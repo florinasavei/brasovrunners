@@ -33,7 +33,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * notice's §3 says the same — so the rights list names objection and restriction, and the data
  * paragraph names the platform's keeping it until the signer asks for its deletion (§503, reversing
  * §393's seven days) and the archive copy's three years from the signing — not "from the run",
- * which a declaration covering every date of a weekly run no longer names (§NNN); the platform's
+ * which a declaration covering every date of a weekly run no longer names (§523); the platform's
  * copy, which a PDF can be drawn from again, is the one that lasts while the signer keeps coming.
  *
  * **One age rule, on `{{minimumAge}}` (§515).** The signer declares for themselves: `{{participant}}`
@@ -57,10 +57,10 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  */
 
 /**
- * What both surfaces open with: who, which run — every date of it, from the one signed on (§NNN) —
+ * What both surfaces open with: who, which run — every date of it, from the one signed on (§523) —
  * that it is optional and not a race.
  *
- * **A series sentence and a one-off sentence (§NNN).** A group run is mostly a weekly one (§113: one
+ * **A series sentence and a one-off sentence (§523).** A group run is mostly a weekly one (§113: one
  * line, many dates), and the owner's rule of 2026-09-27 is that a returning runner signs once. But one
  * approved text serves a one-off run too, and «every date of the run» is untrue of a run that has one.
  * So the text says what it covers in one of two paragraphs, and the renderer keeps the one that fits
@@ -86,12 +86,12 @@ const openingRo = [
   // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §515): the
   // one age the text states — on the day of each run, true of one run and of a series alike.
   "Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.",
-  // The series sentence (§NNN): kept for a run that is one of a series, dropped for a one-off.
+  // The series sentence (§523): kept for a run that is one of a series, dropped for a one-off.
   `Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}}, cu plecare de obicei din {{seriesPlace}} — ${SERIES_TAIL_RO}`,
-  // The same sentence without its place clause (`isPlacelessSeriesSentence`, §NNN): kept only for a
+  // The same sentence without its place clause (`isPlacelessSeriesSentence`, §523): kept only for a
   // series whose place is not written, when the one above is dropped — never both, never neither.
   `Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}} — ${SERIES_TAIL_RO}`,
-  // The one-off sentence (§NNN): kept for a run of one date, dropped for a series.
+  // The one-off sentence (§523): kept for a run of one date, dropped for a series.
   "Declarația este pentru alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",
 ];
@@ -101,12 +101,12 @@ const openingEn = [
   // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §515): the
   // one age the text states — on the day of each run, true of one run and of a series alike.
   "I declare that I am at least {{minimumAge}} old on the day of each run I take part in.",
-  // The series sentence (§NNN): kept for a run that is one of a series, dropped for a one-off.
+  // The series sentence (§523): kept for a run that is one of a series, dropped for a one-off.
   `This declaration is valid for every run of the series {{series}} — {{seriesRhythm}}, usually starting from {{seriesPlace}} — ${SERIES_TAIL_EN}`,
-  // The same sentence without its place clause (`isPlacelessSeriesSentence`, §NNN): kept only for a
+  // The same sentence without its place clause (`isPlacelessSeriesSentence`, §523): kept only for a
   // series whose place is not written, when the one above is dropped — never both, never neither.
   `This declaration is valid for every run of the series {{series}} — {{seriesRhythm}} — ${SERIES_TAIL_EN}`,
-  // The one-off sentence (§NNN): kept for a run of one date, dropped for a series.
+  // The one-off sentence (§523): kept for a run of one date, dropped for a series.
   "This declaration is for the group run {{event}} on {{eventDate}}, starting from {{eventLocation}}.",
   "I know that a group run is neither a competition nor a guided tour: it has no registration, no timing and no safety crew on the course, and the organiser* announces the time, the place and the route and runs together with the participants. Signing this declaration is optional and is not a condition of running with the group.",
 ];

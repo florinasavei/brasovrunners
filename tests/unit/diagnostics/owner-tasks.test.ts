@@ -276,7 +276,7 @@ describe("owner tasks", () => {
     ]);
   });
 
-  // §NNN: the group-run declarations written for one signature per series, approved again.
+  // §523: the group-run declarations written for one signature per series, approved again.
   it("asks for the group-run declarations again while one in force is older, and says nothing while none is in force", () => {
     expect(stateOf({ ...LAUNCHED, groupRunSeriesTextsCurrent: false }, "groupRunSeriesTexts")).toBe("open");
     expect(stateOf(LAUNCHED, "groupRunSeriesTexts")).toBe("done");

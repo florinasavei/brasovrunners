@@ -1098,7 +1098,7 @@ async function renderGroupRunDeclarationRow(
   }
 
   /*
-    A series' declaration (§NNN) says so in both emails: the series by its name — the run's title,
+    A series' declaration (§523) says so in both emails: the series by its name — the run's title,
     in each half's language — and its rhythm, read off the run's dates now, «valabilă pentru toate
     alergările seriei». A one-off's says it is for that run, as before.
   */
@@ -1110,7 +1110,7 @@ async function renderGroupRunDeclarationRow(
   }
 
   /*
-    The signer's own link (§NNN): a secret minted here, at send time, its SHA-256 on the row (§12.8,
+    The signer's own link (§523): a secret minted here, at send time, its SHA-256 on the row (§12.8,
     §14.5) — the newest copy's replaces an older one's. It opens the run's next date with
     `?declaratie=…`, where the page reads «Ai semnat deja…» from it (`findSignatureByViewToken`); a
     read, never an action. The archive copy, and any club copy, carries none: it is the signer's.
@@ -1120,7 +1120,7 @@ async function renderGroupRunDeclarationRow(
     const secret = generateTokenSecret();
     await setGroupRunDeclarationViewToken(db, signed.id, hashTokenSecret(secret));
     // A series' signature opens the run's next date; one that covers its own date only (a one-off's,
-    // or one signed under a text that names no series, §NNN) opens that date, the one it covers.
+    // or one signed under a text that names no series, §523) opens that date, the one it covers.
     const target = signed.seriesKey !== null ? await nextDateOfRun(db, signed.eventId, now) : signed.eventId;
     const targetDetails = target === signed.eventId ? eventDetails : eventNotificationDetailsIn(await eventRows(db, target), locale);
     if (targetDetails?.slug) {

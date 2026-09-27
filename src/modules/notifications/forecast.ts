@@ -176,7 +176,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
         lte(registrations.holdExpiresAt, until),
         /*
-          Not a hold or an offer whose first email is still queued (§NNN): it does not lapse at its
+          Not a hold or an offer whose first email is still queued (§520): it does not lapse at its
           stored deadline — the send re-bases it — so no release, and no offer to the next in line,
           is foreseen for it until that email has left.
         */

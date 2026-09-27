@@ -54,7 +54,7 @@ export type DeclarationToken = {
 /** The made-up event's start (Saturday 21 November 2026, 10:00 in Brașov) and the signature's instant. */
 export const TOKEN_EXAMPLE_EVENT_STARTS_AT = new Date("2026-11-21T08:00:00Z");
 export const TOKEN_EXAMPLE_SIGNED_AT = new Date("2026-09-20T16:42:00Z");
-/** The made-up weekly run's dates (§NNN): three Tuesdays at 18:30 in Brașov. */
+/** The made-up weekly run's dates (§523): three Tuesdays at 18:30 in Brașov. */
 const TOKEN_EXAMPLE_SERIES_DATES = ["2026-10-06", "2026-10-13", "2026-10-20"].map((day) => ({ startsAt: new Date(`${day}T15:30:00Z`) }));
 
 const same = (value: string): Record<TokenLocale, string> => ({ ro: value, en: value });
@@ -98,7 +98,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: MINIMUM_AGE_MERGE_FIELD,
     example: inBoth((locale) => yearsPhrase(16, locale)),
   },
-  // A group run's series (§NNN): the series sentence's name, rhythm and usual place, filled at
+  // A group run's series (§523): the series sentence's name, rhythm and usual place, filled at
   // signing from the dates §113 groups; "" on a one-off run, which keeps the one-off sentence.
   { token: "{{series}}", messageKey: "series", example: { ro: "Tura de marți", en: "The Tuesday loop" } },
   {

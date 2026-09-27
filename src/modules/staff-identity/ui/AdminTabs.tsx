@@ -30,7 +30,7 @@ export type AdminTab = {
   countHint?: string;
   /**
    * Other addresses this tab stands for — «Setări» on `/devs`, the row's «Configurație» tab that
-   * lives outside `/admin/settings` (§NNN) — so the bar still says where the reader is.
+   * lives outside `/admin/settings` (§520) — so the bar still says where the reader is.
    */
   alsoActiveOn?: readonly string[];
 };

@@ -93,7 +93,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
 
   if (done) {
     /*
-      "It covers the whole series" only while the text in force says so (§NNN, `signatureCoversSeries`):
+      "It covers the whole series" only while the text in force says so (§523, `signatureCoversSeries`):
       under an older text a signature covers the date it was signed on. Unknown while the database is
       away — then the words that claim less.
     */
@@ -105,7 +105,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
-        {/* The same words whether a row was written or the one already kept was sent again (§NNN):
+        {/* The same words whether a row was written or the one already kept was sent again (§523):
             the page tells nobody whether the address had signed before. */}
         <Alert severity="success" data-testid="group-run-declaration-done">
           {t(doneWords, { event: event.title })}
@@ -135,7 +135,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   }
 
   /*
-    The text's blanks from the one function the press and the PDF fill them with (§NNN,
+    The text's blanks from the one function the press and the PDF fill them with (§523,
     `groupRunMergeValues`): a series' values under a text that names them — the series sentence kept,
     the one-off sentence dropped — and "" on a one-off run, the reverse. What is read is what is signed.
   */
@@ -170,7 +170,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("groupRunDeclaration.page.title")}
       </Typography>
-      {/* «Once for the whole series» only under a text that says so (§NNN, `signatureCoversSeries`). */}
+      {/* «Once for the whole series» only under a text that says so (§523, `signatureCoversSeries`). */}
       <Typography sx={{ mb: 1 }}>
         {t(signatureCoversSeries(document.body) ? "groupRunDeclaration.page.intro" : "groupRunDeclaration.page.introOneDate", { event: event.title })}
       </Typography>

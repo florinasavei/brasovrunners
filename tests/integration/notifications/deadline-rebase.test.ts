@@ -244,7 +244,7 @@ describe("§513 a participant's deadline counts from the moment its email leaves
     expect((await reload(pending.id)).holdExpiresAt).toEqual(new Date(leaves.getTime() + 30 * MINUTE));
   });
 
-  it("an offer past its stored deadline when it finally leaves runs its full hours from the send — the queue kept it (§NNN)", async () => {
+  it("an offer past its stored deadline when it finally leaves runs its full hours from the send — the queue kept it (§520)", async () => {
     const race = await event(1);
     const first = await enter(race, "ana@example.ro", T);
     await signDeclaration(db, race, first.id, await signingInput(db, T, "Ana Pop"), T);
@@ -262,7 +262,7 @@ describe("§513 a participant's deadline counts from the moment its email leaves
     expect(offer.status).toBe("SENT");
   });
 
-  it("keeps an offer whose first email is still queued: occupied, not swept, and passed on only once it has left and run out (§NNN)", async () => {
+  it("keeps an offer whose first email is still queued: occupied, not swept, and passed on only once it has left and run out (§520)", async () => {
     const race = await event(1);
     const first = await enter(race, "ana@example.ro", T);
     await signDeclaration(db, race, first.id, await signingInput(db, T, "Ana Pop"), T);

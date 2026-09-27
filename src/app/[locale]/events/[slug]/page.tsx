@@ -401,7 +401,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
           {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
               organizer offered it and the club has approved the text of its surface. */}
-          {/* `?declaratie=` is the signer's own link from their copy (§NNN): «Ai semnat deja…», read only from it. */}
+          {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
           <DeclarationOffer event={event} locale={locale} slug={slug} now={now} viewToken={declaratie} />
         </Box>
         <OpenFoldFromHash />

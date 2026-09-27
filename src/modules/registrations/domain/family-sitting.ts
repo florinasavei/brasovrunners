@@ -179,7 +179,7 @@ export function sittingNames(people: readonly SittingPerson[]): string[] {
 /**
  * The boxes a family shares, which the next form of a sitting starts filled with (the owner,
  * 2026-09-27: «claritate»; a parent does not retype the town, the country, the citizenship, the
- * guardian and the emergency contact for every child). The country beside the town since §NNN: the
+ * guardian and the emergency contact for every child). The country beside the town since §520: the
  * country box became required, and a family's second form started it back at the default. Everything else — the name, the birth date, the sex, the
  * phone, the health note, the socials, every consent — belongs to the one person and starts empty.
  * The phone's country and digits are the posted pair `PhoneField` reads back.

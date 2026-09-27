@@ -95,7 +95,7 @@ describe("§516 the moved backoffice addresses", () => {
   });
 });
 
-describe("§NNN a card that left the email page for its own tab, named by an old fragment", () => {
+describe("§520 a card that left the email page for its own tab, named by an old fragment", () => {
   it("sends the fragment on to the card's tab, locale and fragment kept", () => {
     for (const locale of routing.locales) {
       expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#contact-recipients")).toBe(`/${locale}/admin/settings/contact#contact-recipients`);

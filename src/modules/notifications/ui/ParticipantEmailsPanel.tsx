@@ -11,7 +11,7 @@ import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 export type ParticipantEmailCard = {
   type: EmailMessageType;
   /**
-   * The card's own id, for a second shape of one message type (§NNN: the family's confirmation beside
+   * The card's own id, for a second shape of one message type (§520: the family's confirmation beside
    * one person's, both `REGISTRATION_CONFIRMED`); the type is the id when absent.
    */
   id?: string;

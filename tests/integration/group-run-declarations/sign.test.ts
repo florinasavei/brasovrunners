@@ -109,7 +109,7 @@ async function approveTemplate(key: LegalDocumentKey, { privacy = true, idDocume
 
 /**
  * The Tâmpa trail run: a published group run on a trail, offering the declaration. Every call with
- * the same title is another date of the same run (§113, §NNN); a title of its own makes another run.
+ * the same title is another date of the same run (§113, §523); a title of its own makes another run.
  */
 async function trailRun(overrides: Partial<typeof events.$inferInsert> = {}, title = { ro: "Tura pe munte", en: "The mountain loop" }) {
   const [event] = await db
@@ -430,7 +430,7 @@ describe("§393 erasing one (§67, §88)", () => {
   it("takes the declarations' messages with the event when the event itself is deleted or erased, and no other message", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const actor = await admin();
-    // Three runs of one date each: a run's declarations go with its only date (§NNN keeps them
+    // Three runs of one date each: a run's declarations go with its only date (§523 keeps them
     // while the run has another — the test below).
     const deleted = await trailRun({}, { ro: "Tura A", en: "Loop A" });
     const erased = await trailRun({}, { ro: "Tura B", en: "Loop B" });
@@ -457,12 +457,12 @@ describe("§393 erasing one (§67, §88)", () => {
 });
 
 /*
-  §NNN — one self-declaration per person per series. The owner, 2026-09-27: "a returning runner
+  §523 — one self-declaration per person per series. The owner, 2026-09-27: "a returning runner
   signs once; it has no end date and is deleted only at their request". A series is §113's: the
   same type and the same title, so every `trailRun()` with the default title is another date of
   the same run.
 */
-describe("§NNN one declaration per person per series", () => {
+describe("§523 one declaration per person per series", () => {
   const OCT = (day: number) => new Date(`2026-10-${String(day).padStart(2, "0")}T16:00:00.000Z`);
   const archiveOn = async () =>
     updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
@@ -669,12 +669,12 @@ describe("§NNN one declaration per person per series", () => {
 });
 
 /*
-  §NNN — the «already signed» state, read from the signer's own link alone. The signer's copy carries
+  §523 — the «already signed» state, read from the signer's own link alone. The signer's copy carries
   a link to the run's next date with `?declaratie=<secret>`; the row keeps its SHA-256. The run's page
   reads it (`findSignatureByViewToken`) and says «Ai semnat deja…» for the version in force, and asks
   again once a newer one is.
 */
-describe("§NNN the signer's own link", () => {
+describe("§523 the signer's own link", () => {
   const OCT = (day: number) => new Date(`2026-10-${String(day).padStart(2, "0")}T16:00:00.000Z`);
   const secretIn = (html: string) => /[?&]declaratie=([A-Za-z0-9_-]{43})/.exec(html)?.[1];
 
@@ -752,7 +752,7 @@ describe("§NNN the signer's own link", () => {
 });
 
 /*
-  §NNN, the review of the series round — what the text in force decides, filled by one function.
+  §523, the review of the series round — what the text in force decides, filled by one function.
 
   1. The signing page, the press and the PDF fill a group-run text from `groupRunMergeValues`: a series'
      values keep the series sentence and drop the one-off one; a one-off's the reverse.
@@ -762,11 +762,11 @@ describe("§NNN the signer's own link", () => {
   4. The Administrator's erase of a series signature clears it for every date of the series.
   5. A series whose place is not written keeps the series sentence without its place clause.
 */
-describe("§NNN what the text in force decides", () => {
+describe("§523 what the text in force decides", () => {
   const OCT = (day: number) => new Date(`2026-10-${String(day).padStart(2, "0")}T16:00:00.000Z`);
   const secretIn = (html: string) => /[?&]declaratie=([A-Za-z0-9_-]{43})/.exec(html)?.[1];
 
-  /** The trail text as approved before §NNN: the platform's, less the series sentences — one run, one date. */
+  /** The trail text as approved before §523: the platform's, less the series sentences — one run, one date. */
   async function approveOlderTrailText() {
     const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => {
       const template = LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale];
@@ -888,15 +888,15 @@ describe("§NNN what the text in force decides", () => {
 });
 
 /*
-  §NNN — `/admin/tasks` asks for the group-run declarations again until every one in force names
+  §523 — `/admin/tasks` asks for the group-run declarations again until every one in force names
   `{{series}}`: the platform's text written for one signature per series.
 */
-describe("§NNN the group-run texts' row on /admin/tasks", () => {
+describe("§523 the group-run texts' row on /admin/tasks", () => {
   it("is null with none in force, true for the platform's texts, false while one in force is older", async () => {
     expect(await groupRunDeclarationsSeriesCurrent(db, NOW)).toBeNull();
     await approveOne("GROUP_RUN_DECLARATION_TRAIL");
     expect(await groupRunDeclarationsSeriesCurrent(db, NOW)).toBe(true);
-    // An asphalt text approved before §NNN: one date, no series sentence.
+    // An asphalt text approved before §523: one date, no series sentence.
     const older: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
       locale,
       title: LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_ASPHALT[locale].title,

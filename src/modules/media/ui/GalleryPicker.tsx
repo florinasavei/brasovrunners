@@ -18,7 +18,7 @@ import { PICTURE_SOURCES, type PickerScope, pickerScopeParam, type PictureSource
 import { formatBytes } from "./stored-facts";
 
 /**
- * Each chip's picture beside its words (§NNN: a glyph on every button): every picture, an event,
+ * Each chip's picture beside its words (§521: a glyph on every button): every picture, an event,
  * an album, a standing page, «Echipa», and «here» — the record whose editor opened the picker.
  */
 const SOURCE_ICON = {

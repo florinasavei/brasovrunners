@@ -95,7 +95,7 @@ test.describe("§265 the configuration panels", () => {
     await expect(main.getByRole("heading", { name: /Baza de date/i })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Configurație" })).toHaveCount(0);
 
-    // «Setări»'s row is the page's one row (§360, §NNN): «Configurație» marked, its panels after it
+    // «Setări»'s row is the page's one row (§360, §520): «Configurație» marked, its panels after it
     // in the same row, no second row under it — and the main bar lights «Setări», having no
     // «Configurație» entry of its own.
     const panels = main.getByRole("navigation", { name: "Setări" });

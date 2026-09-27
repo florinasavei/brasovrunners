@@ -16,7 +16,7 @@ import { isUuid } from "@/shared/ids";
  * document included, like the race's backoffice copy (§320): it is read by signed-in staff inside
  * the platform, and a pre-§418 identity document is cleared seven days after the run (§503). The
  * download is written to the trail — the event, never whose it was (§324). The address names the
- * date the declaration was signed on (or moved to, §NNN): the backoffice list is the whole run's,
+ * date the declaration was signed on (or moved to, §523): the backoffice list is the whole run's,
  * and each row links under its own date.
  */
 export async function GET(_request: Request, context: { params: Promise<{ id: string; declarationId: string }> }): Promise<Response> {

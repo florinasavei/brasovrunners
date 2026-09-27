@@ -29,7 +29,7 @@ let slug = "";
 let englishSlug = "";
 let editorUrl = "";
 let eventId = "";
-/** A second date of the same run (§113, §NNN): the same titles a week later, another slug. */
+/** A second date of the same run (§113, §523): the same titles a week later, another slug. */
 let secondSlug = "";
 const signers = { ro: "", en: "" };
 
@@ -256,7 +256,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   });
 
   /*
-    §NNN — a declaration covers the run's series: a second date of the same run, the same titles a
+    §523 — a declaration covers the run's series: a second date of the same run, the same titles a
     week later, published, so the signature below is a series' and reads on either date.
   */
   test("the run gets a second date, a week later", async () => {
@@ -294,7 +294,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     // A named section: its heading is its accessible name — without «(opțional)» since §498.
     await expect(page.getByRole("region", { name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
     await expect(offer.getByRole("heading", { level: 3, name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
-    // Once for the whole series of a run that repeats (§NNN).
+    // Once for the whole series of a run that repeats (§523).
     await expect(offer).toContainText(
       `Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria ${title}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri`,
     );
@@ -343,7 +343,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   });
 
   /*
-    §NNN — the signer's own link: their copy carries `?declaratie=<secret>` to the run's page, the row
+    §523 — the signer's own link: their copy carries `?declaratie=<secret>` to the run's page, the row
     its SHA-256. The mail is captured locally, so the spec writes a known secret's hash on the row —
     what the renderer does at send time — and opens the run's OTHER date from that link.
   */
@@ -397,7 +397,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const rows = fold.getByTestId("group-run-declaration-row");
     await expect(rows).toHaveCount(2);
     await expect(rows.first()).toContainText("Ana Popescu");
-    // Signed for the whole series (§NNN): the row says so.
+    // Signed for the whole series (§523): the row says so.
     await expect(rows.first().getByTestId("group-run-declaration-series")).toHaveText("serie");
     // No address and no identity document on the list: they are in the PDF.
     await expect(fold).not.toContainText(signers.ro);

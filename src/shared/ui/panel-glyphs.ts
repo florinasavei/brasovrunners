@@ -58,7 +58,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
 /**
- * A backoffice box's glyph, by name (§NNN; the owner, 2026-09-27: a glyph on every button and
+ * A backoffice box's glyph, by name (§521; the owner, 2026-09-27: a glyph on every button and
  * every fold header).
  *
  * `action-icons.ts` names **verbs** — what a button does. A box names a **subject** — what is

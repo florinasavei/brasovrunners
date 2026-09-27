@@ -113,7 +113,7 @@ describe("§519 the browser's half of a sitting", () => {
     expect(sittingSharedValues(second, posted({ city: "Codlea" }))).toEqual({ city: "Codlea", country: "RO", nationality: "RO", guardianName: "Ana Pop", emergencyContactName: "Dan Pop" });
   });
 
-  it("carries the country like the city — a required box the next form must not start at the default (§NNN)", () => {
+  it("carries the country like the city — a required box the next form must not start at the default (§520)", () => {
     const posted = (values: Record<string, string>) => (name: string) => values[name] ?? "";
     expect(SITTING_SHARED_FIELDS).toContain("country");
     const first = sittingSharedValues(undefined, posted({ city: "Wien", country: "AT" }));

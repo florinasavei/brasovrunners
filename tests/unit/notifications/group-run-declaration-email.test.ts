@@ -30,7 +30,7 @@ describe("§393 the group run's declaration messages", () => {
       expect(email.text).toContain("registers you for nothing");
       expect(email.text).toContain("pentru că ai semnat o declarație pe site-ul clubului");
       expect(email.text).toContain("because you signed a declaration on the club's website");
-      // A one-off run's copy names that run and claims no series (§NNN).
+      // A one-off run's copy names that run and claims no series (§523).
       expect(email.subject).toContain("— Tura pe munte");
       expect(email.text).not.toContain("toate alergările seriei");
       expect(email.text).not.toContain("every run of the series");
@@ -47,7 +47,7 @@ describe("§393 the group run's declaration messages", () => {
       // The legitimate-interest, three-year choice, from the sweep's own constant, and the objection.
       const ro = durationPhrase("ro", RETENTION.registrationsYearsAfterEvent, "years");
       const en = durationPhrase("en", RETENTION.registrationsYearsAfterEvent, "years");
-      // From the signing (§NNN): a series' declaration covers every run of it, so no one run counts.
+      // From the signing (§523): a series' declaration covers every run of it, so no one run counts.
       expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la semnare`);
       expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the signing`);
       expect(email.text).toContain("dacă alergătorul se opune");
@@ -59,7 +59,7 @@ describe("§393 the group run's declaration messages", () => {
   });
 
   /*
-    §NNN — a series' declaration: both emails name the series and its rhythm, in each half's language,
+    §523 — a series' declaration: both emails name the series and its rhythm, in each half's language,
     from the template data (never a literal), and say it is valid for every run of it; the signer's
     carries their own link to the run's page as its button.
   */

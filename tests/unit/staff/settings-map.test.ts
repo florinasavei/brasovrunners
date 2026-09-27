@@ -62,7 +62,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
 
   it("ends the row with «Configurație» (/devs) for exactly the roles that page opens to, and /devs draws the row with it marked", () => {
     for (const role of STAFF_ROLES) expect(offersConfigurationTab(role), role).toBe(canSeeDiagnostics(role));
-    // One way in (§NNN): the main bar has no «Configurație» of its own; «Setări» lights on /devs.
+    // One way in (§520): the main bar has no «Configurație» of its own; «Setări» lights on /devs.
     for (const role of STAFF_ROLES) {
       expect(visibleAdminSections(role) as string[], role).not.toContain("devs");
       if (offersConfigurationTab(role)) expect(visibleAdminSections(role), role).toContain("settings");
@@ -78,7 +78,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
     expect(nav).toContain('href: getPathname({ locale, href: "/devs" })');
     const devs = read("src/app/[locale]/devs/page.tsx");
     expect(devs).toContain('active="configuration"');
-    // One row only (§360, §NNN): the page's panels are entries of «Setări»'s row, not a second SubNav.
+    // One row only (§360, §520): the page's panels are entries of «Setări»'s row, not a second SubNav.
     expect(devs).toContain("configurationPanels={DEVS_PANELS.map(");
     expect(devs).not.toMatch(/<SubNav\b/);
     expect(nav).toContain("configurationPanels && configurationPanels.length > 0");

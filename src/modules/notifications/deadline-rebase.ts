@@ -103,7 +103,7 @@ export async function planDeadlineRebase<T extends Record<string, unknown>>(
  *
  * A hold or an offer is written under the event's lock (`lockEventForCapacity`), the allocator's
  * own serialization point (AGENTS.md §10.6), so no allocation decides between the read and the
- * write. An offer past its stored deadline is moved too (§NNN): while its message was queued it was
+ * write. An offer past its stored deadline is moved too (§520): while its message was queued it was
  * never lapsed (`awaitingItsFirstEmail`). The moment the message is marked SENT that guard is gone,
  * so the caller hands the SENT write in as `inTheLock`: it runs inside the same locked transaction
  * as the move, and no count taken under the lock — a capacity lowered, a place given — can see the

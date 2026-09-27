@@ -1,5 +1,5 @@
 /**
- * The buttons that wear no separate glyph (§NNN), each with its one-line reason. An entry matches a
+ * The buttons that wear no separate glyph (§521), each with its one-line reason. An entry matches a
  * button in `file` whose source contains `words`; `glyph-on-every-button-and-fold.test.ts` reads it,
  * and checks every entry still matches something, so a stale line fails rather than lingers.
  *

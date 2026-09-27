@@ -8,11 +8,11 @@ import { emailSampleFamilyConfirmed, emailSampleFor } from "@/modules/notificati
 import { renderBilingual } from "@/modules/notifications/templates";
 
 /**
- * §NNN — `/admin/emails` previews every message a participant can receive (§81); the family's one
+ * §520 — `/admin/emails` previews every message a participant can receive (§81); the family's one
  * confirmation («Confirmat: 2 persoane», one email with every person's QR and number) had no card: it
  * is `REGISTRATION_CONFIRMED` in another shape. It gets one, right after one person's.
  */
-describe("§NNN the family's confirmation on /admin/emails", () => {
+describe("§520 the family's confirmation on /admin/emails", () => {
   function preview(locale: "ro" | "en") {
     const data = emailSampleFor("REGISTRATION_CONFIRMED", locale);
     data.familyConfirmed = emailSampleFamilyConfirmed();

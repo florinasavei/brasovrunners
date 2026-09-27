@@ -1170,7 +1170,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {/*
                   The envelope going back out, as on the registration's own "Retrimite" (§318).
                   It was left off here once, for 24 pixels of a crowded column; every button
-                  wears its glyph now (§NNN, the owner: a glyph on every button), and the
+                  wears its glyph now (§521, the owner: a glyph on every button), and the
                   compact button keeps the column as narrow as a glyph allows.
                 */}
                 <GlyphSubmitButton

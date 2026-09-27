@@ -36,7 +36,7 @@ import { signatureCoversSeries } from "../series";
  * without one, as a registration is refused), and the run can still be signed for. The listing
  * card says nothing (§393).
  *
- * **The signer's own link (§NNN).** Opened from the signer's copy — `?declaratie=<secret>`, minted
+ * **The signer's own link (§523).** Opened from the signer's copy — `?declaratie=<secret>`, minted
  * when that copy was sent, its hash on the row — the section says what the link's declaration is:
  * «Ai semnat deja declarația pentru aceste alergări (v. N, semnată …)» and no button, while the
  * version signed is the one in force — on any date the signature covers, the run past or not; or,
@@ -67,7 +67,7 @@ export default async function DeclarationOffer({
   locale: Locale;
   slug: string;
   now: Date;
-  /** `?declaratie=` from the signer's own link (§NNN), as the address carried it. */
+  /** `?declaratie=` from the signer's own link (§523), as the address carried it. */
   viewToken?: string;
 }) {
   const key = offeredGroupRunDeclarationKey(event);
@@ -86,12 +86,12 @@ export default async function DeclarationOffer({
     [undefined, undefined],
   );
   if (!declaration || !privacyNotice) return null;
-  // The signer's own declaration, from their link alone (§NNN): not cached, it is one person's.
+  // The signer's own declaration, from their link alone (§523): not cached, it is one person's.
   const mine = token ? await readOrWhileAway(() => findSignatureByViewToken(getDb(), hashTokenSecret(token), event.id, key), undefined) : undefined;
   const signed = signedStateFor(mine, declaration.id);
   if (!open && signed?.kind !== "current") return null;
   // «For the whole series» only when both hold: the text names {{series}} AND the run has another
-  // date; a one-off run's signature covers its one date whatever the text (§NNN).
+  // date; a one-off run's signature covers its one date whatever the text (§523).
   const coversSeries =
     signed === null &&
     signatureCoversSeries(declaration.body) &&
@@ -111,17 +111,17 @@ export default async function DeclarationOffer({
         {t("groupRunDeclaration.heading")}
       </Typography>
       {signed?.kind === "current" ? (
-        // Signed, the version in force (§NNN): what and when, and no button — there is nothing to sign.
+        // Signed, the version in force (§523): what and when, and no button — there is nothing to sign.
         <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-signed">
           {t(mine?.series ? "groupRunDeclaration.signedSeries" : "groupRunDeclaration.signedOne", { version: signed.version, when })}
         </Typography>
       ) : signed?.kind === "renew" ? (
-        // Signed an older version (§NNN): the club approved a new one, which is asked for again.
+        // Signed an older version (§523): the club approved a new one, which is asked for again.
         <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-renew">
           {t("groupRunDeclaration.signedOlder", { version: signed.version, when })}
         </Typography>
       ) : (
-        // Once for the whole run (§NNN): a returning runner reads here that they need not sign again —
+        // Once for the whole run (§523): a returning runner reads here that they need not sign again —
         // only while the text in force says so (`signatureCoversSeries`) and the run has another date;
         // otherwise a signature covers its own date, and the line says this run.
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="group-run-declaration-line">

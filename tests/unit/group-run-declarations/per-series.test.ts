@@ -5,7 +5,7 @@ import { dropsParagraph, isPlacelessSeriesSentence, mergeLegalBody } from "@/mod
 import { groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 
 /**
- * §NNN — one self-declaration per person per series of group runs. The owner, 2026-09-27: "a
+ * §523 — one self-declaration per person per series of group runs. The owner, 2026-09-27: "a
  * returning runner signs once; it has no end date and is deleted only at their request".
  *
  * The pure half: who a signature is (the canonical address and the name, read loosely); which
@@ -26,7 +26,7 @@ const row = (id: string, overrides: Partial<SeriesSignature> = {}): SeriesSignat
   ...overrides,
 });
 
-describe("§NNN who a signature is", () => {
+describe("§523 who a signature is", () => {
   it("reads the address canonically and the name without case, accents or extra spaces", () => {
     const ana = signerIdentity("ana@example.ro", "Ana Popescu");
     expect(ana).not.toBeNull();
@@ -44,7 +44,7 @@ describe("§NNN who a signature is", () => {
   });
 });
 
-describe("§NNN which signature a press keeps", () => {
+describe("§523 which signature a press keeps", () => {
   const ana = { email: "ANA@example.ro", typedName: "ana popescu" };
 
   it("keeps none for a person's first signature, and never another person's", () => {
@@ -76,7 +76,7 @@ describe("§NNN which signature a press keeps", () => {
   });
 });
 
-describe("§NNN what the run's page says from the signer's own link", () => {
+describe("§523 what the run's page says from the signer's own link", () => {
   const signed = { legalDocumentId: V1, version: 1, acceptedAt: new Date("2026-10-01T08:00:00Z") };
 
   it("says «already signed» for the version in force, and asks again once a newer one is", () => {
@@ -89,7 +89,7 @@ describe("§NNN what the run's page says from the signer's own link", () => {
   });
 });
 
-describe("§NNN the series' rhythm, in the declaration's language", () => {
+describe("§523 the series' rhythm, in the declaration's language", () => {
   const TZ = "Europe/Bucharest";
   // Tuesdays at 18:30 in Brașov (15:30 UTC in October).
   const tuesdays = [6, 13, 20].map((day) => ({ startsAt: new Date(`2026-10-${String(day).padStart(2, "0")}T15:30:00.000Z`) }));
@@ -110,7 +110,7 @@ describe("§NNN the series' rhythm, in the declaration's language", () => {
   });
 });
 
-describe("§NNN the series sentence and the one-off sentence", () => {
+describe("§523 the series sentence and the one-off sentence", () => {
   const base = { participant: "Ana Popescu", event: "Tura de marți", eventDate: "marți, 6 oct. 2026", eventLocation: "Parcul Titulescu", minimumAge: "18 ani" };
   const series = { key: "GROUP_RUN\ntura de marți", title: "Tura de marți", rhythm: "în fiecare marți, la 18:30", place: "Parcul Titulescu" };
   const merged = (values: Record<string, string>) => JSON.stringify(mergeLegalBody(groupRunTrailRo, values));
@@ -154,7 +154,7 @@ describe("§NNN the series sentence and the one-off sentence", () => {
   });
 });
 
-describe("§NNN what a signature keeps of the blanks", () => {
+describe("§523 what a signature keeps of the blanks", () => {
   it("keeps the run's and the series' facts, never a name or a document", () => {
     const kept = factsToKeep({ participant: "Ana", idDocument: "CI BV 1", event: "Tura", eventDate: "marți", series: "", seriesRhythm: "", minimumAge: "18 ani" });
     expect(kept).toEqual({ event: "Tura", eventDate: "marți", series: "", seriesRhythm: "", minimumAge: "18 ani" });
@@ -169,10 +169,10 @@ describe("§NNN what a signature keeps of the blanks", () => {
 });
 
 /*
-  §NNN, the review's nit — a series whose place is not written in that language: the series sentence
+  §523, the review's nit — a series whose place is not written in that language: the series sentence
   keeps its second shape, without «cu plecare de obicei din …», and never drops both it and the one-off.
 */
-describe("§NNN the series sentence without a place", () => {
+describe("§523 the series sentence without a place", () => {
   const base = { participant: "Ana Popescu", event: "Tura de marți", eventDate: "marți, 6 oct. 2026", eventLocation: "", minimumAge: "18 ani" };
   const placeless = { key: "GROUP_RUN\ntura de marți", title: "Tura de marți", rhythm: "în fiecare marți, la 18:30", place: "  " };
 
@@ -215,10 +215,10 @@ describe("§NNN the series sentence without a place", () => {
 });
 
 /*
-  §NNN, the review's second blocker — a signature covers the series only when the text it signs says
+  §523, the review's second blocker — a signature covers the series only when the text it signs says
   so: the platform's text names {{series}}; the version approved on production before it names one run.
 */
-describe("§NNN which text a series signature needs", () => {
+describe("§523 which text a series signature needs", () => {
   it("covers the series under a text that names {{series}}, and one date under one that does not", () => {
     expect(signatureCoversSeries(groupRunTrailRo)).toBe(true);
     expect(signatureCoversSeries(groupRunTrailEn)).toBe(true);

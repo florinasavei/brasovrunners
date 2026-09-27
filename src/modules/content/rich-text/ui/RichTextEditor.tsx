@@ -149,7 +149,7 @@ const ALIGN_ICON = {
 } as const;
 
 /**
- * A picture's or a film's place in the column, drawn beside the words (§NNN: a glyph on every
+ * A picture's or a film's place in the column, drawn beside the words (§521: a glyph on every
  * button): the whole width as justified text, a side as that side's alignment.
  */
 const PLACEMENT_ICON = {

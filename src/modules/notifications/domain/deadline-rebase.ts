@@ -47,7 +47,7 @@ import { capHoldExpiry } from "@/modules/registrations/domain/hold-deadlines";
  *   the message was queued (a resend asked after the lapse) is not moved. A hold or an offer past
  *   its stored deadline at the send is re-based like a live one: while the message that starts it
  *   was queued it was never lapsed (`registrations/repository.ts#awaitingItsFirstEmail`, the offer's
- *   since §NNN) — it kept occupying its place and no sweep released it — so nobody else can have
+ *   since §520) — it kept occupying its place and no sweep released it — so nobody else can have
  *   been given that place. That is the night case this exists for. The write asks, under the event's
  *   lock, that the row is still in the state the message was about (`deadline-rebase.ts`), so an
  *   offer the race's start did release stays released.

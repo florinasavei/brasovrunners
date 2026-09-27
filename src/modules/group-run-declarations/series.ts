@@ -1,5 +1,5 @@
 /**
- * A group run's series in a declaration (§NNN): the values of the series sentence, what a signature
+ * A group run's series in a declaration (§523): the values of the series sentence, what a signature
  * keeps of the text's blanks, and how a run that is one of a series is told from a one-off. Pure.
  *
  * The series is §113's — the same type and title, as the listing groups it (`seriesKey`) — and a run
@@ -47,10 +47,10 @@ export function seriesRhythmPhrase(dates: readonly { startsAt: Date }[], timeZon
 export type RunSeries = { key: string; title: string; rhythm: string; place: string } | null;
 
 /**
- * Whether a signature of this text covers the run's series (§NNN): only when the text signed names
+ * Whether a signature of this text covers the run's series (§523): only when the text signed names
  * `{{series}}` — the platform's series sentence, which says so to the signer. Read from the version in
  * force at the signing, in the signer's language, as `{{participantIdDocument}}` gates the minor's
- * own signature (§330). A text approved before §NNN names one run and `{{eventDate}}`: a signature of
+ * own signature (§330). A text approved before §523 names one run and `{{eventDate}}`: a signature of
  * it covers that date alone, one row per date as before, whatever the run's other dates.
  */
 export function signatureCoversSeries(body: unknown): boolean {
@@ -58,8 +58,8 @@ export function signatureCoversSeries(body: unknown): boolean {
 }
 
 /**
- * The series sentence's values for a text (§NNN): none at all for a text that names no series field —
- * every version approved before §NNN, whose sentences are left exactly as they were — else the
+ * The series sentence's values for a text (§523): none at all for a text that names no series field —
+ * every version approved before §523, whose sentences are left exactly as they were — else the
  * series' name, rhythm and usual place, or "" for each on a one-off run, which drops the series
  * sentence and keeps the one-off one (`dropsParagraph`).
  *
@@ -83,7 +83,7 @@ export function seriesMergeValues(body: unknown, series: RunSeries): MergeValues
   return paragraphs.some(isPlacelessSeriesSentence) ? { ...values, seriesPlace: "" } : values;
 }
 
-/** The fields a signature keeps as they were filled (§NNN): the run's facts and the series'. */
+/** The fields a signature keeps as they were filled (§523): the run's facts and the series'. */
 const KEPT: ReadonlySet<MergeField> = new Set<MergeField>(["event", "eventDate", "eventLocation", "minimumAge", ...SERIES_MERGE_FIELDS]);
 
 /** What `signed_facts` keeps of the values the signer read: the run's and the series' facts, nothing personal. */
@@ -92,8 +92,8 @@ export function factsToKeep(values: MergeValues): Record<string, string> {
 }
 
 /**
- * `signed_facts` read back (§NNN): the kept fields that are strings, anything else dropped — a row
- * from before §NNN, or a value nobody wrote this way, is null, and the PDF reads the event as it is.
+ * `signed_facts` read back (§523): the kept fields that are strings, anything else dropped — a row
+ * from before §523, or a value nobody wrote this way, is null, and the PDF reads the event as it is.
  */
 export function readSignedFacts(value: unknown): MergeValues | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;

@@ -77,7 +77,7 @@ export const DISCLOSURE_SUMMARY_SX = {
 export const DISCLOSURE_SX = { "& > summary": DISCLOSURE_SUMMARY_SX, ...DISCLOSURE_OPEN_ARROW } as const;
 
 /**
- * The glyph a fold's header wears after its arrow (§NNN; the owner, 2026-09-27: a glyph on every
+ * The glyph a fold's header wears after its arrow (§521; the owner, 2026-09-27: a glyph on every
  * button and every fold header). The arrow says "this opens"; the glyph says what is inside, so a
  * column of closed folds is read by picture as well as by words.
  *

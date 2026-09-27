@@ -257,7 +257,7 @@ describe("§436 the words, in both languages", () => {
   });
 
   it("says, after the simple path, that it was tried — only the §384 confirmation says it landed", () => {
-    // §NNN (plain words): the same three claims — tried, landed only with the confirmation, check the page — in one short line.
+    // §522 (plain words): the same three claims — tried, landed only with the confirmation, check the page — in one short line.
     expect(catalogues.ro.Network.fallback).toBe(
       "Rețeaua a blocat salvarea, așa că am încercat calea simplă. A ajuns doar dacă vezi mesajul de confirmare; altfel verifică pagina și încearcă de pe telefon.",
     );

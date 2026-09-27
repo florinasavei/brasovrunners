@@ -24,7 +24,7 @@ import ro from "../../../messages/ro.json";
  *    parenthesis of more than 12 words;
  * 2. no string anywhere under `Admin.*` names a §-number, a repository file or a release number:
  *    those are for the people who build the platform, never for the club;
- * 3. (§NNN, the plain-words pass over the whole backoffice) EVERY string the backoffice shows —
+ * 3. (§522, the plain-words pass over the whole backoffice) EVERY string the backoffice shows —
  *    `Admin.*`, the translate panel, the network page, the developers' page `/devs` (`Devs.*`),
  *    the Costuri budget card (`Budget.*`) and the backoffice's own error page (`STAFF_ERROR_KEYS`,
  *    named one by one because the rest of `Error.*` serves the public pages) — whatever its key is
@@ -35,7 +35,7 @@ import ro from "../../../messages/ro.json";
  *    `….howBroken.N`), because the steps are where the detail lives. A short line that dropped a
  *    fact the club still needs keeps it in a sibling `…More` key, drawn as the line's «?» (an
  *    email's `emails.whenMore.*`, the queue's `simulateMore`), never deleted;
- * 4. (§NNN, the owner's two words) no string the backoffice shows says «platforma» / "the
+ * 4. (§522, the owner's two words) no string the backoffice shows says «platforma» / "the
  *    platform" — it names what acts: the site, the email, the job, «noi» — nor hedges with «de
  *    obicei», «în general», "usually", "generally": it says the fact. A numbered step is held to
  *    it too, except inside a quote («…», „…”, “…”), where it names the screen or the button to open.

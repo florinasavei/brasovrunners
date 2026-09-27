@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 /**
  * `/admin/legal`'s token legend calls `t()` on every `Admin.legal.tokens.*` message: a bare
  * `{{event}}` is malformed ICU and would throw on the page. Every entry must parse and format
- * through the formatter next-intl uses, with the literal token text quoted as `'{{…}}'` (§NNN).
+ * through the formatter next-intl uses, with the literal token text quoted as `'{{…}}'` (§523).
  */
 describe("Admin.legal.tokens — every legend entry is well-formed ICU", () => {
   for (const [locale, catalogue] of [

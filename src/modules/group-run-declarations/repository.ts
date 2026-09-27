@@ -15,15 +15,15 @@ import type { SeriesSignature } from "./domain";
  * (`rehomeGroupRunDeclarationsOfEvent`), and the signer's own link, minted when their copy is sent
  * (`setGroupRunDeclarationViewToken`). Rows are kept until the signer asks for their deletion
  * (§503): they leave by the Administrator's erase, audited, or with the run's last date — never
- * by a public press (§NNN).
+ * by a public press (§523).
  *
- * **A series' declaration belongs to the run, not to one date (§NNN).** A weekly run is many rows of
+ * **A series' declaration belongs to the run, not to one date (§523).** A weekly run is many rows of
  * `events` (§113), and a returning runner signs once. The row points at the date it was signed on
  * and records the series it covers (`series_key`, as `seriesKey` wrote it then); everything that
  * reads the declarations reads the whole series: the dates §113 groups, the same type and the same
  * title (trimmed, case-folded), in the default language — the listing's own rule. A date renamed on
  * purpose ("… — ediție de Crăciun") leaves the series and asks its own declaration, as it leaves the
- * line. A one-off run's declaration (`series_key` null), and every row from before §NNN, covers its
+ * line. A one-off run's declaration (`series_key` null), and every row from before §523, covers its
  * own date only, as its text said.
  */
 
@@ -43,7 +43,7 @@ export async function insertGroupRunDeclaration<T extends Record<string, unknown
 }
 
 /**
- * Every date of the run an event belongs to, itself included, soonest first (§NNN): the events of
+ * Every date of the run an event belongs to, itself included, soonest first (§523): the events of
  * its type whose default-language title is the same run's by `seriesKey` (§113) — the listing's own
  * rule, so the declaration covers exactly the dates the reader sees as one line. An event with no
  * default-language title is a series of one. The titles of one type are few (a weekly run for a few
@@ -58,7 +58,7 @@ export async function listSeriesDatesOf<T extends Record<string, unknown>>(
 }
 
 /**
- * The run an event belongs to (§NNN): its dates, soonest first, and the series' key — null for a
+ * The run an event belongs to (§523): its dates, soonest first, and the series' key — null for a
  * one-off run, a date the grouping gives no other.
  */
 export async function findRunSeries<T extends Record<string, unknown>>(
@@ -86,8 +86,8 @@ export async function findRunSeries<T extends Record<string, unknown>>(
 }
 
 /**
- * The condition "this row covers that date" (§NNN): signed on it, or signed for the series on any of
- * the series' dates. A one-off's, or a row from before §NNN, covers only its own date.
+ * The condition "this row covers that date" (§523): signed on it, or signed for the series on any of
+ * the series' dates. A one-off's, or a row from before §523, covers only its own date.
  */
 function coversDate(eventId: string, seriesDates: readonly string[]) {
   return or(
@@ -98,7 +98,7 @@ function coversDate(eventId: string, seriesDates: readonly string[]) {
 
 /**
  * What the backoffice lists (§393): who, when, and against which version of the text (§499) —
- * and, since §NNN, on which date of the run it was signed, for the PDF's address, and whether it
+ * and, since §523, on which date of the run it was signed, for the PDF's address, and whether it
  * covers the series (`series`, the row's «serie» mark). Never the identity document or the address.
  */
 export type GroupRunDeclarationListRow = {
@@ -112,7 +112,7 @@ export type GroupRunDeclarationListRow = {
 };
 
 /**
- * The declarations of the run an event belongs to (§NNN): every date's, since one signature covers
+ * The declarations of the run an event belongs to (§523): every date's, since one signature covers
  * them all — the same list on each date's backoffice page, in the order they were signed.
  */
 export async function listGroupRunDeclarations<T extends Record<string, unknown>>(
@@ -138,7 +138,7 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
 }
 
 /**
- * The signatures of the version in force that cover a date (§NNN): what the signing press reads to
+ * The signatures of the version in force that cover a date (§523): what the signing press reads to
  * keep one declaration per person, series and version (`keptSignature`).
  */
 export async function listCoveringSignatures<T extends Record<string, unknown>>(
@@ -161,11 +161,11 @@ export async function listCoveringSignatures<T extends Record<string, unknown>>(
 }
 
 /**
- * Before a date of a run is deleted (§NNN): a series' declarations cover the run's other dates too,
+ * Before a date of a run is deleted (§523): a series' declarations cover the run's other dates too,
  * so they move to another date rather than cascading away with this one — the next date after it,
  * or, when it was the last, the latest before it, so the evidence is never lost while the run has a
  * date. What a moved declaration says does not move with it: its PDF is drawn from what the blanks
- * said at the signing (`signed_facts`). A one-off's, and a row from before §NNN, covered this date
+ * said at the signing (`signed_facts`). A one-off's, and a row from before §523, covered this date
  * only, and go with it as before (§393), their outbox rows first (`deleteGroupRunDeclarationMessagesOfEvent`).
  * Returns how many moved.
  */
@@ -208,7 +208,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       idDocument: groupRunDeclarations.idDocument,
       email: groupRunDeclarations.email,
       acceptedAt: groupRunDeclarations.acceptedAt,
-      // What the blanks said at the signing, and whether it covers the series (§NNN).
+      // What the blanks said at the signing, and whether it covers the series (§523).
       signedFacts: groupRunDeclarations.signedFacts,
       seriesKey: groupRunDeclarations.seriesKey,
       title: legalDocumentTranslations.title,
@@ -231,7 +231,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
 export type SignedGroupRunDeclaration = NonNullable<Awaited<ReturnType<typeof findSignedGroupRunDeclaration>>>;
 
 /**
- * The signer's own link (§NNN): the hash of the secret their copy carries, set when that copy is sent
+ * The signer's own link (§523): the hash of the secret their copy carries, set when that copy is sent
  * — a newer copy's replaces it, so the newest email's link is the one that reads.
  */
 export async function setGroupRunDeclarationViewToken<T extends Record<string, unknown>>(db: Database<T>, id: string, tokenHash: string): Promise<void> {
@@ -239,7 +239,7 @@ export async function setGroupRunDeclarationViewToken<T extends Record<string, u
 }
 
 /**
- * The declaration a link names, if it covers this date (§NNN): signed on it, or for the series on one
+ * The declaration a link names, if it covers this date (§523): signed on it, or for the series on one
  * of the series' dates — and of the kind of text the date offers. A read, bound to the hash (never the
  * secret, §12.8), that tells the page nothing about anybody else; undefined for any other link.
  */
@@ -265,7 +265,7 @@ export async function findSignatureByViewToken<T extends Record<string, unknown>
 }
 
 /**
- * The date a signer's link should open (§NNN): the run's next date still to come, or the date signed
+ * The date a signer's link should open (§523): the run's next date still to come, or the date signed
  * on when the run has none — so the email's button leads to a page that still offers the run.
  */
 export async function nextDateOfRun<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<string> {

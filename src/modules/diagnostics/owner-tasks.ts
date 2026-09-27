@@ -179,7 +179,7 @@ export type OwnerTaskInputs = {
   raceDeclarationsCurrent: boolean;
   /**
    * Whether the group-run declarations in force are the ones written for one signature per series
-   * (§NNN, `groupRunDeclarationsSeriesCurrent`): true when every one names `{{series}}`, false while
+   * (§523, `groupRunDeclarationsSeriesCurrent`): true when every one names `{{series}}`, false while
    * one in force is older, null while none is in force — then there is nothing to approve again.
    */
   groupRunSeriesTextsCurrent: boolean | null;
@@ -364,7 +364,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.raceDeclarationsCurrent ? "done" : "open",
     });
     /*
-      The group-run declarations once more (§NNN): one signature per series needs texts that say what
+      The group-run declarations once more (§523): one signature per series needs texts that say what
       they cover — the series sentence and the one-off sentence — and a privacy notice that says the
       platform keeps a series' declaration while the signer comes. Open, never blocking: a run keeps
       taking signatures under the text in force, each covering its own date as that text says; done

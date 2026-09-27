@@ -9,7 +9,7 @@ import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import { WITHOUT_GLYPH } from "./glyph-allowlist";
 
 /**
- * §NNN — the owner, 2026-09-27: a glyph on every button and every fold header, on the public
+ * §521 — the owner, 2026-09-27: a glyph on every button and every fold header, on the public
  * site and in the backoffice. §498 did the public buttons and holds them with a hand-kept list
  * of public files (`tests/unit/events/conditions-fold-and-public-glyphs.test.ts`); this walks
  * **every** `.tsx` under `src/`, so a new component anywhere joins the rule without anybody
@@ -157,7 +157,7 @@ function foldsWithoutGlyph(file: string): string[] {
   return found;
 }
 
-describe("§NNN a glyph on every button", () => {
+describe("§521 a glyph on every button", () => {
   it("walks the whole tree, the public pages and the backoffice alike", () => {
     expect(FILES).toContain("src/app/[locale]/events/[slug]/page.tsx");
     expect(FILES).toContain("src/app/[locale]/admin/registrations/(list)/page.tsx");
@@ -211,7 +211,7 @@ describe("§NNN a glyph on every button", () => {
   });
 });
 
-describe("§NNN a glyph on every fold header", () => {
+describe("§521 a glyph on every fold header", () => {
   it("finds no <summary> without a glyph, anywhere under src/", () => {
     expect(FILES.flatMap(foldsWithoutGlyph)).toEqual([]);
   });
@@ -237,7 +237,7 @@ describe("§NNN a glyph on every fold header", () => {
   });
 });
 
-describe("§NNN the cards' glyph table", () => {
+describe("§521 the cards' glyph table", () => {
   const table = read("src/shared/ui/panel-glyphs.ts");
   const names = Object.keys(PANEL_GLYPHS);
   const sources = FILES.map((file) => read(file)).join("\n");

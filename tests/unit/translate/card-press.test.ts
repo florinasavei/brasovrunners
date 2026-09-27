@@ -202,7 +202,7 @@ describe("§514 the button in the card's tab row", () => {
     expect(html).not.toContain('data-testid="translate-card"');
     expect(html).toMatch(/<button[^>]*disabled/);
     expect(html).toContain(ro.Translate.card);
-    // Named once, on the focusable wrapper (§NNN): the disabled button inside carries no label of its own.
+    // Named once, on the focusable wrapper (§520): the disabled button inside carries no label of its own.
     expect(html.match(/aria-label="Tradu cardul: RO → EN"/g)).toHaveLength(1);
     expect(html).toMatch(/<span[^>]*aria-label="Tradu cardul: RO → EN"[^>]*data-testid="translate-card-off"|<span[^>]*data-testid="translate-card-off"[^>]*aria-label="Tradu cardul: RO → EN"|<span[^>]*tabindex="0"[^>]*aria-label="Tradu cardul: RO → EN"/);
     expect(html).not.toMatch(/<button[^>]*aria-label=/);
@@ -250,7 +250,7 @@ describe("§514 the button in the card's tab row", () => {
       expect(raw).not.toContain("flex-wrap:wrap");
       const html = markup(raw);
       // The button wears the translate glyph (an svg before its words) and is named by the full words —
-      // on the button while it works, on the focusable wrapper while it is greyed (§NNN).
+      // on the button while it works, on the focusable wrapper while it is greyed (§520).
       expect(html).toMatch(/aria-label="Tradu cardul: RO → EN"[^>]*>[\s\S]*?<button[^>]*>[\s\S]*?<svg[\s\S]*?data-translate-card-words=""|<button[^>]*aria-label="Tradu cardul: RO → EN"[^>]*>[\s\S]*?<svg[\s\S]*?data-translate-card-words=""/);
       // The words are drawn only from `sm` up: `display:none` below it, `inline` above.
       expect(raw).toMatch(/@media \(min-width:0px\)\{[^{}]*\{display:none;\}\}@media \(min-width:600px\)\{[^{}]*\{display:inline;\}\}/);

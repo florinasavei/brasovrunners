@@ -274,7 +274,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const anySamples = cards.some((card) => card.sampleLanguages.length > 0);
 
   /*
-    The family's one confirmation (§NNN, «Confirmat: 2 persoane»): the same message type as one
+    The family's one confirmation (§520, «Confirmat: 2 persoane»): the same message type as one
     person's, in the shape a sitting confirms — a block per person with the number, the desk code and
     the QR. Previewed like every other message (§81), right after one person's; its words are the
     platform's (the club's words for «Înscriere confirmată» are one person's), so it has no editor.
@@ -288,7 +288,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   return (
     <Stack spacing={3}>
       <SettingsSubNav locale={locale} role={staff.role} active="emails" />
-      {/* An old `/admin/emails#contact-recipients` or `#deadlines` goes on to the card's own tab (§NNN). */}
+      {/* An old `/admin/emails#contact-recipients` or `#deadlines` goes on to the card's own tab (§520). */}
       <MovedFragmentHop />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>

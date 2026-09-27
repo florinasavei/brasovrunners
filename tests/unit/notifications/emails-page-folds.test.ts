@@ -91,7 +91,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
     expect(html).toMatch(/<iframe[^>]*sandbox=""[^>]*title="Reminderul dinaintea startului"/);
   });
 
-  it("keeps what a short «când» line leaves out behind its «?», and draws none where it says it all (§NNN)", () => {
+  it("keeps what a short «când» line leaves out behind its «?», and draws none where it says it all (§522)", () => {
     const withMore = { ...card("COMPLETE_DECLARATION"), whenMore: filled(ro.Admin.emails.whenMore.COMPLETE_DECLARATION) };
     const html = render([withMore]);
     expect(html).toContain(filled(ro.Admin.emails.when.COMPLETE_DECLARATION));
@@ -201,7 +201,7 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
     // Through `cards`, which is `types` with each message's preview and saved words (§359).
     expect(page).toMatch(/const cards = types\.map\(/);
-    // `flatMap` since §NNN: «Înscriere confirmată» is followed by the family's confirmation, a second card of its type.
+    // `flatMap` since §520: «Înscriere confirmată» is followed by the family's confirmation, a second card of its type.
     expect(page).toMatch(/messages=\{cards\.flatMap\(/);
     expect(page).toMatch(/languages=\{routing\.locales\.map\(/);
     // No preview or switch is drawn on the page outside the card any more.

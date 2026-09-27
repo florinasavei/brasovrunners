@@ -3045,7 +3045,7 @@ export async function deleteEvent<T extends Record<string, unknown>>(
 
   // `event_translations` cascades from the event, and so do a group run's self-declarations
   // (§393) — whose outbox rows go first, in the same transaction, since nothing could render them.
-  // A declaration covers the run's other dates too (§NNN): while the run has one, it moves there.
+  // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
   await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
@@ -3159,7 +3159,7 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
     // which is the only reference that would have refused this. A group run's self-declarations
     // cascade too (§393); their outbox rows carry the signer's address and could never render
     // without them, so they go first — unless the run has another date, which they cover too and
-    // move to (§NNN): erasing one date's registrations is not erasing a runner's declaration.
+    // move to (§523): erasing one date's registrations is not erasing a runner's declaration.
     await rehomeGroupRunDeclarationsOfEvent(tx, plan.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));

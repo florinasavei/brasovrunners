@@ -408,7 +408,7 @@ export function renderBilingual(
     // Every date of the second half in its own language (§349), not only the event's.
     ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
-    // A group run series' rhythm in the second half's language (§NNN).
+    // A group run series' rhythm in the second half's language (§523).
     ...(data.seriesRhythmOther ? { seriesRhythm: data.seriesRhythmOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
@@ -800,7 +800,7 @@ export type TemplateData = {
    */
   idDocumentMasked?: boolean;
   /**
-   * A group run's declaration that covers the run's series (§NNN): both emails name the series —
+   * A group run's declaration that covers the run's series (§523): both emails name the series —
    * the run's title — and its rhythm, «în fiecare marți, la 18:30», in each half's language, and say
    * it is valid for every run of it. Unset for a one-off run's, which names that run as before.
    */
@@ -1083,19 +1083,19 @@ const T = {
     },
     groupRunDeclarationSigned: {
       // The signer's copy of a group run's optional self-declaration (§393): the PDF attached, no token.
-      // A series' names the series (§NNN): «seria Tura de marți», valid for every run of it.
+      // A series' names the series (§523): «seria Tura de marți», valid for every run of it.
       subject: (d: TemplateData) =>
         `Declarația ta pe propria răspundere — ${d.groupRunSeries ? `seria ${d.eventTitle ?? "alergării de grup"}` : (d.eventTitle ?? "alergarea de grup")}`,
       body: (d: TemplateData) => [
         d.groupRunSeries
           ? `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru seria de alergări de grup ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`
           : `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
-        // One declaration for every run of the series (§NNN): a returning runner signs it once.
+        // One declaration for every run of the series (§523): a returning runner signs it once.
         d.groupRunSeries
           ? `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.`
           : `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.`,
       ],
-      // The signer's own link (§NNN): the run's page says there that they have signed.
+      // The signer's own link (§523): the run's page says there that they have signed.
       action: "Vezi pe pagina alergării",
     },
     groupRunDeclarationArchive: {
@@ -1109,7 +1109,7 @@ const T = {
           : `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}.`,
         /*
           The legitimate-interest, three-year choice of the notice, and the right to object (§419) —
-          counted from the signing since §NNN: a series' declaration covers every run of it, so "from
+          counted from the signing since §523: a series' declaration covers every run of it, so "from
           the run" named no one day.
         */
         `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la semnare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp alergătorul vine la alergări; când cere ștergerea ei, o ștergi de acolo, cu motivul, și copia de aici.`,

@@ -627,7 +627,7 @@ export type OccupiedCountsRow = {
  * copy carries no mark and keeps nothing; a message that failed for good is final, and the hold
  * lapses on its stored deadline as before.
  *
- * **The waiting-list offer the same (§NNN):** its `WAITLIST_SPOT_OFFER` starts its deadline too, and
+ * **The waiting-list offer the same (§520):** its `WAITLIST_SPOT_OFFER` starts its deadline too, and
  * an offer given at 23:05 under the hourly night tick would otherwise lapse — and pass to the next in
  * line — before its email left. While that email is queued the offer is not lapsed: it keeps
  * occupying its place (`countOccupied`), the sweep leaves it (`expireStaleHolds`), the job does not
@@ -647,7 +647,7 @@ function firstEmailQueued(messageType: "COMPLETE_DECLARATION" | "WAITLIST_SPOT_O
 }
 
 /**
- * The offer's guard (§NNN): its `WAITLIST_SPOT_OFFER` still queued — and only while the send could
+ * The offer's guard (§520): its `WAITLIST_SPOT_OFFER` still queued — and only while the send could
  * still move the deadline. An offer never outlives the close or the start (`capHoldExpiry`), so from
  * that instant on its send re-bases nothing and keeping it would only delay a lapse that is final: at
  * the close it lapses and is handed to nobody (§420), as before.
@@ -656,7 +656,7 @@ export function offerAwaitingItsFirstEmail(now: Date): SQL {
   return sql`(${firstEmailQueued("WAITLIST_SPOT_OFFER")} and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${now} < least(coalesce(${events.registrationClosesAt}, ${events.startsAt}), ${events.startsAt})))`;
 }
 
-/** Either hold whose first email is still queued (§NNN): the declaration hold's or the offer's own message. */
+/** Either hold whose first email is still queued (§520): the declaration hold's or the offer's own message. */
 export function holdAwaitingItsFirstEmail(now: Date): SQL {
   return sql`((${registrations.status} = 'PENDING_DECLARATION' and ${awaitingItsFirstEmail()}) or (${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)}))`;
 }
@@ -678,7 +678,7 @@ export async function countOccupied<T extends Record<string, unknown>>(
     .select({
       confirmed: sql<number>`count(*) filter (where ${registrations.status} = 'CONFIRMED')::int`,
       pendingDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
-      // An offer whose email is still queued occupies past its stored deadline (§NNN): its clock has not started.
+      // An offer whose email is still queued occupies past its stored deadline (§520): its clock has not started.
       unexpiredWaitlistOfferedHolds: sql<number>`count(*) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
       // Not a hold whose first email is still queued (§513): its clock has not started.
       lapsedDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
@@ -873,7 +873,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
 ): Promise<void> {
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free. Not an offer whose email is
-  // still queued (§NNN) — unless the race has started or the event is no longer scheduled.
+  // still queued (§520) — unless the race has started or the event is no longer scheduled.
   const over = event.eventStatus !== "SCHEDULED" || event.startsAt <= now;
   const lapsedOffers = await db
     .update(registrations)
@@ -970,7 +970,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
         */
         sql`${events.eventStatus} = 'SCHEDULED'`,
         or(
-          // An offer whose email is still queued is not lapsed (§NNN) — until the close or the start.
+          // An offer whose email is still queued is not lapsed (§520) — until the close or the start.
           and(
             eq(registrations.status, "WAITLIST_OFFERED"),
             lte(registrations.holdExpiresAt, now),

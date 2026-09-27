@@ -270,7 +270,7 @@ export default async function SiteFooter() {
             {/* One flex item for the words: the summary is a flex row (§325), and the tail as an
                 item of its own took the row's gap — "Despre club , contact și termeni" on every
                 desktop. The ellipsis is here, where the text is. */}
-            {/* What the fold holds, as every fold header says it (§NNN): the club's own facts. */}
+            {/* What the fold holds, as every fold header says it (§521): the club's own facts. */}
             <InfoOutlinedIcon aria-hidden sx={FOLD_GLYPH_SX} />
             <Box component="span" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
               {footer("about.summaryShort")}

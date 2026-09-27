@@ -179,7 +179,7 @@ describe("§383 the forecast of automatic emails", () => {
     expect(row.registrationIds).toEqual([fixture.a2]);
   });
 
-  it("foresees no lapse for a hold or an offer whose first email is still queued — its send re-bases it (§NNN)", async () => {
+  it("foresees no lapse for a hold or an offer whose first email is still queued — its send re-bases it (§520)", async () => {
     const { d } = fixture;
     const [d1] = await db
       .select({ id: registrations.id, participantId: registrations.participantId })

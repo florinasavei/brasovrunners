@@ -49,7 +49,7 @@ export function resolveMovedBackofficePath(pathname: string, search: string): { 
 }
 
 /**
- * Cards that left a page for another tab of «Setări» (§NNN), by the `id` their fold carries: the
+ * Cards that left a page for another tab of «Setări» (§520), by the `id` their fold carries: the
  * old `/admin/emails#contact-recipients` is 308'd to `/admin/settings/emails#contact-recipients`,
  * where no such card is any more — the server never sees a fragment, so it cannot send the reader on.
  * `MovedFragmentHop` on that page reads this table in the browser and replaces the address with the

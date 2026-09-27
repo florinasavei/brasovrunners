@@ -131,7 +131,7 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
 }
 
 /**
- * A group run's series (§NNN; the owner, 2026-09-27: "one self-declaration per series of group runs:
+ * A group run's series (§523; the owner, 2026-09-27: "one self-declaration per series of group runs:
  * a returning runner signs once"), as the fields of the group-run declarations' **series sentence**:
  * `{{series}}` — the run's name —, `{{seriesRhythm}}` — «în fiecare marți, la 18:30» / «every
  * Tuesday at 18:30» — and `{{seriesPlace}}` — where it usually starts. Filled at signing from the
@@ -144,7 +144,7 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
  * sentence (`dropsParagraph`: a paragraph naming `{{eventDate}}` and no series field, while
  * `{{series}}` has a value); a one-off run gets "" for the series fields, and the series sentence
  * goes as `{{minimumAge}}`'s does. A text that names no series field (every version approved before
- * §NNN, and the race's) is given no series value at all (`seriesMergeValues` in the group-run
+ * §523, and the race's) is given no series value at all (`seriesMergeValues` in the group-run
  * module), so nothing of it is dropped. The approved text and its hash are untouched (§12.5).
  */
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
@@ -157,7 +157,7 @@ const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
 const filled = (value: string | null | undefined): boolean => typeof value === "string" && value.trim() !== "";
 
 /**
- * The series sentence's second shape (§NNN): it names `{{series}}` and `{{seriesRhythm}}` but no
+ * The series sentence's second shape (§523): it names `{{series}}` and `{{seriesRhythm}}` but no
  * `{{seriesPlace}}` — the sentence without «cu plecare de obicei din …», for a run whose place is not
  * written. The platform's text carries both shapes; a place keeps the first and drops this one, no
  * place ("" for `{{seriesPlace}}`, only when the text has this shape — `seriesMergeValues`) drops the

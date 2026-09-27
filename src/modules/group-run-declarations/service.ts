@@ -41,7 +41,7 @@ import { factsToKeep } from "./series";
  * Turnstile verdict is asked by the action; and a throttle keyed on a hash of the signer's
  * canonical address, because every post spends two messages of the club's allowance.
  *
- * **One per person, series and version (§NNN).** A series' signature covers every date of the run
+ * **One per person, series and version (§523).** A series' signature covers every date of the run
  * (§113), so a returning runner who signs again writes no second row: the one they signed for the
  * version in force is kept and its copy sent again (`keptSignature`), and the unique index on
  * (version, series, signer) holds two presses at once to one row. A newer version is a new row
@@ -78,7 +78,7 @@ export type GroupRunSigningInput = {
 export type GroupRunSigningOutcome =
   /**
    * Signed: the row and the messages are written — or, when the same person had already signed the
-   * version in force for this run (`kept`, §NNN), that row is kept and its copy sent again. The page
+   * version in force for this run (`kept`, §523), that row is kept and its copy sent again. The page
    * answers both alike; `kept` is for the tests and the log, never for the visitor.
    */
   | { outcome: "signed"; id: string; kept: boolean }
@@ -182,14 +182,14 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const throttle = await consumeRateLimit(db, "group-run-declaration", emailBucketKey("group-run-declaration", canonicalEmail as string), now);
   if (!throttle.allowed) return { outcome: "limited", retryAfter: throttle.retryAfter };
 
-  // The blanks as the signer read them, kept on the row for the PDF (§NNN): the run's and the series'.
+  // The blanks as the signer read them, kept on the row for the PDF (§523): the run's and the series'.
   const facts = await groupRunMergeValues(db, event.id, input.locale, document.body);
   const signerKey = signerIdentity(input.email, typedName) as string;
 
   return db.transaction(async (tx) => {
     const txDb = tx as unknown as Database<T>;
     /*
-      One declaration per person, series and version (§NNN): the signatures of the version in force
+      One declaration per person, series and version (§523): the signatures of the version in force
       that cover this date — signed on it, or for its series on any date of it (§113). The same
       person's is kept and sent again; otherwise this one is written. Nothing is deleted: an older
       version's signature stays beside the new one, as the evidence for the runs it covered (§53).
@@ -229,7 +229,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
     });
     if (!row) {
       /*
-        Another press for the same person wrote the row between our read and our write (§NNN): the
+        Another press for the same person wrote the row between our read and our write (§523): the
         unique index refused this one, and nothing was written. Theirs is the signature; send it.
       */
       const [raced] = await listCoveringSignatures(txDb, event.id, dates, document.id).then((rows) =>

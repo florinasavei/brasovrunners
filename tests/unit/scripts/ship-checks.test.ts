@@ -90,10 +90,10 @@ describe("§426 ship: waiting until the checks settle", () => {
 });
 
 /**
- * §NNN — `gh pr merge` answered «Merge already in progress» on the V2.12 release while the merge
+ * §520 — `gh pr merge` answered «Merge already in progress» on the V2.12 release while the merge
  * went through, and `ship` stopped on a merged PR. The exit is not the verdict: the PR's state is.
  */
-describe("§NNN ship: a merge judged by the PR's state", () => {
+describe("§520 ship: a merge judged by the PR's state", () => {
   function states(readings: string[]) {
     let i = 0;
     const slept: number[] = [];

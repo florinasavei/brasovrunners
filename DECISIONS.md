@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.13-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.14-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.13-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.14-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20120,3 +20120,134 @@ The owner's answers. A family's one confirmation greets everybody by first name 
 While a sitting is live, the confirmation screen's facts cookie (the inbox, the first name, the names) lives exactly as long as the sitting's own cookie: the club's window plus the two-minute grace. It is refreshed with every «Da, încă o persoană». Without this, at the default ten-minute window the screen lost its facts at the instant the automatic «Gata» fired. Outside a sitting it keeps its ten minutes. On every write, the browser's half takes its at-once flag from the window just read, so a «Termene» change mid-sitting leaves no stale flag.
 
 Baseline `BR-V2.13-2026-09-27`.
+
+## 520. The V2.13 review's eight leftovers: one way into «Configurație», old fragments follow their card, an offer kept while its email waits
+
+The V2.13 reviews left eight small things. None changes a documented rule. Item 3 extends the V2.13 "a hold is kept while its first email is queued" rule (the section «Emails on the scheduler») to the waiting-list offer.
+
+1. **«Configurație» has one way in.** It used to be both the last tab of «Setări» and an entry of its own in the main bar: one page, two ways in, and the bar lit neither on arrival. The main-bar entry is gone (`ADMIN_SECTIONS` loses `devs`). On `/devs` the bar lights «Setări» (`AdminTab.alsoActiveOn`). The Tehnic reaches the page through «Setări», which every role from the Redactor up is offered. `/devs` also stopped drawing a second row of tabs under «Setări»'s (§360). Its three panels (§265) are now entries of that one row: «Configurație» (status), «Configurație · General», «Configurație · Emailuri» (`SettingsSubNav`'s `configurationPanels`). The row's «Platformă» tab replaces the anti-bot link, and «Aplicația» is reached from «Sarcini». `/devs` keeps its address, so no redirect is needed.
+
+2. **An old fragment follows its card.** `/admin/emails#contact-recipients` is 308'd to `/admin/settings/emails#contact-recipients`, where that card no longer is. A server never sees a fragment. `MovedFragmentHop`, a client island with nothing to draw, runs on «Emailuri». It reads `MOVED_FRAGMENTS` in `src/i18n/moved-paths.ts` (contact-recipients and shown-contact-address → «Contact», deadlines → «Termene») and calls `location.replace` with the card's tab, keeping the fragment. `OpenFoldFromHash` then opens the card. With JavaScript off, the reader stays on «Emailuri», whose row names the tab.
+
+3. **A waiting-list offer is kept while its first email is queued.** This is the declaration hold's guard applied to the offer. While the `WAITLIST_SPOT_OFFER` that starts the offer's deadline is still PENDING or PROCESSING, the offer is not lapsed:
+   - `countOccupied` counts it;
+   - `expireStaleHolds` leaves it;
+   - `findEventsNeedingMaintenance` does not wake for it;
+   - the 14-day forecast foresees no lapse or next-in-line offer for it. The same holds for a declaration hold in the forecast, which had no guard until now.
+
+   The guard lasts only while the send could still move the deadline. An offer never outlives the close or the start (`capHoldExpiry`), so from then on it lapses as before and is handed to nobody (§420).
+
+   **The send re-bases a late offer.** Its send re-bases the deadline even when the offer is past its stored deadline. Before, an offer past its deadline at the send was never revived ("its place may be somebody else's"). With the guard that cannot happen: the place was never counted free.
+
+   **The SENT mark and the move are one write.** Once the message is marked SENT the guard is gone. So for an offer, the SENT mark and the move commit in one transaction under the event's lock (`applyDeadlineRebase`'s `inTheLock`). No count taken under the lock can see the offer as free in between. If that transaction fails, the SENT mark is written alone and the offer keeps its stored deadline.
+
+   `Admin.emails.whenShort.NEWSLETTER_CONFIRM` now says «când» / "when": the confirmation leaves on the scheduler's tick, not «imediat».
+
+4. **The family sitting carries the country.** `SITTING_SHARED_FIELDS` now carries `country` beside the city. The country box became required, and a family's second form started it back at the default.
+
+5. **`ship` judges a merge by the PR's state.** `gh pr merge` answered «Merge already in progress» on the V2.12 release while the merge went through. `mergePullRequest` in `scripts/ship-checks.mjs` handles that answer by reading the PR's state every 5 s, for at most 60 s, until it says MERGED. For any other failure it reads the state once. Both of `ship`'s merges go through it.
+
+6. **The run declaration's 18 is said in words.** V2.12 folded the group run's own 18+ box into the one «Vârsta minimă» box (§505), and the rule did not change (`groupRunMinimumAge`). The editor's help under «Declarație opțională pe propria răspundere» and the guide now say: «Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.» / "The run declaration is signed from 18, whatever the run's minimum age." The help was shortened to stay within the plain-words limit.
+
+7. **The greyed «Tradu cardul» is named once**, on its focusable wrapper. The disabled button inside no longer carries its own `aria-label`, which made a screen reader say the name twice.
+
+8. **`/admin/emails` previews the family's one confirmation.** It is `REGISTRATION_CONFIRMED` in the shape a sitting confirms: «Confirmat: 2 persoane», one block per person with the number, the desk code and the QR. It is previewed like every other message (§81), right after one person's, from `EMAIL_SAMPLE_FAMILY_CONFIRMED`. It has no editor: that shape reads the platform's words only, and the card says so.
+
+Baseline `BR-V2.14-2026-09-27`.
+
+## 521. A glyph on every button and every fold header
+
+**The owner, 2026-09-27:** «ca și regulă orice buton și orice acordeon ar trebui să aibă și iconițe, eu am ADHD și îmi e mult mai ușor să văd iconițe», and earlier «…have an icon (as do all the buttons from this website)».
+
+**The rule.** Every button wears a glyph for its verb, on the public site and in the backoffice alike. The backoffice gets it by name from `action-icons.ts` through `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink` / `ConfirmSubmitButton`, whose `icon` is now required. A public page imports its one icon file directly. The rule covers MUI `Button`s, `ToggleButton`s, bare `<button>`s and any element drawn as one (`component="button"`, `role="button"`). Every fold header and every card header wears a glyph for its subject, after the fold's arrow. The arrow says the fold opens; the glyph says what is inside. `Panel`'s type requires `glyph` on a card and forbids it on the `help` variant, whose caret is its picture. The table is `panel-glyphs.ts`, one icon file per glyph, looked up on the server only. A hand-drawn `<summary>` uses `FOLD_GLYPH_SX` / `FOLD_GLYPH_INLINE_SX`. Every glyph is `aria-hidden`, so accessible names do not change. The 44-px targets are unchanged, because the summary is already a flex row with a gap. `ConfirmDialog`'s three answers wear Close / AltRoute / Check.
+
+**The toggles too.** A picture's or a film's placement in the column shows FormatAlignJustify / FormatAlignLeft / FormatAlignRight beside «Pe toată lățimea / Stânga / Dreapta». The crop box's target shows Crop / CenterFocusStrong. The gallery picker's source chips each show a subject: Collections for all, Event, PhotoAlbum, Article for a page, Groups for «Echipa», MyLocation for «here». The width percentages and §454's shapes (16:9, 4:3, 1:1, 4:5, Liber) stay bare, because the number or the ratio is the face.
+
+**Held by a test that walks all of `src/`** (`tests/unit/shared/glyph-on-every-button-and-fold.test.ts`), so a new component joins the rule without anybody listing it. A glyph counts when it is given by prop (`startIcon`, `runner`, `glyph`, `icon`) or drawn as a child (an `…Icon` element, a `GLYPHS.…` lookup, an `<svg>`). A bare `{children}` or `{icon}` inside a button proves nothing and counts only in a named pass-through wrapper: `ButtonLink`, `InstagramShareButton`, and the share row's `anchor()` helper. Each wrapper's call sites are checked in its place. The exceptions are in `tests/unit/shared/glyph-allowlist.ts`, each with a one-line reason, and each is checked to still match its file:
+- §498's conditions row, whose checkbox is its picture.
+- The header's «Meniu ▾».
+- The percentage and shape toggles.
+- The gallery thumbnail, whose picture is its face.
+- The version chip's hidden staff entrance.
+Two further exceptions are recognised by shape: the ↑/↓ order arrows, whose label is the glyph, and a childless overlay button such as the telephone's flag.
+
+**Amends §318.** The public send buttons' runner counts as their glyph. §318's backoffice-only restriction survives for the lookup-by-name table, because a lookup by a runtime key cannot be tree-shaken and would ship every glyph to every visitor. The rule reaches public pages through a direct import of one icon file each, and `action-icons.ts` says so. **Amends §336 and §406:** every fold and editor card now names its subject with a picture as well as words.
+
+**Glyph table.** The subjects in `panel-glyphs.ts`, plus these fold glyphs:
+- History: past events.
+- RssFeed: the calendar feed.
+- DateRange: a series' dates.
+- Groups: the start list.
+- FormatListNumbered: steps.
+- InfoOutlined: the footer.
+- MenuBook / Checklist: the guide.
+- RemoveCircle: the bulk cancel.
+- ConfirmationNumber: the bib.
+
+The compact «Retrimite» (`GlyphSubmitButton icon="resend"`) knowingly gives up the old 24-px width to wear its glyph.
+
+Baseline `BR-V2.14-2026-09-27`.
+
+## 522. The backoffice's words: one plain sentence on every screen, the rest behind «?»
+
+**Why.** The Costuri pass (§522) introduced a plain-words test, but it only checked keys named help, intro, description or helper. About 110 backoffice strings under other names stayed long: dialog bodies, notices, errors, each email's «când pleacă» line, the rows on /admin/tasks, the legal documents' descriptions, the «?» texts named `…More`, the network page and the developers' page `/devs`. The owner's rule for the Neon card applies to every screen: one plain sentence per field or card, in the club's words, and the detail behind a «?» or in the guide.
+
+**What changed.**
+- Every such string is rewritten in Romanian and English. Each is now at most 200 characters (a placeholder counts as one), with no parenthesis of caveats, no §-number, no repository file name and no release number.
+- Texts changed per namespace, in each language: Admin.tasks 32, Admin.emails 23, Admin.legal 20, Admin.registrations 7, Admin.editor 7, Admin.errors 5, Admin.confirm 3, Network.blocked 3. One each in legalNotice, queue, testRegistrations, appearance, gallery, participantMessages, newsletter, team, Network.fallback and Network.page. On `/devs`: 20 strings in Romanian, 19 in English.
+- `/devs` no longer cites «(§10.6)».
+- Facts are moved, not deleted. Where a short line dropped something the club still needs, it sits in a new sibling key drawn as that line's «?» (QuietHelp, or Panel's `introMore`, §398):
+  - `Admin.emails.whenMore.COMPLETE_DECLARATION`: how long the place is held (`{hold}`), and that the deadline matters only when someone is waiting.
+  - `Admin.emails.whenMore.BIB_ASSIGNED`: never sent for a cancelled event; carries the manage link.
+  - `Admin.emails.whenMore.REGISTER_ANOTHER_PERSON`: no registration is created; the per-address limit `{people}` and the case with no link.
+  - `Admin.queue.simulateMore`: `{hold}`, and how the waiting-list offer is reached.
+- These are the only added keys. None is renamed or removed. The emails page reads them with `t.has`, so a message without one shows no «?».
+
+**The test.** `tests/unit/i18n/plain-words.test.ts` gains rule 3. Every string under `Admin.*`, `Translate.*`, `Network.*` and `Devs.*` must keep to the limit, whatever its key is called. Rule 2's forbidden references apply there too.
+- Only numbered steps are exempt: the guide's and a task row's `how.N` / `howBroken.N`. That is where the detail lives.
+- Three texts are allowed to stay long, each with its reason:
+  - the legal token legend;
+  - the photographs upload rule, which must match the privacy notice word for word;
+  - the «Pași» column legend.
+- The test also checks that each `…More` key still carries the placeholders the short line dropped.
+- Two unit checks on the network sentences (save-fallback, admin error boundary) now expect the shorter wording, with the same claims.
+
+**Not done.** No component was restructured beyond passing the new `…More` strings. The guide is unchanged.
+
+The backoffice never says «platforma» / "the platform": each sentence names what acts — the site («site-ul»), the email, the job, «noi» — and it never hedges with «de obicei», «în general», "usually" or "generally"; it says the fact («Implicit 1», «Setarea clubului»). Four screen labels changed with it: the legal editor's «Pornește de la textul platformei» is «Pornește de la șablon» / "Start from the template"; the email editor's «Revino la textul platformei» is «Revino la textul implicit» / "Back to the default text"; the Setări tab «Platformă», which only ever held the anti-bot check, is «Anti-robot» / "Anti-bot" (its address `/admin/settings/platform` unchanged); «Cât de des verifică platforma» is «Cât de des verifică site-ul» / "How often the site checks". The Superadministrator's are «setările tehnice» / "the technical settings".
+
+`tests/unit/i18n/plain-words.test.ts` holds it (rule 4) over every string of `Admin.*`, `Devs.*`, `Translate.*`, `Network.*`, `Budget.*` and the backoffice error page's `Error.staffTitle`, `Error.staffBody`, `Error.staffSettings`, named one by one because the rest of `Error.*` serves the public pages. A numbered step is exempt only inside a quote («…», „…”, “…”), where it names the screen or the button to open. Only the numbered steps (`Admin.guide.sections.N.tasks.N.steps.N`, a task row's `how.N` / `howBroken.N`) are exempt from the 200-character ceiling — the guide's titles and intros no longer are — and a bracket on a backoffice screen holds at most 6 words (a help text's, 12).
+
+Baseline `BR-V2.14-2026-09-27`.
+
+## 523. One self-declaration per person per series of group runs
+
+The owner's release plan for BR-V2.14: "one self-declaration per series of group runs: a returning runner signs once; it has no end date and is deleted only at their request". Until now every date of a weekly run took its own signature, and the texts spoke of one run on one day.
+
+**What a declaration covers.** A series is §113's: the same type and default-language title, grouped by the listing's own `seriesKey`. A run is one of a series when that grouping gives it another date. At the signing the row records the series it covers (`series_key`, nullable, migration `0101`). A one-off run's declaration (`series_key` null) covers its own date, as do rows signed before this change. The row still points at the date it was signed on (`event_id`).
+
+**One signature per person, series and text version, never deleted by a press.** Who signed is `signerIdentity`: the canonical address (§10.4) and the typed name read loosely (case, accents, spacing), so two people on a family address (§389) are two signatures. The row keeps it as `signer_key`. A partial unique index on (version, coalesce(series_key, event_id), signer_key) holds one live signature per version and series (or date). Two presses at once write one row: the second insert does nothing and sends the first row's copy. A press by someone who already signed the version in force writes no row and sends their copy again (`keptSignature`). The page answers both cases alike, so it tells nobody whether an address had signed. A newer text version is a new row beside the older one. The public press is unverified, so it never deletes a signature. The older row stays as the evidence for the runs attended under it, and its version stays relied upon (§53, §151). A row leaves only by the Administrator's erase, with its audit row (§393), or with the run's last date.
+
+**The text says what it covers.** `{{series}}`, `{{seriesRhythm}}` («în fiecare marți, la 18:30», read off the dates with the listing's `recurrenceOf`) and `{{seriesPlace}}` are merge fields. Each group-run template carries two sentences, and the renderer keeps the one that fits:
+- the series sentence: every run of the series from the signing, no end date, a differing date read on its own page, valid until the signer asks for its deletion, and signed again when the organiser approves a new version;
+- the one-off sentence: `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`.
+
+`dropsParagraph` drops the series sentence when the series fields are "", and the paragraph naming `{{eventDate}}` and no series field when `{{series}}` has a value. A text that names no series field (every version approved before this) is given no series value at all, so none of its sentences is dropped. The opening names neither sentence's fields, and the age sentence (§440) stays right after it. One function (`groupRunMergeValues`) fills the blanks for the signing page, the press and the PDF.
+
+**What was signed stays what the PDF says.** The row keeps the blanks as they were filled, in its language (`signed_facts`: the run, its date and place, the series, its rhythm and usual place, the age; nothing personal). The PDF is drawn from them (§57). Deleting a date moves a series' rows to the next date after it, or to the latest before it only when it was the run's last. A one-off's rows go with their date as before. Either way a move never changes what the declaration says.
+
+**The signer's own link.** The signer's copy mints a secret at send time. The row keeps its SHA-256 (`view_token_hash`, the §12.8 shape; the newest copy's link replaces an older one's). The email's button opens the run's next date with `?declaratie=…`. There the section says «Ai semnat deja declarația pentru aceste alergări (v. N, semnată …)» and shows no button while the version signed is in force, on any date the signature covers. Once the club approves a newer version, it says so and shows the button again. The page reads this from the link alone, never from an address typed anywhere. It is a read, so opening the link changes nothing. The archive copy and any club copy carry no link.
+
+**Around it.** Both emails name the series and its rhythm in the subject and body, in both halves, and say the declaration is valid for every run of the series. A one-off run's emails name only the run. The archive copy's three years count from the signing. The backoffice fold lists the run's signatures on every date's page, a «serie» chip on each series signature. `/admin/tasks` gains «Declarațiile alergărilor de grup: o semnătură pe serie». The row is read from the texts in force: hidden while none is in force, open while one lacks `{{series}}`, and done otherwise. Its steps cover approving both declarations and the privacy notice again from the platform's text.
+
+**The text in force decides what a signature covers (review round).** A group-run signature covers the run's series only when the text it signs names `{{series}}` (`signatureCoversSeries`, read from the version in force at the signing, in the signer's language — the way `{{participantIdDocument}}` switches on the minor's own signature, §330). `groupRunMergeValues` gives a `seriesKey` only then. Under a text approved before this section, the one on production today, which names one run and `{{eventDate}}`, the row's `series_key` stays null. The signature covers the date it was signed on, one row per date as before. The runner signs again on the next date. The signer's link opens the date the signature covers. The offer line, the signing page's intro and its answer say "this run" rather than "once for the whole series". `/admin/tasks` says so in its «o semnătură pe serie» row: until the new group-run versions are approved, a signature still covers one date. Nothing changes for rows already written.
+
+**One function fills every group-run text.** The signing page, the signing press (which keeps the blanks as `signed_facts`) and the PDF of an older row all fill the text from `groupRunMergeValues`, so the page shows the series sentence exactly when the press records a series signature. A group run has no paper form: the desk's printable form is the race's (§95). The emails name the series from the row's `series_key`.
+
+**The series sentence in two shapes.** The platform's group-run templates carry the series sentence with «cu plecare de obicei din {{seriesPlace}}» and without it (`isPlacelessSeriesSentence`: it names `{{series}}` and `{{seriesRhythm}}` but not `{{seriesPlace}}`). A written place keeps the first shape and drops the second. With no place written in that language, `{{seriesPlace}}` is "" only when the text has the second shape, which then stays. The text never loses both the series sentence and the one-off sentence. A club text with only the first shape keeps it, with a dotted place.
+
+**The privacy notice says what the code keeps.** Signed again on the same text, no second signature is kept and the copy is sent again. Signed on a new version, the new one is in force and the older is kept as evidence of what was accepted then. Both are deleted only at the signer's request. The notice's length ceiling in `merge-fields.test.ts` moves from 25,000 to 25,200 characters for those two sentences.
+
+The group-run offer line says the signature covers the whole series only when both hold: the text in force names `{{series}}` and the run has another date (`findRunSeries` gives a series key). A one-off run shows the one-date line even under a series text, because its signature covers its one date. The privacy notice says a signature covers every date of a repeating run only where the declaration's text says so, because a text approved before this § binds each signature to its own date.
+
+Baseline `BR-V2.14-2026-09-27`.

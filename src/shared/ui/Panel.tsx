@@ -116,7 +116,7 @@ type CommonProps = {
 };
 
 /**
- * Every card wears a glyph before its heading (§NNN; the owner, 2026-09-27: a glyph on every
+ * Every card wears a glyph before its heading (§521; the owner, 2026-09-27: a glyph on every
  * button and every fold header): the subject's picture from `panel-glyphs.ts`, by name, so a
  * closed fold is found by its picture as well as its words. Required on a card — the type
  * refuses a card without one, spread `{...card}` objects included — and absent on the `help`

@@ -127,7 +127,7 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     ]) {
       expect(read(file), file).toMatch(/<SubNav\s[^>]*?label=/);
     }
-    // The configuration's panels are entries of «Setări»'s row since §NNN — one row, never a second.
+    // The configuration's panels are entries of «Setări»'s row since §520 — one row, never a second.
     const devs = read("src/app/[locale]/devs/page.tsx");
     expect(devs).toContain("<SettingsSubNav");
     expect(devs).toContain("configurationPanels=");

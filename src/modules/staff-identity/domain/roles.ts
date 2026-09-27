@@ -609,7 +609,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *                                             `canWriteLegalTexts` (§450)
  *     guide          every staff session      `admin/guide/page.tsx`
  *
- * **`/devs` («Configurație») is not a section of this bar (§NNN).** It is the last tab of «Setări»'s
+ * **`/devs` («Configurație») is not a section of this bar (§520).** It is the last tab of «Setări»'s
  * row (`settings-tabs.ts`'s `offersConfigurationTab`, gate `canSeeDiagnostics`), and it had its own
  * entry here as well — one page, two ways in, and the main bar lit neither on arrival. The Tehnic,
  * whose reason to open the backoffice is that page, reaches it through «Setări», which every role

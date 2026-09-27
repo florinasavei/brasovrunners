@@ -24,7 +24,7 @@ type Props = {
   color?: "primary" | "error" | "warning";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium";
-  /** The glyph before the verb, by name — never as an element (`action-icons.ts`); every button wears one (§NNN). */
+  /** The glyph before the verb, by name — never as an element (`action-icons.ts`); every button wears one (§521). */
   icon: ActionIconName;
   /**
    * A second Server Action for the form this button sits in (§287).

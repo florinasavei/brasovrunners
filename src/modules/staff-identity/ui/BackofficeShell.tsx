@@ -92,7 +92,7 @@ export default async function BackofficeShell({
     label: t(`nav.${section}`),
     section,
     ...(section === "registrations" ? { count: registered, countHint: registeredHint } : {}),
-    // `/devs` is «Setări»'s last tab and no section of its own (§NNN): the bar lights «Setări» there.
+    // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there.
     ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" })] } : {}),
   }));
 

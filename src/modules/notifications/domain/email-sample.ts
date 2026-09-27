@@ -256,7 +256,7 @@ export const EMAIL_SAMPLE_FAMILY = {
 } as const;
 
 /**
- * The family's one confirmation (§NNN), as `/admin/emails` previews it: the sample runner and the
+ * The family's one confirmation (§520), as `/admin/emails` previews it: the sample runner and the
  * person the family link's sample named, each with a desk code and a race number — «Confirmat: 2
  * persoane». Made-up like the rest of the sample; the preview gives each one the sample's QR address.
  */

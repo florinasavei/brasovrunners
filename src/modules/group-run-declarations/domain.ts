@@ -89,7 +89,7 @@ export const ERASE_REASON_MAX = 500;
 export const GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS = 7;
 
 /**
- * Who a signature is, for "one declaration per person per series" (§NNN; `signer_key`, whose unique
+ * Who a signature is, for "one declaration per person per series" (§523; `signer_key`, whose unique
  * index holds two presses at once to one row): the canonical address
  * (§10.4 — never a raw compare, so `Ana@Example.ro` is `ana@example.ro`) and the name as typed, read
  * loosely — case, accents and spacing make no other person («Ana  Popescu», «ana popescu», «Ană
@@ -113,11 +113,11 @@ export function signerIdentity(email: string, typedName: string): string | null 
   return `${canonical}\n${name}`;
 }
 
-/** A signature that covers a run's date, as the signing press reads it (§NNN). */
+/** A signature that covers a run's date, as the signing press reads it (§523). */
 export type SeriesSignature = { id: string; legalDocumentId: string; email: string; typedName: string; acceptedAt: Date };
 
 /**
- * The signature a press on «Semnează declarația» keeps rather than writing a second (§NNN; the owner,
+ * The signature a press on «Semnează declarația» keeps rather than writing a second (§523; the owner,
  * 2026-09-27: "a returning runner signs once; it has no end date and is deleted only at their
  * request"): the same person's earliest signature of the **version in force** among those that cover
  * this date — or null, and a row is written. The service then sends that copy again, and the page
@@ -144,7 +144,7 @@ export function keptSignature(
 }
 
 /**
- * What the run's page says to the person who opened it from their own link (§NNN): `current` — they
+ * What the run's page says to the person who opened it from their own link (§523): `current` — they
  * signed the version in force, «Ai semnat deja declarația pentru aceste alergări (v. N, semnată la …)»,
  * and no button —; `renew` — they signed an older version, which the club has since replaced, so the
  * page says so and offers the button again. Null — no link, a link that is not theirs or not for this

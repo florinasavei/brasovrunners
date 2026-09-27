@@ -19,7 +19,7 @@ import {
  * is the way between them, and the main bar's «Setări» is the way back — no tab carries an
  * «← Înapoi la …» of its own.
  *
- * **One row, never two (§360, §NNN).** `/devs` has three panels of its own (§265); it hands them in as
+ * **One row, never two (§360, §520).** `/devs` has three panels of its own (§265); it hands them in as
  * `configurationPanels`, and they take «Configurație»'s place in this row — «Configurație» (the
  * status), «Configurație · General», «Configurație · Emailuri» — rather than drawing a second row of
  * tabs under this one.
@@ -36,7 +36,7 @@ export default async function SettingsSubNav({
   locale: Locale;
   role: StaffRole;
   active: SettingsRowEntry;
-  /** `/devs`'s own panels, drawn in place of the single «Configurație» entry (§NNN). */
+  /** `/devs`'s own panels, drawn in place of the single «Configurație» entry (§520). */
   configurationPanels?: readonly SubNavItem[];
 }) {
   const t = await getTranslations("Admin");

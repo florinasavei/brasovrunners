@@ -65,7 +65,7 @@ describe("§498 «Condiții de participare»", () => {
   });
 
   it("asks for the declaration without calling it optional: no «Dacă vrei», no \"If you wish\"", () => {
-    // Once for every date of the run since §NNN.
+    // Once for every date of the run since §523.
     expect(ro.Event.groupRunDeclaration.line).toBe(
       "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
     );

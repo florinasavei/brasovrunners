@@ -27,7 +27,7 @@ const TEXTS = [
 ] as const;
 
 // §515: one age rule, the run's, with its day — the text's own «18» is gone; on the day of each run
-// since the text covers every date of a repeated run (§NNN, one declaration per series).
+// since the text covers every date of a repeated run (§523, one declaration per series).
 const SENTENCE = {
   ro: "Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.",
   en: "I declare that I am at least {{minimumAge}} old on the day of each run I take part in.",
@@ -191,11 +191,11 @@ describe("§440 the age gate: one rule, the race's", () => {
 });
 
 /**
- * §NNN — V2.12 folded the group run's own 18+ box into the one «Vârsta minimă» box of every type
+ * §520 — V2.12 folded the group run's own 18+ box into the one «Vârsta minimă» box of every type
  * (§505). The rule did not change — the run declaration is for adults (`groupRunMinimumAge`) — so the
  * editor's help under «Declarație opțională pe propria răspundere» and the guide say it in words.
  */
-describe("§NNN the run declaration's 18 is said where the box used to be", () => {
+describe("§520 the run declaration's 18 is said where the box used to be", () => {
   const RO = "Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.";
   const EN = "The run declaration is signed from 18, whatever the run's minimum age.";
 

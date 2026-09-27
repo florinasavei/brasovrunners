@@ -268,7 +268,7 @@ test.describe("§336 the emails participants receive, as a card of cards", () =>
     for (let index = 0; index < count; index += 1) await expect(messages.nth(index)).not.toHaveAttribute("open");
     await expect(card.locator("#email-EVENT_UPDATE_NOTICE > summary")).toContainText("doar când un organizator anunță o schimbare");
     await expect(card.locator("#email-EVENT_CANCELLED > summary")).toContainText("la anularea evenimentului, dacă e bifat");
-    // The family's one confirmation (§NNN) has its card too.
+    // The family's one confirmation (§520) has its card too.
     await expect(card.locator("#email-REGISTRATION_CONFIRMED-family > summary")).toContainText("după ultima declarație a unei familii");
     // A type nothing queues any more says so before it is opened, and is listed after the rest.
     await expect(card.locator("#email-WAITLIST_OFFER_EXPIRED > summary")).toContainText("nu se mai trimite");

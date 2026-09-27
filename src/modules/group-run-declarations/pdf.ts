@@ -45,8 +45,8 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
   const current = await eventMergeValues(db, signed.eventId, signed.locale);
   if (!current) return undefined;
   /*
-    What the blanks said at the signing (§NNN, `signed_facts`): a date moved or renamed since never
-    changes what a signed declaration says (§57). A row from before §NNN kept none, and reads the
+    What the blanks said at the signing (§523, `signed_facts`): a date moved or renamed since never
+    changes what a signed declaration says (§57). A row from before §523 kept none, and reads the
     event as it is — its text names no series field, so nothing of the series is filled or dropped.
   */
   const kept = readSignedFacts(signed.signedFacts);

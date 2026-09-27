@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { resolveMovedFragment } from "@/i18n/moved-paths";
 
 /**
- * The one hop the server cannot make (§NNN): an old link to a card by its `#fragment` —
+ * The one hop the server cannot make (§520): an old link to a card by its `#fragment` —
  * `/admin/emails#contact-recipients`, the old «Termene» fold — arrives here through the 308 of
  * `moved-paths.ts`, fragment and all, but the card now lives on another tab of «Setări». This reads
  * the table in `MOVED_FRAGMENTS` and replaces the address with that tab, the fragment kept, so the

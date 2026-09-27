@@ -180,7 +180,7 @@ export async function raceDeclarationsCurrent<T extends Record<string, unknown>>
 }
 
 /**
- * Whether the group-run declarations in force say what they cover (§NNN): every approved group-run
+ * Whether the group-run declarations in force say what they cover (§523): every approved group-run
  * text in force, in every language, names `{{series}}` — the platform's series sentence and one-off
  * sentence, written for one signature per series. Null while no group-run text is in force (the
  * editor asks for approving one, §393); false while one in force is older. What `/admin/tasks` asks

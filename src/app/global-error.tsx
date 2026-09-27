@@ -84,7 +84,7 @@ export default function GlobalError({
               }}
             >
               {/*
-                The retry glyph every other button wears (§NNN), drawn as a bare `<svg>`: MUI's
+                The retry glyph every other button wears (§521), drawn as a bare `<svg>`: MUI's
                 icons need the theme this page has lost. Material's "Refresh" path.
               */}
               <svg aria-hidden="true" width={20} height={20} viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>

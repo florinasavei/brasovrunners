@@ -601,7 +601,7 @@ export async function processOutboxBatch(
         } as const;
         const markSent = (handle: Pick<typeof db, "update">) => handle.update(emailOutbox).set(sentValues).where(eq(emailOutbox.id, row.id));
         /*
-          An offer's move and its SENT mark commit together, under the event's lock (§NNN): while the
+          An offer's move and its SENT mark commit together, under the event's lock (§520): while the
           message was queued the offer was kept past its stored deadline (`awaitingItsFirstEmail`),
           and the mark is what ends that — alone, it would let a count under the lock see a late offer
           as free a moment before the move revives it. Should that transaction fail, the mark is

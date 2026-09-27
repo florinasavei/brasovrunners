@@ -216,7 +216,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
   // Built here, because `getPathname` is a server function and the sub-nav takes strings (§265).
   const devsPath = getPathname({ locale, href: "/devs" });
-  // «Configurație» in «Setări»'s row, and each of this page's panels after it in the same row (§NNN).
+  // «Configurație» in «Setări»'s row, and each of this page's panels after it in the same row (§520).
   const configurationLabel = (await getTranslations("Admin"))("settingsTabs.configuration");
 
   const severity = (status: string) =>

@@ -399,7 +399,7 @@ const OTHER_HALF: Partial<Record<EmailCopyPlaceholder, keyof TemplateData>> = {
  * previews exactly as it did.
  */
 /**
- * The family's confirmation for the preview (§NNN): `REGISTRATION_CONFIRMED` in the shape a sitting
+ * The family's confirmation for the preview (§520): `REGISTRATION_CONFIRMED` in the shape a sitting
  * confirms — one block per person with the number, the desk code and the QR — never the club's words,
  * which that shape does not read (`templates.ts`, `familyConfirmedShape`).
  */

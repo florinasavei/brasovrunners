@@ -153,7 +153,7 @@ export async function waitForRun(read, { sleep, every = 15, polls = 240, maxMiss
 }
 
 /**
- * Merges one pull request and says whether it is merged (§NNN).
+ * Merges one pull request and says whether it is merged (§520).
  *
  * `gh pr merge` can exit non-zero on a merge that happens all the same: GitHub answers «Merge
  * already in progress» when the merge it was asked for is still being written — the V2.12 release

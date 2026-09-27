@@ -112,7 +112,7 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
     >
       {/*
         A disabled button fires no pointer events: the wrapper holds the tooltip and the focus, and
-        the name — once (§NNN): the inner button carries no `aria-label` of its own, or a screen
+        the name — once (§520): the inner button carries no `aria-label` of its own, or a screen
         reader walking the page reads «Tradu cardul» twice.
       */}
       <Box

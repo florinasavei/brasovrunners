@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.13-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.14-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
@@ -89,7 +89,7 @@ const gh = (...args) => run("gh", args);
 const ghMayFail = (...args) => run("gh", args, { allowFail: true });
 
 /**
- * `gh pr merge`, judged by the PR's state rather than by the exit alone (§NNN): «Merge already in
+ * `gh pr merge`, judged by the PR's state rather than by the exit alone (§520): «Merge already in
  * progress» is a merge still being written, not a failure — `mergePullRequest` waits up to a minute
  * for MERGED and `ship` continues.
  */

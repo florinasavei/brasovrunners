@@ -103,7 +103,7 @@ describe("§393 the two templates", () => {
   it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§418)", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
       // `minimumAge` since §440: the run's own minimum, in a sentence of its own; the series
-      // sentence's three since §NNN.
+      // sentence's three since §523.
       expect([...mergeFieldsIn(body)].sort()).toEqual([
         "event",
         "eventDate",
@@ -179,7 +179,7 @@ describe("§393 the two templates", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       expect(TEXTS[surface].ro.join(" ")).toMatch(/este opțională și nu este o condiție/);
       expect(TEXTS[surface].ro.join(" ")).toMatch(/Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului/);
-      // From the signing (§NNN): a declaration that covers every date of the run names no one run to count from.
+      // From the signing (§523): a declaration that covers every date of the run names no one run to count from.
       expect(TEXTS[surface].ro.join(" ")).toMatch(/copia din arhiva clubului se păstrează trei ani de la semnare/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/optional and is not a condition/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address/);
@@ -191,14 +191,14 @@ describe("§393 the two templates", () => {
   });
 
   /*
-    §NNN — the owner, 2026-09-27: "one self-declaration per series of group runs: a returning runner
+    §523 — the owner, 2026-09-27: "one self-declaration per series of group runs: a returning runner
     signs once; it has no end date and is deleted only at their request". One text serves a series
     and a one-off run, so it says what it covers in one of two sentences, and the renderer keeps the
     one that fits: the series sentence (the series, its rhythm, its usual place — every run of it
     from the signing, no end date, a differing date read on its own page) or the one-off sentence
     (that run, its date, its place).
   */
-  it("carries a series sentence and a one-off sentence, the opening naming neither (§NNN)", () => {
+  it("carries a series sentence and a one-off sentence, the opening naming neither (§523)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       const roText = TEXTS[surface].ro.join(" ");
       const enText = TEXTS[surface].en.join(" ");
@@ -220,7 +220,7 @@ describe("§393 the two templates", () => {
       expect(enText).toContain("It stays valid until I ask for its deletion; if the organiser approves a new version of the text, I am asked to sign it again.");
       expect(enText).toContain("This declaration is for the group run {{event}} on {{eventDate}}, starting from {{eventLocation}}.");
       // The one-off sentence names no series field, the series sentence no date: the renderer keeps one.
-      // The series sentence in two shapes (§NNN): with the usual place, and without it for a run whose
+      // The series sentence in two shapes (§523): with the usual place, and without it for a run whose
       // place is not written — the same words otherwise, so neither says more than the other.
       for (const paragraphs of [TEXTS[surface].ro, TEXTS[surface].en]) {
         const withSeries = paragraphs.filter((paragraph) => paragraph.includes("{{series}}"));
@@ -241,12 +241,12 @@ describe("§393 the two templates", () => {
   });
 
   /*
-    §NNN, the review — the privacy notice says what the code does with a series' signature: signed
+    §523, the review — the privacy notice says what the code does with a series' signature: signed
     again on the same text, no second one is kept; signed on a new version, the older is kept beside
     it as evidence of what was accepted then, the new one is in force, and both go only at the
     signer's request. Never «replaces the old one»: no public press deletes a signature.
   */
-  it("the privacy notice keeps the older signature as evidence beside the new one (§NNN)", () => {
+  it("the privacy notice keeps the older signature as evidence beside the new one (§523)", () => {
     const roText = paragraphs(privacyNoticeRo).join(" ");
     const enText = paragraphs(privacyNoticeEn).join(" ");
     expect(roText).toContain("Dacă o semnezi din nou pe același text, nu păstrăm a doua: îți retrimitem copia.");
@@ -260,8 +260,8 @@ describe("§393 the two templates", () => {
     for (const text of [roText, enText]) expect(text).not.toMatch(/o înlocuiește pe cea veche|replaces the old one/);
   });
 
-  // A signature covers every date of a repeating run only once the text names {{series}} (§NNN).
-  it("the privacy notice hedges the whole-series signature to the declaration's text (§NNN)", () => {
+  // A signature covers every date of a repeating run only once the text names {{series}} (§523).
+  it("the privacy notice hedges the whole-series signature to the declaration's text (§523)", () => {
     expect(paragraphs(privacyNoticeRo).join(" ")).toContain(
       "O semnezi o singură dată pentru o alergare care se repetă, când textul declarației prevede asta: acoperă atunci fiecare dată a ei, fără termen.",
     );
@@ -297,7 +297,7 @@ describe("§393 the two templates", () => {
         expect(text, `${surface} ${locale}`).not.toMatch(/\b18\b|împlinit 18|18 or older/);
         expect(text.match(/\{\{minimumAge\}\}/g)?.length, `${surface} ${locale}`).toBe(1);
       }
-      // On the day of each run (§NNN): the text covers every date of the run.
+      // On the day of each run (§523): the text covers every date of the run.
       expect(TEXTS[surface].ro).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.");
       expect(TEXTS[surface].en).toContain("I declare that I am at least {{minimumAge}} old on the day of each run I take part in.");
       // Signed personally, for oneself: it covers nobody else, no minor.
@@ -320,7 +320,7 @@ describe("§393 the public offer line states the retention truthfully", () => {
     expect(en.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|days/);
   });
 
-  it("says a returning runner signs once, for the whole series of a run that repeats — on the offer, the signing page and its answer (§NNN)", () => {
+  it("says a returning runner signs once, for the whole series of a run that repeats — on the offer, the signing page and its answer (§523)", () => {
     expect(ro.Event.groupRunDeclaration.line).toContain("La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}");
     expect(en.Event.groupRunDeclaration.line).toContain("For a run that repeats you sign it once, for the whole {event} series");
     expect(ro.Event.groupRunDeclaration.page.intro).toContain("o semnezi o singură dată, pentru toată seria");
@@ -331,9 +331,9 @@ describe("§393 the public offer line states the retention truthfully", () => {
     for (const catalogue of [ro, en]) expect(catalogue.Event.groupRunDeclaration.page.done).not.toMatch(/deja|already/i);
   });
 
-  // §NNN, the review: under a text in force that names no series, a signature covers its own date,
+  // §523, the review: under a text in force that names no series, a signature covers its own date,
   // and the offer, the signing page and its answer say this run — never «once for the whole series».
-  it("says this run, and claims no series, while the text in force names none (§NNN)", () => {
+  it("says this run, and claims no series, while the text in force names none (§523)", () => {
     for (const catalogue of [ro, en]) {
       const words = catalogue.Event.groupRunDeclaration;
       for (const text of [words.lineOneDate, words.page.introOneDate, words.page.doneOneDate]) {
