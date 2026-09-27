@@ -5,6 +5,7 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
+import { countForm } from "@/i18n/count-form";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { ASK_ABOVE_CHARACTERS } from "../domain/budget";
@@ -118,7 +119,8 @@ function TranslateAllButtonIsland() {
     }
     const body = t("confirm.allBody", { count: plan.replaced.length, fields: labels.join(" · ") });
     return {
-      title: t("confirm.allTitle", { count: plan.replaced.length }),
+      // Counted through `countForm`, never an ICU plural (`docs/VIBECODING.md`, §341).
+      title: t(`confirm.allTitle.${countForm(plan.replaced.length, locale)}`, { count: plan.replaced.length }),
       body: budget ? `${body} ${budget}` : body,
       confirmLabel: t("confirm.replaceAll"),
       cancelLabel: t("confirm.cancel"),

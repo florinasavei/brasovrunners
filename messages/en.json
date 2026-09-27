@@ -3986,12 +3986,10 @@
             {
               "title": "The English in one press",
               "steps": [
-                "Write every text in Romanian: the title, the summary, the description, the rules, the route, the programme.",
-                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». The empty English boxes are filled at once with the translation, with the same layout.",
-                "If some English boxes already have text, it asks, naming how many and which: «Replace everything» translates them all again, «Only the empty ones» leaves them untouched and fills the rest.",
-                "For a very long text the question also says how many characters of today's budget will be sent.",
-                "Read, correct what you want, then «Save» — nothing saves itself.",
-                "Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club)."
+                "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
+                "At the top of the editor press «Copy and translate everything: RO → EN». Every box goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
+                "Read the English and correct what reads wrong.",
+                "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
             },
             {
@@ -4047,12 +4045,10 @@
             {
               "title": "The English in one press",
               "steps": [
-                "Write every text in Romanian: the title, the summary, the description, the rules, the route, the programme.",
-                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». The empty English boxes are filled at once with the translation, with the same layout.",
-                "If some English boxes already have text, it asks, naming how many and which: «Replace everything» translates them all again, «Only the empty ones» leaves them untouched and fills the rest.",
-                "For a very long text the question also says how many characters of today's budget will be sent.",
-                "Read, correct what you want, then «Save» — nothing saves itself.",
-                "Is the button grey? The server has no free DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club with everything to do."
+                "Write every box in Romanian: the title, the summary, the description, the rules, the route, the programme.",
+                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». Every text goes, translated, into its English twin, with the same layout. If the English already has text, it asks, naming how many and which: «Replace everything» or «Only the empty ones»; for a very long text it also says how many characters of today's budget will be sent. Is the button grey? The server has no free DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club.",
+                "Read the English and correct what reads wrong.",
+                "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
             },
             {
@@ -6095,7 +6091,11 @@
     "confirm": {
       "title": "Replace the English text?",
       "body": "The English box already has text. The translation from Romanian replaces it; nothing is saved until you press Save.",
-      "allTitle": "{count, plural, one {# English box already has text. Replace it?} other {# English boxes already have text. Replace them?}}",
+      "allTitle": {
+        "one": "{count} English box already has text. Replace it?",
+        "few": "{count} English boxes already have text. Replace them?",
+        "other": "{count} English boxes already have text. Replace them?"
+      },
       "allBody": "Already written: {fields}. «Replace everything» translates them again from Romanian; «Only the empty ones», when it shows, leaves them untouched and fills the rest. Nothing is saved until you press Save.",
       "bigTitle": "Translate everything from Romanian?",
       "bigBody": "The English boxes are filled with the translation, with the same layout. Nothing is saved until you press Save.",
