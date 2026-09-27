@@ -76,6 +76,9 @@ async function createRegistration(
     emailConfirmedAt?: Date;
     waitlistedAt?: Date;
     privacyNoticeVersion?: number;
+    stravaUrl?: string;
+    instagramHandle?: string;
+    listSocials?: boolean;
   },
 ) {
   const [participant] = await db
@@ -106,6 +109,9 @@ async function createRegistration(
     confirmedAt: input.confirmedAt ?? NOW,
     emailConfirmedAt: input.emailConfirmedAt ?? null,
     waitlistedAt: input.waitlistedAt ?? null,
+    stravaUrl: input.stravaUrl ?? null,
+    instagramHandle: input.instagramHandle ?? null,
+    listSocials: input.listSocials ?? false,
   });
 }
 
@@ -372,6 +378,51 @@ describe("§421 the pending and waiting rows follow the notice each runner was g
     await approveNotice(4, { ro: statesBody, en: statesBody });
     await approveNotice(5, { ro: statesBody, en: statesBody });
     expect(await findFirstStatesNoticeVersion(db)).toBe(4);
+  });
+});
+
+/**
+ * §500 (widening §106) — Strava and Instagram beside a name. A deliberate widening, and a narrow
+ * one: only when the caller asks (the page does only behind the notice's gate), and even then a
+ * value leaves the database only for a runner whose own tick is kept (`list_socials`). Without the
+ * option the rows are exactly what they were — the keys above are unchanged.
+ */
+describe("§500 what the socials beside a name may contain", () => {
+  const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
+  const strava = "https://www.strava.com/athletes/12345";
+
+  it("returns no socials key at all unless asked, whatever the rows hold", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", stravaUrl: strava, instagramHandle: "ana.pop", listSocials: true });
+    await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1), stravaUrl: strava, listSocials: true });
+
+    const [confirmed] = await listPublicStartList(db, event.id);
+    expect(Object.keys(confirmed)).toEqual(["displayName", "clubName"]);
+    const [waiting] = await listPublicStartListOthers(db, event.id, 1);
+    expect(Object.keys(waiting)).toEqual(["displayName", "clubName", "group"]);
+  });
+
+  it("asked, prints a runner's socials only where that runner's tick is kept — never an unticked one's", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", confirmedAt: at(1), stravaUrl: strava, instagramHandle: "ana.pop", listSocials: true });
+    await createRegistration(event.id, { name: "Bogdan Ion", email: "bogdan@example.org", confirmedAt: at(2), stravaUrl: strava, instagramHandle: "bogdan.ion", listSocials: false });
+    // Ticked, but off the list: not a row at all, so nothing of theirs is read.
+    await createRegistration(event.id, { name: "Nu Vrea", email: "optout@example.org", confirmedAt: at(3), stravaUrl: strava, listSocials: true, listOptOut: true });
+    await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1), instagramHandle: "carmen", listSocials: true });
+    await createRegistration(event.id, { name: "Dan Oferit", email: "dan@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(2), instagramHandle: "dan", listSocials: false });
+
+    expect(await listPublicStartList(db, event.id, undefined, { socials: true })).toEqual([
+      { displayName: "Ana Pop", clubName: null, stravaUrl: strava, instagramHandle: "ana.pop" },
+      { displayName: "Bogdan Ion", clubName: null, stravaUrl: null, instagramHandle: null },
+    ]);
+    expect(await listPublicStartListOthers(db, event.id, 1, undefined, { socials: true })).toEqual([
+      { displayName: "Carmen Pop", clubName: null, group: "WAITLISTED", stravaUrl: null, instagramHandle: "carmen" },
+      { displayName: "Dan Oferit", clubName: null, group: "WAITLISTED", stravaUrl: null, instagramHandle: null },
+    ]);
+    // Still no address, no identifier, no state beside the two.
+    const [row] = await listPublicStartList(db, event.id, undefined, { socials: true });
+    expect(Object.keys(row)).toEqual(["displayName", "clubName", "stravaUrl", "instagramHandle"]);
+    expect(JSON.stringify(row)).not.toContain("@example.org");
   });
 });
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.10-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.11-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -330,6 +330,7 @@ sections and in `CHANGELOG.md`.
 - **Batch 31 (2026-09-27, `BR-V2.08`):** the measured density pass at 360 px — the «Despre club» fold 180 → 96 px, true 44-px folds, inline links that keep their line, the cards and the event page tightened on the scale (§480) · the editor's cards regrouped — «Când și unde» and «Program, regulament și declarație» as one card each, the film card gone and every film a node in the description; migration `0092` (§481) · «Copiază și tradu tot: RO → EN» at the top of every editor, always visible, one press fills every English box through DeepL (§482) · the nits of V2.03–V2.07 — no colleague's name in the public repository's source, one audit id per setting, the .ro row gone, Echipa's bounds, the editor's leftovers (§483) · the weather line names its place and its hours — «Vremea la <loc>, <zi> HH:MM–HH:MM: …» — on the page and in the reminder (§484) · «Din galerie» beside every picture upload, the same crop box and shapes after the choice, the film's poster a gallery picture the club replaces and crops (§485) · the whole listing card is one tap to the event page, its inner links kept, and a recurring event wears a repeat glyph with its rhythm (§486) · the calendar page's head on a phone — a «?» in place of the intro, small month/year selects on one row with ‹ Azi ›, the chip pairs small (§487).
 - **Batch 32 (2026-09-27, `BR-V2.09`):** «Aspectul site-ului» — the public pages' light background tint as a club setting, presets from the club's colours, a contrast guard (§488) · the public pages measured on a production build and the top wins taken — query counts pinned by a test, dead code removed (§489).
 - **Batch 33 (2026-09-27, `BR-V2.10`):** the review nits of V2.08–V2.09 — orphaned keys, the guide's exact button words, stale comments, the calendar's desktop gap (§490) · the film columns and the six-link check retired (migration `0093`), the twelve-link check (`0094`), the snapshot chain repaired at its newest link (§491) · end-to-end coverage for «Din galerie», the whole-card tap and the calendar head, run against a build (§492) · the V2.03 behaviour nits — a Gmail cap deferral is not a stall, a permanent SMTP refusal is FAILED, one connection per drain, the governor's RED edges, the newsletter alert under the lock, twins named (§493).
+- **Batch 34 (2026-09-27, `BR-V2.11`):** chore/migration-0095-film-columns-dropped (§494) · chore/queue-after-v203-rest (§495) · fix/toasts-on-top-and-translate-done-toast (§496) · fix/deepl-credit-from-usage-api (§497) · fix/event-page-conditions-fold-and-public-buttons (§498) · fix/declaration-documents-say-their-version (§499) · feat/start-list-socials (§500) · chore/cloud-session-setup (§501).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -472,6 +473,11 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   are authorised ("approve / deploy prod for me").
 - Branch from `qa` with `--no-track`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.
 - Windows development machine, Linux CI. Anything with paths or line endings: test both.
+- The owner also works from a phone through Claude Code on the web. A cloud session prepares
+  itself (`scripts/cloud-setup.sh`, run by the `SessionStart` hook in `.claude/settings.json`:
+  dependencies, the image's PostgreSQL 16 migrated one transaction per migration and seeded,
+  local values only; §501); keep that script working when you change setup, the database
+  version or the dev server. `docs/DEVELOPMENT.md` § Coding from the phone.
 - Tests are named by the `BR-REQ-*` they cover, or by the `AGENTS.md` section for cross-cutting
   mechanisms (jobs, health). `WEEKEND.md` records the six that mattered for the original pilot.
 - No `BaseService`, barrels, dispatch tables, or wrappers around MUI. `AGENTS.md` §1.3.

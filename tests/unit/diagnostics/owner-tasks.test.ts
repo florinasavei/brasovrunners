@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { translationCredit } from "@/modules/translate/domain/credit";
 import {
   countTasks,
   filterTasks,
@@ -24,6 +25,7 @@ import {
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
+  listSocialsDescribed: true,
   newsletterDescribed: true,
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
@@ -43,6 +45,7 @@ const LAUNCHED: OwnerTaskInputs = {
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
   translationConfigured: true,
+  translationCredit: { ok: true, credit: translationCredit({ used: 0, limit: 1_000_000 }) },
   contactFormConfigured: true,
   // Production's own numbers set on Neon the evening of 2026-09-23: a 100 CU-hour quota, well
   // under a fifth spent.
@@ -80,6 +83,18 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §500 — Strava and Instagram beside a name wait on the club's notice, like the states; open, never blocking. */
+  it("keeps the list-socials row open while the notice in force does not describe them, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, listSocialsDescribed: false }, "listSocialsNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "listSocialsNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listSocialsNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.listSocialsNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -240,6 +255,7 @@ describe("owner tasks", () => {
     expect(clubOwned.map((task) => task.id)).toEqual([
       "approveLegalText",
       "listStatesNotice",
+      "listSocialsNotice",
       "newsletterNotice",
       "teamPageNotice",
       "raceDeclarations",
@@ -270,6 +286,47 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.translation;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("DEEPL_API_KEY");
+    }
+  });
+
+  // §497: the credit behind the key is given once — amber at 80 %, red at 95 % and when spent.
+  it("reads the DeepL credit: watch is amber, low and spent are red, each with its own sentence and steps", () => {
+    const at = (used: number): OwnerTaskInputs["translationCredit"] => ({ ok: true, credit: translationCredit({ used, limit: 1_000_000 }) });
+    const row = (reading: OwnerTaskInputs["translationCredit"]) =>
+      ownerTasks({ ...LAUNCHED, translationCredit: reading }).find((task) => task.id === "translation");
+    expect(row(at(1_000_000))).toMatchObject({ state: "broken", text: "spent", steps: "howCredit" });
+    expect(row(at(960_000))).toMatchObject({ state: "broken", text: "low", steps: "howCredit" });
+    expect(row(at(950_000))).toMatchObject({ state: "broken", text: "low", steps: "howCredit" });
+    expect(row(at(949_999))).toMatchObject({ state: "open", text: "watch", steps: "howCredit" });
+    expect(row(at(800_000))).toMatchObject({ state: "open", text: "watch", steps: "howCredit" });
+    // Under 80 % the row is done (green) and still says the figures (the `credit` sentence).
+    for (const used of [0, 799_999]) {
+      expect(row(at(used))).toMatchObject({ state: "done", text: "credit" });
+      expect(row(at(used))?.steps).toBeUndefined();
+    }
+    // Unread: «—» with the reason; a refused key or a 456 is red, a silent DeepL leaves it done.
+    expect(row({ ok: false, reason: "unavailable" })).toMatchObject({ state: "done", text: "creditUnread" });
+    expect(row({ ok: false, reason: "refused" })).toMatchObject({ state: "broken", text: "creditUnread" });
+    expect(row({ ok: false, reason: "quota" })).toMatchObject({ state: "broken", text: "creditUnread", steps: "howCredit" });
+    // `off` on purpose: no key, nothing to read, nothing owed.
+    expect(row({ ok: false, reason: "unconfigured" })).toMatchObject({ state: "done" });
+    expect(row({ ok: false, reason: "unconfigured" })?.text).toBeUndefined();
+    // Never blocking: a spent credit stops no registration.
+    expect(row(at(1_000_000))?.state).not.toBe("blocking");
+    // Without a key the credit is not the question.
+    expect(ownerTasks({ ...LAUNCHED, translationConfigured: false, translationCredit: at(1_000_000) }).find((task) => task.id === "translation")?.state).toBe("open");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.translation;
+      // Every credit sentence names the figures the page fills in; the unread one the reason.
+      for (const text of [item.credit, item.watch, item.low]) {
+        for (const value of ["{creditUsed}", "{creditLimit}", "{creditPercent}", "{creditRemaining}"]) expect(text).toContain(value);
+      }
+      expect(item.spent).toContain("{creditUsed}");
+      expect(item.creditUnread).toContain("—");
+      expect(item.creditUnread).toContain("{creditReason}");
+      expect(item.howCredit.join("\n")).toContain("DEEPL_API_KEY");
+      // The key's allowance is a one-time credit: no step promises a monthly one.
+      expect([...item.how, ...item.howCredit].join("\n")).not.toMatch(/500[.,]000|a month, free|pe lună, gratuit|renewed monthly\)|lunar\)/);
     }
   });
 

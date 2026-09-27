@@ -53,6 +53,7 @@ describe("§418 the PDF's words", () => {
       eventTitle: "Crosul",
       version: 1,
       contentSha256: "0".repeat(64),
+      effectiveAt: new Date("2026-01-01T00:00:00Z"),
       signature,
     });
     const signed = (idDocument: string | null, minorIdDocument: string | null = null): DeclarationEntry["signature"] => ({
@@ -60,6 +61,7 @@ describe("§418 the PDF's words", () => {
       idDocument,
       minor: minorIdDocument === null ? null : { typedName: "Maria Popescu", idDocument: minorIdDocument },
       signedAt: "azi",
+      signedAtInline: "azi",
       method: "link",
     });
     const notice = "delete within seven days";

@@ -213,6 +213,13 @@ const submissionFields = z.object({
    */
   listOptOut: z.boolean(),
   /**
+   * "Arată și Strava și Instagram lângă numele meu pe listă" (§500): the runner's own tick, asked
+   * only while the notice in force describes it. What the tick says is what is posted; whether it
+   * is kept — listed, an adult, a social typed, a notice naming `{{participantListSocials}}` — is
+   * the service's decision, never the form's.
+   */
+  listSocials: z.boolean().default(false),
+  /**
   * Deliberately not `.max(0)`: a bot filling the honeypot must get the same generic success
   * response as everyone else, never a distinct validation error that would tell it which
   * defense it tripped. The runtime check in `service.ts` treats any non-empty value as spam.
@@ -521,6 +528,7 @@ export function withoutAnotherAdultsConsents(raw: unknown, now: Date): unknown {
     stravaUrl: undefined,
     instagramHandle: undefined,
     listOptOut: true,
+    listSocials: false,
     fitnessDeclared: undefined,
   };
 }

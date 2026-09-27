@@ -1,3 +1,5 @@
+import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
@@ -71,7 +73,8 @@ export default async function ResendPage({ params, searchParams }: Props) {
               helperText={t("resend.emailHelp")}
             />
 
-            <Button type="submit" variant="contained" sx={TAP_TARGET}>
+            <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+              <ForwardToInboxIcon aria-hidden="true" sx={glyphSx("medium")} />
               {t("resend.submit")}
             </Button>
           </Stack>

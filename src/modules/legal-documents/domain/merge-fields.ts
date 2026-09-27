@@ -91,6 +91,17 @@ export function deadlineMergeValues(
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
+ * The privacy notice's marker for the socials beside a name on the public list (§500, widening
+ * §106, which kept the Strava link and the Instagram username off the site). The same two-in-one
+ * as the states above: filled, when the notice is shown, with the words of the form's own tick,
+ * quoted (`registrations/list-socials-words.ts`), and the switch — the form offers that tick, the
+ * service keeps it, and the list prints a runner's Strava and Instagram only while the notice in
+ * force, in every language, names it (`describesListSocials`). A runner's tick is kept only when
+ * the notice they were given names it, so a tick is always consent to a text that described it.
+ */
+export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
+
+/**
  * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
  * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
  * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
@@ -187,6 +198,7 @@ export const MERGE_FIELDS = [
   MINIMUM_AGE_MERGE_FIELD,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
+  LIST_SOCIALS_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
 ] as const;
@@ -320,6 +332,15 @@ export function asksForMinorSignature(body: unknown): boolean {
  */
 export function describesListStates(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_STATES_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the socials beside a name on the public list (§500): it names
+ * `{{participantListSocials}}`. The gate for the form's tick, for keeping it, and for printing the
+ * socials — the club's approval of such a text is the switch, as for the states (§396). Pure.
+ */
+export function describesListSocials(body: unknown): boolean {
+  return mergeFieldsIn(body).has(LIST_SOCIALS_MERGE_FIELD);
 }
 
 /**

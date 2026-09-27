@@ -315,6 +315,14 @@ export const LOGO = {
 export const HEADER_MARK_HEIGHT_PX = 40;
 export const HEADER_MARK_HEIGHT = "clamp(30px, 8vw, 40px)";
 /**
+ * What clears the sticky site header, in pixels, below `sm` and from `sm` up: the theme's
+ * `scroll-padding-top` (`theme.ts`) and the toasts' top offset (`ToastRegion`) read this one
+ * pair, so the two never drift apart. The environment notice sits above the header and is not
+ * sticky (`SiteHeader`): on QA, at the very top of a page, a toast may overlap the header's lower
+ * edge by that notice's height — accepted, since it scrolls away and production shows no notice.
+ */
+export const HEADER_CLEARANCE_PX = { xs: 72, sm: 76 } as const;
+/**
  * How wide the page is. One value, used by the header, the footer, the environment notice and
  * every public and backoffice page, so "allow a wider screen" (the owner, twice on 2026-09-17:
  * `md` → `lg` → `xl`) is this line. MUI's `xl` is 1536px; `false` would make the page fluid

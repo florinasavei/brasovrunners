@@ -626,8 +626,11 @@ describe("retention sweep", () => {
       resultsConsentVersion: 1,
       stravaUrl: "https://www.strava.com/athletes/1",
       instagramHandle: "runner",
+      listSocials: true,
       createdAt: new Date("2026-09-01T09:00:00.000Z"),
     };
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    vi.mocked(revalidateTag).mockClear();
     const [minor] = await db
       .insert(registrations)
       .values({ ...base, participantId: await participant("kid@example.ro"), registeredName: "Kid", displayName: "Kid", birthDate: "2010-05-01" })
@@ -643,9 +646,12 @@ describe("retention sweep", () => {
     expect(counts.failures).toEqual([]);
     expect(counts.minorSocials).toBe(1);
     const [minorAfter] = await db.select().from(registrations).where(eq(registrations.id, minor.id));
-    expect([minorAfter.stravaUrl, minorAfter.instagramHandle]).toEqual([null, null]);
+    expect([minorAfter.stravaUrl, minorAfter.instagramHandle, minorAfter.listSocials]).toEqual([null, null, false]);
     const [adultAfter] = await db.select().from(registrations).where(eq(registrations.id, adult.id));
-    expect([adultAfter.stravaUrl, adultAfter.instagramHandle]).toEqual(["https://www.strava.com/athletes/1", "runner"]);
+    expect([adultAfter.stravaUrl, adultAfter.instagramHandle, adultAfter.listSocials]).toEqual(["https://www.strava.com/athletes/1", "runner", true]);
+    // §500: the public start list may have printed them, so its pages are expired.
+    expect(revalidateTag).toHaveBeenCalledWith("public:places", { expire: 0 });
+    vi.unstubAllEnvs();
     // Nothing else on the minor's row moved.
     expect(minorAfter.status).toBe("CONFIRMED");
   });

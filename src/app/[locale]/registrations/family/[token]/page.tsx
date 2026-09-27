@@ -1,3 +1,4 @@
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
@@ -124,7 +125,9 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />
             <div data-testid="family-decline">
-              <SubmitButton label={t("family.decline")} pendingLabel={t("family.declinePending")} size="medium" />
+              <SubmitButton label={t("family.decline")} pendingLabel={t("family.declinePending")} size="medium">
+                <PersonRemoveIcon />
+              </SubmitButton>
             </div>
           </form>
           <Typography>
@@ -228,7 +231,9 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="token" value={token} />
           <div data-testid="family-decline">
-            <SubmitButton label={t("family.decline")} pendingLabel={t("family.declinePending")} variant="outlined" size="medium" />
+            <SubmitButton label={t("family.decline")} pendingLabel={t("family.declinePending")} variant="outlined" size="medium">
+              <PersonRemoveIcon />
+            </SubmitButton>
           </div>
         </form>
       </Stack>

@@ -1,6 +1,7 @@
 "use client";
 
 import CloseIcon from "@mui/icons-material/Close";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -314,6 +315,7 @@ export default function NewBuildNotice({ build }: { build: string }) {
               size="small"
               // A thumb's 44 pixels (BR-REQ-041-01 criterion 6): this is pressed on a phone.
               sx={TAP_TARGET}
+              startIcon={<RefreshIcon />}
               onClick={() => {
                 /**
                  * The only reload in the feature, and a person pressed it. The stamp is written

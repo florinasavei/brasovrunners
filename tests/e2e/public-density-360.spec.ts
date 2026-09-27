@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { openFold } from "./support/fold";
 
 /**
  * §480 — the 360-px density pass over the public pages (BR-REQ-041-01), measured on the built
@@ -149,6 +150,8 @@ test.describe("§480 the public pages at 360 px", () => {
     const href = await first.getAttribute("href");
     expect(href).toBeTruthy();
     await page.goto(href!);
+    // The notice sits in «Condiții de participare», closed on arrival, since §498.
+    await openFold(page.getByTestId("conditions-fold"));
     const link = page.locator("#main p a[href$='/contact']").first();
     await expect(link).toBeVisible();
     const paragraph = link.locator("xpath=ancestor::p[1]");

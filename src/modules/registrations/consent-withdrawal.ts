@@ -5,6 +5,7 @@ import { TOKEN_NOT_FOUND, type TokenRejection } from "@/modules/action-tokens/do
 import { readActionTokenContext } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { DomainError } from "@/shared/errors/domain-error";
 import { findRegistrationById } from "./repository";
 
@@ -89,7 +90,7 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
     now: Date;
   },
 ): Promise<{ cleared: OptionalDataField[] }> {
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [current] = await tx
       .select()
       .from(registrations)
@@ -104,7 +105,8 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
       .update(registrations)
       .set({
         ...(cleared.includes("health") ? { healthNotes: null, healthConsentVersion: null, healthConsentAt: null } : {}),
-        ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null } : {}),
+        // The tick that printed them beside the name goes with them (§500).
+        ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null, listSocials: false } : {}),
         ...(cleared.includes("results") ? { resultsNameConsent: false } : {}),
         updatedAt: input.now,
       })
@@ -126,6 +128,12 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
 
     return { cleared };
   });
+  // A public list may have been printing them (§500): off it for the next visitor, not after the
+  // cache's day (§333) — as leaving the list does (`list-consent.ts`). After the commit, never
+  // inside the transaction: a public read landing between an early revalidation and the commit
+  // would cache the old row, socials and all, for the cache's life.
+  if (result.cleared.includes("socials")) revalidatePublicContent("places");
+  return result;
 }
 
 /**

@@ -1,5 +1,7 @@
 "use client";
 
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -313,7 +315,7 @@ export default function ReadAndAgree({
               {keepReadingLabel}
             </Typography>
           )}
-          <Button type="button" onClick={() => setOpen(false)} sx={{ minHeight: 44 }}>
+          <Button type="button" onClick={() => setOpen(false)} sx={{ minHeight: 44 }} startIcon={<CloseIcon />}>
             {closeLabel}
           </Button>
           <Button
@@ -325,6 +327,7 @@ export default function ReadAndAgree({
               setOpen(false);
             }}
             sx={{ minHeight: 44 }}
+            startIcon={<CheckIcon />}
           >
             {agreeButtonLabel}
           </Button>

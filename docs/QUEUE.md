@@ -20,7 +20,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.10` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.11` |
 
 ## Next, queued
 
@@ -54,6 +54,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.11` | chore/migration-0095-film-columns-dropped (§494) · chore/queue-after-v203-rest (§495) · fix/toasts-on-top-and-translate-done-toast (§496) · fix/deepl-credit-from-usage-api (§497) · fix/event-page-conditions-fold-and-public-buttons (§498) · fix/declaration-documents-say-their-version (§499) · feat/start-list-socials (§500) · chore/cloud-session-setup (§501) |
 | `BR-V2.10` | the review nits of V2.08–V2.09 — orphaned keys, the guide's exact button words, stale comments, the calendar's desktop gap (§490) · the film columns and the six-link check retired (migration `0093`), the twelve-link check (`0094`), the snapshot chain repaired at its newest link (§491) · end-to-end coverage for «Din galerie», the whole-card tap and the calendar head, run against a build (§492) · the V2.03 behaviour nits — a Gmail cap deferral is not a stall, a permanent SMTP refusal is FAILED, one connection per drain, the governor's RED edges, the newsletter alert under the lock, twins named (§493) |
 | `BR-V2.09` | «Aspectul site-ului» — the public pages' light background tint as a club setting, presets from the club's colours, a contrast guard (§488) · the public pages measured on a production build and the top wins taken — query counts pinned by a test, dead code removed (§489) |
 | `BR-V2.08` | the measured density pass at 360 px — the «Despre club» fold 180 → 96 px, true 44-px folds, inline links that keep their line, the cards and the event page tightened on the scale (§480) · the editor's cards regrouped — «Când și unde» and «Program, regulament și declarație» as one card each, the film card gone and every film a node in the description; migration `0092` (§481) · «Copiază și tradu tot: RO → EN» at the top of every editor, always visible, one press fills every English box through DeepL (§482) · the nits of V2.03–V2.07 — no colleague's name in the public repository's source, one audit id per setting, the .ro row gone, Echipa's bounds, the editor's leftovers (§483) · the weather line names its place and its hours — «Vremea la <loc>, <zi> HH:MM–HH:MM: …» — on the page and in the reminder (§484) · «Din galerie» beside every picture upload, the same crop box and shapes after the choice, the film's poster a gallery picture the club replaces and crops (§485) · the whole listing card is one tap to the event page, its inner links kept, and a recurring event wears a repeat glyph with its rhythm (§486) · the calendar page's head on a phone — a «?» in place of the intro, small month/year selects on one row with ‹ Azi ›, the chip pairs small (§487) |

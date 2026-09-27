@@ -3,6 +3,7 @@ import { utcMonth } from "@/modules/diagnostics/domain/month-costs";
 import { type MonthCostInputs, type MonthCostReaders, readMonthCosts } from "@/modules/diagnostics/month-costs-read";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { translationCredit } from "@/modules/translate/domain/credit";
 
 /**
  * BR-REQ-090-07 criterion 19 (§479) — how Costuri puts «Luna aceasta» together from what each
@@ -34,6 +35,7 @@ function readers(patch: Partial<MonthCostReaders> = {}): MonthCostReaders {
     mailgunSentBetween: vi.fn(async () => 321),
     neonPreviousPeriod: vi.fn(async () => ({ ok: true as const, cuHours: 20 })),
     mediaBytes: vi.fn(async () => 3 * GB),
+    deeplCredit: vi.fn(async () => ({ ok: false as const, reason: "unconfigured" as const })),
     ...patch,
   };
 }
@@ -112,6 +114,24 @@ describe("BR-REQ-090-07 «Luna aceasta» assembled from its readers", () => {
       }),
     );
     expect(thrown.reasons.current.vercel).toBe("error");
+  });
+
+  it("§497: maps DeepL's credit onto its line, and a refusal onto its reason — never a green line for a key nobody could read", async () => {
+    const read = await readMonthCosts(inputs(), readers({ deeplCredit: async () => ({ ok: true, credit: translationCredit({ used: 800_000, limit: 1_000_000 }) }) }));
+    expect(line(read, "deepl")).toMatchObject({ severity: "watch", detail: { kind: "credit", remaining: 200_000, level: "watch" } });
+    expect(read.reasons.deeplCredit).toBeNull();
+
+    const refused = await readMonthCosts(inputs(), readers({ deeplCredit: async () => ({ ok: false, reason: "refused" }) }));
+    expect(line(refused, "deepl")).toMatchObject({ severity: "unknown", detail: null });
+    expect(refused.reasons.deeplCredit).toBe("refused");
+
+    const off = await readMonthCosts(inputs(), readers());
+    expect(line(off, "deepl")).toMatchObject({ severity: "ok", detail: null });
+    expect(off.reasons.deeplCredit).toBe("unconfigured");
+
+    const thrown = await readMonthCosts(inputs(), readers({ deeplCredit: async () => { throw new Error("boom"); } }));
+    expect(line(thrown, "deepl").severity).toBe("unknown");
+    expect(thrown.reasons.deeplCredit).toBe("unavailable");
   });
 
   it("the outbox or the audit trail throwing takes only its own figure", async () => {

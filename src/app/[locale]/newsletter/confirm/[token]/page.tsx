@@ -1,3 +1,4 @@
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Container from "@mui/material/Container";
@@ -75,7 +76,9 @@ export default async function NewsletterConfirmPage({ params, searchParams }: Pr
           <form action={confirmNewsletterAction}>
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />
-            <SubmitButton label={t("confirm.button")} pendingLabel={t("confirm.pending")} size="large" />
+            <SubmitButton label={t("confirm.button")} pendingLabel={t("confirm.pending")} size="large">
+              <MarkEmailReadIcon />
+            </SubmitButton>
           </form>
         </Stack>
       )}
