@@ -1,4 +1,4 @@
-import { canManageRegistrations, canReadContent, type StaffRole } from "./roles";
+import { canManageRegistrations, canReadContent, canSeeDiagnostics, type StaffRole } from "./roles";
 
 /**
  * «Setări» / "Settings" — the backoffice's one place for what the club sets (§NNN; the owner,
@@ -23,9 +23,26 @@ import { canManageRegistrations, canReadContent, type StaffRole } from "./roles"
  *     costs       canManageRegistrations  the money page and the database card (§479), as «Costuri» was
  *     platform    canManageRegistrations  the anti-robot check (§254, §282): the Superadministrator
  *                                         switches it (§450), the Administrator reads it
+ *
+ * **And a seventh, «Configurație» (`/devs`), last in the row for `canSeeDiagnostics`.** The owner was
+ * on «Configurație» looking for the Neon limits, which are on «Costuri»: two places with no tab
+ * between them. It is a tab of the row rather than a seventh route under `/admin/settings`, because
+ * `/devs` stays where it is — its own layout and gate (§119, BR-REQ-090-04), its three panels (§265),
+ * the address the hosting dashboard's holder is given — and it draws this same row above its panels,
+ * with «Configurație» marked, so the way back to «Costuri» is one tap. The main bar keeps its own
+ * «Configurație» entry too: the Tehnic's whole reason to open the backoffice is that page.
  */
 export const SETTINGS_TABS = ["emails", "deadlines", "contact", "appearance", "costs", "platform"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
+
+/** The row's last entry: `/devs`, a tab of the row that is not a route of this section. */
+export const CONFIGURATION_TAB = "configuration";
+export type SettingsRowEntry = SettingsTab | typeof CONFIGURATION_TAB;
+
+/** Whether the row offers «Configurație» — the page's own gate, so the tab never leads to a 404. */
+export function offersConfigurationTab(role: StaffRole): boolean {
+  return canSeeDiagnostics(role);
+}
 
 /** The internal route of each tab — the key `routing.pathnames` knows it by. */
 export const SETTINGS_TAB_ROUTE = {

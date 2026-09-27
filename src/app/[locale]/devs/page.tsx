@@ -42,6 +42,7 @@ import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canManageClubSettings, canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import SubNav from "@/shared/ui/SubNav";
+import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { buildInfo, formatLastUpdated, formatVersion } from "@/shared/config/build-info";
@@ -221,6 +222,12 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={4} sx={{ maxWidth: 900 }}>
+      {/*
+        «Setări»'s row first, «Configurație» marked (§NNN): this page is the row's last tab, so the
+        club's settings — «Costuri» with the Neon limits the owner came here looking for — are one tap
+        away, and the main bar's «Configurație» and «Setări» lead into one row rather than two places.
+      */}
+      <SettingsSubNav locale={locale} role={actor.role} active="configuration" />
       <Box>
         {/* Under the backoffice's own title and tabs (§119): a section heading, like the others. */}
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
@@ -573,6 +580,18 @@ export default async function DevsPage({ params, searchParams }: Props) {
               <Link href={{ pathname: "/admin/settings/costs", hash: "neon-plan" }}>{t("neon.planLink")}</Link>
             ) : (
               t("neon.planSetBy")
+            )}
+          </Typography>
+          {/*
+            The limits and the cost brakes live on «Setări» → «Costuri» (§479, §NNN), whatever the plan's
+            source: the link for a role that may open that tab, a sentence naming it for the rest (the
+            Tehnic), never a link into a 404.
+          */}
+          <Typography variant="body2" sx={{ mb: 2 }} data-testid="neon-limits-sentence">
+            {canOpenSettingsTab(actor.role, "costs") ? (
+              <Link href={{ pathname: "/admin/settings/costs", hash: "neon-limits" }}>{t("neon.limitsLink")}</Link>
+            ) : (
+              t("neon.limitsSetBy")
             )}
           </Typography>
           {/* Storage, from the database itself (§88): no key needed. Against Free's half gigabyte, or at Launch's rate. */}

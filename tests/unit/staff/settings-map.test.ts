@@ -8,6 +8,7 @@ import { ADMIN_SECTIONS, canOpenSettings, STAFF_ROLES, type StaffRole, visibleAd
 import {
   canOpenSettingsTab,
   defaultSettingsTab,
+  offersConfigurationTab,
   SETTINGS_TAB_ROUTE,
   SETTINGS_TABS,
   visibleSettingsTabs,
@@ -57,6 +58,24 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
       expect(visibleAdminSections(role).includes("settings"), role).toBe(canOpenSettings(role));
       expect(defaultSettingsTab(role), role).toBe(canOpenSettings(role) ? "emails" : null);
     }
+  });
+
+  it("ends the row with «Configurație» (/devs) for exactly the roles that page opens to, and /devs draws the row with it marked", () => {
+    for (const role of STAFF_ROLES) expect(offersConfigurationTab(role), role).toBe(visibleAdminSections(role).includes("devs"));
+    expect(STAFF_ROLES.filter(offersConfigurationTab)).toEqual(["DEV", "ADMIN", "SUPERADMIN"]);
+    expect(ro.Admin.settingsTabs.configuration).toBe("Configurație");
+    expect(en.Admin.settingsTabs.configuration).toBe("Configuration");
+    const nav = read("src/modules/staff-identity/ui/SettingsSubNav.tsx");
+    expect(nav).toContain('offersConfigurationTab(role)');
+    expect(nav).toContain('href: getPathname({ locale, href: "/devs" })');
+    const devs = read("src/app/[locale]/devs/page.tsx");
+    expect(devs).toContain('<SettingsSubNav locale={locale} role={actor.role} active="configuration" />');
+    // The Neon block always names where its limits are set, whatever the plan's source: a link for
+    // a role that opens «Costuri», a sentence for the rest.
+    expect(devs).toContain('<Link href={{ pathname: "/admin/settings/costs", hash: "neon-limits" }}>{t("neon.limitsLink")}</Link>');
+    expect(devs).toContain('canOpenSettingsTab(actor.role, "costs") ? (');
+    expect(ro.Devs.neon.limitsSetBy).toContain("Setări → Costuri");
+    expect(en.Devs.neon.limitsSetBy).toContain("Settings → Costs");
   });
 
   it("gives a higher role every tab a lower one has", () => {

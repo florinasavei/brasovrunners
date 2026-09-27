@@ -37,8 +37,10 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
           {t("retry")}
         </GlyphButton>
         {/* A plain anchor: the boundary may have caught a failure in the routing a localized href needs.
-            To the month's budget, «Setări» → «Costuri» since §NNN; the path is the same in both locales. */}
-        <Link href="/admin/settings/costs">{t("staffTasks")}</Link>
+            To «Setări» (§NNN), which every content role opens — it used to be /admin/tasks, which they
+            open too; «Costuri» itself is the Administrator's, so the body names it and the link does not
+            (a Redactor who followed it met a 404). The path is the same in both locales. */}
+        <Link href="/admin/settings">{t("staffSettings")}</Link>
       </Stack>
       {error.digest && (
         <Alert severity="info" icon={false}>

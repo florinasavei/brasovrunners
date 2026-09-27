@@ -496,7 +496,8 @@
       "contact": "Contact",
       "appearance": "Aspect",
       "costs": "Costuri",
-      "platform": "Platformă"
+      "platform": "Platformă",
+      "configuration": "Configurație"
     },
     "outbox": {
       "status": {
@@ -5670,6 +5671,8 @@
       },
       "planLink": "Schimbă planul (Setări → Costuri).",
       "planSetBy": "Îl setează Administratorul, pe Setări → Costuri.",
+        "limitsLink": "Limitele bazei de date și frânele de cost: Setări → Costuri.",
+        "limitsSetBy": "Limitele bazei de date le setează Administratorul, pe Setări → Costuri.",
       "sizeLaunch": "Spațiu ocupat: {used} MB — {storageRate} $/GB-lună, adică circa {usd} $ pe lună.",
       "used": "{used} din {of} ore-CU folosite ({percent}%)",
       "usedLaunch": "Ore de calcul în perioada aceasta: {used} ore-CU; cost estimat: {usd} $ ({rate} $/oră-CU).",
@@ -5701,8 +5704,8 @@
     "home": "Înapoi la prima pagină",
     "reference": "Dacă se repetă, spune-ne acest cod:",
     "staffTitle": "Backoffice-ul nu a putut încărca pagina",
-    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; bugetul lunii e la Setări → Costuri.",
-    "staffTasks": "Deschide Setări → Costuri"
+    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; un Administrator vede bugetul lunii la Setări → Costuri.",
+    "staffSettings": "Deschide Setări"
   },
   "Gallery": {
     "title": "Galerie",

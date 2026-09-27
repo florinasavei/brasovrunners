@@ -68,6 +68,9 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await expect(block.getByText(/Spațiu ocupat: [\d,.]+ MB — [\d,.]+ \$\/GB-lună/)).toBeVisible();
     await expect(block.getByText(/din 512 MB/)).toHaveCount(0);
     await expect(block.getByText(/din 100 ore-CU/)).toHaveCount(0);
+    // Where the limits are set, in words, never a link into a 404 (§NNN).
+    await expect(block.getByTestId("neon-limits-sentence")).toHaveText("Limitele bazei de date le setează Administratorul, pe Setări → Costuri.");
+    await expect(block.getByTestId("neon-limits-sentence").getByRole("link")).toHaveCount(0);
     expect((await page.goto("/ro/admin/settings/costs"))?.status()).toBe(404);
 
     // And back to Free, as the Administrator, so the next test on this database starts from the
@@ -77,6 +80,8 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await page.goto("/ro/devs");
     const adminBlock = page.locator("#main").getByTestId("neon-block");
     await expect(adminBlock.getByTestId("neon-plan-sentence")).toContainText("Planul setat: Launch.");
+    // The limits' link is there whatever the plan's source — the owner's «unde sunt limitele Neon?» (§NNN).
+    await expect(adminBlock.getByRole("link", { name: /Limitele bazei de date/ })).toHaveAttribute("href", /\/admin\/settings\/costs#neon-limits$/);
     await adminBlock.getByRole("link", { name: /Schimbă planul/ }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/costs#neon-plan$/);
     const again = page.locator("#main").getByTestId("neon-plan");

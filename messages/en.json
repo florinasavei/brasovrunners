@@ -496,7 +496,8 @@
       "contact": "Contact",
       "appearance": "Appearance",
       "costs": "Costs",
-      "platform": "Platform"
+      "platform": "Platform",
+      "configuration": "Configuration"
     },
     "outbox": {
       "status": {
@@ -5528,7 +5529,7 @@
       },
       "contactFormNoRecipients": {
         "title": "Contact form",
-        "body": "It can send, but there is nobody to send to: neither the list on Settings → Contact nor CONTACT_FORM_TO holds an address. The “Write to us” page shows the club's address until somebody writes a recipient on /admin/emails — no redeploy needed."
+        "body": "It can send, but there is nobody to send to: neither the list on Settings → Contact nor CONTACT_FORM_TO holds an address. The “Write to us” page shows the club's address until somebody writes a recipient on Settings → Contact — no redeploy needed."
       },
       "contactFormOff": {
         "title": "Contact form",
@@ -5670,6 +5671,8 @@
       },
       "planLink": "Change the plan (Settings → Costs).",
       "planSetBy": "The Administrator sets it, on Settings → Costs.",
+        "limitsLink": "The database's limits and the cost brakes: Settings → Costs.",
+        "limitsSetBy": "The database's limits are set by the Administrator, on Settings → Costs.",
       "sizeLaunch": "Storage used: {used} MB — ${storageRate}/GB-month, about ${usd} a month.",
       "used": "{used} of {of} CU-hours used ({percent}%)",
       "usedLaunch": "Compute hours this period: {used} CU-hours; estimated cost ${usd} (${rate}/CU-hour).",
@@ -5701,8 +5704,8 @@
     "home": "Back to the first page",
     "reference": "If it keeps happening, tell us this code:",
     "staffTitle": "The backoffice could not load this page",
-    "staffBody": "Our database did not answer just now — it may be starting, or paused for the rest of the month. Nothing on this screen was saved unless it said so. Try again in a minute; the month's budget is under Settings → Costs.",
-    "staffTasks": "Open Settings → Costs"
+    "staffBody": "Our database did not answer just now — it may be starting, or paused for the rest of the month. Nothing on this screen was saved unless it said so. Try again in a minute; an Administrator sees the month's budget under Settings → Costs.",
+    "staffSettings": "Open Settings"
   },
   "Gallery": {
     "title": "Gallery",
