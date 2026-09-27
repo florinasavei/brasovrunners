@@ -40,7 +40,7 @@ import MuiLink from "@mui/material/Link";
 import { getPathname, Link } from "@/i18n/navigation";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canManageClubSettings, canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
-import { canOpenTaskPanel } from "@/modules/diagnostics/domain/task-panels";
+import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import SubNav from "@/shared/ui/SubNav";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -304,11 +304,12 @@ export default async function DevsPage({ params, searchParams }: Props) {
         </>
       )}
       {/*
-        The panels (§265), and the anti-bot switch beside them: that switch belongs to the club's
-        own to-do screen (§254), where the club works, and "where do I turn the captcha off" is a
-        configuration question wherever the answer is kept. The link is offered only to a role whose
-        `/admin/tasks` has that panel (`canOpenTaskPanel`, the page's own gate), so it can reach it (§397) — a Tehnic who
-        followed it used to land on «Aplicația» instead, under a label that named the wrong panel.
+        The panels (§265), and the anti-bot switch beside them: that switch lives on «Setări» →
+        «Platformă» since §NNN (it was a panel of `/admin/tasks`, §254), and "where do I turn the
+        captcha off" is a configuration question wherever the answer is kept. The link is offered only
+        to a role that may open that tab (`canOpenSettingsTab`, the page's own gate), so it can reach
+        it (§397) — a Tehnic who followed it used to land on «Aplicația» instead, under a label that
+        named the wrong panel.
         The «Aplicația» link is that role's own way back to the tab it opened `/admin/tasks` on.
       */}
       <SubNav
@@ -319,8 +320,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
             label: t(`panel.${name}`),
             active: panel === name,
           })),
-          ...(canOpenTaskPanel(actor.role, "botCheck")
-            ? [{ href: `${tasksPath}?panel=botCheck`, label: t("panel.botCheck") }]
+          ...(canOpenSettingsTab(actor.role, "platform")
+            ? [{ href: getPathname({ locale, href: "/admin/settings/platform" }), label: t("panel.botCheck") }]
             : []),
           { href: `${tasksPath}?panel=app`, label: t("panel.app") },
         ]}
@@ -569,7 +570,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
               </>
             )}
             {neonInForce.source === "neon" ? null : canManageClubSettings(actor.role) ? (
-              <Link href={{ pathname: "/admin/tasks", query: { panel: "costs" } }}>{t("neon.planLink")}</Link>
+              <Link href={{ pathname: "/admin/settings/costs", hash: "neon-plan" }}>{t("neon.planLink")}</Link>
             ) : (
               t("neon.planSetBy")
             )}

@@ -20,7 +20,7 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await seedConfirmedSubscriber(email, ["DISCOUNTS"]);
     await signIn(page, "Dev Administrator");
     // /admin/emails holds no newsletter card any more — one line pointing at the page.
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     await expect(page.locator("#main").getByTestId("newsletter-panel")).toHaveCount(0);
     await expect(page.getByTestId("newsletter-link").getByRole("link", { name: "Newsletter →" })).toHaveAttribute("href", "/ro/admin/newsletter");
     // The menu's own entry, after «Emailuri».

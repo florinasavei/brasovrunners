@@ -46,7 +46,7 @@ test("BR-REQ-041-01 the email wording's Salvează textul, the page's first press
   await page.addInitScript(countInsertedRules);
   await signIn(page, "Dev Administrator");
   const abandon = await holdServerActions(page);
-  await page.goto("/ro/admin/emails");
+  await page.goto("/ro/admin/settings/emails");
   await hydrated(page);
   const editor = page.locator('[data-testid^="email-copy-"]').first();
   // Its folds opened by the keyboard, as a person would: no pointer press before the one measured.

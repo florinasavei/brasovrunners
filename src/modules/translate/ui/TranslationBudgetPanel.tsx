@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateTranslationBudgetAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateTranslationBudgetAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -43,7 +43,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
   const clock = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
   return (
-    <Panel title={t("tasks.translationBudget.title")} intro={t("tasks.translationBudget.intro")} data-testid="translation-budget">
+    <Panel id="translation-budget" title={t("tasks.translationBudget.title")} intro={t("tasks.translationBudget.intro")} data-testid="translation-budget">
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="translation-budget-in-force">
         {state.budget.dailyCharacters === 0
           ? t("tasks.translationBudget.inForce.off")

@@ -9,7 +9,7 @@ import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
-import { updateEmailPlanAction } from "@/app/[locale]/admin/emails/actions";
+import { updateEmailPlanAction } from "@/app/[locale]/admin/settings/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";

@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
+import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
 import { REQUEST_PATH_HEADER } from "@/modules/resilience/domain/resting-page";
@@ -41,7 +42,23 @@ export default function proxy(request: NextRequest) {
   }
 
   /**
-   * A locale's root is the listing (§353): `/ro` → `/ro/evenimente`, a real 308 with an empty
+   * A backoffice address that moved into «Setări» (§NNN): a real 308 to where it lives now, the
+   * query kept, before anything renders — so a bookmark, an old link or a tab left open keeps
+   * working, and a POST from a page loaded before the move stays a POST.
+   */
+  const moved = resolveMovedBackofficePath(url.pathname, url.search);
+  if (moved) {
+    const target = new URL(moved.pathname, url);
+    target.search = moved.search;
+    const redirect = NextResponse.redirect(target, 308);
+    // A staff path, like the alias above: never indexed, never cached.
+    redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
+    redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+    return redirect;
+  }
+
+  /**
+   * A locale's root is the listing (§353):`/ro` → `/ro/evenimente`, a real 308 with an empty
    * body, the query kept. Answered here rather than by `app/[locale]/page.tsx`'s
    * `permanentRedirect`, which runs after the layout has started streaming and so could only
    * send a 200 and an error document carrying a client-side hop.

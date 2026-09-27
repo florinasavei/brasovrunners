@@ -483,12 +483,20 @@
       "pages": "Pagini",
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
-      "emails": "Emailuri",
+      "settings": "Setări",
       "guide": "Ghid",
       "registeredHint": "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
       "registeredEvent": "{title}: {count}",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
+    },
+    "settingsTabs": {
+      "emails": "Emailuri",
+      "deadlines": "Termene",
+      "contact": "Contact",
+      "appearance": "Aspect",
+      "costs": "Costuri",
+      "platform": "Platformă"
     },
     "outbox": {
       "status": {
@@ -978,7 +986,7 @@
       "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nu s-a schimbat nimic: scoaterea limitei de pe producție cere aceeași bifă de confirmare — fără limită, producția nu mai are niciun plafon de cheltuieli.",
       "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
-      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură, când trece termenul linkului de confirmare (la „Termene”, pe pagina Emailuri).",
+      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură, când trece termenul linkului de confirmare (la Setări → „Termene”).",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
@@ -1297,7 +1305,7 @@
         "before": "cu {lead} înainte de start",
         "none": "Fără reminder",
         "clubNone": "fără reminder, implicit",
-        "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
+        "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din Setări → „Termene”."
       },
       "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
@@ -1946,9 +1954,9 @@
           "legalName": "Denumirea juridică",
           "registrationNumber": "CIF",
           "registeredAddress": "Sediul",
-          "contactEmail": "Email de contact (adresa de contact afișată, din /admin/emails)"
+          "contactEmail": "Email de contact (adresa de contact afișată, din Setări → Contact)"
         },
-        "contactFactMissing": "EMAIL_REPLY_TO (sau Gmail-ul clubului în «Adresa de contact afișată», pe /admin/emails)",
+        "contactFactMissing": "EMAIL_REPLY_TO (sau Gmail-ul clubului în «Adresa de contact afișată», pe Setări → Contact)",
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
@@ -1973,7 +1981,7 @@
       },
       "tokens": {
         "title": "Câmpurile care se completează singure",
-        "intro": "Le lași exact așa cum sunt în text. Cele ale participantului și ale evenimentului — numai în declarație — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă; cele patru termene, în oricare dintre cele trei texte, cu valorile de la „Termene”, pe pagina Emailuri. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
+        "intro": "Le lași exact așa cum sunt în text. Cele ale participantului și ale evenimentului — numai în declarație — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă; cele patru termene, în oricare dintre cele trei texte, cu valorile de la Setări → „Termene”. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
         "inText": "în text",
         "participant": "Numele cu care s-a înscris participantul",
         "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
@@ -2058,8 +2066,6 @@
         "club": "Club",
         "todo": "De făcut",
         "todoCount": "De făcut ({count})",
-        "botCheck": "Anti-robot",
-        "costs": "Costuri",
         "system": "Sistem",
         "app": "Aplicația"
       },
@@ -2230,7 +2236,7 @@
             "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
             "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *). Noapte: Custom → toate zilele, orele 23 și 0–6, minutul 0 (0 0-6,23 * * *); monitorul de noapte pentru mentenanță poate sări peste 02:00 și 03:00 (0 0-1,4-6,23 * * *). Un apel fără nimic de făcut răspunde fără să trezească baza de date, așa că apelurile dese nu costă nimic — baza se trezește doar când o sarcină chiar are ceva de făcut.",
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
-            "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe această pagină → Costuri „Cât de des verifică platforma” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
+            "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe Setări → Costuri „Cât de des verifică platforma” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
             "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header — pe producție o dată pe oră, la minutul 2 (Custom → toate zilele, toate orele, minutul 2; e în regulă să lași deoparte 02:00 și 03:00: 2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). Nu la 30 de minute: fiecare verificare trezește baza de date pentru cinci minute, iar Neon exact asta facturează. La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
           ]
         },
@@ -2364,14 +2370,14 @@
         },
         "contactForm": {
           "title": "Formularul de contact",
-          "todo": "Pagina „Scrie-ne” e construită: numele, adresa și mesajul vizitatorului ajung ca un e-mail obișnuit în căsuța clubului, direct prin Gmail — nu prin Mailgun, deci nu consumă din cele 100 de mesaje pe zi. Până când contul de trimitere are adresă și parolă de aplicație, pagina arată adresa clubului în loc de formular; cine primește mesajele se scrie în aplicație, pe /admin/emails.",
+          "todo": "Pagina „Scrie-ne” e construită: numele, adresa și mesajul vizitatorului ajung ca un e-mail obișnuit în căsuța clubului, direct prin Gmail — nu prin Mailgun, deci nu consumă din cele 100 de mesaje pe zi. Până când contul de trimitere are adresă și parolă de aplicație, pagina arată adresa clubului în loc de formular; cine primește mesajele se scrie în aplicație, pe Setări → Contact.",
           "done": "Formularul de contact trimite în căsuța clubului.",
           "how": [
             "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
             "Tot în Security → App passwords → creează una cu numele „{club} site” → copiază cele 16 caractere (se arată o singură dată).",
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
+            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         },
@@ -2434,7 +2440,7 @@
             "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar. DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
             "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
-            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Setări → Costuri."
           ],
           "credit": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare. Creditul DeepL: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining} — se dă o singură dată.",
           "creditUnread": "Traducerea automată e pornită. Creditul DeepL: — {creditReason}",
@@ -2442,10 +2448,10 @@
           "low": "Creditul DeepL al cheii e aproape terminat: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Se dă o singură dată și nu revine luna viitoare: pregătiți un credit sau o cheie nouă înainte să se oprească traducerea.",
           "spent": "Creditul DeepL al cheii s-a terminat (folosite {creditUsed} din {creditLimit} caractere): „Copiază și tradu tot” și „Tradu din română” refuză orice traducere. Nu revine luna viitoare — trebuie un credit sau o cheie nouă.",
           "howCredit": [
-            "Intră în contul DeepL (pagina „DeepL API” de pe site-ul DeepL) → Usage: vezi cât a rămas din credit — aceeași cifră ca în Sarcini → Costuri.",
+            "Intră în contul DeepL (pagina „DeepL API” de pe site-ul DeepL) → Usage: vezi cât a rămas din credit — aceeași cifră ca în Setări → Costuri.",
             "Alege: o cheie nouă, cu creditul ei dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește — sau un plan plătit, doar cu acordul explicit al clubului, care folosește planuri gratuite.",
             "În Vercel → proiectul de producție (și QA) → Settings → Environment Variables: DEEPL_API_KEY = cheia nouă. Redeploy.",
-            "În cel mult o oră (sau la prima traducere), Sarcini → Costuri arată noul credit, iar rândul acesta devine verde."
+            "În cel mult o oră (sau la prima traducere), Setări → Costuri arată noul credit, iar rândul acesta devine verde."
           ]
         }
       },
@@ -3011,8 +3017,7 @@
       "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
       "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
       "tabPages": "Paginile clubului",
-      "tabTeam": "Pagina Echipa",
-      "tabAppearance": "Aspect"
+      "tabTeam": "Pagina Echipa"
     },
     "appearance": {
       "title": "Aspectul site-ului",
@@ -3539,7 +3544,7 @@
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",
-        "intro": "Platforma nu poate citi de la Mailgun pe ce plan e contul, așa că îi spui tu aici — și de aici se calculează cât mai poate pleca azi, pe /admin/tasks, pe /devs și la „Trimite acum”. Când plătești o lună de Basic înainte de cursă, schimbi aici; când o anulezi, schimbi înapoi.",
+        "intro": "Platforma nu poate citi de la Mailgun pe ce plan e contul, așa că îi spui tu aici — și de aici se calculează cât mai poate pleca azi, pe Setări → Costuri, pe /devs și la „Trimite acum”. Când plătești o lună de Basic înainte de cursă, schimbi aici; când o anulezi, schimbi înapoi.",
         "aside": {
           "day": "Planul {plan} · {sent} din {allowance} azi",
           "month": "Planul {plan} · {sent} din {allowance} luna aceasta",
@@ -3566,7 +3571,7 @@
         "save": "Salvează planul",
         "readOnly": "Planul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
         "saving": "Se salvează…",
-        "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
+        "saved": "Planul a fost salvat; cifrele de mai sus și de pe Setări → Costuri îl folosesc de acum.",
         "unlimited": "fără limită",
         "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
         "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
@@ -3674,7 +3679,7 @@
       },
       "deadlines": {
         "title": "Termene",
-        "intro": "Cât durează fiecare termen pe care platforma îl dă unui participant. Se aplică de la salvare înainte: un link, un loc ținut sau o ofertă deja date își păstrează termenul primit. Numerele apar singure oriunde sunt scrise — în emailuri, pe formular și în cei cinci pași, în ghid, pe această pagină și în textele legale aprobate din șablonul nou.",
+        "intro": "Cât durează fiecare termen pe care platforma îl dă unui participant. Se aplică de la salvare înainte: un link, un loc ținut sau o ofertă deja date își păstrează termenul primit. Numerele apar singure oriunde sunt scrise — în emailuri, pe formular și în cei cinci pași, în ghid, pe «Emailuri» și în textele legale aprobate din șablonul nou.",
         "aside": "Link {confirmation} · loc ținut {hold} · ofertă {offer} · reminder {reminder}",
         "reminderOff": "fără",
         "bounds": "Recomandat: {recommended}. Între {min} și {max}.",
@@ -3824,12 +3829,13 @@
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
                 "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici.",
-                "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
-                "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
-                "«Emailuri»: ce primesc participanții, planul Mailgun și «Termene».",
+                "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
+                "«Galerie» și «Pagini».",
+                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Contact», «Aspect», «Costuri» și «Platformă».",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
-                "«Pagini», «Galerie», «Echipa», «Configurație» și «Ghid» (pagina aceasta)."
+                "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
+                "«Echipa», «Ghid» (pagina aceasta) și «Configurație»."
               ]
             },
             {
@@ -4180,7 +4186,7 @@
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp: titlul, rezumatul, descrierea, regulamentul, traseul, programul.",
-                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club. Cheia are un credit de 1.000.000 de caractere, dat o singură dată și nereînnoit lunar: cât a rămas scrie în Sarcini → Costuri, iar când s-a terminat butonul rămâne gri și spune asta, cu un link spre Costuri.",
+                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club. Cheia are un credit de 1.000.000 de caractere, dat o singură dată și nereînnoit lunar: cât a rămas scrie în Setări → Costuri, iar când s-a terminat butonul rămâne gri și spune asta, cu un link spre Costuri.",
                 "Citește engleza și corectează ce sună greșit.",
                 "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
@@ -4283,9 +4289,9 @@
               "title": "Planul Mailgun, înainte și după cursă",
               "steps": [
                 "Întâi plătești planul în contul Mailgun.",
-                "«Emailuri» → «Planul Mailgun și cât mai putem trimite».",
+                "«Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».",
                 "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
-                "Apasă «Salvează planul» și confirmă. Cifrele din «Sarcini» și butonul «Trimite acum» se iau după el.",
+                "Apasă «Salvează planul» și confirmă. Cifrele din «Costuri» și butonul «Trimite acum» se iau după el.",
                 "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul»."
               ]
             },
@@ -4299,7 +4305,7 @@
             {
               "title": "Termenele clubului",
               "steps": [
-                "«Emailuri» → «Termene».",
+                "«Setări» → «Termene».",
                 "Schimbă numerele (linkul de email, locul ținut, oferta de pe lista de așteptare, reminderul, prezența, seria).",
                 "Apasă «Salvează termenele» și confirmă. Doar ce se dă de acum încolo ia termenele noi."
               ]
@@ -4325,7 +4331,7 @@
               "title": "Ce mai are clubul de făcut",
               "steps": [
                 "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
-                "«Costuri»: ce plătește clubul și limitele bazei de date. Frânele platformei de acolo le schimbă un Superadministrator (secțiunea lui din ghid)."
+                "«Setări» → «Costuri»: ce plătește clubul și limitele bazei de date. Frânele platformei de acolo le schimbă un Superadministrator (secțiunea lui din ghid)."
               ]
             },
             {
@@ -4351,7 +4357,7 @@
               "title": "Frâna joburilor programate",
               "steps": [
                 "Rol necesar: Superadministrator. Un Administrator vede cifrele la zi, dar nu schimbă intervalul.",
-                "«Sarcini» → «Costuri» → «Cât de des verifică platforma».",
+                "«Setări» → «Costuri» → «Cât de des verifică platforma».",
                 "„La nevoie” e implicit — platforma trezește baza de date doar când are ceva de făcut. Un interval mai lung scade factura Neon, dar întârzie fiecare predare a unui loc de pe lista de așteptare și fiecare email trimis de joburi."
               ]
             },
@@ -4359,7 +4365,7 @@
               "title": "Limitele bazei de date",
               "steps": [
                 "Rol necesar: Superadministrator. O limită greșită poate opri site-ul; un Administrator o vede, dar nu o schimbă.",
-                "«Sarcini» → «Costuri» → «Limitele bazei de date».",
+                "«Setări» → «Costuri» → «Limitele bazei de date».",
                 "Frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu, cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă."
               ]
             },
@@ -4367,7 +4373,7 @@
               "title": "Pragurile bugetului lunii",
               "steps": [
                 "Rol necesar: Superadministrator. Un Administrator vede bugetul și ce face platforma, dar nu schimbă pragurile.",
-                "«Sarcini» → «Costuri» → «Bugetul lunii» → «Salvează pragurile».",
+                "«Setări» → «Costuri» → «Bugetul lunii» → «Salvează pragurile».",
                 "Pragurile spun de la ce parte din limita lunară platforma trece pe galben și pe roșu și se frânează singură. Unul prea jos o frânează degeaba; unul prea sus o lasă să ajungă la limită, iar atunci Neon oprește baza de date."
               ]
             },
@@ -4375,7 +4381,7 @@
               "title": "Verificarea anti-robot",
               "steps": [
                 "Rol necesar: Superadministrator. Un Administrator vede starea, dar nu o schimbă.",
-                "«Sarcini» → «Anti-robot»: verificarea Cloudflare Turnstile și capcana ascunsă (honeypot).",
+                "«Setări» → «Platformă»: verificarea Cloudflare Turnstile și capcana ascunsă (honeypot).",
                 "Oprită, formularul e deschis roboților; pornită cu o cheie greșită, poate refuza oameni reali. Se oprește în ziua în care caseta refuză oameni și se pornește la loc după."
               ]
             },
@@ -4553,7 +4559,7 @@
             {
               "title": "Schimbă limita pe adresă (Administrator)",
               "steps": [
-                "«Emailuri» → «Termene» → «Maxim de înscrieri pe o adresă (pe eveniment)».",
+                "«Setări» → «Termene» → «Maxim de înscrieri pe o adresă (pe eveniment)».",
                 "Scrie numărul, apasă «Salvează maximul» și confirmă."
               ]
             }
@@ -5518,15 +5524,15 @@
       },
       "contactFormSmtp": {
         "title": "Formularul de contact",
-        "body": "Trimite prin SMTP, direct din Gmailul clubului — nu prin Mailgun și nu prin coada de e-mail. Destinatarii vin din /admin/emails, iar dacă acolo nu e nimeni, din CONTACT_FORM_TO; eticheta de alături spune care dintre ele a răspuns."
+        "body": "Trimite prin SMTP, direct din Gmailul clubului — nu prin Mailgun și nu prin coada de e-mail. Destinatarii vin din Setări → Contact, iar dacă acolo nu e nimeni, din CONTACT_FORM_TO; eticheta de alături spune care dintre ele a răspuns."
       },
       "contactFormNoRecipients": {
         "title": "Formularul de contact",
-        "body": "Poate trimite, dar nu are către cine: nici lista din /admin/emails, nici CONTACT_FORM_TO nu au vreo adresă. Pagina „Scrie-ne” arată adresa clubului până când cineva scrie un destinatar pe /admin/emails — fără redeploy."
+        "body": "Poate trimite, dar nu are către cine: nici lista din Setări → Contact, nici CONTACT_FORM_TO nu au vreo adresă. Pagina „Scrie-ne” arată adresa clubului până când cineva scrie un destinatar pe Setări → Contact — fără redeploy."
       },
       "contactFormOff": {
         "title": "Formularul de contact",
-        "body": "Pagina „Scrie-ne” arată adresa clubului în loc de formular. Lipsește contul din care pleacă: CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se scriu în aplicație, pe /admin/emails; CONTACT_FORM_TO e doar rezerva."
+        "body": "Pagina „Scrie-ne” arată adresa clubului în loc de formular. Lipsește contul din care pleacă: CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se scriu în aplicație, pe Setări → Contact; CONTACT_FORM_TO e doar rezerva."
       }
     },
     "rateLimits": "Limite de frecvență",
@@ -5589,7 +5595,7 @@
       }
     },
     "operationalTitle": "Ce face fiecare limită când este atinsă",
-    "operationalIntro": "Cine oprește: furnizorul, prin API-ul lui, sau chiar codul acestei aplicații. Ce face aplicația în acel moment, și ce variabilă sau monitorizare este implicată. Costurile și planurile nu sunt aici: stau pe /admin/tasks, pentru cine plătește factura.",
+    "operationalIntro": "Cine oprește: furnizorul, prin API-ul lui, sau chiar codul acestei aplicații. Ce face aplicația în acel moment, și ce variabilă sau monitorizare este implicată. Costurile și planurile nu sunt aici: stau pe Setări → Costuri, pentru cine plătește factura.",
     "enforcedBy": {
       "provider": "impusă de furnizor",
       "application": "impusă de aplicație"
@@ -5662,8 +5668,8 @@
         "FREE": "Planul: Free, citit de la Neon.",
         "LAUNCH": "Planul: Launch, citit de la Neon."
       },
-      "planLink": "Schimbă planul (Sarcini → Costuri).",
-      "planSetBy": "Îl setează Administratorul, pe Sarcini → Costuri.",
+      "planLink": "Schimbă planul (Setări → Costuri).",
+      "planSetBy": "Îl setează Administratorul, pe Setări → Costuri.",
       "sizeLaunch": "Spațiu ocupat: {used} MB — {storageRate} $/GB-lună, adică circa {usd} $ pe lună.",
       "used": "{used} din {of} ore-CU folosite ({percent}%)",
       "usedLaunch": "Ore de calcul în perioada aceasta: {used} ore-CU; cost estimat: {usd} $ ({rate} $/oră-CU).",
@@ -5684,8 +5690,8 @@
       "nextPing": "următorul ping rulează",
       "pingRan": "ultimul ping {when}: a rulat",
       "pingSkipped": "ultimul ping {when}: sărit",
-      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală la {cap} min (/admin/tasks → Costuri).",
-      "cadenceEvery": "Interval minim: {minutes} min între două rulări reale (/admin/tasks → Costuri)."
+      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală la {cap} min (Setări → Costuri).",
+      "cadenceEvery": "Interval minim: {minutes} min între două rulări reale (Setări → Costuri)."
     }
   },
   "Error": {
@@ -5695,8 +5701,8 @@
     "home": "Înapoi la prima pagină",
     "reference": "Dacă se repetă, spune-ne acest cod:",
     "staffTitle": "Backoffice-ul nu a putut încărca pagina",
-    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; bugetul lunii e pe pagina de sarcini, la Costuri.",
-    "staffTasks": "Deschide pagina de sarcini"
+    "staffBody": "Baza de date nu a răspuns chiar acum — poate pornește sau e în pauză până la sfârșitul lunii. Nimic de pe acest ecran nu s-a salvat, decât dacă ți s-a spus. Mai încearcă peste un minut; bugetul lunii e la Setări → Costuri.",
+    "staffTasks": "Deschide Setări → Costuri"
   },
   "Gallery": {
     "title": "Galerie",
@@ -6252,7 +6258,7 @@
     "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
     "spent": "Creditul DeepL s-a terminat —",
     "spentSteps": "vezi Costuri",
-    "spentAskAdmin": "Creditul DeepL s-a terminat: traducerea automată e oprită până când un Administrator pune un credit sau o cheie nouă (Sarcini → Costuri).",
+    "spentAskAdmin": "Creditul DeepL s-a terminat: traducerea automată e oprită până când un Administrator pune un credit sau o cheie nouă (Setări → Costuri).",
     "offSteps": "Vezi pașii",
     "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
     "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
@@ -6282,12 +6288,12 @@
       "nothing": "Câmpul în română e gol: nu e nimic de tradus.",
       "nothingAll": "Nu e nimic de tradus: scrie întâi textele în română.",
       "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
-      "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
+      "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Setări → Costuri.",
       "quota": "DeepL nu mai are caractere pe această cheie: creditul s-a consumat. Traducerea revine când un Administrator pune un credit sau o cheie nouă (Sarcini → Club).",
       "refused": "DeepL a refuzat cheia. Un Administrator trebuie să verifice DEEPL_API_KEY (Sarcini).",
       "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",
       "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă.",
-      "credit": "Traducerea aceasta cere mai mult decât a rămas din creditul DeepL (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată; un Administrator vede creditul în Sarcini → Costuri."
+      "credit": "Traducerea aceasta cere mai mult decât a rămas din creditul DeepL (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată; un Administrator vede creditul în Setări → Costuri."
     }
   }
 }

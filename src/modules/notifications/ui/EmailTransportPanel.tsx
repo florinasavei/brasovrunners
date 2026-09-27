@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateEmailTransportAction } from "@/app/[locale]/admin/emails/actions";
+import { updateEmailTransportAction } from "@/app/[locale]/admin/settings/emails/actions";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";

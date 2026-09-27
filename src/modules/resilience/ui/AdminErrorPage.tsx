@@ -36,8 +36,9 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
         <GlyphButton icon="reset" variant="contained" onClick={reset} sx={TAP_TARGET}>
           {t("retry")}
         </GlyphButton>
-        {/* A plain anchor: the boundary may have caught a failure in the routing a localized href needs. */}
-        <Link href="/admin/tasks">{t("staffTasks")}</Link>
+        {/* A plain anchor: the boundary may have caught a failure in the routing a localized href needs.
+            To the month's budget, «Setări» → «Costuri» since §NNN; the path is the same in both locales. */}
+        <Link href="/admin/settings/costs">{t("staffTasks")}</Link>
       </Stack>
       {error.digest && (
         <Alert severity="info" icon={false}>

@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { updateNeonLimitsAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateNeonLimitsAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -133,7 +133,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   if (!reading.ok) {
     const { failure } = reading;
     return (
-      <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+      <Panel level={level} id="neon-limits" title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
         {failure.kind === "unconfigured" ? (
           <Typography variant="body2" data-testid="neon-limits-unconfigured">
             {t("tasks.neonLimits.unconfigured", { missing: failure.missing.join(", ") })}
@@ -196,7 +196,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   ];
 
   return (
-    <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+    <Panel level={level} id="neon-limits" title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
       {/* What Neon holds now, in words: the ceiling and its memory, and the limit. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-readout">
         {t("tasks.neonLimits.readout", {

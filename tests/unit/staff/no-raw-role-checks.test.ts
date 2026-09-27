@@ -103,7 +103,7 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
       expect(source, file).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
       expect(source, file).not.toMatch(/canManageRegistrations\(/);
     }
-    const emailsPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    const emailsPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8");
     expect(emailsPage).toMatch(/const mayEditEmail = canManageClubSettings\(staff\.role\);/);
     const tasksPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/tasks/page.tsx"), "utf8");
     expect(tasksPage).toMatch(/canManageClubSettings\(actor\.role\) && <OlderPicturesPanel/);

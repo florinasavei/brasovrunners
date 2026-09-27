@@ -19,7 +19,7 @@ vi.mock("next-intl/server", async () => {
     getLocale: async () => "ro",
   };
 });
-vi.mock("@/app/[locale]/admin/emails/actions", () => ({ updateDeadlinesAction: async () => null }));
+vi.mock("@/app/[locale]/admin/settings/deadlines/actions", () => ({ updateDeadlinesAction: async () => null }));
 
 const { default: DeadlinesPanel } = await import("@/modules/deadlines/ui/DeadlinesPanel");
 const { DEADLINE_KEYS, DEADLINE_RULES, DEFAULT_DEADLINES } = await import("@/modules/deadlines/domain/deadlines");

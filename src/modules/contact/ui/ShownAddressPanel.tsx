@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateShownContactAddressAction } from "@/app/[locale]/admin/emails/actions";
+import { updateShownContactAddressAction } from "@/app/[locale]/admin/settings/contact/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CONTACT_ADDRESS_MODES, joinContactAddresses, replyToHeader } from "@/modules/contact/domain/shown-address";

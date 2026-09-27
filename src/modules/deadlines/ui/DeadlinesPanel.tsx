@@ -3,7 +3,7 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateAddressCapAction, updateDeadlinesAction } from "@/app/[locale]/admin/emails/actions";
+import { updateAddressCapAction, updateDeadlinesAction } from "@/app/[locale]/admin/settings/deadlines/actions";
 import { countForm } from "@/i18n/count-form";
 import type { AddressCapState } from "@/modules/registrations/address-cap";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
@@ -40,9 +40,8 @@ type Props = {
 };
 
 /**
- * "Termene" (§377): the club's deadlines, one box each, on `/admin/emails` — above the messages
- * whose when-lines and previews state them, so a changed number is read back in the next card
- * down. A Server Component with one form, the Mailgun plan's shape (§100): every box a whole
+ * "Termene" (§377): the club's deadlines, one box each — «Setări» → «Termene» since §NNN, one tab
+ * over from «Emailuri», whose when-lines and previews state them. A Server Component with one form, the Mailgun plan's shape (§100): every box a whole
  * number with the bounds the service enforces (`DEADLINE_RULES`), carried as `min`/`max` so the
  * browser refuses "0 hours" before the server does (§315); the closed line says the four a
  * participant meets most.

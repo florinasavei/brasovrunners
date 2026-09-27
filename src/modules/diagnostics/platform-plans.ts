@@ -510,7 +510,11 @@ export type MoneyDecision = {
   state: "open" | "answered";
 };
 
-export function moneyDecisions(input: PlatformFacts): MoneyDecision[] {
+/**
+ * Only the one fact it reads: «Sarcini» → «Club» lists the open questions and no longer reads the
+ * cost table's facts since the money moved to «Setări» → «Costuri» (§NNN).
+ */
+export function moneyDecisions(input: Pick<PlatformFacts, "hasPaidEvent">): MoneyDecision[] {
   return [
     /**
      * Answered by the owner on 2026-09-07 (`DECISIONS.md` §50): the club sells nothing and takes

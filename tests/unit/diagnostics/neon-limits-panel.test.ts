@@ -22,7 +22,7 @@ vi.mock("next-intl/server", async () => {
     getLocale: async () => "ro",
   };
 });
-vi.mock("@/app/[locale]/admin/tasks/actions", () => ({ updateNeonLimitsAction: async () => null }));
+vi.mock("@/app/[locale]/admin/settings/costs/actions", () => ({ updateNeonLimitsAction: async () => null }));
 
 const { default: NeonLimitsPanel, moneySentence } = await import("@/modules/diagnostics/ui/NeonLimitsPanel");
 

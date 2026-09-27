@@ -27,7 +27,7 @@ const ITEMS = [
   { href: "/ro/devs", label: "Stare", active: true },
   { href: "/ro/devs?panel=general", label: "General" },
   { href: "/ro/devs?panel=email", label: "Emailuri" },
-  { href: "/ro/admin/tasks?panel=botCheck", label: "Anti-robot" },
+  { href: "/ro/admin/tasks?panel=app", label: "Aplicația" },
 ];
 
 const html = renderToStaticMarkup(createElement(SubNav, { label: "Configurația acestui mediu", items: ITEMS }));
@@ -123,6 +123,8 @@ describe("§360 one look for every backoffice sub-navigation", () => {
       "src/app/[locale]/admin/tasks/page.tsx",
       "src/app/[locale]/devs/page.tsx",
       "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
+      // «Setări»'s tab row (§NNN).
+      "src/modules/staff-identity/ui/SettingsSubNav.tsx",
     ]) {
       expect(read(file), file).toMatch(/<SubNav\s[^>]*?label=/);
     }

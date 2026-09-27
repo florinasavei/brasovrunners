@@ -309,7 +309,7 @@ describe("§359 what goes out is what went out before", () => {
     const confirmed = renderBilingual("REGISTRATION_CONFIRMED", "en", emailSampleData("en"), emailSampleActionUrl("en")).text;
     for (const value of ["The autumn cross", "EXAMPL", "42", "Water, a rain jacket, good spirits"]) expect(confirmed).toContain(value);
 
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8");
     // Per message since the email follow-up (§373): the sample minus the fields the message never carries.
     expect(page).toContain("const sample = emailSampleFor(messageType, emailLocale);");
     expect(page).toContain("renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy)");
@@ -409,7 +409,7 @@ describe("§359 a saved text with sample values is found in either language", ()
   });
 
   it("feeds the closed card's marker and the card of cards from both languages, not only the one on screen", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8");
     // Every message with words to edit — not the organizer's, written per send (§364).
     expect(page).toContain("const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];");
     expect(page).toContain("const anySamples = cards.some((card) => card.sampleLanguages.length > 0);");
@@ -635,7 +635,7 @@ describe("§364 the organizer's message on the page of every email", () => {
   });
 
   it("draws no editor and no sample-value marker for it, and says where it is written", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8");
     // The newsletter is the other message written per send (§445).
     expect(page).toContain('return messageType === "ORGANIZER_MESSAGE" || messageType === "NEWSLETTER";');
     expect(page).toContain("const own = perSend(messageType) ? null : copyFor(written.copy, messageType, emailLocale);");

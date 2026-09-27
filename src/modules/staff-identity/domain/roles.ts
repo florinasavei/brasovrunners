@@ -586,25 +586,33 @@ export function canManageClubSettings(role: StaffRole): boolean {
  * Each entry names the capability the page behind it actually asserts, so the two cannot drift:
  *
  *     events         everyone with a staff session — the backoffice's front door
- *     checkin        canWorkTheDesk           `admin/checkin/page.tsx` — every role, on purpose
- *     guide          every staff session      `admin/guide/page.tsx`
  *     registrations  canReadRegistrations     `admin/registrations/page.tsx` — the verbs on it
  *                                             ask `canManageRegistrations` one by one (§289)
+ *     checkin        canWorkTheDesk           `admin/checkin/page.tsx` — every role, on purpose
+ *     gallery        canReadContent           `admin/gallery/page.tsx`
  *     pages          isEditorial              `admin/pages/page.tsx`
- *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
- *                                             «Club», «Anti-robot», «Costuri» canManageRegistrations,
- *                                             «Aplicația» canSeeDiagnostics (§397), «De făcut»
- *                                             canReadClubTodo (§438); the forms on them ask
- *                                             `canManageClubSettings` or `canManagePlatform` (§450)
- *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
- *                                             `canWriteLegalTexts` (§450)
- *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
  *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
  *                                             composer (§445); withdrawing an address asks
  *                                             `canManageRegistrations` for itself
+ *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§NNN), each tab
+ *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
+ *                                             «Contact», «Aspect» canReadContent, «Costuri» and
+ *                                             «Platformă» canManageRegistrations; the forms on them ask
+ *                                             `canManageClubSettings` or `canManagePlatform` (§450)
+ *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
+ *                                             «Club» canManageRegistrations, «Aplicația»
+ *                                             canSeeDiagnostics (§397), «De făcut» canReadClubTodo (§438)
  *     staff          canManageStaff           `admin/staff/page.tsx` — the Administrator's since
  *                                             §450; a Superadministrator's row is not (canManageMember)
+ *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
+ *                                             `canWriteLegalTexts` (§450)
+ *     guide          every staff session      `admin/guide/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
+ *
+ * **In the order the club opens them (§NNN)**, which is the array's order and the bar's: the
+ * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, then the
+ * settings, what is owed, the team, the legal texts, the guide, and the system last. A role is
+ * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid».
  *
  * The hierarchy makes one property testable and worth stating: a higher role is offered every
  * section a lower one is. `tests/unit/staff/roles.test.ts` asserts it across every pair, which
@@ -612,16 +620,16 @@ export function canManageClubSettings(role: StaffRole): boolean {
  */
 export const ADMIN_SECTIONS = [
   "events",
-  "checkin",
-  "guide",
-  "pages",
-  "gallery",
   "registrations",
-  "tasks",
-  "legal",
-  "emails",
+  "checkin",
+  "gallery",
+  "pages",
   "newsletter",
+  "settings",
+  "tasks",
   "staff",
+  "legal",
+  "guide",
   "devs",
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
@@ -656,50 +664,61 @@ export function canReadContent(role: StaffRole): boolean {
   return atLeast(role, "COPYWRITER");
 }
 
+/**
+ * Whether «Setări» is offered at all (§NNN): the union of its tabs' gates, which
+ * `settings-tabs.ts` spells out per tab. Written here as the threshold — every tab asks
+ * `canReadContent` or the higher `canManageRegistrations` — because that module reads its
+ * predicates from this one and importing back would cycle; a unit test holds the two equal.
+ */
+export function canOpenSettings(role: StaffRole): boolean {
+  return canReadContent(role);
+}
+
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
-  return [
+  /*
+    Each section's own gate, filtered over `ADMIN_SECTIONS` so the bar's order is the array's —
+    by how often the club opens them (§NNN) — and a role only ever loses a tab, never reorders one.
+  */
+  const offered: Record<AdminSection, boolean> = {
     // The events list, for everyone who may look at it — writing is a separate question and
     // a separate gate (§208). A volunteer's backoffice is the desk and the guide (§103).
-    ...(canReadContent(role) ? (["events"] as const) : []),
-    // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
-    ...(canWorkTheDesk(role) ? (["checkin", "guide"] as const) : []),
-    // Standing pages are words and the gallery is pictures; both are the club's content, so
-    // both are offered to whoever may read it and guarded on the way in (§208).
-    ...(canReadContent(role) ? (["pages"] as const) : []),
-    ...(canReadContent(role) ? (["gallery"] as const) : []),
+    events: canReadContent(role),
     // Who signed up, for the roles that may read it (§289). Every verb on that screen asks
     // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
-    ...(canReadRegistrations(role) ? (["registrations"] as const) : []),
-    // «Sarcini»: what the *club* still owes, read from the system, for the role that answers for
-    // it (BR-REQ-060-01); the «Aplicația» panel for a Tehnic (§397); and since §438 the club's own
-    // checklist «De făcut», which every role that reads the club's content opens — so the whole
-    // section is offered from the copywriter up, and each panel asserts its own gate
-    // (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`). Written as the threshold
-    // rather than imported, because that module reads its predicates from this one.
-    ...(canReadContent(role) ? (["tasks"] as const) : []),
-    // The legal texts are readable by the roles that must know what the club published; only
-    // the Administrator writes one (§46, §181, §203).
-    ...(canReadContent(role) ? (["legal"] as const) : []),
-    /*
-      The club's email (§250): the messages as they go out and the words in them, which is the
-      Redactor's work (§247) — so the same gate as the club's other content, and the page's own
-      panels ask their own questions behind it. The queue, the plan and who receives a copy of a
-      declaration are Administrator's, and each is read only for a role that may see it (§243,
-      §244).
-
-      It had no entry here at all, which is how a page nobody could navigate to ended up holding
-      the templates, the outbox and the club's copies: reachable from one link in the guide, and
-      from nowhere else (the owner: "I am missing the email templates config … in this navbar").
-    */
-    ...(canReadContent(role) ? (["emails"] as const) : []),
+    registrations: canReadRegistrations(role),
+    // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
+    checkin: canWorkTheDesk(role),
+    // The gallery is pictures and the standing pages are words; both are the club's content, so
+    // both are offered to whoever may read it and guarded on the way in (§208).
+    gallery: canReadContent(role),
+    pages: canReadContent(role),
     /*
       «Newsletter» (§445; the owner, 2026-09-26: "pentru newsletter o să fie un meniu suplimentar
       în backoffice cu «Newsletter»"): the subscribers as numbers and the composer, for whoever may
       write to them — the Organizer, the Administrator and the Superadministrator. Not the Tehnic,
       who writes to nobody (§38), which is the ladder's second deliberate hole beside the list.
     */
-    ...(canSendNewsletter(role) ? (["newsletter"] as const) : []),
-    ...(canManageStaff(role) ? (["staff"] as const) : []),
-    ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
-  ];
+    newsletter: canSendNewsletter(role),
+    /*
+      «Setări» (§NNN): the club's settings as one row of tabs — the email page (§250, which had no
+      entry at all until the owner's "I am missing the email templates config … in this navbar"),
+      «Termene», «Contact», «Aspect», «Costuri», «Platformă». Offered to whoever may open one tab of
+      it (`settings-tabs.ts`); the Redactor opens «Emailuri» for the words (§247).
+    */
+    settings: canOpenSettings(role),
+    // «Sarcini»: what the *club* still owes, read from the system, for the role that answers for
+    // it (BR-REQ-060-01); the «Aplicația» panel for a Tehnic (§397); and since §438 the club's own
+    // checklist «De făcut», which every role that reads the club's content opens — so the whole
+    // section is offered from the copywriter up, and each panel asserts its own gate
+    // (`modules/diagnostics/domain/task-panels.ts`'s `canOpenTasks`). Written as the threshold
+    // rather than imported, because that module reads its predicates from this one.
+    tasks: canReadContent(role),
+    staff: canManageStaff(role),
+    // The legal texts are readable by the roles that must know what the club published; only
+    // the Administrator writes one (§46, §181, §203).
+    legal: canReadContent(role),
+    guide: canWorkTheDesk(role),
+    devs: canSeeDiagnostics(role),
+  };
+  return ADMIN_SECTIONS.filter((section) => offered[section]);
 }

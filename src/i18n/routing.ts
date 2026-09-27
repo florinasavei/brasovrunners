@@ -186,8 +186,19 @@ export const routing = defineRouting({
     "/admin/guide": "/admin/guide",
     /** What a staff member's network lets through, and what to ask IT to allow (§436). */
     "/admin/network": "/admin/network",
-    /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91). */
-    "/admin/emails": "/admin/emails",
+    /**
+     * «Setări» (§NNN): the club's settings as one row of tabs. `/admin/emails`,
+     * `/admin/pages/appearance` and `/admin/tasks?panel=costs|botCheck` moved here and answer
+     * 308 from their old addresses (`src/i18n/moved-paths.ts`). A backoffice address, one spelling.
+     */
+    "/admin/settings": "/admin/settings",
+    /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91), and the email settings. */
+    "/admin/settings/emails": "/admin/settings/emails",
+    "/admin/settings/deadlines": "/admin/settings/deadlines",
+    "/admin/settings/contact": "/admin/settings/contact",
+    "/admin/settings/appearance": "/admin/settings/appearance",
+    "/admin/settings/costs": "/admin/settings/costs",
+    "/admin/settings/platform": "/admin/settings/platform",
     /**
      * «Newsletter» (§445): the subscribers as numbers and the composer that writes to them — the
      * backoffice's own entry, after «Emailuri» (the owner, 2026-09-26: "un meniu suplimentar în
@@ -210,7 +221,6 @@ export const routing = defineRouting({
     "/admin/pages/new": "/admin/pages/new",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
-    "/admin/pages/appearance": "/admin/pages/appearance",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",

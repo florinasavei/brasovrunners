@@ -16,7 +16,7 @@ test.describe("§447 the month's budget", () => {
   test("Costuri says the budget is unknown and the platform does nothing extra", async ({ page }) => {
     // The thresholds' form is a platform setting, the Superadministrator's since §450.
     await signIn(page, "Dev Superadministrator");
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93).
     const card = page.locator("#main").getByTestId("neon-budget");
 

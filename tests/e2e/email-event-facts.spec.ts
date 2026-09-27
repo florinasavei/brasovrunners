@@ -13,7 +13,7 @@ import { openFold } from "./support/fold";
 test.describe("the event's facts in the confirmed email's preview", () => {
   test("every row, from the sample event, in both halves", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
-    await page.goto("/ro/admin/emails?lang=ro");
+    await page.goto("/ro/admin/settings/emails?lang=ro");
     const card = page.locator("#main").locator("#email-REGISTRATION_CONFIRMED");
     await openFold(card);
 

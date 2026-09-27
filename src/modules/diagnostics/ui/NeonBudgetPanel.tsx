@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { updateBudgetThresholdsAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateBudgetThresholdsAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { BUDGET_AHEAD_MARGIN, type NeonBudgetLevel } from "@/modules/diagnostics/domain/neon-budget";
@@ -51,7 +51,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
   const words = mayEdit ? await confirmWords() : null;
 
   return (
-    <Panel level={headingLevel} title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
+    <Panel level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
       <Alert severity={SEVERITY[level]} sx={{ mb: 1.5 }} data-testid="neon-budget-level" data-level={level}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t(`level.${level}`)}

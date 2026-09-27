@@ -483,12 +483,20 @@
       "pages": "Pages",
       "gallery": "Gallery",
       "checkin": "Race day",
-      "emails": "Emails",
+      "settings": "Settings",
       "guide": "Guide",
       "registeredHint": "Active registrations (no cancelled, no tests) on the events still to come:",
       "registeredEvent": "{title}: {count}",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter"
+    },
+    "settingsTabs": {
+      "emails": "Emails",
+      "deadlines": "Deadlines",
+      "contact": "Contact",
+      "appearance": "Appearance",
+      "costs": "Costs",
+      "platform": "Platform"
     },
     "outbox": {
       "status": {
@@ -978,7 +986,7 @@
       "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all.",
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
-      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own when the confirmation link runs out (under “Deadlines”, on the Emails page).",
+      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own when the confirmation link runs out (under Settings → “Deadlines”).",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field the platform can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
@@ -1297,7 +1305,7 @@
         "before": "{lead} before the start",
         "none": "No reminder",
         "clubNone": "no reminder by default",
-        "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
+        "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under Settings → “Deadlines”."
       },
       "minAgeHelp": "Reached by the day of the event. Under 18, a parent or legal guardian registers the runner, with their consent. 0 means no minimum age.",
       "bibDesign": {
@@ -1946,9 +1954,9 @@
           "legalName": "Legal name",
           "registrationNumber": "CIF",
           "registeredAddress": "Registered seat",
-          "contactEmail": "Contact email (the contact address shown, from /admin/emails)"
+          "contactEmail": "Contact email (the contact address shown, from Settings → Contact)"
         },
-        "contactFactMissing": "EMAIL_REPLY_TO (or the club's Gmail under «Contact address shown», on /admin/emails)",
+        "contactFactMissing": "EMAIL_REPLY_TO (or the club's Gmail under «Contact address shown», on Settings → Contact)",
         "missing": "not set",
         "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
         "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",
@@ -1973,7 +1981,7 @@
       },
       "tokens": {
         "title": "The fields that fill themselves in",
-        "intro": "Leave them exactly as they are in the text. The participant's and the event's — in the declaration only — are replaced at signing, for each person and each race; the four deadlines, in any of the three texts, with the values under “Deadlines” on the Emails page. The club's own facts are not here: those are already written into the text.",
+        "intro": "Leave them exactly as they are in the text. The participant's and the event's — in the declaration only — are replaced at signing, for each person and each race; the four deadlines, in any of the three texts, with the values under Settings → “Deadlines”. The club's own facts are not here: those are already written into the text.",
         "inText": "in this text",
         "participant": "The name the participant registered under",
         "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
@@ -2058,8 +2066,6 @@
         "club": "Club",
         "todo": "To do",
         "todoCount": "To do ({count})",
-        "botCheck": "Anti-bot",
-        "costs": "Costs",
         "system": "System",
         "app": "The app"
       },
@@ -2230,7 +2236,7 @@
             "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
             "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *). Night: Custom → every day, hours 23 and 0–6, minute 0 (0 0-6,23 * * *); the maintenance night job may skip 02:00 and 03:00 (0 0-1,4-6,23 * * *). A ping with nothing due answers without waking the database, so frequent pings cost nothing — the database wakes only when a job has work.",
             "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
-            "On QA: the outbox every hour (0 * * * *) and maintenance every 2 hours (0 */2 * * *), and on this page → Costuri „Cât de des verifică platforma” = 2 hours: QA pays for its own database's awake hours too.",
+            "On QA: the outbox every hour (0 * * * *) and maintenance every 2 hours (0 */2 * * *), and on Settings → Costs „Cât de des verifică platforma” = 2 hours: QA pays for its own database's awake hours too.",
             "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header — production once an hour at minute 2 (Custom → every day, every hour, minute 2; leaving out 02:00 and 03:00 is fine: 2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Not every 30 minutes: each check wakes the database for five minutes, and that is what Neon bills. Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
           ]
         },
@@ -2364,14 +2370,14 @@
         },
         "contactForm": {
           "title": "The contact form",
-          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the sending account has its address and app password, the page shows the club's address instead of the form; who receives the messages is written in the app, on /admin/emails.",
+          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the sending account has its address and app password, the page shows the club's address instead of the form; who receives the messages is written in the app, on Settings → Contact.",
           "done": "The contact form sends to the club's mailbox.",
           "how": [
             "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
             "Still under Security → App passwords → create one named “{club} site” → copy the 16 characters (shown once).",
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
+            "In the app: Settings → Contact → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         },
@@ -2434,7 +2440,7 @@
             "Create a DeepL API account (the \"DeepL API\" page on DeepL's site): one key, with a one-time credit of 1,000,000 characters that does not renew monthly. DeepL may ask for a card for verification only; the credit is not charged, and a paid plan is chosen only with the club's explicit yes.",
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
             "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
-            "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Tasks → Costs."
+            "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Settings → Costs."
           ],
           "credit": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press. The DeepL credit: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left — given once.",
           "creditUnread": "Automatic translation is on. The DeepL credit: — {creditReason}",
@@ -2442,10 +2448,10 @@
           "low": "The key's DeepL credit is nearly spent: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left. It is given once and does not come back next month: get a new credit or key ready before translation stops.",
           "spent": "The key's DeepL credit is spent ({creditUsed} of {creditLimit} characters used): \"Copy and translate everything\" and \"Translate from Romanian\" refuse every translation. It does not come back next month — a new credit or key is needed.",
           "howCredit": [
-            "Sign in to the DeepL account (the \"DeepL API\" page on DeepL's site) → Usage: see what is left of the credit — the same figure as under Tasks → Costs.",
+            "Sign in to the DeepL account (the \"DeepL API\" page on DeepL's site) → Usage: see what is left of the credit — the same figure as under Settings → Costs.",
             "Choose: a new key, with its one-time credit of 1,000,000 characters that does not renew — or a paid plan, only with the club's explicit yes, since the club uses free plans.",
             "In Vercel → the production project (and QA) → Settings → Environment Variables: DEEPL_API_KEY = the new key. Redeploy.",
-            "Within an hour (or at the first translation), Tasks → Costs shows the new credit, and this row turns green."
+            "Within an hour (or at the first translation), Settings → Costs shows the new credit, and this row turns green."
           ]
         }
       },
@@ -3011,8 +3017,7 @@
       "seoHelp": "Optional, for search engines — in both languages or neither.",
       "bothOrNeither": "write it in both languages or neither",
       "tabPages": "The club's pages",
-      "tabTeam": "The team page",
-      "tabAppearance": "Appearance"
+      "tabTeam": "The team page"
     },
     "appearance": {
       "title": "Site appearance",
@@ -3539,7 +3544,7 @@
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
-        "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on /admin/tasks, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",
+        "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on Settings → Costs, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",
         "aside": {
           "day": "Plan {plan} · {sent} of {allowance} today",
           "month": "Plan {plan} · {sent} of {allowance} this month",
@@ -3566,7 +3571,7 @@
         "save": "Save the plan",
         "readOnly": "The plan is the Administrator’s to change. The figures above are current for you too.",
         "saving": "Saving…",
-        "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
+        "saved": "The plan is saved; the figures above and on Settings → Costs use it from now on.",
         "unlimited": "no limit",
         "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared.",
         "forecast": "A registration carried through to confirmation costs about {count} messages; what is left pays for about {left} more registrations.",
@@ -3674,7 +3679,7 @@
       },
       "deadlines": {
         "title": "Deadlines",
-        "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
+        "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on «Emails» and in legal texts approved from the new template.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
         "bounds": "Recommended: {recommended}. Between {min} and {max}.",
@@ -3824,12 +3829,13 @@
               "steps": [
                 "You see only your role's tabs; the rest do not exist for you, and that is fine.",
                 "«Events»: every club event; «New event» and «Edit» are here.",
-                "«Race day»: the number pickup desk, on a phone.",
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
-                "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
-                "«Emails»: what participants receive, the Mailgun plan and «Deadlines».",
+                "«Race day»: the number pickup desk, on a phone.",
+                "«Gallery» and «Pages».",
+                "«Settings»: «Emails» (what participants receive, the Mailgun plan), «Deadlines», «Contact», «Appearance», «Costs» and «Platform».",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
-                "«Pages», «Gallery», «Staff», «Configuration» and «Guide» (this page)."
+                "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
+                "«Staff», «Guide» (this page) and «Configuration»."
               ]
             },
             {
@@ -4180,7 +4186,7 @@
               "title": "The English in one press",
               "steps": [
                 "Write every box in Romanian: the title, the summary, the description, the rules, the route, the programme.",
-                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». Every text goes, translated, into its English twin, with the same layout. If the English already has text, it asks, naming how many and which: «Replace everything» or «Only the empty ones»; for a very long text it also says how many characters of today's budget will be sent. Is the button grey? The server has no DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club. The key has a credit of 1,000,000 characters, given once and not renewed monthly: what is left is under Tasks → Costs, and once it is spent the button stays grey and says so, with a link to Costs.",
+                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». Every text goes, translated, into its English twin, with the same layout. If the English already has text, it asks, naming how many and which: «Replace everything» or «Only the empty ones»; for a very long text it also says how many characters of today's budget will be sent. Is the button grey? The server has no DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club. The key has a credit of 1,000,000 characters, given once and not renewed monthly: what is left is under Settings → Costs, and once it is spent the button stays grey and says so, with a link to Costs.",
                 "Read the English and correct what reads wrong.",
                 "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
@@ -4283,9 +4289,9 @@
               "title": "The Mailgun plan, before and after a race",
               "steps": [
                 "First pay for the plan in the Mailgun account.",
-                "«Emails» → «The Mailgun plan, and how much we can still send».",
+                "«Settings» → «Emails» → «The Mailgun plan, and how much we can still send».",
                 "Under «The plan the Mailgun account is on» pick Basic; under «Note (why, until when)» write why and until when.",
-                "Press «Save the plan» and confirm. The figures on «Tasks» and the «Send now» button follow it.",
+                "Press «Save the plan» and confirm. The figures on «Costs» and the «Send now» button follow it.",
                 "After the race: cancel in Mailgun, then put Free back here and «Save the plan»."
               ]
             },
@@ -4299,7 +4305,7 @@
             {
               "title": "The club's deadlines",
               "steps": [
-                "«Emails» → «Deadlines».",
+                "«Settings» → «Deadlines».",
                 "Change the numbers (the email link, the held place, the waiting-list offer, the reminder, check-in, the series).",
                 "Press «Save the deadlines» and confirm. Only what is given from now on takes the new deadlines."
               ]
@@ -4325,7 +4331,7 @@
               "title": "What the club still has to do",
               "steps": [
                 "«Tasks» → the «Club» tab: every row is read from the system, with the steps under it. A green row is done.",
-                "«Costs»: what the club pays and the database's limits. The platform's brakes there are a Superadministrator's to change (their section of this guide)."
+                "«Settings» → «Costs»: what the club pays and the database's limits. The platform's brakes there are a Superadministrator's to change (their section of this guide)."
               ]
             },
             {
@@ -4351,7 +4357,7 @@
               "title": "The brake on the scheduled jobs",
               "steps": [
                 "Role needed: Superadministrator. An Administrator sees the current figures but does not change the interval.",
-                "«Tasks» → «Costs» → «How often the platform checks».",
+                "«Settings» → «Costs» → «How often the platform checks».",
                 "“On demand” is the default — the platform wakes the database only when it has something to do. A longer interval lowers the Neon bill, but delays every hand-over of a waiting-list place and every email the jobs send."
               ]
             },
@@ -4359,7 +4365,7 @@
               "title": "The database's limits",
               "steps": [
                 "Role needed: Superadministrator. A wrong limit can stop the site; an Administrator sees it but does not change it.",
-                "«Tasks» → «Costs» → «The database's limits».",
+                "«Settings» → «Costs» → «The database's limits».",
                 "The brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment, with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box."
               ]
             },
@@ -4367,7 +4373,7 @@
               "title": "This month's budget thresholds",
               "steps": [
                 "Role needed: Superadministrator. An Administrator sees the budget and what the platform is doing, but does not change the thresholds.",
-                "«Tasks» → «Costs» → «This month's budget» → «Save the thresholds».",
+                "«Settings» → «Costs» → «This month's budget» → «Save the thresholds».",
                 "The thresholds say at what share of the monthly limit the platform turns amber and red and brakes itself. One set too low brakes it for nothing; one set too high lets it reach the limit, and then Neon stops the database."
               ]
             },
@@ -4375,7 +4381,7 @@
               "title": "The anti-bot check",
               "steps": [
                 "Role needed: Superadministrator. An Administrator sees its state but does not change it.",
-                "«Tasks» → «Anti-bot»: the Cloudflare Turnstile check and the hidden honeypot trap.",
+                "«Settings» → «Platform»: the Cloudflare Turnstile check and the hidden honeypot trap.",
                 "Off, the form is open to robots; on with a wrong key, it can refuse real people. Switch it off on the day the box refuses people, and back on afterwards."
               ]
             },
@@ -4553,7 +4559,7 @@
             {
               "title": "Change the limit per address (Administrator)",
               "steps": [
-                "«Emails» → «Deadlines» → «Registrations per address (per event)».",
+                "«Settings» → «Deadlines» → «Registrations per address (per event)».",
                 "Type the number, press «Save the limit» and confirm."
               ]
             }
@@ -5518,15 +5524,15 @@
       },
       "contactFormSmtp": {
         "title": "Contact form",
-        "body": "Sends over SMTP, straight from the club's Gmail — not through Mailgun and not through the email queue. The recipients come from /admin/emails, or from CONTACT_FORM_TO while nobody is set there; the label beside this says which one answered."
+        "body": "Sends over SMTP, straight from the club's Gmail — not through Mailgun and not through the email queue. The recipients come from Settings → Contact, or from CONTACT_FORM_TO while nobody is set there; the label beside this says which one answered."
       },
       "contactFormNoRecipients": {
         "title": "Contact form",
-        "body": "It can send, but there is nobody to send to: neither the list on /admin/emails nor CONTACT_FORM_TO holds an address. The “Write to us” page shows the club's address until somebody writes a recipient on /admin/emails — no redeploy needed."
+        "body": "It can send, but there is nobody to send to: neither the list on Settings → Contact nor CONTACT_FORM_TO holds an address. The “Write to us” page shows the club's address until somebody writes a recipient on /admin/emails — no redeploy needed."
       },
       "contactFormOff": {
         "title": "Contact form",
-        "body": "The “Write to us” page shows the club's address instead of the form. The sending account is missing: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password). The recipients are written in the app, on /admin/emails; CONTACT_FORM_TO is only the fallback."
+        "body": "The “Write to us” page shows the club's address instead of the form. The sending account is missing: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password). The recipients are written in the app, on Settings → Contact; CONTACT_FORM_TO is only the fallback."
       }
     },
     "rateLimits": "Rate limits",
@@ -5589,7 +5595,7 @@
       }
     },
     "operationalTitle": "What each limit does when it is met",
-    "operationalIntro": "Who stops you — the provider's own API, or this application's code — what the application does at that moment, and which variable or monitor is involved. Costs and plans are not here: they live on /admin/tasks, for the people who pay the invoice.",
+    "operationalIntro": "Who stops you — the provider's own API, or this application's code — what the application does at that moment, and which variable or monitor is involved. Costs and plans are not here: they live on Settings → Costs, for the people who pay the invoice.",
     "enforcedBy": {
       "provider": "enforced by the provider",
       "application": "enforced by the application"
@@ -5662,8 +5668,8 @@
         "FREE": "Plan: Free, read from Neon.",
         "LAUNCH": "Plan: Launch, read from Neon."
       },
-      "planLink": "Change the plan (Tasks → Costs).",
-      "planSetBy": "The Administrator sets it, on Tasks → Costs.",
+      "planLink": "Change the plan (Settings → Costs).",
+      "planSetBy": "The Administrator sets it, on Settings → Costs.",
       "sizeLaunch": "Storage used: {used} MB — ${storageRate}/GB-month, about ${usd} a month.",
       "used": "{used} of {of} CU-hours used ({percent}%)",
       "usedLaunch": "Compute hours this period: {used} CU-hours; estimated cost ${usd} (${rate}/CU-hour).",
@@ -5684,8 +5690,8 @@
       "nextPing": "the next ping runs",
       "pingRan": "last ping {when}: ran",
       "pingSkipped": "last ping {when}: skipped",
-      "cadenceOnDemand": "Minimum interval: on demand — at least one real run every {cap} min (/admin/tasks → Costs).",
-      "cadenceEvery": "Minimum interval: {minutes} min between two real runs (/admin/tasks → Costs)."
+      "cadenceOnDemand": "Minimum interval: on demand — at least one real run every {cap} min (Settings → Costs).",
+      "cadenceEvery": "Minimum interval: {minutes} min between two real runs (Settings → Costs)."
     }
   },
   "Error": {
@@ -5695,8 +5701,8 @@
     "home": "Back to the first page",
     "reference": "If it keeps happening, tell us this code:",
     "staffTitle": "The backoffice could not load this page",
-    "staffBody": "Our database did not answer just now — it may be starting, or paused for the rest of the month. Nothing on this screen was saved unless it said so. Try again in a minute; the month's budget is on the tasks page, under Costs.",
-    "staffTasks": "Open the tasks page"
+    "staffBody": "Our database did not answer just now — it may be starting, or paused for the rest of the month. Nothing on this screen was saved unless it said so. Try again in a minute; the month's budget is under Settings → Costs.",
+    "staffTasks": "Open Settings → Costs"
   },
   "Gallery": {
     "title": "Gallery",
@@ -6252,7 +6258,7 @@
     "offAskAdmin": "Automatic translation is not on yet: the server has no DeepL key. Ask an Administrator to set it (the steps are under Tasks → Club).",
     "spent": "The DeepL credit is spent —",
     "spentSteps": "see Costs",
-    "spentAskAdmin": "The DeepL credit is spent: automatic translation is off until an Administrator sets a new credit or key (Tasks → Costs).",
+    "spentAskAdmin": "The DeepL credit is spent: automatic translation is off until an Administrator sets a new credit or key (Settings → Costs).",
     "offSteps": "See the steps",
     "done": "Translated. Read it, correct it if needed, then save.",
     "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
@@ -6282,12 +6288,12 @@
       "nothing": "The Romanian box is empty: there is nothing to translate.",
       "nothingAll": "Nothing to translate: write the Romanian texts first.",
       "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
-      "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
+      "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Settings → Costs.",
       "quota": "DeepL has no characters left on this key: the credit is spent. Translation comes back when an Administrator sets a new credit or key (Tasks → Club).",
       "refused": "DeepL refused the key. An Administrator needs to check DEEPL_API_KEY (Tasks).",
       "unavailable": "DeepL did not answer. Try again in a minute.",
       "failed": "The translation did not start. Check the connection and try again.",
-      "credit": "This translation asks for more than is left of the DeepL credit (characters left: {remaining}). Translate fewer boxes at once; an Administrator sees the credit under Tasks → Costs."
+      "credit": "This translation asks for more than is left of the DeepL credit (characters left: {remaining}). Translate fewer boxes at once; an Administrator sees the credit under Settings → Costs."
     }
   }
 }

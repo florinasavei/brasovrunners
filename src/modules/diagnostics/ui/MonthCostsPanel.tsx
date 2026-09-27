@@ -160,6 +160,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
 
   return (
     <Panel
+      id="month-costs"
       title={t("tasks.month.title")}
       intro={t("tasks.month.intro")}
       aside={t("tasks.month.aside", { amount: usd(totals.projectedUsd) })}
