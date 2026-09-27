@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import { useEffect, useRef } from "react";
-import { TURNSTILE_SCRIPT_URL } from "../turnstile";
+import { TURNSTILE_SCRIPT_URL } from "../domain/turnstile-widget";
 
 /**
  * Cloudflare Turnstile, rendered explicitly and reset on every attempt (`DECISIONS.md` §185).

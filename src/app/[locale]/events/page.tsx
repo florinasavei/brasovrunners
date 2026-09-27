@@ -436,13 +436,13 @@ async function ListingBody({
     (§470); the start hour's details are the event page's. Open-Meteo's credit is the site footer's
     (§455).
   */
-  const forecasts = await forecastsForEvents(
-    [...(featured ? [featured] : []), ...cards.map((series) => series.members[0])],
-    now,
-  );
+  // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a
+  // visitor. Asked beside the weather rather than after it (§NNN): neither needs the other.
+  const [forecasts, raceWeekDays] = await Promise.all([
+    forecastsForEvents([...(featured ? [featured] : []), ...cards.map((series) => series.members[0])], now),
+    featured ? cachedDeadlines().then((deadlines) => deadlines.raceWeekDays) : null,
+  ]);
   const weatherOf = (event: PublicEvent) => forecasts.get(event.id)?.start ?? null;
-  // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
-  const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // The lead takes the first place in the rise-in order, so the cards after it keep theirs.
   const offset = featured ? 1 : 0;
 

@@ -13,7 +13,8 @@ import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
-import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
+import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 

@@ -6,7 +6,7 @@ import {
   type RichTextDoc,
   type RichTextText,
 } from "@/modules/content/rich-text/domain/schema";
-import { fillPlaceholders, onlyMissingFacts, placeholdersIn } from "./email-copy";
+import { fillPlaceholders, onlyMissingFacts } from "./email-copy";
 
 /**
  * The club's own words for a message, written in the rich-text editor (`DECISIONS.md` §270; the
@@ -57,11 +57,6 @@ export function unsupportedEmailBlocks(doc: RichTextDoc): string[] {
 export function isEmailBodyEmpty(doc: RichTextDoc | null | undefined): boolean {
   if (!doc) return true;
   return (doc.content ?? []).every((block) => textOf(block).trim() === "");
-}
-
-/** Every `{name}` anywhere in the document, so the save can refuse one this platform cannot fill. */
-export function emailBodyPlaceholders(doc: RichTextDoc): string[] {
-  return (doc.content ?? []).flatMap((block) => placeholdersIn(textOf(block)));
 }
 
 /**

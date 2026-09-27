@@ -9,7 +9,8 @@ import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { registerInterest } from "@/modules/registrations/interest";
 import { INTEREST_BOX_ID } from "@/modules/registrations/interest-box";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
-import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
+import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
