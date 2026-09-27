@@ -288,7 +288,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   let listStatesOn = false;
   /*
-    §NNN: the same reading for the socials — while the notice in force describes them, the form
+    §500: the same reading for the socials — while the notice in force describes them, the form
     offers «Arată și Strava și Instagram» under «Vreau să apar» and says in the socials fold that
     they reach the site only through that tick. Off (or unread), the form is as it was.
   */
@@ -1142,7 +1142,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   {t("disclosure.socials")}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
-                  {/* "Nu apar pe site" stops being the whole truth once the list can print them (§NNN). */}
+                  {/* "Nu apar pe site" stops being the whole truth once the list can print them (§500). */}
                   <Typography variant="body2" color="text.secondary">
                     {listSocialsOn ? t("socialsHelpList") : t("socialsHelp")}
                   </Typography>
@@ -1333,7 +1333,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                         </Typography>
                       )}
                       {/*
-                        The socials beside the name (§NNN), behind the notice in force and asked as a
+                        The socials beside the name (§500), behind the notice in force and asked as a
                         consent of its own: never folded (§59), never pre-ticked, and meaningless
                         without the list tick above and a social typed in the fold — the service
                         keeps it only with both. Adults only, like the socials themselves (§323):

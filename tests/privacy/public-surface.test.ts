@@ -382,12 +382,12 @@ describe("§421 the pending and waiting rows follow the notice each runner was g
 });
 
 /**
- * §NNN (widening §106) — Strava and Instagram beside a name. A deliberate widening, and a narrow
+ * §500 (widening §106) — Strava and Instagram beside a name. A deliberate widening, and a narrow
  * one: only when the caller asks (the page does only behind the notice's gate), and even then a
  * value leaves the database only for a runner whose own tick is kept (`list_socials`). Without the
  * option the rows are exactly what they were — the keys above are unchanged.
  */
-describe("§NNN what the socials beside a name may contain", () => {
+describe("§500 what the socials beside a name may contain", () => {
   const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
   const strava = "https://www.strava.com/athletes/12345";
 

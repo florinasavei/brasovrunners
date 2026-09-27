@@ -57,7 +57,7 @@ export default function RegistrationDoorButton({ slug, cta, label }: { slug: str
   }
 
   // The club's runner on the way in (the public send buttons' figure, §318), an hourglass on the
-  // way onto the waiting list (§NNN: every public button wears a glyph).
+  // way onto the waiting list (§498: every public button wears a glyph).
   const Glyph = cta.kind === "FULL" ? HourglassEmptyIcon : DirectionsRunIcon;
   return (
     <ButtonLink variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ...accentOnHover }} href={{ pathname: "/events/[slug]/register", params: { slug } }}>

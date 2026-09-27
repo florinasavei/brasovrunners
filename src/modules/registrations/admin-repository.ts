@@ -63,7 +63,7 @@ export type RegistrationListRow = {
    * club and not the platform.
    */
   listOptOut: boolean;
-  /** Whether the socials are printed beside the name on the public list (§NNN); the export's last column. */
+  /** Whether the socials are printed beside the name on the public list (§500); the export's last column. */
   listSocials: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
@@ -508,7 +508,7 @@ export type RegistrationDetail = {
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
-  /** Whether the public list prints them beside the name (§NNN): the runner's own tick, as kept. */
+  /** Whether the public list prints them beside the name (§500): the runner's own tick, as kept. */
   listSocials: boolean;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
@@ -766,11 +766,11 @@ export async function listWorkbookDetails<T extends Record<string, unknown>>(
   return new Map(rows.map((row) => [row.id, row]));
 }
 
-/** The declaration a registration's latest acceptance was signed against (§NNN): its version and when. */
+/** The declaration a registration's latest acceptance was signed against (§499): its version and when. */
 export type LatestDeclarationAcceptance = { version: number; acceptedAt: Date };
 
 /**
- * The latest declaration acceptance of each exported registration (§NNN), for the export's two
+ * The latest declaration acceptance of each exported registration (§499), for the export's two
  * declaration columns: one query for the lot, newest first, the first per registration kept — the
  * same "latest" the signed PDF is drawn from (`findSignedDeclaration`). A registration with no
  * acceptance is absent from the map, which the file prints as two blank cells.

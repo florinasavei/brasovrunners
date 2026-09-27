@@ -37,7 +37,7 @@ export async function translateFieldAction(input: unknown): Promise<TranslateOut
   const outcome = await translateClubTexts(getDb(), actor, input, {
     translator,
     now: new Date(),
-    // DeepL's credit (§NNN): a spent one refuses without a request; an unread one lets DeepL answer.
+    // DeepL's credit (§497): a spent one refuses without a request; an unread one lets DeepL answer.
     credit: async () => {
       const reading = await readTranslationCredit(env);
       return reading.ok ? reading.credit : null;

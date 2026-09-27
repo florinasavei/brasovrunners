@@ -15,7 +15,7 @@ import { TOAST_ANCHOR, TOAST_TOP_PX } from "@/shared/feedback/ToastRegion";
 import { HEADER_CLEARANCE_PX } from "@/theme/brand";
 
 /**
- * §NNN — the owner, 2026-09-27: «Am nevoie de un toast de confirmare că s-a tradus tot, și
+ * §496 — the owner, 2026-09-27: «Am nevoie de un toast de confirmare că s-a tradus tot, și
  * toast-urile trebuie să apară în partea de sus».
  *
  * - «Copiază și tradu tot» says what happened in a toast: the count of English boxes it filled
@@ -39,7 +39,7 @@ function toastSentence(locale: Locale, key: string, count?: number): string {
   return t(`toast.${key}.${countForm(count, locale)}` as never, { count: String(count) } as never) as string;
 }
 
-describe("§NNN the translate press toasts its outcome", () => {
+describe("§496 the translate press toasts its outcome", () => {
   it("the whole-record press that worked: a success notice keyed on whether anything was cut, for 8 s", () => {
     expect(translatedAllNotice(7, [])).toEqual({ kind: "success", key: "translatedAll", values: { count: "7" }, autoHideMs: LONG_TOAST_AUTO_HIDE_MS });
     expect(translatedAllNotice(3, ["Titlu"])).toMatchObject({ kind: "success", key: "translatedAllCut", values: { count: "3" } });
@@ -125,7 +125,7 @@ describe("§NNN the translate press toasts its outcome", () => {
   });
 });
 
-describe("§NNN toasts sit at the top", () => {
+describe("§496 toasts sit at the top", () => {
   it("anchors the one ToastRegion top centre, at the header clearance the theme's scroll padding also reads", () => {
     expect(TOAST_ANCHOR).toEqual({ vertical: "top", horizontal: "center" });
     expect(TOAST_TOP_PX).toBe(HEADER_CLEARANCE_PX);

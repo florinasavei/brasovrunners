@@ -352,7 +352,7 @@ export const registrations = pgTable(
     listOptOut: boolean("list_opt_out").notNull().default(true),
 
     /**
-     * "Show my Strava and Instagram beside my name on the list" (§NNN): the runner's own tick,
+     * "Show my Strava and Instagram beside my name on the list" (§500): the runner's own tick,
      * separate from the list tick above and from typing the socials at all (§106 kept them off
      * the site). True only when the runner ticked it, was listed, was an adult, typed at least one
      * of the two, and the privacy notice they were given names `{{participantListSocials}}` —

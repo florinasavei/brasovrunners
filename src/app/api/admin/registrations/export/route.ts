@@ -122,7 +122,7 @@ export async function GET(request: Request): Promise<Response> {
    * downloads folder telling you nothing.
    */
   const format = url.searchParams.get("format") === "xlsx" ? "xlsx" : "csv";
-  // Which declaration each row signed, and when (§NNN): both formats, one query for the exported rows.
+  // Which declaration each row signed, and when (§499): both formats, one query for the exported rows.
   const declarations = await listLatestDeclarationAcceptances(db, rows.map((row) => row.id));
 
   /*
@@ -217,7 +217,7 @@ export async function GET(request: Request): Promise<Response> {
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
       termsVersion: row.termsVersion,
       termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",
-      // The declaration signed (§NNN): blank while none is.
+      // The declaration signed (§499): blank while none is.
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
     })),

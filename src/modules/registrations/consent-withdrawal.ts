@@ -105,7 +105,7 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
       .update(registrations)
       .set({
         ...(cleared.includes("health") ? { healthNotes: null, healthConsentVersion: null, healthConsentAt: null } : {}),
-        // The tick that printed them beside the name goes with them (§NNN).
+        // The tick that printed them beside the name goes with them (§500).
         ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null, listSocials: false } : {}),
         ...(cleared.includes("results") ? { resultsNameConsent: false } : {}),
         updatedAt: input.now,
@@ -128,7 +128,7 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
 
     return { cleared };
   });
-  // A public list may have been printing them (§NNN): off it for the next visitor, not after the
+  // A public list may have been printing them (§500): off it for the next visitor, not after the
   // cache's day (§333) — as leaving the list does (`list-consent.ts`). After the commit, never
   // inside the transaction: a public read landing between an early revalidation and the commit
   // would cache the old row, socials and all, for the cache's life.

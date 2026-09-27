@@ -169,7 +169,7 @@ describe("§440 a group run's minimum age is its own box in «Traseul»", () => 
   });
 
   /*
-    §NNN: a refusal of the age names the box the reader can see. The save reads a group run's age
+    §495: a refusal of the age names the box the reader can see. The save reads a group run's age
     from «Traseul»; `fields.ts` reports it as `minAge`, which the form's names turned into the
     race's hidden box — so the summary's link opened a block the group run does not show.
   */

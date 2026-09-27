@@ -1192,7 +1192,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const stravaUrl = minor ? null : (input.stravaUrl ?? null);
   const instagramHandle = minor ? null : (input.instagramHandle ?? null);
   /*
-    The socials beside the name on the public list (§NNN), kept only when every condition holds:
+    The socials beside the name on the public list (§500), kept only when every condition holds:
     the runner ticked it; ticked the list too (a tick about a list they are not on is about
     nothing); has a Strava link or an Instagram username to print (so never a minor, §323); and the
     privacy notice this registration records — the one they were just given, in their language —

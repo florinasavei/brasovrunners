@@ -273,7 +273,7 @@ export async function cachedStartListCounts(eventId: string): Promise<{ named: n
 
 /**
  * One page of `listPublicStartList` — names and clubs, and, only with `socials` (the notice in force
- * describes them, §NNN), each ticked runner's Strava and Instagram. The flag is in the key, so a
+ * describes them, §500), each ticked runner's Strava and Instagram. The flag is in the key, so a
  * page read without the gate is never served to a reader with it, or the other way round.
  */
 export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false) {
@@ -327,7 +327,7 @@ export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
 
 /**
  * Whether the public list may print a runner's Strava and Instagram, and the form offer the tick
- * that asks for it (§NNN): the privacy notice in force describes them (`describesListSocials`), in
+ * that asks for it (§500): the privacy notice in force describes them (`describesListSocials`), in
  * every language — the same reading as the states above. `noticeDescribesListSocials` is the
  * backoffice's uncached twin; the service asks the notice each runner is given at submission.
  */

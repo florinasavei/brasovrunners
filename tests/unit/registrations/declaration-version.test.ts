@@ -3,7 +3,7 @@ import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { declarationFooterLine, declarationVersionLine, pageOwners } from "@/modules/registrations/declaration-pdf";
 
 /**
- * §NNN — every declaration document says which version it is: under each entry's title and in
+ * §499 — every declaration document says which version it is: under each entry's title and in
  * the footer of every page, the version's number and the day it took effect — the signing pages'
  * own «Versiunea N, în vigoare din …» — so a page that travels alone still names the approved text
  * it carries, and a signed page says when it was signed.
@@ -16,7 +16,7 @@ const NOW = new Date("2026-09-27T10:00:00.000Z");
  */
 const EFFECTIVE = new Date("2026-09-11T22:30:00.000Z");
 
-describe("§NNN the declaration's version line", () => {
+describe("§499 the declaration's version line", () => {
   it("names the version and the day it took effect, with its weekday on the club's clock, in both languages", () => {
     expect(declarationWords("ro", NOW).versionInForce(3, EFFECTIVE)).toBe("Versiunea 3, în vigoare din sâmbătă, 12 sept. 2026");
     expect(declarationWords("en", NOW).versionInForce(3, EFFECTIVE)).toBe("Version 3, in force since Saturday, 12 Sept 2026");
@@ -51,7 +51,7 @@ describe("§NNN the declaration's version line", () => {
   });
 });
 
-describe("§NNN each page's footer names its own entry's version", () => {
+describe("§499 each page's footer names its own entry's version", () => {
   it("gives every page to the entry drawn on it, however many pages each took", () => {
     const older = { version: 1 };
     const newer = { version: 2 };

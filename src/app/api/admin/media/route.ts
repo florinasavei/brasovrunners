@@ -11,7 +11,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * A picture is up to ten WebP encodes since «Originală» (§437, §NNN): the master, the thumbnail
+ * A picture is up to ten WebP encodes since «Originală» (§437, §495): the master, the thumbnail
  * and eight rungs (3200 only under a master wider than 4000), plus the two probe encodes that
  * decide near-lossless at «Mare» and «Originală». The worst case this ceiling has to cover is a
  * 6000-px near-lossless «Originală»; a phone photograph's ladder measured 3–10 seconds on a

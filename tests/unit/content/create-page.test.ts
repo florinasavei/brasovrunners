@@ -162,7 +162,7 @@ describe("no film box", () => {
 
   it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
     // The columns left the Drizzle schema in BR-V2.10 and the database in BR-V2.11's contract
-    // migration 0095, because BR-V2.09 still declared them (AGENTS.md §7.6, §491, §NNN).
+    // migration 0095, because BR-V2.09 still declared them (AGENTS.md §7.6, §491, §494).
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_url")');
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_poster_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
@@ -182,7 +182,7 @@ describe("no film box", () => {
     expect(index).toBeGreaterThan(0);
     expect(journal.entries[index].when).toBeGreaterThan(journal.entries[index - 1].when);
     // The release that stopped declaring them drops nothing (0093, 0094); the drop is the release
-    // after's own contract, 0095, and the only migration after 0092 that names them (§491, §NNN).
+    // after's own contract, 0095, and the only migration after 0092 that names them (§491, §494).
     for (const entry of journal.entries.slice(index + 1)) {
       const sql = read(`src/db/migrations/${entry.tag}.sql`);
       if (entry.tag === "0095_film_columns_dropped") {

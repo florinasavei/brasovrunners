@@ -5,7 +5,7 @@ import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 
 /**
- * §NNN — a cloud session (Claude Code on the web) prepares itself; a session on a developer's
+ * §501 — a cloud session (Claude Code on the web) prepares itself; a session on a developer's
  * own machine never does.
  *
  * The SessionStart hook in `.claude/settings.json` runs on every session, local ones included,
@@ -36,7 +36,7 @@ function envWithout(...names: string[]): NodeJS.ProcessEnv {
   return env;
 }
 
-describe("§NNN the cloud-session hook", () => {
+describe("§501 the cloud-session hook", () => {
   it("runs scripts/cloud-setup.sh on a session's start and resume, from the project root", () => {
     expect(hook, "a SessionStart command hook naming scripts/cloud-setup.sh").toBeDefined();
     const entry = sessionStart.find((e) => e.hooks.includes(hook as Hook));

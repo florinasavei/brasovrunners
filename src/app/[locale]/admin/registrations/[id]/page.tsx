@@ -252,7 +252,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Typography>
       )}
       {/* The socials the person offered (§106): links to follow back — and whether the public
-          list prints them beside the name, the runner's own tick (§NNN). */}
+          list prints them beside the name, the runner's own tick (§500). */}
       {(registration.stravaUrl || registration.instagramHandle) && (
         <Typography variant="body2" color="text.secondary">
           {registration.stravaUrl && (

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prepare a Claude Code cloud session (Claude Code on the web) to work on this repository (§NNN).
+# Prepare a Claude Code cloud session (Claude Code on the web) to work on this repository (§501).
 #
 # A cloud session starts from a fresh clone: no node_modules, no .env.local, PostgreSQL 16
 # installed but not running. The SessionStart hook in .claude/settings.json runs this script on

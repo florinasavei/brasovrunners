@@ -110,7 +110,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
   },
-  // The privacy notice's marker for the socials beside a name (§NNN): filled with the form's own
+  // The privacy notice's marker for the socials beside a name (§500): filled with the form's own
   // tick, and the switch that lets the form offer it and the list print them (`describesListSocials`).
   {
     token: `{{${LIST_SOCIALS_MERGE_FIELD}}}`,

@@ -163,7 +163,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         {t("groupRunDeclaration.page.languageNote")}
       </Typography>
 
-      {/* Which approved text this is (§NNN): its version and the day it took effect, as the terms page says its own (§323). */}
+      {/* Which approved text this is (§499): its version and the day it took effect, as the terms page says its own (§323). */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
         {legalCopy("inForce", {
           version: document.version,

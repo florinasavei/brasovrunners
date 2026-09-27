@@ -116,7 +116,7 @@ describe("BR-REQ-090-07 «Luna aceasta» assembled from its readers", () => {
     expect(thrown.reasons.current.vercel).toBe("error");
   });
 
-  it("§NNN: maps DeepL's credit onto its line, and a refusal onto its reason — never a green line for a key nobody could read", async () => {
+  it("§497: maps DeepL's credit onto its line, and a refusal onto its reason — never a green line for a key nobody could read", async () => {
     const read = await readMonthCosts(inputs(), readers({ deeplCredit: async () => ({ ok: true, credit: translationCredit({ used: 800_000, limit: 1_000_000 }) }) }));
     expect(line(read, "deepl")).toMatchObject({ severity: "watch", detail: { kind: "credit", remaining: 200_000, level: "watch" } });
     expect(read.reasons.deeplCredit).toBeNull();

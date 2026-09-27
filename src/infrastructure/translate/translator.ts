@@ -21,7 +21,7 @@ export function createTranslatorForEnvironment(env: TranslateEnvironment): Trans
 }
 
 /**
- * What the configured key has used and may use (§NNN), from the provider's own meter, or null
+ * What the configured key has used and may use (§497), from the provider's own meter, or null
  * when no translator is configured here. Throws `TranslatorError` when the provider says no.
  */
 export async function readTranslationUsageForEnvironment(

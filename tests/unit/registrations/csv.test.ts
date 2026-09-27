@@ -207,7 +207,7 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    // §425's two, now followed by the declaration's two (§NNN).
+    // §425's two, now followed by the declaration's two (§499).
     expect(columns.slice(-4, -2)).toEqual(["Terms version", "Terms accepted"]);
     expect(accepted.split(",").slice(-4, -2)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
     expect(staff.split(",").slice(-4, -2)).toEqual(["", ""]);
@@ -215,7 +215,7 @@ describe("CSV formula neutralization", () => {
   });
 
   /**
-   * §NNN — which declaration version the registration signed, and when, as the last two columns,
+   * §499 — which declaration version the registration signed, and when, as the last two columns,
    * after the terms: blank while nothing is signed, never 0. A paper acceptance recorded at the
    * desk has a version too, so a staff entry's cells are filled like anybody's.
    */

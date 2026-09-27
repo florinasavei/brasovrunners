@@ -277,7 +277,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       guardianName: input.details?.guardianName ?? null,
       stravaUrl: input.details?.stravaUrl ?? null,
       instagramHandle: input.details?.instagramHandle ?? null,
-      // The socials beside the name on the public list (§NNN): decided by the service, false unless said.
+      // The socials beside the name on the public list (§500): decided by the service, false unless said.
       listSocials: input.details?.listSocials ?? false,
       // NOT NULL with a default of false: "did not say" and "said no" are the same answer to
       // a question that grants nothing, unlike the two consents above it, where they are not.
@@ -367,7 +367,7 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 
 /**
  * A row of the public list: the display name and the club — and, only when the caller asked for
- * the socials behind the notice's gate (§NNN), the runner's Strava link and Instagram username,
+ * the socials behind the notice's gate (§500), the runner's Strava link and Instagram username,
  * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`).
  */
 export type PublicStartListRow = {
@@ -378,7 +378,7 @@ export type PublicStartListRow = {
 };
 
 /**
- * The two socials columns a public list may add (§NNN, widening §106), or none.
+ * The two socials columns a public list may add (§500, widening §106), or none.
  *
  * Asked for only by `StartList`, only while the privacy notice in force names
  * `{{participantListSocials}}` (`cachedListSocialsDisclosed`). Even then each value is gated in
@@ -423,7 +423,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
    * the page existed asked for, and what the privacy test still reads.
    */
   page?: { offset: number; limit: number },
-  /** Only behind the notice's gate (§NNN): see `publicSocialColumns`. */
+  /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
   options: { socials?: boolean } = {},
 ): Promise<PublicStartListRow[]> {
   const query = db
@@ -539,7 +539,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
    */
   firstStatesNoticeVersion: number,
   page?: { offset: number; limit: number },
-  /** Only behind the notice's gate (§NNN): see `publicSocialColumns`. */
+  /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
   options: { socials?: boolean } = {},
 ): Promise<Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>> {
   const waiting = inArray(registrations.status, [...WAITLISTED_LIST_STATUSES]);

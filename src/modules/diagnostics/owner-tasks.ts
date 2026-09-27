@@ -153,7 +153,7 @@ export type OwnerTaskInputs = {
   listStatesDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe Strava and Instagram beside a name on
-   * the public list (§NNN, `noticeDescribesListSocials`)? Until it does, the form does not offer
+   * the public list (§500, `noticeDescribesListSocials`)? Until it does, the form does not offer
    * the tick and the list prints them for nobody.
    */
   listSocialsDescribed: boolean;
@@ -243,7 +243,7 @@ export type OwnerTaskInputs = {
    */
   translationConfigured: boolean;
   /**
-   * The DeepL credit from DeepL's own meter (§NNN), as `readTranslationCredit` answered it. The
+   * The DeepL credit from DeepL's own meter (§497), as `readTranslationCredit` answered it. The
    * credit is given once: `watch` (80 %) reopens the row amber with the steps for a new one, `low`
    * (95 %) and `spent` (translation refuses everything until a new credit or key) turn it red; the figures themselves reach
    * the sentence through the page's values, and an unread credit says «—» with the reason.
@@ -308,7 +308,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.listStatesDescribed ? "done" : "open",
     });
     /*
-      Strava and Instagram beside a name (§NNN), the same shape: open, never blocking — nothing is
+      Strava and Instagram beside a name (§500), the same shape: open, never blocking — nothing is
       refused, the form simply does not ask — and done by itself the day a notice naming
       `{{participantListSocials}}` takes effect.
     */
@@ -450,7 +450,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // «Tradu din română» (§464): built; open until DeepL's free key is on the deployment, never
   // blocking — without it the English boxes are written by hand, as before.
-  // Since §NNN the credit behind the key is read too: it is given once and never refilled, so a
+  // Since §497 the credit behind the key is read too: it is given once and never refilled, so a
   // key at 80 % of its credit is `open` (amber) with its own sentence and the steps for a new one,
   // and at 95 % — nearly spent or spent — it is `broken` (red): the row is where the club hears it
   // before a press fails, at the same two thresholds Costuri's line uses (`watch`, then `act`).

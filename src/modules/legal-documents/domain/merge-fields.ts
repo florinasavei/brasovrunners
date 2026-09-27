@@ -91,7 +91,7 @@ export function deadlineMergeValues(
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
- * The privacy notice's marker for the socials beside a name on the public list (§NNN, widening
+ * The privacy notice's marker for the socials beside a name on the public list (§500, widening
  * §106, which kept the Strava link and the Instagram username off the site). The same two-in-one
  * as the states above: filled, when the notice is shown, with the words of the form's own tick,
  * quoted (`registrations/list-socials-words.ts`), and the switch — the form offers that tick, the
@@ -330,7 +330,7 @@ export function describesListStates(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the socials beside a name on the public list (§NNN): it names
+ * Whether a privacy notice describes the socials beside a name on the public list (§500): it names
  * `{{participantListSocials}}`. The gate for the form's tick, for keeping it, and for printing the
  * socials — the club's approval of such a text is the switch, as for the states (§396). Pure.
  */

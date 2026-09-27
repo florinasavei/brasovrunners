@@ -89,7 +89,7 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
       "clubMemberDeclared",
       "honeypot",
       "listOptOut",
-      // §NNN: a tick like `listOptOut`, and the service decides what is kept — nothing to refuse.
+      // §500: a tick like `listOptOut`, and the service decides what is kept — nothing to refuse.
       "listSocials",
       "locale",
       "renderedAt",

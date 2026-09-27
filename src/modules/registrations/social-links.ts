@@ -2,7 +2,7 @@ import { INSTAGRAM_HANDLE, STRAVA_URL } from "./fields";
 
 /**
  * Where a registration's socials (§106) point, for the backoffice's registration page and the
- * public list (§NNN). One place, so the two cannot build the Instagram address two ways.
+ * public list (§500). One place, so the two cannot build the Instagram address two ways.
  */
 
 /** A username's profile page. The handle is stored without the `@` (`fields.ts`). */
@@ -14,7 +14,7 @@ export function instagramProfileUrl(handle: string): string {
  * A profile on strava.com itself — with or without `www.`, over https only. Narrower than the
  * form's `STRAVA_URL`, which also takes the app's share links on `strava.app.link` for the club's
  * own use (§106): that host is a third party's deep-link and attribution redirector, and a public
- * page never prints a redirector beside a runner's name (§NNN).
+ * page never prints a redirector beside a runner's name (§500).
  */
 const PUBLIC_STRAVA_PROFILE = /^https:\/\/(?:www\.)?strava\.com\/(athletes|pros)\/([A-Za-z0-9_-]+)\/?$/;
 

@@ -29,7 +29,7 @@ import { type RichTextSegment, richTextSegments, segmentCharacters, withTranslat
  * a form: the role (BR-REQ-060-01), a translator configured, a request naming only the club's own
  * boxes (`domain/fields.ts` — never a legal text, never a participant's data), something to
  * translate, the per-person throttle, the club's daily character budget, and then the provider's
- * own answer — and, before that, DeepL's credit as its own meter last said it (§NNN): a spent
+ * own answer — and, before that, DeepL's credit as its own meter last said it (§497): a spent
  * credit refuses as `quota` without asking DeepL, a press larger than what is left as `credit`
  * with the figure. One audit row per press that reached the provider: who, which boxes, how many
  * characters, which provider — never the words.
@@ -94,7 +94,7 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
     translator: Translator | null;
     now: Date;
     /**
-     * DeepL's credit as its meter last said it (`readTranslationCredit`, §NNN), or null when it
+     * DeepL's credit as its meter last said it (`readTranslationCredit`, §497), or null when it
      * could not be read — then the press goes on and DeepL's own 456 is the answer.
      */
     credit?: () => Promise<TranslationCredit | null>;
@@ -127,7 +127,7 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
   const verdict = budgetAllows(usedToday, characters, budget);
   if (!verdict.allowed) return { ok: false, reason: "budget", remainingToday: verdict.remaining };
 
-  // The credit is given once and never refilled (§NNN): spent, nothing is sent; too small for this
+  // The credit is given once and never refilled (§497): spent, nothing is sent; too small for this
   // press, the refusal names what is left so the person translates fewer boxes at once.
   const credit = deps.credit ? await deps.credit() : null;
   if (credit && !creditAllows(credit, characters)) {

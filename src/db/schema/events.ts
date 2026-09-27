@@ -239,7 +239,7 @@ export const events = pgTable(
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;
     // BR-V2.11's contract migration 0095 drops them from the database, a release later, because
-    // BR-V2.09 still declared them while BR-V2.10 migrated (AGENTS.md §7.6, §NNN).
+    // BR-V2.09 still declared them while BR-V2.10 migrated (AGENTS.md §7.6, §494).
 
     /**
      * The club's Strava group event for this occurrence (BR-REQ-011-01 criterion 10): the

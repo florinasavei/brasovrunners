@@ -3,7 +3,7 @@ import { publicInstagramUrl, publicStravaUrl } from "@/modules/registrations/soc
 import SocialIcon, { type SocialNetwork } from "@/shared/ui/SocialIcon";
 
 /**
- * A listed runner's Strava and Instagram beside their name on the public list (§NNN): the
+ * A listed runner's Strava and Instagram beside their name on the public list (§500): the
  * networks' own marks (`SocialIcon`, the footer's and «Echipa»'s), each a link to the profile.
  *
  * Only what the query returned — and it returns them only behind the notice's gate and the

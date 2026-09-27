@@ -72,7 +72,7 @@ export type SignedDeclaration = {
   attestedByName: string | null;
   version: number;
   contentSha256: string;
-  /** The day the signed version took effect (§NNN), for the PDF's version line. */
+  /** The day the signed version took effect (§499), for the PDF's version line. */
   effectiveAt: Date;
   locale: Locale;
   title: string;

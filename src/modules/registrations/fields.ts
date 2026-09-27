@@ -213,7 +213,7 @@ const submissionFields = z.object({
    */
   listOptOut: z.boolean(),
   /**
-   * "Arată și Strava și Instagram lângă numele meu pe listă" (§NNN): the runner's own tick, asked
+   * "Arată și Strava și Instagram lângă numele meu pe listă" (§500): the runner's own tick, asked
    * only while the notice in force describes it. What the tick says is what is posted; whether it
    * is kept — listed, an adult, a social typed, a notice naming `{{participantListSocials}}` — is
    * the service's decision, never the form's.

@@ -14,7 +14,7 @@ import ToastRegion from "./ToastRegion";
  * One at a time: a notice that arrives while another is showing waits its turn
  * (`toastQueueReducer`), so two quick saves are two sentences read one after the other rather
  * than one drawn over the other. Each stays `TOAST_AUTO_HIDE_MS` (a notice's own `autoHideMs`
- * when it names one — the translate press's 8 s, §NNN), or until its close button, and
+ * when it names one — the translate press's 8 s, §496), or until its close button, and
  * a click elsewhere on the page never dismisses it — a volunteer at the desk pressing the next
  * row's button must not lose the sentence about the last one.
  *
@@ -24,7 +24,7 @@ import ToastRegion from "./ToastRegion";
  * provider, and the toast is drawn inside it: a region inserted already holding its sentence is
  * one many screen readers never announce, while a change inside a region they already know is.
  *
- * **Where it sits.** At the top, under the sticky site header (§NNN, `ToastRegion`), clear of the
+ * **Where it sits.** At the top, under the sticky site header (§496, `ToastRegion`), clear of the
  * footer's sticky bar and the event editor's sticky save row: the toast must never cover the
  * primary button of the form that just produced it (measured at 320 px by
  * `tests/e2e/toasts-and-confirms.spec.ts`).

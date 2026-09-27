@@ -12,10 +12,10 @@ import { instagramProfileUrl, publicInstagramUrl, publicStravaUrl } from "@/modu
 import { REGISTRATION_SHEET_HEADERS } from "@/modules/registrations/workbook";
 
 /**
- * §NNN (widening §106) — Strava and Instagram beside a name on the public list: the privacy
+ * §500 (widening §106) — Strava and Instagram beside a name on the public list: the privacy
  * notice's marker that switches it on, the form's tick, and the addresses a public page may print.
  */
-describe("§NNN the privacy notice's marker for the socials", () => {
+describe("§500 the privacy notice's marker for the socials", () => {
   const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 
   it("is a merge field the platform's notice and terms carry, in both languages, and the legend lists", () => {
@@ -54,7 +54,7 @@ describe("§NNN the privacy notice's marker for the socials", () => {
   });
 });
 
-describe("§NNN the form's tick", () => {
+describe("§500 the form's tick", () => {
   it("is read as posted — the service, not the form, decides what is kept", () => {
     const form = new FormData();
     expect(readRegistrationForm(form, "ro").listSocials).toBe(false);
@@ -70,14 +70,14 @@ describe("§NNN the form's tick", () => {
   });
 });
 
-describe("§NNN the export says whose socials the list prints", () => {
+describe("§500 the export says whose socials the list prints", () => {
   it("carries the column beside Instagram on the spreadsheet", () => {
     const at = REGISTRATION_SHEET_HEADERS.indexOf("Instagram");
     expect(REGISTRATION_SHEET_HEADERS[at + 1]).toBe("Socials on the public list");
   });
 });
 
-describe("§NNN the addresses a public page may print", () => {
+describe("§500 the addresses a public page may print", () => {
   it("prints Strava's own addresses and a well-formed username's profile, and nothing else", () => {
     expect(publicStravaUrl("https://www.strava.com/athletes/12345")).toBe("https://www.strava.com/athletes/12345");
     expect(publicStravaUrl("https://strava.com/athletes/12345")).toBe("https://www.strava.com/athletes/12345");
@@ -85,7 +85,7 @@ describe("§NNN the addresses a public page may print", () => {
     expect(publicStravaUrl("https://www.strava.com/pros/67890")).toBe("https://www.strava.com/pros/67890");
   });
 
-  it("drops the app's share links (a third party's redirector) and anything not over https (§NNN)", () => {
+  it("drops the app's share links (a third party's redirector) and anything not over https (§500)", () => {
     expect(publicStravaUrl("https://strava.app.link/AbC123")).toBeNull();
     expect(publicStravaUrl("http://www.strava.com/athletes/12345")).toBeNull();
     expect(publicStravaUrl("http://strava.com/athletes/12345")).toBeNull();

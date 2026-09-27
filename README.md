@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.10-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.11-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 >
@@ -107,7 +107,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
 | [`scripts/sync-flags.mjs`](./scripts/sync-flags.mjs) | `yarn flags:sync`: copies the country flags from `flag-icons` into `public/flags/`. Runs on install and as the first half of `yarn build`; the output is generated and git-ignored |
 | [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit, and adds the `git gone` alias |
-| [`scripts/cloud-setup.sh`](./scripts/cloud-setup.sh) | Run by the `SessionStart` hook in `.claude/settings.json` in a Claude Code cloud session only (`CLAUDE_CODE_REMOTE=true`): installs the dependencies, starts a local PostgreSQL with the throwaway `brasov_runners` role and database, writes a local-values `.env.local` when there is none, migrates and seeds. Idempotent; `--force` runs it on any Linux machine (`docs/DEVELOPMENT.md` § Coding from the phone, `DECISIONS.md` §NNN) |
+| [`scripts/cloud-setup.sh`](./scripts/cloud-setup.sh) | Run by the `SessionStart` hook in `.claude/settings.json` in a Claude Code cloud session only (`CLAUDE_CODE_REMOTE=true`): installs the dependencies, starts a local PostgreSQL with the throwaway `brasov_runners` role and database, writes a local-values `.env.local` when there is none, migrates and seeds. Idempotent; `--force` runs it on any Linux machine (`docs/DEVELOPMENT.md` § Coding from the phone, `DECISIONS.md` §501) |
 | [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
 | [`.githooks/pre-push`](./.githooks/pre-push) | Refuses a push to `qa` or `main`; those branches move through pull requests only |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |

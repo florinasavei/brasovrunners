@@ -32,7 +32,7 @@
  * force names it (`describesListStates`), the way §330's declaration switches the minor's
  * signature on.
  *
- * `{{participantListSocials}}` in section 4 (§NNN, widening §106) is the same two-in-one for the
+ * `{{participantListSocials}}` in section 4 (§500, widening §106) is the same two-in-one for the
  * Strava link and the Instagram username beside a name: the form's own tick, quoted, filled from
  * the catalogue, and the switch — the form offers that tick, the service keeps it, and the list
  * prints them only while the notice in force names it (`describesListSocials`), and only for a

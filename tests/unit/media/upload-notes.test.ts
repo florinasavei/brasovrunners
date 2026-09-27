@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — the album uploader's two lines describe one photo (§437's review leftovers).
+ * §495 — the album uploader's two lines describe one photo (§437's review leftovers).
  *
  * In a multi-file upload whose last file failed, «Fotografia aleasă» named the failed file while
  * the stored line still showed the photo before it: the stored facts were cleared once, before the

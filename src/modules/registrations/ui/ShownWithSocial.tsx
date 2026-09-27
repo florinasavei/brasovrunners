@@ -5,7 +5,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 
 /**
- * The tick «Arată și Strava și Instagram lângă numele meu pe listă» (§NNN) is asked only once
+ * The tick «Arată și Strava și Instagram lângă numele meu pe listă» (§500) is asked only once
  * there is something to show: hidden, and out of the form, until the Strava box or the Instagram
  * box in the socials fold holds a value. The mirror of `HiddenForMinor`, reading the two boxes
  * instead of the birth date.

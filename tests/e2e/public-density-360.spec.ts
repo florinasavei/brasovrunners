@@ -150,7 +150,7 @@ test.describe("§480 the public pages at 360 px", () => {
     const href = await first.getAttribute("href");
     expect(href).toBeTruthy();
     await page.goto(href!);
-    // The notice sits in «Condiții de participare», closed on arrival, since §NNN.
+    // The notice sits in «Condiții de participare», closed on arrival, since §498.
     await openFold(page.getByTestId("conditions-fold"));
     const link = page.locator("#main p a[href$='/contact']").first();
     await expect(link).toBeVisible();

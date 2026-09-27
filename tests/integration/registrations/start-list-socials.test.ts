@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (widening §106) — the rendered public list with Strava and
+ * BR-REQ-039-01, `DECISIONS.md` §500 (widening §106) — the rendered public list with Strava and
  * Instagram beside a name, both faces of the gate.
  *
  * With the platform's privacy notice in force — it names `{{participantListSocials}}` — a named
@@ -57,7 +57,7 @@ async function approveNotice(bodies: { ro: LegalDocumentBody; en: LegalDocumentB
   });
 }
 
-/** A notice approved before §NNN: it describes the list and says nothing of socials. */
+/** A notice approved before §500: it describes the list and says nothing of socials. */
 const OLDER_NOTICE = {
   ro: { sections: [{ heading: "4. Lista publică", paragraphs: ["Lista publică arată doar numele participanților confirmați care au bifat."] }] },
   en: { sections: [{ heading: "4. Public list", paragraphs: ["The public list shows only the names of confirmed participants who ticked."] }] },
@@ -149,7 +149,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN with a notice that describes the socials", () => {
+describe("§500 with a notice that describes the socials", () => {
   it("links the ticked runners' Strava and Instagram beside their names, and nobody else's", async () => {
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     const event = await mixedEvent();
@@ -193,7 +193,7 @@ describe("§NNN with a notice that describes the socials", () => {
   });
 });
 
-describe("§NNN with a notice that does not describe them", () => {
+describe("§500 with a notice that does not describe them", () => {
   it("reads no social at all: the list is as it was", async () => {
     await approveNotice(OLDER_NOTICE);
     const event = await mixedEvent();

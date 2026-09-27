@@ -75,13 +75,13 @@ export type RegistrationCsvRow = {
   termsVersion?: number | null;
   termsAcceptedAt?: string;
   /**
-   * The declaration the registration's latest acceptance was signed against (§NNN): its version
+   * The declaration the registration's latest acceptance was signed against (§499): its version
    * and the moment, online or recorded from paper at the desk (§67). Empty while nothing is signed.
    */
   declarationVersion?: number | null;
   declarationSignedAt?: string;
   /**
-   * Whether the public list prints the socials beside the name (§NNN): "Yes" or empty, like the
+   * Whether the public list prints the socials beside the name (§500): "Yes" or empty, like the
    * member claim — an empty cell is "not ticked", or ticked where it could not be kept.
    */
   listSocials?: boolean;

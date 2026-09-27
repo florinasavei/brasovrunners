@@ -76,7 +76,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
  *
- * ## Strava and Instagram, behind the notice and the runner's own tick (§NNN)
+ * ## Strava and Instagram, behind the notice and the runner's own tick (§500)
  *
  * The owner: "on the who's coming I want to show people's social as well, if they put that, like
  * their Strava and Instagram". Once the privacy notice in force names `{{participantListSocials}}`
@@ -123,7 +123,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);
-  // The socials' gate (§NNN), the same reading: off, no Strava or Instagram is even selected.
+  // The socials' gate (§500), the same reading: off, no Strava or Instagram is even selected.
   const socialsOn = await cachedListSocialsDisclosed(now);
   /*
     …and only for the ticks given under a notice that described them (§421): a registration that

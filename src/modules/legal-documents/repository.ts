@@ -149,7 +149,7 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 
 /**
  * Whether the privacy notice in force describes the socials beside a name on the public list
- * (§NNN, `describesListSocials`) — in every language, like `noticeDescribesListStates`. For
+ * (§500, `describesListSocials`) — in every language, like `noticeDescribesListStates`. For
  * `/admin/tasks`; a public page asks through the public cache (`cachedListSocialsDisclosed`).
  */
 export async function noticeDescribesListSocials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {

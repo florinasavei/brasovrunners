@@ -163,7 +163,7 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(words).toContain("— nu s-a putut citi (baza de date a site-ului).");
   });
 
-  it("§NNN: says the DeepL credit as DeepL counts it — used, left, given once — and its level, in both languages", async () => {
+  it("§497: says the DeepL credit as DeepL counts it — used, left, given once — and its level, in both languages", async () => {
     const withCredit = (used: number) => facts({ deeplCredit: { expected: true, credit: translationCredit({ used, limit: 1_000_000 }) } });
     const ro = text(await render("ro", withCredit(250_000), reasons({ deeplCredit: null })));
     expect(ro).toContain("Creditul DeepL: 250.000 din 1.000.000 caractere folosite (25 %), rămân 750.000 — citit de la DeepL, se dă o singură dată.");
@@ -177,7 +177,7 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(en).toContain("The credit is nearly spent");
   });
 
-  it("§NNN: says why the credit could not be read, and nothing about it without a key", async () => {
+  it("§497: says why the credit could not be read, and nothing about it without a key", async () => {
     const unread = facts({ deeplCredit: { expected: true, credit: null } });
     expect(text(await render("ro", unread, reasons({ deeplCredit: "refused" })))).toContain("Creditul DeepL nu s-a putut citi: DeepL refuză cheia.");
     expect(text(await render("en", unread, reasons({ deeplCredit: "unavailable" })))).toContain("The DeepL credit could not be read just now");

@@ -10,7 +10,7 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (widening §106) — Strava and Instagram beside a name on the public list: what the service
+ * §500 (widening §106) — Strava and Instagram beside a name on the public list: what the service
  * keeps, and what takes it away again.
  *
  * The tick «Arată și Strava și Instagram lângă numele meu pe listă» is kept only when every
@@ -86,7 +86,7 @@ async function keptAfter(overrides: Record<string, unknown>) {
   return onlyRow(event.id);
 }
 
-describe("§NNN what the service keeps of the socials tick", () => {
+describe("§500 what the service keeps of the socials tick", () => {
   it("keeps it for an adult on the list with a social typed, under a notice naming the marker", async () => {
     await approve("TERMS", 1);
     await approve("PRIVACY_NOTICE", 1, withMarker);
@@ -124,7 +124,7 @@ describe("§NNN what the service keeps of the socials tick", () => {
   });
 });
 
-describe("§NNN what takes it away", () => {
+describe("§500 what takes it away", () => {
   async function shown() {
     await approve("TERMS", 1);
     await approve("PRIVACY_NOTICE", 1, withMarker);

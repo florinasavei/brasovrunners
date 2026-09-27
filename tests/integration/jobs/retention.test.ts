@@ -649,7 +649,7 @@ describe("retention sweep", () => {
     expect([minorAfter.stravaUrl, minorAfter.instagramHandle, minorAfter.listSocials]).toEqual([null, null, false]);
     const [adultAfter] = await db.select().from(registrations).where(eq(registrations.id, adult.id));
     expect([adultAfter.stravaUrl, adultAfter.instagramHandle, adultAfter.listSocials]).toEqual(["https://www.strava.com/athletes/1", "runner", true]);
-    // §NNN: the public start list may have printed them, so its pages are expired.
+    // §500: the public start list may have printed them, so its pages are expired.
     expect(revalidateTag).toHaveBeenCalledWith("public:places", { expire: 0 });
     vi.unstubAllEnvs();
     // Nothing else on the minor's row moved.

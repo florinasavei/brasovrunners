@@ -28,7 +28,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     date: "Data",
     idDocument: "Act de identitate",
     version: "Versiunea",
-    // The signing pages' own words (`Legal.inForce`), so the page and the PDF name the version alike (§NNN).
+    // The signing pages' own words (`Legal.inForce`), so the page and the PDF name the version alike (§499).
     versionInForce: "Versiunea {version}, în vigoare din {date}",
     // No preposition: {when} starts with its weekday, "semnată joi, 24 sept. 2026, la 18:05" (§452).
     signedWhen: "semnată {when}",
@@ -79,7 +79,7 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
     date: words.date,
     idDocument: words.idDocument,
     version: words.version,
-    // The day the version took effect, inside the sentence, on the club's clock as `/admin/legal` and the signing pages show it (§349, §NNN).
+    // The day the version took effect, inside the sentence, on the club's clock as `/admin/legal` and the signing pages show it (§349, §499).
     versionInForce: (version, effectiveAt) =>
       words.versionInForce
         .replace("{version}", String(version))

@@ -31,7 +31,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * The notice is one row for the whole database, so the two projects must not flip it at once: a
  * PostgreSQL advisory lock, held for the test, makes the second wait for the first.
  *
- * The same notice carries `{{participantListSocials}}` (§NNN), so the same two faces prove the
+ * The same notice carries `{{participantListSocials}}` (§500), so the same two faces prove the
  * socials beside a name: with both markers, a runner who ticked «Arată și Strava și Instagram»
  * carries the networks' marks — 44-pixel links, `nofollow ugc`, a new tab, on the name's line and
  * nothing wider than 320 pixels — and the form offers the tick under «Vreau să apar» once a social
@@ -44,7 +44,7 @@ import { hydrated, signIn } from "./support/featured-event";
 
 const LOCK_KEY = 390_039_001;
 const MARKER = "{{participantListStates}}";
-/** The socials beside a name (§NNN): the platform's template carries it beside the states' marker. */
+/** The socials beside a name (§500): the platform's template carries it beside the states' marker. */
 const SOCIALS_MARKER = "{{participantListSocials}}";
 const LINK_REL = "noopener noreferrer nofollow ugc";
 
@@ -144,7 +144,7 @@ async function seedEvent(tag: string): Promise<Seeded> {
       ]);
     }
     /*
-      The socials (§NNN): Ana ticked «Arată și Strava și Instagram» and gave both; Carmen, pending,
+      The socials (§500): Ana ticked «Arată și Strava și Instagram» and gave both; Carmen, pending,
       ticked it with Instagram alone; Bogdan gave both and did not tick it, and the hidden runner
       gave both and ticked it — neither may ever print a link.
     */
@@ -339,7 +339,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         for (const never of ["Ascuns", "Retras Anulat", "Adresa Nedovedita"]) await expect(ro.list).not.toContainText(never);
       });
 
-      await test.step("with the marker: the socials of the runners who ticked them, beside the name, and nobody else's (§NNN)", async () => {
+      await test.step("with the marker: the socials of the runners who ticked them, beside the name, and nobody else's (§500)", async () => {
         // `readList` holds the page to the phone's width with the marks drawn (no sideways scroll).
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
         // Ana's two and Carmen's one: never Bogdan's (not ticked), never the hidden runner's.
@@ -405,7 +405,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         await expect(page.getByTestId("list-opt-in-states")).toContainText("„Pe lista de așteptare”");
       });
 
-      await test.step("the form offers the socials tick under «Vreau să apar» once a social is typed, never to a minor (§NNN)", async () => {
+      await test.step("the form offers the socials tick under «Vreau să apar» once a social is typed, never to a minor (§500)", async () => {
         await page.goto(`/ro/evenimente/${event.slug}-ro/inscriere`);
         await hydrated(page);
         const listSocials = page.locator('[name="listSocials"]');

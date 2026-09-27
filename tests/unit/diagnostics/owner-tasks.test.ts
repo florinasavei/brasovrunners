@@ -87,7 +87,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — Strava and Instagram beside a name wait on the club's notice, like the states; open, never blocking. */
+  /** §500 — Strava and Instagram beside a name wait on the club's notice, like the states; open, never blocking. */
   it("keeps the list-socials row open while the notice in force does not describe them, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, listSocialsDescribed: false }, "listSocialsNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "listSocialsNotice")).toBe("done");
@@ -287,7 +287,7 @@ describe("owner tasks", () => {
     }
   });
 
-  // §NNN: the credit behind the key is given once — amber at 80 %, red at 95 % and when spent.
+  // §497: the credit behind the key is given once — amber at 80 %, red at 95 % and when spent.
   it("reads the DeepL credit: watch is amber, low and spent are red, each with its own sentence and steps", () => {
     const at = (used: number): OwnerTaskInputs["translationCredit"] => ({ ok: true, credit: translationCredit({ used, limit: 1_000_000 }) });
     const row = (reading: OwnerTaskInputs["translationCredit"]) =>

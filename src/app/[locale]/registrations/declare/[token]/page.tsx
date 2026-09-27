@@ -163,7 +163,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
-  // The version line the terms and the privacy notice carry (§323), over the text being signed (§NNN).
+  // The version line the terms and the privacy notice carry (§323), over the text being signed (§499).
   const legalCopy = await getTranslations("Legal");
 
   /*
@@ -572,7 +572,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             until they are typed below — the form is where they are asked, the text is where they
             land when printed — except a guardian's on an adult's declaration, which is the em
             dash `{{guardian}}` reads too (§330). What is signed is the template, by id and hash.
-            Its version and the day it took effect over it (§NNN), as the terms page says its own
+            Its version and the day it took effect over it (§499), as the terms page says its own
             (§323) — the number the PDF, the email's copy and the registration's page repeat.
           */}
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">

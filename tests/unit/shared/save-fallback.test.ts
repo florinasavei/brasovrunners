@@ -272,7 +272,7 @@ describe("§436 the words, in both languages", () => {
     expect(roBlocked.send).toBe("Trimite pe calea simplă");
     expect(enBlocked.send).toBe("Send the simple way");
     /*
-      §NNN: the sentence speaks to the case it exists for. A blocked save's confirmation never
+      §495: the sentence speaks to the case it exists for. A blocked save's confirmation never
       arrives — the answer that carried it is what was lost — so «if you already got the message
       that it saved» never applied. What can happen is a cancel, an erase or a message the server
       ran before the proxy swallowed its answer: so the page is checked in a new tab first.

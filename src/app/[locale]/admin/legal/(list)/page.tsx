@@ -159,7 +159,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     all, the "one step" box above is the thing to do, and registration is closed anyway.
   */
   const listStatesMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListStates(getDb(), now));
-  // The same for the socials beside a name (§NNN): the form offers the tick only while the notice
+  // The same for the socials beside a name (§500): the form offers the tick only while the notice
   // in force names `{{participantListSocials}}`, and this is where that notice is approved.
   const listSocialsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListSocials(getDb(), now));
   /*

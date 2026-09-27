@@ -4,7 +4,7 @@ import { protectPlaceholders } from "./placeholders";
 import { richTextSegments, segmentCharacters } from "./rich-text-html";
 
 /**
- * The club's daily allowance of translated characters (`DECISIONS.md` §464, §NNN).
+ * The club's daily allowance of translated characters (`DECISIONS.md` §464, §497).
  *
  * The club's DeepL key carries a credit given once — 1 000 000 characters, never renewed — and
  * DeepL answers "quota exceeded" (HTTP 456) once it is spent (`domain/credit.ts`). Fifty thousand
@@ -16,7 +16,7 @@ import { richTextSegments, segmentCharacters } from "./rich-text-html";
  * out first.
  */
 /**
- * The highest daily allowance the Administrator may type (§464, §NNN): a ceiling on the setting,
+ * The highest daily allowance the Administrator may type (§464, §497): a ceiling on the setting,
  * not a provider's figure — half of the club's one-time credit in a single day is already more
  * than any week needs.
  */

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.10-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.11-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -220,7 +220,7 @@ A Claude Code cloud session (Claude Code on the web, on this repository) starts 
 clone: no `node_modules`, no `.env.local`, PostgreSQL 16 installed but stopped. The
 `SessionStart` hook in `.claude/settings.json` runs `scripts/cloud-setup.sh` on every start and
 resume of such a session, and only there — it is guarded on `CLAUDE_CODE_REMOTE=true`, so a
-session on a developer's own machine never runs it (§NNN). The script, idempotent and silent
+session on a developer's own machine never runs it (§501). The script, idempotent and silent
 when there is nothing to do:
 
 - enables Corepack and runs `yarn install --immutable`, then `yarn setup` for the git hooks;

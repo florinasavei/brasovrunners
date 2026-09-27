@@ -9,7 +9,7 @@ export type DrawnRun = { page: number; text: string; y: number | undefined };
 export const DECLARATION_FOOTER_Y = DECLARATION_PAGE.height - DECLARATION_MARGIN.bottom + DECLARATION_FOOTER.gap;
 
 /**
- * What a declaration PDF actually draws, page by page (§NNN). pdfkit writes an embedded font's text
+ * What a declaration PDF actually draws, page by page (§499). pdfkit writes an embedded font's text
  * as glyph ids, so the file cannot be searched for words; the words are caught on their way in,
  * at `text()`, with the page they were drawn on — the page's place in the buffered file, so a
  * footer drawn after every entry still counts as its own page's.

@@ -82,7 +82,7 @@ export async function setListConsent<T extends Record<string, unknown>>(
 
   await db
     .update(registrations)
-    // Leaving the list takes the socials beside the name with it (§NNN), for good: coming back
+    // Leaving the list takes the socials beside the name with it (§500), for good: coming back
     // through this door puts the name back, never a Strava or Instagram nobody asked about again.
     .set({ listOptOut: !listed, ...(listed ? {} : { listSocials: false }), updatedAt: now })
     .where(eq(registrations.id, registrationId));
