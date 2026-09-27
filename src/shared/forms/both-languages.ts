@@ -70,9 +70,6 @@ export function refuseOneLanguage(
  */
 export type BilingualText = Readonly<Record<TextLanguage, string>>;
 
-/** The other language of the pair — the second half of a bilingual email, the box beside this one. */
-export const otherLanguage = (language: TextLanguage): TextLanguage => (language === "ro" ? "en" : "ro");
-
 // --- The same text in both boxes (§354, bilingual everywhere) --------------------------------
 
 /**

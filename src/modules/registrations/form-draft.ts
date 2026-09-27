@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { env } from "@/shared/config/env";
-import { TURNSTILE_FIELD } from "./turnstile";
+import { TURNSTILE_FIELD } from "./domain/turnstile-widget";
 import { ANOTHER_PERSON_PARAM } from "./domain/family";
 
 /**

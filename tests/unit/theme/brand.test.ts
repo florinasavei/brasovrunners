@@ -4,7 +4,8 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
-import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
+import { MAX_CARD_STEP } from "@/modules/appearance/domain/tint-contrast";
+import { CLUB_NAME, COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SITE_TINT, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
 
 /**
  * BR-REQ-070-02 criterion 4 — colour contrast meets the accessibility baseline.
@@ -186,6 +187,47 @@ describe("BR-REQ-070-02 the gradients are readable at both ends", () => {
       const found = css.match(/#[0-9a-f]{3,8}/g) ?? [];
       expect(found, name).toEqual(expected);
     }
+  });
+});
+
+/**
+ * §488 — «Aspectul site-ului»: every preset the club may put under the public pages is a page
+ * colour like `COLOR.paper`, so every text colour that sits on the page has to clear AA on it,
+ * and the white cards have to stay a step away from it without the page turning into a wash.
+ */
+describe("BR-REQ-070-02 every site background preset is readable", () => {
+  const onPage: Array<[string, string]> = [
+    ["body text", COLOR.ink],
+    ["muted text", COLOR.inkMuted],
+    ["the club blue as text", COLOR.blue],
+    ["the hover shade", COLOR.blueInk],
+  ];
+
+  for (const [tint, background] of Object.entries(SITE_TINT)) {
+    for (const [label, foreground] of onPage) {
+      it(`clears AA for ${label} on the «${tint}» background`, () => {
+        expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+
+    it(`keeps the «${tint}» background a page under white cards, in six-digit hex`, () => {
+      expect(background).toMatch(/^#[0-9a-f]{6}$/);
+      expect(background).not.toBe(COLOR.surface);
+      // The same ceiling that refuses a «Personalizat» colour (`tint-contrast.ts`).
+      expect(contrastRatio(COLOR.surface, background)).toBeLessThanOrEqual(MAX_CARD_STEP);
+    });
+  }
+
+  it("keeps the platform's paper as the first preset, and the two blues are the club's blue over white", () => {
+    expect(SITE_TINT.paper).toBe(COLOR.paper);
+    // `COLOR.blue` is #0000ff: over white at a share `a`, red and green fall to 255 × (1 − a).
+    const overWhite = (share: number) => {
+      const channel = Math.round(255 * (1 - share)).toString(16).padStart(2, "0");
+      return `#${channel}${channel}ff`;
+    };
+    expect(COLOR.blue).toBe("#0000ff");
+    expect(SITE_TINT.faintBlue).toBe(overWhite(0.04));
+    expect(SITE_TINT.lightBlue).toBe(overWhite(0.08));
   });
 });
 

@@ -122,6 +122,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateContactRecipientsAction: [],
   // What the site shows and every email's Reply-To (§442).
   updateShownContactAddressAction: [],
+  // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
+  updateSiteTintAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
   // Asks for "Revino la textul platformei" (`reset=1`) only; saving the wording is an editorial save.

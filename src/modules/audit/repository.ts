@@ -195,6 +195,8 @@ export type AuditAction =
   | "contact_recipients.changed"
   /** «Adresa de contact afișată»: the mailbox, the club's Gmail, or both (§442). */
   | "shown_contact_address.changed"
+  /** «Aspectul site-ului»: the public pages' light background tint, a preset or a typed colour (§488). */
+  | "site_tint.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
   | "bot_check.changed"
   /**

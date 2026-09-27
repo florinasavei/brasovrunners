@@ -41,14 +41,6 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
     .orderBy(asc(groupRunDeclarations.acceptedAt));
 }
 
-export async function countGroupRunDeclarations<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
-  const [row] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(groupRunDeclarations)
-    .where(eq(groupRunDeclarations.eventId, eventId));
-  return row?.count ?? 0;
-}
-
 /**
  * One signed declaration with the text it was signed against: the version by id, in the language
  * it was signed in — what the PDF is drawn from. The hash is the row's own copy (§57).

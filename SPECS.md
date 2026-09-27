@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.08-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.09-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.08-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.09-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -302,6 +302,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 120. The repeat chip says the series' rule on hover, on a tap and to a screen reader, in both languages: «Se repetă în fiecare luni, la 18:30» / «Repeats every Monday at 18:30», or «Eveniment recurent» / «Recurring event» with no rhythm (2026-09-27, `DECISIONS.md` §486).
 121. At 320 px the calendar page's head shows no intro paragraph. A «?» fold beside the H1 has a 44-pixel target and a name of its own, opens without JavaScript, and holds the intro sentence and both calendar links (Google Calendar's add link and the webcal feed). From sm the paragraph is shown and the «?» is not.
 122. At 320 px the month select, the year select, ‹, «Azi» and › form one row no taller than one control. Each control is at least 44 pixels tall, and the month select's longest name fits the select without clipping. The Lună / An and Calendar / Listă pills sit on the row below.
+123. No client island reached from a public route imports the server's configuration (src/shared/config/env.ts) or the zod package, except those listed with a reason in the guard; a listed exception that no longer carries the import must leave the list. (tests/unit/shared/public-islands-weight.test.ts)
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -2140,6 +2141,10 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 57. The badge criterion numbered in §255 gains: the tooltip splits the figure per upcoming event (the first five, then «+N altele»), reachable by keyboard and touch.
 58. The one translate-everything button fills only allowlisted English boxes; the server refuses any other name, and an Organizer's translated title or description is still not saved by the event save (2026-09-27, `DECISIONS.md` §482).
 59. The stored pictures' list (`GET /api/admin/media`) answers only the roles that may put a picture somewhere. A volunteer gets 403 (2026-09-27, `DECISIONS.md` §485).
+60. Only an Administrator (canManageClubSettings) reads or saves the site's background tint, asserted at the page, the action and the service (2026-09-27, `DECISIONS.md` §488).
+61. The presets Alb (the default), Albastru abia vizibil, Albastru deschis and Gri albăstrui each keep every text colour at WCAG AA or better. A typed «Personalizat» #rrggbb is refused in both languages when body or muted text falls under 4.5:1 or a white card stands more than 1.2:1 from the page (2026-09-27, `DECISIONS.md` §488).
+62. The tint applies only in the light scheme and never inside the backoffice shell or the admin resting notice. A browser without `:has()` shows the plain paper. The default draws no rule, so a database without the row renders as before (2026-09-27, `DECISIONS.md` §488).
+63. A save is audited as site_tint.changed under the setting's own entity id, which no other setting shares. It revalidates the public cache's settings. A refused save does not revalidate (2026-09-27, `DECISIONS.md` §488).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 
@@ -2178,6 +2183,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 5. Given any public page, when it renders, then it has a unique title, a meta description, a canonical URL, and hreflang alternates for published locales.
 6. Given the sitemap, when it is generated, then it contains published public content only, and excludes participant action pages, previews, and runner profiles.
 7. The contact page and the gallery listing each declare their own canonical in both languages, whatever query the address carries, with hreflang to both languages and `x-default` on the Romanian address. The sitemap lists the gallery listing in both languages whether or not an album is published (`tests/e2e/seo.spec.ts`, `tests/integration/seo/sitemap.test.ts`).
+8. Every preset background the club may choose for the public pages keeps body text, muted text, the club blue and its hover shade at 4.5 : 1 or more, and a white card within 1.2 : 1 of the page (tests/unit/theme/brand.test.ts).
+9. A custom background colour typed under Pagini → «Aspect» is refused unless it is #rrggbb, body and muted text reach 4.5 : 1 on it, and a white card stays within 1.2 : 1 of it. The refusal names the rule in words (tests/unit/appearance/site-tint.test.ts, tests/integration/appearance/site-tint.test.ts).
 
 **Verification:** e2e `seo.spec.ts`; accessibility audit in CI
 
@@ -2285,6 +2292,7 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 1. Given `/devs/theme`, when a DEV or above applies a text size (90–150% of the browser default), a heading face, a body face (Roboto, Inter, Nunito, the system face, Georgia) or a corner radius, then every page of the site renders with it in that browser and in no other, and "back to normal" removes it; below DEV the page is 404.
 2. Given the preview, when any page renders on the server, then it is unchanged and exactly as cacheable as before: the setting is a cookie the browser alone reads, applied at the theme boundary after hydration, and a value naming anything outside the allowlist is ignored.
 3. Given the lab's faces, when no preview is set, then no visitor downloads a font file for them.
+4. The chosen tint is applied on the server as one rule on MUI's page-colour variable, only in the light scheme and never inside the backoffice shell, and the default tint draws no rule at all (`tests/unit/appearance/site-tint.test.ts`).
 
 **Verification:** unit `theme/preview.test.ts`
 
@@ -2411,6 +2419,10 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 9. Given a database that is away, when the registration form, the family link, the contact form or the group-run declaration is submitted, then it answers a polite bilingual notice instead of a 500 and keeps every input for a retry. The backoffice shows its own error page with the same notice, and `/api/health` answers 503 `degraded` with `database: suspended` on Neon's quota refusal or a spent quota, and `down` otherwise. Verification: integration `resilience/forms-database-away.test.ts`; unit `api/health-budget.test.ts` (2026-09-26, `DECISIONS.md` §447).
 10. The production build makes no network request for fonts: every web font is loaded with next/font/local from src/theme/fonts/, no file under src/ imports next/font/google or names fonts.googleapis.com / fonts.gstatic.com, and every font file shipped carries its licence beside it (tests/unit/theme/fonts.test.ts).
 11. Every self-hosted body, heading, theme-lab and signature face covers ș, ț, ă, â, î and their capitals, read from the file's own cmap, and each file's OS/2 weight equals the weight it is declared at.
+12. A public client island imports neither `shared/config/env.ts` nor `zod`; `tests/unit/shared/public-islands-weight.test.ts` walks every public route to its islands and fails on either, with `ReadAndAgree` as the one listed exception (2026-09-27, `DECISIONS.md` §489).
+13. Within one render, a public read with the same key reaches the data cache and the database once; nothing is shared between requests, and a rejected read is forgotten (2026-09-27, `DECISIONS.md` §489).
+14. `tests/integration/public-cache/query-counts.test.ts` pins the statement count behind every public read, the same with 3 and 9 events, and the per-page totals of one simulated request: the listing with a race 8, an event page with its metadata 2 (2026-09-27, `DECISIONS.md` §489).
+15. Only measured changes are kept: the header's and the listing's reads stay sequential as on qa, since no measurement isolated a gain from running them together (2026-09-27, `DECISIONS.md` §489).
 
 **Verification:** integration `hosting/portability.test.ts`; deployment checklist
 

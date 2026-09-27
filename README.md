@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.08-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.09-2026-09-27 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.08-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.09-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 >
@@ -99,6 +99,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; a leading `-- expand:` / `-- contract:` note overrides the classification; runs in `yarn check` (`AGENTS.md` §7.6, `DECISIONS.md` §426) |
 | [`.github/workflows/e2e-dev-nightly.yml`](./.github/workflows/e2e-dev-nightly.yml) | Once a night on `qa`: the `next dev` walk of every backoffice and public route (`yarn test:e2e:dev`, §370) — minutes, so it is not on every pull request; a red run emails whoever last changed the schedule (`DECISIONS.md` §426) |
 | [`scripts/brand-assets.mjs`](./scripts/brand-assets.mjs) | `node scripts/brand-assets.mjs` — rasterises the club's lockup from `public/brand/*.svg` into the two places that cannot take an SVG: the PDFs (flat, no alpha — an alpha channel reaches a PDF as a soft mask and prints as an outline) and the email header. Outputs are committed; run it after changing the source (`DECISIONS.md` §174) |
+| [`scripts/unused-exports.mjs`](./scripts/unused-exports.mjs) | `node scripts/unused-exports.mjs [--types] [--local]` — the dead-code sweep: exports under `src/` that nothing else in the repository names, as candidates to read; a grep walk with no dependency, not in `yarn check` (`docs/DEVELOPMENT.md`, `DECISIONS.md` §489) |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/secrets-check.mjs`](./scripts/secrets-check.mjs) | Refuses a commit carrying a provider credential — the repository is public; runs in `yarn check` and CI (`DECISIONS.md` §98) |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |

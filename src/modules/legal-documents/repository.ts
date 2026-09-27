@@ -260,42 +260,6 @@ export async function findCurrentApprovedVersionId<T extends Record<string, unkn
 }
 
 /**
- * A specific version, for confirming a registration's acknowledged version is still the exact
- * text it was shown (BR-REQ-053-01 criterion 3: an acceptance references the version accepted,
- * not merely "whatever is current now").
- *
- * Withdrawn versions are excluded, and it costs nothing: withdrawal requires zero acceptances
- * and zero acknowledgements, so no registration can be pointing at one. Excluding them here
- * keeps "approved and still offered" a single meaning across the module rather than two that
- * differ by one row.
- */
-export async function findApprovedDocumentVersion<T extends Record<string, unknown>>(
-  db: Database<T>,
-  key: LegalDocumentKey,
-  version: number,
-): Promise<Pick<CurrentLegalDocument, "id" | "key" | "version" | "contentSha256"> | undefined> {
-  const [row] = await db
-    .select({
-      id: legalDocuments.id,
-      key: legalDocuments.key,
-      version: legalDocuments.version,
-      contentSha256: legalDocuments.contentSha256,
-    })
-    .from(legalDocuments)
-    .where(
-      and(
-        eq(legalDocuments.key, key),
-        eq(legalDocuments.version, version),
-        eq(legalDocuments.isApproved, true),
-        isNull(legalDocuments.withdrawnAt),
-      ),
-    )
-    .limit(1);
-
-  return row;
-}
-
-/**
  * The highest version of a key, whatever its approval state — what "the next version" counts
  * from. A version number is never reused (`docs/RUNBOOKS.md` § Legal document version), so this
  * is the only safe way to ask for one.

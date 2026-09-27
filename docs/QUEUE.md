@@ -20,7 +20,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.08` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.09` |
 
 ## Next, queued
 
@@ -54,6 +54,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.09` | «Aspectul site-ului» — the public pages' light background tint as a club setting, presets from the club's colours, a contrast guard (§488) · the public pages measured on a production build and the top wins taken — query counts pinned by a test, dead code removed (§489) |
 | `BR-V2.08` | the measured density pass at 360 px — the «Despre club» fold 180 → 96 px, true 44-px folds, inline links that keep their line, the cards and the event page tightened on the scale (§480) · the editor's cards regrouped — «Când și unde» and «Program, regulament și declarație» as one card each, the film card gone and every film a node in the description; migration `0092` (§481) · «Copiază și tradu tot: RO → EN» at the top of every editor, always visible, one press fills every English box through DeepL (§482) · the nits of V2.03–V2.07 — no colleague's name in the public repository's source, one audit id per setting, the .ro row gone, Echipa's bounds, the editor's leftovers (§483) · the weather line names its place and its hours — «Vremea la <loc>, <zi> HH:MM–HH:MM: …» — on the page and in the reminder (§484) · «Din galerie» beside every picture upload, the same crop box and shapes after the choice, the film's poster a gallery picture the club replaces and crops (§485) · the whole listing card is one tap to the event page, its inner links kept, and a recurring event wears a repeat glyph with its rhythm (§486) · the calendar page's head on a phone — a «?» in place of the intro, small month/year selects on one row with ‹ Azi ›, the chip pairs small (§487) |
 | `BR-V2.07` | the film's volume is a quiet corner glyph with the slider on demand, and the film asks YouTube for HD first (§478) · «Costuri» is the club's money page — the month so far per provider at the published price, a projection to month end, the database's configuration in one card (§479) |
 | `BR-V2.06` | a discreet «?» after the event page's weather line — an indicative forecast, data from Open-Meteo (§473) · «Echipa» grows up: a rich-text introduction and bios, several typed links per person; migration `0091` (§474) · the calendar's month view swipes between months on a phone, like Google Calendar (§475) · the «Înscrieri» badge says what it counts, per upcoming event, in a tooltip (§476) · the image-quality end-to-end spec runs on both projects again, lighter (§477) |

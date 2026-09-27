@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.09-2026-09-27
+
+- **The site's background is the club's choice**: Pagini → «Aspect» lets the Administrator pick the public pages' light background from four tints taken from the club's colours (Hârtie, Albastrul clubului, Cerul tricoului, Nisip). The tint is applied on the server before the first paint and every tint is checked for readable text; the dark theme and the backoffice stay as they were. §488.
+- **The public pages, measured and made lighter.** The contact page loads 88 KB less JavaScript (380 → 292 KB gzipped): the anti-bot widget no longer pulls the server's configuration and the whole of Zod into the browser. A public page asks each of its database reads once per request, not once per part of the page: 55 → 47 statements over 17 pages on an empty cache. The query counts are pinned by a test. Ten unused pieces of code were removed. §489.
 ## BR-V2.08-2026-09-27
 
 - **Tighter public pages on a phone (360 px):** every fold is the 44 pixels it claims instead of 64 (the listing's past events, the calendar's feed address, a race's steps and start list, the partners, the registration form's sections); a link inside a sentence no longer stretches its line; the contact form's first box sits one gap under the legend; the leftover spacing on contact, gallery, «Echipa» and the legal texts is on the phone scale. The listing is 20 px shorter, an event page 24, the calendar 20, contact 84. §480.

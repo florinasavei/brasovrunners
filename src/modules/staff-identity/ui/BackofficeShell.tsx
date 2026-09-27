@@ -96,7 +96,9 @@ export default async function BackofficeShell({
   }));
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    // `data-backoffice`: the public pages' background tint (§488) stops at this marker, so staff
+    // always work on the platform's own paper whatever the club chose for the site.
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }} data-backoffice="">
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}

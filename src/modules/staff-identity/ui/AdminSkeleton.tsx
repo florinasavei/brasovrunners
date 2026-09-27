@@ -107,21 +107,3 @@ export function AdminListSkeleton({ label, rows = 8 }: LabelProps & { rows?: num
     </Stack>
   );
 }
-
-/** An editor route: a header, then stacked fields. */
-export function AdminFormSkeleton({ label, fields = 6 }: LabelProps & { fields?: number }) {
-  return (
-    <Stack spacing={3} role="status" aria-live="polite" aria-label={label}>
-      <HeaderSkeleton />
-      <Stack spacing={2}>
-        {Array.from({ length: fields }, (_, index) => (
-          <Box key={index}>
-            <Skeleton variant="text" width={120} animation="wave" sx={WAVE} />
-            <Skeleton variant="rounded" height={56} animation="wave" sx={WAVE} />
-          </Box>
-        ))}
-      </Stack>
-      <Skeleton variant="rounded" width={160} height={44} animation="wave" sx={WAVE} />
-    </Stack>
-  );
-}

@@ -10,7 +10,8 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INTEREST_BOX_ID, type InterestOutcome } from "../interest-box";
-import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "../turnstile";
+import { TURNSTILE_SCRIPT_URL } from "../domain/turnstile-widget";
+import { turnstileSiteKey } from "../turnstile";
 
 /**
  * "Anunță-mă când se deschid înscrierile" (`DECISIONS.md` §146): one address, one button, one

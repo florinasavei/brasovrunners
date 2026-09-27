@@ -38,8 +38,6 @@ export type LegalBlock =
 
 export type LegalEditorDoc = { type: "doc"; content: LegalBlock[] };
 
-export const EMPTY_LEGAL_DOC: LegalEditorDoc = { type: "doc", content: [] };
-
 /** A paragraph's words as the editor's runs: text, links, and the breaks the author typed. */
 function inlineOf(paragraph: string): LegalInline[] {
   const runs: LegalInline[] = [];

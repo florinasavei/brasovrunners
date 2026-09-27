@@ -583,6 +583,12 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
     expect(source("src/modules/contact/shown-address.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
   });
 
+  it("«Fundalul site-ului» (§488) is a club setting: the Administrator's, form included", () => {
+    expect(action("src/app/[locale]/admin/pages/appearance/actions.ts", "updateSiteTintAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(source("src/modules/appearance/site-tint.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
+    expect(source("src/app/[locale]/admin/pages/appearance/page.tsx")).toMatch(/<SiteTintPanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);
+  });
+
   it("the month's budget thresholds (§447) are a platform setting: the Superadministrator's, form included", () => {
     expect(action("src/app/[locale]/admin/tasks/actions.ts", "updateBudgetThresholdsAction")).toContain("requireStaffCapability(canManagePlatform)");
     expect(source("src/modules/diagnostics/budget-thresholds.ts")).toMatch(/if \(!canManagePlatform\(actor\.role\)\)/);

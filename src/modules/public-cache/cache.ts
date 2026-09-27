@@ -6,6 +6,7 @@ import { ColdMissError, isColdMiss, throughBreaker } from "@/modules/resilience/
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
 import { copyOf, keepCopy } from "@/modules/resilience/last-good";
 import { allowRefreshNow, scheduleMissRefresh } from "./miss-refresh";
+import { thisRequestsReads } from "./request-memo";
 import { buildInfo } from "@/shared/config/build-info";
 
 /**
@@ -169,7 +170,26 @@ export async function publicRead<T>(
     return tagDates(value);
   };
 
-  if (effects.publicMissRefreshMinutes === 0) return untagDates(await unstable_cache(loadAndKeep, keyParts, options)()) as T;
+  if (effects.publicMissRefreshMinutes === 0) {
+    /*
+      Asked once per request however many parts of the page need it (§489, `request-memo.ts`).
+      The request keeps the stored form, and each caller is handed its own copy by `untagDates`,
+      so no caller can change what another one reads. A failure is forgotten, so a later reader
+      in the same request asks again, as it did before.
+    */
+    const reads = thisRequestsReads();
+    const memoKey = keyParts.join("\u0000");
+    let stored = reads.get(memoKey);
+    if (!stored) {
+      const asked = unstable_cache(loadAndKeep, keyParts, options)();
+      stored = asked;
+      reads.set(memoKey, asked);
+      asked.catch(() => {
+        if (reads.get(memoKey) === asked) reads.delete(memoKey);
+      });
+    }
+    return untagDates(await stored) as T;
+  }
 
   /*
     Red (§447): anonymous traffic is served from the cache only. A hit is answered as ever; a miss
