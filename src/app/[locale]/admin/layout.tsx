@@ -12,7 +12,8 @@ import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import AdminRestingNotice from "@/modules/resilience/ui/AdminRestingNotice";
 import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
-import TranslateProvider from "@/modules/translate/ui/TranslateProvider";
+import { canOpenTaskPanel } from "@/modules/diagnostics/domain/task-panels";
+import TranslateProvider, { type TranslateOffer } from "@/modules/translate/ui/TranslateProvider";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
 import { readFlash } from "@/shared/feedback/flash";
@@ -76,6 +77,14 @@ export default async function AdminLayout({ children, params }: Props) {
   }
 
   const messages = await getMessages({ locale });
+  // Who translates, and whether this deployment can (§464, §NNN). Without a key the steps are
+  // on «Sarcini» → «Club», linked only for a role that may open that panel.
+  const translateOffer: TranslateOffer | null = canTranslateTexts(staffUser.role)
+    ? {
+        action: isTranslationConfigured(env) ? translateFieldAction : null,
+        setupHref: canOpenTaskPanel(staffUser.role, "club") ? `${getPathname({ locale, href: "/admin/tasks" })}#task-translation` : null,
+      }
+    : null;
   // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §384): shown once by
   // the provider below, which also clears the cookie, so a refresh shows nothing.
   const flash = await readFlash();
@@ -99,9 +108,10 @@ export default async function AdminLayout({ children, params }: Props) {
           {/* A save a network refused is offered the simple way, and the page it lands on says so (§436). */}
           <SaveFallbackGuard />
           <SaveFallbackNotice shown={savedTheSimpleWay} />
-          {/* «Tradu din română» (§464): offered only where a translator is configured and the
-              reader's role writes the club's words; the action asks both again. */}
-          <TranslateProvider action={isTranslationConfigured(env) && canTranslateTexts(staffUser.role) ? translateFieldAction : null}>
+          {/* «Tradu din română» (§464): for a role that writes the club's words; working where a
+              translator is configured, and otherwise the editors' one «Copiază și tradu tot»
+              says why it is grey and where the steps are (§NNN). The action asks both again. */}
+          <TranslateProvider offer={translateOffer}>
             <PickerProvider>{children}</PickerProvider>
           </TranslateProvider>
         </ToastProvider>

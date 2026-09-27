@@ -72,7 +72,7 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
-      {/* «Tradu tot din română» (§464): every English box from its Romanian twin, one question first. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): every English box from its Romanian twin, in one press. */}
       <TranslateAllButton />
 
       <LocaleTabPanels

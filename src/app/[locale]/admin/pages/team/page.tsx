@@ -21,6 +21,7 @@ import { type AdminTeamMember, listTeamMembersForAdmin } from "@/modules/content
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import TeamLinkRowsEditor, { type TeamLinkRowsLabels } from "@/modules/content/team/ui/TeamLinkRowsEditor";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { noticeDescribesTeamPage } from "@/modules/legal-documents/repository";
@@ -314,6 +315,8 @@ function PageCard({
               <input type="hidden" name="uiLocale" value={locale} />
               {/* The page's own column, so the whole toolbar: a picture, a film, a table (§474). */}
               <Stack spacing={1.5}>
+                {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): the introduction's English from its Romanian. */}
+                <TranslateAllButton />
                 <LazyRichTextEditor
                   name="introRoBody"
                   label={t("team.introRo")}
@@ -517,6 +520,9 @@ function MemberFields({
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
   return (
     <Stack spacing={2}>
+      {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): this card's role, words and link labels in
+          English from the Romanian, in this card's form alone — every card posts the same names. */}
+      <TranslateAllButton />
       <RecallField
         name="name"
         label={t("team.name")}

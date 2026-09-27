@@ -223,7 +223,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             <Stack spacing={2}>
               {/* "Creează și publică" pressed while something publication needs is empty (§406). */}
               <PublishGapsSummary id="publish-gaps" title={t("editor.publishGaps.title")} intro={t("editor.publishGaps.intro")} labels={gapLabels} />
-              {/* «Tradu tot din română» (§464), as on the editor: write the Romanian, then fill the English. */}
+              {/* «Copiază și tradu tot: RO → EN» (§464, §NNN), as on the editor: write the Romanian, then
+                  fill the English in one press — drawn greyed, saying why, where no DeepL key is set. */}
               <TranslateAllButton />
               {/* The page, top to bottom (§406): the editor's same cards, in the same order. */}
               <EditorGroup label={t("editor.groups.page")} />

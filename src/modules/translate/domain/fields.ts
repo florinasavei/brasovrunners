@@ -13,7 +13,9 @@
  *   discount note, the two search-engine texts, an album's description;
  * - an event's meeting place in English, a partner's description and its links' labels, a
  *   "Linkuri și fișiere" row's label, a programme row's words;
- * - the organizer's note on an update, the cancellation's reason, a message to the participants.
+ * - the organizer's note on an update, the cancellation's reason, a message to the participants;
+ * - «Echipa» (§474, §NNN): a card's role, its words about the person and its links' labels, and
+ *   the page's introduction — one form per card, each posting the same names.
  *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
  * `/admin/legal` (counsel-reviewed, §418, and the legal editor posts other names anyway); and
@@ -48,7 +50,14 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^notice\.noteEn$/,
   /^cancel\.reasonEn$/,
   /^(subject|body)En$/,
+  // «Echipa»: the role, a link row's label, the words about the person and the page's introduction.
+  /^roleEn$/,
+  /^links\[\d{1,2}\]\.labelEn$/,
+  /^(bio|intro)EnBody$/,
 ];
+
+/** «Echipa»'s rich texts, which spell the pair `bioRoBody` / `bioEnBody` (§474). */
+const TEAM_RICH_TEXT = /^(bio|intro)EnBody$/;
 
 /** Whether `name` is an English box the club types words into — the whole of what may be translated. */
 export function isTranslatableEnglishField(name: string): boolean {
@@ -57,17 +66,20 @@ export function isTranslatableEnglishField(name: string): boolean {
 
 /** Whether the box holds a rich text (a Tiptap document) rather than plain words. */
 export function isRichTextField(name: string): boolean {
+  if (TEAM_RICH_TEXT.test(name)) return true;
   const translation = /^translations\.en\.(\w+)$/.exec(name);
   return translation !== null && RICH_TEXT_FIELDS.has(translation[1] ?? "");
 }
 
 /**
- * The Romanian box's name, in the order to try: the forms spell the pair three ways —
- * `translations.ro.x` / `translations.en.x`, `…Ro` / `…En`, and a programme row's `.ro` / `.en` —
- * and the meeting place's Romanian box has no suffix at all (`event.locationName`, §362).
+ * The Romanian box's name, in the order to try: the forms spell the pair four ways —
+ * `translations.ro.x` / `translations.en.x`, `…Ro` / `…En`, a programme row's `.ro` / `.en`, and
+ * «Echipa»'s `…RoBody` / `…EnBody` — and the meeting place's Romanian box has no suffix at all
+ * (`event.locationName`, §362).
  */
 export function romanianTwinCandidates(englishName: string): string[] {
   if (englishName.startsWith("translations.en.")) return [`translations.ro.${englishName.slice("translations.en.".length)}`];
+  if (englishName.endsWith("EnBody")) return [`${englishName.slice(0, -"EnBody".length)}RoBody`];
   if (englishName.endsWith(".en")) return [`${englishName.slice(0, -3)}.ro`];
   if (englishName.endsWith("En")) {
     const stem = englishName.slice(0, -2);

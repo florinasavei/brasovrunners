@@ -30,17 +30,23 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  * the form, still down when the dialog opens, neither confirms nor cancels it. Escape and the
  * backdrop cancel either. An email the action will queue is a line of its own, in bold, so it is
  * never missed.
+ *
+ * **A second answer**, rarely (`alternative`): a question with two ways forward and a way back —
+ * «Copiază și tradu tot» asks whether to replace the English already written or fill only the
+ * empty boxes (§NNN). It sits between cancel and confirm, outlined, and Enter never picks it.
  */
 export default function ConfirmDialog({
   spec,
   open,
   onCancel,
   onConfirm,
+  alternative,
 }: {
   spec: ConfirmSpec | null;
   open: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  alternative?: { label: string; onClick: () => void } | null;
 }) {
   const titleId = useId();
   const descriptionId = useId();
@@ -83,6 +89,16 @@ export default function ConfirmDialog({
         <Button onClick={onCancel} autoFocus sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }} data-testid="confirm-dialog-cancel">
           {spec.cancelLabel}
         </Button>
+        {alternative && (
+          <Button
+            variant="outlined"
+            onClick={alternative.onClick}
+            sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
+            data-testid="confirm-dialog-alternative"
+          >
+            {alternative.label}
+          </Button>
+        )}
         <Button
           variant="contained"
           color={spec.destructive ? "error" : "primary"}
