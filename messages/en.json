@@ -384,13 +384,19 @@
     "groupRunDeclaration": {
       "heading": "Self-declaration",
       "button": "Sign the declaration",
-      "line": "Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.",
+      "line": "Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole {event} series; the club keeps it while you keep coming to the runs and deletes it when you ask.",
+      "lineOneDate": "Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.",
+      "signedSeries": "You have already signed the declaration for these runs (v. {version}, signed {when}). It is valid for every run of the series: you need not sign it again.",
+      "signedOne": "You have already signed the declaration for this run (v. {version}, signed {when}).",
+      "signedOlder": "You signed version {version} of the declaration ({when}). Since then the organiser has approved a new version: read it and sign it again.",
       "page": {
         "back": "Back to {event}",
         "title": "Self-declaration",
-        "intro": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
+        "intro": "For the group run {event}. For a run that repeats you sign it once, for the whole series. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
+        "introOneDate": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
         "doneTitle": "The declaration is signed",
-        "done": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. Come to the run as usual.",
+        "done": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. For a run that repeats, it covers the whole {event} series: you do not sign it again for the next ones. The email also has a link to the run's page, which tells you that you have signed. Come to the run as usual.",
+        "doneOneDate": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. It covers the {event} run on this date. The email also has a link to the run's page, which tells you that you have signed. Come to the run as usual.",
         "closed": "The declaration can no longer be signed for this run.",
         "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
         "away": "We could not reach our records just now, so nothing was signed or recorded. What you filled in is still below — please try again in a few minutes.",
@@ -1713,7 +1719,7 @@
       },
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
-        "help": "Optional; the signer and the club each get a copy. It needs an approved privacy notice. The run declaration is signed from 18, whatever the run's minimum age.",
+        "help": "Optional, signed once for every date; the signer and the club each get a copy. It needs an approved privacy notice. The run declaration is signed from 18, whatever the run's minimum age.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet. Approve one in Legal documents, together with a new privacy notice, then tick it here.",
         "minAgeHelp": "Reached by the day of the run, at least 18: the declaration covers no minor, even if this box says less. Above 18, for example 21, the signing page asks for the birth date.",
@@ -1885,8 +1891,8 @@
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering, not the race rules — those are on the event's page. Ticked at registration.",
         "EVENT_DECLARATION": "The declaration of a race on mountain or forest trails: age, minors, the course's risks, health. Signed when the place is confirmed.",
-        "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt; signed on the run's page. Approve it together with a new privacy notice.",
-        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page. Approve it together with a new privacy notice.",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
+        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "EVENT_DECLARATION_ROAD": "The declaration of a road or park race, with the risks of asphalt and traffic. Until you approve it, these races sign the trail declaration."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
@@ -2011,7 +2017,10 @@
         "participantListSocials": "Privacy notice only: the tick with which someone shows their Strava and Instagram on the public list. Without it in the notice in force, never",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
         "newsletterTopics": "Privacy notice only: the topics of the contact page's subscription. Without it in the notice in force, the subscription does not show",
-        "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described"
+        "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described",
+        "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
+        "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
+        "seriesPlace": "Only in the group-run declarations: the series' usual starting place"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2476,6 +2485,17 @@
             "/admin/legal → “New version” → “Self-declaration — trail race” → “Start from the template”. Read the text, fill in the club's name, save the draft, then “Approve”.",
             "The same for “Self-declaration — road / park race”.",
             "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then — the trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course; choose the road or park one and save."
+          ]
+        },
+        "groupRunSeriesTexts": {
+          "title": "The group-run declarations: one signature per series",
+          "todo": "A group-run declaration in force is still written for a single date. The platform's text now says what it covers: for a run that repeats, the whole series — its name, rhythm and starting place — and for a one-day run, that run. Until the new versions are approved, a signature still covers one date — the one it was signed on —, as the text in force says: the runner signs again on each date of the series.",
+          "done": "The group-run declarations in force say what they cover: a runner signs once for the whole series.",
+          "how": [
+            "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “start from the platform's text”. Read the text, fill in the club's details, save the draft, then “Approve”.",
+            "The same for “Self-declaration (group run, trail)”.",
+            "Approve a new version of the privacy notice from the platform's text too: it says a series' declaration is kept while the runner keeps coming to the runs.",
+            "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
           ]
         }
       },
@@ -3460,7 +3480,7 @@
         "EVENT_UPDATE_NOTICE": "Only when the organizer ticks “Tell the participants” on saving and the place, date, time or programme changed, or they wrote a note. To every active registration.",
         "EVENT_CANCELLED": "When an organizer cancels the event with “Tell the participants” ticked: their reason, to every active registration. The registrations are not cancelled.",
         "ORGANIZER_MESSAGE": "When an organizer sends a message from the event's page → “Send a message to participants”, to the group chosen. The preview uses a sample text.",
-        "GROUP_RUN_DECLARATION_SIGNED": "After someone signs a group run's optional declaration, to the address they gave. With the declaration as a PDF.",
+        "GROUP_RUN_DECLARATION_SIGNED": "After someone signs a group run's optional declaration, to the address they gave — and again if they sign once more on another date of the same run. With the declaration as a PDF.",
         "GROUP_RUN_DECLARATION_ARCHIVE": "With a declaration signed on a group run, to the club's declarations mailbox. The identity document is masked.",
         "REGISTER_ANOTHER_PERSON": "When the form is sent again with an address already registered and another name: a single-use link, valid for {confirmation}, to register the other person.",
         "NEWSLETTER_CONFIRM": "When someone subscribes on the contact page: the link that confirms the subscription, valid for {confirmation}.",
@@ -4809,9 +4829,10 @@
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
       "help": "Who signed the optional declaration, and when. The club keeps a declaration while the signer keeps coming to the runs and deletes it when they ask: erase it here, with the reason.",
-      "helpMore": "No identity document is asked for; the signer's email address is in the PDF.",
+      "helpMore": "A signature marked “series” covers every date of the run; a new version is signed again, and the old one stays. No identity document is asked for; the signer's address is in the PDF.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when} (v{version})",
+      "series": "series",
       "pdf": "PDF",
       "reason": "Why it is erased",
       "reasonHelp": "It stays in the club's log, with your name. Do not write the person's name.",

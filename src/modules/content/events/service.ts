@@ -31,7 +31,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
-import { deleteGroupRunDeclarationMessagesOfEvent } from "@/modules/group-run-declarations/repository";
+import { deleteGroupRunDeclarationMessagesOfEvent, rehomeGroupRunDeclarationsOfEvent } from "@/modules/group-run-declarations/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -3045,7 +3045,9 @@ export async function deleteEvent<T extends Record<string, unknown>>(
 
   // `event_translations` cascades from the event, and so do a group run's self-declarations
   // (§393) — whose outbox rows go first, in the same transaction, since nothing could render them.
+  // A declaration covers the run's other dates too (§NNN): while the run has one, it moves there.
   await db.transaction(async (tx) => {
+    await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
     await tx.delete(events).where(eq(events.id, input.eventId));
   });
@@ -3156,7 +3158,9 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
     // and a later edition's `repeat_of` are set to null. The registrations are gone above,
     // which is the only reference that would have refused this. A group run's self-declarations
     // cascade too (§393); their outbox rows carry the signer's address and could never render
-    // without them, so they go first.
+    // without them, so they go first — unless the run has another date, which they cover too and
+    // move to (§NNN): erasing one date's registrations is not erasing a runner's declaration.
+    await rehomeGroupRunDeclarationsOfEvent(tx, plan.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));
 

@@ -26,8 +26,12 @@ const TEXTS = [
   { name: "trail en", body: groupRunTrailEn, locale: "en" },
 ] as const;
 
-// §515: one age rule, the run's, with its day — the text's own «18» is gone.
-const SENTENCE = { ro: "Declar că am cel puțin {{minimumAge}} împliniți la data alergării.", en: "I declare that I am at least {{minimumAge}} old on the day of the run." } as const;
+// §515: one age rule, the run's, with its day — the text's own «18» is gone; on the day of each run
+// since the text covers every date of a repeated run (§NNN, one declaration per series).
+const SENTENCE = {
+  ro: "Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.",
+  en: "I declare that I am at least {{minimumAge}} old on the day of each run I take part in.",
+} as const;
 const paragraphs = (body: LegalDocumentBody) => body.sections.flatMap((section) => [...section.paragraphs]);
 
 describe("§440 {{minimumAge}} in the group-run templates", () => {
@@ -40,7 +44,9 @@ describe("§440 {{minimumAge}} in the group-run templates", () => {
   it("fills sixteen with its unit, and twenty with Romanian's 'de'", () => {
     for (const { name, body, locale } of TEXTS) {
       const merged = paragraphs(mergeLegalBody(body, { minimumAge: minimumAgeMergeValue(16, locale) }));
-      expect(merged[1], name).toBe(locale === "ro" ? "Declar că am cel puțin 16 ani împliniți la data alergării." : "I declare that I am at least 16 years old on the day of the run.");
+      expect(merged[1], name).toBe(
+        locale === "ro" ? "Declar că am cel puțin 16 ani împliniți la data fiecărei alergări la care particip." : "I declare that I am at least 16 years old on the day of each run I take part in.",
+      );
       expect(merged.join(" "), name).not.toContain("{{minimumAge}}");
     }
     expect(minimumAgeMergeValue(20, "ro")).toBe("20 de ani");
@@ -60,7 +66,7 @@ describe("§440 {{minimumAge}} in the group-run templates", () => {
 
   it("keeps the sentence with its dotted blank when no event gave a value (a preview, the blank form)", () => {
     expect(dropsParagraph(SENTENCE.ro, {})).toBe(false);
-    expect(mergeTextSegments(SENTENCE.ro, {}).map((segment) => segment.text).join("")).toBe(`Declar că am cel puțin ${BLANK} împliniți la data alergării.`);
+    expect(mergeTextSegments(SENTENCE.ro, {}).map((segment) => segment.text).join("")).toBe(`Declar că am cel puțin ${BLANK} împliniți la data fiecărei alergări la care particip.`);
   });
 
   it("is registered in the token legend, with an example and words in both catalogues", () => {

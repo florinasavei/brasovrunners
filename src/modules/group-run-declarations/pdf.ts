@@ -5,7 +5,9 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-doc
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { maskIdDocument, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import { type DeclarationAudience, eventMergeValues } from "@/modules/registrations/signed-declaration";
+import { groupRunMergeValues } from "./facts";
 import type { SignedGroupRunDeclaration } from "./repository";
+import { readSignedFacts } from "./series";
 
 /**
  * How a group-run declaration was signed, under the signature (§393): on the run's own page, not
@@ -40,8 +42,15 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
   audience: DeclarationAudience,
   now: Date,
 ): Promise<Buffer | undefined> {
-  const event = await eventMergeValues(db, signed.eventId, signed.locale);
-  if (!event) return undefined;
+  const current = await eventMergeValues(db, signed.eventId, signed.locale);
+  if (!current) return undefined;
+  /*
+    What the blanks said at the signing (§NNN, `signed_facts`): a date moved or renamed since never
+    changes what a signed declaration says (§57). A row from before §NNN kept none, and reads the
+    event as it is — its text names no series field, so nothing of the series is filled or dropped.
+  */
+  const kept = readSignedFacts(signed.signedFacts);
+  const event = { ...current, title: kept?.event ?? current.title, values: kept ? { ...current.values, ...kept } : (await groupRunMergeValues(db, signed.eventId, signed.locale, signed.body))?.values ?? current.values };
   const labels = declarationWords(signed.locale, now);
   const idDocument = audience === "club" && signed.idDocument !== null ? maskIdDocument(signed.idDocument) : signed.idDocument;
   // Inside a sentence, and under the "Data" label where it starts the value (§349).

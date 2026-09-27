@@ -18,18 +18,20 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { groupRunMergeValues } from "@/modules/group-run-declarations/facts";
+import { signatureCoversSeries } from "@/modules/group-run-declarations/series";
 import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, groupRunAsksBirthDate, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
 import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
-import { cachedBotCheckSiteKey, cachedDeadlines } from "@/modules/public-cache/reads";
+import { cachedBotCheckSiteKey, cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
-import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import IdDocumentFields, { ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
@@ -90,14 +92,23 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   );
 
   if (done) {
+    /*
+      "It covers the whole series" only while the text in force says so (§NNN, `signatureCoversSeries`):
+      under an older text a signature covers the date it was signed on. Unknown while the database is
+      away — then the words that claim less.
+    */
+    const inForce = await readOrWhileAway(() => cachedCurrentApprovedDocument(key, locale, now), undefined);
+    const doneWords = inForce && signatureCoversSeries(inForce.body) ? "groupRunDeclaration.page.done" : "groupRunDeclaration.page.doneOneDate";
     return (
       <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {back}
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
+        {/* The same words whether a row was written or the one already kept was sent again (§NNN):
+            the page tells nobody whether the address had signed before. */}
         <Alert severity="success" data-testid="group-run-declaration-done">
-          {t("groupRunDeclaration.page.done")}
+          {t(doneWords, { event: event.title })}
         </Alert>
       </Container>
     );
@@ -123,7 +134,12 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
     );
   }
 
-  const facts = await eventMergeValues(db, event.id, locale);
+  /*
+    The text's blanks from the one function the press and the PDF fill them with (§NNN,
+    `groupRunMergeValues`): a series' values under a text that names them — the series sentence kept,
+    the one-off sentence dropped — and "" on a one-off run, the reverse. What is read is what is signed.
+  */
+  const facts = await groupRunMergeValues(db, event.id, locale, document.body);
   const needsDocument = asksForIdDocument(document.body);
   const siteKey = await cachedBotCheckSiteKey();
   // What the refused press had typed, sealed for ten minutes (§142, §314): read only after a refusal.
@@ -154,7 +170,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("groupRunDeclaration.page.title")}
       </Typography>
-      <Typography sx={{ mb: 1 }}>{t("groupRunDeclaration.page.intro", { event: event.title })}</Typography>
+      {/* «Once for the whole series» only under a text that says so (§NNN, `signatureCoversSeries`). */}
+      <Typography sx={{ mb: 1 }}>
+        {t(signatureCoversSeries(document.body) ? "groupRunDeclaration.page.intro" : "groupRunDeclaration.page.introOneDate", { event: event.title })}
+      </Typography>
       {/* For oneself, from the run's age — never under eighteen (§515) — and the text is this page's language:
           what is signed is what is shown (§57); the header's switch brings the other language's text. */}
       <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-adults">

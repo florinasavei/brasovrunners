@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import pg from "pg";
@@ -28,6 +29,8 @@ let slug = "";
 let englishSlug = "";
 let editorUrl = "";
 let eventId = "";
+/** A second date of the same run (§113, §NNN): the same titles a week later, another slug. */
+let secondSlug = "";
 const signers = { ro: "", en: "" };
 
 function databaseUrl(): string {
@@ -56,8 +59,8 @@ async function noSidewaysScroll(page: Page) {
 async function sign(page: Page, locale: "ro" | "en", name: string, email: string) {
   const words =
     locale === "ro"
-      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am cel puțin 18 ani împliniți, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data alergării." }
-      : { document: "Identity document (series and number)", email: "Email address", accept: "I am at least 18 years old, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of the run." };
+      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am cel puțin 18 ani împliniți, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data fiecărei alergări la care particip." }
+      : { document: "Identity document (series and number)", email: "Email address", accept: "I am at least 18 years old, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of each run I take part in." };
   await hydrated(page);
   // The approved text, before anything is asked (§57): the sample's banner says what it is, and the
   // text states the run's age through {{minimumAge}} — never under eighteen, the declaration covers
@@ -252,6 +255,32 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
+  /*
+    §NNN — a declaration covers the run's series: a second date of the same run, the same titles a
+    week later, published, so the signature below is a series' and reads on either date.
+  */
+  test("the run gets a second date, a week later", async () => {
+    secondSlug = `${slug}-2`;
+    await withDatabase(async (client) => {
+      await client.query("BEGIN");
+      try {
+        await client.query("CREATE TEMP TABLE second_date ON COMMIT DROP AS SELECT * FROM events WHERE id = $1", [eventId]);
+        const { rows } = await client.query<{ id: string }>(
+          `UPDATE second_date SET id = gen_random_uuid(), featured = false, starts_at = starts_at + interval '7 days',
+             ends_at = ends_at + interval '7 days' RETURNING id`,
+        );
+        await client.query("INSERT INTO events SELECT * FROM second_date");
+        await client.query("CREATE TEMP TABLE second_texts ON COMMIT DROP AS SELECT * FROM event_translations WHERE event_id = $1", [eventId]);
+        await client.query("UPDATE second_texts SET id = gen_random_uuid(), event_id = $1, slug = slug || '-2'", [rows[0].id]);
+        await client.query("INSERT INTO event_translations SELECT * FROM second_texts");
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      }
+    });
+  });
+
   test("the run's page offers it under the route, and a runner signs it in Romanian", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
@@ -265,7 +294,10 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     // A named section: its heading is its accessible name — without «(opțional)» since §498.
     await expect(page.getByRole("region", { name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
     await expect(offer.getByRole("heading", { level: 3, name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
-    await expect(offer).toContainText("Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri");
+    // Once for the whole series of a run that repeats (§NNN).
+    await expect(offer).toContainText(
+      `Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria ${title}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri`,
+    );
     await expect(offer).not.toContainText("Dacă vrei");
     // The photographs notice comes before it in the fold, the declaration last (§498).
     expect(
@@ -299,13 +331,41 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const offer = page.getByTestId("group-run-declaration-offer");
     await openFold(page.getByTestId("conditions-fold"));
     await expect(offer.getByRole("heading", { level: 3, name: "Self-declaration", exact: true })).toBeVisible();
-    await expect(offer).toContainText("Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask");
+    await expect(offer).toContainText(
+      `Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole ${englishTitle} series; the club keeps it while you keep coming to the runs and deletes it when you ask`,
+    );
     await expect(offer).not.toContainText("If you wish");
     await offer.getByRole("link", { name: "Sign the declaration", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/en/events/${englishSlug}/declaration$`));
     await sign(page, "en", "Ion Ionescu", signers.en);
     const locale = await withDatabase(async (client) => (await client.query("SELECT locale::text AS locale FROM group_run_declarations WHERE email = $1", [signers.en])).rows[0].locale);
     expect(locale).toBe("en");
+  });
+
+  /*
+    §NNN — the signer's own link: their copy carries `?declaratie=<secret>` to the run's page, the row
+    its SHA-256. The mail is captured locally, so the spec writes a known secret's hash on the row —
+    what the renderer does at send time — and opens the run's OTHER date from that link.
+  */
+  test("the signer's own link opens another date of the run with «Ai semnat deja…» and no button", async ({ page }) => {
+    const secret = `e2e${Date.now().toString(36)}`.padEnd(43, "x").slice(0, 43);
+    await withDatabase(async (client) => {
+      const { rowCount } = await client.query("UPDATE group_run_declarations SET view_token_hash = $1 WHERE email = $2 AND series_key IS NOT NULL", [
+        createHash("sha256").update(secret, "utf8").digest("hex"),
+        signers.ro,
+      ]);
+      expect(rowCount).toBe(1);
+    });
+    await page.goto(`/ro/evenimente/${secondSlug}?declaratie=${secret}#declaratie`);
+    const offer = page.getByTestId("group-run-declaration-offer");
+    await expect(offer).toBeVisible();
+    await expect(offer.getByTestId("group-run-declaration-signed")).toContainText("Ai semnat deja declarația pentru aceste alergări (v. ");
+    await expect(offer.getByRole("link", { name: "Semnează declarația", exact: true })).toHaveCount(0);
+    // Without the link, the same date's page is every visitor's: the button, and no word of anybody.
+    await page.goto(`/ro/evenimente/${secondSlug}#declaratie`);
+    await expect(page.getByTestId("group-run-declaration-offer").getByRole("link", { name: "Semnează declarația", exact: true })).toBeVisible();
+    await expect(page.getByTestId("group-run-declaration-signed")).toHaveCount(0);
+    await noSidewaysScroll(page);
   });
 
   test("an address naming #declaratie arrives with «Condiții de participare» open (§498)", async ({ page }) => {
@@ -337,6 +397,8 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const rows = fold.getByTestId("group-run-declaration-row");
     await expect(rows).toHaveCount(2);
     await expect(rows.first()).toContainText("Ana Popescu");
+    // Signed for the whole series (§NNN): the row says so.
+    await expect(rows.first().getByTestId("group-run-declaration-series")).toHaveText("serie");
     // No address and no identity document on the list: they are in the PDF.
     await expect(fold).not.toContainText(signers.ro);
     await expect(fold).not.toContainText("123456");

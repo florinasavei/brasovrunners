@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -16,7 +17,9 @@ import type { GroupRunDeclarationListRow } from "../repository";
 
 /**
  * "Declarații semnate (alergare de grup)" on the event's backoffice page (§393): who signed the
- * run's optional self-declaration, and when, with each one's PDF. A closed fold (§336).
+ * run's optional self-declaration, and when, with each one's PDF. A closed fold (§336). The run's,
+ * not the date's (§NNN): one signature covers every date of a repeated run, so every date's page
+ * lists the same people, one row each.
  *
  * For whoever may read the registrations — the Organizer and the Administrator (§289); the page
  * draws it only for them, and the PDF route asserts it again (BR-REQ-060-01). The name and the
@@ -62,6 +65,8 @@ export default async function GroupRunDeclarationsPanel({
             <Box key={row.id} data-testid="group-run-declaration-row" sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
                 <Typography sx={{ fontWeight: 600, flex: 1 }}>{row.typedName}</Typography>
+                {/* Signed for the whole series (§NNN): the one signature every date of the run lists. */}
+                {row.series && <Chip size="small" variant="outlined" label={t("groupRunDeclarations.series")} sx={{ alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="group-run-declaration-series" />}
                 <Typography variant="body2" color="text.secondary">
                   {t("groupRunDeclarations.signedAt", {
                     when: formatDay(row.acceptedAt, { locale, timeZone, style: "short", withTime: true, position: "inline" }),
@@ -71,7 +76,8 @@ export default async function GroupRunDeclarationsPanel({
                 </Typography>
                 <GlyphButton
                   icon="pdf"
-                  href={`/api/admin/events/${eventId}/group-run-declarations/${row.id}`}
+                  // Under the date it was signed on (§NNN): the list is the run's, the route checks the pair.
+                  href={`/api/admin/events/${row.eventId}/group-run-declarations/${row.id}`}
                   variant="text"
                   size="small"
                   sx={{ minHeight: 44 }}

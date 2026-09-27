@@ -1,0 +1,8 @@
+-- expand: four nullable columns, two unique indexes and a CHECK on group_run_declarations (§NNN) — one self-declaration per person per series of group runs. series_key records the run's series at the signing (null for a one-off run), signer_key who signed (the canonical address and the name), signed_facts what the text's blanks said at the signing, view_token_hash the signer's own read-only link. Existing rows keep null in every one: each still covers its own date, and the partial unique index skips them. The code serving while this runs writes none of the columns, which is harmless.
+ALTER TABLE "group_run_declarations" ADD COLUMN "series_key" text;--> statement-breakpoint
+ALTER TABLE "group_run_declarations" ADD COLUMN "signer_key" text;--> statement-breakpoint
+ALTER TABLE "group_run_declarations" ADD COLUMN "signed_facts" jsonb;--> statement-breakpoint
+ALTER TABLE "group_run_declarations" ADD COLUMN "view_token_hash" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "group_run_declarations_one_per_series_signer_version" ON "group_run_declarations" USING btree ("legal_document_id",coalesce("series_key", "event_id"::text),"signer_key") WHERE "group_run_declarations"."signer_key" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "group_run_declarations_view_token_hash_unique" ON "group_run_declarations" USING btree ("view_token_hash");--> statement-breakpoint
+ALTER TABLE "group_run_declarations" ADD CONSTRAINT "group_run_declarations_view_token_is_sha256_hex" CHECK ("group_run_declarations"."view_token_hash" IS NULL OR "group_run_declarations"."view_token_hash" ~ '^[0-9a-f]{64}$');
