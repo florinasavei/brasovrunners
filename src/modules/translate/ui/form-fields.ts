@@ -97,10 +97,18 @@ export function fillBox(form: HTMLFormElement | null, name: string, value: BoxVa
  * Every English box of the form «Copiază și tradu tot» may fill: on the allowlist, not switched
  * off, not a visible box a hidden block made read-only (§350: what is hidden is not asked), and
  * with a Romanian twin that has words in it. In the form's own order, each once.
+ *
+ * `within`, set, narrows the press to one card of the form (§NNN, «Tradu cardul: RO → EN»): only the
+ * boxes inside it that post in this form, in the document's order. The Romanian twin is still
+ * looked up in the whole form — a card's pair is almost always inside it, and where it is not the
+ * form is where the save reads it from.
  */
-export function englishBoxesToTranslate(form: HTMLFormElement): string[] {
+export function englishBoxesToTranslate(form: HTMLFormElement, within?: ParentNode | null): string[] {
   const names: string[] = [];
-  for (const element of Array.from(form.elements)) {
+  const elements: unknown[] = within
+    ? Array.from(within.querySelectorAll("input[name], textarea[name]")).filter((element) => isBox(element) && element.form === form)
+    : Array.from(form.elements);
+  for (const element of elements) {
     if (!isBox(element) || !element.name || names.includes(element.name)) continue;
     if (!isTranslatableEnglishField(element.name) || element.disabled) continue;
     if (element.type !== "hidden" && element.readOnly) continue;
@@ -149,8 +157,8 @@ export function collectItems(form: HTMLFormElement | null, englishNames: readonl
  */
 export type TranslateAllPlan = { names: string[]; replaced: string[]; empty: string[]; characters: number; emptyCharacters: number };
 
-export function planTranslateAll(form: HTMLFormElement | null): TranslateAllPlan {
-  const names = form ? englishBoxesToTranslate(form) : [];
+export function planTranslateAll(form: HTMLFormElement | null, within?: ParentNode | null): TranslateAllPlan {
+  const names = form ? englishBoxesToTranslate(form, within) : [];
   const replaced = englishBoxesWithWords(form, names);
   const empty = names.filter((name) => !replaced.includes(name));
   return {
@@ -160,6 +168,16 @@ export function planTranslateAll(form: HTMLFormElement | null): TranslateAllPlan
     characters: charactersToSend(collectItems(form, names)),
     emptyCharacters: charactersToSend(collectItems(form, empty)),
   };
+}
+
+/**
+ * The card a «Tradu cardul: RO → EN» belongs to (§NNN): the nearest card of the editor around its
+ * tab row — a `Panel` is a `<details>` or a `<section>` — so the card's boxes outside its language
+ * tabs (a programme's rows, the meeting place's English name) are translated with it. Nothing
+ * around it: the tab strip alone.
+ */
+export function cardOf(element: Element): ParentNode {
+  return element.closest("details, section") ?? element;
 }
 
 export type TranslateBoxesResult =

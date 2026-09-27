@@ -88,6 +88,8 @@ export async function LanguageTabs({
       // Only the languages the reader may write are re-read as they type; a read-only one has no box.
       watch={mayType ? watch : undefined}
       live={mayType}
+      // «Tradu cardul: RO → EN» at the end of the card's tab row (§NNN).
+      translateCard
       requiredCount={requiredCount}
       identical={
         identical
