@@ -75,7 +75,7 @@ const EVENT = {
   type: "GROUP_RUN",
   eventStatus: "SCHEDULED",
   surface: "ASPHALT",
-  difficulty: "EASY",
+  difficultyLevel: 2,
   distanceMeters: 10_000,
   elevationGainMeters: 120,
   routeUrl: "https://routes.example.test/tampa",
@@ -185,8 +185,11 @@ describe("§448 the first box holds the type and the status, and its line says b
     expect(kind).toContain("Ce înseamnă fiecare tip?");
   });
 
-  it("says the type, the status and the cost on its closed line, in both catalogues (§466)", async () => {
-    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat<\/span>/);
+  it("says the type, the status, the cost and the difficulty on its closed line, in both catalogues (§466, §526)", async () => {
+    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat · Ușor 2<\/span>/);
+    // No difficulty stated, nothing said of it.
+    const unstated = { ...EVENT, difficultyLevel: null } as unknown as EditableEvent;
+    expect(summaryOf((await boxes(unstated)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat<\/span>/);
     const cancelled = { ...EVENT, type: "RACE", eventStatus: "CANCELLED" } as unknown as EditableEvent;
     expect(summaryOf((await boxes(cancelled)).kind)).toContain("Concurs · Anulat");
     const paid = { ...EVENT, costType: "PAID", costAmount: "50 lei" } as unknown as EditableEvent;
@@ -207,7 +210,7 @@ describe("§448 the first box holds the type and the status, and its line says b
       expect(foldsAround(html, id), key).toEqual([]);
       expect(html, key).toMatch(new RegExp(`<h2[^>]*>(?:<svg[\\s\\S]*?</svg>)?${name}<span`));
     }
-    expect(drawn.course).toContain("Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu");
+    expect(drawn.course).toContain("Asfalt · 10 km · +120 m · de zi (automat) · traseu");
     expect(drawn.links).toContain("Strava · 1 link (Traseul (GPX))");
     const en = await boxes(EVENT, { locale: "en" });
     for (const name of ["The course", "Links and files"]) expect(`${en.course}${en.links}`).toMatch(new RegExp(`<h2[^>]*>(?:<svg[\\s\\S]*?</svg>)?${name}<span`));
@@ -216,7 +219,14 @@ describe("§448 the first box holds the type and the status, and its line says b
 
   it("posts the same names as before, each from its own box — and no declaration from «Traseul» (§448)", async () => {
     const drawn = await boxes(EVENT);
-    for (const name of ["event.surface", "event.difficulty", "event.distanceMeters", "event.elevationGainMeters", "event.routeUrl"]) expect(drawn.course, name).toContain(`name="${name}"`);
+    for (const name of ["event.surface", "event.distanceMeters", "event.elevationGainMeters", "event.routeUrl"]) expect(drawn.course, name).toContain(`name="${name}"`);
+    // How hard is asked with what kind (§526): the band and its step side by side in the first box.
+    for (const name of ["event.difficulty", "event.difficultyStep"]) {
+      expect(drawn.kind, name).toContain(`name="${name}"`);
+      expect(drawn.course, name).not.toContain(`name="${name}"`);
+    }
+    expect(drawn.kind).toContain('name="event.difficultyStep" checked="" value="2"');
+    expect(drawn.kind).toContain("1 = cel mai ușor din categorie, 3 = cel mai greu");
     expect(drawn.course).not.toContain("group-run-declaration-field");
     for (const name of ["event.stravaEventUrl", "event.facebookEventUrl", "event.links[0].url"]) expect(drawn.links, name).toContain(`name="${name}"`);
   });
@@ -259,7 +269,7 @@ describe("§358 a role that may only read the settings", () => {
     expect(summaryOf(drawn.kind)).toContain("Alergare de grup · Programat");
     expect(drawn.kind).not.toContain('id="box-status"');
     for (const [key, id, name, line] of [
-      ["course", "box-course", "Traseul", "Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu"],
+      ["course", "box-course", "Traseul", "Asfalt · 10 km · +120 m · de zi (automat) · traseu"],
       ["links", "box-links", "Linkuri și fișiere", "Strava · 1 link (Traseul (GPX))"],
     ] as const) {
       const html = drawn[key];

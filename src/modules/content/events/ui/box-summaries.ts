@@ -507,7 +507,7 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
 }
 
 /**
- * Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · de noapte (automat) · traseu · cu descriere`, or
+ * Sub-card 1.2: `Trail · 12 km · +450 m · de noapte (automat) · traseu · cu descriere`, or
  * `Nimic completat` (the night event, §394 — `labels.night` is the automatic answer for the event's
  * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
@@ -516,13 +516,12 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
-  labels: { surface: string | null; difficulty: string | null; night?: boolean },
+  labels: { surface: string | null; night?: boolean },
   translations: readonly SummaryTranslation[] = [],
 ): string {
   const described = translations.filter((translation) => !BLANK.route(translation)).length;
   const line = join(words, [
     labels.surface,
-    labels.difficulty,
     distanceWords(words, event?.distanceMeters),
     event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
     event ? nightSummary(words, event.nightOverride, labels.night === true) : null,

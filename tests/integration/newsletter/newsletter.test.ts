@@ -423,7 +423,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
         mapUrl: MAP,
         scheduleItems: [{ startsAt: "2026-11-21T06:00:00.000Z", endsAt: null, label: { ro: "Ridicarea numerelor", en: "Number pickup" }, place: "Cort" }],
         surface: "TRAIL",
-        difficulty: "HARD",
+        difficultyLevel: 11,
         distanceMeters: 21_100,
         elevationGainMeters: 900,
         nightOverride: true,
@@ -452,7 +452,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
       expect(ro).toContain(`Unde: Parcul Tractorul\n  Strada Carpaților 60\n  Vezi pe hartă: ${MAP}`);
       expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
-      expect(ro).toContain(`Traseu: Trail · Greu · 21,1 km · 900 m D+ · Noapte (Soarele apune la 16:42)\n  Evenimentul pe Strava: ${STRAVA}`);
+      expect(ro).toContain(`Traseu: Trail · Greu, treapta 2 din 3 · 21,1 km · 900 m D+ · Noapte (Soarele apune la 16:42)\n  Evenimentul pe Strava: ${STRAVA}`);
       expect(ro).toContain(`Cost: 50 lei\n  plata pe pay.example: ${PAY}`);
       expect(ro).toMatch(
         new RegExp(`Linkuri:\\n  Pagina evenimentului: \\S+${page}\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`),
@@ -460,7 +460,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
       expect(en).toContain(`Where: Tractorul Park\n  Strada Carpaților 60\n  Open the map: ${MAP}`);
       expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
-      expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Night");
+      expect(en).toContain("Route: Trail · Hard, step 2 of 3 · 21.1 km · 900 m climb · Night");
       expect(en).toContain(`Cost: 50 lei\n  payment on pay.example: ${PAY}`);
       expect(en).toMatch(new RegExp(`Links:\\n  The event's page: \\S+${enPage}\\n  Programme: \\S+${enPage}#schedule`));
       // The block took the place of the old bold line: the date and the place are said once, the page linked once.

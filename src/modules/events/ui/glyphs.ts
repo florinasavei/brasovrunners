@@ -24,8 +24,8 @@ import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
-import { DIFFICULTY_ICONS } from "./difficulty-glyphs";
-import type { DifficultyLevel } from "../domain/difficulty";
+import { DIFFICULTY_ICONS, DIFFICULTY_LEVEL_ICONS } from "./difficulty-glyphs";
+import type { DifficultyBand } from "../domain/difficulty";
 import RoadIcon from "./RoadIcon";
 
 /** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
@@ -42,9 +42,10 @@ export type Glyph = ComponentType<SvgIconProps>;
  * trophy (every runner finishes a race, few win one); a gear test is the flask (something is
  * being tried); "other event" is a group of people; an external event opens elsewhere;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
- * mixed the fork in the path; difficulty is a gauge, its needle at one of five positions
- * (§412; the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu — sau un gauge icon
- * custom mai degrabă", replacing §399's scale of weights — drawn in `DifficultyGaugeIcon.tsx`);
+ * mixed the fork in the path; difficulty is a gauge, its needle in one of five bands and, since
+ * §526 (the owner's «ușor, mediu, greuț, greu, foarte greu»), at one of three steps inside it, the
+ * step as dots (§412: "un gauge icon custom mai degrabă", replacing §399's scale of weights — drawn
+ * in `DifficultyGaugeIcon.tsx`);
  * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
  * platform takes none of the three itself.
  */
@@ -64,9 +65,9 @@ export const SURFACE_GLYPH: Record<EventSurface, Glyph> = {
   MIXED: AltRouteIcon,
 };
 
-/** One gauge per level, mapped over `DIFFICULTY_LEVELS` in `difficulty-glyphs.ts` — a level added
+/** One gauge per band, mapped over `DIFFICULTY_BANDS` in `difficulty-glyphs.ts` — a band added
  * there is registered here with no edit of its own. */
-export const DIFFICULTY_GLYPH: Record<DifficultyLevel, Glyph> = DIFFICULTY_ICONS;
+export const DIFFICULTY_GLYPH: Record<DifficultyBand, Glyph> = DIFFICULTY_ICONS;
 
 export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
   FREE: MoneyOffIcon,
@@ -107,16 +108,19 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * one picture meaning two things on one screen is what §318 refused. Always beside its word,
  * «Noapte» / «Night», like every other pill.
  *
- * There is no bare `difficulty` entry: every caller reads one value's own level, so only the
- * `difficulty:*` entries exist — one per level of `DIFFICULTY_LEVELS` (`DifficultyGaugeIcon.tsx`),
- * a half-dial with the needle at the level's own position (§412), one `<svg>` each so
- * `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
+ * There is no bare `difficulty` entry: every caller reads one value's own band or level, so only
+ * the `difficulty:*` entries exist — one per band of `DIFFICULTY_BANDS` (`difficulty:MEDIUM`, the
+ * needle at the band's middle, §412: a filter box, the editor's band select) and one per level of
+ * the club's scale of fifteen (`difficulty:MEDIUM-3`, the needle at the step and the step's dots
+ * lit, §526: an event's own pill) — a half-dial drawn by `DifficultyGaugeIcon.tsx`, one `<svg>` each
+ * so `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
  * hands them.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
   ...prefixed("surface", SURFACE_GLYPH),
   ...prefixed("difficulty", DIFFICULTY_GLYPH),
+  ...prefixed("difficulty", DIFFICULTY_LEVEL_ICONS),
   ...prefixed("cost", COST_GLYPH),
   featured: StarIcon,
   special: AutoAwesomeIcon,

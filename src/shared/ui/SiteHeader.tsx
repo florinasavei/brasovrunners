@@ -3,6 +3,7 @@ import Container from "@mui/material/Container";
 import { getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
+import { faqOnSite } from "@/modules/content/faq/on-site";
 import { teamPageOnSite } from "@/modules/content/team/repository";
 import {
   cachedContactFormReaches,
@@ -129,6 +130,8 @@ export default async function SiteHeader() {
   const pages = await navigationPages(locale as Locale);
   const showGallery = await hasPublishedAlbum(locale as Locale);
   const showTeam = await hasVisibleTeam(locale as Locale);
+  // «Întrebări frecvente» (§525): the page published with a question on it — «Echipa»'s rule.
+  const showFaq = await faqOnSite(locale as Locale);
   const showMembers = await hasMembersPage(locale as Locale);
   /**
    * "Contact" leads to the form, or to the club's address; a deployment with neither has no
@@ -273,6 +276,7 @@ export default async function SiteHeader() {
             pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
             showGallery={showGallery}
             showTeam={showTeam}
+            showFaq={showFaq}
             showMembers={showMembers}
             showContact={showContact}
           />

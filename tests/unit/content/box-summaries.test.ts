@@ -252,13 +252,13 @@ describe("§350 each box's summary, empty and filled", () => {
   });
 
   it("Traseul, Linkuri, Parteneri, Evidențiere — and the empty state of each", () => {
-    expect(courseSummary(words, null, { surface: null, difficulty: null })).toBe("Nimic completat");
+    expect(courseSummary(words, null, { surface: null })).toBe("Nimic completat");
     // §394: automatic and no night fact given (`labels.night` absent, so not `true`) still names
     // the day, «de zi (automat)» — the nit's fix, so the card says something rather than nothing.
-    expect(courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: 450, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail", difficulty: "Mediu" })).toBe(
-      "Trail · Mediu · 12 km · +450 m · de zi (automat) · traseu",
+    expect(courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: 450, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail" })).toBe(
+      "Trail · 12 km · +450 m · de zi (automat) · traseu",
     );
-    expect(courseSummary(words, { distanceMeters: 21_100, elevationGainMeters: null, routeUrl: null, nightOverride: null }, { surface: null, difficulty: null })).toBe(
+    expect(courseSummary(words, { distanceMeters: 21_100, elevationGainMeters: null, routeUrl: null, nightOverride: null }, { surface: null })).toBe(
       "21,1 km · de zi (automat)",
     );
     expect(linksSummary(words, null, {}, "ro")).toBe("Niciun link");

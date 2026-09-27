@@ -55,7 +55,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.15` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.16` |
 
 ## Next, queued
 
@@ -89,6 +89,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.16` | «Întrebări frecvente» — a platform page the club fills with questions and rich-text answers in both languages, native folds with deep links, `FAQPage` structured data; Pagini in «standard» and «personalizate» groups; migration `0103` (§525) · the difficulty as five bands × three steps — ușor, mediu, greuț, greu, foarte greu, each 1·2·3 — one level column backfilled from the old five values, the gauge with step dots, the club's scale in the guide; migration `0104` (§526) |
 | `BR-V2.15` | the members' zone — a «Membru» role below the volunteer with the same Zitadel sign-in and no backoffice, the public «Beneficiile membrilor» page with the sign-in button, one members-only page behind the sign-in, bulk invitations; migration `0102` (§524) |
 | `BR-V2.14` | the V2.13 leftovers — «Configurație» only under «Setări», fragment addresses hop to their tab, the waiting-list offer kept while its email is queued, the family form carries the country, the ship tolerates a merge in progress, the family confirmation previewed (§520) · a glyph on every button and every fold header, public site and backoffice, guarded by a source-walk test (§521) · the plain-words pass over the whole backoffice — one sentence per fact, at most 200 characters, detail behind «?», enforced by the test (§522) · one self-declaration per person per series of group runs — no expiry, ended only by the signer's request or a new text version; the templates, the paper form, the notice and the PDF written for the recurring run; migration `0101` (§523) |
 | `BR-V2.13` | the country before the city on the form, România by default, and a sex the person chooses (§510) · Costuri opens with the month's total and the backoffice speaks one plain sentence per field (§511) · the public list's card inside «Program, regulament și declarație» (§512) · emails leave on the scheduler's tick, never right after the request — a «Termene» setting (§513) · a «Tradu cardul: RO → EN» in every card's tab row beside the whole-editor button (§514) · the declarations reviewed — the race declaration as trail and road from one shared body, minimum age 14 with no under-14 flow, the group-run texts on the event's minimum age (§515) · one «Setări» area with tabs, Sarcini pointing into it, every old address redirected (§516) · the newsletter no longer offers «Coduri de reducere» — members-only from the members' zone — retired from every screen and stripped from stored subscriptions by migration `0100` (§517) · the anti-bot check says every state under itself and on the send button, offers «Reîncearcă verificarea» wherever a person could be stuck, never holds a press for a check that gave up, and `/api/health` says a level for the presses the valve sent (§518) · several people on one address in one sitting — one held family email with every person, one confirm-all link, «Toate înscrierile mele», one declarations wizard (§519) |

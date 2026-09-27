@@ -1,6 +1,11 @@
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
+import GroupsIcon from "@mui/icons-material/Groups";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
+import MailOutlineIcon from "@mui/icons-material/MailOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -9,10 +14,18 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { readFaqPageSettings } from "@/modules/content/faq/page-settings";
+import { listFaqItemsForAdmin } from "@/modules/content/faq/repository";
+import { readMembersPageSettings } from "@/modules/content/members/page-settings";
 import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/repository";
+import { readTeamPageSettings } from "@/modules/content/team/page-settings";
+import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
+import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules/public-cache/reads";
+import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
@@ -61,8 +74,73 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   const current = await searchParams;
   const { saved, error } = current;
-  const rows = await listPagesForAdmin(getDb(), locale);
+  const db = getDb();
+  const [rows, teamSettings, teamMembers, faqSettings, faqItems, membersSettings, members, contactFormReaches, contactAddresses] = await Promise.all([
+    listPagesForAdmin(db, locale),
+    readTeamPageSettings(db),
+    listTeamMembersForAdmin(db),
+    readFaqPageSettings(db),
+    listFaqItemsForAdmin(db),
+    readMembersPageSettings(db),
+    countMembers(db),
+    cachedContactFormReaches(),
+    cachedShownContactAddresses(),
+  ]);
   const t = await getTranslations("Admin");
+  /*
+    The standard pages (§525): the platform's own, whose address and title the club does not
+    choose and whose contents it keeps on their own screens — «Contact» (§442, §461), «Echipa»
+    (§459), «Întrebări frecvente» and «Membri» (§524). Each wears its glyph and says whether it is on the site and
+    what of it is, so the list answers "what is live" for every page the club has, standard and
+    custom alike. «Contact» is always on the site; its row says what the page offers, and opens
+    the settings behind it for a role that may read them.
+  */
+  const contactLine = [
+    contactFormReaches ? t("pages.contactForm") : t("pages.contactNoForm"),
+    contactAddresses.length > 0 ? t("pages.contactAddress", { address: contactAddresses.join(", ") }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const standard = [
+    {
+      key: "contact",
+      icon: <MailOutlineIcon aria-hidden fontSize="small" color="action" />,
+      href: canOpenSettingsTab(actor.role, "contact") ? ("/admin/settings/contact" as const) : null,
+      title: t("pages.tabContact"),
+      published: true,
+      line: contactLine,
+    },
+    {
+      key: "team",
+      icon: <GroupsIcon aria-hidden fontSize="small" color="action" />,
+      href: "/admin/pages/team" as const,
+      title: t("pages.tabTeam"),
+      published: teamSettings.status === "PUBLISHED",
+      line: t("pages.standardShown", {
+        shown: String(teamMembers.filter((member) => member.visible).length),
+        total: String(teamMembers.length),
+      }),
+    },
+    {
+      key: "faq",
+      icon: <HelpOutlineIcon aria-hidden fontSize="small" color="action" />,
+      href: "/admin/pages/faq" as const,
+      title: t("pages.tabFaq"),
+      published: faqSettings.status === "PUBLISHED",
+      line: t("pages.standardShown", {
+        shown: String(faqItems.filter((item) => item.visible).length),
+        total: String(faqItems.length),
+      }),
+    },
+    {
+      key: "members",
+      icon: <CardMembershipIcon aria-hidden fontSize="small" color="action" />,
+      href: "/admin/pages/members" as const,
+      title: t("pages.tabMembers"),
+      published: membersSettings.status === "PUBLISHED",
+      line: t("members.count", { count: members }),
+    },
+  ];
   const words = await confirmWords();
 
   const query = parseListQuery(current, {
@@ -114,7 +192,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* The club's own pages and «Echipa», the platform's team page (§459). */}
+      {/* The club's own pages, and the platform's standard ones: «Contact», «Echipa» (§459), «Întrebări frecvente» (§525), «Membri» (§524). */}
       <PagesSubNav locale={locale} active="pages" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
@@ -122,12 +200,48 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
       </Box>
 
+      <Stack component="section" spacing={1.5} aria-labelledby="pages-standard" data-testid="pages-standard">
+        <Typography variant="h2" id="pages-standard" sx={{ fontSize: "1.25rem" }}>
+          {t("pages.standardTitle")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("pages.standardIntro")}
+        </Typography>
+        <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {standard.map((page) => (
+            <Paper component="li" key={page.key} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }} data-testid={`pages-standard-${page.key}`}>
+              <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, minWidth: 0 }}>
+                  {page.icon}
+                  <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
+                    {page.title}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    color={page.published ? "success" : "default"}
+                    label={EDITORIAL_STATUS_LABEL[page.published ? "PUBLISHED" : "DRAFT"]}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {page.line}
+                  </Typography>
+                </Stack>
+                {page.href && (
+                  <GlyphButtonLink href={page.href} icon="edit" variant="outlined" sx={{ minHeight: 44 }}>
+                    {t("pages.standardOpen")}
+                  </GlyphButtonLink>
+                )}
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      </Stack>
+
       <Stack
         direction="row"
         sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}
       >
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
-          {t("pages.title")}
+          {t("pages.customTitle")}
         </Typography>
         {/* A reader opens this list; writing a page is the Redactor's and the Administrator's
             (§207, §208). The action refuses either way — this keeps the button off a screen

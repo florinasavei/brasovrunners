@@ -68,7 +68,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
 }
 
 /** A chip's words, in order, wherever they are in the markup (§356: the page's cost is a pill). */
-const pillLabels = (html: string) => [...html.matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+const pillLabels = (html: string) => [...html.matchAll(/class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</g)].map((match) => match[1]);
 
 describe("the cost facts, full page (§343; its own row and pill since §356)", () => {
   it("says «Gratuit» for a free event, with no amount and no link", async () => {

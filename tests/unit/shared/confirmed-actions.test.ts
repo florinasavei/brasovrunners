@@ -108,6 +108,10 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setTeamMemberVisibleAction: [],
   deleteTeamMemberAction: [],
   setTeamPagePublishedAction: [],
+  // «Întrebări frecvente» (§525): the page's one save, which asks when a card is put on the site,
+  // taken off or deleted (and nothing else), and the page's own publish switch.
+  saveFaqPageAction: [],
+  setFaqPagePublishedAction: [],
   // «Beneficiile membrilor» on the site or off it (§524).
   setMembersPagePublishedAction: [],
   // The team.
