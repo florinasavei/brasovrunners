@@ -1,3 +1,4 @@
+import HistoryIcon from "@mui/icons-material/History";
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -29,7 +30,7 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
-import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import type { listUpcomingEvents, PublicEvent } from "@/modules/events/repository";
@@ -374,6 +375,7 @@ async function PastEvents({
         variant="h2"
         sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 1.5 }}
       >
+        <HistoryIcon aria-hidden sx={FOLD_GLYPH_SX} />
         {onlyOneType
           ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${sourceType}`) })
           : filtered

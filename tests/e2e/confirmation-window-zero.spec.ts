@@ -46,11 +46,15 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     // A thumb's target (BR-REQ-041-01 criterion 6).
     expect((await due.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await due.fill("0");
-    const help = card.getByText(/^Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul/);
+    // One plain sentence under the numbers (§511): what each number means, 0 included; the rest —
+    // who gets the place after the deadline, and the hold of a late or windowless registration —
+    // is the sentence's «?», its tooltip and its accessible name.
+    const help = card.getByText(/^Prima cifră: cu câte zile înainte de start cerem semnarea declarației\./);
     await expect(help).toBeVisible();
-    await expect(help).toContainText("după termen, locul trece la următorul doar dacă așteaptă cineva");
-    await expect(help).toContainText("Cu 0 la termen, locul nu expiră înainte de start");
-    await expect(help).toContainText("are 30 de minute să semneze");
+    await expect(help).toContainText("A doua: termenul până la care locul e al alergătorului; 0 înseamnă că nu expiră.");
+    const more = help.getByRole("button", { name: /^După termen, locul trece la următorul doar dacă așteaptă cineva\./ });
+    await expect(more).toBeVisible();
+    await expect(more).toHaveAttribute("aria-label", /sau când prima cifră e 0, are 30 de minute să semneze\.$/);
 
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);

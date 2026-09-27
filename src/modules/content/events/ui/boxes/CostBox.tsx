@@ -77,7 +77,7 @@ export default async function CostBox({
   // Whether the note may be typed by a reader without the settings (§394): the stored mode and cost.
   const discountNoteApplies = event !== null && costPaidToExternalOrganizer(event);
   const costLabel = await costLine(event, languages);
-  const card = { id: "box-cost", level: 3, title: heading ?? t("editor.boxes.cost.title"), aside: costLabel } as const;
+  const card = { id: "box-cost", glyph: "cost", level: 3, title: heading ?? t("editor.boxes.cost.title"), aside: costLabel } as const;
 
   // One strip, used inside `CostFields` for a settings editor and on its own for a words-only reader.
   const discountNotePanels = (

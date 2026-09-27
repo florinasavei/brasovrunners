@@ -1,3 +1,6 @@
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import Alert from "@mui/material/Alert";
@@ -32,7 +35,7 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
 type Props = {
   locale: Locale;
@@ -230,6 +233,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
         {mayEdit && (
           <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
             <Box component="summary" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
+              <EditIcon aria-hidden sx={FOLD_GLYPH_SX} />
               {t("clubTodo.edit")}
             </Box>
             <Stack spacing={1.5} sx={{ pb: 1.5 }}>
@@ -305,6 +309,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
       {mayEdit && (
         <Box component="details" sx={BOXED_DISCLOSURE_SX} data-testid="club-todo-add">
           <Box component="summary" sx={{ fontWeight: 500 }}>
+            <AddIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("clubTodo.add.title")}
           </Box>
           <Box sx={{ pb: 1.5 }}>
@@ -340,6 +345,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
       {done.length > 0 && (
         <Box component="details" sx={BOXED_DISCLOSURE_SX} data-testid="club-todo-done">
           <Box component="summary" sx={{ fontWeight: 500 }}>
+            <TaskAltIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("clubTodo.doneTitle", { count: done.length })}
           </Box>
           <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0, pb: 1.5 }}>

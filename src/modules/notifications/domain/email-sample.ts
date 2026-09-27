@@ -256,6 +256,16 @@ export const EMAIL_SAMPLE_FAMILY = {
 } as const;
 
 /**
+ * The family's one confirmation (§520), as `/admin/emails` previews it: the sample runner and the
+ * person the family link's sample named, each with a desk code and a race number — «Confirmat: 2
+ * persoane». Made-up like the rest of the sample; the preview gives each one the sample's QR address.
+ */
+export const EMAIL_SAMPLE_FAMILY_CONFIRMED = [
+  { name: "Ana Popescu", firstName: "Ana", checkinCode: "EXAMPL", raceNumber: 42, provisional: false },
+  { name: EMAIL_SAMPLE_FAMILY.personName, firstName: "Mihai", checkinCode: "EXAMP2", raceNumber: 43, provisional: false },
+] as const;
+
+/**
  * The sample's value for a field of the closed set, in one language — every field has one since
  * §373 (email follow-up), so the preview and the legend under the editor show each of them.
  */

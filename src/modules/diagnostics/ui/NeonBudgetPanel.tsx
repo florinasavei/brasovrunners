@@ -52,7 +52,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
   const words = mayEdit ? await confirmWords() : null;
 
   return (
-    <Panel level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
+    <Panel glyph="budget" level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
       <Alert severity={SEVERITY[level]} sx={{ mb: 1.5 }} data-testid="neon-budget-level" data-level={level}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t(`level.${level}`)}
@@ -98,7 +98,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
         </>
       )}
 
-      {/* What the platform does now: one sentence a line (§511), the lead on the first. */}
+      {/* What the site does now: one sentence a line (§511), the lead on the first. */}
       <Box sx={{ mt: 1.5 }} data-testid="neon-budget-effect">
         <Typography variant="body2">
           {t("effectLead")}{" "}

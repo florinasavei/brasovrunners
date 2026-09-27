@@ -1,7 +1,10 @@
 "use client";
 
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import LinkIcon from "@mui/icons-material/Link";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
 import RedoIcon from "@mui/icons-material/Redo";
 import UndoIcon from "@mui/icons-material/Undo";
 import Box from "@mui/material/Box";
@@ -289,9 +292,12 @@ function LegalBodyEditorIsland({
               }}
               sx={{ flexGrow: 1, minWidth: 220 }}
             />
-            <Button onClick={applyLink}>{labels.linkApply}</Button>
+            <Button onClick={applyLink} startIcon={<CheckIcon fontSize="small" />}>
+              {labels.linkApply}
+            </Button>
             <Button
               color="inherit"
+              startIcon={<LinkOffIcon fontSize="small" />}
               onClick={() => {
                 editor?.chain().focus().extendMarkRange("link").unsetLink().run();
                 setLinkDraft(null);
@@ -299,7 +305,7 @@ function LegalBodyEditorIsland({
             >
               {labels.linkRemove}
             </Button>
-            <Button color="inherit" onClick={() => setLinkDraft(null)}>
+            <Button color="inherit" onClick={() => setLinkDraft(null)} startIcon={<CloseIcon fontSize="small" />}>
               {labels.linkCancel}
             </Button>
           </Stack>
@@ -327,8 +333,10 @@ function LegalBodyEditorIsland({
               onChange={(event) => setImageDraft((draft) => ({ src: draft?.src ?? "", alt: event.target.value }))}
               sx={{ minWidth: 180 }}
             />
-            <Button onClick={applyImage}>{labels.imageApply}</Button>
-            <Button color="inherit" onClick={() => setImageDraft(null)}>
+            <Button onClick={applyImage} startIcon={<CheckIcon fontSize="small" />}>
+              {labels.imageApply}
+            </Button>
+            <Button color="inherit" onClick={() => setImageDraft(null)} startIcon={<CloseIcon fontSize="small" />}>
               {labels.imageCancel}
             </Button>
           </Stack>

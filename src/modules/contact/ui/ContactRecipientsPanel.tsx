@@ -49,7 +49,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
     anybody opens this panel to check. The copies are left to the body: the summary is one line.
   */
   return (
-    <Panel
+    <Panel glyph="contacts"
       title={t("emails.contacts.title")}
       intro={t("emails.contacts.intro")}
       aside={t("emails.contacts.aside", { to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody") })}

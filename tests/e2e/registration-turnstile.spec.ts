@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { cancelRegistrationsByEmailPrefix } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 import {
   BLIND_FIELD_FLAG,
   CLOUDFLARE_DUMMY_TOKEN,
@@ -69,6 +70,8 @@ async function fillRequired(page: Page, email: string, emailConfirm = email) {
     const box = page.locator(`[name="${name}"]`);
     if ((await box.inputValue()).replace(/\s/g, "") !== value.replace(/\s/g, "")) await box.fill(value);
   }
+  // «Sex» starts empty and is required (§518): without it the press is refused before it is held.
+  await chooseSex(page);
   for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     await page.locator(`[name="${name}"]`).check();
   }

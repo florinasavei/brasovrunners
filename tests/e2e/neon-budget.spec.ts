@@ -13,7 +13,7 @@ import { signIn } from "./support/featured-event";
  * health answer names the level without a figure. Read-only, so it runs on both projects.
  */
 test.describe("§447 the month's budget", () => {
-  test("Costuri says the budget is unknown and the platform does nothing extra", async ({ page }) => {
+  test("Costuri says the budget is unknown and the site does nothing extra", async ({ page }) => {
     // The thresholds' form is a platform setting, the Superadministrator's since §450.
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/settings/costs");
@@ -23,7 +23,7 @@ test.describe("§447 the month's budget", () => {
     await expect(card.getByRole("heading", { name: "Bugetul lunii" })).toBeVisible();
     await expect(card.getByTestId("neon-budget-level")).toHaveAttribute("data-level", "unknown");
     await expect(card.getByTestId("neon-budget-level")).toContainText("Neon nu a putut fi citit acum");
-    await expect(card.getByTestId("neon-budget-effect")).toContainText("Ce face platforma acum: nimic în plus");
+    await expect(card.getByTestId("neon-budget-effect")).toContainText("Ce face site-ul acum: nimic în plus");
     // No reading, so no figures and no source line: nothing is invented.
     await expect(card.getByTestId("neon-budget-spent")).toHaveCount(0);
     await expect(card.getByTestId("neon-budget-source")).toHaveCount(0);
@@ -37,7 +37,7 @@ test.describe("§447 the month's budget", () => {
     await page.goto("/en/devs");
     const card = page.locator("#main").getByTestId("neon-budget");
     await expect(card.getByRole("heading", { name: "This month's budget" })).toBeVisible();
-    await expect(card.getByTestId("neon-budget-effect")).toContainText("What the platform does now: nothing extra");
+    await expect(card.getByTestId("neon-budget-effect")).toContainText("What the site does now: nothing extra");
   });
 
   test("the public health answer names the level, never a figure, and when the database was asked", async ({ request }) => {

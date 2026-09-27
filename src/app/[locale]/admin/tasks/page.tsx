@@ -1,3 +1,4 @@
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -23,6 +24,7 @@ import {
   noticeDescribesNewsletter,
   noticeDescribesTeamPage,
   raceDeclarationsCurrent,
+  groupRunDeclarationsSeriesCurrent,
 } from "@/modules/legal-documents/repository";
 import {
   countTasks,
@@ -64,7 +66,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
 import SubNav from "@/shared/ui/SubNav";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CLUB_NAME } from "@/theme/brand";
 
 type Props = {
@@ -92,7 +94,7 @@ export const maxDuration = 60;
  * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
  * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
  * every service on the way. Five panels, then three since §516, which moved «Anti-robot» and
- * «Costuri» to «Setări» → «Platformă» and «Costuri» (their old `?panel=` answers 308 there):
+ * «Costuri» to «Setări» → «Anti-robot» and «Costuri» (their old `?panel=` answers 308 there):
  *
  * - `club` — «Club»: what is still owed, read from the system, with its filters, and the
  *   decisions still open. It was `todo`, «De făcut», until §438, and it is still where a bare
@@ -262,7 +264,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const db = getDb();
   const now = new Date();
 
-  // The anti-bot switch (§254), for its row: switched on «Setări» → «Platformă» since §516.
+  // The anti-bot switch (§254), for its row: switched on «Setări» → «Anti-robot» since §516.
   const botCheck = await readBotCheck(db);
   // Whether the configured secret works, not merely whether it is set (§420, finding (10)'s
   // health half) — cached fifteen minutes, same as `/api/health`.
@@ -406,6 +408,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
       // §515: both race declarations, trail and road or park, from the platform's shared body.
       raceDeclarationsCurrent: await raceDeclarationsCurrent(db, now),
+      // §523: the group-run declarations written for one signature per series; null while none is in force.
+      groupRunSeriesTextsCurrent: await groupRunDeclarationsSeriesCurrent(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.
@@ -641,6 +645,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               {task.state !== "done" && (
                 <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1.5 }}>
                   <Box component="summary" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                    <HelpOutlineIcon aria-hidden sx={FOLD_GLYPH_SX} />
                     {t("howTitle")}
                   </Box>
                   <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>

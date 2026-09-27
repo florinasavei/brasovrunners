@@ -12,7 +12,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
+import { GROUP_RUN_DECLARATION_KEYS, raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
 import {
   asksForMinorSignature,
   describesListSocials,
@@ -177,6 +177,22 @@ export async function raceDeclarationsCurrent<T extends Record<string, unknown>>
     RACE_DECLARATION_KEYS.flatMap((key) => routing.locales.map((locale) => findCurrentApprovedDocument(db, key, locale, now))),
   );
   return texts.every((document) => document !== undefined && mergeFieldsIn(document.body).has(MINIMUM_AGE_MERGE_FIELD));
+}
+
+/**
+ * Whether the group-run declarations in force say what they cover (§523): every approved group-run
+ * text in force, in every language, names `{{series}}` — the platform's series sentence and one-off
+ * sentence, written for one signature per series. Null while no group-run text is in force (the
+ * editor asks for approving one, §393); false while one in force is older. What `/admin/tasks` asks
+ * for its «Declarațiile alergărilor de grup: o semnătură pe serie» row.
+ */
+export async function groupRunDeclarationsSeriesCurrent<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean | null> {
+  const texts = await Promise.all(
+    GROUP_RUN_DECLARATION_KEYS.flatMap((key) => routing.locales.map((locale) => findCurrentApprovedDocument(db, key, locale, now))),
+  );
+  const inForce = texts.filter((document) => document !== undefined);
+  if (inForce.length === 0) return null;
+  return inForce.every((document) => mergeFieldsIn(document.body).has("series"));
 }
 
 /** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */

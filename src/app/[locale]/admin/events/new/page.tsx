@@ -172,7 +172,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             <>
               {/* S1 — folded: five empty-field lines at the top of a phone would be noise; its
                   closed line counts them, live. */}
-              <Panel
+              <Panel glyph="publication"
                 collapsible
                 id="box-publication"
                 title={t("editor.publicationSection")}
@@ -199,12 +199,12 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
               {/* S2 — recurrence first (BR-REQ-050-02 criterion 7): open, and a single switch
                   until it is ticked. The copies are drafts like the event itself, or live with it. */}
-              <Panel collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={<TickedLine name="repeat.on" off={t("editor.boxes.recurrence.none")} on={t("editor.boxes.recurrence.on")} />}>
+              <Panel glyph="recurrence" collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={<TickedLine name="repeat.on" off={t("editor.boxes.recurrence.none")} on={t("editor.boxes.recurrence.on")} />}>
                 <Stack spacing={1.5}>
                   <RepeatToggle name="repeat.on" label={t("editor.repeatOn")}>
                     <RepeatFields prefix="repeat." draftSource />
                   </RepeatToggle>
-                  <Panel collapsible level={3} title={t("editor.repeatHelpSummary")}>
+                  <Panel glyph="help" collapsible level={3} title={t("editor.repeatHelpSummary")}>
                     <Typography variant="body2" color="text.secondary">
                       {t("editor.repeatHelp", { horizon })}
                     </Typography>
@@ -213,7 +213,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               </Panel>
 
               {/* S3 — the page, top to bottom (§406): the editor's same map. */}
-              <Panel static id="box-map" title={flow.label}>
+              <Panel glyph="map" static id="box-map" title={flow.label}>
                 <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
               </Panel>
             </>
@@ -245,7 +245,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <AddressBox languages={languages} slugLocked={false} creating />
 
               {/* 15 — always open: what the press makes, and the two buttons. */}
-              <Panel static id="box-save" title={t("editor.boxes.save.title")}>
+              <Panel glyph="save" static id="box-save" title={t("editor.boxes.save.title")}>
                 <CreateDraftLine repeatName="repeat.on" draft={t("editor.boxes.save.createDraft")} withSeries={t("editor.boxes.save.createWithSeries", { horizon })} />
                 <Box
                   sx={{

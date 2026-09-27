@@ -1,8 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { MOVED_BACKOFFICE_PATHS, resolveMovedBackofficePath } from "@/i18n/moved-paths";
+import { MOVED_BACKOFFICE_PATHS, MOVED_FRAGMENTS, resolveMovedBackofficePath, resolveMovedFragment } from "@/i18n/moved-paths";
 import { routing } from "@/i18n/routing";
 import proxy from "@/proxy";
 
@@ -92,5 +92,38 @@ describe("§516 the moved backoffice addresses", () => {
   it("does not redirect «Sarcini» itself", () => {
     const response = proxy(new NextRequest("http://localhost:4000/ro/admin/tasks?panel=todo"));
     expect(response.status).not.toBe(308);
+  });
+});
+
+describe("§520 a card that left the email page for its own tab, named by an old fragment", () => {
+  it("sends the fragment on to the card's tab, locale and fragment kept", () => {
+    for (const locale of routing.locales) {
+      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#contact-recipients")).toBe(`/${locale}/admin/settings/contact#contact-recipients`);
+      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#shown-contact-address")).toBe(`/${locale}/admin/settings/contact#shown-contact-address`);
+      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#deadlines")).toBe(`/${locale}/admin/settings/deadlines#deadlines`);
+    }
+    expect(resolveMovedFragment("/admin/settings/emails/", "#deadlines")).toBe("/admin/settings/deadlines#deadlines");
+  });
+
+  it("leaves a card that stayed, an empty fragment and another page alone", () => {
+    expect(resolveMovedFragment("/ro/admin/settings/emails", "#email-plan")).toBeNull();
+    expect(resolveMovedFragment("/ro/admin/settings/emails", "")).toBeNull();
+    expect(resolveMovedFragment("/ro/admin/settings/emails", "#")).toBeNull();
+    expect(resolveMovedFragment("/ro/admin/settings/contact", "#contact-recipients")).toBeNull();
+  });
+
+  it("names cards that really live on the tab it sends them to, and the page mounts the hop", () => {
+    const panelOf: Record<string, string> = {
+      "contact-recipients": "src/modules/contact/ui/ContactRecipientsPanel.tsx",
+      "shown-contact-address": "src/modules/contact/ui/ShownAddressPanel.tsx",
+      deadlines: "src/modules/deadlines/ui/DeadlinesPanel.tsx",
+    };
+    for (const entry of MOVED_FRAGMENTS) {
+      expect(readFileSync(path.join(ROOT, panelOf[entry.hash]), "utf8")).toContain(`id="${entry.hash}"`);
+      const tab = entry.to.split("/").pop();
+      const component = path.basename(panelOf[entry.hash], ".tsx");
+      expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/settings", tab!, "page.tsx"), "utf8")).toContain(`<${component}`);
+    }
+    expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8")).toContain("<MovedFragmentHop />");
   });
 });

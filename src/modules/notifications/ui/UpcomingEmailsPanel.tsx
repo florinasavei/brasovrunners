@@ -60,7 +60,7 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
   const other: Locale = locale === "ro" ? "en" : "ro";
 
   return (
-    <Panel
+    <Panel glyph="forecast"
       title={t("emails.forecast.title")}
       intro={t("emails.forecast.intro")}
       introMore={t("emails.forecast.introMore")}

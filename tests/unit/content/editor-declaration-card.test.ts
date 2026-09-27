@@ -81,9 +81,9 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
     for (const event of [TRAIL_RUN, RACE, null]) {
       const html = await rules(event);
       expect(namedFolds(html)).toEqual(["box-declaration"]);
-      expect(html).toMatch(/<h3[^>]*>Declarația pe propria răspundere<span/);
+      expect(html).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Declarația pe propria răspundere<span/);
     }
-    expect(await rules(TRAIL_RUN, { locale: "en" })).toMatch(/<h3[^>]*>Self-declaration<span/);
+    expect(await rules(TRAIL_RUN, { locale: "en" })).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Self-declaration<span/);
     // The card that holds the three awaits each and draws them in the page's order — the programme,
     // the rules, the declaration — its line joined to theirs, open while the declaration is missing.
     const box = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/ProgrammeRulesBox.tsx"), "utf8");

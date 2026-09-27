@@ -555,7 +555,7 @@ export function canWriteLegalTexts(role: StaffRole): boolean {
  * What makes a Superadministrator more than an Administrator: a setting whose wrong value takes
  * the site down or holds every message back, for every participant at once —
  *
- *     "Cât de des verifică platforma"   the jobs' throttle (§334): a long interval delays every
+ *     "Cât de des verifică site-ul"   the jobs' throttle (§334): a long interval delays every
  *                                       hand-over of a place and every email the jobs send
  *     "Limitele bazei de date"          Neon's size ceiling and monthly quota (§335): a quota
  *                                       reached suspends the database, and the site with it
@@ -615,7 +615,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§516), each tab
  *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
  *                                             «Contact», «Aspect» canReadContent, «Costuri» and
- *                                             «Platformă» canManageRegistrations; the forms on them ask
+ *                                             «Anti-robot» canManageRegistrations; the forms on them ask
  *                                             `canManageClubSettings` or `canManagePlatform` (§450)
  *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
  *                                             «Club» canManageRegistrations, «Aplicația»
@@ -625,11 +625,16 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
  *                                             `canWriteLegalTexts` (§450)
  *     guide          every staff session      `admin/guide/page.tsx`
- *     devs           canSeeDiagnostics        `devs/page.tsx`
+ *
+ * **`/devs` («Configurație») is not a section of this bar (§520).** It is the last tab of «Setări»'s
+ * row (`settings-tabs.ts`'s `offersConfigurationTab`, gate `canSeeDiagnostics`), and it had its own
+ * entry here as well — one page, two ways in, and the main bar lit neither on arrival. The Tehnic,
+ * whose reason to open the backoffice is that page, reaches it through «Setări», which every role
+ * from the Redactor up is offered; the bar lights «Setări» on `/devs` (`BackofficeShell`).
  *
  * **In the order the club opens them (§516)**, which is the array's order and the bar's: the
  * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, then the
- * settings, what is owed, the team, the legal texts, the guide, and the system last. A role is
+ * settings, what is owed, the team, the legal texts and the guide. A role is
  * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid».
  *
  * The hierarchy makes one property testable and worth stating: a higher role is offered every
@@ -648,7 +653,6 @@ export const ADMIN_SECTIONS = [
   "staff",
   "legal",
   "guide",
-  "devs",
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
@@ -720,7 +724,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     /*
       «Setări» (§516): the club's settings as one row of tabs — the email page (§250, which had no
       entry at all until the owner's "I am missing the email templates config … in this navbar"),
-      «Termene», «Contact», «Aspect», «Costuri», «Platformă». Offered to whoever may open one tab of
+      «Termene», «Contact», «Aspect», «Costuri», «Anti-robot». Offered to whoever may open one tab of
       it (`settings-tabs.ts`); the Redactor opens «Emailuri» for the words (§247).
     */
     settings: canOpenSettings(role),
@@ -736,7 +740,6 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // the Administrator writes one (§46, §181, §203).
     legal: canReadContent(role),
     guide: canWorkTheDesk(role),
-    devs: canSeeDiagnostics(role),
   };
   return ADMIN_SECTIONS.filter((section) => offered[section]);
 }

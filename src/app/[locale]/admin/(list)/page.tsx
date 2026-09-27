@@ -1,3 +1,4 @@
+import DateRangeIcon from "@mui/icons-material/DateRange";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -52,7 +53,7 @@ import PartnerChip from "@/modules/events/ui/PartnerChip";
 import RoutePills from "@/modules/events/ui/RoutePills";
 import { buildRoutePills } from "@/modules/events/ui/route-pills";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -319,6 +320,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                  `display: flex` on a `<summary>` removes the triangle. */
               <Box component="details" sx={BOXED_DISCLOSURE_SX}>
                 <Typography component="summary" variant="body2">
+                  <DateRangeIcon aria-hidden sx={FOLD_GLYPH_SX} />
                   {t("events.seriesDates")}
                 </Typography>
                 <Stack component="ul" spacing={0.5} sx={{ listStyle: "none", p: 0, m: 0 }}>

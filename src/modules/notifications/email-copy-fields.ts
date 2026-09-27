@@ -23,6 +23,7 @@ import {
 import {
   EMAIL_SAMPLE,
   EMAIL_SAMPLE_EVENT,
+  EMAIL_SAMPLE_FAMILY_CONFIRMED,
   EMAIL_SAMPLE_FORMER_INVITER,
   type EmailSampleHit,
   emailSampleDeadlines,
@@ -397,6 +398,15 @@ const OTHER_HALF: Partial<Record<EmailCopyPlaceholder, keyof TemplateData>> = {
  * own text never names such a field (a unit test holds that), so a message the club never rewrote
  * previews exactly as it did.
  */
+/**
+ * The family's confirmation for the preview (§520): `REGISTRATION_CONFIRMED` in the shape a sitting
+ * confirms — one block per person with the number, the desk code and the QR — never the club's words,
+ * which that shape does not read (`templates.ts`, `familyConfirmedShape`).
+ */
+export function emailSampleFamilyConfirmed(): NonNullable<TemplateData["familyConfirmed"]> {
+  return EMAIL_SAMPLE_FAMILY_CONFIRMED.map((person) => ({ ...person, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${person.checkinCode}.png` }));
+}
+
 export function emailSampleFor(messageType: EmailMessageType, locale: EmailLocale): TemplateData {
   const data: TemplateData = { ...emailSampleData(locale) };
   const filled = new Set(placeholdersFilledBy(messageType));

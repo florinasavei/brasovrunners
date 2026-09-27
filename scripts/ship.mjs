@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.13-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.14-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
@@ -39,7 +39,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { createClock, formatDuration, judgeChecks, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
+import { createClock, formatDuration, judgeChecks, mergePullRequest, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
 
 // Each step's time as it ends (m:ss), and the whole at the end or at a stop (§504).
 const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
@@ -87,6 +87,25 @@ function run(command, args, { allowFail = false } = {}) {
 }
 const gh = (...args) => run("gh", args);
 const ghMayFail = (...args) => run("gh", args, { allowFail: true });
+
+/**
+ * `gh pr merge`, judged by the PR's state rather than by the exit alone (§520): «Merge already in
+ * progress» is a merge still being written, not a failure — `mergePullRequest` waits up to a minute
+ * for MERGED and `ship` continues.
+ */
+async function merge(pr) {
+  const outcome = await mergePullRequest(
+    () => {
+      const result = spawnSync("gh", ["pr", "merge", pr, "--merge"], { encoding: "utf8" });
+      if (result.error) stop(`gh could not start: ${result.error.message}`);
+      return { status: result.status, stderr: result.stderr };
+    },
+    () => ghMayFail("pr", "view", pr, "--json", "state", "-q", ".state"),
+    { sleep },
+  );
+  if (outcome.status !== "merged") stop(`gh pr merge ${pr} --merge\n  ${outcome.error}`);
+  if (outcome.waited > 0) console.log(`  PR #${pr} merged after ${outcome.waited} s («Merge already in progress»)`);
+}
 
 function productionUrl() {
   if (process.env.SHIP_PRODUCTION_URL) return process.env.SHIP_PRODUCTION_URL;
@@ -184,7 +203,7 @@ if (batchInfo.state === "MERGED" && batchInfo.baseRefName === "qa") {
   stop(`PR #${PR} is already merged, but into ${batchInfo.baseRefName}, not qa`);
 } else {
   await settledChecks(PR);
-  gh("pr", "merge", PR, "--merge");
+  await merge(PR);
   batchMerge = gh("pr", "view", PR, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 }
 
@@ -218,7 +237,7 @@ console.log(`== release PR #${release}`);
 // Hobby's daily deploy limit alone, so its red is reported and not stopped on.
 await settledChecks(release, { tolerate: /^Vercel\b/i });
 const migrationExpected = releaseChangesMigrations();
-gh("pr", "merge", release, "--merge");
+await merge(release);
 const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 
 clock.step("migration");

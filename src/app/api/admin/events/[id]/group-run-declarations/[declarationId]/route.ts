@@ -14,8 +14,10 @@ import { isUuid } from "@/shared/ids";
  * registrations (§289) — the Organizer, the Administrator — and nobody else, asserted here and not
  * by hiding the link (BR-REQ-060-01): the volunteer and the Tehnic role get 403. Whole, identity
  * document included, like the race's backoffice copy (§320): it is read by signed-in staff inside
- * the platform, and it is gone with the row seven days after the run. The download is written to
- * the trail — the event, never whose it was (§324).
+ * the platform, and a pre-§418 identity document is cleared seven days after the run (§503). The
+ * download is written to the trail — the event, never whose it was (§324). The address names the
+ * date the declaration was signed on (or moved to, §523): the backoffice list is the whole run's,
+ * and each row links under its own date.
  */
 export async function GET(_request: Request, context: { params: Promise<{ id: string; declarationId: string }> }): Promise<Response> {
   let actor;

@@ -11,8 +11,16 @@ import { cardOf, cardTitleOf } from "./form-fields";
 import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslateAll } from "./use-translate-all";
 
-/** Read by assistive technology, out of sight: the sticky tab row keeps its one line (§514). */
-const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+/**
+ * Read by assistive technology, out of sight: the sticky tab row keeps its one line (§514).
+ *
+ * `"1px"` and not `1`: MUI reads a number between 0 and 1 in `sx` as a fraction, so `width: 1` is
+ * `100%` and `m: -1` is eight pixels. The greyed button's reason was laid out as wide as the card,
+ * starting at the row's right end: the editor scrolled sideways on a desktop and, on a phone, the
+ * page grew wider than the screen and the cards landed over the save buttons (the same trap
+ * `AdminTable`'s caption documents).
+ */
+const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
 /**
  * The button at the end of the tab row: never squeezed, 44 px tall. Below `sm` it is the translate
@@ -102,7 +110,11 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
         </>
       }
     >
-      {/* A disabled button fires no pointer events: the wrapper holds the tooltip and the focus. */}
+      {/*
+        A disabled button fires no pointer events: the wrapper holds the tooltip and the focus, and
+        the name — once (§520): the inner button carries no `aria-label` of its own, or a screen
+        reader walking the page reads «Tradu cardul» twice.
+      */}
       <Box
         component="span"
         tabIndex={0}
@@ -112,7 +124,7 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
         data-testid="translate-card-off"
         data-reason={reason}
       >
-        <GlyphButton icon="translate" size="small" disabled aria-label={t("card")} sx={BUTTON_SX}>
+        <GlyphButton icon="translate" size="small" disabled sx={BUTTON_SX}>
           <Words>{t("card")}</Words>
         </GlyphButton>
         <Box component="span" id={reasonId} sx={VISUALLY_HIDDEN}>

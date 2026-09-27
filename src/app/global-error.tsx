@@ -71,6 +71,9 @@ export default function GlobalError({
                 // 44 pixels, like every other control a thumb has to find
                 // (BR-REQ-041-01 criterion 6). The theme that normally guarantees that is gone.
                 minHeight: 44,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
                 padding: "0 1.25rem",
                 fontSize: "1rem",
                 cursor: "pointer",
@@ -80,6 +83,13 @@ export default function GlobalError({
                 borderRadius: 8,
               }}
             >
+              {/*
+                The retry glyph every other button wears (§521), drawn as a bare `<svg>`: MUI's
+                icons need the theme this page has lost. Material's "Refresh" path.
+              */}
+              <svg aria-hidden="true" width={20} height={20} viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z" />
+              </svg>
               Încearcă din nou / Try again
             </button>
           </p>

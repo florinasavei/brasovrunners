@@ -24,8 +24,8 @@ type Props = {
   color?: "primary" | "error" | "warning";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium";
-  /** A glyph before the verb, by name — never as an element (`action-icons.ts`). */
-  icon?: ActionIconName;
+  /** The glyph before the verb, by name — never as an element (`action-icons.ts`); every button wears one (§521). */
+  icon: ActionIconName;
   /**
    * A second Server Action for the form this button sits in (§287).
    *
@@ -88,7 +88,7 @@ export default function ConfirmSubmitButton({
 }: Props) {
   const [open, setOpen] = useState<ConfirmSpec | null>(null);
   const anchor = useRef<HTMLButtonElement>(null);
-  const Icon = icon ? ACTION_ICONS[icon] : null;
+  const Icon = ACTION_ICONS[icon];
   const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, email, emailCount, destructive: color === "error" };
   // The parent form's status: meaningful only for a button inside its form (not one tied by `form=`).
   const status = useFormStatus();
@@ -114,7 +114,7 @@ export default function ConfirmSubmitButton({
         value={pendingLabel !== undefined ? label : undefined}
         aria-busy={pending || undefined}
         sx={{ minHeight: 44 }}
-        startIcon={Icon ? <Icon fontSize="small" /> : undefined}
+        startIcon={<Icon fontSize="small" />}
         onClick={(event) => {
           event.preventDefault();
           if (pending) return;

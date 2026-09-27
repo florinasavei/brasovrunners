@@ -10,6 +10,11 @@ import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 /** One message, already rendered and translated: this component decides only the shape. */
 export type ParticipantEmailCard = {
   type: EmailMessageType;
+  /**
+   * The card's own id, for a second shape of one message type (§520: the family's confirmation beside
+   * one person's, both `REGISTRATION_CONFIRMED`); the type is the id when absent.
+   */
+  id?: string;
   /** The message's name — "Confirmă adresa de email". */
   name: string;
   /** When it is sent, in a few words, for the closed card's summary. */
@@ -29,6 +34,8 @@ export type ParticipantEmailCard = {
   sampleValues?: string;
   /** When it is sent, in full, as the first line inside the card. */
   when: string;
+  /** What the short `when` leaves out, behind its «?» (Panel's `introMore`); absent when it says it all. */
+  whenMore?: string;
   /** "Subiect: …", as the participant's inbox will show it. */
   subjectLine: string;
   /** The message as it goes out, for the sandboxed preview. */
@@ -72,7 +79,7 @@ type Props = {
  */
 export default function ParticipantEmailsPanel({ title, intro, aside, languageLabel, languages, messages, openWhen }: Props) {
   return (
-    <Panel title={title} intro={intro} aside={aside} collapsible openWhen={openWhen} id="participant-emails" data-testid="participant-emails">
+    <Panel glyph="email" title={title} intro={intro} aside={aside} collapsible openWhen={openWhen} id="participant-emails" data-testid="participant-emails">
       <Box sx={{ mb: 2 }} data-testid="participant-emails-language">
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
@@ -81,8 +88,8 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (
-          <Panel
-            key={message.type}
+          <Panel glyph="email"
+            key={message.id ?? message.type}
             title={message.name}
             aside={
               message.neverSent || message.sampleValues ? (
@@ -105,10 +112,11 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
               )
             }
             intro={message.when}
+            introMore={message.whenMore}
             collapsible
             level={3}
             openWhen={{ saved: message.justSaved, attention: Boolean(message.sampleValues) }}
-            id={`email-${message.type}`}
+            id={`email-${message.id ?? message.type}`}
             data-testid="participant-email"
           >
             <Typography variant="body2" sx={{ mb: 1, wordBreak: "break-word" }}>

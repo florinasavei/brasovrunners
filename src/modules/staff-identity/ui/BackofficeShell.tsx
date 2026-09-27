@@ -54,14 +54,11 @@ export default async function BackofficeShell({
     registrations: getPathname({ locale, href: "/admin/registrations" }),
     tasks: getPathname({ locale, href: "/admin/tasks" }),
     legal: getPathname({ locale, href: "/admin/legal" }),
-    // «Setări» (§516): the email page, «Termene», «Contact», «Aspect», «Costuri», «Platformă» — a bare
+    // «Setări» (§516): the email page, «Termene», «Contact», «Aspect», «Costuri», «Anti-robot» — a bare
     // /admin/settings lands on the reader's first tab.
     settings: getPathname({ locale, href: "/admin/settings" }),
     newsletter: getPathname({ locale, href: "/admin/newsletter" }),
     staff: getPathname({ locale, href: "/admin/staff" }),
-    // Its own route rather than a backoffice page: it is read by whoever is holding the
-    // hosting dashboard (BR-REQ-090-04) — and it wears the same chrome since §119.
-    devs: getPathname({ locale, href: "/devs" }),
   };
 
   /*
@@ -95,6 +92,8 @@ export default async function BackofficeShell({
     label: t(`nav.${section}`),
     section,
     ...(section === "registrations" ? { count: registered, countHint: registeredHint } : {}),
+    // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there.
+    ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" })] } : {}),
   }));
 
   return (
