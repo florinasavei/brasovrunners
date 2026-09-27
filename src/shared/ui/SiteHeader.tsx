@@ -83,31 +83,6 @@ async function hasVisibleTeam(locale: Locale) {
 }
 
 /**
- * "Contact" leads to the form, or to the club's address; a deployment with neither has no
- * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
- *
- * The same question the page itself asks, and it has to be: since §164 `CONTACT_FORM_MODE`
- * answers for the transport alone, so "can send" no longer implies "has somebody to send
- * to" — a deployment with the Gmail account set and nobody named would otherwise show a
- * menu entry leading to a page that says there is no address.
- *
- * The read costs nothing on the common path and is skipped by the `||`: an address to
- * write to, or an environment that already reaches somebody, answers without it — and a
- * setting can only *add* recipients to those, never take them away. Otherwise it is one
- * primary-key lookup on `platform_settings`, beside the two the header already makes, and
- * guarded the same way: no database means the environment's list answers, as before §164.
- */
-async function offersContact(): Promise<boolean> {
-  return (
-    Boolean(env.EMAIL_REPLY_TO) ||
-    contactFormReaches(env, null) ||
-    (await cachedContactFormReaches()) ||
-    // The club's Gmail alone is an address to write to as well (§442).
-    (await cachedShownContactAddresses()).length > 0
-  );
-}
-
-/**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
  * A Server Component — nothing here is interactive except the link, and that lives in
@@ -140,17 +115,30 @@ export default async function SiteHeader() {
    * (§333).
    */
   const locale = await getLocale();
-  /*
-    The four questions at once, not one after another (§NNN): none depends on another's answer,
-    and each is its own trip to the data cache on every page — on a cold one, to the database —
-    so asked in turn they cost the sum and asked together the longest. Each guards itself.
-  */
-  const [pages, showGallery, showTeam, showContact] = await Promise.all([
-    navigationPages(locale as Locale),
-    hasPublishedAlbum(locale as Locale),
-    hasVisibleTeam(locale as Locale),
-    offersContact(),
-  ]);
+  const pages = await navigationPages(locale as Locale);
+  const showGallery = await hasPublishedAlbum(locale as Locale);
+  const showTeam = await hasVisibleTeam(locale as Locale);
+  /**
+   * "Contact" leads to the form, or to the club's address; a deployment with neither has no
+   * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
+   *
+   * The same question the page itself asks, and it has to be: since §164 `CONTACT_FORM_MODE`
+   * answers for the transport alone, so "can send" no longer implies "has somebody to send
+   * to" — a deployment with the Gmail account set and nobody named would otherwise show a
+   * menu entry leading to a page that says there is no address.
+   *
+   * The read costs nothing on the common path and is skipped by the `||`: an address to
+   * write to, or an environment that already reaches somebody, answers without it — and a
+   * setting can only *add* recipients to those, never take them away. Otherwise it is one
+   * primary-key lookup on `platform_settings`, beside the two the header already makes, and
+   * guarded the same way: no database means the environment's list answers, as before §164.
+   */
+  const showContact =
+    Boolean(env.EMAIL_REPLY_TO) ||
+    contactFormReaches(env, null) ||
+    (await cachedContactFormReaches()) ||
+    // The club's Gmail alone is an address to write to as well (§442).
+    (await cachedShownContactAddresses()).length > 0;
 
   return (
     <>
