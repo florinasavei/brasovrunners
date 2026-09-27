@@ -50,7 +50,7 @@ export const teamMembers = pgTable(
      */
     link: text("link"),
     /**
-     * The person's links (§474): an ordered list of at most six `{ kind, url, labelRo, labelEn }`
+     * The person's links (§474): an ordered list of at most twelve `{ kind, url, labelRo, labelEn }`
      * — Strava, Instagram, Facebook, a site of their own, anything else — every address https,
      * each label both languages or neither. Null is "no list yet": the one `link` above is read.
      */
@@ -86,13 +86,15 @@ export const teamMembers = pgTable(
     check("team_members_position_positive", sql`${t.position} >= 1`),
     check("team_members_version_positive", sql`${t.version} >= 1`),
     /**
-     * The links (§474): an array of at most six, every address https — the guarantee
-     * `events_links_is_a_short_array_of_https_links` gives an event's (§332), at the layer that
-     * also refuses a seed's or a hand-written `UPDATE`.
+     * The links (§474): an array of at most twelve (§NNN, raised from six), every address https —
+     * the guarantee `events_links_is_a_short_array_of_https_links` gives an event's (§332), at the
+     * layer that also refuses a seed's or a hand-written `UPDATE`. The six-link version was dropped
+     * by migration 0093 and this one added by migration 0094; the number here is
+     * `MAX_TEAM_LINKS` (`content/team/links.ts`), and a test holds the two together.
      */
     check(
       "team_members_links_is_a_short_array_of_https_links",
-      sql`${t.links} IS NULL OR CASE WHEN jsonb_typeof(${t.links}) = 'array' THEN jsonb_array_length(${t.links}) <= 6 AND NOT jsonb_path_exists(${t.links}, '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END`,
+      sql`${t.links} IS NULL OR CASE WHEN jsonb_typeof(${t.links}) = 'array' THEN jsonb_array_length(${t.links}) <= 12 AND NOT jsonb_path_exists(${t.links}, '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END`,
     ),
     index("team_members_visible_position_idx").on(t.visible, t.position),
   ],
