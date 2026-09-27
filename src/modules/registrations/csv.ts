@@ -99,7 +99,7 @@ const HEADER = [
   "Medically fit (declared)",
   "Strava",
   "Instagram",
-  // Beside the two (§NNN), as on the spreadsheet: whether the public list prints them.
+  // Beside the two (§500), as on the spreadsheet: whether the public list prints them.
   "Socials on the public list",
   "Guardian",
   // Beside the guardian's name (§330): the kit goes to that person (§108), against this document.
@@ -117,7 +117,7 @@ const HEADER = [
   // Last (§425), so a script that reads the columns by position still finds every earlier one.
   "Terms version",
   "Terms accepted",
-  // After the terms (§NNN), last for the same reason.
+  // After the terms (§499), last for the same reason.
   "Declaration version",
   "Declaration signed",
 ];

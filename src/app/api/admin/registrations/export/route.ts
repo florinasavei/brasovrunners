@@ -206,7 +206,7 @@ export async function GET(request: Request): Promise<Response> {
       guardianName: row.guardianName ?? "",
       guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
       instagramHandle: row.instagramHandle ?? "",
-      // Whether the public list prints the socials (§NNN): beside Instagram, as on the spreadsheet.
+      // Whether the public list prints the socials (§500): beside Instagram, as on the spreadsheet.
       listSocials: row.listSocials,
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",

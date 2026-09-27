@@ -251,7 +251,7 @@ describe("CSV formula neutralization", () => {
     expect(older.split(",").slice(-2)).toEqual(["", ""]);
   });
 
-  // §NNN — whether the public list prints the socials: right after Instagram, as on the spreadsheet, "Yes" or empty.
+  // §500 — whether the public list prints the socials: right after Instagram, as on the spreadsheet, "Yes" or empty.
   it("says beside Instagram whether the public list prints the socials, Yes or empty", () => {
     const base = {
       eventTitle: "Test",
@@ -278,7 +278,7 @@ describe("CSV formula neutralization", () => {
     expect(shown.split(",").slice(at - 1, at + 1)).toEqual(["ana.pop", "Yes"]);
     expect(kept.split(",")[at]).toBe("");
     expect(older.split(",")[at]).toBe("");
-    // The declaration's pair stays last (§NNN).
+    // The declaration's pair stays last (§499).
     expect(header.split(",").slice(-2)).toEqual(["Declaration version", "Declaration signed"]);
   });
 });
