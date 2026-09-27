@@ -1395,7 +1395,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                  {/* The one form whose send button holds a press for the check (§NNN). */}
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} heldPress />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}

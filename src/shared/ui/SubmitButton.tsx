@@ -10,10 +10,10 @@ import { type ComponentType, type MouseEvent, type ReactNode, useEffect, useId, 
 import { useFormStatus } from "react-dom";
 import {
   BOT_CHECK_GAVE_UP_ATTRIBUTE,
+  BOT_CHECK_SIGNAL_FIELD,
   BOT_CHECK_STATE_ATTRIBUTE,
   botCheckHeldHint,
   botCheckUnansweredFrom,
-  reportBotCheckSignal,
   TURNSTILE_FIELD,
   TURNSTILE_TOKEN_EVENT,
 } from "@/modules/registrations/domain/turnstile-widget";
@@ -385,7 +385,24 @@ export default function SubmitButton({
       // The form's one held press (`held-press.ts`): only the button that was pressed owns it, so
       // a second awaiting button in the same form never replays a press of its own. A request
       // already in flight owns the form; a second one would only queue behind it.
-      if (releaseHeldPress(form, button, !pendingNow.current) && byValve) reportBotCheckSignal("held-press-valve");
+      //
+      // A press the valve sends says so with the form (§NNN): the button is the submitter, and a
+      // submitter's name and value are posted with it — `bot-check-signal=held-press-valve`, which
+      // the register action counts for `/api/health`. Set only around this one send: the form's
+      // data is read while `requestSubmit` dispatches, and a press of the finger afterwards posts
+      // no such word.
+      if (byValve) {
+        button.name = BOT_CHECK_SIGNAL_FIELD;
+        button.value = "held-press-valve";
+      }
+      try {
+        releaseHeldPress(form, button, !pendingNow.current);
+      } finally {
+        if (byValve) {
+          button.removeAttribute("name");
+          button.removeAttribute("value");
+        }
+      }
     };
     const check = () => {
       setCheckState(botCheckStateOf(form));
@@ -593,9 +610,11 @@ export default function SubmitButton({
         // `aria-busy` is set, so the figure is the third way of saying it rather than the
         // only one. Under `prefers-reduced-motion` it stands still and the words carry it.
         // At rest the verb's own glyph, if it has one (§318) — on the public send buttons that
-        // is the same runner, standing, so a press is the figure setting off.
+        // is the same runner, standing, so a press is the figure setting off. A press held for the
+        // anti-bot check (§NNN) runs as well: the press has been taken, and «Se verifică…» under
+        // the button says what it is waiting for — a standing figure read as a press that missed.
         startIcon={
-          pending ? (
+          pending || holding ? (
             <RunnerLoader size={GLYPH_PX[size]} color="inherit" />
           ) : Glyph ? (
             <Glyph fontSize="small" />

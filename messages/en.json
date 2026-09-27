@@ -6305,6 +6305,12 @@
     "blocked": "The anti-bot check did not load — a network or a browser extension may be blocking it. We could not check automatically; we send it anyway, and the club confirms. You can also press “Retry the check”.",
     "slow": "The check is taking longer than usual. Press “Retry the check” — or send the form: it goes without the check in a few seconds.",
     "retry": "Retry the check",
-    "failed": "We could not check automatically; we send it anyway, and the club confirms. You can also press “Retry the check”."
+    "failed": "We could not check automatically; we send it anyway, and the club confirms. You can also press “Retry the check”.",
+    "plain": {
+      "unsupported": "Your browser cannot run the anti-bot check. You can send anyway.",
+      "blocked": "The anti-bot check did not load — a network or a browser extension may be blocking it. You can send anyway, or press “Retry the check”.",
+      "slow": "The check is taking longer than usual. Press “Retry the check” — or send anyway.",
+      "failed": "The check failed; you can send anyway. You can also press “Retry the check”."
+    }
   }
 }

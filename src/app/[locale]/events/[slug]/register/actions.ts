@@ -13,7 +13,8 @@ import { publicFormEvent } from "@/modules/registrations/public-form-event";
 import { submitRegistration } from "@/modules/registrations/service";
 import { botCheckIsOn, honeypotIsOn } from "@/modules/registrations/bot-check";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
-import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { BOT_CHECK_SIGNAL_FIELD, botCheckSignalsFrom, TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { recordBotCheckSignal } from "@/modules/registrations/bot-check-signals";
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -144,6 +145,22 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       redirect(`${path}?error=${error.code}${fields}${retry}#${ERROR_SUMMARY_ID}`);
     }
     throw error;
+  }
+
+  /*
+    What the anti-bot check did to this person (§NNN), counted for `/api/health`: a press the
+    valve sent, a widget that failed — the words the form carried (`BOT_CHECK_SIGNAL_FIELD`), and
+    only once the registration went through the throttle and the other defences, so the figure
+    takes no anonymous write. A count that fails is a smaller figure, never a refused registration.
+  */
+  if (verdict !== "not_configured") {
+    try {
+      for (const signal of botCheckSignalsFrom(form.getAll(BOT_CHECK_SIGNAL_FIELD))) {
+        await recordBotCheckSignal(db, signal, new Date());
+      }
+    } catch (error) {
+      console.error("[registration] the bot-check signal could not be counted", error);
+    }
   }
 
   await clearFormDraft(path);

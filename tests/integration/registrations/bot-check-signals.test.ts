@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { countBotCheckSignals, isBotCheckSignal, recordBotCheckSignal } from "@/modules/registrations/bot-check-signals";
+import { countBotCheckSignals, recordBotCheckSignal } from "@/modules/registrations/bot-check-signals";
+import { botCheckSignalsFrom } from "@/modules/registrations/domain/turnstile-widget";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -24,11 +25,11 @@ beforeEach(async () => {
 });
 
 describe("§NNN the bot-check signals", () => {
-  it("knows its two words and nothing else", () => {
-    expect(isBotCheckSignal("held-press-valve")).toBe(true);
-    expect(isBotCheckSignal("widget-failed")).toBe(true);
-    expect(isBotCheckSignal("ana@example.org")).toBe(false);
-    expect(isBotCheckSignal("")).toBe(false);
+  it("reads its two words from the form, each once, and nothing else", () => {
+    expect(botCheckSignalsFrom(["held-press-valve"])).toEqual(["held-press-valve"]);
+    expect(botCheckSignalsFrom(["widget-failed", "held-press-valve", "widget-failed"])).toEqual(["held-press-valve", "widget-failed"]);
+    expect(botCheckSignalsFrom(["ana@example.org", "", "widget-failed "])).toEqual([]);
+    expect(botCheckSignalsFrom([])).toEqual([]);
   });
 
   it("is zero when nothing happened", async () => {

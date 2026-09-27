@@ -6305,6 +6305,12 @@
     "blocked": "Verificarea anti-bot nu s-a încărcat — o rețea sau o extensie a browserului o poate bloca. Nu am putut verifica automat; trimitem oricum, iar clubul confirmă. Poți apăsa și «Reîncearcă verificarea».",
     "slow": "Verificarea durează mai mult decât de obicei. Apasă «Reîncearcă verificarea» — sau trimite formularul: pleacă și fără ea în câteva secunde.",
     "retry": "Reîncearcă verificarea",
-    "failed": "Nu am putut verifica automat; trimitem oricum, iar clubul confirmă. Poți apăsa și «Reîncearcă verificarea»."
+    "failed": "Nu am putut verifica automat; trimitem oricum, iar clubul confirmă. Poți apăsa și «Reîncearcă verificarea».",
+    "plain": {
+      "unsupported": "Browserul tău nu poate rula verificarea anti-bot. Poți trimite oricum.",
+      "blocked": "Verificarea anti-bot nu s-a încărcat — o rețea sau o extensie a browserului o poate bloca. Poți trimite oricum, sau apasă «Reîncearcă verificarea».",
+      "slow": "Verificarea durează mai mult decât de obicei. Apasă «Reîncearcă verificarea» — sau trimite oricum.",
+      "failed": "Verificarea a eșuat; poți trimite oricum. Poți apăsa și «Reîncearcă verificarea»."
+    }
   }
 }

@@ -294,8 +294,10 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
     const saidAt = Date.now();
     // The valve opens eight seconds after the press, the form goes without a token, and the server
     // takes a missing token for the check not running, not for a robot (§216).
-    await posted;
+    const request = await posted;
     expect(Date.now() - saidAt, "said a beat before it went").toBeGreaterThanOrEqual(500);
+    // The valve's send names itself with the form (§NNN), as the submitter's word.
+    expect(request.postData() ?? "").toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 30_000 });
     expect(Date.now() - pressedAt).toBeGreaterThanOrEqual(7_500);
   });
@@ -477,6 +479,32 @@ test.describe("§NNN the anti-bot check says every state and never strands a pre
     await answerAndExpectOnePromptSend(page, pressedAt);
   });
 
+  test("after a refused attempt the widget still says its state: the callbacks reach the new attempt (review blocker)", async ({ page }) => {
+    test.setTimeout(90_000);
+    // A field no observer sees: the callbacks are the only way the widget and the button can know.
+    const openedAt = await openWithStandIn(page, { blindField: true });
+    const widgetElement = page.locator("[data-bot-check]");
+    const email = address();
+    await fillRequired(page, email, `other-${email}`);
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+
+    // First attempt, answered and refused by the server (§206): the form re-renders with a new attempt.
+    await answer(page);
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "passed");
+    await sendButton(page).click();
+    await expect(page.locator("#registration-errors")).toBeVisible({ timeout: 20_000 });
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "checking");
+    await expect(botCheckLine(page)).toHaveText(/^Se verifică…/);
+
+    // Cloudflare calls back through the callbacks it was given at the first draw.
+    await askForTick(page);
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "interactive");
+    await expect(botCheckLine(page)).toHaveText(/Bifează căsuța de mai sus/);
+    await answer(page, "call-then-write");
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "passed");
+    await expect(botCheckLine(page)).toHaveText(/^Verificare reușită/);
+  });
+
   test("Cloudflare's script blocked: said with the owner's sentence and «Reîncearcă verificarea», and a press goes straight through", async ({ page }) => {
     test.setTimeout(60_000);
     await page.route(TURNSTILE_SCRIPT_PATTERN, (route) => route.abort("blockedbyclient"));
@@ -496,8 +524,11 @@ test.describe("§NNN the anti-bot check says every state and never strands a pre
     const posted = formPost(page);
     const pressedAt = Date.now();
     await sendButton(page).click();
-    await posted;
+    const request = await posted;
     expect(Date.now() - pressedAt, "not held for a script that will not come").toBeLessThan(PROMPTLY_MS);
+    // The failure rides with the form, for the register action to count (§NNN): no request of its own.
+    expect(request.postData() ?? "").toContain("widget-failed");
+    expect(request.postData() ?? "").not.toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
   });
 });

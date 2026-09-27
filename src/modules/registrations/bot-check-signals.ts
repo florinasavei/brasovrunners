@@ -2,12 +2,13 @@ import { and, eq, gt, sql } from "drizzle-orm";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
-import { BOT_CHECK_SIGNALS, type BotCheckSignal } from "./domain/turnstile-widget";
+import type { BotCheckSignal } from "./domain/turnstile-widget";
 
 /**
  * How often the anti-bot check let people down in the last day (§NNN), for `/api/health`: the held
  * presses the eight-second valve sent because the check never answered, and the widgets that failed
- * or never loaded.
+ * or never loaded — as the registration form carried them (`BOT_CHECK_SIGNAL_FIELD`), counted by
+ * the register action once the registration went through; no endpoint of its own.
  *
  * No table of its own and no migration: the throttle's hourly buckets (`rate_limit_buckets`,
  * AGENTS.md §19.4) already are a counter per word per hour, written in one atomic statement, and
@@ -17,10 +18,6 @@ import { BOT_CHECK_SIGNALS, type BotCheckSignal } from "./domain/turnstile-widge
  * never enforced — the verdict is ignored; the bucket is the figure.
  */
 export const BOT_CHECK_SIGNAL_SCOPE = "bot-check-signal" as const;
-
-export function isBotCheckSignal(value: string): value is BotCheckSignal {
-  return (BOT_CHECK_SIGNALS as readonly string[]).includes(value);
-}
 
 /** Count one signal in the current hour. */
 export async function recordBotCheckSignal<T extends Record<string, unknown>>(

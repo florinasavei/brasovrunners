@@ -14,8 +14,11 @@ import {
   botCheckAsksAttention,
   botCheckGaveUp,
   botCheckOffersRetry,
-  type BotCheckState,
-  reportBotCheckSignal,
+  type BotCheckRelay,
+  BOT_CHECK_SIGNAL_FIELD,
+  type BotCheckWidgetState,
+  drawBotCheck,
+  type TurnstileRenderOptions,
   TURNSTILE_SCRIPT_URL,
   TURNSTILE_TOKEN_EVENT,
 } from "../domain/turnstile-widget";
@@ -56,8 +59,14 @@ import { isPressHeld } from "@/shared/ui/held-press";
  *   the owner's sentence — «Nu am putut verifica automat; trimitem oricum, iar clubul confirmă».
  *   The server takes the missing token for the check not running (§216), and people register at
  *   all costs (§205);
- * - a widget that fails or never loads is counted once, level-only, for `/api/health`
- *   (`reportBotCheckSignal`).
+ * - a widget that fails or never loads says so in a hidden field of its form
+ *   (`BOT_CHECK_SIGNAL_FIELD`), which the register action counts, level-only, for `/api/health`.
+ *
+ * **Callbacks that outlive the effect run that drew them (§NNN).** The widget is drawn once and
+ * reset on every attempt, so the callbacks `render` was given are the ones Cloudflare keeps calling;
+ * the effect below runs again on every attempt. The callbacks read the current run's `become` from
+ * a ref (`relay`, `botCheckCallbacks`) at the moment they are called — before, they held the first
+ * run's, cancelled by the first server re-render, and the widget went silent from then on.
  *
  * Cloudflare's own retries are kept: `retry` and `refresh-expired` / `refresh-timeout` stay at
  * their `auto` defaults, and the error callback returns `false`, which the documentation names as
@@ -67,20 +76,8 @@ import { isPressHeld } from "@/shared/ui/held-press";
  * runs, so a page without scripts never promises a check that cannot start.
  */
 
-type TurnstileOptions = {
-  sitekey: string;
-  language?: string;
-  callback?: (token: string) => void;
-  "error-callback"?: (code: string) => boolean | void;
-  "expired-callback"?: () => void;
-  "timeout-callback"?: () => void;
-  "before-interactive-callback"?: () => void;
-  "after-interactive-callback"?: () => void;
-  "unsupported-callback"?: () => void;
-};
-
 type TurnstileApi = {
-  render: (element: HTMLElement, options: TurnstileOptions) => string;
+  render: (element: HTMLElement, options: TurnstileRenderOptions) => string;
   reset: (widgetId?: string) => void;
   remove: (widgetId: string) => void;
 };
@@ -95,7 +92,7 @@ declare global {
  * The line under the widget, per state, the slow line, the retry button's label and the line of a
  * failure that gave up — translated on the server (`BotCheck`).
  */
-export type BotCheckWords = Record<BotCheckState, string> & { slow: string; retry: string; failed: string };
+export type BotCheckWords = Record<BotCheckWidgetState, string> & { slow: string; retry: string; failed: string };
 
 const SCRIPT_SELECTOR = "script[data-turnstile]";
 const NOTHING_TO_WATCH = () => () => {};
@@ -114,15 +111,19 @@ export default function TurnstileWidget({
 }) {
   const holder = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<string | null>(null);
-  const [state, setState] = useState<BotCheckState>("loading");
+  const [state, setState] = useState<BotCheckWidgetState>("loading");
+  // The current effect run's `become`, read by Cloudflare's callbacks when they are called (§NNN).
+  const relay = useRef<BotCheckRelay["current"]>(null);
   // Failures so far (§NNN): the first is Cloudflare's to retry, the second gives up. Kept across
   // «Reîncearcă verificarea» and new attempts; a pass starts the count again.
   const [failures, setFailures] = useState(0);
   // A press held on the form when the state changed: the button's own sentence is then the live
   // region, and this line changes without being read out on top of it (§NNN).
   const [quiet, setQuiet] = useState(false);
-  // One count per widget for `/api/health` (§NNN), however many times it fails.
-  const reported = useRef(false);
+  // The attempt in which the widget last failed or never loaded (§NNN): while it is this one, the
+  // form says so to the register action, which counts it for `/api/health` — once per submission,
+  // however many times it failed, and never again for a later attempt whose check worked.
+  const [failedIn, setFailedIn] = useState<string | null>(null);
   // Bumped by «Încearcă din nou» when the script never came: the effect below injects it again.
   const [reload, setReload] = useState(0);
   // Bumped by every «Încearcă din nou», so the slow line's clock starts again even when the state
@@ -137,71 +138,42 @@ export default function TurnstileWidget({
 
   useEffect(() => {
     let cancelled = false;
-    const become = (next: BotCheckState) => {
+    const become = (next: BotCheckWidgetState) => {
       if (cancelled) return;
       const form = holder.current?.closest("form");
       setQuiet(form ? isPressHeld(form) : false);
       setState(next);
       if (next === "passed") setFailures(0);
       if (next === "error") setFailures((count) => count + 1);
-      if ((next === "error" || next === "blocked") && !reported.current) {
-        reported.current = true;
-        reportBotCheckSignal("widget-failed");
-      }
+      if (next === "error" || next === "blocked") setFailedIn(attempt);
     };
+    // This run's `become` is the one every callback reaches from now on — the widget's callbacks
+    // were handed to Cloudflare by whichever run drew it, and read this ref when they are called.
+    relay.current = become;
 
     const draw = () => {
       if (cancelled || !holder.current || !window.turnstile) return;
-      // Already drawn: the token has been spent, so ask for a fresh challenge rather than a
-      // second widget — `render` into an occupied element is a Cloudflare error.
-      if (widgetId.current !== null) {
-        become("checking");
-        window.turnstile.reset(widgetId.current);
-        return;
-      }
       /*
-        Say so when the token arrives (§NNN). A send button held for the token also watches the
-        hidden field's `value` attribute, but that holds only while Cloudflare draws the field as
-        `type="hidden"`; the success callback is its documented answer. It bubbles to the form from
-        here, and the button reads the field on the next task — so a held press is sent the moment
-        the check says yes, whatever the field is and whichever order the script calls back and
-        writes it in.
-
-        Every other documented callback names a state (§NNN). The error callback returns `false`:
-        Cloudflare's documentation says a falsy answer leaves the retry to Turnstile, and a truthy
-        one takes it over — its automatic retry stays, and «Încearcă din nou» is the faster way.
+        Drawn once, reset on every later attempt (`drawBotCheck`). Say so when the token arrives
+        (§NNN): a send button held for the token also watches the hidden field's `value` attribute,
+        but that holds only while Cloudflare draws the field as `type="hidden"`; the success
+        callback is its documented answer. The event bubbles to the form from here, and the button
+        reads the field on the next task — so a held press is sent the moment the check says yes,
+        whatever the field is and whichever order the script calls back and writes it in.
       */
       const element = holder.current;
-      become("checking");
-      try {
-        widgetId.current = window.turnstile.render(element, {
-          sitekey: siteKey,
-          language: locale,
-          callback: () => {
-            become("passed");
-            element.dispatchEvent(new Event(TURNSTILE_TOKEN_EVENT, { bubbles: true }));
-          },
-          "error-callback": () => {
-            become("error");
-            return false;
-          },
-          "expired-callback": () => become("expired"),
-          "timeout-callback": () => become("timeout"),
-          "before-interactive-callback": () => become("interactive"),
-          "after-interactive-callback": () => become("checking"),
-          "unsupported-callback": () => become("unsupported"),
-        });
-      } catch {
-        // A widget Cloudflare refused to draw (a malformed option, a script half-loaded) is a
-        // failure like any other: said, retryable, and never a reason to hold a press.
-        become("error");
-      }
+      drawBotCheck(window.turnstile, element, widgetId, relay, {
+        sitekey: siteKey,
+        language: locale,
+        onToken: () => element.dispatchEvent(new Event(TURNSTILE_TOKEN_EVENT, { bubbles: true })),
+      });
     };
 
     if (window.turnstile) {
       draw();
       return () => {
         cancelled = true;
+        if (relay.current === become) relay.current = null;
       };
     }
 
@@ -232,6 +204,7 @@ export default function TurnstileWidget({
     script.addEventListener("error", refused);
     return () => {
       cancelled = true;
+      if (relay.current === become) relay.current = null;
       clearTimeout(late);
       script.removeEventListener("load", draw);
       script.removeEventListener("error", refused);
@@ -272,6 +245,7 @@ export default function TurnstileWidget({
       } catch {
         setState("error");
         setFailures((count) => count + 1);
+        setFailedIn(attempt);
       }
       return;
     }
@@ -322,6 +296,12 @@ export default function TurnstileWidget({
         {...{ [BOT_CHECK_STATE_ATTRIBUTE]: state, ...(gaveUp ? { [BOT_CHECK_GAVE_UP_ATTRIBUTE]: "true" } : {}) }}
         sx={{ minHeight: 65 }}
       />
+      {/*
+        A widget that failed in this attempt says so with the form (§NNN) — a word, nothing about
+        who — and the register action counts it for `/api/health`. Beside Cloudflare's element,
+        never inside it: that one is the script's to draw into.
+      */}
+      {failedIn === attempt && <input type="hidden" name={BOT_CHECK_SIGNAL_FIELD} value="widget-failed" />}
       {running && (
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5, rowGap: 0.5, mt: 0.5 }}>
           {/*

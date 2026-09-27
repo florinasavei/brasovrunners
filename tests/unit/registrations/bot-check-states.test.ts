@@ -7,12 +7,17 @@ import {
   BOT_CHECK_BLOCKED_AFTER_MS,
   BOT_CHECK_SLOW_AFTER_MS,
   BOT_CHECK_FAILURES_BEFORE_GIVING_UP,
-  BOT_CHECK_STATES,
+  BOT_CHECK_WIDGET_STATES,
   botCheckAsksAttention,
+  botCheckCallbacks,
   botCheckGaveUp,
   botCheckHeldHint,
   botCheckOffersRetry,
   botCheckUnansweredFrom,
+  type BotCheckRelay,
+  type BotCheckWidgetState,
+  drawBotCheck,
+  type TurnstileRenderOptions,
 } from "@/modules/registrations/domain/turnstile-widget";
 
 /**
@@ -30,13 +35,15 @@ import {
  * The browser side is `registration-turnstile.spec.ts`.
  */
 const ROOT = path.resolve(__dirname, "../../..");
+/** The sentences a form without a held press says in place of the registration form's (§NNN). */
+const PLAIN_KEYS = ["unsupported", "blocked", "slow", "failed"] as const;
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 
 describe("§NNN the widget's states", () => {
   it("gives up at a blocked script and an unsupported browser at once, and at the second failure — not the first", () => {
     expect(BOT_CHECK_FAILURES_BEFORE_GIVING_UP).toBe(2);
-    expect(BOT_CHECK_STATES.filter((state) => botCheckGaveUp(state, 1))).toEqual(["unsupported", "blocked"]);
-    expect(BOT_CHECK_STATES.filter((state) => botCheckGaveUp(state, 2))).toEqual(["error", "unsupported", "blocked"]);
+    expect(BOT_CHECK_WIDGET_STATES.filter((state) => botCheckGaveUp(state, 1))).toEqual(["unsupported", "blocked"]);
+    expect(BOT_CHECK_WIDGET_STATES.filter((state) => botCheckGaveUp(state, 2))).toEqual(["error", "unsupported", "blocked"]);
     // A widget that has not said anything yet (no attribute) is not taken for one that gave up.
     expect(botCheckGaveUp(null, 5)).toBe(false);
     expect(botCheckGaveUp(undefined, 5)).toBe(false);
@@ -94,7 +101,7 @@ describe("§NNN the widget's states", () => {
   });
 
   it("offers «Încearcă din nou» wherever a person can be stuck, never while it works or cannot work", () => {
-    const offered = BOT_CHECK_STATES.filter((state) => botCheckOffersRetry(state, false));
+    const offered = BOT_CHECK_WIDGET_STATES.filter((state) => botCheckOffersRetry(state, false));
     expect(offered).toEqual(["expired", "timeout", "error", "blocked"]);
     // A check taking too long gets it as well; a passed one and an unsupported browser never do.
     expect(botCheckOffersRetry("loading", true)).toBe(true);
@@ -121,23 +128,39 @@ describe("§NNN the widget's states", () => {
   });
 
   it("says every state, the slow line and the retry in both languages, and promises nothing a missing token would break", () => {
-    const keys = [...BOT_CHECK_STATES, "slow", "retry", "failed"];
+    const keys = [...BOT_CHECK_WIDGET_STATES, "slow", "retry", "failed"];
     for (const [name, catalogue] of [
       ["ro", ro],
       ["en", en],
     ] as const) {
-      const words = (catalogue as unknown as { BotCheck: Record<string, string> }).BotCheck;
+      const { plain, ...words } = (catalogue as unknown as { BotCheck: Record<string, string> & { plain: Record<string, string> } }).BotCheck;
       expect(Object.keys(words).sort(), name).toEqual([...keys].sort());
+      expect(Object.keys(plain).sort(), name).toEqual([...PLAIN_KEYS].sort());
+      for (const key of PLAIN_KEYS) expect(plain[key].trim(), `${name}.BotCheck.plain.${key}`).not.toBe("");
       for (const key of keys) expect(words[key].trim(), `${name}.BotCheck.${key}`).not.toBe("");
       // The held press's own sentence lives on the button; the widget never repeats it (the
       // e2e spec tells a held press by it).
       for (const key of keys) expect(words[key], `${name}.BotCheck.${key}`).not.toMatch(/trimitem noi înscrierea|we send the form ourselves/);
     }
     // The failure sentences name the retry by its own label, so the words and the button agree.
-    for (const key of ["error", "blocked", "slow", "failed"]) {
-      expect(ro.BotCheck[key as keyof typeof ro.BotCheck]).toContain(`«${ro.BotCheck.retry}»`);
-      expect(en.BotCheck[key as keyof typeof en.BotCheck]).toContain(`“${en.BotCheck.retry}”`);
+    for (const key of ["error", "blocked", "slow", "failed"] as const) {
+      expect(ro.BotCheck[key]).toContain(`«${ro.BotCheck.retry}»`);
+      expect(en.BotCheck[key]).toContain(`“${en.BotCheck.retry}”`);
     }
+    for (const key of ["blocked", "slow", "failed"] as const) {
+      expect(ro.BotCheck.plain[key]).toContain(`«${ro.BotCheck.retry}»`);
+      expect(en.BotCheck.plain[key]).toContain(`“${en.BotCheck.retry}”`);
+    }
+  });
+
+  it("a form with no held press never promises the valve or the club's confirmation (review nit, §NNN)", () => {
+    for (const key of PLAIN_KEYS) {
+      expect(ro.BotCheck.plain[key], key).not.toMatch(/clubul confirmă|pleacă și fără ea|trimitem/);
+      expect(en.BotCheck.plain[key], key).not.toMatch(/club confirms|goes without it|we send/);
+      expect(ro.BotCheck.plain[key], key).toMatch(/trimite oricum/);
+      expect(en.BotCheck.plain[key], key).toMatch(/send anyway/);
+    }
+    expect(ro.BotCheck.plain.failed).toMatch(/^Verificarea a eșuat; poți trimite oricum/);
   });
 });
 
@@ -145,20 +168,16 @@ describe("§NNN the wiring", () => {
   const widget = read("src/modules/registrations/ui/TurnstileWidget.tsx");
   const button = read("src/shared/ui/SubmitButton.tsx");
 
-  it("names a state for each of Cloudflare's documented callbacks", () => {
-    for (const [callback, state] of [
-      ["error-callback", "error"],
-      ["expired-callback", "expired"],
-      ["timeout-callback", "timeout"],
-      ["before-interactive-callback", "interactive"],
-      ["after-interactive-callback", "checking"],
-      ["unsupported-callback", "unsupported"],
-    ]) {
-      expect(widget, callback).toMatch(new RegExp(`"${callback}": \\(\\) =>[\\s\\S]{0,40}become\\("${state}"\\)`));
-    }
-    expect(widget).toMatch(/callback: \(\) => \{\s*\r?\n\s*become\("passed"\);/);
+  it("draws through `drawBotCheck`, and hands every callback this run's `become` through the relay", () => {
+    expect(widget).toMatch(/relay\.current = become;/);
+    expect(widget).toMatch(/drawBotCheck\(window\.turnstile, element, widgetId, relay, \{/);
+    // A cleanup forgets only its own `become`: the next run's is already in the relay.
+    expect(widget.split("if (relay.current === become) relay.current = null;").length - 1).toBe(2);
     // Cloudflare's own retries stay on: nothing sets `retry` or the refresh options away from `auto`.
-    expect(widget).not.toMatch(/\bretry: "never"|"refresh-expired": "(manual|never)"|"refresh-timeout": "(manual|never)"/);
+    const domain = read("src/modules/registrations/domain/turnstile-widget.ts");
+    for (const source of [widget, domain]) {
+      expect(source).not.toMatch(/\bretry: "never"|"refresh-expired": "(manual|never)"|"refresh-timeout": "(manual|never)"/);
+    }
   });
 
   it("says a script that refused or never came, and draws it again on «Reîncearcă verificarea»", () => {
@@ -176,7 +195,9 @@ describe("§NNN the wiring", () => {
     expect(widget).toMatch(/if \(next === "error"\) setFailures\(\(count\) => count \+ 1\);/);
     expect(widget).toMatch(/const gaveUp = botCheckGaveUp\(state, failures\);/);
     expect(widget).toMatch(/\[BOT_CHECK_GAVE_UP_ATTRIBUTE\]: "true"/);
-    expect(widget).toMatch(/reportBotCheckSignal\("widget-failed"\)/);
+    // A failure in this attempt rides with the form, for the register action to count (§NNN).
+    expect(widget).toMatch(/if \(next === "error" \|\| next === "blocked"\) setFailedIn\(attempt\);/);
+    expect(widget).toMatch(/\{failedIn === attempt && <input type="hidden" name=\{BOT_CHECK_SIGNAL_FIELD\} value="widget-failed" \/>\}/);
   });
 
   it("one live region while a press is held: the widget's line goes quiet, the button speaks", () => {
@@ -202,7 +223,10 @@ describe("§NNN the wiring", () => {
     expect(button).toMatch(/heldHints\[botCheckHeldHint\(checkState\)\]/);
     expect(button).toMatch(/const notice = setTimeout\(\(\) => setValved\(true\), RELEASE_AFTER_MS - VALVE_NOTICE_MS\);/);
     expect(button).toMatch(/const valve = setTimeout\(\(\) => send\(true\), RELEASE_AFTER_MS\);/);
-    expect(button).toMatch(/&& byValve\) reportBotCheckSignal\("held-press-valve"\)/);
+    // The valve's send names itself as the submitter's word, only around that one send (§NNN).
+    expect(button).toMatch(/if \(byValve\) \{\s*button\.name = BOT_CHECK_SIGNAL_FIELD;\s*button\.value = "held-press-valve";\s*\}/);
+    expect(button).toMatch(/finally \{\s*if \(byValve\) \{\s*button\.removeAttribute\("name"\);\s*button\.removeAttribute\("value"\);/);
+    expect(button).not.toMatch(/sendBeacon|reportBotCheckSignal/);
     const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
     for (const [prop, key] of [
       ["botCheckHint", "botCheckWait"],
@@ -227,6 +251,117 @@ describe("§NNN the wiring", () => {
       expect(source, page).not.toContain("<TurnstileWidget ");
     }
     const place = read("src/modules/registrations/ui/BotCheck.tsx");
-    for (const key of [...BOT_CHECK_STATES, "slow", "retry", "failed"]) expect(place, key).toContain(`${key}: t("${key}")`);
+    for (const key of [...BOT_CHECK_WIDGET_STATES, "slow", "retry", "failed"]) expect(place, key).toMatch(new RegExp(`${key}: (heldPress \\? )?t\\("${key}"\\)`));
+    for (const key of PLAIN_KEYS) expect(place, key).toContain(`${key}: heldPress ? t("${key}") : t("plain.${key}")`);
+    // Only the registration form holds a press, so only it says the held-press sentences.
+    expect(read("src/app/[locale]/events/[slug]/register/page.tsx")).toMatch(/<BotCheck [^>]*heldPress \/>/);
+    for (const page of ["src/app/[locale]/contact/page.tsx", "src/app/[locale]/events/[slug]/declaration/page.tsx", "src/modules/newsletter/ui/NewsletterSignup.tsx"]) {
+      expect(read(page), page).not.toMatch(/<BotCheck [^>]*heldPress/);
+    }
+  });
+});
+
+/**
+ * The review's blocker (§NNN): after the form's first server re-render the widget stopped saying
+ * its state. The callbacks Cloudflare keeps are the ones `render` got from the run that drew the
+ * widget; the effect runs again on every attempt and `reset()`s the same widget, so a callback that
+ * held the first run's `become` — cancelled by that re-render — said nothing ever again. Driven here
+ * with a fake `window.turnstile` through the very functions the island calls, run by run as React
+ * runs the effect: draw, re-render with a new attempt, and Cloudflare calling back.
+ */
+describe("§NNN the widget's callbacks outlive the effect run that drew it", () => {
+  function fakeTurnstile() {
+    const drawn: TurnstileRenderOptions[] = [];
+    let resets = 0;
+    const api = {
+      render: (_element: object, options: TurnstileRenderOptions) => {
+        drawn.push(options);
+        return `cf-widget-${drawn.length}`;
+      },
+      reset: () => {
+        resets += 1;
+      },
+    };
+    return { api, drawn, resets: () => resets };
+  }
+
+  /** One effect run as `TurnstileWidget` runs it: its own `become`, cancelled by its cleanup. */
+  function effectRun(relay: BotCheckRelay, said: BotCheckWidgetState[]) {
+    let cancelled = false;
+    const become = (state: BotCheckWidgetState) => {
+      if (!cancelled) said.push(state);
+    };
+    relay.current = become;
+    return () => {
+      cancelled = true;
+      if (relay.current === become) relay.current = null;
+    };
+  }
+
+  it("render → server re-render (a new attempt) → the callback fires: the current run hears it", () => {
+    const { api, drawn, resets } = fakeTurnstile();
+    const relay: BotCheckRelay = { current: null };
+    const widget = { current: null as string | null };
+    let tokens = 0;
+    const draw = () => drawBotCheck(api, {}, widget, relay, { sitekey: "k", language: "ro", onToken: () => (tokens += 1) });
+
+    // First attempt: drawn once.
+    const first: BotCheckWidgetState[] = [];
+    const cleanupFirst = effectRun(relay, first);
+    draw();
+    expect(drawn).toHaveLength(1);
+    expect(first).toEqual(["checking"]);
+
+    // The server re-renders with a new `attempt`: the first run is cleaned up, the second resets
+    // the same widget — no second widget, and the callbacks Cloudflare holds are still the first's.
+    cleanupFirst();
+    const second: BotCheckWidgetState[] = [];
+    effectRun(relay, second);
+    draw();
+    expect(drawn).toHaveLength(1);
+    expect(resets()).toBe(1);
+    expect(second).toEqual(["checking"]);
+
+    // Cloudflare calls back through the options it was given at the first draw.
+    const options = drawn[0];
+    options["before-interactive-callback"]();
+    options.callback("token");
+    expect(second).toEqual(["checking", "interactive", "passed"]);
+    expect(tokens).toBe(1);
+    // The cancelled run hears nothing after its cleanup.
+    expect(first).toEqual(["checking"]);
+  });
+
+  it("every documented callback names its state, and the error callback leaves the retry to Cloudflare", () => {
+    const said: BotCheckWidgetState[] = [];
+    const callbacks = botCheckCallbacks({ current: (state) => said.push(state) }, () => {});
+    expect(callbacks["error-callback"]("300010")).toBe(false);
+    callbacks["expired-callback"]();
+    callbacks["timeout-callback"]();
+    callbacks["before-interactive-callback"]();
+    callbacks["after-interactive-callback"]();
+    callbacks["unsupported-callback"]();
+    callbacks.callback("token");
+    expect(said).toEqual(["error", "expired", "timeout", "interactive", "checking", "unsupported", "passed"]);
+  });
+
+  it("a callback after the island is gone says nothing and throws nothing", () => {
+    const callbacks = botCheckCallbacks({ current: null }, () => {});
+    expect(() => callbacks.callback("token")).not.toThrow();
+    expect(callbacks["error-callback"]("300010")).toBe(false);
+  });
+
+  it("a widget Cloudflare refused to draw is a failure, said through the current run", () => {
+    const said: BotCheckWidgetState[] = [];
+    const widget = { current: null as string | null };
+    const api = {
+      render: () => {
+        throw new Error("bad option");
+      },
+      reset: () => {},
+    };
+    drawBotCheck(api, {}, widget, { current: (state) => said.push(state) }, { sitekey: "k", language: "ro", onToken: () => {} });
+    expect(said).toEqual(["checking", "error"]);
+    expect(widget.current).toBeNull();
   });
 });

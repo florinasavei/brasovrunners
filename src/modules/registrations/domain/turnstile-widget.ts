@@ -42,8 +42,11 @@ export const TURNSTILE_TOKEN_EVENT = "br-turnstile-token";
  *   and the second failure gives up (`BOT_CHECK_FAILURES_BEFORE_GIVING_UP`).
  * - `unsupported` — this browser cannot run it (`unsupported-callback`).
  * - `blocked` — the script never arrived: a failed load, or nothing after `BOT_CHECK_BLOCKED_AFTER_MS`.
+ *
+ * Named for the widget, not the check: `../bot-check.ts`'s `BotCheckState` is the club's on/off
+ * setting, a different thing entirely.
  */
-export const BOT_CHECK_STATES = [
+export const BOT_CHECK_WIDGET_STATES = [
   "loading",
   "checking",
   "interactive",
@@ -54,7 +57,87 @@ export const BOT_CHECK_STATES = [
   "unsupported",
   "blocked",
 ] as const;
-export type BotCheckState = (typeof BOT_CHECK_STATES)[number];
+export type BotCheckWidgetState = (typeof BOT_CHECK_WIDGET_STATES)[number];
+
+/**
+ * Cloudflare's documented callbacks, each naming a state (§NNN), for `turnstile.render`.
+ *
+ * The widget is drawn once and `reset()` on every new attempt (§185), so the callbacks handed to
+ * `render` are the ones Cloudflare calls for the rest of the page's life — while the effect that
+ * says the state runs again on every attempt. They must therefore never hold the `become` of the
+ * run that drew the widget: that run is cancelled at the first server re-render, and a callback
+ * bound to it would say nothing ever again (the state line stuck on «Se verifică…», the send
+ * button reading a stale `data-bot-check`). So they hold a relay, and read the current run's
+ * `become` from it at the moment Cloudflare calls — `null` once the island is gone.
+ *
+ * The error callback returns `false`: Cloudflare's documentation says a falsy answer leaves the
+ * retry to Turnstile, and a truthy one takes it over — its automatic retry stays, and
+ * «Reîncearcă verificarea» is the faster way.
+ */
+export type BotCheckRelay = { current: ((state: BotCheckWidgetState) => void) | null };
+export type TurnstileCallbacks = {
+  callback: (token: string) => void;
+  "error-callback": (code: string) => boolean;
+  "expired-callback": () => void;
+  "timeout-callback": () => void;
+  "before-interactive-callback": () => void;
+  "after-interactive-callback": () => void;
+  "unsupported-callback": () => void;
+};
+export function botCheckCallbacks(relay: BotCheckRelay, onToken: () => void): TurnstileCallbacks {
+  const say = (state: BotCheckWidgetState) => relay.current?.(state);
+  return {
+    callback: () => {
+      say("passed");
+      onToken();
+    },
+    "error-callback": () => {
+      say("error");
+      return false;
+    },
+    "expired-callback": () => say("expired"),
+    "timeout-callback": () => say("timeout"),
+    "before-interactive-callback": () => say("interactive"),
+    "after-interactive-callback": () => say("checking"),
+    "unsupported-callback": () => say("unsupported"),
+  };
+}
+
+/** What `render` is given: the site key, the language and the callbacks. */
+export type TurnstileRenderOptions = { sitekey: string; language?: string } & TurnstileCallbacks;
+
+/**
+ * Draw the widget into `element`, or — already drawn — ask it for a fresh challenge (§185): the
+ * token has been spent, and `render` into an occupied element is a Cloudflare error. `widget` is
+ * the id `render` returned, kept across attempts; `relay` is where every callback finds the state's
+ * current `become` (see `botCheckCallbacks`). A widget Cloudflare refused to draw (a malformed
+ * option, a script half-loaded) is a failure like any other: said, retryable, and never a reason
+ * to hold a press. The API is structural, so the unit suite hands it a fake.
+ */
+export function drawBotCheck<E>(
+  api: { render: (element: E, options: TurnstileRenderOptions) => string; reset: (widgetId?: string) => void },
+  element: E,
+  widget: { current: string | null },
+  relay: BotCheckRelay,
+  options: { sitekey: string; language: string; onToken: () => void },
+): void {
+  const become = (state: BotCheckWidgetState) => relay.current?.(state);
+  if (widget.current !== null) {
+    become("checking");
+    api.reset(widget.current);
+    return;
+  }
+  become("checking");
+  try {
+    widget.current = api.render(element, {
+      sitekey: options.sitekey,
+      language: options.language,
+      ...botCheckCallbacks(relay, options.onToken),
+    });
+  } catch {
+    become("error");
+  }
+}
 
 /**
  * The attribute the widget's own element carries its state in, for the send button to read from
@@ -145,13 +228,13 @@ export function botCheckHeldHint(state: string | null): HeldHint {
  * failure, a lapse, a check that is taking too long. Never while it merely works, and never for a
  * browser that cannot run it (a second try would fail the same way; the form goes without it).
  */
-export function botCheckOffersRetry(state: BotCheckState, slow: boolean): boolean {
+export function botCheckOffersRetry(state: BotCheckWidgetState, slow: boolean): boolean {
   if (state === "error" || state === "blocked" || state === "timeout" || state === "expired") return true;
   return slow && (state === "loading" || state === "checking");
 }
 
 /** What the person is asked to do, if anything: the states whose sentence is written to be noticed. */
-export function botCheckAsksAttention(state: BotCheckState, slow: boolean): boolean {
+export function botCheckAsksAttention(state: BotCheckWidgetState, slow: boolean): boolean {
   return state !== "passed" && (slow || !(state === "loading" || state === "checking"));
 }
 
@@ -160,24 +243,25 @@ export function botCheckAsksAttention(state: BotCheckState, slow: boolean): bool
  * address, no IP, no page — a word, counted per hour in the throttle's own table.
  *
  * - `held-press-valve` — a held press the eight-second valve sent, because the check never answered;
- * - `widget-failed` — a widget that reached `error` or `blocked` (once per widget and kind).
+ * - `widget-failed` — a widget that reached `error` or `blocked` before the form was sent.
+ *
+ * They travel **with the registration form** (`BOT_CHECK_SIGNAL_FIELD`), never on a request of
+ * their own: the register action counts them once the registration went through the throttle and
+ * the other defences, so no endpoint takes an anonymous write (the review of §NNN).
  */
 export const BOT_CHECK_SIGNALS = ["held-press-valve", "widget-failed"] as const;
 export type BotCheckSignal = (typeof BOT_CHECK_SIGNALS)[number];
 
-/** Where the browser reports a signal; a path on this site, never an absolute URL (§8). */
-export const BOT_CHECK_SIGNAL_PATH = "/api/bot-check-signal";
+/**
+ * The form field the signals travel in: the widget's own hidden input once it failed, and the send
+ * button's name as the submitter of a press the valve sent.
+ */
+export const BOT_CHECK_SIGNAL_FIELD = "bot-check-signal";
 
 /**
- * Report one signal, fire-and-forget: a beacon (it survives the navigation a valve's send starts),
- * or a `keepalive` fetch where there is none. Never throws, never waits, never retries — a lost
- * count is a smaller figure on the health page, not a problem for the person sending the form.
+ * The signals one submission carries, from the field's posted values: only the two words, each at
+ * most once, whatever else a request puts there.
  */
-export function reportBotCheckSignal(signal: BotCheckSignal): void {
-  try {
-    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function" && navigator.sendBeacon(BOT_CHECK_SIGNAL_PATH, signal)) return;
-    if (typeof fetch === "function") void fetch(BOT_CHECK_SIGNAL_PATH, { method: "POST", body: signal, keepalive: true }).catch(() => {});
-  } catch {
-    // Nothing to do: see above.
-  }
+export function botCheckSignalsFrom(values: readonly unknown[]): BotCheckSignal[] {
+  return BOT_CHECK_SIGNALS.filter((signal) => values.includes(signal));
 }
