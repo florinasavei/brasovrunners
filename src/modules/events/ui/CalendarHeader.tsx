@@ -59,7 +59,7 @@ export function calendarStepHrefs({
  * section's name (`aria-labelledby="calendar-title"`) and still read by a screen reader; from `sm`
  * it is drawn as before.
  */
-const TITLE_ON_A_PHONE_SX = {
+export const TITLE_ON_A_PHONE_SX = {
   position: { xs: "absolute", sm: "static" },
   width: { xs: "1px", sm: "auto" },
   height: { xs: "1px", sm: "auto" },

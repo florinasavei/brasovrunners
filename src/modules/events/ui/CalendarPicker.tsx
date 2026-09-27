@@ -5,6 +5,21 @@ import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
 import { DENSITY } from "@/theme/density";
 
+/*
+  On a phone the two selects share one row with ‹ Azi › (§NNN): they take what the row leaves
+  and may shrink below their words' width rather than wrap the row, in a smaller type with a
+  narrower caret gutter; the height stays the 44-pixel target (BR-REQ-041-01 criterion 6). The
+  year, four digits, has a fixed narrow width and the month takes the rest, so its name stays
+  whole at 320 pixels. From `sm` nothing changes: every key names its `sm` value, because an
+  xs-only object is a `min-width: 0px` rule that would reach the desktop too — `inherit` is the
+  input's own type size, 14px / 32px MUI's small outlined select padding.
+*/
+export const PHONE_SELECT_SX = {
+  fontSize: { xs: "0.8125rem", sm: "inherit" },
+  pl: { xs: 1, sm: "14px" },
+  pr: { xs: "24px !important", sm: "32px !important" },
+} as const;
+
 /**
  * "Select per month, or per year" (`DECISIONS.md` §116): two native selects that go straight
  * to the chosen month or year. A client island for the one thing a select cannot do on its
@@ -52,13 +67,6 @@ export default function CalendarPicker({
   };
 
   const select = { select: { native: true }, inputLabel: { shrink: true } } as const;
-  /*
-    On a phone the two selects share one row with ‹ Azi › (§NNN): they take what the row leaves
-    and may shrink below their words' width rather than wrap the row, in a smaller type with a
-    narrower caret gutter; the height stays the 44-pixel target (BR-REQ-041-01 criterion 6).
-    From `sm` nothing changes.
-  */
-  const phoneSelect = { fontSize: { xs: "0.8125rem" }, pl: { xs: 1 }, pr: { xs: "24px !important" } } as const;
 
   return (
     <Stack direction="row" spacing={{ xs: DENSITY.gapXs, sm: 1 }} sx={{ alignItems: "center", flex: { xs: "1 1 auto", sm: "0 0 auto" }, minWidth: 0 }}>
@@ -70,7 +78,7 @@ export default function CalendarPicker({
           value={month}
           onChange={(event) => go({ year, month: Number(event.target.value) })}
           slotProps={select}
-          sx={{ flex: { xs: "3 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 118 }, "& select": { ...phoneSelect, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
+          sx={{ flex: { xs: "1 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 118 }, "& select": { ...PHONE_SELECT_SX, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
         >
           {monthNames.map((name, index) => (
             <option key={name} value={index + 1}>
@@ -86,7 +94,7 @@ export default function CalendarPicker({
         value={year}
         onChange={(event) => go({ year: Number(event.target.value), month })}
         slotProps={select}
-        sx={{ flex: { xs: "2 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 88 }, "& select": { ...phoneSelect, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
+        sx={{ flex: { xs: "0 0 66px", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 88 }, "& select": { ...PHONE_SELECT_SX, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
       >
         {years.map((candidate) => (
           <option key={candidate} value={candidate}>

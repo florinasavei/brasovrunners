@@ -7,9 +7,9 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { webcalUrl } from "@/modules/events/ical";
 import type { PublicEvent } from "@/modules/events/repository";
 import CalendarHeader, { calendarStepHrefs } from "@/modules/events/ui/CalendarHeader";
+import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import InfoTip from "@/shared/ui/InfoTip";
@@ -55,6 +55,8 @@ export default async function CalendarSection({
 }) {
   const t = await getTranslations("Events");
   const feed = `${env.APP_BASE_URL}/${locale}/events/calendar.ics`;
+  // The same two doors the page head's «?» carries on a phone (§NNN), built in one place.
+  const links = calendarFeedLinks(env.APP_BASE_URL, locale);
   const steps = calendarStepHrefs({ view, query, locale, pathname: "/calendar" });
 
   return (
@@ -81,7 +83,7 @@ export default async function CalendarSection({
           </Typography>
           <Button
             component="a"
-            href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(feed))}`}
+            href={links.google}
             target="_blank"
             rel="noopener noreferrer"
             size="small"
@@ -91,7 +93,7 @@ export default async function CalendarSection({
             <EventAvailableIcon sx={{ fontSize: 18 }} aria-hidden="true" />
             {t("calendar.subscribeGoogle")}
           </Button>
-          <Button component="a" href={webcalUrl(feed)} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
+          <Button component="a" href={links.webcal} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
             <CalendarMonthIcon sx={{ fontSize: 18 }} aria-hidden="true" />
             {t("calendar.subscribeApple")}
           </Button>
@@ -117,7 +119,7 @@ export default async function CalendarSection({
           */}
           <Box
             component="a"
-            href={webcalUrl(feed)}
+            href={links.webcal}
             sx={{
               display: "inline-block",
               fontFamily: "monospace",

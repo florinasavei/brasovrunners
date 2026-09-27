@@ -1,18 +1,16 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the calendar page's head on a phone: the H1 and a «?» that carries the intro sentence,
+ * §NNN — the calendar page's head on a phone: the H1 and a «?» fold with the intro sentence and the two calendar links,
  * one row of the two small selects with ‹ Azi ›, and one row of the two chip pairs with the rule
  * between them. From `sm` the sentence and the period's heading are drawn as before.
  *
  * The header is rendered for real with the real catalogues; the two client islands that need
  * Next's router (`CalendarPicker`, `CalendarStepLink`) are stubbed to marked elements so the test
- * can read where they sit. The page itself needs a database to render, so its two lines are read
- * from the source, like `theme/wordmark.test.ts`.
+ * can read where they sit. The page itself needs a database to render; its «?» is its own component,
+ * `CalendarIntroFold`, rendered here.
  */
 let currentLocale: "ro" | "en" = "ro";
 
@@ -68,6 +66,10 @@ function inside(html: string, marker: string): string {
   return html.slice(open);
 }
 
+const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const ro = (await import("../../../messages/ro.json")).default;
+const en = (await import("../../../messages/en.json")).default;
+
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
 describe("the calendar's compact head on a phone (§NNN)", () => {
@@ -99,13 +101,17 @@ describe("the calendar's compact head on a phone (§NNN)", () => {
     expect(html).toContain(">Today</a>");
   });
 
-  it("draws the heading only from sm, hidden from sight (not from a screen reader) on a phone", () => {
-    const source = readFileSync(path.join(process.cwd(), "src/modules/events/ui/CalendarHeader.tsx"), "utf8");
-    expect(source).toMatch(/position: \{ xs: "absolute", sm: "static" \}/);
-    expect(source).toMatch(/clip: \{ xs: "rect\(0 0 0 0\)", sm: "auto" \}/);
-    expect(source).toContain("...TITLE_ON_A_PHONE_SX");
-    // The rule between the two pairs is on every width now: they share a row on a phone too.
-    expect(source).not.toMatch(/bgcolor: "divider", mx: 0\.5, display: \{ xs: "none"/);
+  it("hides the heading from sight on a phone only, and names every rule's sm value", async () => {
+    const { TITLE_ON_A_PHONE_SX } = await import("@/modules/events/ui/CalendarHeader");
+    expect(TITLE_ON_A_PHONE_SX.position).toEqual({ xs: "absolute", sm: "static" });
+    expect(TITLE_ON_A_PHONE_SX.clip).toEqual({ xs: "rect(0 0 0 0)", sm: "auto" });
+    for (const [key, value] of Object.entries(TITLE_ON_A_PHONE_SX)) expect(value, key).toHaveProperty("sm");
+  });
+
+  it("draws the rule between the two pairs in the chip row", async () => {
+    const html = withoutStyles(renderToStaticMarkup(await CalendarHeader({ view: month, now: NOW })));
+    const row = inside(html, 'data-testid="calendar-chip-row"');
+    expect(row).toMatch(/<div class="[^"]+" aria-hidden="true"><\/div>/);
   });
 
   it("the year view keeps the period row and the Lună / An pair, without the layout pair", async () => {
@@ -117,25 +123,30 @@ describe("the calendar's compact head on a phone (§NNN)", () => {
   });
 });
 
-describe("the calendar page's intro behind a «?» on a phone (§NNN)", () => {
-  const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/calendar/page.tsx"), "utf8");
-
-  it("renders the intro as the «?»'s words on a phone, and the paragraph from sm only", () => {
-    expect(page).toMatch(/<QuietHelp text=\{t\("calendar\.pageIntro"\)\}/);
-    expect(page).toMatch(/data-testid="calendar-intro-help" sx=\{\{ display: \{ xs: "inline-flex", sm: "none" \} \}\}/);
-    expect(page).toMatch(/display: \{ xs: "none", sm: "block" \}[^\n]*\n\s*\{t\("calendar\.pageIntro"\)\}/);
+describe("the calendar page's intro behind a «?» fold on a phone (§NNN)", () => {
+  it.each(["ro", "en"] as const)("holds the sentence and both calendar links in a native fold (%s)", async (locale) => {
+    currentLocale = locale;
+    const { default: CalendarIntroFold } = await import("@/modules/events/ui/CalendarIntroFold");
+    const html = withoutStyles(renderToStaticMarkup(await CalendarIntroFold({ locale, baseUrl: "https://example.test" })));
+    const messages = locale === "ro" ? ro : en;
+    // A <details> the server renders, so it opens with scripts off; the summary has its own name.
+    expect(html).toMatch(/^<details[^>]*data-testid="calendar-intro-help"/);
+    expect(html).toContain(`<summary aria-label="${escape(messages.Events.calendar.introHelp)}">`);
+    expect(html).toContain(escape(messages.Events.calendar.pageIntro));
+    const webcal = `webcal://example.test/${locale}/events/calendar.ics`;
+    expect(html).toContain(`href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}"`);
+    expect(html).toContain(`href="${webcal}"`);
+    expect(html).toContain(`>${escape(messages.Events.calendar.subscribeGoogle)}</a>`);
+    expect(html).toContain(`>${escape(messages.Events.calendar.subscribeApple)}</a>`);
   });
 });
 
-describe("QuietHelp (§473, shared since §NNN)", () => {
-  it("says its sentence as its name and keeps a 44-pixel reach at any glyph size", async () => {
-    const { default: QuietHelp } = await import("@/shared/ui/QuietHelp");
-    const small = renderToStaticMarkup(createElement(QuietHelp, { text: "Ce e asta?", testId: "x" }));
-    expect(small).toContain('aria-label="Ce e asta?"');
-    expect(small).toContain('data-testid="x"');
-    expect(small).toMatch(/inset:-15px/);
-    const larger = renderToStaticMarkup(createElement(QuietHelp, { text: "Ce e asta?", glyphSize: 18 }));
-    expect(larger).toMatch(/inset:-13px/);
-    expect(larger).toContain('data-testid="HelpOutlineOutlinedIcon"');
+describe("the period selects on a desktop (§NNN)", () => {
+  it("gives every phone-only select rule an sm value, so nothing reaches the desktop", async () => {
+    const { PHONE_SELECT_SX } = await vi.importActual<typeof import("@/modules/events/ui/CalendarPicker")>("@/modules/events/ui/CalendarPicker");
+    for (const [key, value] of Object.entries(PHONE_SELECT_SX)) {
+      expect(value, key).toHaveProperty("xs");
+      expect(value, key).toHaveProperty("sm");
+    }
   });
 });

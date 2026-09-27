@@ -81,7 +81,7 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
   },
   {
     file: "src/modules/events/ui/CalendarPicker.tsx",
-    line: 'pl: { xs: 1 }',
+    line: 'pl: { xs: 1, sm: "14px" }',
     reason: "a select's text inset, not whitespace between elements — narrower so the month fits beside ‹ Azi › (§NNN)",
   },
   {
