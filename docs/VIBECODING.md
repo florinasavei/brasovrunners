@@ -27,6 +27,13 @@ what was refused), a `SPECS.md` criterion for behaviour a test proves, a `CHANGE
 for anything a person sees. `yarn check` fails on a `BR-REQ-*` that does not exist, a hostname
 literal, or a hex colour outside `src/theme/brand.ts`.
 
+**In a Claude Code on the web session** (the owner on a phone, the PC off) the database is
+already up, migrated and seeded when you start: the SessionStart hook did it. Skip the
+`docker compose` line — there is no Docker there — and use `yarn db:reset:local` only to start
+over. There is no `gh` either: open the pull request through the GitHub tools. Never write a
+QA or production value anywhere; the session is local-only by design.
+[`DEVELOPMENT.md` § Coding from the phone](./DEVELOPMENT.md#coding-from-the-phone-claude-code-on-the-web).
+
 ## Where things live
 
 | You want to change… | Go to |
