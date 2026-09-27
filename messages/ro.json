@@ -2417,6 +2417,7 @@
           ],
           "credit": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare. Creditul DeepL: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining} — se dă o singură dată.",
           "creditUnread": "Traducerea automată e pornită. Creditul DeepL: — {creditReason}",
+          "watch": "Peste 80% din creditul DeepL al cheii e folosit: {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Traducerea merge încă; creditul se dă o singură dată și nu revine luna viitoare, așa că pregătiți un credit sau o cheie nouă.",
           "low": "Creditul DeepL al cheii e aproape terminat: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Se dă o singură dată și nu revine luna viitoare: pregătiți un credit sau o cheie nouă înainte să se oprească traducerea.",
           "spent": "Creditul DeepL al cheii s-a terminat (folosite {creditUsed} din {creditLimit} caractere): „Copiază și tradu tot” și „Tradu din română” refuză orice traducere. Nu revine luna viitoare — trebuie un credit sau o cheie nouă.",
           "howCredit": [

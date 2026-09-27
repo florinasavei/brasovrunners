@@ -2,18 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 import { TranslatorError } from "@/infrastructure/translate/adapter";
 import { readDeeplUsage } from "@/infrastructure/translate/deepl-adapter";
 import { readTranslationUsageForEnvironment } from "@/infrastructure/translate/translator";
-import { CREDIT_LOW_SHARE, CREDIT_WATCH_SHARE, creditAllows, translationCredit } from "@/modules/translate/domain/credit";
+import { CREDIT_LOW_SHARE, CREDIT_WATCH_SHARE, creditAllows, creditIsSpent, translationCredit } from "@/modules/translate/domain/credit";
 
-const cache = vi.hoisted(() => ({ revalidated: [] as string[] }));
+const cache = vi.hoisted(() => ({ revalidated: [] as string[], keys: [] as string[][] }));
 vi.mock("next/cache", () => ({
   // The data cache is Next's; here every read goes to the reader, which is what is under test.
-  unstable_cache: (load: () => Promise<unknown>) => load,
+  unstable_cache: (load: () => Promise<unknown>, keys: string[]) => {
+    cache.keys.push(keys);
+    return load;
+  },
   revalidateTag: (tag: string) => {
     cache.revalidated.push(tag);
   },
 }));
 
-const { FAILURE_MEMO_MS, forgetTranslationCredit, readTranslationCredit } = await import("@/modules/translate/credit");
+const { FAILURE_MEMO_MS, creditCacheKey, forgetTranslationCredit, readTranslationCredit } = await import("@/modules/translate/credit");
 
 /**
  * §NNN — the DeepL credit read from DeepL's own meter (`GET /v2/usage`) as the one-time credit it
@@ -54,6 +57,14 @@ describe("§NNN the credit's levels", () => {
     expect(creditAllows(credit, 10)).toBe(true);
     expect(creditAllows(credit, 11)).toBe(false);
     expect(creditAllows(translationCredit({ used: 5, limit: 5 }), 0)).toBe(false);
+  });
+
+  it("is spent at 100 % on the meter, or when the usage read itself answered 456", () => {
+    const at = (used: number) => ({ ok: true as const, credit: translationCredit({ used, limit: 1_000_000 }) });
+    expect(creditIsSpent(at(1_000_000))).toBe(true);
+    expect(creditIsSpent({ ok: false, reason: "quota" })).toBe(true);
+    expect(creditIsSpent(at(999_999))).toBe(false);
+    for (const reason of ["unconfigured", "refused", "unavailable"]) expect(creditIsSpent({ ok: false, reason })).toBe(false);
   });
 });
 
@@ -144,6 +155,22 @@ describe("§NNN the credit reading the pages share", () => {
     await readTranslationCredit(configured, slow, now);
     forgetTranslationCredit();
     expect((await readTranslationCredit(configured, fine, now)).ok).toBe(true);
+  });
+
+  it("keys the cached figure by the host kind and a short fingerprint of the key, never the key", async () => {
+    forgetTranslationCredit();
+    cache.keys.length = 0;
+    const secret = "not-a-real-key-secret:fx";
+    await readTranslationCredit({ TRANSLATE_PROVIDER: "deepl", DEEPL_API_KEY: secret }, async () => ({ used: 1, limit: 10 }));
+    const key = cache.keys.at(-1) ?? [];
+    expect(key.join("|")).not.toContain(secret);
+    expect(key.join("|")).not.toContain("secret");
+    expect(creditCacheKey(secret)).toMatch(/^free-[0-9a-f]{8}$/);
+    expect(creditCacheKey("abc")).toMatch(/^pro-[0-9a-f]{8}$/);
+    expect(key).toContain(creditCacheKey(secret));
+    // A replaced key of the same kind reads its own credit, not the old key's cached one.
+    expect(creditCacheKey("another-key:fx")).not.toBe(creditCacheKey(secret));
+    expect(creditCacheKey(` ${secret} `)).toBe(creditCacheKey(secret));
   });
 
   it("expires the cached figure after a press", () => {

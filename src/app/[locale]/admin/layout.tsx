@@ -14,6 +14,7 @@ import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { canOpenTaskPanel } from "@/modules/diagnostics/domain/task-panels";
 import { readTranslationCredit } from "@/modules/translate/credit";
+import { creditIsSpent } from "@/modules/translate/domain/credit";
 import TranslateProvider, { type TranslateOffer } from "@/modules/translate/ui/TranslateProvider";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
@@ -82,10 +83,11 @@ export default async function AdminLayout({ children, params }: Props) {
   // on «Sarcini» → «Club», linked only for a role that may open that panel. A key whose one-time
   // DeepL credit is spent (§NNN, DeepL's own meter, cached an hour) offers nothing either: the
   // whole-record button greyed with «Creditul DeepL s-a terminat — vezi Costuri», no per-box one.
-  // An unread credit is not a spent one: the buttons stay and DeepL's own answer decides.
+  // Spent is the meter at 100 % or the usage read answered 456 (`creditIsSpent`); any other
+  // unread credit is not a spent one: the buttons stay and DeepL's own answer decides.
   const mayTranslate = canTranslateTexts(staffUser.role);
   const configured = mayTranslate && isTranslationConfigured(env);
-  const creditSpent = configured && (await readTranslationCredit(env).then((reading) => reading.ok && reading.credit.level === "spent"));
+  const creditSpent = configured && creditIsSpent(await readTranslationCredit(env));
   const tasksPath = getPathname({ locale, href: "/admin/tasks" });
   const translateOffer: TranslateOffer | null = mayTranslate
     ? {

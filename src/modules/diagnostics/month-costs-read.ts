@@ -26,7 +26,7 @@ export type MonthCostReaders = {
   neonPreviousPeriod: (periodStart: Date) => Promise<{ ok: true; cuHours: number } | { ok: false; reason: string }>;
   /** The pictures' recorded bytes (`storedMediaBytes`). */
   mediaBytes: () => Promise<number>;
-  /** DeepL's credit from its own meter, cached ten minutes (`readTranslationCredit`, §NNN). */
+  /** DeepL's credit from its own meter, cached an hour and expired by every press (`readTranslationCredit`, §NNN). */
   deeplCredit: () => Promise<CreditReading>;
 };
 

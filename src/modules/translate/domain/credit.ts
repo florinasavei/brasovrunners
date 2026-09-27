@@ -54,6 +54,17 @@ export function creditAllows(credit: TranslationCredit, asked: number): boolean 
   return credit.level !== "spent" && asked <= credit.remaining;
 }
 
+/**
+ * Whether a credit reading says the key can translate nothing (§NNN): DeepL's meter at 100 %
+ * (`spent`), or the usage read itself answered 456 (`quota`) — DeepL's own word that the credit
+ * is gone, even without figures. The editors grey the whole-record button and hide the per-box
+ * ones on either. Any other unread answer is not a spent credit: the buttons stay and the
+ * press's own answer decides.
+ */
+export function creditIsSpent(reading: { ok: true; credit: TranslationCredit } | { ok: false; reason: string }): boolean {
+  return reading.ok ? reading.credit.level === "spent" : reading.reason === "quota";
+}
+
 /** What `/api/health` publishes about the credit (§NNN): a word and a note, never a figure. */
 export type CreditHealth = { level: CreditLevel | "unknown" | "unconfigured"; note: string | null };
 

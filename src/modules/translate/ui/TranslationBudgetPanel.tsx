@@ -33,7 +33,7 @@ const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.
  * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §464), beside the
  * other brakes on Costuri and built like them (`JobCadencePanel`): one form, the service asserting
  * the role and writing the audit row, a refusal handed back as the form's state (§315), one
- * question first (§384). It says what is spent today, what DeepL Free allows a month, and that
+ * question first (§384). It says what is spent today, what is used and left of the key's one-time DeepL credit (§NNN, DeepL's own figure), and that
  * only the club's own texts are ever sent.
  */
 export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, credit, mayEdit }: Props) {

@@ -2417,6 +2417,7 @@
           ],
           "credit": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press. The DeepL credit: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left — given once.",
           "creditUnread": "Automatic translation is on. The DeepL credit: — {creditReason}",
+          "watch": "Over 80% of the key's DeepL credit is used: {creditUsed} of {creditLimit} characters ({creditPercent}), {creditRemaining} left. Translation still works; the credit is given once and does not come back next month, so plan a new credit or key.",
           "low": "The key's DeepL credit is nearly spent: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left. It is given once and does not come back next month: get a new credit or key ready before translation stops.",
           "spent": "The key's DeepL credit is spent ({creditUsed} of {creditLimit} characters used): \"Copy and translate everything\" and \"Translate from Romanian\" refuse every translation. It does not come back next month — a new credit or key is needed.",
           "howCredit": [

@@ -273,15 +273,18 @@ describe("owner tasks", () => {
     }
   });
 
-  // §NNN: the credit behind the key is given once — spent is red, nearly spent reopens the row.
-  it("reads the DeepL credit: spent is broken, low is open, both with the credit's own sentence and steps", () => {
+  // §NNN: the credit behind the key is given once — amber at 80 %, red at 95 % and when spent.
+  it("reads the DeepL credit: watch is amber, low and spent are red, each with its own sentence and steps", () => {
     const at = (used: number): OwnerTaskInputs["translationCredit"] => ({ ok: true, credit: translationCredit({ used, limit: 1_000_000 }) });
     const row = (reading: OwnerTaskInputs["translationCredit"]) =>
       ownerTasks({ ...LAUNCHED, translationCredit: reading }).find((task) => task.id === "translation");
     expect(row(at(1_000_000))).toMatchObject({ state: "broken", text: "spent", steps: "howCredit" });
-    expect(row(at(960_000))).toMatchObject({ state: "open", text: "low", steps: "howCredit" });
-    // Under 95 % the row is done and still says the figures (the `credit` sentence).
-    for (const used of [0, 850_000]) {
+    expect(row(at(960_000))).toMatchObject({ state: "broken", text: "low", steps: "howCredit" });
+    expect(row(at(950_000))).toMatchObject({ state: "broken", text: "low", steps: "howCredit" });
+    expect(row(at(949_999))).toMatchObject({ state: "open", text: "watch", steps: "howCredit" });
+    expect(row(at(800_000))).toMatchObject({ state: "open", text: "watch", steps: "howCredit" });
+    // Under 80 % the row is done (green) and still says the figures (the `credit` sentence).
+    for (const used of [0, 799_999]) {
       expect(row(at(used))).toMatchObject({ state: "done", text: "credit" });
       expect(row(at(used))?.steps).toBeUndefined();
     }
@@ -299,7 +302,7 @@ describe("owner tasks", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.translation;
       // Every credit sentence names the figures the page fills in; the unread one the reason.
-      for (const text of [item.credit, item.low]) {
+      for (const text of [item.credit, item.watch, item.low]) {
         for (const value of ["{creditUsed}", "{creditLimit}", "{creditPercent}", "{creditRemaining}"]) expect(text).toContain(value);
       }
       expect(item.spent).toContain("{creditUsed}");

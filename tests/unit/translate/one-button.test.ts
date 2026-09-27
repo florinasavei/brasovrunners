@@ -91,6 +91,8 @@ describe("§482 the whole-record button is always there for a role that writes w
     const layout = readFileSync(path.join(ROOT, "src/app/[locale]/admin/layout.tsx"), "utf8");
     expect(layout).toContain("readTranslationCredit");
     expect(layout).toMatch(/action: configured && !creditSpent \? translateFieldAction : null/);
+    // Spent is the meter at 100 % or a 456 on the usage read itself (`creditIsSpent`).
+    expect(layout).toMatch(/creditSpent = configured && creditIsSpent\(await readTranslationCredit\(env\)\)/);
   });
 
   it("is mounted on every editor: the event (new and saved), the page, the album and every «Echipa» form", () => {

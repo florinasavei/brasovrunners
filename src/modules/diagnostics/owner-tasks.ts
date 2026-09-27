@@ -236,8 +236,8 @@ export type OwnerTaskInputs = {
   translationConfigured: boolean;
   /**
    * The DeepL credit from DeepL's own meter (§NNN), as `readTranslationCredit` answered it. The
-   * credit is given once: `spent` turns the row red (translation refuses everything until a new
-   * credit or key), `low` reopens it with the steps for a new one; the figures themselves reach
+   * credit is given once: `watch` (80 %) reopens the row amber with the steps for a new one, `low`
+   * (95 %) and `spent` (translation refuses everything until a new credit or key) turn it red; the figures themselves reach
    * the sentence through the page's values, and an unread credit says «—» with the reason.
    */
   translationCredit: CreditReading;
@@ -434,8 +434,9 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   // «Tradu din română» (§464): built; open until DeepL's free key is on the deployment, never
   // blocking — without it the English boxes are written by hand, as before.
   // Since §NNN the credit behind the key is read too: it is given once and never refilled, so a
-  // key that is set and spent is `broken` (it translates nothing), and one nearly spent is `open`
-  // with the steps for a new credit — the row is where the club hears it before a press fails.
+  // key at 80 % of its credit is `open` (amber) with its own sentence and the steps for a new one,
+  // and at 95 % — nearly spent or spent — it is `broken` (red): the row is where the club hears it
+  // before a press fails, at the same two thresholds Costuri's line uses (`watch`, then `act`).
   // A credit DeepL would not state is «—» with the reason: a refused key or a 456 is red, a
   // DeepL that did not answer leaves the row as it was (translation may still work).
   const reading = input.translationConfigured ? input.translationCredit : null;
@@ -445,12 +446,12 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     owner: "club",
     state: !input.translationConfigured
       ? "open"
-      : level === "spent" || unread === "quota" || unread === "refused"
+      : level === "spent" || level === "low" || unread === "quota" || unread === "refused"
         ? "broken"
-        : level === "low"
+        : level === "watch"
           ? "open"
           : "done",
-    ...(level === "spent" || level === "low"
+    ...(level === "spent" || level === "low" || level === "watch"
       ? { text: level, steps: "howCredit" }
       : level
         ? { text: "credit" }
