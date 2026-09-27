@@ -237,7 +237,7 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
             tabIndex={-1}
             aria-hidden="true"
             data-testid="faq-default-save"
-            sx={{ position: "absolute", width: 1, height: 1, p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", border: 0, pointerEvents: "none" }}
+            hidden
           />
           <Stack spacing={2}>
             {/* «Copiază și tradu tot: RO → EN» (§464, §482): once, at the top — every English box of the page. */}

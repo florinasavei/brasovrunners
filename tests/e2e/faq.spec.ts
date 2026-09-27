@@ -98,7 +98,19 @@ test.describe.serial("§NNN the FAQ page", () => {
   test("the Administrator deletes the question in the same one save, asked first", async ({ page }) => {
     expect(question, "the first part wrote the question").not.toBe("");
     await faqEditor(page);
-    const card = page.getByTestId("faq-card").filter({ hasText: question });
+    let card = page.getByTestId("faq-card").filter({ hasText: question });
+
+    // Enter in a box is the plain save — the form's hidden default button — never a card's arrow.
+    const titles = async () =>
+      page.locator('[data-testid="faq-card"] input[name$=".questionRo"]').evaluateAll((boxes) => boxes.map((box) => (box as HTMLInputElement).value));
+    const order = await titles();
+    await openFold(card);
+    await card.locator('[name$=".questionRo"]').press("Enter");
+    await expect(page).toHaveURL(/saved=faqPageSaved/, { timeout: 20_000 });
+    await hydrated(page);
+    expect(await titles()).toEqual(order);
+
+    card = page.getByTestId("faq-card").filter({ hasText: question });
     await openFold(card);
     await card.getByTestId("faq-remove").check();
     await page.getByRole("button", { name: "Salvează pagina" }).click();
