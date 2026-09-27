@@ -6165,7 +6165,6 @@
     "topicHints": {
       "ALL": "Every topic below, and any we add later.",
       "BIG_EVENTS": "The club's big days, such as the anniversary cross: an announcement when one appears on the calendar, then registration and what changes.",
-      "DISCOUNTS": "Discounts from the club's partners, for subscribers only.",
       "GEAR_TESTING": "When a shop or a maker brings shoes and gear to try.",
       "SPECIAL_EVENTS": "Special editions, themed runs, events held with other organizers and other organizers' events.",
       "WEEKLY_RUNS": "An announcement when a new series of weekly runs starts — once per series, not for every run.",
@@ -6173,7 +6172,7 @@
       "RESULTS_PHOTOS": "Results and photo albums after the events."
     },
     "heading": "The club's news by email",
-    "intro": "Choose what you want to hear from us — the big events, discounts, shoe testing, the weekly runs — and we write to you about that alone.",
+    "intro": "Choose what you want to hear from us — the big events, shoe testing, the weekly runs, volunteering — and we write to you about that alone.",
     "open": "Subscribe to the news",
     "dialogTitle": "Subscribe to the club's news",
     "dialogIntro": "Tick what interests you. We email you a confirmation link; until you press it, you receive nothing else.",

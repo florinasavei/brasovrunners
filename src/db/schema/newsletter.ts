@@ -12,14 +12,16 @@ import { staffUsers } from "./staff-users";
  *
  * **The topics** a subscriber picks. `ALL` is "everything the club sends", today's topics and any
  * added later; the rest are one subject each. The order here is the order the pop-up lists them.
- * A value is added by a migration (expand only) and never removed.
+ * A value is added by a migration (expand only) and never removed; one the club stops offering is
+ * listed in `RETIRED_TOPICS` (`modules/newsletter/domain/topics.ts`) instead.
  */
 export const newsletterTopic = pgEnum("newsletter_topic", [
   // «Toate noutățile»: every topic, today's and any added later.
   "ALL",
   // The club's own big days: its races, the anniversary cross. A new race is announced here.
   "BIG_EVENTS",
-  // Discount codes from the club's partners.
+  // Retired (§NNN): discount codes are for the club's members, not the newsletter. Kept because an
+  // enum value is never removed and an old send's row may name it; no subscription carries it.
   "DISCOUNTS",
   // Shoe and gear testing sessions (the `GEAR_TEST` event type).
   "GEAR_TESTING",

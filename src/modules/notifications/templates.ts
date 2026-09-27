@@ -707,7 +707,7 @@ export type TemplateData = {
   idDocumentMasked?: boolean;
   /**
    * The newsletter (§445). The topics this subscriber chose, as a phrase in this half's language —
-   * "„Evenimente mari” și „Coduri de reducere”" — and in the other half's.
+   * "„Evenimente mari” și „Testări de încălțăminte”" — and in the other half's.
    */
   newsletterTopics?: string;
   newsletterTopicsOther?: string;

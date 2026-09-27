@@ -6165,7 +6165,6 @@
     "topicHints": {
       "ALL": "Toate temele de mai jos și cele pe care le vom adăuga.",
       "BIG_EVENTS": "Marile zile ale clubului, de exemplu crosul aniversar: un anunț când apare în calendar, apoi înscrierile și ce se schimbă.",
-      "DISCOUNTS": "Reduceri de la partenerii clubului, doar pentru abonați.",
       "GEAR_TESTING": "Când un magazin sau un producător aduce încălțăminte și echipament de încercat.",
       "SPECIAL_EVENTS": "Ediții speciale, alergări tematice, evenimente făcute împreună cu alți organizatori și evenimentele altor organizatori.",
       "WEEKLY_RUNS": "Un anunț când pornește o serie nouă de alergări săptămânale — o dată pe serie, nu la fiecare alergare.",
@@ -6173,7 +6172,7 @@
       "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente."
     },
     "heading": "Noutățile clubului pe email",
-    "intro": "Alege ce vrei să afli de la noi — evenimentele mari, reduceri, testări de încălțăminte, alergările săptămânale — și îți scriem doar despre asta.",
+    "intro": "Alege ce vrei să afli de la noi — evenimentele mari, testări de încălțăminte, alergările săptămânale, voluntariat — și îți scriem doar despre asta.",
     "open": "Abonează-te la noutăți",
     "dialogTitle": "Abonează-te la noutățile clubului",
     "dialogIntro": "Bifează ce te interesează. Îți trimitem un email cu un link de confirmare; până nu îl apeși, nu primești nimic altceva.",

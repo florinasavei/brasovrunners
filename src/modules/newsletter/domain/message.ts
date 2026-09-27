@@ -14,7 +14,7 @@ import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/f
 
 /** One line; the subject a subscriber receives joins the two languages with " / " (§96). */
 export const NEWSLETTER_SUBJECT_MAX = 150;
-/** Room for a real letter — the news, a discount code and its terms — and not for a book. */
+/** Room for a real letter — the news, a session's details and its terms — and not for a book. */
 export const NEWSLETTER_BODY_MAX = 6000;
 
 export type NewsletterBox = "subjectRo" | "subjectEn" | "bodyRo" | "bodyEn";
