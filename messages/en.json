@@ -1299,7 +1299,7 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "0 = no limit. Under 18, a parent registers the runner.",
+      "minAgeHelp": "{default} by default; put 0 for no limit. Under 18, a parent registers the runner.",
       "minAgeReadOnly": "{age}. Changed by whoever may change the event's settings.",
       "bibDesign": {
         "title": "What the race number looks like",

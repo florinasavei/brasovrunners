@@ -227,7 +227,7 @@ export async function RulesBox({
           <RecallField
             name="event.minAge"
             label={t("editor.minAge")}
-            helperText={t("editor.minAgeHelp")}
+            helperText={t("editor.minAgeHelp", { default: MIN_PARTICIPANT_AGE })}
             defaultValue={minAge}
             {...textFieldConstraints(eventInputConstraints("minAge"), { inputMode: "numeric" })}
             sx={{ width: { sm: 220 } }}

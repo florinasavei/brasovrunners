@@ -99,6 +99,21 @@ describe("§NNN the page says the minimum age for every type", () => {
   });
 });
 
+describe("§NNN the staff preview says the age as the page does", () => {
+  const preview = readFileSync(path.join(process.cwd(), "src/app/[locale]/preview/events/[id]/page.tsx"), "utf8");
+
+  it("renders EventAgeRule with the preview's event, after the rules", () => {
+    expect(preview).toContain("<EventAgeRule event={preview} />");
+    expect(preview.indexOf('id="rules"')).toBeLessThan(preview.indexOf("<EventAgeRule "));
+    expect(preview).toMatch(/minAge: event\.minAge/);
+  });
+
+  it("a race and a group run in the preview's shape get the page's sentences", async () => {
+    expect(await ageOf({ type: "RACE", registrationMode: "INTERNAL", minAge: 14 })).toContain("înscrierea se face de un părinte sau tutore");
+    expect(await ageOf({ type: "GROUP_RUN", registrationMode: "NONE", minAge: 14 })).toContain("Vârsta minimă: 14 ani. Sub 18 ani, participarea se face cu acordul unui părinte.");
+  });
+});
+
 describe("§NNN the editor's one box, for every type", () => {
   const languages: LanguageEntry[] = (["ro", "en"] as const).map((locale) => ({
     label: locale,
@@ -121,6 +136,10 @@ describe("§NNN the editor's one box, for every type", () => {
     }
   });
 
+  it("the box's help says the default, 14, and 0 for no limit", async () => {
+    expect(await rulesBox("GROUP_RUN")).toContain("Implicit 14; pune 0 pentru fără limită.");
+  });
+
   it("a role without settings rights reads the number instead of the box", async () => {
     const html = await rulesBox("GROUP_RUN", false);
     expect(html).not.toContain('name="event.minAge"');
@@ -130,8 +149,8 @@ describe("§NNN the editor's one box, for every type", () => {
   it("the label and the help are the owner's words, in both languages", () => {
     expect(ro.Admin.editor.minAge).toBe("Vârsta minimă de participare");
     expect(en.Admin.editor.minAge).toBe("Minimum age to take part");
-    expect(ro.Admin.editor.minAgeHelp).toBe("0 = fără limită. Sub 18 ani, înscrierea se face de un părinte.");
-    expect(en.Admin.editor.minAgeHelp).toBe("0 = no limit. Under 18, a parent registers the runner.");
+    expect(ro.Admin.editor.minAgeHelp).toBe("Implicit {default}; pune 0 pentru fără limită. Sub 18 ani, înscrierea se face de un părinte.");
+    expect(en.Admin.editor.minAgeHelp).toBe("{default} by default; put 0 for no limit. Under 18, a parent registers the runner.");
     for (const catalogue of [ro, en]) {
       expect(catalogue.Admin.editor.boxes.summary.age.from).toContain("{age}");
       expect(catalogue.Admin.editor.boxes.summary.age.from).not.toMatch(/\d/);
