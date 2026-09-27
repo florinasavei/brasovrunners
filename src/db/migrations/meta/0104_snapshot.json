@@ -1,6 +1,6 @@
 {
   "id": "2c31c80f-9116-44b6-9ae9-c3fbbb302663",
-  "prevId": "71f1c552-0a5f-4ae0-9e4c-6dbb12e6c270",
+  "prevId": "9ccb62be-59f9-4955-b048-0a1b3184003f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2107,6 +2107,186 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.faq_questions": {
+      "name": "faq_questions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "question_ro": {
+          "name": "question_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_en": {
+          "name": "question_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_ro": {
+          "name": "category_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category_en": {
+          "name": "category_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "answer_ro_json": {
+          "name": "answer_ro_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "answer_en_json": {
+          "name": "answer_en_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "answer_ro": {
+          "name": "answer_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "answer_en": {
+          "name": "answer_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visible": {
+          "name": "visible",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_by_staff_user_id": {
+          "name": "created_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_staff_user_id": {
+          "name": "updated_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "faq_questions_visible_position_idx": {
+          "name": "faq_questions_visible_position_idx",
+          "columns": [
+            {
+              "expression": "visible",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "faq_questions_created_by_staff_user_id_staff_users_id_fk": {
+          "name": "faq_questions_created_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "faq_questions",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "created_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "faq_questions_updated_by_staff_user_id_staff_users_id_fk": {
+          "name": "faq_questions_updated_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "faq_questions",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "updated_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "faq_questions_questions_present": {
+          "name": "faq_questions_questions_present",
+          "value": "length(btrim(\"faq_questions\".\"question_ro\")) > 0 AND length(btrim(\"faq_questions\".\"question_en\")) > 0"
+        },
+        "faq_questions_category_pair": {
+          "name": "faq_questions_category_pair",
+          "value": "(\"faq_questions\".\"category_ro\" IS NULL) = (\"faq_questions\".\"category_en\" IS NULL)"
+        },
+        "faq_questions_position_positive": {
+          "name": "faq_questions_position_positive",
+          "value": "\"faq_questions\".\"position\" >= 1"
+        },
+        "faq_questions_version_positive": {
+          "name": "faq_questions_version_positive",
+          "value": "\"faq_questions\".\"version\" >= 1"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.gallery_album_translations": {
