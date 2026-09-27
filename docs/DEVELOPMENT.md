@@ -214,6 +214,32 @@ It is guarded twice. `STAFF_AUTH_MODE` defaults to `dev-switcher` in local and t
 `APP_ENV=qa` or `production` refuses to start. The backoffice is at `/ro/admin`; signed out, it
 redirects to the switcher locally and answers 404 where there is no way in.
 
+## Coding from the phone (Claude Code on the web)
+
+A Claude Code cloud session (Claude Code on the web, on this repository) starts from a fresh
+clone: no `node_modules`, no `.env.local`, PostgreSQL 16 installed but stopped. The
+`SessionStart` hook in `.claude/settings.json` runs `scripts/cloud-setup.sh` on every start and
+resume of such a session, and only there — it is guarded on `CLAUDE_CODE_REMOTE=true`, so a
+session on a developer's own machine never runs it (§NNN). The script, idempotent and silent
+when there is nothing to do:
+
+- enables Corepack and runs `yarn install --immutable`, then `yarn setup` for the git hooks;
+- starts the local PostgreSQL and creates the role and database `brasov_runners` with the
+  password `local_only_not_a_secret` — the same throwaway values `docker-compose.yml` publishes —
+  skipping either when it exists;
+- writes `.env.local` from `.env.example` only when there is none, setting `APP_ENV=local`,
+  `APP_BASE_URL=http://localhost:47821` and the local `DATABASE_URL`, nothing else;
+- migrates (one transaction per migration on PostgreSQL 16) and runs `yarn db:seed` only on an
+  empty events table, refusing any database that is not on localhost.
+
+A cloud session therefore runs on **local values only**: email in `capture` mode, the
+`dev-switcher` staff sign-in, this machine's database. **No QA or production credential goes
+into the cloud environment's settings or into this repository** — it is public, and
+`yarn secrets:check` blocks the commit that tries. Deploys and production migrations do not
+change: a branch, a pull request into `qa`, the `qa → main` release PR, and the gated migration
+workflow (`DECISIONS.md` §31). To run the same setup on a Linux machine of your own,
+`bash scripts/cloud-setup.sh --force`.
+
 ## Where things live
 
 ```text
