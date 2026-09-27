@@ -137,6 +137,15 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     failed: t("team.photoFailed"),
     none: t("team.photoNone"),
     help: t("team.photoHelp"),
+    // A picture the club already stored (§NNN), in the editor's own picker words.
+    fromGallery: t("team.photoFromGallery"),
+    gallery: {
+      loading: t("richText.imageGalleryLoading"),
+      empty: t("richText.imageGalleryEmpty"),
+      close: t("richText.linkCancel"),
+      filter: t("richText.imageGalleryFilter"),
+      noMatch: t("richText.imageGalleryNoMatch"),
+    },
     // The gallery's words for the same choice (§414), one set for every upload — four levels (§437).
     quality: {
       legend: t("gallery.qualityLegend"),

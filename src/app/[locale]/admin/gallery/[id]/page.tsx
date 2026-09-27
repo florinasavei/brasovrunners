@@ -167,6 +167,18 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                     original: t("gallery.storedOriginal"),
                     nearLossless: t.raw("gallery.storedNearLossless") as string,
                   },
+                  // A picture the club already stored, into this album (§NNN).
+                  fromGallery: t("gallery.fromGallery"),
+                  gallery: {
+                    loading: t("richText.imageGalleryLoading"),
+                    empty: t("richText.imageGalleryEmpty"),
+                    close: t("richText.linkCancel"),
+                    filter: t("richText.imageGalleryFilter"),
+                    noMatch: t("richText.imageGalleryNoMatch"),
+                  },
+                  galleryAdded: t.raw("gallery.galleryAdded") as string,
+                  galleryAlready: t.raw("gallery.galleryAlready") as string,
+                  galleryFailed: t.raw("gallery.galleryFailed") as string,
                 }}
               />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

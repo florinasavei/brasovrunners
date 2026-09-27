@@ -502,6 +502,15 @@ const youtubeNode = z.object({
      */
     posterWidth: z.number().int().min(1).max(12_000).nullable().optional(),
     posterHeight: z.number().int().min(1).max(12_000).nullable().optional(),
+    /**
+     * The part of the poster the film's 16∶9 box shows (§NNN): §241's four fractions, drawn in
+     * the panel's crop box with the box's own shape, over whichever poster the film has — the
+     * club's upload, a picture from the gallery, or YouTube's own thumbnail. Absent stays absent
+     * (no transform), so a film stored before keeps its exact JSON and is covered, centred, as
+     * it always was. Drawn only with the poster's size beside it: a window cannot be shaped from
+     * a photograph whose ratio nobody recorded.
+     */
+    posterCrop: imageCrop.nullable().optional(),
   }).strict(),
 });
 

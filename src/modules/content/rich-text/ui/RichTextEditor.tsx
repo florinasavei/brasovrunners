@@ -49,6 +49,7 @@ import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
 import { prepareImageUpload } from "@/modules/media/browser-shrink";
+import GalleryPicker, { type StoredPicture } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, readRemembered, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
 import {
   type ChosenFacts,
@@ -84,7 +85,7 @@ import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-fra
 import { editorLook, sameEditorLook } from "./editor-look";
 import { RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
 import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
-import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
+import { cardFrameGeometry, cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 
 /** Floating-UI's placement for the table's bar: above the table, created once. */
@@ -299,6 +300,11 @@ function RichTextEditorIsland({
     imageGalleryLoading: string;
     imageGalleryEmpty: string;
     imageGalleryClose: string;
+    /** The picker's name box, and its "nothing matches" (§NNN). */
+    imageGalleryFilter: string;
+    imageGalleryNoMatch: string;
+    /** What a picture from the gallery became; raw, `{name}`, `{width}`, `{height}` substituted here (§NNN). */
+    imageFromGalleryPicked: string;
     youtube: string;
     youtubeShort: string;
     youtubeUrl: string;
@@ -311,6 +317,12 @@ function RichTextEditorIsland({
     youtubePosterUploading: string;
     youtubePosterFailed: string;
     youtubePosterUseYoutube: string;
+    /** A poster from the gallery, and its crop (§NNN): the button, the box's name, how, "the middle", and before a poster exists. */
+    youtubePosterFromGallery: string;
+    youtubePosterCrop: string;
+    youtubePosterCropHelp: string;
+    youtubePosterCropReset: string;
+    youtubePosterCropWaiting: string;
   };
 }) {
   const initialDoc = readRichText(initialBody);
@@ -387,8 +399,22 @@ function RichTextEditorIsland({
     hiddenValue.current?.dispatchEvent(new Event("input", { bubbles: true }));
   }, [value]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
-  const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
+  /** «Din galerie» for a picture in the text: open or shut; the picker asks for the list itself. */
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  /**
+   * The picture last taken from the gallery, said like an upload's stored facts (§NNN): its name,
+   * its size and the shape it went in with — so a choice from the gallery is told what it became
+   * exactly as an upload is.
+   */
+  const [picked, setPicked] = useState<{ name: string; width: number; height: number; shape: CropPreset } | null>(null);
+  /** «Din galerie» for the selected film's poster (§NNN). */
+  const [posterGalleryOpen, setPosterGalleryOpen] = useState(false);
+  /**
+   * A poster's own size, measured in this browser when the node does not carry it — YouTube's
+   * thumbnail stored by a save (§403) and a club poster from before §414. The crop box needs the
+   * photograph's ratio; the master's natural size is the stored size, so measuring is exact.
+   */
+  const [measuredPoster, setMeasuredPoster] = useState<{ src: string; width: number; height: number } | null>(null);
   /**
    * The picture's panel, closed by hand (§258; the owner: "ar trebui să pot anula sau închide
    * pur și simplu").
@@ -602,6 +628,7 @@ function RichTextEditorIsland({
     setImageBarOpen(false);
     setStored(null);
     setChosen(null);
+    setPicked(null);
     try {
       const uploaded = await uploadPicture(file, setChosen);
       setStored(uploaded.stored ?? null);
@@ -642,13 +669,32 @@ function RichTextEditorIsland({
       editor
         ?.chain()
         .focus()
-        .updateAttributes("youtube", { poster: uploaded.src, posterSource: "club", posterWidth: uploaded.width, posterHeight: uploaded.height })
+        // A new poster starts uncropped: the rectangle drawn over the old one means nothing on this one.
+        .updateAttributes("youtube", { poster: uploaded.src, posterSource: "club", posterWidth: uploaded.width, posterHeight: uploaded.height, posterCrop: null })
         .run();
       setPosterStored(uploaded.stored ? { src: uploaded.src, facts: uploaded.stored } : null);
       setPosterState("idle");
     } catch {
       setPosterState("failed");
     }
+  };
+
+  /**
+   * A poster from the gallery (§NNN): any picture the club stored — an upload, or a film's own
+   * automatic poster — written to the selected film exactly as an uploaded poster is, `club`
+   * included, so the automatic fetch never replaces it. Uncropped, like an upload; the crop box
+   * under it is where the club picks the part the box shows.
+   */
+  const pickPosterFromGallery = (picture: StoredPicture) => {
+    editor
+      ?.chain()
+      .focus()
+      .updateAttributes("youtube", { poster: picture.src, posterSource: "club", posterWidth: picture.width, posterHeight: picture.height, posterCrop: null })
+      .run();
+    setPosterStored(null);
+    setPosterChosen(null);
+    setPosterState("idle");
+    setPosterGalleryOpen(false);
   };
 
   /**
@@ -688,34 +734,52 @@ function RichTextEditorIsland({
   const setImageAttr = (attrs: Record<string, unknown>) => editor?.chain().updateAttributes("image", attrs).run();
 
   /**
-   * "Choose one already uploaded": the same list the pictures page shows, fetched when the
-   * control is pressed and never before — a page body is written far more often than a
-   * picture is reused, and the list is a request the editor would otherwise make on every load.
+   * "Choose one already uploaded" (§73): the same list the pictures page shows, asked for by the
+   * picker when it opens and never before. Since §NNN it goes in exactly as an upload does — in
+   * the shape chosen in the bar, as a crop of the stored photograph (§454), with the same crop box
+   * in its panel afterwards — and the line under the toolbar says what it became.
    */
-  const openGallery = async () => {
-    if (gallery !== null) {
-      setGallery(null);
-      return;
-    }
-    setGallery("loading");
-    try {
-      const response = await fetch("/api/admin/media");
-      if (!response.ok) throw new Error(String(response.status));
-      const { assets } = (await response.json()) as { assets: StoredPicture[] };
-      setGallery(assets);
-    } catch {
-      setGallery([]);
-    }
-  };
-
   const insertStored = (picture: StoredPicture) => {
+    const shape = uploadShapeRef.current;
+    const crop = shape === "free" ? null : presetCrop(shape, { width: picture.width, height: picture.height });
     editor
       ?.chain()
       .focus()
-      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block", crop: null, focus: null } as never)
+      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block", crop, focus: null } as never)
       .run();
-    setGallery(null);
+    setStored(null);
+    setChosen(null);
+    setImageState("idle");
+    setPicked({ name: picture.name, width: picture.width, height: picture.height, shape: crop ? shape : "free" });
+    setGalleryOpen(false);
   };
+
+  /*
+    The selected film's poster size, when its node does not say (§NNN): measured once per address
+    from the stored master itself, which is what the crop box needs and what the page will draw.
+  */
+  const selectedPosterSrc = typeof videoAttrs?.poster === "string" && videoAttrs.poster ? videoAttrs.poster : null;
+  const selectedPosterSized = typeof videoAttrs?.posterWidth === "number" && typeof videoAttrs?.posterHeight === "number";
+  useEffect(() => {
+    if (!selectedPosterSrc || selectedPosterSized || measuredPoster?.src === selectedPosterSrc) return;
+    let cancelled = false;
+    const probe = new window.Image();
+    probe.onload = () => {
+      if (!cancelled && probe.naturalWidth > 0 && probe.naturalHeight > 0) {
+        setMeasuredPoster({ src: selectedPosterSrc, width: probe.naturalWidth, height: probe.naturalHeight });
+      }
+    };
+    probe.src = selectedPosterSrc;
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPosterSrc, selectedPosterSized, measuredPoster?.src]);
+  const posterIntrinsic =
+    selectedPosterSrc && selectedPosterSized
+      ? { width: Number(videoAttrs?.posterWidth), height: Number(videoAttrs?.posterHeight) }
+      : selectedPosterSrc && measuredPoster?.src === selectedPosterSrc
+        ? { width: measuredPoster.width, height: measuredPoster.height }
+        : null;
 
   /** The address becomes an id, or a refusal under the field; nothing else is kept (§110). */
   const applyYoutube = () => {
@@ -926,8 +990,8 @@ function RichTextEditorIsland({
           <ToolbarButton
             label={labels.imageFromGallery}
             icon={PhotoLibraryIcon}
-            active={gallery !== null}
-            onClick={() => void openGallery()}
+            active={galleryOpen}
+            onClick={() => setGalleryOpen((open) => !open)}
           />
           <ToolbarButton
             label={labels.youtube}
@@ -1005,30 +1069,12 @@ function RichTextEditorIsland({
           >
             <ImageQualityChoice value={imageQuality} onChange={setImageQuality} labels={labels.imageQuality} />
             {/* The shape it goes in with (§454): a crop of the stored photograph, never its pixels. */}
-            <Box data-testid="rich-text-upload-shape">
-              <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 600, mb: 0.5 }}>
-                {labels.imageShapes.presets}
-              </Typography>
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={uploadShape}
-                onChange={(_event, next: CropPreset | null) => {
-                  if (next !== null) setUploadShape(next);
-                }}
-                aria-label={labels.imageShapes.presets}
-                sx={{ flexWrap: "wrap" }}
-              >
-                {CROP_PRESETS.map((value) => (
-                  <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
-                    {labels.imageShapes.preset[value]}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                {labels.imageUploadShapeHelp}
-              </Typography>
-            </Box>
+            <UploadShapeChoice
+              value={uploadShape}
+              onChange={setUploadShape}
+              labels={{ presets: labels.imageShapes.presets, preset: labels.imageShapes.preset, help: labels.imageUploadShapeHelp }}
+              testId="rich-text-upload-shape"
+            />
             <Stack direction="row" spacing={1}>
               <Button variant="contained" onClick={() => fileInputRef.current?.click()} sx={{ minHeight: 44 }}>
                 {labels.imageChoose}
@@ -1059,39 +1105,44 @@ function RichTextEditorIsland({
           </Typography>
         )}
 
-        {gallery !== null && (
-          <Box sx={{ p: 1, borderBottom: 1, borderColor: "divider" }} data-testid="rich-text-gallery">
-            {gallery === "loading" ? (
-              <Typography variant="body2" color="text.secondary">
-                {labels.imageGalleryLoading}
-              </Typography>
-            ) : gallery.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {labels.imageGalleryEmpty}
-              </Typography>
-            ) : (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 260, overflowY: "auto" }}>
-                {gallery.map((picture) => (
-                  // A plain button around the thumbnail: the file name is its accessible name,
-                  // and 88px is a thumb-sized target.
-                  <Box
-                    key={picture.id}
-                    component="button"
-                    type="button"
-                    aria-label={picture.name}
-                    title={picture.name}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => insertStored(picture)}
-                    sx={{ p: 0, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "transparent", cursor: "pointer", overflow: "hidden", width: 88, height: 88 }}
-                  >
-                    <Box component="img" src={picture.thumb} alt="" width={88} height={88} sx={{ display: "block", width: 88, height: 88, objectFit: "cover" }} />
-                  </Box>
-                ))}
-              </Box>
-            )}
-            <Button color="inherit" size="small" onClick={() => setGallery(null)} sx={{ mt: 1 }}>
-              {labels.imageGalleryClose}
-            </Button>
+        {/* A picture taken from the gallery (§NNN), said like an upload: its size and its shape. */}
+        {imageState === "idle" && picked && (
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-picked">
+            {labels.imageFromGalleryPicked
+              .replace("{name}", picked.name)
+              .replace("{width}", String(picked.width))
+              .replace("{height}", String(picked.height))}
+            {picked.shape !== "free" && ` · ${labels.imageUploadCropped.replace("{shape}", labels.imageShapes.preset[picked.shape])}`}
+          </Typography>
+        )}
+
+        {/*
+          «Din galerie» (§73, §NNN): the shape first — the same choice, the same state, as the
+          upload bar's — then every stored picture. A film's automatic poster is left out: a
+          picture in a text carries an uploaded picture's address (§72).
+        */}
+        {galleryOpen && (
+          <Box data-testid="rich-text-gallery">
+            <Box sx={{ px: 1, pt: 1 }}>
+              <UploadShapeChoice
+                value={uploadShape}
+                onChange={setUploadShape}
+                labels={{ presets: labels.imageShapes.presets, preset: labels.imageShapes.preset, help: labels.imageUploadShapeHelp }}
+                testId="rich-text-gallery-shape"
+              />
+            </Box>
+            <GalleryPicker
+              onPick={insertStored}
+              onClose={() => setGalleryOpen(false)}
+              labels={{
+                loading: labels.imageGalleryLoading,
+                empty: labels.imageGalleryEmpty,
+                close: labels.imageGalleryClose,
+                filter: labels.imageGalleryFilter,
+                noMatch: labels.imageGalleryNoMatch,
+              }}
+              testId="rich-text-gallery-list"
+            />
           </Box>
         )}
 
@@ -1666,13 +1717,25 @@ function RichTextEditorIsland({
               labels={labels.imageQuality}
               disabled={posterState === "uploading"}
             />
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+            <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
               <Button
                 size="small"
                 onClick={() => posterFileInputRef.current?.click()}
                 disabled={posterState === "uploading"}
+                sx={{ minHeight: 44 }}
               >
                 {posterState === "uploading" ? labels.youtubePosterUploading : labels.youtubePoster}
+              </Button>
+              {/* A picture the club already stored, as the poster (§NNN): the gallery every other picture comes from. */}
+              <Button
+                size="small"
+                startIcon={<PhotoLibraryIcon fontSize="small" />}
+                onClick={() => setPosterGalleryOpen((open) => !open)}
+                disabled={posterState === "uploading"}
+                aria-expanded={posterGalleryOpen}
+                sx={{ minHeight: 44 }}
+              >
+                {labels.youtubePosterFromGallery}
               </Button>
               {videoAttrs?.posterSource === "club" ? (
                 <Button
@@ -1682,14 +1745,64 @@ function RichTextEditorIsland({
                     editor
                       ?.chain()
                       .focus()
-                      .updateAttributes("youtube", { poster: null, posterSource: null, posterWidth: null, posterHeight: null })
+                      .updateAttributes("youtube", { poster: null, posterSource: null, posterWidth: null, posterHeight: null, posterCrop: null })
                       .run();
                   }}
+                  sx={{ minHeight: 44 }}
                 >
                   {labels.youtubePosterUseYoutube}
                 </Button>
               ) : null}
             </Stack>
+            {posterGalleryOpen && (
+              <GalleryPicker
+                onPick={pickPosterFromGallery}
+                onClose={() => setPosterGalleryOpen(false)}
+                // Every stored picture, a film's automatic poster included: it is a poster already.
+                accept={() => true}
+                labels={{
+                  loading: labels.imageGalleryLoading,
+                  empty: labels.imageGalleryEmpty,
+                  close: labels.imageGalleryClose,
+                  filter: labels.imageGalleryFilter,
+                  noMatch: labels.imageGalleryNoMatch,
+                }}
+                testId="rich-text-poster-gallery"
+              />
+            )}
+            {/*
+              The poster's crop (§NNN): the part the film's 16∶9 box shows, over whichever poster
+              the film has — the club's, one from the gallery, or YouTube's own once a save stored
+              it. One shape, the box's, so the rectangle is exactly what the page draws; without a
+              crop the box shows the middle, which is what the rectangle starts on.
+            */}
+            {selectedPosterSrc && posterIntrinsic ? (
+              <ImageCropBox
+                key={`${selectedPosterSrc}@${posterIntrinsic.width}x${posterIntrinsic.height}`}
+                src={selectedPosterSrc}
+                intrinsic={posterIntrinsic}
+                crop={(videoAttrs?.posterCrop as ImageCrop | null | undefined) ?? presetCrop("16:9", posterIntrinsic)}
+                onChange={(crop) =>
+                  editor
+                    ?.chain()
+                    .updateAttributes("youtube", { posterCrop: crop, posterWidth: posterIntrinsic.width, posterHeight: posterIntrinsic.height })
+                    .run()
+                }
+                presets={POSTER_PRESETS}
+                testId="rich-text-poster-crop"
+                labels={{
+                  title: labels.youtubePosterCrop,
+                  help: labels.youtubePosterCropHelp,
+                  reset: labels.youtubePosterCropReset,
+                  position: labels.imageCropPosition,
+                  ...labels.imageShapes,
+                }}
+              />
+            ) : !selectedPosterSrc ? (
+              <Typography variant="caption" color="text.secondary" data-testid="rich-text-poster-crop-waiting">
+                {labels.youtubePosterCropWaiting}
+              </Typography>
+            ) : null}
             {posterChosen && (posterState !== "idle" || (posterStored && videoAttrs?.poster === posterStored.src)) && (
               <Typography variant="body2" color="text.secondary" aria-live="polite" data-testid="rich-text-poster-chosen">
                 {describeChosenImage(posterChosen, labels.imageChosen, document.documentElement.lang || "ro")}
@@ -1903,6 +2016,8 @@ const YoutubeNode = Node.create({
       // A club poster's size (§414), for the page's `srcset`; null for YouTube's own thumbnail.
       posterWidth: { default: null },
       posterHeight: { default: null },
+      // The part of the poster the box shows (§NNN), drawn here as the page draws it.
+      posterCrop: { default: null },
     };
   },
   parseHTML() {
@@ -1916,6 +2031,22 @@ const YoutubeNode = Node.create({
     // placing the film, not YouTube's own thumbnail underneath it.
     const posterSrc = typeof node.attrs.poster === "string" && node.attrs.poster ? node.attrs.poster : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
     /*
+      A cropped poster (§NNN) in the page's own 16∶9 window: the card frame's arithmetic, as
+      `RichTextVideo` draws it, written as the inline CSS this DOM accepts. Without a crop — or a
+      size to shape it from — the poster is drawn whole, as before.
+    */
+    const framed =
+      node.attrs.posterCrop && typeof node.attrs.poster === "string" && node.attrs.poster
+        ? cardFrameGeometry({ crop: node.attrs.posterCrop as ImageCrop, width: node.attrs.posterWidth, height: node.attrs.posterHeight })
+        : null;
+    const poster: [string, Record<string, string>, ...unknown[]] = framed
+      ? [
+          "div",
+          { style: `${cropWindowCss(framed.geometry)};border-radius:4px` },
+          ["img", { src: posterSrc, alt: "", style: cropImageCss(framed.geometry) }],
+        ]
+      : ["img", { src: posterSrc, alt: "", style: "display:block;width:100%;border-radius:4px" }];
+    /*
       The page's geometry, in the one form this DOM accepts. A floated film gets the gutter the
       text wraps against on its inner side, which is what `imageFigureSx` does with `mr`/`ml`.
     */
@@ -1928,15 +2059,59 @@ const YoutubeNode = Node.create({
     return [
       "div",
       { class: "rt-youtube", "data-youtube": id, "data-width": String(percent), "data-align": align, style: box },
-      ["img", { src: posterSrc, alt: "", style: "display:block;width:100%;border-radius:4px" }],
+      poster,
       ["span", { style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 0 8px #000" }, "▶"],
       ["div", { style: "font-size:0.875rem;color:#666;text-align:center;margin-top:4px" }, String(node.attrs.caption ?? "")],
     ];
   },
 });
 
-/** One stored picture, as `GET /api/admin/media` lists it. */
-type StoredPicture = { id: string; src: string; thumb: string; width: number; height: number; name: string };
+/** A film's poster takes one shape, its box's (§NNN). */
+const POSTER_PRESETS: readonly CropPreset[] = ["16:9"];
+
+/**
+ * The shape a new picture goes in with (§454) — an upload's, and since §NNN a picture taken from
+ * the gallery too, one state for both so the choice made in one is the choice in the other. A
+ * crop of the stored photograph, never its pixels. 44 pixels tall: a thumb presses these.
+ */
+function UploadShapeChoice({
+  value,
+  onChange,
+  labels,
+  testId,
+}: {
+  value: CropPreset;
+  onChange: (next: CropPreset) => void;
+  labels: { presets: string; preset: Record<CropPreset, string>; help: string };
+  testId: string;
+}) {
+  return (
+    <Box data-testid={testId}>
+      <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 600, mb: 0.5 }}>
+        {labels.presets}
+      </Typography>
+      <ToggleButtonGroup
+        exclusive
+        size="small"
+        value={value}
+        onChange={(_event, next: CropPreset | null) => {
+          if (next !== null) onChange(next);
+        }}
+        aria-label={labels.presets}
+        sx={{ flexWrap: "wrap" }}
+      >
+        {CROP_PRESETS.map((preset) => (
+          <ToggleButton key={preset} value={preset} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
+            {labels.preset[preset]}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+        {labels.help}
+      </Typography>
+    </Box>
+  );
+}
 
 /**
  * One picture up to `/api/admin/media` at the remembered quality (§414): shrunk in the browser

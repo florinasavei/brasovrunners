@@ -66,8 +66,9 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 /**
- * The pictures already stored, newest first, for the editor's "choose one already uploaded"
- * (`DECISIONS.md` §73): the two variant addresses and the size the image node needs, and
+ * The pictures already stored, newest first, for every «Din galerie» in the backoffice
+ * (`DECISIONS.md` §73, §NNN: a text, a film's poster, a card of «Echipa», an album): the two
+ * variant addresses and the size the image node needs, and
  * nothing about where a picture is used — that is the pictures page's question. Every staff
  * session, like the upload above.
  */
@@ -89,6 +90,9 @@ export async function GET(): Promise<Response> {
       width: asset.width,
       height: asset.height,
       name: asset.originalFilename,
+      // A film's automatic poster (`yt-<id>`, §403): the poster picker offers it, a text and an
+      // album do not — a body's picture must carry an uploaded picture's address (§72).
+      poster: asset.keyPrefix.startsWith("yt-"),
     })),
   });
 }

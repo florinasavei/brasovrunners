@@ -153,6 +153,10 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageGalleryLoading: rt("imageGalleryLoading"),
     imageGalleryEmpty: rt("imageGalleryEmpty"),
     imageGalleryClose: rt("linkCancel"),
+    imageGalleryFilter: rt("imageGalleryFilter"),
+    imageGalleryNoMatch: rt("imageGalleryNoMatch"),
+    // Raw, with its placeholders: the island says the picture's name and size itself (§NNN).
+    imageFromGalleryPicked: rt.raw("imageFromGalleryPicked") as string,
     youtube: rt("youtube"),
     youtubeShort: rt("youtubeShort"),
     youtubeUrl: rt("youtubeUrl"),
@@ -164,5 +168,10 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     youtubePosterUploading: rt("youtubePosterUploading"),
     youtubePosterFailed: rt("youtubePosterFailed"),
     youtubePosterUseYoutube: rt("youtubePosterUseYoutube"),
+    youtubePosterFromGallery: rt("youtubePosterFromGallery"),
+    youtubePosterCrop: rt("youtubePosterCrop"),
+    youtubePosterCropHelp: rt("youtubePosterCropHelp"),
+    youtubePosterCropReset: rt("youtubePosterCropReset"),
+    youtubePosterCropWaiting: rt("youtubePosterCropWaiting"),
   };
 }

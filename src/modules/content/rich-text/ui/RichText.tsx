@@ -107,6 +107,7 @@ function renderBlock(
           poster={block.attrs.poster}
           posterWidth={block.attrs.posterWidth ?? null}
           posterHeight={block.attrs.posterHeight ?? null}
+          posterCrop={block.attrs.posterCrop ?? null}
           pictures={pictures}
           widthPercent={block.attrs.widthPercent}
           align={block.attrs.align}

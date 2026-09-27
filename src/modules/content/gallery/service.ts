@@ -11,6 +11,7 @@ import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import { processUploadedImage } from "@/modules/media/images";
 import type { ImageQuality } from "@/modules/media/ladder";
+import { deleteAssetsNoLongerReferenced } from "@/modules/media/references";
 import { newAssetKeyPrefix, putImageObjects, type StoredImageFacts, storedImageFacts } from "@/modules/media/service";
 import { deleteAssetObjects, getStorage } from "@/modules/media/storage";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -269,7 +270,57 @@ export async function addPhoto<T extends Record<string, unknown>>(
   return { ...rows, stored: storedImageFacts(processed) };
 }
 
-/** Remove one photo: its rows, then its objects. A cover that was this photo moves on. */
+/**
+ * A picture the club already stored, into an album (§NNN, «Din galerie»): one `gallery_items`
+ * row pointing at the existing `media_assets` row — no bytes, no new objects, the same picture
+ * wherever else it is used. The first photo of an album becomes its cover, as an upload does.
+ *
+ * Twice the same picture in one album is one photo: the second press answers `added: false`
+ * rather than refusing, because the table's own unique pair says so and the picker may be
+ * pressed twice. A film's automatic poster (`yt-<id>`, §403) is YouTube's thumbnail, not a club
+ * photograph, and is refused.
+ */
+export async function addStoredPhoto<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; albumId: string; assetId: string; now?: Date },
+): Promise<{ itemId: string | null; assetId: string; added: boolean }> {
+  if (!canEditEventFields(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not add a photo`);
+  }
+  const now = input.now ?? new Date();
+  const result = await db.transaction(async (tx) => {
+    const [album] = await tx.select({ id: galleryAlbums.id, cover: galleryAlbums.coverMediaAssetId }).from(galleryAlbums).where(eq(galleryAlbums.id, input.albumId)).limit(1);
+    if (!album) throw new DomainError("NOT_FOUND", "no such album");
+    const [asset] = await tx.select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix }).from(mediaAssets).where(eq(mediaAssets.id, input.assetId)).limit(1);
+    if (!asset) throw new DomainError("NOT_FOUND", "no such picture");
+    if (asset.keyPrefix.startsWith("yt-")) throw new DomainError("VALIDATION_ERROR", "a film's poster is not an album photo");
+
+    const [{ next }] = await tx
+      .select({ next: sql<number>`coalesce(max(${galleryItems.position}), 0) + 1` })
+      .from(galleryItems)
+      .where(eq(galleryItems.albumId, input.albumId));
+    const [item] = await tx
+      .insert(galleryItems)
+      .values({ albumId: input.albumId, mediaAssetId: asset.id, position: Number(next), createdAt: now })
+      .onConflictDoNothing({ target: [galleryItems.albumId, galleryItems.mediaAssetId] })
+      .returning();
+    if (!item) return { itemId: null, assetId: asset.id, added: false };
+
+    if (!album.cover) {
+      await tx.update(galleryAlbums).set({ coverMediaAssetId: asset.id, updatedAt: now }).where(eq(galleryAlbums.id, input.albumId));
+    }
+    return { itemId: item.id, assetId: asset.id, added: true };
+  });
+  if (result.added) revalidatePublicContent("gallery");
+  return result;
+}
+
+/**
+ * Remove one photo from its album: its item, then the picture itself only when nothing else
+ * uses it (§NNN) — a picture chosen from the gallery for this album may be in a text, on a card
+ * of «Echipa» or in another album, and taking it out of here must not take it from there. A
+ * cover that was this photo moves on to the first remaining one.
+ */
 export async function deletePhoto<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; itemId: string },
@@ -277,18 +328,17 @@ export async function deletePhoto<T extends Record<string, unknown>>(
   if (!canEditEventFields(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not remove a photo`);
   }
-  const keyPrefix = await db.transaction(async (tx) => {
+  const prefixes = await db.transaction(async (tx) => {
     const [item] = await tx
-      .select({ albumId: galleryItems.albumId, assetId: galleryItems.mediaAssetId, keyPrefix: mediaAssets.keyPrefix })
+      .select({ albumId: galleryItems.albumId, assetId: galleryItems.mediaAssetId })
       .from(galleryItems)
-      .innerJoin(mediaAssets, eq(mediaAssets.id, galleryItems.mediaAssetId))
       .where(eq(galleryItems.id, input.itemId))
       .limit(1);
     if (!item) throw new DomainError("NOT_FOUND", "no such photo");
 
-    // The asset row goes; the item cascades from it, and the album's cover reference is set
-    // null by its foreign key — then re-pointed at the first remaining photo, if any.
-    await tx.delete(mediaAssets).where(eq(mediaAssets.id, item.assetId));
+    await tx.delete(galleryItems).where(eq(galleryItems.id, input.itemId));
+    // The cover, when it was this photo, moves to the first remaining one — before the picture
+    // is weighed, because a cover is itself a use of it.
     const [first] = await tx
       .select({ assetId: galleryItems.mediaAssetId })
       .from(galleryItems)
@@ -298,11 +348,11 @@ export async function deletePhoto<T extends Record<string, unknown>>(
     await tx
       .update(galleryAlbums)
       .set({ coverMediaAssetId: first?.assetId ?? null })
-      .where(and(eq(galleryAlbums.id, item.albumId), sql`${galleryAlbums.coverMediaAssetId} IS NULL`));
-    return item.keyPrefix;
+      .where(and(eq(galleryAlbums.id, item.albumId), eq(galleryAlbums.coverMediaAssetId, item.assetId)));
+    return deleteAssetsNoLongerReferenced(tx, [item.assetId]);
   });
   revalidatePublicContent("gallery");
-  await removeObjects([keyPrefix]);
+  await removeObjects(prefixes);
 }
 
 export async function setCover<T extends Record<string, unknown>>(
@@ -322,7 +372,10 @@ export async function setCover<T extends Record<string, unknown>>(
   revalidatePublicContent("gallery");
 }
 
-/** The album, its translations, its items, its assets — and every object they owned. */
+/**
+ * The album, its translations, its items, and every picture of it nothing else uses — with
+ * their objects. A picture that is also in a text, on a card or in another album stays (§NNN).
+ */
 export async function deleteAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string },
@@ -331,15 +384,15 @@ export async function deleteAlbum<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not delete an album`);
   }
   const prefixes = await db.transaction(async (tx) => {
-    const assets = await tx
-      .select({ id: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix })
+    const items = await tx
+      .select({ assetId: galleryItems.mediaAssetId })
       .from(galleryItems)
-      .innerJoin(mediaAssets, eq(mediaAssets.id, galleryItems.mediaAssetId))
       .where(eq(galleryItems.albumId, input.albumId));
+    // The album and its items (cascade) first; then each of its pictures that nothing else uses
+    // any more (§NNN) — one chosen from the gallery stays wherever else it is.
     const [deleted] = await tx.delete(galleryAlbums).where(eq(galleryAlbums.id, input.albumId)).returning();
     if (!deleted) throw new DomainError("NOT_FOUND", "no such album");
-    for (const asset of assets) await tx.delete(mediaAssets).where(eq(mediaAssets.id, asset.id));
-    return assets.map((asset) => asset.keyPrefix);
+    return deleteAssetsNoLongerReferenced(tx, items.map((item) => item.assetId));
   });
   revalidatePublicContent("gallery");
   await removeObjects(prefixes);

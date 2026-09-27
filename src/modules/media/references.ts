@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
@@ -146,6 +146,28 @@ export async function sweepOrphanAssets<T extends Record<string, unknown>>(
     deleted += 1;
   }
   return deleted;
+}
+
+/**
+ * The pictures among `assetIds` that nothing references any more, deleted — rows only, in the
+ * caller's transaction, each re-checked by the one predicate in the statement that deletes it.
+ * Answers their key prefixes, whose objects the caller removes once its transaction commits.
+ *
+ * For a removal that takes away one place a picture was used — an album's photo, a whole album —
+ * now that a picture can be in an album and in a text, on a card of «Echipa» or in another album
+ * at once (§NNN, «Din galerie»). Before, taking a photo out of an album deleted the picture
+ * outright, and a page that had chosen it from the gallery was left with a broken image.
+ */
+export async function deleteAssetsNoLongerReferenced<T extends Record<string, unknown>>(
+  db: Database<T>,
+  assetIds: readonly string[],
+): Promise<string[]> {
+  if (assetIds.length === 0) return [];
+  const rows = await db
+    .delete(mediaAssets)
+    .where(and(inArray(mediaAssets.id, [...assetIds]), not(referencedSomewhere)))
+    .returning({ keyPrefix: mediaAssets.keyPrefix });
+  return rows.map((row) => row.keyPrefix);
 }
 
 /** The figures `/devs` shows: how many pictures, how many used nowhere, how many the next sweep takes. */

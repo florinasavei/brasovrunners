@@ -22,6 +22,7 @@ import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
@@ -124,6 +125,9 @@ export type ActionIconName =
   // Looking and finding.
   | "preview"
   | "picture"
+  // «Din galerie» (§NNN): a picture the club already stored, chosen again — the stack of photos,
+  // never the single picture, which is looking at one.
+  | "gallery"
   | "filter"
   | "clearFilter"
   | "search"
@@ -197,6 +201,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
 
   preview: VisibilityIcon,
   picture: ImageIcon,
+  gallery: PhotoLibraryIcon,
   filter: FilterAltIcon,
   clearFilter: FilterAltOffIcon,
   search: SearchIcon,
