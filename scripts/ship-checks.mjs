@@ -9,6 +9,10 @@
  * green" with nothing red on it, and the release PR could be merged with its checks still running.
  * Now nothing is judged until the same set of checks has been seen twice in a row with none of
  * them pending.
+ *
+ * Since §NNN it also holds how `ship` waits on one workflow run — by reading the run's status
+ * until it says "completed", never by `gh run watch`, whose exit says nothing about the run —
+ * and the clock `ship` keeps of its own steps.
  */
 
 /** `gh pr checks --json bucket` sorts every state into one of these five. */
@@ -107,4 +111,89 @@ export async function waitForSettledChecks(read, { sleep, every = 30, polls = 18
   // The last reading had nothing pending but no second look to confirm it: take it.
   if (previous !== null) return { status: "settled", checks: last };
   return { status: "timeout", pending };
+}
+
+/**
+ * Waits for one workflow run to complete, reading its status every `every` seconds (§NNN).
+ *
+ * `ship` used `gh run watch`, then read the conclusion once. `watch` returns on its own errors (a
+ * dropped connection, a rate limit) as readily as on the run's end, and a run just rerun reads
+ * its old conclusion for a moment — so a run still going could be judged by an empty or a stale
+ * conclusion. Now only a reading whose status is "completed" ends the wait.
+ *
+ *   read()  → the run now, `{ status, conclusion }` as `gh run view/list --json` gives it, or null
+ *             while it has not appeared;
+ *   onRead(run, reading) → called on every reading of a run that exists (the migration's approval);
+ *   maxMissing → the most readings in a row without the run before giving up.
+ *
+ * Returns { status: "completed", conclusion, run } | { status: "missing" } | { status: "timeout", run }.
+ *
+ * @param {() => ({ status?: string, conclusion?: string | null } | null | undefined)} read
+ * @param {{ sleep: (seconds: number) => Promise<unknown>, every?: number, polls?: number, maxMissing?: number,
+ *           onRead?: (run: { status?: string, conclusion?: string | null }, reading: number) => unknown }} options
+ */
+export async function waitForRun(read, { sleep, every = 15, polls = 240, maxMissing = 40, onRead }) {
+  let missing = 0;
+  let last = null;
+  for (let i = 0; i < polls; i++) {
+    const run = read();
+    if (!run) {
+      if (++missing >= maxMissing) return { status: "missing" };
+    } else {
+      missing = 0;
+      last = run;
+      if (String(run.status ?? "").toLowerCase() === "completed") {
+        return { status: "completed", conclusion: String(run.conclusion ?? "").toLowerCase(), run };
+      }
+      await onRead?.(run, i);
+    }
+    if (i < polls - 1) await sleep(every);
+  }
+  return last ? { status: "timeout", run: last } : { status: "missing" };
+}
+
+/** A duration as `m:ss` — minutes are not wrapped into hours, a release is read in minutes. */
+export function formatDuration(ms) {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+/**
+ * The clock `ship` keeps of itself (§NNN): each step from its start to the next one's, and the
+ * whole. `report()` counts a step still open up to now, so a stop says where the time went too.
+ *
+ * @param {() => number} [now]
+ */
+export function createClock(now = Date.now) {
+  const started = now();
+  const done = [];
+  let open = null;
+  const close = () => {
+    if (open) done.push({ name: open.name, ms: now() - open.at });
+    open = null;
+  };
+  const summary = () => {
+    const steps = open ? [...done, { name: open.name, ms: now() - open.at, open: true }] : [...done];
+    return { steps, totalMs: now() - started };
+  };
+  return {
+    /** Ends the step running, if any, and starts `name`. */
+    step(name) {
+      close();
+      open = { name, at: now() };
+    },
+    /** Ends the step running. */
+    end() {
+      close();
+    },
+    summary,
+    /** The steps and the total as aligned lines; an open step is marked where it stopped. */
+    report() {
+      const { steps, totalMs } = summary();
+      const width = Math.max(5, ...steps.map((s) => s.name.length));
+      const lines = steps.map((s) => `  ${s.name.padEnd(width)}  ${formatDuration(s.ms).padStart(6)}${s.open ? "  (stopped here)" : ""}`);
+      lines.push(`  ${"total".padEnd(width)}  ${formatDuration(totalMs).padStart(6)}`);
+      return lines;
+    },
+  };
 }
