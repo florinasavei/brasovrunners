@@ -172,7 +172,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * crawler what to index.
    */
   for (const key of ["TERMS", "PRIVACY_NOTICE"] as const) {
-    // Left out for this answer while the database cannot say (§447) — away, or a red month's miss with no copy (§NNN) — never a 500.
+    // Left out for this answer while the database cannot say (§447) — away, or a red month's miss with no copy (§493) — never a 500.
     const inForce = await readOrWhileAway(() => legalDocumentsInForce(key, now), {});
     const locales = routing.locales.filter((candidate) => inForce[candidate]);
     if (locales.length === 0) continue;

@@ -535,7 +535,7 @@ async function renderRow(
   // message says how to register somebody else. Never on a club copy: it is advice to the address.
   if ((row.payloadJson as { anotherPersonHint?: unknown } | null)?.anotherPersonHint === true && !clubCopy) {
     data.anotherPersonHint = true;
-    // …another name on a registered birth date (§NNN): the sentence for twins instead.
+    // …another name on a registered birth date (§493): the sentence for twins instead.
     if ((row.payloadJson as { sameBirthDateHint?: unknown } | null)?.sameBirthDateHint === true) data.sameBirthDateHint = true;
   }
   // The staff invitation (§141): everything it says is in the payload — there is no

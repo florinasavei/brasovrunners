@@ -96,7 +96,7 @@ describe("email health", () => {
   });
 
   /*
-    §NNN — a row waiting out Gmail's cap because the club chose to wait (§443) is the club's choice
+    §493 — a row waiting out Gmail's cap because the club chose to wait (§443) is the club's choice
     working, not a stall: counted in the Gmail block with when it resumes, never the 503. A Mailgun
     deferral beside it still is one, and so is the same row once its turn is overdue.
   */

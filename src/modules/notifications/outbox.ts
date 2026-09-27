@@ -531,7 +531,7 @@ export async function processOutboxBatch(
   };
 
   /*
-    The Gmail road's one connection for the whole batch (§NNN) is let go when the batch ends,
+    The Gmail road's one connection for the whole batch (§493) is let go when the batch ends,
     however it ends: a pooled SMTP socket left open would outlive the function's work for nothing.
   */
   try {

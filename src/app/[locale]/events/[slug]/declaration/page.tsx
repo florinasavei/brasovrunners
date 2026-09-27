@@ -70,7 +70,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const { done, invalid, changed, limited, closed, away } = await searchParams;
 
   const now = new Date();
-  // The cached row, or the database's own at a red month's miss (§NNN): this page reads it anyway.
+  // The cached row, or the database's own at a red month's miss (§493): this page reads it anyway.
   const event = await formEventBySlug(locale, slug);
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key) notFound();

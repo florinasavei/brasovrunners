@@ -411,7 +411,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
     // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
-    // and leaves the database in BR-V2.11 (§NNN).
+    // and leaves the database in BR-V2.11 (§491).
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
     // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any

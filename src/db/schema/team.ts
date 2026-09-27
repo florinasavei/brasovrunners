@@ -86,7 +86,7 @@ export const teamMembers = pgTable(
     check("team_members_position_positive", sql`${t.position} >= 1`),
     check("team_members_version_positive", sql`${t.version} >= 1`),
     /**
-     * The links (§474): an array of at most twelve (§NNN, raised from six), every address https —
+     * The links (§474): an array of at most twelve (§491, raised from six), every address https —
      * the guarantee `events_links_is_a_short_array_of_https_links` gives an event's (§332), at the
      * layer that also refuses a seed's or a hand-written `UPDATE`. The six-link version was dropped
      * by migration 0093 and this one added by migration 0094; the number here is

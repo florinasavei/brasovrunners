@@ -226,7 +226,7 @@ describe("§447 publicRead while the month's budget is red", () => {
     expect(second).not.toHaveBeenCalled();
     expect(pendingMissRefreshes()).toBe(1);
 
-    // A write woke the compute already (§NNN): the next miss is read in the request, and the queued read rides the same wake.
+    // A write woke the compute already (§493): the next miss is read in the request, and the queued read rides the same wake.
     revalidatePublicContent("events");
     const third = vi.fn(async () => 3);
     expect(await publicRead(["c"], ["events"], third)).toBe(3);
@@ -236,7 +236,7 @@ describe("§447 publicRead while the month's budget is red", () => {
   });
 
   /*
-    §NNN — the red month's nits: the organizer's own page after a save, a saved copy that says so,
+    §493 — the red month's nits: the organizer's own page after a save, a saved copy that says so,
     and a stale hit that no longer "revalidates" by throwing.
   */
   it("reads a miss in the request for a moment after a write on this instance, then goes back to the cache alone", async () => {

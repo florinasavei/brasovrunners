@@ -235,7 +235,7 @@ export const events = pgTable(
      */
     routeUrl: text("route_url"),
 
-    // No `video_url` / `video_poster_url` here any more (§481, §NNN): a film is a `youtube` node in
+    // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. The two columns and `events_video_url_is_https` are still in the database
     // until BR-V2.11's contract migration drops them — BR-V2.09 declared them and may be serving

@@ -140,7 +140,7 @@ export interface EmailAdapter {
   send(message: OutgoingEmail): Promise<SendResult>;
   /**
    * Let go of whatever the adapter holds open between two messages — the Gmail road's one pooled
-   * SMTP connection (§NNN). Called once, when the batch that built it ends; an adapter that holds
+   * SMTP connection (§493). Called once, when the batch that built it ends; an adapter that holds
    * nothing (Mailgun's HTTP calls, the capture) has none.
    */
   close?(): void;

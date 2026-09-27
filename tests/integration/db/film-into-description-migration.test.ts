@@ -162,14 +162,14 @@ describe("§481 migration 0092_film_into_description — the film section's link
 });
 
 /**
- * What follows it in this release (§NNN): migrations 0093 and 0094 touch only «Echipa»'s links
+ * What follows it in this release (§491): migrations 0093 and 0094 touch only «Echipa»'s links
  * CHECK, and the film's old columns stay in the database. BR-V2.10 stops declaring them in the
  * Drizzle schema; BR-V2.09, which may still be serving while BR-V2.10 migrates, declares them, and
  * every bare select, returning and insert of `events` it makes names them — so their drop is
  * BR-V2.11's own contract migration (AGENTS.md §7.6). Runs last in this file, over the same rows,
  * as `yarn db:migrate:env` runs every pending migration over production.
  */
-describe("§NNN migrations 0093 and 0094 — the film columns stay until the release after", () => {
+describe("§491 migrations 0093 and 0094 — the film columns stay until the release after", () => {
   it("leaves the two columns, their CHECK, every description and every version as 0092 left them", async () => {
     const before = {
       race: [await translation("race", "ro"), await translation("race", "en")],

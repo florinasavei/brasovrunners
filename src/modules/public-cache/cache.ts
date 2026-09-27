@@ -171,7 +171,7 @@ export async function publicRead<T>(
   };
 
   /*
-    A write on this instance woke the compute a moment ago (§NNN, `miss-refresh.ts`): a red month's
+    A write on this instance woke the compute a moment ago (§493, `miss-refresh.ts`): a red month's
     miss is read in the request for that moment, as below red — the compute is awake whatever this
     read does — so the organizer who saved sees the page as saved, never the copy from before the
     save. Whatever else was queued rides the same wake.
@@ -213,7 +213,7 @@ export async function publicRead<T>(
         fillEntry(loadAndKeep, true),
         keyParts,
         /*
-          Looked up as never stale by age (§NNN): an entry past its ceiling is served as the hit it
+          Looked up as never stale by age (§493): an entry past its ceiling is served as the hit it
           is, rather than served and "revalidated" in the background by this very function — which
           throws by design, so every such hit logged "revalidating cache with key …" with a
           ColdMissError and refreshed nothing. At red an entry lives until a write expires it, and
@@ -227,7 +227,7 @@ export async function publicRead<T>(
     scheduleMissRefresh(keyParts.join("|"), () => unstable_cache(fillEntry(loadAndKeep, false), keyParts, options)(), effects.publicMissRefreshMinutes);
     const copy = copyKey ? await copyOf<T>(copyKey) : null;
     if (copy) {
-      // The page says it shows a saved copy, and from when (§NNN): nothing failed, but the database was not asked.
+      // The page says it shows a saved copy, and from when (§493): nothing failed, but the database was not asked.
       noteSavedCopyServed(copy.takenAt);
       return copy.value;
     }
@@ -254,7 +254,7 @@ function fillEntry(loadAndKeep: () => Promise<unknown>, coldOnly: boolean): () =
 }
 
 /**
- * Whether a public read that misses is being answered without the database right now (§447, §NNN):
+ * Whether a public read that misses is being answered without the database right now (§447, §493):
  * a red month, inside a production Next server, and no write on this instance has just woken the
  * compute. For the reads that go around `publicRead` — an address that can name no row, a path too
  * long to cache — so that at red they, too, answer without waking the database for whoever typed it.
@@ -265,7 +265,7 @@ export function answeringFromCacheOnly(): boolean {
 }
 
 /**
- * The age a red month's cache lookup treats as stale (§NNN): a year — Next's own "no revalidation"
+ * The age a red month's cache lookup treats as stale (§493): a year — Next's own "no revalidation"
  * value — so the lookup never starts a background revalidation of an entry it would only fail to
  * refresh. Only the lookup's: the entries the refresh writes keep the stretched day's ceiling.
  */

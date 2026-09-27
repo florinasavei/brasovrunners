@@ -162,7 +162,7 @@ describe("no film box", () => {
 
   it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
     // The columns left the Drizzle schema in BR-V2.10; the database keeps them until BR-V2.11's
-    // contract migration, because BR-V2.09 still declared them (AGENTS.md §7.6, §NNN).
+    // contract migration, because BR-V2.09 still declared them (AGENTS.md §7.6, §491).
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_url")');
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_poster_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);

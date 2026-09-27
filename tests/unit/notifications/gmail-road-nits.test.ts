@@ -3,7 +3,7 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "@/infrastructure/e
 import { gmailAdmission, type GmailLedger } from "@/modules/notifications/domain/email-transport";
 
 /**
- * §NNN — the Gmail road's nits after §443:
+ * §493 — the Gmail road's nits after §443:
  *
  * - one pooled SMTP connection per batch, closed when the batch ends — not a TLS handshake and a
  *   login per message;
@@ -60,7 +60,7 @@ beforeEach(() => {
   smtp.answer = null;
 });
 
-describe("§NNN the Gmail adapter", () => {
+describe("§493 the Gmail adapter", () => {
   it("keeps one pooled connection, never re-sends a message its connection dropped, and lets it go on close", async () => {
     const adapter = createGmailAdapter(adapterConfig);
     await adapter.send(message("a@example.ro"));
@@ -151,7 +151,7 @@ function fake(name: string, answers: SendResult[] = []): EmailAdapter & { sent: 
   return adapter;
 }
 
-describe("§NNN the sender's Gmail road", () => {
+describe("§493 the sender's Gmail road", () => {
   function setup(gmailAnswers: SendResult[] = []) {
     credited.length = 0;
     const gmail = fake("gmail", gmailAnswers);

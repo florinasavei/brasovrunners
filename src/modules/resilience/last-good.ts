@@ -50,7 +50,7 @@ import {
  */
 
 /**
- * `saved` (§NNN): the database answered nothing because a red month's cache miss was answered from
+ * `saved` (§493): the database answered nothing because a red month's cache miss was answered from
  * a saved copy (`public-cache/cache.ts`) — nothing failed, but the page is the copy of `takenAt`,
  * possibly from before a write the club just made, and it says so.
  */
@@ -69,7 +69,7 @@ export type Resilient<T> = {
 };
 
 /**
- * Which saved copies one `readWithLastGood` load was answered with (§NNN). A red month answers a
+ * Which saved copies one `readWithLastGood` load was answered with (§493). A red month answers a
  * cache miss from the read's saved copy without asking the database (`public-cache/cache.ts`), and
  * that answer looks live to whoever awaits it — so the page said nothing about showing the copy of
  * an hour ago, possibly from before the organizer's own save. The public cache notes each copy it
@@ -80,7 +80,7 @@ export type Resilient<T> = {
 type SavedCopiesSeen = { oldest: Date | null };
 const savedCopies = new AsyncLocalStorage<SavedCopiesSeen>();
 
-/** A saved copy taken at `takenAt` answered a read in place of the database (§NNN). Outside any `readWithLastGood`, nothing to tell. */
+/** A saved copy taken at `takenAt` answered a read in place of the database (§493). Outside any `readWithLastGood`, nothing to tell. */
 export function noteSavedCopyServed(takenAt: Date): void {
   const seen = savedCopies.getStore();
   if (seen && (seen.oldest === null || takenAt < seen.oldest)) seen.oldest = takenAt;
@@ -169,7 +169,7 @@ export async function readWithLastGood<T>(
     const value = await savedCopies.run(seen, load);
     if (seen.oldest) {
       /*
-        Part of the answer is a saved copy a red month served instead of the database (§NNN): the
+        Part of the answer is a saved copy a red month served instead of the database (§493): the
         page says so, naming the oldest copy's time, and whoever wraps this read hears it too. Not
         kept as this key's copy: it is not a newer truth than the copies it was made of.
       */

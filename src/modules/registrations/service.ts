@@ -1255,7 +1255,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   /*
     The club's limit of registrations per address (§389), read the same way and for the same reason
     as the deadlines: before the transaction, from the instance's memo, never under the event's lock.
-    A staff entry meets it too since §NNN: it may enter another person on a registered address, and
+    A staff entry meets it too since §493: it may enter another person on a registered address, and
     the club's limit is the club's at the desk as on the form.
   */
   const cap = await currentAddressCap(db);
@@ -1301,7 +1301,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "a second person on one address is not available yet", [ANOTHER_LINK_INVALID]);
     }
     /*
-      A staff entry hears the same two refusals (§NNN), with the address box named beside the marker:
+      A staff entry hears the same two refusals (§493), with the address box named beside the marker:
       the backoffice form points at the box and says the sentence.
     */
     const addressBox = via === "staff" ? ["email"] : [];
@@ -1319,7 +1319,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       fast track would confirm *that* runner — somebody who is not there and signed nothing — on the
       paper of the one who is (BR-REQ-037-07). Refused out loud instead, and rolled back whole: no
       re-send, no audit row, nothing confirmed. A staff entry succeeds only by creating or restarting.
-      Since §NNN a staff entry reaches a re-send only while the schema holds one registration per
+      Since §493 a staff entry reaches a re-send only while the schema holds one registration per
       address; with the family open it decides by the name (`decideSubmission`, via `staff`) and is
       refused above when it is this runner again or the address is at the club's limit.
     */
@@ -1441,7 +1441,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         so nothing was created — and the message, in the one place it may be said, adds how to
         register somebody else: the form again, with that person's full name and birth date.
       */
-      // …and, for another name on a registered birth date, how twins are registered (§NNN).
+      // …and, for another name on a registered birth date, how twins are registered (§493).
       const hint =
         decision.kind === "resend" && decision.notAnotherPerson === true
           ? { anotherPersonHint: true, ...(decision.sameBirthDate === true ? { sameBirthDateHint: true } : {}) }

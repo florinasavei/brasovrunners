@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the public reads that go around `publicRead` answer without the database while a red month
+ * §493 — the public reads that go around `publicRead` answer without the database while a red month
  * serves anonymous traffic from the cache alone (§447):
  *
  * - an address whose slug can name no row is "no such page" without a query, where below red the
@@ -58,7 +58,7 @@ afterEach(() => {
   budget.level = "unknown";
 });
 
-describe("§NNN a red month's reads around the cache", () => {
+describe("§493 a red month's reads around the cache", () => {
   it("answers a slug that can name no row as 'no such page' without the database", async () => {
     for (const slug of ["Crosul-De-Toamna", "a--b", "x".repeat(201), "%20"]) {
       expect(await reads.cachedPublishedEventBySlug("ro", slug)).toBeUndefined();

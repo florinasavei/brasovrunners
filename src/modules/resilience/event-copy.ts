@@ -32,7 +32,7 @@ export type RegistrationEvent = NonNullable<Awaited<ReturnType<typeof findPublis
 
 /**
  * The event a form page is for — the group run's self-declaration (§393) — from the public cache,
- * and from the database itself when a red month's miss finds no copy (§NNN). Such a page reads the
+ * and from the database itself when a red month's miss finds no copy (§493). Such a page reads the
  * texts in force and the event's facts from the database on every visit anyway (signing is a
  * decision), so the cold miss has nothing to save: it used to throw `ColdMissError` out of a page
  * nothing wrapped, a 500 for somebody about to sign. Through the breaker, so a database this

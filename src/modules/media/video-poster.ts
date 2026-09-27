@@ -248,7 +248,7 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
 
 /*
   `resolveEventVideoPoster`, which kept the event's old poster column in step with its old film
-  link column (both unread since §481, dropped from the database in BR-V2.11, §NNN), is gone with
+  link column (both unread since §481, dropped from the database in BR-V2.11, §491), is gone with
   the film section (§481): a film lives only in a description, and migration `0092`
   moved each stored link — with its stored poster — into the descriptions as a `youtube` node. A
   node that arrived without a poster gets one from `attachYoutubePosters` on the event's next save,

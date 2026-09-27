@@ -82,7 +82,7 @@ const PUBLIC_COLUMNS = {
   routeUrl: events.routeUrl,
   // No `video_url` / `video_poster_url` (§481): a film is a figure in the description, where
   // migration `0092` moved every stored link (BR-REQ-011-01 criterion 9), and the two columns
-  // leave the database in BR-V2.11's contract migration (§NNN, AGENTS.md §7.6).
+  // leave the database in BR-V2.11's contract migration (§491, AGENTS.md §7.6).
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
   facebookEventUrl: events.facebookEventUrl,

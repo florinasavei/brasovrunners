@@ -88,7 +88,7 @@ export function describeSmtpFailure(error: unknown): string {
  * The connection every SMTP send here opens — the contact form's and, since §443, the outbox's
  * Gmail road (`gmail-adapter.ts`) — so both keep the same TLS rule and the same bounded waits.
  *
- * `pooled` is the outbox's (§NNN): one batch sends several Gmail messages a few seconds apart, and
+ * `pooled` is the outbox's (§493): one batch sends several Gmail messages a few seconds apart, and
  * without a pool each of them paid its own TCP, TLS and login handshake — three round trips to
  * Google and one more "new sign-in" per message on an account Google watches for automated use.
  * Pooled, a batch keeps one connection (`maxConnections: 1`) and closes it when it ends

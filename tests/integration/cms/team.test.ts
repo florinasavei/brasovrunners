@@ -364,7 +364,7 @@ describe("§459 the team page's cards", () => {
       expect(admin.links).toEqual([{ kind: "INSTAGRAM", url: "https://instagram.com/elena", labelRo: null, labelEn: null }]);
     });
 
-    it("refuses a stored link that is not https, or a thirteenth, at the database too — and takes twelve (§NNN, migration 0094)", async () => {
+    it("refuses a stored link that is not https, or a thirteenth, at the database too — and takes twelve (§491, migration 0094)", async () => {
       await expect(
         db.insert(teamMembers).values({ name: "X", position: 1, links: [{ kind: "OTHER", url: "http://example.org" }] }),
       ).rejects.toThrow();

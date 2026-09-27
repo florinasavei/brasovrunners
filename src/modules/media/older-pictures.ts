@@ -263,7 +263,7 @@ async function convertOne<T extends Record<string, unknown>>(
       .where(holds(pageTranslations.bodyJson, old));
     // Not `events.video_poster_url` (§485): a film's poster lives in the description's youtube
     // node, which the translations' swap above already carries; the column is unread and
-    // leaves the database in BR-V2.11 (§NNN).
+    // leaves the database in BR-V2.11 (§491).
     // «Echipa»'s texts (§474), which `references.ts` reads too and this press had missed (§483):
     // the words about each person, and the page's introduction in its platform setting. A card's
     // photo is by id and follows the row above on its own.

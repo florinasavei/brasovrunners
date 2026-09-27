@@ -60,7 +60,7 @@ function startWave(everyMinutes: number, now: number): boolean {
 }
 
 /**
- * How long after a write on this instance a red month's miss is read in the request (§NNN): the
+ * How long after a write on this instance a red month's miss is read in the request (§493): the
  * write woke the compute, which stays awake five minutes after its last query whatever anybody
  * does (Neon's fixed suspend), so a read inside this window costs at most the window itself — never
  * a wake — and the organizer who just cancelled an event and opens its page sees it cancelled,
@@ -77,7 +77,7 @@ export function allowRefreshNow(now: number = Date.now()): void {
   wokenByWriteAt = now;
 }
 
-/** Whether a write on this instance woke the compute within `READ_AFTER_WRITE_MS` (§NNN). */
+/** Whether a write on this instance woke the compute within `READ_AFTER_WRITE_MS` (§493). */
 export function computeAwakeFromWrite(now: number = Date.now()): boolean {
   return now - wokenByWriteAt < READ_AFTER_WRITE_MS;
 }

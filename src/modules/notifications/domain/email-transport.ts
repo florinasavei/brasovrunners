@@ -218,7 +218,7 @@ export const GMAIL_WINDOW_MS = 24 * 60 * 60 * 1000;
 /**
  * The reason a row carries while it waits out Gmail's cap because the club chose to wait
  * (`atGmailCap: "defer"`, §443) — the sender writes it, and `/api/health` reads it to tell the
- * club's own choice apart from a stall (§NNN). One string, so the two cannot drift apart.
+ * club's own choice apart from a stall (§493). One string, so the two cannot drift apart.
  */
 export const GMAIL_CAP_DEFERRED_ERROR = "gmail daily cap: deferred";
 

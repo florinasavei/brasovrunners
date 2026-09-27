@@ -102,7 +102,7 @@ export type EmailSender = {
   send(message: OutgoingEmail): Promise<SendResult>;
   /**
    * The batch is over: let go of the Gmail road's one connection, when this sender opened it
-   * (§NNN). Safe to call twice, and on a sender that never sent through Gmail.
+   * (§493). Safe to call twice, and on a sender that never sent through Gmail.
    */
   close?(): void;
 };
@@ -179,7 +179,7 @@ export function createEmailSender(config: {
   // same connection timeout to learn the same thing.
   let gmailDown = false;
   /*
-    One Gmail adapter per sender, which is one per batch (§NNN): built at the first Gmail message and
+    One Gmail adapter per sender, which is one per batch (§493): built at the first Gmail message and
     kept, so its pooled connection carries every Gmail message of the batch — one TLS handshake and
     one login, not one of each per message — and `close()` lets it go when the batch ends.
   */
@@ -244,7 +244,7 @@ export function createEmailSender(config: {
     }
     const result = await gmailAdapterOnce(gmail).send(message);
     /*
-      The address itself refused for good (§NNN, `gmail-adapter.ts`): the bounce it is. Not a Gmail
+      The address itself refused for good (§493, `gmail-adapter.ts`): the bounce it is. Not a Gmail
       failure — the account works, the next message still goes through it — and not Mailgun's to try,
       which would spend a message of the allowance to bounce the same way hours later.
     */
@@ -341,7 +341,7 @@ export function createEmailSender(config: {
         1. The club chose Gmail for this group: Gmail, if configured and not failed in this batch —
            after the pace. At the cap, deferred or Mailgun, as the club chose. A failure before Gmail
            could have taken it: Mailgun, at once. A failure after it might have: the outbox retries.
-           The address itself refused for good (a `5.1.x`): bounced, on neither road again (§NNN).
+           The address itself refused for good (a `5.1.x`): bounced, on neither road again (§493).
         2. Mailgun refuses because the plan's allowance is spent (§40): Gmail, when the club lets
            it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
       */

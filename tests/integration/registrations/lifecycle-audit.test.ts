@@ -47,7 +47,7 @@ vi.mock("@/modules/registrations/repository", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/modules/registrations/repository")>();
   return {
     ...original,
-    // The pre-check reads the address's rows at the event (§NNN: by the runner's name); the locked decision reads them again.
+    // The pre-check reads the address's rows at the event (§493: by the runner's name); the locked decision reads them again.
     findRegistrationsByEventAndParticipant: (async (...args: Parameters<typeof original.findRegistrationsByEventAndParticipant>) => {
       if (gap.hideAddressOnce) {
         gap.hideAddressOnce = false;
@@ -281,7 +281,7 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     await submitRegistration(db, event, submission("Ion", EMAIL), NOW);
     gap.hideAddressOnce = true;
 
-    // The desk enters Ion too (§NNN: at the desk the name decides): the lock finds him and says so.
+    // The desk enters Ion too (§493: at the desk the name decides): the lock finds him and says so.
     expect(
       await refusal(
         createRegistrationByStaff(
@@ -303,7 +303,7 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     expect((await db.select().from(emailOutbox)).map((row) => row.messageType)).toEqual(["VERIFY_REGISTRATION_EMAIL"]);
   });
 
-  it("§NNN another person entered at the desk on that address gets a row of their own, confirmed on their own paper", async () => {
+  it("§493 another person entered at the desk on that address gets a row of their own, confirmed on their own paper", async () => {
     const staff = await admin();
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ion", EMAIL), NOW);

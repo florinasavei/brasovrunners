@@ -16,7 +16,7 @@ import { createSmtpConnection, describeSmtpFailure, type SmtpAddress, type SmtpC
  * have come after acceptance carries `mayHaveBeenAccepted`, and the sender leaves it to the outbox's
  * own retry instead of risking a second copy of a single-use link.
  *
- * One refusal is not Gmail's to fall back from (§NNN): the address itself. A 5xx answer with an
+ * One refusal is not Gmail's to fall back from (§493): the address itself. A 5xx answer with an
  * enhanced status of `5.1.x` to the recipient — "no such mailbox", "bad destination", "bad syntax" —
  * says the address cannot receive mail from anybody; handing it to Mailgun spent a message of the
  * club's allowance to learn the same thing from a bounce hours later, and meanwhile the row read as
@@ -24,7 +24,7 @@ import { createSmtpConnection, describeSmtpFailure, type SmtpAddress, type SmtpC
  * BR-REQ-080-02 criterion 4), exactly what Mailgun's own `5.1.1` becomes through the webhook.
  * Everything else about a refusal stays Mailgun's to try.
  *
- * One connection per batch (§NNN): the adapter keeps one pooled SMTP connection for every message
+ * One connection per batch (§493): the adapter keeps one pooled SMTP connection for every message
  * the batch sends through it, and `close()` lets it go when the batch ends.
  */
 export type GmailAdapterConfig = SmtpConfig & {
@@ -67,7 +67,7 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
             : {}),
         });
         /*
-          The runner's own address refused while a copy went (§NNN): Gmail took the message for the
+          The runner's own address refused while a copy went (§493): Gmail took the message for the
           club's copies and not for the person it is for. Never "sent" — the runner has nothing. A
           permanent refusal of the address is the bounce it is; a temporary one goes back to the
           outbox's retry, never to Mailgun, which would send the copies a second time at once.
@@ -91,7 +91,7 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
       } catch (error) {
         // A code or a class, never the server's reply, which may echo the login (§14.5).
         const failure = `gmail: ${describeSmtpFailure(error)}`;
-        // The address itself cannot receive mail (§NNN): the bounce it is, not Mailgun's to try again.
+        // The address itself cannot receive mail (§493): the bounce it is, not Mailgun's to try again.
         const refused = error && typeof error === "object" ? refusalOf(message.to, error) : null;
         if (refused && gmailRefusedTheAddress(refused)) {
           return { outcome: "permanent_failure", error: `${failure} ${enhancedStatusOf(refused) ?? ""}`.trim() };
@@ -114,7 +114,7 @@ export function enhancedStatusOf(error: unknown): string | null {
 }
 
 /**
- * Whether one recipient's SMTP refusal refused the **address** for good (§NNN): a 5xx reply whose
+ * Whether one recipient's SMTP refusal refused the **address** for good (§493): a 5xx reply whose
  * enhanced status is `5.1.x` — the addressing class of RFC 3463 (bad mailbox, bad domain, bad
  * syntax). Nothing else is: a `5.4.5` (Google's daily sending limit), a `5.7.x` (policy, a login) or
  * a 4xx is about the account or the moment, and Mailgun may still deliver.

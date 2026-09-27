@@ -273,7 +273,7 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
     const event = await createInternalEvent(10);
     await addByStaff(event, "desk@example.org");
 
-    // The same person again (§NNN: the name decides at the desk), however it is spaced or cased.
+    // The same person again (§493: the name decides at the desk), however it is spaced or cased.
     let refusal: unknown = null;
     try {
       await createRegistrationByStaff(
@@ -300,7 +300,7 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
   });
 
   /*
-    §NNN — another person on a registered address is entered at the desk: a family one at a time,
+    §493 — another person on a registered address is entered at the desk: a family one at a time,
     twins included (the public form reads the second twin as a slip of the first, §446), within the
     club's limit per address, which is refused out loud.
   */

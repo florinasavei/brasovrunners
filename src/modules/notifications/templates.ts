@@ -668,7 +668,7 @@ export type TemplateData = {
    */
   anotherPersonHint?: boolean;
   /**
-   * The slip was another name on a registered birth date (§NNN): twins, perhaps, whom "send the form
+   * The slip was another name on a registered birth date (§493): twins, perhaps, whom "send the form
    * again" cannot help — the sentence says what can (another address, or the club at the desk).
    */
   sameBirthDateHint?: boolean;
@@ -1245,7 +1245,7 @@ const T = {
     familyDecline: "Nu înscriu această persoană",
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
-    /** In its place when the slip was another name on a registered birth date (§NNN): how twins are registered. */
+    /** In its place when the slip was another name on a registered birth date (§493): how twins are registered. */
     sameBirthDateHint:
       "Pe aceeași adresă de email nu pot fi înscrise din formular două persoane născute în aceeași zi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email, ori răspunde la acest email și facem noi înscrierea.",
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */

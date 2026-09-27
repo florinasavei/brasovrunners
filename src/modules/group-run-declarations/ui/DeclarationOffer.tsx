@@ -43,7 +43,7 @@ export default async function DeclarationOffer({
   if (!key || !signingOpen({ ...event, editorialStatus: "PUBLISHED" }, now)) return null;
   /*
     An optional part of the page (§447): while the database cannot say which texts are in force — away,
-    or a red month's miss with no copy (§NNN) — the offer is left out rather than taking the event
+    or a red month's miss with no copy (§493) — the offer is left out rather than taking the event
     page down with it. Signing needs the database anyway.
   */
   const [declaration, privacyNotice] = await readOrWhileAway(

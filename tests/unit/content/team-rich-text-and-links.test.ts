@@ -6,7 +6,7 @@ import { guessTeamLinkKind, MAX_TEAM_LINKS, readTeamLinks, teamLinkHost } from "
 
 /**
  * §474 — «Echipa» grows up: the words about a person are a rich text in both languages or neither,
- * without a table; a card carries up to twelve typed links (§NNN, six until then), each https, each label both languages or
+ * without a table; a card carries up to twelve typed links (§491, six until then), each https, each label both languages or
  * neither; and a card from before — plain words, one link — reads as it did.
  */
 const doc = (...paragraphs: string[]): RichTextDoc => ({
@@ -104,14 +104,14 @@ describe("§474 a person's links", () => {
     expect(issuesOf({ ...base, links: [row({ kind: "TIKTOK", url: "https://tiktok.com/@ana" })] })).toEqual(["links[0].kind"]);
   });
 
-  it("stops at twelve (§NNN), and takes twelve", () => {
+  it("stops at twelve (§491), and takes twelve", () => {
     expect(MAX_TEAM_LINKS).toBe(12);
     const rows = (count: number) => Array.from({ length: count }, (_, index) => row({ url: `https://example.org/${index}` }));
     expect(issuesOf({ ...base, links: rows(MAX_TEAM_LINKS + 1) })).toEqual(["links"]);
     expect(teamMemberFieldsSchema.parse({ ...base, links: rows(MAX_TEAM_LINKS) }).links).toHaveLength(MAX_TEAM_LINKS);
   });
 
-  it("holds the database's CHECK to the same number: the schema and the migration that added it say `<= MAX_TEAM_LINKS` (§NNN)", () => {
+  it("holds the database's CHECK to the same number: the schema and the migration that added it say `<= MAX_TEAM_LINKS` (§491)", () => {
     const schema = readFileSync("src/db/schema/team.ts", "utf8");
     expect(schema).toContain(`jsonb_array_length(\${t.links}) <= ${MAX_TEAM_LINKS} AND`);
     const migration = readFileSync("src/db/migrations/0094_team_links_twelve.sql", "utf8");

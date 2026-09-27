@@ -144,7 +144,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
 
   describe("save → poster stored → read model, and the orphan sweep", () => {
     // The event's own film columns are unread since §485 and gone from the schema since BR-V2.10
-    // (§NNN; the database drops them in BR-V2.11): migration 0092 carried every stored poster into the description's youtube node,
+    // (§491; the database drops them in BR-V2.11): migration 0092 carried every stored poster into the description's youtube node,
     // which is what the sweep reads. A poster no description names is a picture no page draws.
     it("a poster no description names is swept like any unreferenced picture, the event row having no film field", async () => {
       const bytes = await JPEG();
@@ -449,7 +449,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
           expect(posterOf(row.excerptJson)).toBe(posterUrlFor("excpt-film1"));
           // A group run keeps no programme (§111); the film in it was still fetched, outside.
         }
-        // The event row holds no film of its own since §481, and the schema declares no film column since BR-V2.10 (§NNN).
+        // The event row holds no film of its own since §481, and the schema declares no film column since BR-V2.10 (§491).
         const [event] = await db.select().from(events).where(eq(events.id, eventId));
         expect(event).not.toHaveProperty("videoUrl");
         expect(event).not.toHaveProperty("videoPosterUrl");

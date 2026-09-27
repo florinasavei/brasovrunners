@@ -554,7 +554,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
     if (audience > 0 && announcedToday) continue;
     await db.transaction(async (tx) => {
       /*
-        One alert a day, across runs that overlap (§NNN). The check above is read before the loop, so
+        One alert a day, across runs that overlap (§493). The check above is read before the loop, so
         two maintenance runs a second apart — the pinger and the drain a publication wakes, or two
         instances — could each find the day free and each announce a different event. Every run now
         queues its alert holding one row lock (`newsletterAlertDay`), and asks again under it: the
@@ -611,7 +611,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
   return queued;
 }
 
-/** The `platform_settings` row every run takes before it queues an alert (§NNN): the day's one alert, serialised. */
+/** The `platform_settings` row every run takes before it queues an alert (§493): the day's one alert, serialised. */
 export const NEWSLETTER_ALERT_LOCK_KEY = "newsletterAlertDay";
 
 async function lockAlertDay<T extends Record<string, unknown>>(tx: Database<T>, now: Date): Promise<void> {

@@ -23,7 +23,7 @@ export const TEAM_LINK_KINDS = ["STRAVA", "INSTAGRAM", "FACEBOOK", "WEBSITE", "O
 export type TeamLinkKind = (typeof TEAM_LINK_KINDS)[number];
 
 /**
- * Twelve (§NNN, raised from §474's six): a person's networks, a site of their own, a club's page,
+ * Twelve (§491, raised from §474's six): a person's networks, a site of their own, a club's page,
  * a race's results — an event's own ceiling (§332). The database's CHECK
  * `team_members_links_is_a_short_array_of_https_links` holds the same number (migration 0094,
  * after 0093 dropped the six-link one), and a test keeps the two equal.

@@ -284,7 +284,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP),
     });
     /*
-      Another person on a registered address is entered here since §NNN; the two refusals it can meet
+      Another person on a registered address is entered here since §493; the two refusals it can meet
       are said as sentences — this person is on the address already, or the address is at the club's
       limit — with the address box named, rather than "check what you entered" over a correct form.
     */

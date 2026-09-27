@@ -491,7 +491,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
     });
 
     /*
-      §NNN — the day's one alert holds across runs that overlap: the pinger and the drain a
+      §493 — the day's one alert holds across runs that overlap: the pinger and the drain a
       publication wakes, a second apart, each read "nothing announced today" before either queued.
     */
     it("never sends two announcements in one club day when two runs overlap", async () => {

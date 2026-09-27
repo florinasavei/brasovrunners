@@ -138,7 +138,7 @@ describe("§389 §446 what one submission does on an address", () => {
   it("another name with a registered birth date is a slip too — the name is looked for first", () => {
     const ana = row("Ana Pop", "CONFIRMED", "1985-03-02");
     const ion = row("Ion Pop", "CONFIRMED", "2012-06-01");
-    // Another name on a registered birth date (§NNN): the re-sent message says how twins are registered.
+    // Another name on a registered birth date (§493): the re-sent message says how twins are registered.
     expect(decide([ana, ion], "Maria Pop", "form", true, "2012-06-01")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true, sameBirthDate: true });
     expect(decide([ana, ion], "Ion Pop", "form", true, "1985-03-02")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true });
   });
@@ -183,7 +183,7 @@ describe("§389 §446 what one submission does on an address", () => {
   });
 
   /*
-    §NNN — a staff entry decides by the name alone: the person at the desk typed somebody's name, so
+    §493 — a staff entry decides by the name alone: the person at the desk typed somebody's name, so
     another name on a registered address is another person — twins included, whom the form's rule
     reads as a slip — within the club's limit; the same runner again is refused out loud.
   */

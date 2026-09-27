@@ -15,7 +15,7 @@ import { isActiveStatus } from "./state-machine";
  *   here — and only here — a refusal may say "this person is already registered on this address"
  *   or "the address is at the club's limit";
  * - **a staff entry** (`staff`): somebody at the desk typing a name, so another name on a registered
- *   address is another person, within the club's limit (§NNN) — and a refusal is said out loud, as
+ *   address is another person, within the club's limit (§493) — and a refusal is said out loud, as
  *   behind the link, since the staff member can already read the whole list.
  *
  * Decided under the event's lock (`submitRegistration`), from every registration the address holds
@@ -90,7 +90,7 @@ export type SubmissionDecision<R extends FamilyRow> =
       registration: R;
       notAnotherPerson?: true;
       /**
-       * The slip matched a registration's birth date under another name (§NNN) — twins, perhaps: the
+       * The slip matched a registration's birth date under another name (§493) — twins, perhaps: the
        * re-sent message says how two people born on one day are registered (another address, or the club).
        */
       sameBirthDate?: true;
@@ -163,7 +163,7 @@ export function decideSubmission<R extends FamilyRow>(input: {
 
   if (via === "staff") {
     /*
-      A staff member entering another person on a registered address (§NNN). The public form cannot
+      A staff member entering another person on a registered address (§493). The public form cannot
       tell a second person from a slip without the owner's two-part rule, and asks the inbox; the
       person at the desk has no such doubt — they typed the name of somebody standing in front of
       them, or relayed a request (the tick `createRegistrationByStaff` requires). So the name alone
@@ -191,7 +191,7 @@ export function decideSubmission<R extends FamilyRow>(input: {
   if (partial) {
     if (via !== "form") return { kind: "resend", registration: partial };
     /*
-      Another name on a registered birth date (§NNN): possibly twins — whom the owner's rule reads
+      Another name on a registered birth date (§493): possibly twins — whom the owner's rule reads
       as a slip, and whom "send the form with that person's name and birth date" cannot help, since
       that is what they did. The re-sent message says what can: another address, or the club.
     */

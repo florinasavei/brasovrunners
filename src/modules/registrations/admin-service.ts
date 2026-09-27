@@ -359,7 +359,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
    * told it worked" is the wrong outcome for somebody standing at a desk.
    */
   /*
-    Since §NNN the question is "is *this person* already registered on the address", not "is the
+    Since §493 the question is "is *this person* already registered on the address", not "is the
     address registered": a family on one address (§389, §446) is entered at the desk one person at a
     time — twins included, whom the public form's rule cannot tell from a slip — and the staff member
     typing the name is the intent the public form has to ask the inbox for. The same runner again

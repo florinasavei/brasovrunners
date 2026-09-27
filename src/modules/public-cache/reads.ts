@@ -90,7 +90,7 @@ const CACHEABLE_SLUG_MAX_LENGTH = 200;
  * (`cachedLocaleSwitch` refuses a path over 300 characters). A slug of the wrong shape or length
  * can name no row, so it is answered by the database, exactly as before, and filed nowhere.
  *
- * While a red month answers from the cache alone (§447) it is not asked even that (§NNN): such a
+ * While a red month answers from the cache alone (§447) it is not asked even that (§493): such a
  * slug names no row, so the answer is "no such page" without a query — a crawler walking odd
  * addresses at red would otherwise wake the database once per address, the one cost red exists to
  * stop. Below red the database still answers it, so nothing about a green month changes.
@@ -547,7 +547,7 @@ export async function cachedLocaleSwitch(from: string, target: Locale): Promise<
   const route = parsed?.route;
   if (!route || !SLUG_ROUTES.has(route)) return resolveLocaleSwitch(getDb(), from, target);
   /*
-    The switch is a redirect, never a page (§NNN): it has no copy to show and no resting page to send
+    The switch is a redirect, never a page (§493): it has no copy to show and no resting page to send
     anybody to, so while the database cannot answer for it — away, or a red month's miss — it lands
     on the other language's listing, which needs no row, instead of a 500. The same landing a slug
     with no sibling in that language already gets. And at red, an address that could never name a

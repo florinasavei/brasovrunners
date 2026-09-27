@@ -696,7 +696,7 @@ export const eventFieldsSchema = z
     /*
       No `videoUrl` (§481): a film is a figure in the description (§266), where migration `0092`
       moved every stored link; the column leaves the database in BR-V2.11's contract migration
-      (§NNN, AGENTS.md §7.6); no form posts one, and `.strict()` refuses a caller that does.
+      (§491, AGENTS.md §7.6); no form posts one, and `.strict()` refuses a caller that does.
     */
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),

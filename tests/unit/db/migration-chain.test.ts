@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The migrations' snapshot chain (§NNN, AGENTS.md §7.6).
+ * The migrations' snapshot chain (§491, AGENTS.md §7.6).
  *
  * `drizzle-kit generate` diffs the schema against the newest snapshot, and refuses to run at all
  * when two snapshots name the same parent. Sibling branches that each generated on top of 0081 left

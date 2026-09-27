@@ -83,7 +83,7 @@ describe("§443 email transport setting and the outbox's road", () => {
   });
 
   /*
-    §NNN — the batch lets go of the Gmail road's one connection when it ends, however it ends, and a
+    §493 — the batch lets go of the Gmail road's one connection when it ends, however it ends, and a
     Gmail refusal of the address itself is the bounce it is: BOUNCED, never Mailgun's to try.
   */
   it("closes the sender once at the batch's end, and marks an address Gmail refused for good BOUNCED", async () => {

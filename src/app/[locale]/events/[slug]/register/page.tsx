@@ -302,7 +302,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       // Unread, as said above.
     } else if (isColdMiss(failure)) {
       /*
-        A red month's miss with no copy (§NNN): this page reads its event from the database on every
+        A red month's miss with no copy (§493): this page reads its event from the database on every
         visit, so the text in force is read there too rather than failing the form with a 500 — through
         the breaker, as the event itself is (`event-copy.ts`), so a database this instance knows is
         away fails at once rather than waiting on a refused connection.

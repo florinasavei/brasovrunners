@@ -64,7 +64,7 @@ export type EmailHealth = {
    * into the 503 (§98), unchanged.
    *
    * `deferred` and `resumesAt` are the rows waiting out Gmail's cap because the club chose to wait
-   * (§NNN): counted here, and not in `deferred` above — the club's own choice working, like the
+   * (§493): counted here, and not in `deferred` above — the club's own choice working, like the
    * newsletter's reserve, not the plan's limit the monitor exists to report.
    */
   gmail: GmailHealth & { deferred: number; resumesAt: string | null };
@@ -111,7 +111,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const pending = and(eq(emailOutbox.status, "PENDING"), not(inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES])));
   /*
     A row waiting out Gmail's rolling day because the club chose "wait at the cap" (§443) is not a
-    stall either (§NNN): the club set the cap and the choice on `/admin/emails`, the row goes when the
+    stall either (§493): the club set the cap and the choice on `/admin/emails`, the row goes when the
     oldest send leaves the day, and a monitor that alarmed on it would alarm every busy day for a
     choice nobody has to undo. It is counted in the Gmail block instead, with when it resumes. Only
     while it waits: once its turn is overdue, the overdue count below says so as for any row.

@@ -4,13 +4,13 @@ import ro from "../../../messages/ro.json";
 import { BLANK_PAGE_SECTION_DATA, cardStates } from "@/modules/events/domain/page-sections";
 
 /**
- * BR-REQ-050-02 criterion 79 (§406, §481, §NNN) — the page map's chips read `Admin.editor.pageFlow.short.<id>`
+ * BR-REQ-050-02 criterion 79 (§406, §481, §490) — the page map's chips read `Admin.editor.pageFlow.short.<id>`
  * for every card `cardStates` returns, a key built at run time that the catalogue checker cannot
  * follow. So the catalogue holds exactly those words: none missing (a chip would print its key),
  * none left over. A section asked inside another card (the cost §466, the place and the rules
  * §481) has no chip, and its short word went with it.
  */
-describe("the page map's short words are exactly the cards' (§NNN)", () => {
+describe("the page map's short words are exactly the cards' (§490)", () => {
   const cardIds = cardStates(BLANK_PAGE_SECTION_DATA)
     .map((section) => section.id)
     .sort();

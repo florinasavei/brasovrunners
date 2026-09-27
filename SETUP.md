@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.09-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.09-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.10-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1299,7 +1299,7 @@ club names — which is why a colleague's Yahoo can be on the list.
 5. In the app — the part the club owns, and the part that changes without a developer:
    `/admin/emails` → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
    receive each message, comma-separated; **Copie (Cc)** = anybody who should get a copy and
-   be visible to the others (Amalia's Yahoo, say); **Copie ascunsă (Bcc)** = anybody who
+   be visible to the others (the administrator colleague's Yahoo, say); **Copie ascunsă (Bcc)** = anybody who
    should get a copy without the others seeing it — an archive mailbox, say (§293) → Salvează. The sentence above the boxes
    says which list is in force — the app's or `CONTACT_FORM_TO` — so there is no guessing.
 6. Check: open `/ro/contact` on the deployment and send a message. The page says "Mesajul a
