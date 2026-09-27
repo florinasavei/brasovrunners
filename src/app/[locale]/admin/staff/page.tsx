@@ -321,7 +321,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         nobody (§457): a row that is not an address, or an address already on the team, adds no one
         and names the rows. A fold of its own, closed like every fold (§336).
       */}
-      <Panel title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible id="staff-members" data-testid="staff-members">
+      <Panel glyph="members" title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible id="staff-members" data-testid="staff-members">
         <ActionForm
           action={inviteMembersAction}
           messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale") })}

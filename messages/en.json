@@ -2329,7 +2329,7 @@
             "Reload the page in a few minutes: the check runs on every open, with one search in Zitadel.",
             "If it stays so, open the Zitadel console. If it does not open, the provider has a problem; if it does, check ZITADEL_MANAGEMENT_PAT and AUTH_ZITADEL_ISSUER on Vercel."
           ],
-          "capped": "The organization has more accounts than the check reads (at most 2000, in pages of 200). The key may well work, but Echipa can no longer say of any row that it has no sign-in account.",
+          "capped": "The organization has more accounts than the check reads: at most 2000, 200 to a page. The key may well work, but Echipa can no longer say which row has no sign-in account.",
           "howCapped": [
             "Nothing to fix on the key. A developer raises the ACCOUNTS_LISTING_MAX ceiling in src/modules/staff-identity/zitadel-users.ts, or deletes the accounts no longer used in the Zitadel console."
           ]
@@ -2636,8 +2636,8 @@
           "more": "On the free plan the database sleeps when unused, so the first page after a quiet spell is slower. The next step up is paid by usage."
         },
         "zitadel": {
-          "name": "Zitadel (how the team and the members sign in)",
-          "freeGives": "Free (checked on 27 Sept 2026): up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers and custom workflows (actions) included, with no monthly number published.",
+          "name": "Zitadel (sign-in for the team and members)",
+          "freeGives": "Free: up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers. Checked on 27 Sept 2026.",
           "ceiling": "The one limit that matters: a single administrator, without whom nobody can invite anybody.",
           "whenCrossed": "It is not crossed: who the administrator is and where the credentials are is written down.",
           "closeYes": "—",
@@ -3519,7 +3519,7 @@
         "NEWSLETTER_CONFIRM": "When someone subscribes on the contact page: the link that confirms the subscription, valid for {confirmation}.",
         "NEWSLETTER": "Only when an organizer sends a newsletter from the backoffice, to the chosen topic's subscribers. It leaves after every other email, from what is left of the allowance.",
         "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics.",
-        "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" while that person has not signed in yet. To the member's address, no token: the button leads to the sign-in, which decides who they are, then to the members' area."
+        "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5060,7 +5060,7 @@
       "written": "Written",
       "notWritten": "Not written",
       "benefitsHeading": "Members' benefits",
-      "benefitsHelp": "On the public page, above the sign-in button: what a member of the club gets. Unwritten, the page says one of the platform's sentences.",
+      "benefitsHelp": "On the public page, above the sign-in button: what a member of the club gets. Unwritten, the page shows a default sentence.",
       "benefitsFold": "Write the benefits",
       "benefitsRo": "Benefits (Romanian)",
       "benefitsEn": "Benefits (English)",

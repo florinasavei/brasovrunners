@@ -30,7 +30,7 @@ import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
@@ -43,9 +43,6 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
-
-/** A fold summary's glyph: the words' size, on their line. */
-const SUMMARY_GLYPH_SX = { fontSize: 20, verticalAlign: "text-bottom", mr: 0.75 } as const;
 
 /**
  * The members' pages in the backoffice (§NNN), «Membri» in the «Pagini standard» group of «Pagini»: «Beneficiile
@@ -224,9 +221,9 @@ function TextCard({
             <summary>
               {/* The glyph the «Pagini» row gives this text (§NNN): the benefits' card, the zone's lock. */}
               {text === "benefits" ? (
-                <CardMembershipIcon aria-hidden="true" sx={SUMMARY_GLYPH_SX} />
+                <CardMembershipIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
               ) : (
-                <LockPersonIcon aria-hidden="true" sx={SUMMARY_GLYPH_SX} />
+                <LockPersonIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
               )}
               {t(`members.${text}Fold`)}
             </summary>

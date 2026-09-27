@@ -2329,7 +2329,7 @@
             "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
             "Dacă rămâne așa, deschide consola Zitadel. Dacă nu se deschide, e o problemă a furnizorului; dacă se deschide, verifică pe Vercel ZITADEL_MANAGEMENT_PAT și AUTH_ZITADEL_ISSUER."
           ],
-          "capped": "Organizația are mai multe conturi decât citește verificarea (cel mult 2000, în pagini de câte 200). Cheia poate funcționa, dar Echipa nu mai poate spune despre niciun rând că nu are cont de autentificare.",
+          "capped": "Organizația are mai multe conturi decât citește verificarea: cel mult 2000, câte 200 pe pagină. Cheia poate funcționa, dar Echipa nu mai poate spune ce rând nu are cont de autentificare.",
           "howCapped": [
             "Nu e nimic de reparat la cheie. Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din src/modules/staff-identity/zitadel-users.ts, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
           ]
@@ -2636,8 +2636,8 @@
           "more": "Pe planul gratuit baza adoarme când nu o folosește nimeni, așa că prima pagină după o pauză e mai lentă. Pasul următor se plătește la consum."
         },
         "zitadel": {
-          "name": "Zitadel (contul cu care intră echipa și membrii)",
-          "freeGives": "Gratuit (verificat pe 27.09.2026): până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate și fluxurile personalizate (actions) incluse, fără un număr lunar publicat.",
+          "name": "Zitadel (contul echipei și al membrilor)",
+          "freeGives": "Gratuit: până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate. Verificat pe 27.09.2026.",
           "ceiling": "Singura limită care contează: un singur administrator, fără de care nimeni nu mai poate invita pe nimeni.",
           "whenCrossed": "Nu se traversează: se notează cine este administratorul și unde sunt datele de acces.",
           "closeYes": "—",
@@ -3519,7 +3519,7 @@
         "NEWSLETTER_CONFIRM": "Când cineva se abonează de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}.",
         "NEWSLETTER": "Doar când un organizator trimite un newsletter din backoffice, către abonații temei alese. Pleacă după celelalte emailuri, din ce rămâne din limită.",
         "NEW_EVENT_ALERT": "O dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), către abonații la evenimente noi și la temele lui.",
-        "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa membrului, fără token: butonul duce la autentificare, care decide cine e, apoi în zona membrilor."
+        "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” până la prima autentificare. Fără token: butonul duce la autentificare, apoi în zona membrilor."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5060,7 +5060,7 @@
       "written": "Scris",
       "notWritten": "Nescris",
       "benefitsHeading": "Beneficiile membrilor",
-      "benefitsHelp": "Pe pagina publică, deasupra butonului de autentificare: ce primește un membru al clubului. Nescris, pagina spune o frază a platformei.",
+      "benefitsHelp": "Pe pagina publică, deasupra butonului de autentificare: ce primește un membru al clubului. Nescris, pagina arată un text implicit.",
       "benefitsFold": "Scrie beneficiile",
       "benefitsRo": "Beneficiile (română)",
       "benefitsEn": "Beneficiile (engleză)",
