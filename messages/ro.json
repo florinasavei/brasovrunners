@@ -180,7 +180,6 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — ia o frontală"
     },
-    "difficulty": "Dificultate",
     "difficultyLevelShort": "{band} {step}",
     "difficultyLevelSr": "Dificultate: {band}, treapta {step} din {steps}",
     "difficultyWithStep": "{band}, treapta {step} din {steps}",

@@ -154,6 +154,9 @@ const DISTANCE_ALIASES: Record<string, DistanceBand> = {
   "21-": "OVER_21",
 };
 
+/** The old difficulty keys an address may still carry, read as migration `0104` mapped them. */
+const LEGACY_DIFFICULTY: Record<string, string> = { VERY_EASY: "EASY", MODERATE: "MEDIUM" };
+
 /**
  * One asked value in a group's own spelling: the enum's name whatever its case, with `-` for `_`
  * (`group-run`, `Group_Run` and `GROUP_RUN` are one kind), and a distance's kilometre alias.
@@ -161,7 +164,10 @@ const DISTANCE_ALIASES: Record<string, DistanceBand> = {
 function canonical(group: FilterGroup, asked: string): string {
   // `Object.hasOwn`, not `in`: `?distance=constructor` must not find the prototype's.
   if (group === "distance" && Object.hasOwn(DISTANCE_ALIASES, asked)) return DISTANCE_ALIASES[asked];
-  return asked.toUpperCase().replaceAll("-", "_");
+  const name = asked.toUpperCase().replaceAll("-", "_");
+  // A §413 bookmark names the old four-level keys; read them as the migration mapped them (§NNN).
+  if (group === "difficulty" && Object.hasOwn(LEGACY_DIFFICULTY, name)) return LEGACY_DIFFICULTY[name];
+  return name;
 }
 
 /**

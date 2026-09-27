@@ -60,6 +60,11 @@ const ids = (rows: Row[], params: Record<string, string | string[]>) => {
 };
 
 describe("parseListingFilter reads the address", () => {
+  it("reads an old §413 bookmark: VERY_EASY as EASY and MODERATE as MEDIUM", () => {
+    expect(parseListingFilter({ difficulty: "VERY_EASY" }).difficulty).toEqual(["EASY"]);
+    expect(parseListingFilter({ difficulty: "moderate" }).difficulty).toEqual(["MEDIUM"]);
+  });
+
   it("reads the old single-value addresses exactly as before", () => {
     expect(parseListingFilter({ type: "RACE" })).toEqual({ ...NO_FILTER, type: ["RACE"] });
     expect(parseListingFilter({ partner: "1" })).toEqual({ ...NO_FILTER, partner: true });

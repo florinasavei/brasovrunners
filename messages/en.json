@@ -180,7 +180,6 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — bring a headlamp"
     },
-    "difficulty": "Difficulty",
     "difficultyLevelShort": "{band} {step}",
     "difficultyLevelSr": "Difficulty: {band}, step {step} of {steps}",
     "difficultyWithStep": "{band}, step {step} of {steps}",
