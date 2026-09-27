@@ -666,6 +666,13 @@
       "when": 1790521914565,
       "tag": "0097_registration_country",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1790525629959,
+      "tag": "0098_race_declaration_road",
+      "breakpoints": true
     }
   ]
 }

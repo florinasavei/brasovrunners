@@ -7,7 +7,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { currentFamilyStep, familySigningSteps } from "@/modules/registrations/domain/family-signing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import type { FamilySigningPass } from "@/modules/registrations/family-signing";
@@ -60,8 +60,8 @@ async function approve() {
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   const declaration: LegalDocumentTranslationInput[] = [
-    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-    { locale: "en", title: "Declaration", body: declarationEn },
+    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+    { locale: "en", title: "Declaration", body: declarationTrailEn },
   ];
   const effectiveAt = new Date("2026-01-01T00:00:00Z");
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt, isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });

@@ -8,6 +8,7 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
+import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
@@ -52,7 +53,8 @@ const BIB_COLOURS = [
   { key: "black", hex: "#212121" },
 ] as const;
 
-export type DeclarationOption = { id: string; version: number; title: string };
+/** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§NNN). */
+export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
 
 /** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
 function box(field: EventFieldName, extra: Record<string, unknown> = {}) {

@@ -56,11 +56,12 @@ async function noSidewaysScroll(page: Page) {
 async function sign(page: Page, locale: "ro" | "en", name: string, email: string) {
   const words =
     locale === "ro"
-      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am împlinit 18 ani, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "am împlinit 18 ani" }
-      : { document: "Identity document (series and number)", email: "Email address", accept: "I am 18 or older, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I am 18 or older" };
+      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am cel puțin 18 ani împliniți, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data alergării." }
+      : { document: "Identity document (series and number)", email: "Email address", accept: "I am at least 18 years old, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of the run." };
   await hydrated(page);
   // The approved text, before anything is asked (§57): the sample's banner says what it is, and the
-  // text opens with the signer's own statement of age — adults only.
+  // text states the run's age through {{minimumAge}} — never under eighteen, the declaration covers
+  // no minor (§NNN).
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
   await expect(page.locator("#main")).toContainText(words.adults);
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
@@ -74,9 +75,9 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   // regression that asks for one under these texts would go unnoticed by a lenient check —
   // the field is asked exactly when the text names it, never otherwise.
   await expect(page.getByLabel(words.document, { exact: false })).toHaveCount(0);
-  // The run's own minimum age (§440): the editor's default fourteen binds nobody the adults-only
-  // text does not already bind, so the sentence is left out and no birth date is asked.
-  await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "Declar că am cel puțin" : "I declare that I am at least");
+  // The run's own minimum age (§440, §NNN): a run saved with the default fourteen reads as eighteen,
+  // which the text states once; no birth date is asked at eighteen.
+  await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "am împlinit 18 ani" : "I am 18 or older");
   await expect(page.locator('input[name="birthDate"]')).toHaveCount(0);
   await page.getByRole("textbox", { name: words.email }).fill(email);
   await page.getByRole("checkbox", { name: words.accept }).check();

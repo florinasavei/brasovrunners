@@ -91,7 +91,8 @@ describe("the event form's constraints are the schema's (§315)", () => {
     expect(eventInputConstraints("confirmationOpensDaysBefore")).toMatchObject({ type: "number", min: 0, max: 60 });
     expect(eventInputConstraints("confirmationDeadlineDaysBefore")).toMatchObject({ type: "number", min: 0, max: 60 });
     // The event's minimum age (§329): the database's CHECK, zero (no minimum) to ninety-nine.
-    expect(eventInputConstraints("minAge")).toMatchObject({ type: "number", min: 0, max: 99, step: 1 });
+    // §NNN: fourteen is the floor.
+    expect(eventInputConstraints("minAge")).toMatchObject({ type: "number", min: 14, max: 99, step: 1 });
     // Optional: an empty capacity is "no limit", never a refusal; an empty minimum is fourteen.
     expect(eventInputConstraints("capacity").required).toBeUndefined();
     expect(eventInputConstraints("minAge").required).toBeUndefined();

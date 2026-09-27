@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { yearsPhrase } from "@/modules/registrations/domain/age";
+import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { type EventType, publicAgeRule } from "../domain/event-type";
 
 /**
@@ -12,7 +12,7 @@ import { type EventType, publicAgeRule } from "../domain/event-type";
  *
  * The sentence is `publicAgeRule`'s: where the club takes the registrations, the form's own
  * sentence (the page and the form cannot disagree); anywhere else the minimum with the parent's
- * consent below eighteen; nothing for no minimum where nobody registers here. A `h3` like the
+ * consent below eighteen; never under fourteen (`effectiveMinimumAge`, §NNN). A `h3` like the
  * fold's other parts, so it stays in a screen reader's list of headings. A Server Component.
  */
 export default async function EventAgeRule({
@@ -21,7 +21,6 @@ export default async function EventAgeRule({
   event: { type: EventType; registrationMode: "NONE" | "INTERNAL" | "EXTERNAL"; minAge: number };
 }) {
   const variant = publicAgeRule(event);
-  if (!variant) return null;
   const [t, rt, locale] = await Promise.all([getTranslations("Event"), getTranslations("Registration"), getLocale()]);
   return (
     <Box component="section" id="age" aria-labelledby="age-title" data-testid="conditions-age" sx={{ mt: 1 }}>
@@ -29,7 +28,7 @@ export default async function EventAgeRule({
         {t("age")}
       </Typography>
       <Typography variant="body1" sx={{ m: 0 }}>
-        {rt(`ageRule.${variant}`, { age: yearsPhrase(event.minAge, locale) })}
+        {rt(`ageRule.${variant}`, { age: yearsPhrase(effectiveMinimumAge(event.minAge), locale) })}
       </Typography>
     </Box>
   );

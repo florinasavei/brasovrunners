@@ -32,7 +32,7 @@ import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
-import { groupRunDeclarationsInForce, listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
@@ -98,7 +98,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   const mayPublish = canTransition(staffUser.role, "IN_REVIEW", "PUBLISHED", false);
 
   const { error } = await searchParams;
-  const declarations = await listApprovedVersions(getDb(), "EVENT_DECLARATION", locale);
+  const declarations = await listApprovedRaceDeclarations(getDb(), locale);
   // The club's deadlines (§377): the reminder an event left "as usual" gets, and how far ahead a series is created.
   const deadlines = await deadlinesForThisRequest();
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);

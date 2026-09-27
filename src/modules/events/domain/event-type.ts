@@ -1,4 +1,4 @@
-import { ADULT_AGE, type AgeRuleVariant, ageRuleVariant } from "@/modules/registrations/domain/age";
+import { ADULT_AGE, type AgeRuleVariant, ageRuleVariant, effectiveMinimumAge } from "@/modules/registrations/domain/age";
 
 /**
  * The event types and surfaces, as AGENTS.md §10.1 defines them.
@@ -111,7 +111,8 @@ export function hasAgeRule(event: { type: EventType; registrationMode: "NONE" | 
  *   cu acordul unui părinte.» (`minimumAndConsent`): there is no registration here for a parent to
  *   make, so the sentence names the consent, not a door that does not exist. Eighteen and over,
  *   the minimum alone (`minimumOnly`).
- * - No minimum (zero) and no registration here: nothing — never "from 0 years".
+ * - Never under fourteen (§NNN, `effectiveMinimumAge`): an event saved with 0 under §329 reads as
+ *   fourteen, so every event states a minimum.
  */
 export type PublicAgeRuleVariant = AgeRuleVariant | "minimumAndConsent";
 
@@ -119,10 +120,9 @@ export function publicAgeRule(event: {
   type: EventType;
   registrationMode: "NONE" | "INTERNAL" | "EXTERNAL";
   minAge: number;
-}): PublicAgeRuleVariant | null {
+}): PublicAgeRuleVariant {
   if (hasAgeRule(event)) return ageRuleVariant(event.minAge);
-  if (event.minAge <= 0) return null;
-  return event.minAge >= ADULT_AGE ? "minimumOnly" : "minimumAndConsent";
+  return effectiveMinimumAge(event.minAge) >= ADULT_AGE ? "minimumOnly" : "minimumAndConsent";
 }
 
 /** Whether the editor offers a programme — the timed rows and the text under `#schedule`. */

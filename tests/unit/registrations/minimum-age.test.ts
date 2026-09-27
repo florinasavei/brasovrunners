@@ -7,6 +7,7 @@ import {
   ageOn,
   ageRuleVariant,
   dayIn,
+  effectiveMinimumAge,
   isMinorOn,
   latestBirthDateFor,
   MIN_PARTICIPANT_AGE,
@@ -30,8 +31,19 @@ import {
  * the words the number is said in, at the edges where Romanian grammar changes.
  */
 describe("§321 the minimum age is counted by the calendar, on the race day", () => {
-  it("defaults to fourteen — the column's default and what a new event is offered, not the rule", () => {
+  it("defaults to fourteen — the column's default and what a new event is offered", () => {
     expect(MIN_PARTICIPANT_AGE).toBe(14);
+  });
+
+  // §NNN — the owner's review of 2026-09-27: fourteen is the absolute floor; an event asks as much or more.
+  it("binds at fourteen at least: an older event's 0 or 12 reads as fourteen, its own 16 or 21 as itself", () => {
+    expect(effectiveMinimumAge(0)).toBe(14);
+    expect(effectiveMinimumAge(12)).toBe(14);
+    expect(effectiveMinimumAge(null)).toBe(14);
+    expect(effectiveMinimumAge(undefined)).toBe(14);
+    expect(effectiveMinimumAge(14)).toBe(14);
+    expect(effectiveMinimumAge(16)).toBe(16);
+    expect(effectiveMinimumAge(21)).toBe(21);
   });
 
   it("lets in somebody whose fourteenth birthday is the race day, and not the day after", () => {
@@ -130,8 +142,9 @@ describe("§329 a number of years, as a sentence says it", () => {
     }
   });
 
-  it("picks the sentence that reads right for the number: no minimum, a minor's minimum, an adult's", () => {
-    expect(ageRuleVariant(0)).toBe("guardianOnly");
+  it("picks the sentence that reads right for the number: a minor's minimum, an adult's — never «no minimum» (§NNN)", () => {
+    // An older event saved with 0 or 1 reads as fourteen: the minimum and the parent.
+    expect(ageRuleVariant(0)).toBe("minimumAndGuardian");
     expect(ageRuleVariant(1)).toBe("minimumAndGuardian");
     expect(ageRuleVariant(14)).toBe("minimumAndGuardian");
     expect(ageRuleVariant(17)).toBe("minimumAndGuardian");
@@ -191,11 +204,17 @@ describe("§321 the rule on the schema, for whichever caller adds it", () => {
     expect(registrationSubmissionSchema.superRefine(minimumAgeRule("2026-11-21", 16)).safeParse(sixteenOnTheDay).success).toBe(true);
   });
 
-  it("has no minimum to count at zero", () => {
-    // Born the week of the race: anyone the birth-date range allows.
-    const baby = { ...complete, birthDate: "2026-09-01" };
-    const result = registrationSubmissionSchema.superRefine(minimumAgeRule("2026-11-21", 0)).safeParse(baby);
-    expect(paths(result)).not.toContain(UNDER_MINIMUM_AGE);
+  it("counts fourteen at zero or twelve: nobody under fourteen enters any event (§NNN)", () => {
+    // Born the week of the race, and thirteen on the day: an event saved under §329 with 0 or 12
+    // refuses both, as fourteen does.
+    for (const minAge of [0, 12]) {
+      for (const birthDate of ["2026-09-01", "2012-11-22"]) {
+        const result = registrationSubmissionSchema.superRefine(minimumAgeRule("2026-11-21", minAge)).safeParse({ ...complete, birthDate });
+        expect(paths(result), `${birthDate} at ${minAge}`).toEqual(["birthDate", UNDER_MINIMUM_AGE]);
+      }
+    }
+    // Fourteen on the day still enters.
+    expect(registrationSubmissionSchema.superRefine(minimumAgeRule("2026-11-21", 0)).safeParse({ ...complete, birthDate: "2012-11-21" }).success).toBe(true);
   });
 
   it("gives a malformed date the schema's own reason only", () => {
@@ -260,20 +279,17 @@ describe("§329 every sentence about the minimum age says the event's number, th
       expect(t("ageRule.minimumAndGuardian", { age: yearsPhrase(14, locale) })).toMatch(/18/);
       // Eighteen or more: nobody who may enter needs a parent.
       expect(t("ageRule.minimumOnly", { age: yearsPhrase(18, locale) })).not.toMatch(/părinte|parent/);
-      // No minimum: the parent sentence alone, and never "from 0 years".
-      const none = t("ageRule.guardianOnly");
-      expect(none).not.toContain("{age}");
-      expect(none).not.toMatch(/\b0\b/);
-      expect(none).toMatch(/părinte|parent/);
-      // The birth date's help on an event with no minimum says only the categories.
-      expect(t("birthDateHelpNoMinimum")).not.toMatch(/\d/);
     });
   }
 
-  it("has every sentence variant in both catalogues", () => {
-    for (const variant of ["minimumAndGuardian", "minimumOnly", "guardianOnly"] as const) {
+  it("has every sentence variant in both catalogues, and no «no minimum» sentence any more (§NNN)", () => {
+    for (const variant of ["minimumAndGuardian", "minimumOnly"] as const) {
       expect(ro.Registration.ageRule[variant], `ro ${variant}`).toBeTruthy();
       expect(en.Registration.ageRule[variant], `en ${variant}`).toBeTruthy();
+    }
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Registration.ageRule).not.toHaveProperty("guardianOnly");
+      expect(catalogue.Registration).not.toHaveProperty("birthDateHelpNoMinimum");
     }
   });
 
@@ -286,9 +302,6 @@ describe("§329 every sentence about the minimum age says the event's number, th
     expect(t("errors.tooYoung", { age: yearsPhrase(16, "ro") })).toBe(
       "Vârsta minimă de participare la acest eveniment este 16 ani împliniți în ziua cursei.",
     );
-    expect(t("ageRule.guardianOnly")).toBe(
-      "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
-    );
   });
 
   it("puts the event's minimum in English with the same exact wording", () => {
@@ -297,9 +310,6 @@ describe("§329 every sentence about the minimum age says the event's number, th
       "Minimum age: 14 years. Under 18, a parent or legal guardian registers the runner, with their consent.",
     );
     expect(t("ageRule.minimumOnly", { age: yearsPhrase(21, "en") })).toBe("Minimum age: 21 years.");
-    expect(t("ageRule.guardianOnly")).toBe(
-      "Under 18, a parent or legal guardian registers the runner, with their consent.",
-    );
   });
 
   it("gives the volunteer the chosen event's number in the backoffice's sentence, in both languages", () => {

@@ -523,7 +523,7 @@ describe("§440 a group run's minimum age at the signing door", () => {
     await renderOutboxMessage(claimed(signed), db, NOW);
     const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
     expect(drawn.entries[0].values?.minimumAge).toBe("21 de ani");
-    expect(JSON.stringify(drawn.entries[0].body)).toContain("Declar că am cel puțin {{minimumAge}}.");
+    expect(JSON.stringify(drawn.entries[0].body)).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data alergării.");
   });
 
   it("counts the day in the run's zone: a start at 01:30 in Brașov is the 7th, the 6th in UTC", async () => {
@@ -532,23 +532,25 @@ describe("§440 a group run's minimum age at the signing door", () => {
     expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: "2005-10-07" }), NOW)).outcome).toBe("signed");
   });
 
-  it("asks nothing of a run whose minimum is eighteen or less, and leaves the sentence out: the text already says eighteen", async () => {
+  // §NNN: the text states the run's age through {{minimumAge}} alone, never under eighteen — the
+  // declaration covers no minor — and asks a birth date only above eighteen (§440).
+  it("asks no birth date of a run whose minimum is eighteen or less, and states eighteen in the PDF", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun({ minAge: 14 });
     expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: undefined }), NOW)).outcome).toBe("signed");
     const [signed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
     await renderOutboxMessage(claimed(signed), db, NOW);
     const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
-    expect(drawn.entries[0].values?.minimumAge).toBe("");
+    expect(drawn.entries[0].values?.minimumAge).toBe("18 ani");
   });
 
-  it("asks nothing of a run with no minimum, and leaves the sentence out (the value is empty)", async () => {
+  it("reads a run saved with no minimum as eighteen: no birth date, eighteen in the PDF", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun({ minAge: 0 });
     expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: undefined }), NOW)).outcome).toBe("signed");
     const [signed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
     await renderOutboxMessage(claimed(signed), db, NOW);
     const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
-    expect(drawn.entries[0].values?.minimumAge).toBe("");
+    expect(drawn.entries[0].values?.minimumAge).toBe("18 ani");
   });
 });

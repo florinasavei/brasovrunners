@@ -114,6 +114,11 @@ export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
  * which drops the field's words and keeps the sentence around them; this is the paragraph's
  * version of it. Given no value at all, the paragraph stays with its dotted blank, like every
  * field on a text previewed without an event.
+ *
+ * Since §NNN every declaration states it — both race texts open with it, and the group runs' one
+ * sentence of age is it — and no event gives "" any more: a race's is never under fourteen
+ * (`effectiveMinimumAge`), a group run's never under eighteen (`groupRunMinimumAge`). The drop
+ * stays for a caller that passes zero, so a sentence about no age is still never printed.
  */
 export const MINIMUM_AGE_MERGE_FIELD = "minimumAge";
 

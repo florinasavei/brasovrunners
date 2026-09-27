@@ -847,7 +847,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 });
 
 test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => {
-  test("the form's picker and its sentences follow the number set in the editor: sixteen, then none", async ({ page }) => {
+  test("the form's picker and its sentences follow the number set in the editor: sixteen, then eighteen", async ({ page }) => {
     /*
       The owner, 2026-09-23: "actually this min age must be set at event level!". An event of its
       own, per project and per run, rather than the featured one: every other spec here counts on
@@ -890,8 +890,9 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await field("event.capacity").fill("50");
     // The minimum age is a box of «Regulamentul», for every type (§505).
     await openEditorBox(page, "Regulamentul");
-    // The box offers the club's fourteen until the organizer says otherwise.
+    // The box offers the club's fourteen until the organizer says otherwise, and never less (§NNN).
     await expect(field("event.minAge")).toHaveValue("14");
+    await expect(field("event.minAge")).toHaveAttribute("min", "14");
     await field("event.minAge").fill("16");
     await openEditorBox(page, "Declarația pe propria răspundere");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
@@ -926,30 +927,26 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       );
       expect(await typicalAgeRange()).toBe("16-");
 
-      // No minimum, set in the editor.
+      // Eighteen, set in the editor: no event has «no minimum» any more (§NNN).
       await page.goto(editorUrl);
       await hydrated(page);
       await expect(field("event.minAge")).toHaveValue("16");
       await openEditorBox(page, "Regulamentul");
-      await field("event.minAge").fill("0");
+      await field("event.minAge").fill("18");
       const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
       if (await acknowledge.count()) await acknowledge.check();
       await page.getByRole("button", { name: "Salvează", exact: true }).click();
       await page.waitForURL(/[?&](saved|error)=/);
       expect(page.url()).toContain("saved=");
 
-      // Only who registers a minor, no "from 0 years"; the help says the categories alone; and
-      // the picker's bound is today, the one the page always had.
+      // Eighteen: the minimum alone, nobody who may enter needs a parent; the picker's bound is the
+      // last birth date that is eighteen on 3 May 2027, and the structured data says "18-".
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
-      await expect(page.getByTestId("age-rule")).toHaveText(
-        "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
-      );
-      await expect(page.locator("#main")).toContainText("Categoriile de vârstă se calculează la data cursei.");
-      await expect(page.locator("#main")).not.toContainText("Vârsta minimă este");
-      await expect(page.locator("#main")).not.toContainText("Vârsta minimă:");
-      await expect(field("birthDate")).toHaveAttribute("max", new Date().toISOString().slice(0, 10));
+      await expect(page.getByTestId("age-rule")).toHaveText("Vârsta minimă: 18 ani.");
+      await expect(page.locator("#main")).toContainText("Vârsta minimă este 18 ani împliniți în ziua cursei");
+      await expect(field("birthDate")).toHaveAttribute("max", "2009-05-03");
       await page.goto(`/ro/evenimente/${slug}`);
-      expect(await typicalAgeRange()).toBeNull();
+      expect(await typicalAgeRange()).toBe("18-");
     } finally {
       // Off the site again — pass or fail — so no run leaves one more card on the listing that
       // other specs count.

@@ -10,7 +10,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
@@ -1817,15 +1817,16 @@ export async function signDeclaration<T extends Record<string, unknown>>(
      * whether the signature is accepted, never what it says.
      */
     /*
-      The text this signature binds to: the version current for this registration's language,
-      read once, before anything is compared (§330). Who signs and which documents are asked are
+      The text this signature binds to: the version current for this registration's language, of
+      the event's own declaration — trail or road (§NNN, `findEventDeclaration`) — read once,
+      before anything is compared (§330). Who signs and which documents are asked are
       read from it, so it has to be the text the page showed — and that is checked first: the
       page posts the id and hash of the version it rendered, and a newer version approved in
       between is refused here with CONFLICT (`declarationChanged`, BR-REQ-033-02 criterion 6,
       §57) rather than as a refusal of a box the page never had, or a box the page had ignored.
       Never a flag the page posts: the server reads the text itself.
     */
-    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", before.locale, now);
+    const document = await findEventDeclaration(tx, before.eventId, before.locale, now);
     if (document && (document.id !== parsed.data.documentId || document.contentSha256 !== parsed.data.contentSha256)) {
       throw declarationChanged(document.version);
     }
@@ -2039,7 +2040,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   /** The number the desk handed with the paper (§444), when it handed one. */
   handedBib?: number,
 ): Promise<Registration> {
-  const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", current.locale, now);
+  const document = await findEventDeclaration(tx, current.eventId, current.locale, now);
   if (!document) {
     throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
   }

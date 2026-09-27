@@ -7,7 +7,7 @@ import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentBody, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import {
@@ -66,8 +66,8 @@ async function approve(db: TestDatabase, declaration: LegalDocumentTranslationIn
 }
 
 const CLUB_DECLARATION: LegalDocumentTranslationInput[] = [
-  { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-  { locale: "en", title: "Declaration", body: declarationEn },
+  { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+  { locale: "en", title: "Declaration", body: declarationTrailEn },
 ];
 const PLAIN_DECLARATION: LegalDocumentTranslationInput[] = [
   { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["Particip pe proprie răspundere."] }] } },

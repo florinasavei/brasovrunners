@@ -10,7 +10,7 @@ import {
   mergeTextSegments,
   mergeText,
 } from "@/modules/legal-documents/domain/merge-fields";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 
 /** `DECISIONS.md` §95 — the blanks of the club's declaration are named fields in one fixed text. */
@@ -43,8 +43,8 @@ describe("the declaration's merge fields", () => {
   });
 
   it("is used by the club's declaration in both languages, with the same fields", () => {
-    const ro = mergeFieldsIn(declarationRo);
-    const en = mergeFieldsIn(declarationEn);
+    const ro = mergeFieldsIn(declarationTrailRo);
+    const en = mergeFieldsIn(declarationTrailEn);
     expect([...ro].sort()).toEqual([...en].sort());
     /*
       Since §330 the platform's text opens with the participant and their own document, and names
@@ -55,7 +55,7 @@ describe("the declaration's merge fields", () => {
     for (const field of ["participant", "participantIdDocument", "guardian", "guardianIdDocument", "event", "eventDate", "eventLocation"]) {
       expect(ro.has(field as (typeof MERGE_FIELDS)[number]), field).toBe(true);
     }
-    expect(asksForIdDocument(declarationRo)).toBe(true);
+    expect(asksForIdDocument(declarationTrailRo)).toBe(true);
   });
 
   /** §330 — each signer's document is a field of its own, and naming any document asks for them. */
@@ -81,8 +81,8 @@ describe("the declaration's merge fields", () => {
     const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 
     it("is on when the text names the participant's own document, in either language", () => {
-      expect(asksForMinorSignature(declarationRo)).toBe(true);
-      expect(asksForMinorSignature(declarationEn)).toBe(true);
+      expect(asksForMinorSignature(declarationTrailRo)).toBe(true);
+      expect(asksForMinorSignature(declarationTrailEn)).toBe(true);
       expect(asksForMinorSignature(text("I, {{participant}}, holder of {{participantIdDocument}}."))).toBe(true);
       // Spaced inside the braces, as the merge reads it too.
       expect(asksForMinorSignature(text("CI {{ participantIdDocument }}"))).toBe(true);

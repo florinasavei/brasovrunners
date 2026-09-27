@@ -2,7 +2,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import type { Locale } from "@/i18n/routing";
 import type { LegalDocumentBody } from "../domain/content-hash";
 import { type ClubFacts, fillClubFacts } from "./club-facts";
-import { declarationEn, declarationRo } from "./declaration";
+import { declarationRoadEn, declarationRoadRo, declarationTrailEn, declarationTrailRo } from "./declaration";
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "./group-run-declaration";
 import { privacyNoticeEn, privacyNoticeRo } from "./privacy-notice";
 import { termsEn, termsRo } from "./terms";
@@ -29,9 +29,15 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Termeni și condiții", body: termsRo },
     en: { title: "Terms and conditions", body: termsEn },
   },
+  // The race's two declarations, one body with a risk section per course (§NNN): the trail one keeps
+  // the key every signature so far was recorded under.
   EVENT_DECLARATION: {
-    ro: { title: "Declarație pe proprie răspundere", body: declarationRo },
-    en: { title: "Declaration of own responsibility", body: declarationEn },
+    ro: { title: "Declarație pe propria răspundere — cursă trail", body: declarationTrailRo },
+    en: { title: "Self-declaration — trail race", body: declarationTrailEn },
+  },
+  EVENT_DECLARATION_ROAD: {
+    ro: { title: "Declarație pe propria răspundere — cursă pe asfalt / în parc", body: declarationRoadRo },
+    en: { title: "Self-declaration — road / park race", body: declarationRoadEn },
   },
   // The group runs' optional self-declarations, one per surface (§393).
   GROUP_RUN_DECLARATION_ASPHALT: {

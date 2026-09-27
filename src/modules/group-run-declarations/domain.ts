@@ -22,32 +22,45 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
 }
 
 /**
- * The minimum age a group run's self-declaration actually states and asks for (§440): the event's
- * own `min_age` (§329) only when it is above eighteen, zero otherwise. The declaration is for adults
- * (§393, §418): its opening says "am împlinit 18 ani" and the consent box repeats it, so a minimum of
- * eighteen or less binds nobody the text does not already bind. Stating it would read as a second,
- * contradictory age ("am împlinit 18 ani… am cel puțin 14 ani"), and asking a birth date for it would
- * collect data for no purpose (GDPR art. 5(1)(c), the reason §418 took the identity number off this
- * text). The column defaults to fourteen, so on most runs this is zero: no sentence, no birth date.
- * Admitting minors of 14–17 would change the opening and the consent box — a legal-text decision.
+ * The minimum age a group run's self-declaration states (§440, amended by §NNN): the event's own
+ * `min_age` (§329), never under eighteen.
+ *
+ * The owner's review of 2026-09-27: the texts said at once «declar că am împlinit 18 ani» and «Declar
+ * că am cel puțin {{minimumAge}}» — "elimină hardcodarea de 18 și folosește o singură regulă pe
+ * `{{minimumAge}}`. Dacă group run-urile rămân doar pentru adulți, `minimumAge = 18` la configurarea
+ * evenimentului, nu în text. Nu presupune că declarația de group run acoperă minorii." So the text
+ * carries one sentence, «Declar că am cel puțin {{minimumAge}} împliniți la data alergării», and this
+ * is its value: the run's number, which the editor's group-run box starts and stops at eighteen,
+ * read as eighteen for a run saved before with the race's default of fourteen. The declaration has
+ * no minor's signature and no parent's (that is the race's flow, §330), so it covers no minor.
  */
 export function groupRunMinimumAge(minAge: number): number {
-  return minAge > ADULT_AGE ? minAge : 0;
+  return Math.max(minAge, ADULT_AGE);
+}
+
+/**
+ * Whether the signing page asks for a birth date (§440): only for a minimum above eighteen. At
+ * eighteen the signer's own statement — the text's sentence, and the consent box that repeats it —
+ * is what the declaration rests on, and a birth date would be data collected for no purpose (GDPR
+ * art. 5(1)(c), the reason §418 took the identity number off this text). Above it, the page checks.
+ */
+export function groupRunAsksBirthDate(minAge: number): boolean {
+  return groupRunMinimumAge(minAge) > ADULT_AGE;
 }
 
 /**
  * The run's minimum age at the signing page's door (§440, amending §393): the event's own number
  * (§329) as `groupRunMinimumAge` binds it, counted on the run's day in the run's zone by `isUnderMinimumAge` — the rule the race's
- * registration door asks (`minimumAgeRule`), never a second one. Nothing is asked of a run with no
- * minimum. A missing or unreadable date names the box; a date under the minimum names the box and
- * the marker, so the page says the number rather than "fill it in".
+ * registration door asks (`minimumAgeRule`), never a second one. Nothing is asked of a run at
+ * eighteen (`groupRunAsksBirthDate`). A missing or unreadable date names the box; a date under the
+ * minimum names the box and the marker, so the page says the number rather than "fill it in".
  */
 export function birthDateRefusal(
   event: { minAge: number; startsAt: Date; timezone: string },
   birthDate: string | undefined,
 ): string[] {
+  if (!groupRunAsksBirthDate(event.minAge)) return [];
   const minAge = groupRunMinimumAge(event.minAge);
-  if (minAge <= 0) return [];
   const day = dayIn(event.startsAt, event.timezone);
   const value = (birthDate ?? "").trim();
   if (ageOn(value, day) === null) return ["birthDate"];

@@ -332,7 +332,7 @@ async function renderRow(
   if (registration?.guardianName) {
     data.guardianName = registration.guardianName;
     if (row.messageType === "COMPLETE_DECLARATION" || row.messageType === "WAITLIST_SPOT_OFFER") {
-      data.minorSigns = await declarationAsksMinorToSign(db, registration.locale as Locale, now);
+      data.minorSigns = await declarationAsksMinorToSign(db, registration.locale as Locale, now, registration.eventId);
     }
   }
   /*

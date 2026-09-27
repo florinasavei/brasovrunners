@@ -42,7 +42,7 @@ import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
 import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
 import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { groupRunDeclarationsInForce, declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, declarationAsksMinorToSign, listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   canCreateEvent,
@@ -193,7 +193,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
-  const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
+  const declarations = await listApprovedRaceDeclarations(db, locale);
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const now = new Date();
@@ -207,7 +207,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     The minor's paper form (§330) only where the declaration in effect, in the language the form
     prints in, asks the minor to sign.
   */
-  const minorFormOffered = canReadRegistrations(staffUser.role) && internal ? await declarationAsksMinorToSign(db, locale, now) : false;
+  const minorFormOffered = canReadRegistrations(staffUser.role) && internal ? await declarationAsksMinorToSign(db, locale, now, event.id) : false;
   // The language endonyms are shared with the public switcher.
   const tSite = await getTranslations("Site");
 

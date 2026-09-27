@@ -2,7 +2,7 @@ import Stack from "@mui/material/Stack";
 import { getTranslations } from "next-intl/server";
 import { hasProgramme } from "@/modules/events/domain/event-type";
 import Panel from "@/shared/ui/Panel";
-import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { minAgeSummary, programmeSummary, rulesSummary, startListSummary } from "../box-summaries";
 import { type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 import DeclarationCard, { declarationLine } from "./DeclarationCard";
@@ -64,7 +64,7 @@ export default async function ProgrammeRulesBox({
         // «regulamentul: RO: completat · EN: gol» — the rules' own line, named, among the other two.
         t("editor.boxes.programmeRules.rulesLine", { state: rulesSummary(words, translations) }),
         // «vârsta minimă 14 ani» — the age is a box of «Regulamentul» since §505.
-        minAgeSummary(words, event?.minAge ?? MIN_PARTICIPANT_AGE, locale),
+        minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
         line.text,
         // «lista publică: Ascunsă» — the public list's own line, named, last (§NNN).
         t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility) }),

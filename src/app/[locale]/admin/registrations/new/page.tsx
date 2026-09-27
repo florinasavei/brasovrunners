@@ -23,7 +23,7 @@ import {
   StaffHandedBibField,
 } from "@/modules/registrations/ui/StaffEventBirthDate";
 import { spareStates } from "@/modules/registrations/bibs";
-import { dayIn } from "@/modules/registrations/domain/age";
+import { dayIn, effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
@@ -170,7 +170,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               defaultValue={selectedEventId}
               events={events.map((event) => ({
                 id: event.id,
-                label: `${event.title ?? event.id} · ${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })}${event.minAge > 0 ? ` · ${event.minAge}+` : ""}`,
+                label: `${event.title ?? event.id} · ${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })} · ${effectiveMinimumAge(event.minAge)}+`,
               }))}
             />
 

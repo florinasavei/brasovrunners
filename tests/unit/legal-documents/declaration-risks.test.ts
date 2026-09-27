@@ -1,138 +1,216 @@
 import { describe, expect, it } from "vitest";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import {
+  declarationRoadEn,
+  declarationRoadRo,
+  declarationTrailEn,
+  declarationTrailRo,
+  RACE_DECLARATION_PARTS,
+} from "@/modules/legal-documents/templates/declaration";
+import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 
 /**
  * §357 — the owner, 2026-09-24: the declaration must "cover us on the encounters with wild
  * animals, proper equipment (shoes, headlamp for night running), falling, etc — basically the
- * runner takes ownership of everything".
+ * runner takes ownership of everything". §418 — the counsel review: informed acceptance of risk,
+ * never a waiver, and the law's limit on every sentence that says the organiser does not answer.
  *
- * The platform's declaration names each of those risks, in both languages, as a bullet in the
- * text's own "• …;" style, and closes them with the owner's sentence. It is written as informed
- * acceptance of a risk plus the runner's own obligations — the Civil Code does not let a text
- * remove liability for intent or gross fault, or for harm to the body or health except as the
- * law allows (art. 1355), and accepting a risk is not a waiver of damages — so the new bullets
- * promise nobody immunity, and every sentence that says the organiser does not answer for
- * something (the liability paragraph, the belongings bullet) carries "to the extent the law
- * allows".
- *
- * §418 — the counsel review of 2026-09-25: the health bullet is "to the best of my knowledge" and
- * names the cardiac risk; heat and cold, traffic duties, slow help on remote sections, no alcohol
- * or drugs, first aid and being stopped are named; "a group run is not a guided tour" left the
- * race's text; the paper form's waiver became informed acceptance that says it is no waiver; and
- * the runner can no longer release the club toward a child they bring along — that paragraph says
- * who supervises, and disclaims nothing.
+ * §NNN — the owner's review of 2026-09-27: the race's declaration is two texts from one shared
+ * body — trail (`EVENT_DECLARATION`) and road or park (`EVENT_DECLARATION_ROAD`). The shared
+ * sections (the participant, the minimum age, minors of 14–17, liability, health, stopping, fair
+ * play, belongings, the kit, photographs, the data, the signature) are written once; each text adds
+ * the risks of its own course. No flow for a participant under fourteen. Wild animals in general
+ * words; substances as "other substances that impair my ability to take part safely"; the start
+ * refused only for the mandatory equipment of the event's own rules.
  */
-const paragraphs = { ro: declarationRo.sections.flatMap((s) => s.paragraphs), en: declarationEn.sections.flatMap((s) => s.paragraphs) };
-const bullets = { ro: paragraphs.ro.filter((p) => p.startsWith("• ")), en: paragraphs.en.filter((p) => p.startsWith("• ")) };
+type Locale = "ro" | "en";
+const LOCALES: readonly Locale[] = ["ro", "en"];
+const paragraphsOf = (body: LegalDocumentBody) => body.sections.flatMap((s) => s.paragraphs);
+const TEXTS = {
+  trail: { ro: paragraphsOf(declarationTrailRo), en: paragraphsOf(declarationTrailEn) },
+  road: { ro: paragraphsOf(declarationRoadRo), en: paragraphsOf(declarationRoadEn) },
+} as const;
+type Course = keyof typeof TEXTS;
+const COURSES: readonly Course[] = ["trail", "road"];
+const bullets = (course: Course, locale: Locale) => TEXTS[course][locale].filter((p) => p.startsWith("• "));
+const all = (course: Course, locale: Locale) => TEXTS[course][locale].join("\n");
 
-/** Each risk the owner named, and the words that say it in each language. */
-const RISKS: ReadonlyArray<{ risk: string; ro: RegExp[]; en: RegExp[] }> = [
-  { risk: "wild animals and dogs", ro: [/animalelor sălbatice/, /urși/, /mistreți/, /vipere/, /căpușe/, /câini de stână/], en: [/wild animals/, /bears/, /wild boar/, /vipers/, /ticks/, /sheepdogs/] },
+/** What both texts must say, in each language. */
+const SHARED: ReadonlyArray<{ what: string; ro: RegExp[]; en: RegExp[] }> = [
+  { what: "the event's own minimum age, never a number", ro: [/Declar că am cel puțin \{\{minimumAge\}\} împliniți la data evenimentului\./], en: [/I declare that I am at least \{\{minimumAge\}\} old on the day of the event\./] },
   {
-    risk: "what to do when one is met",
-    ro: [/păstrez distanța/, /nu hrănesc/, /nu mă apropii/, /nu fug de un urs/, /mă retrag încet și calm/, /anunț organizatorul/, /112/],
-    en: [/keep my distance/, /never feed or approach/, /never run from a bear/, /back away slowly and calmly/, /tell the organiser/, /112/],
+    what: "minors of 14 to 17: the minor signs, the parent or guardian approves and signs",
+    ro: [/între 14 și 17 ani inclusiv, declarația este semnată de participant și încuviințată de părintele sau tutorele legal/, /art\. 41 alin\. \(2\)/],
+    en: [/aged between 14 and 17 inclusive, this declaration is signed by the participant and approved by the parent or legal guardian/, /art\. 41\(2\)/],
   },
-  { risk: "terrain and falls", ro: [/porțiuni abrupte/, /rădăcini/, /gheață sau zăpadă/, /cădere/, /entorsă/, /îmi adaptez ritmul/], en: [/steep sections/, /roots/, /ice or snow/, /falls/, /sprains/, /adapt my pace/] },
-  { risk: "the weather and the dark", ro: [/fulgere/, /întunericului/, /modifica, scurta, opri sau anula/], en: [/lightning/, /after dark/, /change, shorten, stop or cancel/] },
+  { what: "nobody under the minimum takes part", ro: [/Persoanele care nu au împlinit vârsta minimă stabilită pentru eveniment nu pot participa\./], en: [/Persons who have not reached the minimum age set for the event may not take part\./] },
   {
-    risk: "the runner's own equipment, a headlamp after dark",
-    ro: [/Echipamentul este responsabilitatea mea/, /pantofi de trail/, /telefon mobil încărcat/, /lanternă frontală funcțională/, /bateriile încărcate/, /elemente reflectorizante/, /refuza startul/],
-    en: [/equipment is my own responsibility/, /trail shoes/, /charged mobile phone/, /working headlamp/, /charged batteries/, /reflective elements/, /refuse the start/],
+    what: "liability without an absolute waiver",
+    ro: [/riscuri inerente/, /nu înseamnă, prin ea însăși, că renunț la dreptul de a fi despăgubit/, /răspunde, potrivit legii, pentru prejudiciile care îi sunt imputabile/, /Nu răspunde, în limitele permise de lege, pentru prejudiciile care nu îi sunt imputabile/, /art\. 1371/, /se reduce sau, după caz, se înlătură/, /intenție sau din culpă gravă/, /integrității corporale sau a sănătății/],
+    en: [/inherent risks/, /not, by itself, a waiver of my right to compensation/, /liable, under the law, for harm attributable to it/, /not responsible, to the extent the law allows, for harm not attributable to it/, /art\. 1371/, /reduced or, as the case may be, removed/, /intentionally or through gross negligence/, /bodily integrity or health/],
   },
-  { risk: "own pace and decisions", ro: [/în ritmul meu/, /mă opresc dacă nu mă simt bine/, /traseul marcat/, /abandonez/, /Deciziile pe care le iau pe traseu îmi aparțin/], en: [/at my own pace/, /stop if I feel unwell/, /marked course/, /drop out/, /decisions I make on the course are my own/] },
-  // §418, the counsel review.
-  { risk: "health, as far as the runner knows, and the heart", ro: [/După cunoștința mea/, /inclusiv cardiace/, /sfatul medicului/], en: [/To the best of my knowledge/, /including cardiac ones/, /a doctor's advice/] },
-  { risk: "heat and cold", ro: [/deshidratare/, /epuizare termică/, /hipotermie/], en: [/dehydration/, /heat exhaustion/, /hypothermia/] },
-  { risk: "traffic duties", ro: [/drumuri deschise circulației/, /indicațiile poliției/, /nu este închis traficului/], en: [/roads open to traffic/, /instructions of the police/, /not closed to traffic/] },
+  { what: "health, as far as the runner knows, and the heart", ro: [/După cunoștința mea/, /inclusiv cardiace/, /sfatul medicului/], en: [/To the best of my knowledge/, /including cardiac ones/, /a doctor's advice/] },
+  { what: "heat and cold", ro: [/deshidratare/, /epuizare termică/, /hipotermie/], en: [/dehydration/, /heat exhaustion/, /hypothermia/] },
+  { what: "the weather and the dark", ro: [/fulgere/, /întunericului/, /modifica, scurta, opri sau anula/], en: [/lightning/, /after dark/, /change, shorten, stop or cancel/] },
   {
-    risk: "slow help, no alcohol or drugs, first aid and being stopped",
-    ro: [/ajutorul poate ajunge greu și târziu/, /alcoolului, a drogurilor/, /primul ajutor/, /oprit\/ă din eveniment/],
-    en: [/help can be slow and late to arrive/, /alcohol, drugs/, /first aid/, /being stopped from continuing/],
+    what: "own equipment; the start refused only for the rules' mandatory equipment",
+    ro: [/Echipamentul este responsabilitatea mea/, /telefon mobil încărcat/, /refuza startul doar dacă îmi lipsește echipamentul declarat obligatoriu în regulamentul evenimentului/, /ce regulamentul doar recomandă rămâne o recomandare/],
+    en: [/equipment is my own responsibility/, /charged mobile phone/, /refuse me the start only if I lack the equipment the event's rules declare mandatory/, /only recommend remains a recommendation/],
   },
-  { risk: "personal belongings", ro: [/Obiectele personale/, /pierderea sau deteriorarea/], en: [/personal belongings/, /loss or damage/] },
-  { risk: "protected areas", ro: [/ariile naturale protejate/, /niciun deșeu/], en: [/protected natural areas/, /no waste/] },
+  {
+    what: "own pace, dropping out, first aid and being stopped",
+    ro: [/în ritmul meu/, /mă opresc dacă nu mă simt bine/, /abandonez/, /112/, /primul ajutor/, /oprit\/ă din eveniment/, /Deciziile pe care le iau pe traseu îmi aparțin/],
+    en: [/at my own pace/, /stop if I feel unwell/, /drop out/, /112/, /first aid/, /being stopped from continuing/, /decisions I make on the course are my own/],
+  },
+  {
+    what: "substances, in the owner's words",
+    ro: [/Nu particip sub influența alcoolului, a drogurilor ori a altor substanțe care îmi afectează capacitatea de a participa în siguranță/],
+    en: [/I do not take part under the influence of alcohol, drugs or other substances that impair my ability to take part safely/],
+  },
+  { what: "fair play", ro: [/fair-play/], en: [/fair play/] },
+  { what: "personal belongings", ro: [/Obiectele personale/, /pierderea sau deteriorarea/], en: [/personal belongings/, /loss or damage/] },
+  {
+    what: "the kit, against a document on the declaration — for 14–17, the minor's or the co-signing parent's, as the terms say",
+    ro: [/Kitul de participare se ridică personal și nu se cedează/, /pentru un participant de 14–17 ani, al lui ori al părintelui sau tutorelui legal care a semnat alături de el/],
+    en: [/The race kit is collected in person and is not passed on/, /for a participant aged 14–17, theirs or that of the parent or legal guardian who signed beside them/],
+  },
+  { what: "photographs", ro: [/fotografii și filmări/], en: [/photographs and film/] },
+  {
+    what: "the data: three years, the documents seven days, the archive masked",
+    ro: [/trei ani de la data evenimentului/, /cel mult șapte zile de la eveniment/, /le au mascate/],
+    en: [/three years from the date of the event/, /at most seven days from the event/, /have them masked/],
+  },
+  {
+    what: "the signature: personal, 14–17 both, simple electronic signature, fingerprint, moment, name",
+    ro: [/Semnez personal: un adult semnează doar pentru sine/, /pentru un participant de 14–17 ani semnează minorul și părintele sau tutorele legal/, /semnătură electronică simplă/, /amprenta textului citit/, /momentul semnării/, /numele fiecărui semnatar/],
+    en: [/I sign personally: an adult signs only for themselves/, /for a participant aged 14–17 the minor and the parent or legal guardian sign/, /simple electronic signature/, /fingerprint of the text read/, /moment of signing/, /each signer's name/],
+  },
 ];
 
-/** The law's own limit, as the text words it. */
-const LAW_LIMIT = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
+/** The trail's own risks — and the road text must not carry them. */
+const TRAIL_ONLY = {
+  ro: [/trasee montane sau de pădure/, /rădăcini/, /noroi/, /animalelor sălbatice/, /câini de stână/, /pantofi de trail/, /ajutorul poate ajunge greu/, /ariile naturale protejate/],
+  en: [/mountain or forest trails/, /roots/, /mud/, /wild animals/, /sheepdogs/, /trail shoes/, /help can be slow/, /protected natural areas/],
+};
+
+/** The road's and the park's own risks — and the trail text must not carry them. */
+const ROAD_ONLY = {
+  ro: [/asfalt, beton, tartan sau pavele/, /borduri/, /gropi/, /capace de canal/, /suprafețe ude sau alunecoase/, /curbe și porțiuni înguste/, /aglomerație/, /contact sau în coliziune cu alți participanți/, /pietoni, bicicliști, trotinete/, /nu este complet închis circulației/, /schimbările bruște de direcție/, /nu blochez traseul/],
+  en: [/asphalt, concrete, tartan or paving/, /kerbs/, /potholes/, /manhole covers/, /wet or slippery surfaces/, /bends and narrow sections/, /crowding/, /contact or collide with other participants/, /pedestrians, cyclists, scooters/, /not fully closed to traffic/, /sudden changes of direction/, /do not block the course/],
+};
 
 /** A sentence that says the organiser does not answer for something, qualified or not. */
-const DISCLAIMER = { ro: /nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|nu răspunde\b/, en: /cannot be held liable|not responsible/ } as const;
+const DISCLAIMER = { ro: /nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|nu răspunde\b/i, en: /cannot be held liable|not responsible/i } as const;
+const LAW_LIMIT = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
 
-/**
- * A promise of immunity: liability excluded "in any way", a waiver, or the organiser "not
- * responsible" without the law's limit straight after it — the one qualified form let through.
- */
-const IMMUNITY = {
-  ro: new RegExp(`în niciun fel|nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|renunț|nu răspunde\\b(?!, ${LAW_LIMIT.ro})`, "i"),
-  en: new RegExp(`in any way|cannot be held liable|waive|not responsible(?!, ${LAW_LIMIT.en})`, "i"),
-} as const;
+describe("§NNN the race's two declarations, one shared body", () => {
+  it("are the catalogue's trail and road texts, both languages", () => {
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.body).toBe(declarationTrailRo);
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.body).toBe(declarationTrailEn);
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.body).toBe(declarationRoadRo);
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.body).toBe(declarationRoadEn);
+    // The titles the review asked for (§NNN): «— cursă trail», «— cursă pe asfalt / în parc».
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toBe("Declarație pe propria răspundere — cursă trail");
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toBe("Declarație pe propria răspundere — cursă pe asfalt / în parc");
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.title).toMatch(/— trail race$/);
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.title).toMatch(/— road \/ park race$/);
+  });
 
-describe("§357 the runner takes ownership — the declaration's risks", () => {
-  for (const { risk, ro, en } of RISKS) {
-    it(`names ${risk}, in both languages, in a bullet`, () => {
-      for (const pattern of ro) expect(bullets.ro.some((b) => pattern.test(b)), `ro ${pattern}`).toBe(true);
-      for (const pattern of en) expect(bullets.en.some((b) => pattern.test(b)), `en ${pattern}`).toBe(true);
-    });
+  it("share every section but the risks, written once: opening + course risks + shared duties + closing", () => {
+    for (const locale of LOCALES) {
+      const parts = RACE_DECLARATION_PARTS[locale];
+      expect(TEXTS.trail[locale]).toEqual([...parts.opening, ...parts.trail, ...parts.shared, ...parts.closing]);
+      expect(TEXTS.road[locale]).toEqual([...parts.opening, ...parts.road, ...parts.shared, ...parts.closing]);
+      // The GDPR paragraph, the liability, the signature and the minors exist once, in the shared parts.
+      for (const pattern of [/GDPR|Regulation \(EU\) 2016\/679/, /art\. 1371/, /eIDAS/, /14 (?:și|and) 17|14–17/]) {
+        const inRisks = [...parts.trail, ...parts.road].filter((p) => pattern.test(p));
+        expect(inRisks, `${locale} ${pattern}`).toEqual([]);
+      }
+    }
+  });
+
+  for (const course of COURSES) {
+    for (const { what, ro, en } of SHARED) {
+      it(`${course}: says ${what}, in both languages`, () => {
+        for (const pattern of ro) expect(all(course, "ro"), `ro ${pattern}`).toMatch(pattern);
+        for (const pattern of en) expect(all(course, "en"), `en ${pattern}`).toMatch(pattern);
+      });
+    }
   }
 
-  it("closes the bullets with the owner's sentence, as a paragraph of its own", () => {
-    const ro = paragraphs.ro.indexOf("Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.");
-    const en = paragraphs.en.indexOf("I take responsibility for my own safety, my equipment and the decisions I make on the course.");
-    expect(ro).toBeGreaterThan(-1);
-    expect(en).toBeGreaterThan(-1);
-    // Straight after the last bullet, in the same place in both languages.
-    expect(paragraphs.ro[ro - 1].startsWith("• ")).toBe(true);
-    expect(paragraphs.en[en - 1].startsWith("• ")).toBe(true);
-    expect(ro).toBe(en);
-  });
-
-  it("keeps the text's bullet style: each ends with a semicolon, the last with a full stop", () => {
-    for (const locale of ["ro", "en"] as const) {
-      const list = bullets[locale];
-      expect(list.length, locale).toBe(14);
-      for (const bullet of list.slice(0, -1)) expect(bullet.endsWith(";"), `${locale}: ${bullet.slice(0, 40)}`).toBe(true);
-      expect(list.at(-1)!.endsWith("."), locale).toBe(true);
+  it("names the trail's risks only in the trail text, and the road's only in the road text", () => {
+    for (const locale of LOCALES) {
+      for (const pattern of TRAIL_ONLY[locale]) {
+        expect(all("trail", locale), `trail ${locale} ${pattern}`).toMatch(pattern);
+        expect(all("road", locale), `road ${locale} ${pattern}`).not.toMatch(pattern);
+      }
+      for (const pattern of ROAD_ONLY[locale]) {
+        expect(all("road", locale), `road ${locale} ${pattern}`).toMatch(pattern);
+        expect(all("trail", locale), `trail ${locale} ${pattern}`).not.toMatch(pattern);
+      }
     }
-    // One text per language, the same shape: paragraph for paragraph.
-    expect(paragraphs.ro.length).toBe(paragraphs.en.length);
-    paragraphs.ro.forEach((p, i) => expect(p.startsWith("• "), `paragraph ${i}`).toBe(paragraphs.en[i].startsWith("• ")));
   });
 
-  it("promises nobody immunity: the new bullets accept a risk and set out conduct", () => {
-    // The checker first, on the sentences it exists to refuse — the belongings bullet as it was
-    // first written among them — and on the one qualified form it lets through.
-    expect("accept că organizatorul nu răspunde pentru pierderea sau deteriorarea lor").toMatch(IMMUNITY.ro);
-    expect("I accept that the organiser is not responsible for their loss or damage").toMatch(IMMUNITY.en);
-    expect("organizatorul nu poate fi tras la răspundere pentru eventualele accidente").toMatch(IMMUNITY.ro);
-    expect("accept că organizatorul nu răspunde, în limitele permise de lege, pentru pierderea lor").not.toMatch(IMMUNITY.ro);
-    expect("the organiser is not responsible, to the extent the law allows, for their loss").not.toMatch(IMMUNITY.en);
-    expect("le las pe răspunderea mea").not.toMatch(IMMUNITY.ro);
+  it("words wild animals as the owner did, with no species list and no bear drill", () => {
+    expect(all("trail", "ro")).toContain(
+      "Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile organizatorului și recomandările autorităților și, în caz de urgență, să apelez 112",
+    );
+    for (const course of COURSES) {
+      expect(all(course, "ro")).not.toMatch(/urși|mistreți|vipere|nu fug de un urs/);
+      expect(all(course, "en")).not.toMatch(/bears|wild boar|vipers|run from a bear/);
+    }
+  });
 
-    for (const locale of ["ro", "en"] as const) {
-      const owned = bullets[locale].filter((b) => RISKS.some((risk) => risk[locale].some((pattern) => pattern.test(b))));
-      expect(owned.length, locale).toBeGreaterThanOrEqual(7);
-      for (const bullet of owned) expect(bullet, `${locale}: ${bullet.slice(0, 40)}`).not.toMatch(IMMUNITY[locale]);
+  it("has no flow for a participant under fourteen, and no «medicines that lower my attention»", () => {
+    for (const course of COURSES) {
+      expect(all(course, "ro")).not.toMatch(/sub 14 ani|semnează singur|minor sub 14|medicamentelor care îmi scad atenția/);
+      expect(all(course, "en")).not.toMatch(/under 14|signs alone|minor under 14|medicines that impair my attention/);
+    }
+  });
+
+  it("keeps the bullet style: each ends with a semicolon, the last with a full stop, the same shape in both languages", () => {
+    for (const course of COURSES) {
+      for (const locale of LOCALES) {
+        const list = bullets(course, locale);
+        expect(list.length, `${course} ${locale}`).toBeGreaterThanOrEqual(14);
+        for (const bullet of list.slice(0, -1)) expect(bullet.endsWith(";"), `${course} ${locale}: ${bullet.slice(0, 40)}`).toBe(true);
+        expect(list.at(-1)!.endsWith("."), `${course} ${locale}`).toBe(true);
+      }
+      expect(TEXTS[course].ro.length).toBe(TEXTS[course].en.length);
+      TEXTS[course].ro.forEach((p, i) => expect(p.startsWith("• "), `${course} paragraph ${i}`).toBe(TEXTS[course].en[i].startsWith("• ")));
+    }
+  });
+
+  it("closes the bullets with the owner's sentence, as a paragraph of its own", () => {
+    for (const course of COURSES) {
+      const ro = TEXTS[course].ro.indexOf("Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.");
+      const en = TEXTS[course].en.indexOf("I take responsibility for my own safety, my equipment and the decisions I make on the course.");
+      expect(ro).toBeGreaterThan(-1);
+      expect(TEXTS[course].ro[ro - 1].startsWith("• ")).toBe(true);
+      expect(ro).toBe(en);
     }
   });
 
   it("limits by the law every sentence that says the organiser does not answer for something", () => {
-    for (const locale of ["ro", "en"] as const) {
-      const disclaimers = paragraphs[locale].filter((p) => DISCLAIMER[locale].test(p));
-      // The liability paragraph and the belongings bullet (§418: the paragraph on minors the runner
-      // brings along disclaims nothing any more — it says who supervises them).
-      expect(disclaimers.length, locale).toBe(2);
-      for (const paragraph of disclaimers) expect(paragraph, `${locale}: ${paragraph.slice(0, 40)}`).toContain(LAW_LIMIT[locale]);
+    for (const course of COURSES) {
+      for (const locale of LOCALES) {
+        const disclaimers = TEXTS[course][locale].filter((p) => DISCLAIMER[locale].test(p));
+        // The liability paragraph and the belongings bullet.
+        expect(disclaimers.length, `${course} ${locale}`).toBe(2);
+        for (const paragraph of disclaimers) expect(paragraph, `${course} ${locale}: ${paragraph.slice(0, 40)}`).toContain(LAW_LIMIT[locale]);
+      }
     }
   });
 
-  it("keeps every merge field exactly as before, and the club's name as the footnote's placeholder", () => {
-    const expected = ["event", "eventDate", "eventLocation", "guardian", "guardianIdDocument", "participant", "participantIdDocument"];
-    expect([...mergeFieldsIn(declarationRo)].sort()).toEqual(expected);
-    expect([...mergeFieldsIn(declarationEn)].sort()).toEqual(expected);
-    expect(paragraphs.ro.at(-1)).toBe("*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>.");
-    expect(paragraphs.en.at(-1)).toBe("*Organiser means <THE CLUB'S FULL LEGAL NAME>.");
+  it("takes the same merge fields in both, the minimum age among them, and the club's name as the footnote's placeholder", () => {
+    const expected = ["event", "eventDate", "eventLocation", "guardian", "guardianIdDocument", "minimumAge", "participant", "participantIdDocument"];
+    for (const body of [declarationTrailRo, declarationTrailEn, declarationRoadRo, declarationRoadEn]) {
+      expect([...mergeFieldsIn(body)].sort()).toEqual(expected);
+    }
+    for (const course of COURSES) {
+      expect(TEXTS[course].ro.at(-1)).toBe("*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>.");
+      expect(TEXTS[course].en.at(-1)).toBe("*Organiser means <THE CLUB'S FULL LEGAL NAME>.");
+    }
   });
 });

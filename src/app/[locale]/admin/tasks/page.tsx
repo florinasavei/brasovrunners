@@ -23,6 +23,7 @@ import {
   noticeDescribesListStates,
   noticeDescribesNewsletter,
   noticeDescribesTeamPage,
+  raceDeclarationsCurrent,
 } from "@/modules/legal-documents/repository";
 import {
   countTasks,
@@ -482,6 +483,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
+      // §NNN: both race declarations, trail and road or park, from the platform's shared body.
+      raceDeclarationsCurrent: await raceDeclarationsCurrent(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.

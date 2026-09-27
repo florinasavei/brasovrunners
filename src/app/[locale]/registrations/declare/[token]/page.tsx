@@ -22,12 +22,13 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
-import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
+import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
@@ -309,10 +310,6 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const documentRefused = signing && invalid === "document";
   const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused;
 
-  const declaration = signing
-    ? await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now)
-    : undefined;
-
   /**
    * Which event, and by when — the two facts BR-REQ-041-01 criterion 3 and AGENTS.md §18.5
    * require in the first screen of this page, and neither of which it showed.
@@ -330,6 +327,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     : context.ok && context.token.registrationId
       ? await findRegistrationById(db, context.token.registrationId)
       : undefined;
+  // The event's own declaration, trail or road (§NNN, `findEventDeclaration`): the text shown is
+  // the text `signDeclaration` binds, read for the same event.
+  const declaration = signing && registration ? await findEventDeclaration(db, registration.eventId, locale, now) : undefined;
   /*
     The family's stepper (§471), from the opened link: everybody on the address at the event whose
     declaration waits, this person first. One person alone gets the page they always had.
@@ -413,7 +413,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const signingText =
     declaration && registration && registration.locale !== locale
-      ? await findCurrentApprovedDocument(db, "EVENT_DECLARATION", registration.locale, new Date())
+      ? await findEventDeclaration(db, registration.eventId, registration.locale, new Date())
       : declaration;
 
   /*
@@ -594,6 +594,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
+              // The event's minimum age, never under fourteen (§NNN) — as the PDF fills it.
+              minimumAge: eventDetails ? minimumAgeMergeValue(effectiveMinimumAge(eventDetails.minAge), locale) : undefined,
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
