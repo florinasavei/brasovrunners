@@ -2,10 +2,23 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import type { FormNotice } from "@/shared/feedback/notice";
+import { useToast } from "@/shared/feedback/toast-context";
 import { translateBoxes } from "./form-fields";
 import { useTranslateAction } from "./TranslateProvider";
 
 export type PressMessage = { tone: "done" | "refused"; text: string };
+
+/**
+ * The toast after «Copiază și tradu tot» worked (§NNN; the owner, 2026-09-27: «Am nevoie de un
+ * toast de confirmare că s-a tradus tot»): how many English boxes were filled, counted through
+ * `countForm` by the provider (`Feedback.toast.translatedAll.one|few|other`, never an ICU plural,
+ * §341), and a second sentence when some were cut at their box's limit — the names stay in the
+ * status line under the button, where they can be read at leisure.
+ */
+export function translatedAllNotice(count: number, cut: readonly string[]): FormNotice {
+  return { kind: "success", key: cut.length === 0 ? "translatedAll" : "translatedAllCut", values: { count: String(count) } };
+}
 
 /**
  * One press of «Tradu din română», for one box or for all of them (`DECISIONS.md` §464): read the
@@ -18,6 +31,7 @@ export function useTranslatePress() {
   const t = useTranslations("Translate");
   const locale = useLocale();
   const action = useTranslateAction();
+  const toast = useToast();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<PressMessage | null>(null);
 
@@ -44,6 +58,9 @@ export function useTranslatePress() {
       }
       const done = result.count === 1 ? t("done") : t("doneAll", { count: result.count });
       setMessage({ tone: "done", text: result.cut.length === 0 ? done : `${done} ${t("cut", { fields: result.cut.join(", ") })}` });
+      // The whole-record press also says so in a toast at the top (§384, §NNN): the status line
+      // sits under the button, easily out of sight on a long editor.
+      if (options.all) toast.show(translatedAllNotice(result.count, result.cut));
     } catch {
       setMessage({ tone: "refused", text: t("refusal.failed") });
     } finally {

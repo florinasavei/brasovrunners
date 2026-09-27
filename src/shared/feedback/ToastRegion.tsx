@@ -18,10 +18,11 @@ export type DrawnToast = { id: number; kind: NoticeKind; sentence: string };
  * a region inserted already holding its sentence is one many screen readers never announce,
  * while a change inside a region they already know is. Nothing steals the focus.
  *
- * **Where it sits.** At the bottom, above the footer's sticky bar on a phone (`SiteFooter`) and
- * above the event editor's sticky save row, which stands on that bar: the toast never covers the
- * primary button of the form that produced it (measured at 320 px by
- * `tests/e2e/toasts-and-confirms.spec.ts`).
+ * **Where it sits.** At the top, centred, just under the sticky site header (§NNN; the owner,
+ * 2026-09-27: «toast-urile trebuie să apară în partea de sus») — where the eye is after a press
+ * at the top of an editor, and away from the footer's sticky bar and the event editor's sticky
+ * save row at the bottom: the toast never covers the primary button of the form that produced it
+ * (measured at 320 px by `tests/e2e/toasts-and-confirms.spec.ts`).
  *
  * Strings only: the sentence and the close button's name come translated, so this file reads no
  * catalogue and a public page that draws it ships no words for it (§353).
@@ -51,10 +52,11 @@ export default function ToastRegion({
             if (reason === "clickaway") return;
             onDismiss();
           }}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          // Above the footer's bar on a phone and the editor's sticky save row; above the footer's
-          // one line elsewhere.
-          sx={{ bottom: { xs: 112, sm: 64 } }}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          // At the top (§NNN), just under the sticky site header — the same two heights the
+          // theme's `scroll-padding-top` clears (`theme.ts`) — so it never covers the header's
+          // way out, nor the footer's bar or the editor's sticky save row at the bottom.
+          sx={{ top: { xs: 72, sm: 76 } }}
           data-testid="toast"
         >
           <Alert

@@ -23,10 +23,10 @@ import ToastRegion from "./ToastRegion";
  * provider, and the toast is drawn inside it: a region inserted already holding its sentence is
  * one many screen readers never announce, while a change inside a region they already know is.
  *
- * **Where it sits.** At the bottom, above the footer's sticky bar — two 44-pixel lines on a phone
- * (`SiteFooter`) — and above the event editor's sticky save row, which stands on that bar: the
- * toast must never cover the primary button of the form that just produced it (measured at
- * 320 px by `tests/e2e/toasts-and-confirms.spec.ts`).
+ * **Where it sits.** At the top, under the sticky site header (§NNN, `ToastRegion`), clear of the
+ * footer's sticky bar and the event editor's sticky save row: the toast must never cover the
+ * primary button of the form that just produced it (measured at 320 px by
+ * `tests/e2e/toasts-and-confirms.spec.ts`).
  *
  * **The words** come from `Feedback.toast`, the one namespace this island reads
  * (`STAFF_CLIENT_MESSAGES`): a `saved` code is the key, and a code whose sentence counts

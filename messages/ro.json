@@ -6005,7 +6005,17 @@
       "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
       "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
       "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site.",
-      "translationBudget": "Bugetul de traduceri a fost salvat."
+      "translationBudget": "Bugetul de traduceri a fost salvat.",
+      "translatedAll": {
+        "one": "Gata, s-a tradus tot: {count} câmp în engleză. Citește-l, corectează dacă e nevoie, apoi salvează.",
+        "few": "Gata, s-a tradus tot: {count} câmpuri în engleză. Citește-le, corectează dacă e nevoie, apoi salvează.",
+        "other": "Gata, s-a tradus tot: {count} de câmpuri în engleză. Citește-le, corectează dacă e nevoie, apoi salvează."
+      },
+      "translatedAllCut": {
+        "one": "S-a tradus tot: {count} câmp în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton.",
+        "few": "S-a tradus tot: {count} câmpuri în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton.",
+        "other": "S-a tradus tot: {count} de câmpuri în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton."
+      }
     }
   },
   "Network": {

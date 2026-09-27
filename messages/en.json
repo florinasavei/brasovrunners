@@ -6005,7 +6005,17 @@
       "teamPageIntroSaved": "The team page's introduction was saved.",
       "teamPagePublished": "The team page is on the site, in both languages.",
       "teamPageUnpublished": "The team page was taken off the site.",
-      "translationBudget": "The translation budget was saved."
+      "translationBudget": "The translation budget was saved.",
+      "translatedAll": {
+        "one": "Done, everything is translated: {count} English box. Read it, correct it if needed, then save.",
+        "few": "Done, everything is translated: {count} English boxes. Read them, correct them if needed, then save.",
+        "other": "Done, everything is translated: {count} English boxes. Read them, correct them if needed, then save."
+      },
+      "translatedAllCut": {
+        "one": "Everything is translated: {count} English box, but some texts were cut at the box's limit — see the line under the button.",
+        "few": "Everything is translated: {count} English boxes, but some texts were cut at their box's limit — see the line under the button.",
+        "other": "Everything is translated: {count} English boxes, but some texts were cut at their box's limit — see the line under the button."
+      }
     }
   },
   "Network": {
