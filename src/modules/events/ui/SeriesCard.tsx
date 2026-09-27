@@ -19,7 +19,7 @@ import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 import SeriesDates from "./SeriesDates";
-import { editionNote, recurrenceSentence, rhythmLabel } from "./series-sentence";
+import { editionNote, recurrenceSentence, repeatTooltip, rhythmLabel } from "./series-sentence";
 
 /** How many dates the card lists before pointing at the month view for the rest. */
 
@@ -49,6 +49,8 @@ export default async function SeriesCard({
   // The chip says how often, not how many (`rhythmLabel`); every date is shown in the fold — "2
   // more in the calendar" meant nothing to the owner.
   const rhythm = await rhythmLabel(members, next.timezone, locale);
+  // The rule behind the word (§NNN), the same on the one-date card of a repeated event.
+  const repeats = await repeatTooltip(members, next.timezone, locale);
   const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).
@@ -74,7 +76,7 @@ export default async function SeriesCard({
         <Box sx={CARD_CHIPS_SX}>
           {/* The type; the surface is a pill with the facts below, said once (§366). */}
           <EventKindChips type={next.type} surface={null} />
-          <GlyphChip glyph="series" variant="outlined" label={rhythm} />
+          <GlyphChip glyph="series" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />
           {/* An edition apart on *any* of the dates (§168, §169). A repeated event is one card
               (§113), so the badge the single-event card wears would otherwise be shown nowhere
               for the owner's own case — "some dates can be special events where we overlap

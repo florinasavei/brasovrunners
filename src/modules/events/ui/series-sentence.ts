@@ -99,6 +99,21 @@ export async function rhythmLabel(members: readonly { startsAt: Date }[], timeZo
   return t(`series.count.${countForm(members.length, locale)}`, { count: members.length });
 }
 
+/**
+ * What the repeat chip says on hover, on a tap and to a screen reader (§NNN): the series' rule as a
+ * sentence — «Se repetă în fiecare marți, la 18:30» / «Repeats every Tuesday at 18:30» — so the
+ * chip's short word («Săptămânal») is never the whole story; a set of dates with no weekly or
+ * fortnightly rhythm is «Eveniment recurent» / «Recurring event». Both cards wear it.
+ */
+export async function repeatTooltip(members: readonly { startsAt: Date }[], timeZone: string, locale: string): Promise<string> {
+  const t = await getTranslations("Event");
+  const kind = recurrenceOf(members, timeZone).kind;
+  if (kind !== "weekly" && kind !== "fortnightly") return t("series.recurring");
+  const sentence = await recurrenceSentence(members, timeZone, locale);
+  // Inside the sentence, lower case (§349): «În fiecare» → «Se repetă în fiecare».
+  return t("series.repeats", { sentence: sentence.charAt(0).toLocaleLowerCase(locale) + sentence.slice(1) });
+}
+
 /** The words on a date's mark (§122), from the catalogue, or null for a date like the others. */
 export async function editionNote(difference: EditionDifference): Promise<EditionNote | null> {
   if (!difference) return null;

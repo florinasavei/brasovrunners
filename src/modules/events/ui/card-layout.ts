@@ -97,8 +97,15 @@ export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlig
  *
  * - `position: relative` makes the card the cover's box; MUI's `Card` already clips to its border.
  * - `isolation: isolate` keeps the cover's `z-index` inside the card, never above the header.
- * - The lift is `:where(…)`, weightless, so the title's own rule (`position: static`) wins on the
- *   title's link and its cover measures the card rather than the title.
+ * - The lift is `.card :where(…)`: the `:where` adds nothing, but the card's class still counts
+ *   (0,1,0), so it is *not* weightless. The title's own rule (`.title a`, 0,1,1) outranks it, so the
+ *   title's link stays `static` and its cover measures the card rather than the title. A child whose
+ *   own single-class rule sets `position: absolute` (a film's play overlay, were one ever in the
+ *   excerpt) ties with the lift and wins only by coming later in Emotion's sheet — which a child's
+ *   rule does, being inserted after the card's; mind that before lifting anything else here.
+ * - **The focus ring is the card's** (§NNN): the title's link now targets the whole card, so while
+ *   the keyboard is on that link the card wears the ring (`:has(h2 a:focus-visible)`) and the title
+ *   keeps only its underline. A focused map link, date or door keeps its own ring.
  * - Anything else positioned on the card (the weather pill, a picture's frame) stays under the
  *   cover: the cover's `z-index` is 1, not `auto`, so a positioned element later in the card does
  *   not take the press by painting over it.
@@ -110,6 +117,7 @@ export const CARD_TAP_SX = {
   position: "relative",
   isolation: "isolate",
   "& :where(a, button, summary, [data-has-tooltip])": { position: "relative", zIndex: 2 },
+  "&:has(h2 a:focus-visible)": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
 } as const;
 
 /** The chips at the top of a card: one wrapping row, six pixels apart. */
@@ -175,7 +183,8 @@ export const CARD_TITLE_SX = {
     borderRadius: 1,
     "&:visited": { color: "primary.main" },
     "&:hover": { textDecoration: "underline" },
-    "&:focus-visible": { textDecoration: "underline", outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+    // The ring is the card's (`CARD_TAP_SX`, §NNN): the link's target is the whole card now.
+    "&:focus-visible": { textDecoration: "underline", outline: "none" },
     position: "static",
     "&::after": { content: '""', position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 1 },
   },

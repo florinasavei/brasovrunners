@@ -329,6 +329,8 @@
       },
       "weeklyChip": "Săptămânal",
       "fortnightlyChip": "La două săptămâni",
+      "repeats": "Se repetă {sentence}",
+      "recurring": "Eveniment recurent",
       "nextLabel": "Următoarea:",
       "allDatesCount": "Următoarele date ({count})",
       "fullDescription": "Descrierea completă a evenimentului"

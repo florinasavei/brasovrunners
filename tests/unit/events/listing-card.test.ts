@@ -249,6 +249,10 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
       // Every control of the card's own — the map, the dates, the fold, the door, a registration
       // button, a pill with a tooltip — above the cover, so a press on it is still a press on it.
       expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip]){position:relative;z-index:2;}");
+      // The keyboard's ring is the card's, since the title's link targets the whole card (§NNN)…
+      expect(rules).toMatch(new RegExp(`:has\\(h2 a:focus-visible\\)\\{outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\\}`));
+      // …and the title keeps only its underline, no second ring around its words.
+      expect(title).toMatch(/ a:focus-visible\{[^}]*;text-decoration:underline;outline:none;\}/);
     }
   });
 
@@ -282,6 +286,30 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     const scattered = [mondays[0], mondays[1], row({ ...mondays[2], startsAt: new Date("2026-10-19T15:30:00Z") })];
     const dates = await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }));
     expect(chipLabels(dates)).toContain("3 dates");
+  });
+
+  it("says the series' rule on the repeat chip — hover, tap and screen reader — on both cards, in both languages (§NNN)", async () => {
+    const mondays = series();
+    const repeatChip = (html: string) => /<div\b[^>]*data-has-tooltip="true"[^>]*>(?:(?!<\/div>)[\s\S])*?data-testid="EventRepeatIcon"[\s\S]*?<\/div>/.exec(withoutStyles(html))?.[0] ?? "";
+    for (const html of [await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays })), await repeated()]) {
+      const chip = repeatChip(html);
+      expect(chip).not.toBe("");
+      // The visible word stays short; the rule is the chip's tooltip and part of its accessible name.
+      expect(chipLabels(html)).toContain("Săptămânal");
+      expect(text(chip)).toContain("Săptămânal — Se repetă în fiecare luni, la 18:30");
+    }
+    currentLocale = "en";
+    const english = repeatChip(await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: mondays })));
+    expect(text(english)).toContain("Weekly — Repeats every Monday at 18:30");
+    // No weekly or fortnightly rhythm: «Recurring event» / «Eveniment recurent».
+    const scattered = [mondays[0], mondays[1], row({ ...mondays[2], startsAt: new Date("2026-10-19T15:30:00Z") })];
+    expect(text(repeatChip(await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }))))).toContain(
+      "3 dates — Recurring event",
+    );
+    currentLocale = "ro";
+    expect(text(repeatChip(await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }))))).toContain(
+      "3 date — Eveniment recurent",
+    );
   });
 
   it("makes the title the link, in the heading, in the theme's blue visited or not, underlined only under a pointer or the keyboard", async () => {

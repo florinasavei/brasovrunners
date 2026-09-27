@@ -19,7 +19,7 @@ import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
-import { rhythmLabel } from "./series-sentence";
+import { repeatTooltip, rhythmLabel } from "./series-sentence";
 
 /**
  * One event on the listing — the single-date card, beside `SeriesCard`, and since §366 the same
@@ -91,6 +91,8 @@ export default async function EventCard({
   const week = featured ? raceWeek(event, now, featured) : null;
   const tEvents = featured ? await getTranslations("Events") : null;
   const rhythm = seriesDates && seriesDates.length > 1 ? await rhythmLabel(seriesDates, event.timezone, locale) : null;
+  // The rule behind the word, on hover, on a tap and to a screen reader (§NNN): «Se repetă în fiecare marți, la 18:30».
+  const repeats = seriesDates && seriesDates.length > 1 ? await repeatTooltip(seriesDates, event.timezone, locale) : undefined;
   return (
     <Card
       component="li"
@@ -117,7 +119,7 @@ export default async function EventCard({
           <EventKindChips type={event.type} surface={null} />
           {/* One date of a repeated event, alone on its card (§NNN): the series card's repeat chip,
               in the same place, so the rhythm is read the same way on both cards. */}
-          {rhythm && <GlyphChip glyph="series" variant="outlined" label={rhythm} />}
+          {rhythm && <GlyphChip glyph="series" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />}
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}

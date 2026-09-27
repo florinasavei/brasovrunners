@@ -329,6 +329,8 @@
       },
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
+      "repeats": "Repeats {sentence}",
+      "recurring": "Recurring event",
       "nextLabel": "Next:",
       "allDatesCount": "Upcoming dates ({count})",
       "fullDescription": "Full event description"
