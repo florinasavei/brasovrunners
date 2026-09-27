@@ -13,6 +13,8 @@ import AdminRestingNotice from "@/modules/resilience/ui/AdminRestingNotice";
 import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { canOpenTaskPanel } from "@/modules/diagnostics/domain/task-panels";
+import { readTranslationCredit } from "@/modules/translate/credit";
+import { creditIsSpent } from "@/modules/translate/domain/credit";
 import TranslateProvider, { type TranslateOffer } from "@/modules/translate/ui/TranslateProvider";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
@@ -78,11 +80,21 @@ export default async function AdminLayout({ children, params }: Props) {
 
   const messages = await getMessages({ locale });
   // Who translates, and whether this deployment can (§464, §482). Without a key the steps are
-  // on «Sarcini» → «Club», linked only for a role that may open that panel.
-  const translateOffer: TranslateOffer | null = canTranslateTexts(staffUser.role)
+  // on «Sarcini» → «Club», linked only for a role that may open that panel. A key whose one-time
+  // DeepL credit is spent (§497, DeepL's own meter, cached an hour) offers nothing either: the
+  // whole-record button greyed with «Creditul DeepL s-a terminat — vezi Costuri», no per-box one.
+  // Spent is the meter at 100 % or the usage read answered 456 (`creditIsSpent`); any other
+  // unread credit is not a spent one: the buttons stay and DeepL's own answer decides.
+  const mayTranslate = canTranslateTexts(staffUser.role);
+  const configured = mayTranslate && isTranslationConfigured(env);
+  const creditSpent = configured && creditIsSpent(await readTranslationCredit(env));
+  const tasksPath = getPathname({ locale, href: "/admin/tasks" });
+  const translateOffer: TranslateOffer | null = mayTranslate
     ? {
-        action: isTranslationConfigured(env) ? translateFieldAction : null,
-        setupHref: canOpenTaskPanel(staffUser.role, "club") ? `${getPathname({ locale, href: "/admin/tasks" })}#task-translation` : null,
+        action: configured && !creditSpent ? translateFieldAction : null,
+        setupHref: canOpenTaskPanel(staffUser.role, "club") ? `${tasksPath}#task-translation` : null,
+        spent: creditSpent,
+        costsHref: canOpenTaskPanel(staffUser.role, "costs") ? `${tasksPath}?panel=costs` : null,
       }
     : null;
   // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §384): shown once by

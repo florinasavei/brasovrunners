@@ -484,7 +484,8 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     // reserve is 40px there (was 96 for two 44px lines); 52px from 600px, unchanged.
     const theme = read("src/theme/theme.ts");
     expect(theme).toMatch(/scrollPaddingBottom: 40,/);
-    expect(theme).toMatch(/"@media \(min-width:600px\)": \{ scrollPaddingTop: 76, scrollPaddingBottom: 52 \}/);
+    // The top reserve is the header clearance the toasts share (`HEADER_CLEARANCE_PX`, 76 from 600px).
+    expect(theme).toMatch(/"@media \(min-width:600px\)": \{ scrollPaddingTop: HEADER_CLEARANCE_PX\.sm, scrollPaddingBottom: 52 \}/);
   });
 
   it("puts RO and EN side by side as flags on a phone, each a square of the bar's target", async () => {

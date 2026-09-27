@@ -173,7 +173,9 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       expect(html).toMatch(/<details[^>]*data-testid="listing-filters"/);
       expect(html).toMatch(/<input type="checkbox" name="type" checked="" value="RACE"/);
       expect(html).toMatch(/<input type="checkbox" name="surface" value="TRAIL"/);
-      expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Aplică</);
+      // Since §498 every public button carries a glyph before its words, so the label is no longer
+      // the button's first child: match the word anywhere inside the submit button.
+      expect(html).toMatch(/<button[^>]*type="submit"[^>]*>(?:(?!<\/button>)[\s\S])*Aplică</);
       // An active chip is an ordinary link to the address without its tick.
       expect(html).toMatch(/<a[^>]*aria-label="Scoate filtrul: Concurs"[^>]*href="\/ro\/evenimente"/);
       // Nothing is left waiting for a script to reveal it (§413): no loading shape anywhere.

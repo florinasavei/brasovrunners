@@ -1,3 +1,9 @@
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
@@ -134,7 +140,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                   <form action={selfCheckInAction}>
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="token" value={token} />
-                    <Button type="submit" variant="contained" sx={TAP_TARGET}>
+                    <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                      <HowToRegIcon aria-hidden="true" sx={glyphSx("medium")} />
                       {t("manage.selfCheckIn")}
                     </Button>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -185,7 +192,12 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="token" value={token} />
                 <input type="hidden" name="listed" value={live.registration.listOptOut ? "1" : "0"} />
-                <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                  {live.registration.listOptOut ? (
+                    <VisibilityIcon aria-hidden="true" sx={glyphSx("medium")} />
+                  ) : (
+                    <VisibilityOffIcon aria-hidden="true" sx={glyphSx("medium")} />
+                  )}
                   {live.registration.listOptOut ? t("list.optIn") : t("list.optOut")}
                 </Button>
               </form>
@@ -231,7 +243,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="field" value="health" />
-                    <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                    <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                      <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("medium")} />
                       {t("withdraw.health")}
                     </Button>
                   </form>
@@ -241,7 +254,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="field" value="socials" />
-                    <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                    <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                      <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("medium")} />
                       {t("withdraw.socials")}
                     </Button>
                   </form>
@@ -256,7 +270,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />
             <Typography sx={{ mb: 2 }}>{t("manage.prompt")}</Typography>
-            <Button type="submit" variant="outlined" color="error" sx={TAP_TARGET}>
+            <Button type="submit" variant="outlined" color="error" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+              <EventBusyIcon aria-hidden="true" sx={glyphSx("medium")} />
               {t("manage.action")}
             </Button>
             {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}

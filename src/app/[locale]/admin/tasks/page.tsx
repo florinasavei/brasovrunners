@@ -18,7 +18,13 @@ import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
-import { findCurrentApprovedDocument, noticeDescribesListStates, noticeDescribesNewsletter, noticeDescribesTeamPage } from "@/modules/legal-documents/repository";
+import {
+  findCurrentApprovedDocument,
+  noticeDescribesListSocials,
+  noticeDescribesListStates,
+  noticeDescribesNewsletter,
+  noticeDescribesTeamPage,
+} from "@/modules/legal-documents/repository";
 import {
   countTasks,
   filterTasks,
@@ -80,6 +86,7 @@ import type { JobName } from "@/modules/jobs/schedule";
 import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { isTranslationConfigured } from "@/infrastructure/translate/translator";
 import { charactersTranslatedSince, charactersTranslatedToday, readTranslationBudget } from "@/modules/translate/budget";
+import { readTranslationCredit } from "@/modules/translate/credit";
 import TranslationBudgetPanel from "@/modules/translate/ui/TranslationBudgetPanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
@@ -442,16 +449,35 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // period's quota and spend on every panel, not only Costuri, where the full endpoint detail
   // (`readNeonLimits`, the two extra requests) stays gated — the task board's own row only
   // needs the same project row `readNeonConsumption` already fetches.
-  const [neon, neonLimits] = await Promise.all([
+  // DeepL's credit from its own meter (§497), cached an hour and a failure remembered a minute,
+  // asked beside Neon rather than after it: the task row, «Luna aceasta» and the translation
+  // panel read this one answer. No key, no request.
+  const [neon, neonLimits, deeplCredit] = await Promise.all([
     readNeonConsumption(env),
     panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
+    readTranslationCredit(env),
   ]);
+  // The credit's own figures for the translation row's sentence (§497), in the reader's numbers;
+  // an unread credit gives the row its reason instead.
+  if (deeplCredit.ok) {
+    const figure = new Intl.NumberFormat(locale === "ro" ? "ro-RO" : "en-GB");
+    Object.assign(howValues, {
+      creditUsed: figure.format(deeplCredit.credit.used),
+      creditLimit: figure.format(deeplCredit.credit.limit),
+      creditRemaining: figure.format(deeplCredit.credit.remaining),
+      creditPercent: new Intl.NumberFormat(locale === "ro" ? "ro-RO" : "en-GB", { style: "percent", maximumFractionDigits: 0 }).format(deeplCredit.credit.share),
+    });
+  } else if (deeplCredit.reason !== "unconfigured") {
+    howValues.creditReason = t(`translationBudget.credit.unread.${deeplCredit.reason}`);
+  }
 
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
       // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
+      // §500: the same switch for Strava and Instagram beside a name on the public list.
+      listSocialsDescribed: await noticeDescribesListSocials(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
@@ -479,6 +505,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
       // «Tradu din română» (§464): DeepL chosen and its key set; `off` reads as done — nothing owed.
       translationConfigured: isTranslationConfigured(env) || env.TRANSLATE_PROVIDER === "off",
+      translationCredit: deeplCredit,
       // Capture counts, like local storage does: on a laptop the form works and nothing is
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
       // the page does: is there a way out, and is there anybody at the other end.
@@ -602,6 +629,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             mailgunSentBetween: (start, end) => mailgunMessagesSentBetween(db, start, end),
             neonPreviousPeriod: (periodStart) => readNeonPreviousPeriod(env, periodStart),
             mediaBytes: () => storedMediaBytes(db),
+            deeplCredit: async () => deeplCredit,
           },
         )
       : null;
@@ -940,6 +968,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             state={translation.state}
             usedToday={translation.usedToday}
             configured={isTranslationConfigured(env)}
+            credit={deeplCredit}
             mayEdit={canManageClubSettings(actor.role)}
           />
         )}

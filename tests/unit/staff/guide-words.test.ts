@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01 criterion 34 — the guide's «words» are the screen's words (§441).
+ * BR-REQ-060-01 criterion 38 — the guide's «words» are the screen's words (§441).
  *
  * The guide was rewritten as numbered steps "with the exact button words" for the colleagues who
  * run the backoffice while the owner is away. The previous one had drifted: it sent the desk to
@@ -88,7 +88,7 @@ function everyText(guide: Guide): { where: string; text: string }[] {
 
 const locales = { ro: ro as Catalogue, en: en as Catalogue };
 
-describe("BR-REQ-060-01 criterion 34 the guide quotes the screen's own words", () => {
+describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", () => {
   for (const [locale, catalogue] of Object.entries(locales)) {
     it(`${locale}: every «…» is a label the backoffice shows`, () => {
       const guide = guideOf(catalogue);

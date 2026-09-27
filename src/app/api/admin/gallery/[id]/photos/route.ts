@@ -9,7 +9,10 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
-/** Up to nine WebP encodes per photo (§414); the same ceiling as `/api/admin/media`. */
+/**
+ * Up to ten WebP encodes per photo, plus the two probe encodes of «Mare» and «Originală» (§414,
+ * §437, §495); the same ceiling as `/api/admin/media`, where the worst case is counted.
+ */
 export const maxDuration = 60;
 
 /**

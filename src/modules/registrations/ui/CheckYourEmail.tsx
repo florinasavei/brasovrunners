@@ -1,3 +1,5 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import DrawIcon from "@mui/icons-material/Draw";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
@@ -195,7 +197,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
       <Box>
         {/* `component="a"` with a resolved path, never `component={Link}`: a component reference
             does not cross the Server → client boundary (`GlyphChip.tsx`). */}
-        <Button component="a" href={eventHref} variant="outlined" sx={TAP_TARGET}>
+        <Button component="a" href={eventHref} variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+          <ArrowBackIcon aria-hidden="true" sx={glyphSx("medium")} />
           {t("done.backToEvent")}
         </Button>
       </Box>

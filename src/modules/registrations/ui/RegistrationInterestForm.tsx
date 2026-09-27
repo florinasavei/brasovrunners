@@ -1,3 +1,4 @@
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -100,7 +101,9 @@ export default async function RegistrationInterestForm({
               </Box>
             )}
 
-            <SubmitButton label={t("interest.submit")} pendingLabel={t("interest.submitting")} size="large" />
+            <SubmitButton label={t("interest.submit")} pendingLabel={t("interest.submitting")} size="large">
+              <NotificationsActiveIcon />
+            </SubmitButton>
 
             <Typography variant="body2" color="text.secondary">
               {t("interest.note")} <Link href="/legal/privacy">{t("interest.privacy")}</Link>
