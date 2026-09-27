@@ -926,6 +926,8 @@
       "deadlinesBody": "Every hold, offer and link given from now on takes the new numbers, and the emails and pages say them. Nothing already given changes: a link, a held place or an offer keeps the deadline it got.",
       "addressCapTitle": "Save the limit per address?",
       "addressCapBody": "From now on, at every event, one email address may register at most this many people, and the email offering to register someone else says the new number. Registrations already made all stay.",
+      "deliveryTimingTitle": "Change when emails leave?",
+      "deliveryTimingBody": "It applies from now on to every email the platform sends, including those already in the queue. No message is lost.",
       "jobCadenceTitle": "Save the interval?",
       "jobCadenceBody": "The email queue and the maintenance run at most once per chosen interval; an email may wait that long.",
       "neonLimitsTitle": "Save the Neon limits?",
@@ -2610,7 +2612,7 @@
         "saved": "The interval was saved. Each job looks at the database again at its next ping and plans by it.",
         "emails": {
           "immediate": "Emails go out right after the request that queued them, whatever the interval; the scheduled queue only picks up what is left (a retry, a message deferred until the daily allowance resets).",
-          "scheduled": "Emails now go out only when the scheduled queue runs (the club's sending setting is on “scheduled”), so a longer interval delays them too, by up to that many minutes."
+          "scheduled": "Emails now leave only when the scheduled queue runs («Deadlines» → «When emails leave» is on the scheduled round), so a longer interval delays them too, by up to that many minutes."
         }
       },
       "budgetThresholds": {
@@ -3709,6 +3711,18 @@
           "few": "{count} people",
           "other": "{count} people"
         }
+      },
+      "deliveryTiming": {
+        "title": "When emails leave",
+        "intro": "On the scheduled round (the default), emails wait in the queue and leave at the platform's next check — on production within 15 minutes by day and an hour at night: sending is paced, the daily allowance is spent predictably, and what one registration queues leaves together. «Right after the request» sends them within seconds of the press. No email is lost either way, and «Send now» empties the queue at any time.",
+        "field": "Emails leave",
+        "help": "The page after the registration form, the link resend and the newsletter sign-up tell the person how long it may take.",
+        "option": {
+          "scheduled": "On the platform's scheduled round (recommended)",
+          "immediate": "Right after the request"
+        },
+        "save": "Save the sending",
+        "saved": "When emails leave was saved."
       },
       "shownAddress": {
         "title": "Contact address shown",
@@ -4852,6 +4866,7 @@
         }
       },
       "delay": "It usually arrives within a minute, five at the most.",
+      "delayScheduled": "Emails leave on the platform's scheduled round, so it arrives within {wait} at the most.",
       "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
       "backToEvent": "Back to the event"
     },
@@ -4973,6 +4988,7 @@
       "emailHelp": "The address you used when registering.",
       "submit": "Send the link",
       "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
+      "sentScheduled": "If there is a registration on this address, the link leaves for it on the platform's next scheduled round, within {wait} at the most. Check your spam folder as well.",
       "prompt": "Did the message not arrive?",
       "linkLabel": "Send it again",
       "stillNothing": "Nothing arrived even after asking again?",
@@ -5966,6 +5982,7 @@
       "budgetThresholds": "Budget thresholds saved.",
       "deadlines": "Deadlines saved.",
       "addressCap": "Limit per address saved.",
+      "deliveryTiming": "Email sending saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed.",
       "picturesLaddered": {
@@ -6105,7 +6122,8 @@
     "submitting": "Sending…",
     "sent": {
       "title": "Check your inbox",
-      "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it. Can't find it? Look in the Spam folder too."
+      "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it. Can't find it? Look in the Spam folder too.",
+      "bodyScheduled": "If the address is right, you get an email with a link within {wait} at the most — emails leave on the platform's scheduled round. The subscription starts only once you press the link. Can't find it? Look in your Spam folder too."
     },
     "errors": {
       "title": "The subscription has not started yet",

@@ -10,6 +10,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestRegistrationLinkAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -44,6 +46,9 @@ export default async function ResendPage({ params, searchParams }: Props) {
 
   const { sent, event } = await searchParams;
   const t = await getTranslations("Registration");
+  // The link leaves on the scheduler's tick by default (§NNN): "just sent" would be untrue for up to
+  // the pinger's interval, and that is what makes somebody press again.
+  const waitMinutes = sent ? await cachedEmailWaitMinutes(new Date()) : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -52,7 +57,9 @@ export default async function ResendPage({ params, searchParams }: Props) {
       </Typography>
 
       {sent ? (
-        <Alert severity="success">{t("resend.sent")}</Alert>
+        <Alert severity="success">
+          {waitMinutes === null ? t("resend.sent") : t("resend.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
+        </Alert>
       ) : (
         <form action={requestRegistrationLinkAction}>
           <Stack spacing={2}>

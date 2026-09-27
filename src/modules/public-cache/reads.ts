@@ -37,6 +37,9 @@ import {
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
+import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
+import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -505,6 +508,24 @@ export async function cachedDeadlines(): Promise<Deadlines> {
   } catch {
     return { ...DEFAULT_DEADLINES };
   }
+}
+
+/**
+ * How long a message the visitor just asked for may take (§NNN): null when the club sends right
+ * after the request (§221 `immediate`), else the pinger's cadence at this hour on this deployment
+ * (`pingerCadenceMinutes`: fifteen minutes by day, an hour at night) — the outbox job is then the
+ * only sender. The screen after the registration form and the newsletter's pop-up say it, so the
+ * setting is read from the data cache, which a save of it expires (`updateDeliveryTiming`). When
+ * the database cannot answer, the default's wait: the longer promise is the one that stays true.
+ */
+export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> {
+  let timing: DeliveryTiming;
+  try {
+    timing = (await publicRead(["settings.delivery-timing"], ["settings"], () => readDeliveryTiming(getDb()))).timing;
+  } catch {
+    timing = defaultDeliveryTiming(env.APP_ENV).timing;
+  }
+  return timing === "scheduled" ? pingerCadenceMinutes(now) : null;
 }
 
 /**

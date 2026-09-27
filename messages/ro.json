@@ -926,6 +926,8 @@
       "deadlinesBody": "Fiecare loc ținut, ofertă și link dat de acum înainte primește numerele noi, iar emailurile și paginile le spun. Nimic din ce s-a dat deja nu se schimbă: un link, un loc ținut sau o ofertă își păstrează termenul primit.",
       "addressCapTitle": "Salvezi limita pe adresă?",
       "addressCapBody": "De acum, la fiecare eveniment, o adresă de email poate înscrie cel mult atâtea persoane, iar emailul care oferă înscrierea altcuiva spune numărul nou. Înscrierile făcute deja rămân toate.",
+      "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
+      "deliveryTimingBody": "Se aplică de acum fiecărui email al platformei, și celor aflate deja în coadă. Niciun mesaj nu se pierde.",
       "jobCadenceTitle": "Salvezi intervalul?",
       "jobCadenceBody": "Emailurile din coadă și întreținerea rulează cel mult o dată la intervalul ales; un email poate aștepta atât.",
       "neonLimitsTitle": "Salvezi limitele Neon?",
@@ -2610,7 +2612,7 @@
         "saved": "Intervalul a fost salvat. Fiecare lucrare se uită din nou în bază la următorul ping și se planifică după el.",
         "emails": {
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
-          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii (setarea clubului pentru trimitere e pe „programat”), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
+          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii («Termene» → «Când pleacă emailurile» e pe trecerea programată), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
         }
       },
       "budgetThresholds": {
@@ -3709,6 +3711,18 @@
           "few": "{count} persoane",
           "other": "{count} de persoane"
         }
+      },
+      "deliveryTiming": {
+        "title": "Când pleacă emailurile",
+        "intro": "La trecerea programată (implicit), emailurile se adună în coadă și pleacă la următoarea verificare a platformei — pe producție la cel mult 15 minute ziua și o oră noaptea: trimiterea e eșalonată, limita zilnică se consumă previzibil, iar ce pune în coadă o singură înscriere pleacă împreună. «Imediat după cerere» le trimite în câteva secunde de la apăsare. Niciun email nu se pierde în niciun caz, iar «Trimite acum» golește coada oricând.",
+        "field": "Emailurile pleacă",
+        "help": "Pagina de după formularul de înscriere, retrimiterea linkului și abonarea la noutăți îi spun persoanei cât poate dura.",
+        "option": {
+          "scheduled": "La trecerea programată a platformei (recomandat)",
+          "immediate": "Imediat după cerere"
+        },
+        "save": "Salvează trimiterea",
+        "saved": "Momentul trimiterii emailurilor a fost salvat."
       },
       "shownAddress": {
         "title": "Adresa de contact afișată",
@@ -4852,6 +4866,7 @@
         }
       },
       "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
+      "delayScheduled": "Emailurile pleacă la trecerea programată a platformei, așa că ajunge în cel mult {wait}.",
       "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {confirmation}, așa că ai timp.",
       "backToEvent": "Înapoi la eveniment"
     },
@@ -4973,6 +4988,7 @@
       "emailHelp": "Adresa folosită la înscriere.",
       "submit": "Trimite linkul",
       "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "sentScheduled": "Dacă există o înscriere pe această adresă, linkul pleacă acolo la următoarea trecere programată a platformei, în cel mult {wait}. Verifică inclusiv folderul de spam.",
       "prompt": "Nu a ajuns mesajul?",
       "linkLabel": "Trimite-l din nou",
       "stillNothing": "Nici după ce l-ai cerut din nou nu a ajuns nimic?",
@@ -5966,6 +5982,7 @@
       "budgetThresholds": "Pragurile bugetului salvate.",
       "deadlines": "Termene salvate.",
       "addressCap": "Limită pe adresă salvată.",
+      "deliveryTiming": "Trimiterea emailurilor salvată.",
       "neonLimits": "Limitele Neon au fost salvate.",
       "neonLimitsSame": "Limitele erau deja acestea; nimic de schimbat.",
       "picturesLaddered": {
@@ -6105,7 +6122,8 @@
     "submitting": "Se trimite…",
     "sent": {
       "title": "Verifică-ți căsuța de email",
-      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
+      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam.",
+      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait} — emailurile pleacă la trecerea programată a platformei. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
     },
     "errors": {
       "title": "Abonarea nu a pornit încă",

@@ -2,25 +2,25 @@ import { z } from "zod";
 
 /**
  * When a queued message actually leaves: the moment the request that queued it finishes, or
- * on the scheduler's next visit (`DECISIONS.md` §221).
+ * on the scheduler's next visit (`DECISIONS.md` §221, §NNN).
  *
- * The owner asked for the switch, and the reason it is worth having is that the two failure
- * modes are opposite and the club cannot know in advance which one it is in.
+ * The two failure modes are opposite, which is why it is a setting and not a constant.
  *
- * - **`immediate`** is what has always happened: `drainOutboxAfterResponse` sends after the
- *   response, so a confirmation link arrives in seconds. It is the right default, and it is
- *   the reason a registration feels instant. Its cost is that a burst — eighty people
- *   registering when a popular race opens — is eighty sends inside a few minutes, which is
- *   where a daily allowance is spent fastest and where a provider's rate limiter answers 429.
- * - **`scheduled`** sends nothing from the web request and leaves everything to the pinger,
- *   which visits every fifteen minutes by day (§68). Messages are late by up to that, and in
- *   exchange the sending is paced, the allowance drains predictably, and a burst cannot take
- *   the site's own response times with it.
+ * - **`immediate`**: `drainOutboxAfterResponse` sends after the response, so a confirmation link
+ *   arrives in seconds. Its cost is a burst — eighty people registering when a popular race opens
+ *   is eighty sends inside a few minutes, where a daily allowance is spent fastest and where a
+ *   provider's rate limiter answers 429 — and one message per request, so a parent registering
+ *   three people gets three emails in three minutes where one would do.
+ * - **`scheduled`** sends nothing from the web request and leaves everything to the outbox job,
+ *   which the pinger visits every fifteen minutes by day and once an hour at night (§68). Messages
+ *   are late by up to that, and in exchange the sending is paced, the allowance drains
+ *   predictably, a burst cannot take the site's own response times with it, and what one sitting
+ *   queued leaves together.
  *
- * **Superadministrator only**, unlike the Mailgun plan beside it, which is the Administrator's
- * (§100). The plan is a fact about the account that the club's data controller knows; this is
- * an operational trade that makes every email on the platform arrive later, and getting it
- * wrong is invisible until somebody asks why their link took a quarter of an hour.
+ * **A «Termene» setting since §NNN**, the Administrator's (`canManageClubSettings`) — it decides a
+ * wait every participant is told about, on the screen after the form and in the newsletter's
+ * pop-up, like the other numbers in that fold. It was the Superadministrator's under §221 and §450
+ * with no control left on any screen.
  */
 export const DELIVERY_TIMINGS = ["immediate", "scheduled"] as const;
 export type DeliveryTiming = (typeof DELIVERY_TIMINGS)[number];
@@ -34,9 +34,19 @@ export const deliveryTimingSettingSchema = z
 export type DeliveryTimingSetting = z.infer<typeof deliveryTimingSettingSchema>;
 
 /**
- * Immediate, because it is what the platform did before this setting existed and because a
- * participant waiting on a confirmation link is the case that matters most. A setting that
- * defaults to the slower behaviour would change how the site feels for every club that never
- * opens this screen.
+ * Scheduled — the owner, 2026-09-27: emails leave on the scheduler's tick, not right after the
+ * request (§NNN, reversing §221's default). A deployment that never stored the row sends on the
+ * tick; `immediate` is one save away in «Termene».
  */
-export const DEFAULT_DELIVERY_TIMING: DeliveryTimingSetting = { timing: "immediate" };
+export const DEFAULT_DELIVERY_TIMING: DeliveryTimingSetting = { timing: "scheduled" };
+
+/**
+ * The default where nobody stored a choice, per environment (§NNN). Scheduled where a pinger
+ * exists — QA and production, the cron-job.org monitors of `SETUP.md` §40. Immediate on a laptop
+ * (`local`) and on the end-to-end suite's server (`test`): neither has a pinger, so "on the tick"
+ * would be "never", and a developer's registration would wait for a scheduler that does not come.
+ * A stored choice wins everywhere.
+ */
+export function defaultDeliveryTiming(appEnv: "local" | "test" | "qa" | "production"): DeliveryTimingSetting {
+  return appEnv === "qa" || appEnv === "production" ? DEFAULT_DELIVERY_TIMING : { timing: "immediate" };
+}

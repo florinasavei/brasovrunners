@@ -49,6 +49,7 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageClubSettings, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
+import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { countForm } from "@/i18n/count-form";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -137,7 +138,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress] = await Promise.all([
+  const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress, deliveryTiming] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
@@ -165,6 +166,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     readAddressCap(db),
     // «Adresa de contact afișată» (§442): what the site shows and every email's Reply-To.
     readShownContactAddress(db),
+    // «Când pleacă emailurile» (§NNN), in «Termene»: on the scheduler's tick or right after the request.
+    readDeliveryTiming(db),
   ]);
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
@@ -271,6 +274,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
         {saved === "deadlines" && <Alert severity="success">{t("emails.deadlines.saved")}</Alert>}
         {saved === "addressCap" && <Alert severity="success">{t("emails.addressCap.saved")}</Alert>}
+        {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
       </Box>
 
@@ -352,8 +356,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         locale={locale}
         state={deadlines}
         mayEdit={mayEditEmail}
-        openWhen={{ saved: saved === "deadlines" || saved === "addressCap" }}
+        openWhen={{ saved: saved === "deadlines" || saved === "addressCap" || saved === "deliveryTiming" }}
         addressCap={addressCap}
+        deliveryTiming={deliveryTiming}
       />
 
       {/*
