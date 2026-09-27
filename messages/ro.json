@@ -3838,7 +3838,7 @@
         "name": "Înscriere confirmată — familie (mai multe persoane)",
         "whenShort": "după ultima declarație a unei familii",
         "when": "Când o adresă a înscris mai multe persoane deodată și le-a confirmat pe toate: un singur email, cu codul QR, codul de la masă și numărul de concurs al fiecăreia.",
-        "platformWords": "Textul este al platformei. Cuvintele scrise de club pentru «Înscriere confirmată (cu QR și număr)» sunt pentru o singură persoană și nu intră aici."
+        "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru «Înscriere confirmată (cu QR și număr)» e pentru o singură persoană și nu intră aici."
       },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {

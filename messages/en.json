@@ -3838,7 +3838,7 @@
         "name": "Registration confirmed — family (several people)",
         "whenShort": "after a family's last declaration",
         "when": "When one address registered several people at once and all of them are confirmed: one email, with each person's QR code, desk code and race number.",
-        "platformWords": "The platform's words. The club's own words for «Registration confirmed (with QR and number)» are for one person and do not apply here."
+        "platformWords": "Always the default text. The club's own words for «Registration confirmed (with QR and number)» are for one person and do not apply here."
       },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
