@@ -46,6 +46,7 @@ vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () =>
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),
   inviteStaffAction: vi.fn(),
+  inviteMembersAction: vi.fn(),
   resendStaffInviteAction: vi.fn(),
   revokeStaffAction: vi.fn(),
   sendStaffPasswordResetAction: vi.fn(),
@@ -108,7 +109,7 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
 
   it("offers every role but the Superadministrator in the invitation", () => {
     const inviteSelects = roleOptions(page.all);
-    expect(inviteSelects).toEqual([["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
+    expect(inviteSelects).toEqual([["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
   });
 
   it("shows a Superadministrator's row as a line with no verb", () => {
@@ -123,7 +124,7 @@ describe("BR-REQ-060-01 the team page, read by an Administrator (§450)", () => 
   it.each(STAFF_ROLES.filter((role) => role !== "SUPERADMIN"))("gives the %s row a role select without the top role, and no line", (role) => {
     const row = page.rows.get(`m-${role}`)!;
     expect(superadminLine(row)).toEqual([]);
-    expect(roleOptions(row)).toEqual([["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
+    expect(roleOptions(row)).toEqual([["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]]);
   });
 
   it("offers nothing on the reader's own row", () => {

@@ -29,7 +29,8 @@
       "team": "Team",
       "faq": "FAQ",
       "more": "Menu",
-      "contact": "Contact"
+      "contact": "Contact",
+      "members": "Members"
     },
     "newBuild": {
       "body": "A new version of the site has been deployed — reload the page whenever you are ready, but anything you have typed into an open form will be lost.",
@@ -914,7 +915,7 @@
       "interestWithdrawTitle": "Withdraw the address?",
       "interestWithdrawBody": "The address typed is removed from “Notify me” and no longer receives the announcement that registration opened.",
       "inviteStaffTitle": "Add the person to the team?",
-      "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter the backoffice as soon as they set a password.",
+      "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter as soon as they set a password: the backoffice, or — as a Member — only the members' area on the site.",
       "changeRoleTitle": "Change the role?",
       "changeRoleBody": "{name} gets the chosen role from the next page they open.",
       "approvePlatformTitle": "Approve the missing templates ({count} of {total})?",
@@ -957,7 +958,9 @@
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
       "deliveryTimingTitle": "Change when emails leave?",
-      "deliveryTimingBody": "It applies from now on to every email the site sends, including those already in the queue. No message is lost."
+      "deliveryTimingBody": "It applies from now on to every email the site sends, including those already in the queue. No message is lost.",
+      "inviteMembersTitle": "Add the members?",
+      "inviteMembersBody": "Every address on the list gets the Member role and the sign-in invitation by email. Once they set a password, a member enters only the members' area on the site — never the backoffice."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -995,7 +998,8 @@
       "BIB_NUMBER_TAKEN": "That number is already somebody's at this event: given, held, or worn by an erased registration. Pick another number from the box and try again.",
       "WALK_IN_BIB_TAKEN": "The person is entered, but somebody just gave that number away, so they are unconfirmed. Find them in the list and press “Confirm here” with another number.",
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
-      "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person."
+      "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
+      "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1778,7 +1782,9 @@
       "title": "Staff sign-in",
       "unavailable": "Staff sign-in is not available in this environment yet.",
       "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people.",
-      "action": "Sign in"
+      "action": "Sign in",
+      "membersTitle": "Members' sign-in",
+      "membersLead": "Sign in with the address the club made your member account for."
     },
     "staff": {
       "title": "Staff",
@@ -1824,7 +1830,8 @@
         "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
         "DEV": "plus the technical page /devs. No participant data.",
         "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
-        "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator."
+        "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
+        "MEMBER": "the members' area of the site, after signing in. No backoffice."
       },
       "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
       "passwordReset": "Send a password reset",
@@ -1845,7 +1852,22 @@
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
       "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
-      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access."
+      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access.",
+      "membersTitle": "Add several members",
+      "membersAside": "one address per row, the Member role",
+      "membersRows": "The members, one per row",
+      "membersRowsHelp": "The address, or the name and the address: “Ana Pop, ana@example.com”. At most {max} rows at a time. One row that is not an address stops them all. A member already added only gets their account again.",
+      "membersInvite": "Add the members",
+      "membersInviting": "Adding…",
+      "membersInvited": "Members added: {count}. The invitations are on their way.",
+      "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
+      "membersRetried": "Already members: {retried} — only their account was tried again.",
+      "membersOutcome": {
+        "created": "account created, invitation sent",
+        "invited": "the account existed, invitation sent again",
+        "failed": "failed: {reason}",
+        "unconfigured": "no invitation key: the account is made in the Zitadel console"
+      }
     },
     "queue": {
       "title": "The registration queue",
@@ -2305,8 +2327,12 @@
             "Check: reload this page; the row turns green when the key finds your account. Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
           ],
           "howUnreachable": [
-            "Reload the page in a few minutes: the check runs on every open, with a single request to Zitadel.",
+            "Reload the page in a few minutes: the check runs on every open, with one search in Zitadel.",
             "If it stays so, open the Zitadel console. If it does not open, the provider has a problem; if it does, check ZITADEL_MANAGEMENT_PAT and AUTH_ZITADEL_ISSUER on Vercel."
+          ],
+          "capped": "The organization has more accounts than the check reads: at most 2000, 200 to a page. The key may well work, but Echipa can no longer say which row has no sign-in account.",
+          "howCapped": [
+            "Nothing to fix on the key. A developer raises the ACCOUNTS_LISTING_MAX ceiling in src/modules/staff-identity/zitadel-users.ts, or deletes the accounts no longer used in the Zitadel console."
           ]
         },
         "mediaStorage": {
@@ -2453,7 +2479,8 @@
           "how": [
             "/admin/legal → “New version” → Privacy notice → “Start from the template”. Section 4 describes the team page.",
             "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
-            "Only then publish the page, from /admin/pages/team → “Publish the page”."
+            "Only then publish the page, from /admin/pages/team → “Publish the page”.",
+            "The same new notice also describes, in section 12, the club members' accounts (the members' area): approve it before inviting the first members from Team → “Add several members”."
           ]
         },
         "translation": {
@@ -2610,8 +2637,8 @@
           "more": "On the free plan the database sleeps when unused, so the first page after a quiet spell is slower. The next step up is paid by usage."
         },
         "zitadel": {
-          "name": "Zitadel (how the team signs in)",
-          "freeGives": "Free: up to 100 sign-ins a day and a single administrator of the Zitadel account.",
+          "name": "Zitadel (sign-in for the team and members)",
+          "freeGives": "Free: up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers. Checked on 27 Sept 2026.",
           "ceiling": "The one limit that matters: a single administrator, without whom nobody can invite anybody.",
           "whenCrossed": "It is not crossed: who the administrator is and where the credentials are is written down.",
           "closeYes": "—",
@@ -3101,7 +3128,7 @@
       "seoHelp": "Optional, for search engines — in both languages or neither.",
       "bothOrNeither": "write it in both languages or neither",
       "tabPages": "The club's pages",
-      "tabTeam": "The team page",
+      "tabTeam": "The team",
       "tabFaq": "FAQ",
       "standardTitle": "Standard pages",
       "standardIntro": "The site's pages: their address and title are fixed; the club fills in their content on each one's screen and publishes them when they are ready.",
@@ -3111,7 +3138,10 @@
       "contactForm": "The form takes messages",
       "contactNoForm": "No form: the page shows the club's address",
       "contactAddress": "address shown: {address}",
-      "customTitle": "Custom pages"
+      "customTitle": "Custom pages",
+      "groupStandard": "Standard pages",
+      "groupCustom": "Custom pages",
+      "tabMembers": "Members"
     },
     "appearance": {
       "title": "Site appearance",
@@ -3185,7 +3215,8 @@
       "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes.",
       "usedInTeam": "On the team page: {title}",
       "usedInTeamIntro": "On the team page: the introduction",
-      "usedInFaq": "On the FAQ page"
+      "usedInFaq": "On the FAQ page",
+      "usedInMembersPage": "On the members' pages"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -3468,7 +3499,8 @@
         "REGISTER_ANOTHER_PERSON": "Registering another person with the same address",
         "NEWSLETTER_CONFIRM": "Confirming a news subscription",
         "NEWSLETTER": "Newsletter",
-        "NEW_EVENT_ALERT": "Announcement: a new event on the calendar"
+        "NEW_EVENT_ALERT": "Announcement: a new event on the calendar",
+        "MEMBER_INVITATION": "The member invitation"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "After the form is sent. The link lasts {confirmation}, from when the email leaves.",
@@ -3497,7 +3529,8 @@
         "REGISTER_ANOTHER_PERSON": "When the form is sent again with an address already registered and another name: a single-use link, valid for {confirmation}, to register the other person.",
         "NEWSLETTER_CONFIRM": "When someone subscribes on the contact page: the link that confirms the subscription, valid for {confirmation}.",
         "NEWSLETTER": "Only when an organizer sends a newsletter from the backoffice, to the chosen topic's subscribers. It leaves after every other email, from what is left of the allowance.",
-        "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics."
+        "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics.",
+        "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -3526,7 +3559,8 @@
         "REGISTER_ANOTHER_PERSON": "when the form is sent again for another person",
         "NEWSLETTER_CONFIRM": "when someone subscribes",
         "NEWSLETTER": "only when an organizer sends a newsletter",
-        "NEW_EVENT_ALERT": "automatically, when a new event is published"
+        "NEW_EVENT_ALERT": "automatically, when a new event is published",
+        "MEMBER_INVITATION": "when a member is added"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -3866,12 +3900,6 @@
           "immediate": "Emails leave right after the request that queued them; what is left (a retry, a deferral) leaves on the scheduled round, the next one expected around {at}."
         }
       },
-      "familyConfirmed": {
-        "name": "Registration confirmed — family (several people)",
-        "whenShort": "after a family's last declaration",
-        "when": "When one address registered several people at once and all of them are confirmed: one email, with each person's QR code, desk code and race number.",
-        "platformWords": "Always the default text. The club's own words for «Registration confirmed (with QR and number)» are for one person and do not apply here."
-      },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
@@ -3923,6 +3951,12 @@
         },
         "save": "Save the sending",
         "saved": "When emails leave was saved."
+      },
+      "familyConfirmed": {
+        "name": "Registration confirmed — family (several people)",
+        "whenShort": "after a family's last declaration",
+        "when": "When one address registered several people at once and all of them are confirmed: one email, with each person's QR code, desk code and race number.",
+        "platformWords": "Always the default text. The club's own words for «Registration confirmed (with QR and number)» are for one person and do not apply here."
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
@@ -4474,6 +4508,15 @@
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
                 "It never arrived: on their row, «Resend the invitation».",
                 "Another role: «Change role». Left the team: «Revoke access»."
+              ]
+            },
+            {
+              "title": "Club members and the members' area",
+              "steps": [
+                "A member has an account but no backoffice: after «Sign in» they see the members' area alone.",
+                "«Staff» → «Add someone», «Role» «Membru», or «Add several members» for a list. Press «Add» and confirm; the member gets the invitation by email.",
+                "The words: «Pages» → «Standard pages» → «Members». «Members' benefits» is the public page with the sign-in button; «The members' area» is what a member sees after signing in. Both in Romanian and English.",
+                "Put the page on the site: «Publish the page» (the Administrator only)."
               ]
             }
           ]
@@ -5065,6 +5108,39 @@
       "costs": "Costs",
       "platform": "Anti-bot",
       "configuration": "Configuration"
+    },
+    "members": {
+      "title": "Members",
+      "intro": "The public «Members' benefits» page, with the sign-in button, and the members' area. A member is an account added on Staff with the role Membru: the site, never the backoffice.",
+      "count": "Members with an account: {count}.",
+      "addOnTeam": "Add a member on Staff",
+      "readOnly": "You can read these texts; the Copywriter and the Administrator write them.",
+      "publishIsAdmin": "An Administrator puts the page on the site.",
+      "pageHeading": "The Members' benefits page",
+      "pagePublished": "On the site",
+      "pageDraft": "Draft",
+      "pagePublishedHelp": "On the site at {ro} and {en}, with «Members» in the menu. The members' area opens either way, after signing in.",
+      "pageDraftHelp": "Not on the site: the address answers \"page not found\". The members' area works anyway, for whoever has an account.",
+      "publish": "Publish the page",
+      "unpublish": "Take the page off the site",
+      "publishTitle": "Publish the members' page?",
+      "publishBody": "The page appears in both languages, at {ro} and {en}, with «Members» in the menu.",
+      "unpublishTitle": "Take the page off the site?",
+      "unpublishBody": "The address will answer \"page not found\" and «Members» leaves the menu. The members' area stays open for whoever has an account.",
+      "written": "Written",
+      "notWritten": "Not written",
+      "benefitsHeading": "Members' benefits",
+      "benefitsHelp": "On the public page, above the sign-in button: what a member of the club gets. Unwritten, the page shows a default sentence.",
+      "benefitsFold": "Write the benefits",
+      "benefitsRo": "Benefits (Romanian)",
+      "benefitsEn": "Benefits (English)",
+      "zoneHeading": "The members' area",
+      "zoneHelp": "What a member sees after signing in. It is on no public page. A picture in it has an address that is hard to guess, but not secret.",
+      "zoneFold": "Write the members' area",
+      "zoneRo": "Members' area (Romanian)",
+      "zoneEn": "Members' area (English)",
+      "textEmpty": "Not written yet.",
+      "textHelp": "In both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a table."
     }
   },
   "NotFound": {
@@ -5823,7 +5899,8 @@
       "MODERATOR": "creates and configures events, publishes, the gallery",
       "DEV": "plus the configuration page. No participant data",
       "ADMIN": "runs the club: plus registrations, participants, export, legal texts, the team, deleting an event",
-      "SUPERADMIN": "plus the technical settings that can stop the service, and naming another Superadministrator"
+      "SUPERADMIN": "plus the technical settings that can stop the service, and naming another Superadministrator",
+      "MEMBER": "the members' area of the site. No backoffice"
     },
     "settings": "Settings",
     "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",
@@ -6392,6 +6469,14 @@
         "one": "Done: {count} box translated in “{card}”, but the text was cut at the box's limit. Check it under English and press Save.",
         "few": "Done: {count} boxes translated in “{card}”, but some texts were cut at their box's limit. Check them under English and press Save.",
         "other": "Done: {count} boxes translated in “{card}”, but some texts were cut at their box's limit. Check them under English and press Save."
+      },
+      "membersTextSaved": "The members' pages text was saved.",
+      "membersPagePublished": "The members' benefits page is on the site, in both languages.",
+      "membersPageUnpublished": "The members' benefits page was taken off the site.",
+      "membersInvited": {
+        "one": "Added: {count} member.",
+        "few": "Added: {count} members.",
+        "other": "Added: {count} members."
       }
     }
   },
@@ -6621,5 +6706,25 @@
       "slow": "The check is taking longer than usual. Press “Retry the check” — or send anyway.",
       "failed": "The check failed; you can send anyway. You can also press “Retry the check”."
     }
+  },
+  "Members": {
+    "title": "Members' benefits",
+    "lead": "{club}'s members have an area of their own on the site. The club will soon write here what a member gets.",
+    "doorTitle": "The members' area",
+    "doorHelp": "A member who got the invitation by email? Sign in with your address.",
+    "doorSignedIn": "You are signed in.",
+    "signIn": "Enter the members' area",
+    "openZone": "Enter the members' area",
+    "signInUnavailable": "Signing in is not available on this site yet.",
+    "noAccount": "No account? The club makes the member accounts. <contact>Write to us</contact>.",
+    "zoneTitle": "The members' area",
+    "zoneGreeting": "Welcome, {name}.",
+    "zoneEmpty": "The club will soon put here what is for members only.",
+    "zoneAway": "The site's database is resting right now. Come back in a few minutes.",
+    "openBackoffice": "Open the backoffice",
+    "signOut": "Sign out",
+    "upcomingTitle": "The next runs",
+    "upcomingEmpty": "No run is announced right now.",
+    "upcomingAll": "Every event"
   }
 }

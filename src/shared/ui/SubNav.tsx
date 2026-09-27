@@ -1,7 +1,14 @@
 import Box from "@mui/material/Box";
+import type { ReactNode } from "react";
 
-/** One entry: where it goes, what it says, and whether it is the panel being shown. */
-export type SubNavItem = { href: string; label: string; active?: boolean };
+/**
+ * One entry: where it goes, what it says, and whether it is the panel being shown. `glyph` and
+ * `group` are optional (§524): a row that names kinds of things — «Pagini standard» and «Pagini
+ * personalizate» — gives each entry its picture and each run of entries its caption. The glyph is
+ * an element, which is safe here because `SubNav` is a Server Component end to end: nothing it
+ * renders crosses into a client island.
+ */
+export type SubNavItem = { href: string; label: string; active?: boolean; glyph?: ReactNode; group?: string };
 
 /**
  * The row the sub-navigation sits in: a thin rule under it like the backoffice's own tab bar,
@@ -61,6 +68,24 @@ const ENTRY_SX = {
   '&[aria-current="page"]': { color: "primary.main", fontWeight: 600, borderColor: "primary.main" },
 } as const;
 
+/** A group's caption: a quiet label in the row, never a link, the row's rule under it like the entries'. */
+const GROUP_SX = {
+  display: "flex",
+  alignItems: "center",
+  boxSizing: "border-box",
+  minHeight: 44,
+  pl: { xs: 1, sm: 1.5 },
+  pr: 0.5,
+  color: "text.secondary",
+  typography: "overline",
+  fontSize: "0.6875rem",
+  lineHeight: 1.25,
+  whiteSpace: "nowrap",
+} as const;
+
+/** The glyph before an entry's words: the words' size, inheriting their colour. */
+const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } } as const;
+
 /**
  * A row of sub-tabs inside one backoffice section (`DECISIONS.md` §265), and the one look every
  * sub-navigation in the backoffice wears (§360).
@@ -84,9 +109,10 @@ const ENTRY_SX = {
  * `role="tab"`: every entry changes the address, and a tab widget promises arrow keys and a panel
  * in the same document that these do not have.
  *
- * No glyphs: the main tab bar carries the pictures, and a row of one-word labels under it is
- * lighter without them. (An icon element handed from a Server Component to a client one is the
- * defect `shared/ui/action-icons.ts` documents, so a glyph here would have to go by name.)
+ * No glyphs by default: the main tab bar carries the pictures, and a row of one-word labels under
+ * it is lighter without them. A row whose entries are kinds of things — «Pagini» (§524) — gives
+ * each its glyph and each run its caption (`SubNavItem.glyph`, `.group`); the elements stay on
+ * the server, so the defect `shared/ui/action-icons.ts` documents cannot happen here.
  *
  * The href is a string rather than a typed route because a panel is a query parameter, and
  * because one of these rows deliberately points at the neighbouring page: the anti-bot switch
@@ -96,13 +122,26 @@ export default function SubNav({ items, label }: { items: readonly SubNavItem[];
   return (
     <Box component="nav" aria-label={label} sx={ROW_SX}>
       <Box component="ul" sx={LIST_SX}>
-        {items.map((item) => (
-          <Box component="li" key={item.href} sx={{ flex: "none" }}>
-            <Box component="a" href={item.href} aria-current={item.active ? "page" : undefined} sx={ENTRY_SX}>
-              {item.label}
-            </Box>
-          </Box>
-        ))}
+        {items.map((item, index) => {
+          const opensGroup = item.group !== undefined && item.group !== items[index - 1]?.group;
+          return [
+            opensGroup ? (
+              <Box component="li" key={`group:${item.group}`} sx={{ flex: "none", ...(index > 0 ? { ml: 1.5 } : {}) }}>
+                <Box sx={GROUP_SX}>{item.group}</Box>
+              </Box>
+            ) : null,
+            <Box component="li" key={item.href} sx={{ flex: "none" }}>
+              <Box component="a" href={item.href} aria-current={item.active ? "page" : undefined} sx={ENTRY_SX}>
+                {item.glyph ? (
+                  <Box component="span" aria-hidden="true" sx={GLYPH_SX}>
+                    {item.glyph}
+                  </Box>
+                ) : null}
+                {item.label}
+              </Box>
+            </Box>,
+          ];
+        })}
       </Box>
     </Box>
   );

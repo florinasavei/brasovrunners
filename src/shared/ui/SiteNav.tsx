@@ -33,6 +33,9 @@ const SECTIONS = [
   // «Întrebări frecvente» (§NNN): another page this application ships, offered while a question is
   // on the site (`showFaq`).
   { segment: "faq", href: "/faq" },
+  // «Membri» (§524): «Beneficiile membrilor» and its sign-in — offered while the page is published
+  // with its words (`offersMembersEntry`, `showMembers`).
+  { segment: "members", href: "/members" },
   { segment: "contact", href: "/contact" },
 ] as const;
 
@@ -105,12 +108,14 @@ export default function SiteNav({
   showGallery = false,
   showTeam = false,
   showFaq = false,
+  showMembers = false,
   showContact = false,
 }: {
   pages?: readonly NavPage[];
   showGallery?: boolean;
   showTeam?: boolean;
   showFaq?: boolean;
+  showMembers?: boolean;
   showContact?: boolean;
 }) {
   const t = useTranslations("Site.nav");
@@ -123,6 +128,7 @@ export default function SiteNav({
         (section.segment !== "gallery" || showGallery) &&
         (section.segment !== "team" || showTeam) &&
         (section.segment !== "faq" || showFaq) &&
+        (section.segment !== "members" || showMembers) &&
         (section.segment !== "contact" || showContact),
     ).map((section) => ({
       key: section.segment,

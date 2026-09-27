@@ -11,7 +11,9 @@ import {
   cachedPublishedAlbums,
   cachedPublishedPages,
   cachedTeamPage,
+  cachedMembersPage,
 } from "@/modules/public-cache/reads";
+import { offersMembersEntry } from "@/modules/content/members/page-settings";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
@@ -83,6 +85,15 @@ async function hasVisibleTeam(locale: Locale) {
   }
 }
 
+/** Whether «Membri» is offered (§524): «Beneficiile membrilor» published with its words (`offersMembersEntry`), or nothing. */
+async function hasMembersPage(locale: Locale) {
+  try {
+    return (await readWithLastGood(`nav:members:${locale}`, async () => offersMembersEntry(await cachedMembersPage(locale)))).value;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
@@ -121,6 +132,7 @@ export default async function SiteHeader() {
   const showTeam = await hasVisibleTeam(locale as Locale);
   // «Întrebări frecvente» (§NNN): the page published with a question on it — «Echipa»'s rule.
   const showFaq = await faqOnSite(locale as Locale);
+  const showMembers = await hasMembersPage(locale as Locale);
   /**
    * "Contact" leads to the form, or to the club's address; a deployment with neither has no
    * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
@@ -265,6 +277,7 @@ export default async function SiteHeader() {
             showGallery={showGallery}
             showTeam={showTeam}
             showFaq={showFaq}
+            showMembers={showMembers}
             showContact={showContact}
           />
         </Box>

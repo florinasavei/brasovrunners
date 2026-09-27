@@ -95,6 +95,9 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       case "faq":
         // «Întrebări frecvente» (§NNN): an answer or the introduction — the page's one screen.
         return <Link href="/admin/pages/faq">{t("pictures.usedInFaq")}</Link>;
+      case "membersPage":
+        // The members' pages (§524): the screen that holds both texts.
+        return <Link href="/admin/pages/members">{t("pictures.usedInMembersPage")}</Link>;
     }
   };
 

@@ -8,6 +8,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { faqQuestions } from "@/db/schema/faq";
 import { teamMembers } from "@/db/schema/team";
 import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
+import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-settings";
 import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
@@ -294,6 +295,11 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
       .where(and(eq(platformSettings.key, FAQ_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
+    // The members' pages (§524), in their platform setting like the team's introduction.
+    await tx
+      .update(platformSettings)
+      .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
+      .where(and(eq(platformSettings.key, MEMBERS_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
     return true;
   });
   if (moved) return "converted";

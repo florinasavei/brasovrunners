@@ -22,6 +22,7 @@ import {
   listPublishedPages,
 } from "@/modules/content/pages/repository";
 import { readPublicFaqPage } from "@/modules/content/faq/repository";
+import { readPublicMembersPage } from "@/modules/content/members/page-settings";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
@@ -405,6 +406,15 @@ export async function cachedTeamPage(locale: Locale) {
  */
 export async function cachedFaqPage(locale: Locale) {
   return publicRead(["faq.page", locale], ["pages"], () => readPublicFaqPage(getDb(), locale));
+}
+
+/**
+ * `readPublicMembersPage`: «Beneficiile membrilor» (§524) — whether it is on the site and its
+ * benefits, for the page, the navigation's entry and the sitemap. Never the members' zone, which is
+ * read per request for a signed-in account alone. Filed under `pages`, like «Echipa».
+ */
+export async function cachedMembersPage(locale: Locale) {
+  return publicRead(["members.page", locale], ["pages"], () => readPublicMembersPage(getDb(), locale));
 }
 
 /** The sitemap's standing pages: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */

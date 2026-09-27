@@ -112,8 +112,12 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // taken off or deleted (and nothing else), and the page's own publish switch.
   saveFaqPageAction: [],
   setFaqPagePublishedAction: [],
+  // «Beneficiile membrilor» on the site or off it (§524).
+  setMembersPagePublishedAction: [],
   // The team.
   inviteStaffAction: [],
+  // «Adaugă mai mulți membri» (§524): several accounts and invitations in one press.
+  inviteMembersAction: [],
   changeStaffRoleAction: [],
   resendStaffInviteAction: [],
   sendStaffPasswordResetAction: [],
@@ -166,6 +170,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
   moveTeamMemberAction: "reorders the team's cards, undone by moving back",
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",
+  saveMembersTextAction: "an editorial save of the members' pages' words (§524), like a page's; publishing the page asks",
   createLegalVersionAction: "a draft, never in force until approved, which asks",
   updateLegalVersionAction: "a draft, never in force until approved, which asks",
   markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",

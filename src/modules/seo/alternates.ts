@@ -30,12 +30,14 @@ export type LocaleUrls = Partial<Record<Locale, string>>;
 export type HreflangLanguages = Partial<Record<Locale | "x-default", string>>;
 
 /** The public pages whose address takes no parameter, and which exist in every locale. */
+// «Beneficiile membrilor» (§524) is one; the members' zone behind the sign-in never is.
 export type StaticPublicRoute =
   | "/events"
   | "/calendar"
   | "/gallery"
   | "/team"
   | "/faq"
+  | "/members"
   | "/contact"
   | "/legal/privacy"
   | "/legal/terms";

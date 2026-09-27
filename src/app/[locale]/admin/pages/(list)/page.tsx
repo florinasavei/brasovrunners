@@ -1,3 +1,4 @@
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import MailOutlineIcon from "@mui/icons-material/MailOutlined";
@@ -15,6 +16,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readFaqPageSettings } from "@/modules/content/faq/page-settings";
 import { listFaqItemsForAdmin } from "@/modules/content/faq/repository";
+import { readMembersPageSettings } from "@/modules/content/members/page-settings";
 import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/repository";
 import { readTeamPageSettings } from "@/modules/content/team/page-settings";
 import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
@@ -23,6 +25,7 @@ import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
@@ -72,12 +75,14 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const current = await searchParams;
   const { saved, error } = current;
   const db = getDb();
-  const [rows, teamSettings, teamMembers, faqSettings, faqItems, contactFormReaches, contactAddresses] = await Promise.all([
+  const [rows, teamSettings, teamMembers, faqSettings, faqItems, membersSettings, members, contactFormReaches, contactAddresses] = await Promise.all([
     listPagesForAdmin(db, locale),
     readTeamPageSettings(db),
     listTeamMembersForAdmin(db),
     readFaqPageSettings(db),
     listFaqItemsForAdmin(db),
+    readMembersPageSettings(db),
+    countMembers(db),
     cachedContactFormReaches(),
     cachedShownContactAddresses(),
   ]);
@@ -85,7 +90,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   /*
     The standard pages (§NNN): the platform's own, whose address and title the club does not
     choose and whose contents it keeps on their own screens — «Contact» (§442, §461), «Echipa»
-    (§459) and «Întrebări frecvente». Each wears its glyph and says whether it is on the site and
+    (§459), «Întrebări frecvente» and «Membri» (§524). Each wears its glyph and says whether it is on the site and
     what of it is, so the list answers "what is live" for every page the club has, standard and
     custom alike. «Contact» is always on the site; its row says what the page offers, and opens
     the settings behind it for a role that may read them.
@@ -126,6 +131,14 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         shown: String(faqItems.filter((item) => item.visible).length),
         total: String(faqItems.length),
       }),
+    },
+    {
+      key: "members",
+      icon: <CardMembershipIcon aria-hidden fontSize="small" color="action" />,
+      href: "/admin/pages/members" as const,
+      title: t("pages.tabMembers"),
+      published: membersSettings.status === "PUBLISHED",
+      line: t("members.count", { count: members }),
     },
   ];
   const words = await confirmWords();
@@ -179,7 +192,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* The club's own pages, and the platform's standard ones: «Contact», «Echipa» (§459), «Întrebări frecvente» (§NNN). */}
+      {/* The club's own pages, and the platform's standard ones: «Contact», «Echipa» (§459), «Întrebări frecvente» (§NNN), «Membri» (§524). */}
       <PagesSubNav locale={locale} active="pages" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>

@@ -262,6 +262,20 @@ export type AuditAction =
   | "faq_page.published"
   | "faq_page.unpublished"
   /**
+   * The members' pages (§524): «Beneficiile membrilor» on or off the site, and either of its two
+   * texts saved — which text, and whether it is written; never the words.
+   */
+  | "members_page.published"
+  | "members_page.unpublished"
+  | "members_page.text_saved"
+  /**
+   * «Adaugă mai mulți membri» (§524): one row per press — how many were added, how many were
+   * already members, and each member's sign-in account by row id (created, invited, failed with
+   * the provider's words, unconfigured). Never an address or a name: the ids are the staff rows.
+   * The result page reads its report back from this row.
+   */
+  | "staff.members_invited"
+  /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
    * translation budget sums these rows' `characters` since the club's midnight.
@@ -280,6 +294,7 @@ export type RecordAuditInput = {
   // `newsletter` for a send (its id) or a subscription removed by hand (no id: the row is gone).
   // `team_member` for a card of «Echipa» (§459).
   // `content` for a translation press, about boxes in a form rather than a stored row (§472).
+  // `staff_user` for the team's rows — a bulk invitation of members names no single one (§524).
   entityType:
     | "registration"
     | "event"
@@ -290,7 +305,8 @@ export type RecordAuditInput = {
     | "media_asset"
     | "newsletter"
     | "team_member"
-    | "content";
+    | "content"
+    | "staff_user";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**
@@ -302,19 +318,38 @@ export type RecordAuditInput = {
   now: Date;
 };
 
+/** Returns the new row's id, for the one caller that shows a row back (§524); the rest ignore it. */
 export async function recordAuditEvent<T extends Record<string, unknown>>(
   db: Database<T>,
   input: RecordAuditInput,
-): Promise<void> {
-  await db.insert(auditLogs).values({
-    actorStaffUserId: input.actorStaffUserId,
-    participantId: input.participantId ?? null,
-    action: input.action,
-    entityType: input.entityType,
-    entityId: input.entityId,
-    metadataJson: input.metadata ?? {},
-    createdAt: input.now,
-  });
+): Promise<string> {
+  const [row] = await db
+    .insert(auditLogs)
+    .values({
+      actorStaffUserId: input.actorStaffUserId,
+      participantId: input.participantId ?? null,
+      action: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      metadataJson: input.metadata ?? {},
+      createdAt: input.now,
+    })
+    .returning({ id: auditLogs.id });
+  return row.id;
+}
+
+/** One audit row of one action, by id, or nothing (§524): a result page reading its own report. */
+export async function findAuditEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+  action: AuditAction,
+): Promise<AuditLog | undefined> {
+  const [row] = await db
+    .select()
+    .from(auditLogs)
+    .where(and(eq(auditLogs.id, id), eq(auditLogs.action, action)))
+    .limit(1);
+  return row;
 }
 
 /**

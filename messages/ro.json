@@ -29,7 +29,8 @@
       "team": "Echipa",
       "faq": "Întrebări",
       "more": "Meniu",
-      "contact": "Contact"
+      "contact": "Contact",
+      "members": "Membri"
     },
     "newBuild": {
       "body": "S-a publicat o versiune nouă a site-ului — reîncarcă pagina când vrei, dar vei pierde ce ai completat în formularele deschise.",
@@ -914,7 +915,7 @@
       "interestWithdrawTitle": "Retragi adresa?",
       "interestWithdrawBody": "Adresa scrisă este ștearsă de la „Anunță-mă” și nu mai primește anunțul deschiderii înscrierilor.",
       "inviteStaffTitle": "Adaugi persoana în echipă?",
-      "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra în backoffice de îndată ce își pune parola.",
+      "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra de îndată ce își pune parola: în backoffice, sau — ca Membru — doar în zona membrilor de pe site.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
       "approvePlatformTitle": "Aprobi șabloanele care lipsesc ({count} din {total})?",
@@ -957,7 +958,9 @@
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
-      "deliveryTimingBody": "Se aplică de acum fiecărui email trimis de site, și celor aflate deja în coadă. Niciun mesaj nu se pierde."
+      "deliveryTimingBody": "Se aplică de acum fiecărui email trimis de site, și celor aflate deja în coadă. Niciun mesaj nu se pierde.",
+      "inviteMembersTitle": "Adaugi membrii?",
+      "inviteMembersBody": "Fiecare adresă din listă primește rolul Membru și, pe email, invitația de intrare. După ce își pune parola, un membru intră doar în zona membrilor de pe site — niciodată în backoffice."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -995,7 +998,8 @@
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment: dat, rezervat sau al unei înscrieri șterse. Alege alt număr din cutie și încearcă din nou.",
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
-      "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană."
+      "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
+      "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1778,7 +1782,9 @@
       "title": "Autentificare echipă",
       "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
       "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale.",
-      "action": "Autentificare"
+      "action": "Autentificare",
+      "membersTitle": "Autentificare membri",
+      "membersLead": "Intră cu adresa pentru care clubul ți-a făcut contul de membru."
     },
     "staff": {
       "title": "Echipa",
@@ -1824,7 +1830,8 @@
         "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
         "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
-        "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator."
+        "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
+        "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
       "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
@@ -1845,7 +1852,22 @@
       "inviting": "Se adaugă…",
       "inviteAsideSends": "contul și invitația, într-un pas",
       "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
-      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator."
+      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator.",
+      "membersTitle": "Adaugă mai mulți membri",
+      "membersAside": "o adresă pe rând, rolul Membru",
+      "membersRows": "Membrii, câte unul pe rând",
+      "membersRowsHelp": "Adresa, sau numele și adresa: „Ana Pop, ana@exemplu.ro”. Cel mult {max} de rânduri o dată. Un rând care nu e adresă oprește tot. Un membru deja adăugat primește doar contul, din nou.",
+      "membersInvite": "Adaugă membrii",
+      "membersInviting": "Se adaugă…",
+      "membersInvited": "Membri adăugați: {count}. Invitațiile sunt pe drum.",
+      "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei contul de autentificare nu s-a putut face. Apasă din nou „Adaugă membrii” cu adresele lor ca să reîncerci.",
+      "membersRetried": "Erau deja membri: {retried} — li s-a reîncercat doar contul.",
+      "membersOutcome": {
+        "created": "cont creat, invitația trimisă",
+        "invited": "contul exista, invitația trimisă din nou",
+        "failed": "eșuat: {reason}",
+        "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+      }
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -2305,8 +2327,12 @@
             "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău. Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
           ],
           "howUnreachable": [
-            "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o singură cerere către Zitadel.",
+            "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
             "Dacă rămâne așa, deschide consola Zitadel. Dacă nu se deschide, e o problemă a furnizorului; dacă se deschide, verifică pe Vercel ZITADEL_MANAGEMENT_PAT și AUTH_ZITADEL_ISSUER."
+          ],
+          "capped": "Organizația are mai multe conturi decât citește verificarea: cel mult 2000, câte 200 pe pagină. Cheia poate funcționa, dar Echipa nu mai poate spune ce rând nu are cont de autentificare.",
+          "howCapped": [
+            "Nu e nimic de reparat la cheie. Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din src/modules/staff-identity/zitadel-users.ts, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
           ]
         },
         "mediaStorage": {
@@ -2453,7 +2479,8 @@
           "how": [
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea 4 descrie pagina Echipa.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
-            "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”."
+            "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”.",
+            "Aceeași notă nouă descrie, în secțiunea 12, și conturile membrilor clubului (zona membrilor): aprob-o înainte să inviți primii membri din Echipa → „Adaugă mai mulți membri”."
           ]
         },
         "translation": {
@@ -2610,8 +2637,8 @@
           "more": "Pe planul gratuit baza adoarme când nu o folosește nimeni, așa că prima pagină după o pauză e mai lentă. Pasul următor se plătește la consum."
         },
         "zitadel": {
-          "name": "Zitadel (contul cu care intră echipa)",
-          "freeGives": "Gratuit: până la 100 de autentificări pe zi și un singur administrator al contului Zitadel.",
+          "name": "Zitadel (contul echipei și al membrilor)",
+          "freeGives": "Gratuit: până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate. Verificat pe 27.09.2026.",
           "ceiling": "Singura limită care contează: un singur administrator, fără de care nimeni nu mai poate invita pe nimeni.",
           "whenCrossed": "Nu se traversează: se notează cine este administratorul și unde sunt datele de acces.",
           "closeYes": "—",
@@ -3101,7 +3128,7 @@
       "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
       "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
       "tabPages": "Paginile clubului",
-      "tabTeam": "Pagina Echipa",
+      "tabTeam": "Echipa",
       "tabFaq": "Întrebări frecvente",
       "standardTitle": "Pagini standard",
       "standardIntro": "Paginile site-ului: adresa și titlul lor sunt fixe, clubul le completează conținutul pe ecranul fiecăreia și le publică atunci când sunt gata.",
@@ -3111,7 +3138,10 @@
       "contactForm": "Formularul primește mesaje",
       "contactNoForm": "Fără formular: pagina arată adresa clubului",
       "contactAddress": "adresa afișată: {address}",
-      "customTitle": "Pagini personalizate"
+      "customTitle": "Pagini personalizate",
+      "groupStandard": "Pagini standard",
+      "groupCustom": "Pagini personalizate",
+      "tabMembers": "Membri"
     },
     "appearance": {
       "title": "Aspectul site-ului",
@@ -3185,7 +3215,8 @@
       "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți.",
       "usedInTeam": "Pe pagina Echipa: {title}",
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
-      "usedInFaq": "Pe pagina «Întrebări frecvente»"
+      "usedInFaq": "Pe pagina «Întrebări frecvente»",
+      "usedInMembersPage": "Pe paginile membrilor"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -3468,7 +3499,8 @@
         "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă",
         "NEWSLETTER_CONFIRM": "Confirmarea abonării la noutăți",
         "NEWSLETTER": "Newsletter",
-        "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar"
+        "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar",
+        "MEMBER_INVITATION": "Invitația de membru"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "După trimiterea formularului. Linkul e valabil {confirmation}, de când pleacă emailul.",
@@ -3497,7 +3529,8 @@
         "REGISTER_ANOTHER_PERSON": "Când formularul e trimis din nou cu o adresă deja înscrisă și alt nume: un link de unică folosință, valabil {confirmation}, ca să înscrie cealaltă persoană.",
         "NEWSLETTER_CONFIRM": "Când cineva se abonează de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}.",
         "NEWSLETTER": "Doar când un organizator trimite un newsletter din backoffice, către abonații temei alese. Pleacă după celelalte emailuri, din ce rămâne din limită.",
-        "NEW_EVENT_ALERT": "O dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), către abonații la evenimente noi și la temele lui."
+        "NEW_EVENT_ALERT": "O dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), către abonații la evenimente noi și la temele lui.",
+        "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” până la prima autentificare. Fără token: butonul duce la autentificare, apoi în zona membrilor."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -3526,7 +3559,8 @@
         "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană",
         "NEWSLETTER_CONFIRM": "când cineva se abonează",
         "NEWSLETTER": "doar când un organizator trimite un newsletter",
-        "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou"
+        "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou",
+        "MEMBER_INVITATION": "când e adăugat un membru"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -3866,12 +3900,6 @@
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă; ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată, următoarea așteptată pe la {at}."
         }
       },
-      "familyConfirmed": {
-        "name": "Înscriere confirmată — familie (mai multe persoane)",
-        "whenShort": "după ultima declarație a unei familii",
-        "when": "Când o adresă a înscris mai multe persoane deodată și le-a confirmat pe toate: un singur email, cu codul QR, codul de la masă și numărul de concurs al fiecăreia.",
-        "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru «Înscriere confirmată (cu QR și număr)» e pentru o singură persoană și nu intră aici."
-      },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
@@ -3923,6 +3951,12 @@
         },
         "save": "Salvează trimiterea",
         "saved": "Momentul trimiterii emailurilor a fost salvat."
+      },
+      "familyConfirmed": {
+        "name": "Înscriere confirmată — familie (mai multe persoane)",
+        "whenShort": "după ultima declarație a unei familii",
+        "when": "Când o adresă a înscris mai multe persoane deodată și le-a confirmat pe toate: un singur email, cu codul QR, codul de la masă și numărul de concurs al fiecăreia.",
+        "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru «Înscriere confirmată (cu QR și număr)» e pentru o singură persoană și nu intră aici."
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
@@ -4474,6 +4508,15 @@
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
                 "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
+              ]
+            },
+            {
+              "title": "Membrii clubului și zona membrilor",
+              "steps": [
+                "Un membru are cont, dar nu intră în backoffice: după «Autentificare» vede doar zona membrilor.",
+                "«Echipa» → «Adaugă o persoană», cu «Rol» «Membru», sau «Adaugă mai mulți membri» pentru o listă. Apasă «Adaugă» și confirmă; membrul primește invitația pe email.",
+                "Textele: «Pagini» → «Pagini standard» → «Membri». «Beneficiile membrilor» e pagina publică, cu butonul de autentificare; «Zona membrilor» e ce vede membrul după autentificare. Ambele în română și în engleză.",
+                "Pune pagina pe site: «Publică pagina» (doar Administratorul)."
               ]
             }
           ]
@@ -5065,6 +5108,39 @@
       "costs": "Costuri",
       "platform": "Anti-robot",
       "configuration": "Configurație"
+    },
+    "members": {
+      "title": "Membri",
+      "intro": "Pagina publică «Beneficiile membrilor», cu butonul de autentificare, și zona membrilor. Un membru e un cont adăugat pe Echipa cu rolul Membru: intră pe site, nu în backoffice.",
+      "count": "Membri cu cont: {count}.",
+      "addOnTeam": "Adaugă un membru pe Echipa",
+      "readOnly": "Poți citi aceste texte; le scriu Redactorul și Administratorul.",
+      "publishIsAdmin": "Pagina o pune pe site Administratorul.",
+      "pageHeading": "Pagina Beneficiile membrilor",
+      "pagePublished": "Pe site",
+      "pageDraft": "Ciornă",
+      "pagePublishedHelp": "Pe site la {ro} și {en}, cu «Membri» în meniu. Zona membrilor se deschide oricum, după autentificare.",
+      "pageDraftHelp": "Nu e pe site: adresa răspunde „pagina nu există”. Zona membrilor merge și așa, pentru cine are cont.",
+      "publish": "Publică pagina",
+      "unpublish": "Scoate pagina de pe site",
+      "publishTitle": "Publici pagina membrilor?",
+      "publishBody": "Pagina apare în ambele limbi, la {ro} și {en}, cu «Membri» în meniu.",
+      "unpublishTitle": "Scoți pagina de pe site?",
+      "unpublishBody": "Adresa va răspunde „pagina nu există”, iar «Membri» dispare din meniu. Zona membrilor rămâne deschisă pentru cine are cont.",
+      "written": "Scris",
+      "notWritten": "Nescris",
+      "benefitsHeading": "Beneficiile membrilor",
+      "benefitsHelp": "Pe pagina publică, deasupra butonului de autentificare: ce primește un membru al clubului. Nescris, pagina arată un text implicit.",
+      "benefitsFold": "Scrie beneficiile",
+      "benefitsRo": "Beneficiile (română)",
+      "benefitsEn": "Beneficiile (engleză)",
+      "zoneHeading": "Zona membrilor",
+      "zoneHelp": "Ce vede un membru după autentificare. Nu apare pe nicio pagină publică. O poză din text are o adresă greu de ghicit, dar nu secretă.",
+      "zoneFold": "Scrie zona membrilor",
+      "zoneRo": "Zona membrilor (română)",
+      "zoneEn": "Zona membrilor (engleză)",
+      "textEmpty": "Nescris încă.",
+      "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel."
     }
   },
   "NotFound": {
@@ -5823,7 +5899,8 @@
       "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
       "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
-      "SUPERADMIN": "plus setările tehnice care pot opri serviciul și numirea altui Superadministrator"
+      "SUPERADMIN": "plus setările tehnice care pot opri serviciul și numirea altui Superadministrator",
+      "MEMBER": "zona membrilor de pe site. Fără backoffice"
     },
     "settings": "Setări",
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
@@ -6392,6 +6469,14 @@
         "one": "Gata: {count} câmp tradus în „{card}”, dar textul a fost scurtat la limita câmpului. Verifică-l în English și apasă Salvează.",
         "few": "Gata: {count} câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează.",
         "other": "Gata: {count} de câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează."
+      },
+      "membersTextSaved": "Textul paginilor membrilor a fost salvat.",
+      "membersPagePublished": "Pagina Beneficiile membrilor este pe site, în ambele limbi.",
+      "membersPageUnpublished": "Pagina Beneficiile membrilor a fost retrasă de pe site.",
+      "membersInvited": {
+        "one": "Adăugat: {count} membru.",
+        "few": "Adăugați: {count} membri.",
+        "other": "Adăugați: {count} de membri."
       }
     }
   },
@@ -6621,5 +6706,25 @@
       "slow": "Verificarea durează mai mult decât de obicei. Apasă «Reîncearcă verificarea» — sau trimite oricum.",
       "failed": "Verificarea a eșuat; poți trimite oricum. Poți apăsa și «Reîncearcă verificarea»."
     }
+  },
+  "Members": {
+    "title": "Beneficiile membrilor",
+    "lead": "Membrii {club} au o zonă a lor pe site. Clubul scrie aici, în curând, ce primește un membru.",
+    "doorTitle": "Zona membrilor",
+    "doorHelp": "Ești membru și ai primit invitația pe email? Intră cu adresa ta.",
+    "doorSignedIn": "Ești autentificat.",
+    "signIn": "Intră în zona membrilor",
+    "openZone": "Intră în zona membrilor",
+    "signInUnavailable": "Autentificarea nu este încă disponibilă pe acest site.",
+    "noAccount": "Nu ai cont? Conturile de membru le face clubul. <contact>Scrie-ne</contact>.",
+    "zoneTitle": "Zona membrilor",
+    "zoneGreeting": "Bun venit, {name}.",
+    "zoneEmpty": "Clubul pune aici, în curând, ce e doar pentru membri.",
+    "zoneAway": "Baza de date a site-ului se odihnește acum. Revino în câteva minute.",
+    "openBackoffice": "Deschide backoffice-ul",
+    "signOut": "Ieși din cont",
+    "upcomingTitle": "Următoarele alergări",
+    "upcomingEmpty": "Nicio alergare anunțată acum.",
+    "upcomingAll": "Toate evenimentele"
   }
 }

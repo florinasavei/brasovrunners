@@ -135,6 +135,14 @@ export const routing = defineRouting({
      * address under `/pagini/`.
      */
     "/faq": { ro: "/intrebari", en: "/faq" },
+    /**
+     * The members' pages (§524): «Beneficiile membrilor», public, with the sign-in button; and the
+     * members' zone behind the sign-in, at an address of its own rather than under `/membri/`, so
+     * its first segment can be private (`shared/security/private-paths.ts`: never indexed, never
+     * publicly cached) while the benefits stay a page a search engine may read.
+     */
+    "/members": { ro: "/membri", en: "/members" },
+    "/members-area": { ro: "/zona-membri", en: "/members-area" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
@@ -229,6 +237,8 @@ export const routing = defineRouting({
     "/admin/pages/team": "/admin/pages/team",
     /** The questions of «Întrebări frecvente» (§NNN): a standard page, beside «Echipa». */
     "/admin/pages/faq": "/admin/pages/faq",
+    /** The members' pages (§524): the public benefits and the member-only words, beside «Echipa». */
+    "/admin/pages/members": "/admin/pages/members",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",
