@@ -49,7 +49,7 @@ import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
 import { prepareImageUpload } from "@/modules/media/browser-shrink";
-import type { PictureSource } from "@/modules/media/picker";
+import type { PickerScope, PickerScopeKind, PictureSource } from "@/modules/media/picker";
 import GalleryPicker, { type StoredPicture } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, readRemembered, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
 import {
@@ -178,6 +178,7 @@ function RichTextEditorIsland({
   accessibleSuffix,
   features = { media: true, tables: true },
   cardPictures = false,
+  pictureScope,
   labels,
 }: {
   /** The form field the JSON is posted as — the same name the textarea used. */
@@ -208,6 +209,12 @@ function RichTextEditorIsland({
    * 16∶9 frame (§454): the picture's panel then shows that frame and offers the card's centre.
    */
   cardPictures?: boolean;
+  /**
+   * The event, album or page this text belongs to, when it is stored already (§NNN): every
+   * «Din galerie» in it then opens on «Acest eveniment» (resp. album, page) — the pictures that
+   * place already uses. Plain data, never an element: a Server Component hands it over.
+   */
+  pictureScope?: PickerScope;
   /** Translated control names. Passed in, because a client island cannot read the catalogue. */
   labels: {
     bold: string;
@@ -306,7 +313,9 @@ function RichTextEditorIsland({
     imageGalleryNoMatch: string;
     /** The picker's «Folosită în» chips (§NNN). */
     imageGallerySourceLegend: string;
-    imageGallerySources: Record<PictureSource, string>;
+    imageGallerySources: Record<Exclude<PictureSource, "here">, string>;
+    /** The picker's first chip for the place the text belongs to (§NNN), one word per kind. */
+    imageGalleryHere: Record<PickerScopeKind, string>;
     /** What a picture from the gallery became; raw, `{name}`, `{width}`, `{height}` substituted here (§NNN). */
     imageFromGalleryPicked: string;
     youtube: string;
@@ -1146,7 +1155,9 @@ function RichTextEditorIsland({
                 noMatch: labels.imageGalleryNoMatch,
                 sourceLegend: labels.imageGallerySourceLegend,
                 sources: labels.imageGallerySources,
+                here: pictureScope ? labels.imageGalleryHere[pictureScope.kind] : undefined,
               }}
+              scope={pictureScope}
               testId="rich-text-gallery-list"
             />
           </Box>
@@ -1774,7 +1785,9 @@ function RichTextEditorIsland({
                   noMatch: labels.imageGalleryNoMatch,
                   sourceLegend: labels.imageGallerySourceLegend,
                   sources: labels.imageGallerySources,
+                  here: pictureScope ? labels.imageGalleryHere[pictureScope.kind] : undefined,
                 }}
+                scope={pictureScope}
                 testId="rich-text-poster-gallery"
               />
             )}

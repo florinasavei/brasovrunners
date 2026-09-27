@@ -133,6 +133,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
             <Box sx={{ mb: 2 }}>
               <PhotoUploader
                 uploadUrl={`/api/admin/gallery/${album.id}/photos`}
+                albumId={album.id}
                 labels={{
                   choose: t("gallery.upload"),
                   uploading: t.raw("gallery.uploading") as string,
@@ -183,6 +184,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                       page: t("richText.imageGallerySourcePage"),
                       team: t("richText.imageGallerySourceTeam"),
                     },
+                    here: t("richText.imageGalleryHereAlbum"),
                   },
                   galleryAdded: t.raw("gallery.galleryAdded") as string,
                   galleryAlready: t.raw("gallery.galleryAlready") as string,

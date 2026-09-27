@@ -175,6 +175,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
               navOrder={page.navOrder}
               translations={translations}
               slugLocked={page.publishedAt !== null}
+              pageId={page.id}
             />
             <Box>
               <GlyphSubmitButton

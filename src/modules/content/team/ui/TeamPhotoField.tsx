@@ -9,6 +9,7 @@ import { useRecall } from "@/shared/forms/recall";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import GalleryPicker, { type GalleryPickerLabels } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 export type TeamPhotoLabels = {
   /** "Fotografia" — the group's name. */
@@ -122,7 +123,9 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           {state === "uploading" ? labels.uploading : photo.id ? labels.replace : labels.choose}
           <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onChoose} />
         </Button>
-        <Button
+        {/* The same glyph as the album's and the film poster's «Din galerie» (§NNN): one action, one look. */}
+        <GlyphButton
+          icon="gallery"
           variant="outlined"
           disabled={state === "uploading"}
           aria-expanded={galleryOpen}
@@ -130,7 +133,7 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           sx={{ minHeight: 44 }}
         >
           {labels.fromGallery}
-        </Button>
+        </GlyphButton>
         {photo.id && (
           <Button variant="text" color="error" sx={{ minHeight: 44 }} onClick={() => setPhoto({ id: "", preview: "" })}>
             {labels.remove}

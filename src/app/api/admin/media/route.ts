@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
 import { parseImageQuality } from "@/modules/media/ladder";
-import { parsePictureSource, PICKER_LIMIT, pictureUses, visiblePictures } from "@/modules/media/picker";
+import { parsePickerScope, parsePictureSource, PICKER_LIMIT, pictureUses, usedHere, visiblePictures } from "@/modules/media/picker";
 import { listMediaAssetsForAdmin } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -80,6 +80,8 @@ export async function POST(request: Request): Promise<Response> {
  *
  * `?q=` (a name, accents and case ignored) and `?source=` (`event`, `album`, `page`, `team`) narrow
  * the list here, before the cap, so an old picture is found by name however many came after it;
+ * `?for=event:<uuid>` (or `album:`, `page:`) names the editor the picker is in, and `?source=here`
+ * then keeps only the pictures that place already uses — «Acest eveniment» (§NNN);
  * a film's automatic poster (`yt-<id>`, §403) is left out unless `?posters=1` — the film's own
  * poster picker asks for it, a text, a card and an album do not.
  */
@@ -98,6 +100,10 @@ export async function GET(request: Request): Promise<Response> {
 
   const params = new URL(request.url).searchParams;
   const withPosters = params.get("posters") === "1";
+  // The editor the picker was opened from (§NNN), when it is one event, album or page: each
+  // picture then says whether THAT place already uses it, from its references, here — the browser
+  // never filters the whole list for «Acest eveniment».
+  const scope = parsePickerScope(params.get("for"));
   const assets = (await listMediaAssetsForAdmin(getDb(), "ro")).map((asset) => ({
     id: asset.id,
     src: asset.webUrl,
@@ -109,11 +115,12 @@ export async function GET(request: Request): Promise<Response> {
     uses: pictureUses(asset.references.map((reference) => reference.kind)),
     // A body's picture must carry an uploaded picture's address (§72).
     poster: asset.keyPrefix.startsWith("yt-"),
+    ...(scope ? { here: usedHere(asset.references, scope) } : {}),
   }));
   const shown = visiblePictures(assets, {
     accept: (asset) => withPosters || !asset.poster,
     needle: (params.get("q") ?? "").slice(0, 200),
-    source: parsePictureSource(params.get("source")),
+    source: parsePictureSource(params.get("source"), scope !== null),
   });
   return NextResponse.json({ assets: shown.slice(0, PICKER_LIMIT) });
 }

@@ -48,9 +48,12 @@ const GalleryGlyph = ACTION_ICONS.gallery;
  */
 export default function PhotoUploader({
   uploadUrl,
+  albumId,
   labels,
 }: {
   uploadUrl: string;
+  /** The album (§NNN): its picker offers «Acest album» beside «Toate». */
+  albumId: string;
   labels: {
     choose: string;
     uploading: string;
@@ -168,7 +171,7 @@ export default function PhotoUploader({
       </Box>
       {galleryOpen && (
         <Box sx={{ mt: 1.5, border: 1, borderColor: "divider", borderRadius: 1, maxWidth: 640 }}>
-          <GalleryPicker onPick={(picture) => void addFromGallery(picture)} onClose={() => setGalleryOpen(false)} picked={added} labels={labels.gallery} testId="album-gallery-picker" />
+          <GalleryPicker onPick={(picture) => void addFromGallery(picture)} onClose={() => setGalleryOpen(false)} picked={added} scope={{ kind: "album", id: albumId }} opensHere={false} labels={labels.gallery} testId="album-gallery-picker" />
         </Box>
       )}
       {galleryNote && (

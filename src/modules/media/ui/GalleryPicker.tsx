@@ -6,8 +6,8 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
-import { PICTURE_SOURCES, type PictureSource, type PictureUse, visiblePictures } from "../picker";
+import { useEffect, useRef, useState } from "react";
+import { PICTURE_SOURCES, type PickerScope, pickerScopeParam, type PictureSource, type PictureUse, visiblePictures } from "../picker";
 import { formatBytes } from "./stored-facts";
 
 /**
@@ -26,6 +26,8 @@ export type StoredPicture = {
   name: string;
   uses: PictureUse[];
   poster?: boolean;
+  /** Asked for from a place (`scope`): whether that very place already uses it (§NNN). */
+  here?: boolean;
 };
 
 export type GalleryPickerLabels = {
@@ -38,7 +40,12 @@ export type GalleryPickerLabels = {
   noMatch: string;
   /** The chips' legend, «Folosită în», and one word per chip, «toate» first. */
   sourceLegend: string;
-  sources: Record<PictureSource, string>;
+  sources: Record<Exclude<PictureSource, "here">, string>;
+  /**
+   * The first chip when the picker knows its place (`scope`): «Acest eveniment», «Acest album»,
+   * «Această pagină» — the caller picks the word for its own kind (§NNN).
+   */
+  here?: string;
 };
 
 /**
@@ -66,6 +73,8 @@ export default function GalleryPicker({
   onClose,
   withPosters = false,
   picked = [],
+  scope,
+  opensHere = true,
   labels,
   testId = "gallery-picker",
 }: {
@@ -75,12 +84,28 @@ export default function GalleryPicker({
   withPosters?: boolean;
   /** Pictures already chosen in this sitting, marked as such (an album taking several). */
   picked?: readonly string[];
+  /**
+   * The event, album or page whose editor the picker is in (§NNN). With it, the picker opens on
+   * «Acest eveniment» (resp. album, page) — the pictures that place already uses, as the server
+   * reads them from its references — with «Toate» and the kinds of place beside it. A place with
+   * nothing yet opens on «Toate» instead of on an empty grid.
+   */
+  scope?: PickerScope;
+  /**
+   * Whether the picker opens on the place's own chip. An album's picker does not: every picture
+   * the album uses is already in it, so it opens on «Toate» with «Acest album» beside it.
+   */
+  opensHere?: boolean;
   labels: GalleryPickerLabels;
   testId?: string;
 }) {
   const [pictures, setPictures] = useState<StoredPicture[] | null>(null);
   const [filter, setFilter] = useState("");
-  const [source, setSource] = useState<PictureSource>("all");
+  const scoped = scope !== undefined && labels.here !== undefined;
+  const [source, setSource] = useState<PictureSource>(scoped && opensHere ? "here" : "all");
+  /** The first answer only: a place that uses no picture yet opens on «Toate», not on nothing. */
+  const firstAnswer = useRef(true);
+  const scopeParam = scoped ? pickerScopeParam(scope) : null;
   /** The typed name as sent: a moment after the last key rather than on every one. */
   const [needle, setNeedle] = useState("");
 
@@ -95,12 +120,20 @@ export default function GalleryPicker({
     if (needle) query.set("q", needle);
     if (source !== "all") query.set("source", source);
     if (withPosters) query.set("posters", "1");
+    if (scopeParam) query.set("for", scopeParam);
     const search = query.toString();
     fetch(`/api/admin/media${search ? `?${search}` : ""}`)
       .then(async (response) => {
         if (!response.ok) throw new Error(String(response.status));
         const { assets } = (await response.json()) as { assets: StoredPicture[] };
-        if (!cancelled) setPictures(assets);
+        if (cancelled) return;
+        const first = firstAnswer.current;
+        firstAnswer.current = false;
+        if (first && source === "here" && needle === "" && assets.length === 0) {
+          setSource("all");
+          return;
+        }
+        setPictures(assets);
       })
       .catch(() => {
         if (!cancelled) setPictures([]);
@@ -108,7 +141,7 @@ export default function GalleryPicker({
     return () => {
       cancelled = true;
     };
-  }, [needle, source, withPosters]);
+  }, [needle, source, withPosters, scopeParam]);
 
   // The server's filter again, on what came back: the place's rule is held here too, and what is
   // typed narrows at once while the next answer is on its way.
@@ -118,6 +151,7 @@ export default function GalleryPicker({
     source,
   });
   const narrowed = filter.trim() !== "" || source !== "all" || needle !== "";
+  const chips: PictureSource[] = scoped ? ["here", ...PICTURE_SOURCES] : [...PICTURE_SOURCES];
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
 
   return (
@@ -158,9 +192,9 @@ export default function GalleryPicker({
               data-testid={`${testId}-sources`}
               sx={{ flexWrap: "wrap" }}
             >
-              {PICTURE_SOURCES.map((value) => (
+              {chips.map((value) => (
                 <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
-                  {labels.sources[value]}
+                  {value === "here" ? labels.here : labels.sources[value]}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>

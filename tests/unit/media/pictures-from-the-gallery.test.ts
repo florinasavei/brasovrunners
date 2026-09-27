@@ -22,7 +22,9 @@ const { presetCrop } = await import("@/modules/content/rich-text/domain/picture-
 const { cardFrameGeometry } = await import("@/modules/content/rich-text/ui/image-layout");
 const { default: RichTextVideo } = await import("@/modules/content/rich-text/ui/RichTextVideo");
 const { default: ImageCropBox } = await import("@/modules/content/rich-text/ui/ImageCropBox");
-const { foldForSearch, parsePictureSource, pictureUses, visiblePictures } = await import("@/modules/media/picker");
+const { foldForSearch, parsePickerScope, parsePictureSource, pickerScopeParam, pictureUses, usedHere, visiblePictures } = await import(
+  "@/modules/media/picker"
+);
 
 const source = (...where: string[]) => readFileSync(path.join(process.cwd(), ...where), "utf8");
 
@@ -262,5 +264,102 @@ describe("§NNN the picker's query: order, rule, search and source", () => {
         expect(messages.Admin.richText[`imageGallery${key}`], `${locale} imageGallery${key}`).toBeTruthy();
       }
     }
+  });
+});
+
+describe("§NNN «Acest eveniment»: the picker opens on the place it was opened from", () => {
+  const EVENT = "3f2a1b4c-0000-4abc-8def-000000000001";
+
+  it("reads the place strictly: three kinds and a UUID, else none", () => {
+    expect(parsePickerScope(`event:${EVENT}`)).toEqual({ kind: "event", id: EVENT });
+    expect(parsePickerScope(`album:${EVENT}`)).toEqual({ kind: "album", id: EVENT });
+    expect(parsePickerScope(`page:${EVENT}`)).toEqual({ kind: "page", id: EVENT });
+    expect(parsePickerScope(`team:${EVENT}`)).toBeNull();
+    expect(parsePickerScope("event:1; DROP TABLE")).toBeNull();
+    expect(parsePickerScope(null)).toBeNull();
+    expect(pickerScopeParam({ kind: "event", id: EVENT })).toBe(`event:${EVENT}`);
+  });
+
+  it("«here» is a source only with a place", () => {
+    expect(parsePictureSource("here", true)).toBe("here");
+    expect(parsePictureSource("here")).toBe("all");
+    expect(parsePictureSource("event", true)).toBe("event");
+  });
+
+  it("says a picture is used here by kind AND id, never by kind alone", () => {
+    const refs = [{ kind: "event", id: EVENT }, { kind: "album", id: "a" }];
+    expect(usedHere(refs, { kind: "event", id: EVENT })).toBe(true);
+    expect(usedHere(refs, { kind: "event", id: "another" })).toBe(false);
+    expect(usedHere(refs, { kind: "page", id: EVENT })).toBe(false);
+    expect(usedHere([], { kind: "event", id: EVENT })).toBe(false);
+  });
+
+  it("narrows to the place's own pictures by the server's flag, never by the kind chip", () => {
+    const list = [
+      { id: "1", name: "a.jpg", uses: ["event" as const], here: true },
+      { id: "2", name: "b.jpg", uses: ["event" as const], here: false },
+      { id: "3", name: "c.jpg", uses: [] },
+    ];
+    expect(visiblePictures(list, { source: "here" }).map((p) => p.id)).toEqual(["1"]);
+    expect(visiblePictures(list, { source: "event" }).map((p) => p.id)).toEqual(["1", "2"]);
+  });
+
+  it("hands every event text its event, a page's text its page and an album's picker its album", () => {
+    const fields = source("src", "modules", "content", "events", "ui", "TranslationFields.tsx");
+    expect(fields.match(/pictureScope=\{pictureScopeOf\(translation\)\}/g)).toHaveLength(5);
+    expect(fields).toContain('{ kind: "event", id: translation.eventId }');
+    expect(source("src", "modules", "content", "pages", "ui", "PageFieldsForm.tsx")).toContain('{ kind: "page", id: pageId }');
+    expect(source("src", "app", "[locale]", "admin", "pages", "[id]", "page.tsx")).toContain("pageId={page.id}");
+    const album = source("src", "modules", "content", "gallery", "ui", "PhotoUploader.tsx");
+    expect(album).toContain('scope={{ kind: "album", id: albumId }}');
+  });
+
+  it("the picker asks the server for its place and starts on it; both pickers in a text pass it", () => {
+    const picker = source("src", "modules", "media", "ui", "GalleryPicker.tsx");
+    expect(picker).toContain('query.set("for", scopeParam)');
+    expect(picker).toContain('scoped && opensHere ? "here" : "all"');
+    const editor = source("src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx");
+    expect(editor.match(/scope=\{pictureScope\}/g)).toHaveLength(2);
+  });
+
+  it("has the three chip words in both catalogues", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const messages = (await import(`../../../messages/${locale}.json`)).default as { Admin: { richText: Record<string, string> } };
+      for (const key of ["Event", "Album", "Page"]) expect(messages.Admin.richText[`imageGalleryHere${key}`], `${locale} ${key}`).toBeTruthy();
+    }
+  });
+});
+
+describe("§NNN the event's card picture (§454) takes «Din galerie» like an upload", () => {
+  const editor = source("src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx");
+  const fields = source("src", "modules", "content", "events", "ui", "TranslationFields.tsx");
+
+  it("the summary — the card's picture slot — is the editor with card pictures and the whole toolbar", () => {
+    const summary = fields.slice(fields.indexOf('name={name("excerptBody")}'), fields.indexOf('translateButton(translation, name("excerptBody"))'));
+    expect(summary).toContain("cardPictures");
+    expect(summary).not.toContain("features=");
+  });
+
+  it("offers «Din galerie» with every picture control, not only outside the card", () => {
+    const gallery = editor.indexOf("label={labels.imageFromGallery}");
+    const mediaGate = editor.lastIndexOf("features.media !== false", gallery);
+    expect(gallery).toBeGreaterThan(0);
+    expect(mediaGate).toBeGreaterThan(0);
+    expect(editor.slice(mediaGate, gallery)).not.toContain("cardPictures");
+  });
+
+  it("a chosen picture carries its size, so the crop box with the card's frame and «Centrul pe card» opens on it", () => {
+    const insertStored = editor.slice(editor.indexOf("const insertStored"), editor.indexOf("const insertStored") + 900);
+    expect(insertStored).toContain("width: picture.width, height: picture.height");
+    expect(editor).toContain("card={cardPictures}");
+  });
+});
+
+describe("§NNN the same action looks the same everywhere", () => {
+  it("the team card's «Din galerie» wears the gallery glyph through GlyphButton", () => {
+    const team = source("src", "modules", "content", "team", "ui", "TeamPhotoField.tsx");
+    expect(team).toContain('from "@/shared/ui/GlyphButton"');
+    expect(team).toMatch(/<GlyphButton\s+icon="gallery"/);
+    expect(source("src", "modules", "content", "gallery", "ui", "PhotoUploader.tsx")).toContain("ACTION_ICONS.gallery");
   });
 });
