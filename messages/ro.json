@@ -1457,7 +1457,8 @@
         },
         "programmeRules": {
           "title": "Program, regulament și declarație",
-          "rulesLine": "regulamentul: {state}"
+          "rulesLine": "regulamentul: {state}",
+          "startListLine": "lista publică: {state}"
         },
         "programme": {
           "title": "Programul zilei și ce să aduci"
@@ -1722,8 +1723,7 @@
           "coHosts": "Împreună cu",
           "share": "Distribuie",
           "links": "Linkuri și fișiere",
-          "programme": "Program și regulament",
-          "startList": "Lista participanților"
+          "programme": "Program și regulament"
         }
       },
       "required": {

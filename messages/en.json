@@ -1457,7 +1457,8 @@
         },
         "programmeRules": {
           "title": "Programme, rules and declaration",
-          "rulesLine": "rules: {state}"
+          "rulesLine": "rules: {state}",
+          "startListLine": "public list: {state}"
         },
         "programme": {
           "title": "The day's programme and what to bring"
@@ -1722,8 +1723,7 @@
           "coHosts": "Together with",
           "share": "Share",
           "links": "Links and files",
-          "programme": "Programme and rules",
-          "startList": "Participant list"
+          "programme": "Programme and rules"
         }
       },
       "required": {

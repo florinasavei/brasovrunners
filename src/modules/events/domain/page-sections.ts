@@ -131,8 +131,8 @@ export type PageSection = {
   /**
    * The section whose editor card holds this one's card (§466, §481): the page draws it in its own
    * place, but the editor asks it inside another card, so it has no number and no chip on the map —
-   * the cost inside «Ce fel de eveniment», the place inside «Când și unde», the rules inside
-   * «Program, regulament și declarație». The holding card is drawn when either is (`cardStates`).
+   * the cost inside «Ce fel de eveniment», the place inside «Când și unde», the rules and the public
+   * list (§NNN) inside «Program, regulament și declarație». The holding card is drawn when any is (`cardStates`).
    */
   nestedIn?: PageSectionId;
 };
@@ -253,7 +253,18 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   // switched on stays marked drawn on the map after the club's period has closed it on the
   // public page, the way every other still-true fact does. Wiring the deadlines through here
   // would tell the editor something the public page already tells a visitor more plainly.
-  { id: "startList", card: "box-start-list", anchor: null, glyph: "startList", automatic: false, drawn: ({ event }) => event.participantListVisibility === "NAMES" },
+  //
+  // Asked inside «Program, regulament și declarație» since §NNN (after the declaration, the last
+  // of its cards, as the page draws the list last): no number and no chip of its own.
+  {
+    id: "startList",
+    card: "box-start-list",
+    anchor: null,
+    glyph: "startList",
+    automatic: false,
+    nestedIn: "programme",
+    drawn: ({ event }) => event.participantListVisibility === "NAMES",
+  },
 ];
 
 /** A section with its place on the page: its number, or null for an automatic one. */
@@ -278,7 +289,7 @@ export function pageSectionStates(data: PageSectionData): Array<NumberedPageSect
 /**
  * Each editor card — every section not nested in another's card — with whether the page draws
  * anything it holds (§481): «Când și unde» is drawn when the date or the place is, «Program,
- * regulament și declarație» when the programme or the rules are. The card's heading and its chip on
+ * regulament și declarație» when the programme, the rules or the public list (§NNN) is. The card's heading and its chip on
  * the map read this; a nested section's own `isDrawn` stays in `pageSectionStates`.
  */
 export function cardStates(data: PageSectionData): Array<NumberedPageSection & { isDrawn: boolean }> {
