@@ -15,6 +15,8 @@ import { routing } from "@/i18n/routing";
 import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
+import { siteTintStyle } from "@/modules/appearance/domain/site-tint";
+import { cachedSiteTint } from "@/modules/public-cache/reads";
 import AppTheme from "@/theme/AppTheme";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -131,11 +133,17 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   const site = await getTranslations({ locale, namespace: "Site" });
   const messages = await getMessages({ locale });
+  // «Fundalul site-ului» (§NNN): the club's tint for the public pages, from the public cache, as
+  // one rule on MUI's page-colour variable — nothing at all for the default.
+  const tintStyle = siteTintStyle(await cachedSiteTint());
 
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
       <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
+        {/* Drawn on the server, before the first paint; light scheme and public pages only
+            (`modules/appearance/domain/site-tint.ts`). Its text is built from a preset, never typed. */}
+        {tintStyle && <style data-site-tint="">{tintStyle}</style>}
         {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
             (§93). Light unless the visitor pressed the switch — the owner: "by default we are on
             white, ignore browser settings; dark is enabled only by the button". */}

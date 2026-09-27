@@ -6,6 +6,8 @@ import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
+import { DEFAULT_SITE_TINT, parseSiteTint, type SiteTint } from "@/modules/appearance/domain/site-tint";
+import { readSiteTint } from "@/modules/appearance/site-tint";
 import {
   findPublishedAlbumBySlug,
   findPublishedAlbumTranslations,
@@ -441,6 +443,23 @@ export async function cachedShownContactAddresses(): Promise<string[]> {
     );
   } catch {
     return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);
+  }
+}
+
+/**
+ * «Fundalul site-ului» (§NNN): the tint every public page is drawn in, read by the locale layout —
+ * so it is cached, or every page view of the site would wake the database for a colour. A save
+ * expires it (`updateSiteTint`). When the database cannot answer, the last good copy (§447), then
+ * the platform's own paper: never a page that fails over its background.
+ */
+export async function cachedSiteTint(): Promise<SiteTint> {
+  try {
+    const read = await readWithLastGood("settings:site-tint", () =>
+      publicRead(["settings.site-tint"], ["settings"], async () => (await readSiteTint(getDb())).tint),
+    );
+    return parseSiteTint({ tint: read.value });
+  } catch {
+    return DEFAULT_SITE_TINT;
   }
 }
 

@@ -83,6 +83,27 @@ export const COLOR_DARK = {
 } as const;
 
 /**
+ * The public pages' background tints the club may choose from (§NNN, «Fundalul site-ului» under
+ * Pagini → «Aspect»). Light scheme only: after dark the page stays `COLOR_DARK.paper`.
+ *
+ * Presets, never a typed colour: each is `COLOR.paper` walked a small step towards one of the
+ * club's own colours — the logo's blue, the kit's cyan hem, the orange accent — about as far as
+ * a page can move while the white cards on it still read as cards and every text colour on it
+ * still clears AA. `tests/unit/theme/brand.test.ts` asserts ink, muted ink and the club blue
+ * against each one, which is what makes a new preset safe to add here and nowhere else.
+ */
+export const SITE_TINT = {
+  /** The platform's page colour, unchanged: the default. */
+  paper: COLOR.paper,
+  /** A breath of the club's blue. */
+  blue: "#f2f5ff",
+  /** The kit's cyan, from the light end of `GRADIENT` below. */
+  sky: "#eef7fc",
+  /** The orange accent, as sand. */
+  sand: "#fcf6ee",
+} as const;
+
+/**
  * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
  * body, to white at the hem. It is the most distinctive thing the club already owns, and the
  * one part of the identity that is theirs rather than generic.
