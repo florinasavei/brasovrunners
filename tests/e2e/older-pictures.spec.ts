@@ -189,7 +189,9 @@ test.describe("BR-REQ-054-01 the older pictures get their phone sizes (§430)", 
       expect(failedPress.failed).toBeGreaterThanOrEqual(1);
       const failedLine = page.locator("#main").getByTestId("older-pictures-failed");
       await expect(failedLine).toContainText(`La ultima apăsare, ${failedPress.failed} `);
-      await expect(failedLine).toContainText("dacă rămâne și după încă o apăsare");
+      // Every plural form (countForm): «rămâne» for one picture, «rămân» for two or more — a
+      // developer's database may hold broken pictures of its own beside this spec's (§483).
+      await expect(failedLine).toContainText(/dacă rămân(e)? și după încă o apăsare/);
       await expect(failedLine.getByRole("link", { name: /Unde e folosită fiecare imagine/ })).toHaveAttribute("href", "/ro/admin/gallery/pictures");
     } finally {
       if (goneId) await db.query(`DELETE FROM media_assets WHERE id = $1`, [goneId]).catch(() => undefined);

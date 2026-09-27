@@ -62,7 +62,17 @@ export type WeatherReading = {
  * after it (`pickHours`, the start's first), and which place it was asked for — the page says
  * "for the event's place" or "for Brașov". The listing reads `start` alone.
  */
-export type EventForecast = { start: WeatherReading; hours: WeatherReading[]; place: ForecastPlaceSource };
+export type EventForecast = {
+  start: WeatherReading;
+  hours: WeatherReading[];
+  /**
+   * The hours the event page's line and the reminder's speak for (§484): from the start's hour to
+   * the end's, at most `WEATHER_SPAN_MAX_HOURS` after the start (`pickSpan`) — the start's alone
+   * when the event names no end. Never empty: the start is its first.
+   */
+  span: WeatherReading[];
+  place: ForecastPlaceSource;
+};
 
 /**
  * The forecast as it is kept: every hour of the answer, column by column, the way Open-Meteo
@@ -210,6 +220,87 @@ export function pickHours(forecast: HourlyForecast, startAt: Date, count: number
 }
 
 /**
+ * The longest stretch the weather line names, in hours after the start's (§484): six — a long
+ * trail race's morning. A longer event (a camp, a day on the ridge) is read for its first six
+ * hours, and the line says exactly which hours those are, so it never claims more than it read.
+ */
+export const WEATHER_SPAN_MAX_HOURS = 6;
+
+/**
+ * The hours an event is out, as the forecast has them (§484; the owner: the weather line should say
+ * where and for which hours): the start's hour by `pickHour`'s rule, then every hour up to the
+ * end's nearest hour, capped at `WEATHER_SPAN_MAX_HOURS` after the start. No end, or an end at or
+ * before the start's hour, is the start's hour alone. An hour the answer lacks is left out; empty
+ * only when the start's own hour has no reading.
+ */
+export function pickSpan(
+  forecast: HourlyForecast,
+  startAt: Date,
+  endAt: Date | null | undefined,
+  maxHours: number = WEATHER_SPAN_MAX_HOURS,
+): WeatherReading[] {
+  const first = pickHour(forecast, startAt);
+  if (!first) return [];
+  const endHour = endAt ? Math.round(endAt.getTime() / HOUR_MS) * HOUR_MS : first.hourAt;
+  const last = Math.min(endHour, first.hourAt + maxHours * HOUR_MS);
+  const hours = [first];
+  for (let at = first.hourAt + HOUR_MS; at <= last; at += HOUR_MS) {
+    const reading = readingAt(forecast, at);
+    if (reading) hours.push(reading);
+  }
+  return hours;
+}
+
+/**
+ * What a span of hours says as one line (§484): the first and last hour read, the coldest and the
+ * warmest degrees among them (null when no hour has one), and whether rain is likely in any hour of
+ * it (`rainLikely`) — with the highest chance among those hours, null when none of them names one.
+ *
+ * `sky` is the hour whose word and glyph speak for the span: the worst when rain is likely in any
+ * hour — the wettest of those hours (the highest chance; the earlier on a tie) — so the line never
+ * says «Parțial noros» beside an umbrella; otherwise the dominant sky, the kind most hours share
+ * (a tie goes to the earlier hour, the start's first). Null only for an empty span.
+ */
+export type WeatherSpanSummary = {
+  fromHour: number;
+  toHour: number;
+  minC: number | null;
+  maxC: number | null;
+  rainLikely: boolean;
+  rainChance: number | null;
+  sky: WeatherReading | null;
+};
+
+/** The hour whose sky speaks for the span: the wettest likely-rain hour, else the most frequent kind (`WeatherSpanSummary.sky`). */
+function spanSky(span: readonly WeatherReading[], wet: readonly WeatherReading[]): WeatherReading | null {
+  if (wet.length > 0) {
+    return wet.reduce((worst, hour) => ((hour.precipitationProbability ?? -1) > (worst.precipitationProbability ?? -1) ? hour : worst));
+  }
+  const counts = new Map<WeatherReading["kind"], number>();
+  for (const hour of span) counts.set(hour.kind, (counts.get(hour.kind) ?? 0) + 1);
+  let dominant: WeatherReading | null = null;
+  for (const hour of span) {
+    if (!dominant || (counts.get(hour.kind) ?? 0) > (counts.get(dominant.kind) ?? 0)) dominant = hour;
+  }
+  return dominant;
+}
+
+export function summarizeSpan(span: readonly WeatherReading[]): WeatherSpanSummary {
+  const temperatures = span.map((hour) => hour.temperatureC).filter((value): value is number => value !== null);
+  const wet = span.filter((hour) => rainLikely(hour));
+  const chances = wet.map((hour) => hour.precipitationProbability).filter((value): value is number => value !== null);
+  return {
+    sky: spanSky(span, wet),
+    fromHour: span[0]?.hourAt ?? 0,
+    toHour: span.at(-1)?.hourAt ?? 0,
+    minC: temperatures.length > 0 ? Math.min(...temperatures) : null,
+    maxC: temperatures.length > 0 ? Math.max(...temperatures) : null,
+    rainLikely: wet.length > 0,
+    rainChance: chances.length > 0 ? Math.max(...chances) : null,
+  };
+}
+
+/**
  * The chance of rain, in percent, from which a listing card's weather pill wears the umbrella
  * (§429; the owner, 2026-09-26: "an umbrella when rain is likely"). Fifty: "likely" is more likely
  * than not, the one threshold a runner reads without a legend — below it the sky's own glyph, at
@@ -250,4 +341,16 @@ export function rainLikely(reading: Pick<WeatherReading, "precipitationProbabili
  */
 export function weatherInstant(event: { startsAt: Date; raceStartsAt?: Date | null }): Date {
   return event.raceStartsAt ?? event.startsAt;
+}
+
+/**
+ * Which place the weather line names (§484): the club's locality when the forecast was read at the
+ * club's own coordinates (`club` — no pin, no typed pair, or a place still to be announced), since
+ * that is where the numbers are for, whatever the meeting point is called; else the meeting point's
+ * name in the reader's language — null when the event names none, and the words say "the event's
+ * place" instead.
+ */
+export function forecastPlaceName(source: ForecastPlaceSource, locationName: string | null | undefined, clubLocality: string): string | null {
+  if (source === "club") return clubLocality;
+  return locationName?.trim() || null;
 }

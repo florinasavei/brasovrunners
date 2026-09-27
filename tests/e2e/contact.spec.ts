@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { FOLD_LINE } from "../../src/shared/ui/footer-target";
 import { HUMAN_PAUSE_MS } from "./support/featured-event";
 
 /**
@@ -56,7 +57,11 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await footer.locator("summary").click();
     const inFooter = footer.getByRole("link", { name: "Scrie-ne" });
     await expect(inFooter).toBeVisible();
-    expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The fold's links are one fold line each since §480 amended §385 (the compact fold,
+    // `footer-target.ts`'s `FOLD_LINE`): 24 pixels on every phone width, 44 from `sm` as before.
+    const width = page.viewportSize()?.width ?? 1280;
+    const target = width >= 600 ? FOLD_LINE.sm : FOLD_LINE.xs;
+    expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(target - 0.5);
   });
 
   test("sends a message and says so, naming where the answer goes", async ({ page }) => {

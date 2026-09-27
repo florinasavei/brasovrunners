@@ -4,12 +4,12 @@ import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — «Înaltă» in the text editor: a picture and a
- * film's poster go up at the chosen quality, larger than «Normală» keeps, the person is told what
+ * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — «Mare» in the text editor: a picture and a
+ * film's poster go up at the chosen quality, larger than «Medie» keeps, the person is told what
  * each became, and the public page offers every stored width with the browser taking the one it
- * needs. Found by re-review: the first version tested «Înaltă» only in an album, never in the
- * editor, never for a poster, and never with a picture larger than «Normală»'s 2400 pixels —
- * which is the one thing that made «Înaltă» sharper.
+ * needs. Found by re-review: the first version tested «Mare» only in an album, never in the
+ * editor, never for a poster, and never with a picture larger than «Medie»'s 2400 pixels —
+ * which is the one thing that made «Mare» sharper.
  *
  * A standing page rather than an event: it carries a body with pictures and films and nothing
  * else, and it is its own fixture — created here, published, never shared with another spec.
@@ -80,7 +80,7 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     await bar.getByRole("radio", { name: "Mare", exact: true }).check();
     await chooseFile(page, () => bar.getByRole("button", { name: "Alege imaginea" }).click(), "afis.png", await poster(2700, 1800));
     await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 30_000 });
-    // 2700 pixels kept, not 2400: «Înaltă» is more pixels, not only another encoder.
+    // 2700 pixels kept, not 2400: «Mare» is more pixels, not only another encoder.
     await expect(roEditor.getByTestId("rich-text-image-stored")).toContainText("2700 × 1800 px, calitate mare", { timeout: 30_000 });
     // What was chosen, said as soon as it was read (§437): sent as it is at «Mare», so no second sentence.
     await expect(roEditor.getByTestId("rich-text-image-chosen")).toHaveText(/^Fișierul ales: afis\.png, 2700 × 1800 px, \d+(,\d)? (KB|MB)\.$/);

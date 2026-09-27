@@ -303,7 +303,7 @@ export default function SubmitButton({
     §285 swallowed a press made before Cloudflare's token existed and showed a sentence; the
     sentence went away when the token landed, and that was all — the person had to press again,
     and nothing told them so. With autofill the whole form is filled in a second and the press
-    comes in the same second, so the swallowed press was the *normal* press. Amalia, from her
+    comes in the same second, so the swallowed press was the *normal* press. The Administrator, from her
     laptop, 2026-09-23: "nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe
     lista" — QA's database has no row and no outbox entry for that minute: the submit never left
     her browser.

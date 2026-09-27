@@ -1,5 +1,5 @@
-import { and, desc, eq, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
-import { eventTranslations, events } from "@/db/schema/events";
+import { and, desc, eq, inArray, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
+import { eventTranslations } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -87,10 +87,9 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${names(sql`${pageTranslations.bodyJson}::text`)})
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
-  -- An event's own film poster (DECISIONS.md §403): the address is stored on the event row
-  -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
-  -- the same substring check every other body uses.
-  OR EXISTS (SELECT 1 FROM ${events} WHERE ${names(sql`${events.videoPosterUrl}`)})
+  -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
+  -- poster the event translation's own body names above (migration 0092 carried every stored
+  -- poster there). The column is unread and unwritten until its contract migration drops it.
   -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
   -- is a card somebody is about to show.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})
@@ -146,6 +145,28 @@ export async function sweepOrphanAssets<T extends Record<string, unknown>>(
     deleted += 1;
   }
   return deleted;
+}
+
+/**
+ * The pictures among `assetIds` that nothing references any more, deleted — rows only, in the
+ * caller's transaction, each re-checked by the one predicate in the statement that deletes it.
+ * Answers their key prefixes, whose objects the caller removes once its transaction commits.
+ *
+ * For a removal that takes away one place a picture was used — an album's photo, a whole album —
+ * now that a picture can be in an album and in a text, on a card of «Echipa» or in another album
+ * at once (§485, «Din galerie»). Before, taking a photo out of an album deleted the picture
+ * outright, and a page that had chosen it from the gallery was left with a broken image.
+ */
+export async function deleteAssetsNoLongerReferenced<T extends Record<string, unknown>>(
+  db: Database<T>,
+  assetIds: readonly string[],
+): Promise<string[]> {
+  if (assetIds.length === 0) return [];
+  const rows = await db
+    .delete(mediaAssets)
+    .where(and(inArray(mediaAssets.id, [...assetIds]), not(referencedSomewhere)))
+    .returning({ keyPrefix: mediaAssets.keyPrefix });
+  return rows.map((row) => row.keyPrefix);
 }
 
 /** The figures `/devs` shows: how many pictures, how many used nowhere, how many the next sweep takes. */

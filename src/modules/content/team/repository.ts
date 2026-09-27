@@ -171,8 +171,11 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
   }));
 }
 
-/** Whether a picture id names a stored picture — the save refuses one that does not. */
-export async function mediaAssetExists<T extends Record<string, unknown>>(db: Database<T>, assetId: string): Promise<boolean> {
-  const [row] = await db.select({ id: mediaAssets.id }).from(mediaAssets).where(eq(mediaAssets.id, assetId)).limit(1);
-  return Boolean(row);
+/**
+ * A stored picture's key prefix, or `null` when the id names none — the save refuses one that
+ * does not, and one whose prefix says it is a film's automatic poster (`yt-<id>`, §403, §485).
+ */
+export async function mediaAssetKeyPrefix<T extends Record<string, unknown>>(db: Database<T>, assetId: string): Promise<string | null> {
+  const [row] = await db.select({ keyPrefix: mediaAssets.keyPrefix }).from(mediaAssets).where(eq(mediaAssets.id, assetId)).limit(1);
+  return row?.keyPrefix ?? null;
 }

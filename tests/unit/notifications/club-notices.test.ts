@@ -30,11 +30,11 @@ describe("DECISIONS.md §244 the club's copies of a signed declaration", () => {
   it("takes one archive address, a Cc list and a Bcc list", () => {
     expect(
       parse({
-        declarations: { to: "club@example.ro", cc: ["amalia@example.ro"], bcc: ["arhiva@example.ro"] },
+        declarations: { to: "club@example.ro", cc: ["ioana@example.ro"], bcc: ["arhiva@example.ro"] },
         confirmations: { to: ["presedinte@example.ro"] },
       }),
     ).toEqual({
-      declarations: { to: "club@example.ro", cc: ["amalia@example.ro"], bcc: ["arhiva@example.ro"] },
+      declarations: { to: "club@example.ro", cc: ["ioana@example.ro"], bcc: ["arhiva@example.ro"] },
       confirmations: { to: ["presedinte@example.ro"] },
       // The third list (2026-09-22), empty until the club asks for it.
       participants: { bcc: [] },
@@ -58,28 +58,28 @@ describe("DECISIONS.md §244 the club's copies of a signed declaration", () => {
     // Nodemailer and Mailgun both build the envelope from every list at once, so the club's own
     // address in two boxes is two copies of a declaration and two messages of the allowance.
     const stored = parse({
-      declarations: { to: "club@example.ro", cc: ["CLUB@example.ro", "amalia@example.ro"], bcc: ["amalia@example.ro"] },
+      declarations: { to: "club@example.ro", cc: ["CLUB@example.ro", "ioana@example.ro"], bcc: ["ioana@example.ro"] },
       confirmations: { to: [] },
     });
-    expect(stored.declarations.cc).toEqual(["amalia@example.ro"]);
+    expect(stored.declarations.cc).toEqual(["ioana@example.ro"]);
     expect(stored.declarations.bcc).toEqual([]);
   });
 
   it("keeps the club's setting above the deployment's variable, and the variable above nothing", () => {
-    const named = parse({ declarations: { to: "club@example.ro", cc: ["amalia@example.ro"] } });
+    const named = parse({ declarations: { to: "club@example.ro", cc: ["ioana@example.ro"] } });
     expect(resolveDeclarationCopies(named, "old@example.ro")).toEqual({
       to: "club@example.ro",
-      cc: ["amalia@example.ro"],
+      cc: ["ioana@example.ro"],
       bcc: [],
       source: "setting",
     });
 
     // §99's deployment, untouched since: the variable still decides, and the club may still
     // add a Cc without a developer.
-    const ccOnly = parse({ declarations: { cc: ["amalia@example.ro"] } });
+    const ccOnly = parse({ declarations: { cc: ["ioana@example.ro"] } });
     expect(resolveDeclarationCopies(ccOnly, "old@example.ro")).toEqual({
       to: "old@example.ro",
-      cc: ["amalia@example.ro"],
+      cc: ["ioana@example.ro"],
       bcc: [],
       source: "environment",
     });
@@ -88,7 +88,7 @@ describe("DECISIONS.md §244 the club's copies of a signed declaration", () => {
     // would send a participant's declaration somewhere the club did not choose.
     expect(resolveDeclarationCopies(ccOnly, undefined)).toEqual({
       to: null,
-      cc: ["amalia@example.ro"],
+      cc: ["ioana@example.ro"],
       bcc: [],
       source: "none",
     });

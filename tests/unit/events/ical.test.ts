@@ -184,7 +184,6 @@ describe("the calendar file", () => {
     costType: "FREE",
     rulesJson: rules,
     routeUrl: "https://www.strava.com/routes/1",
-    videoUrl: "https://www.youtube.com/watch?v=abc",
     stravaEventUrl: "https://www.strava.com/clubs/1/group_events/2",
     facebookEventUrl: "https://www.facebook.com/events/3",
     checklist: "număr de concurs, apă",
@@ -211,7 +210,6 @@ describe("the calendar file", () => {
         "Regulament: https://example.test/ro/evenimente/crosul-aniversar#rules",
         "Program: https://example.test/ro/evenimente/crosul-aniversar#schedule",
         "Traseu: https://www.strava.com/routes/1",
-        "Vezi filmul evenimentului: https://www.youtube.com/watch?v=abc",
         "Evenimentul pe Strava: https://www.strava.com/clubs/1/group_events/2",
         "Evenimentul pe Facebook: https://www.facebook.com/events/3",
         "",
@@ -228,7 +226,8 @@ describe("the calendar file", () => {
     expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Moderate · Free");
     expect(english).toContain("Registration is open — ");
     expect(english).toContain("Event page: ");
-    expect(english).toContain("Watch the event film: ");
+    // No film line (§481): a film is a figure in the description, reached through the page.
+    expect(english).not.toContain("film");
     expect(calendarDescription({ ...full, distanceMeters: 14_500 }, labelsRo)).toContain("🏃 14,5 km");
     // Nothing set, nothing said: neither the line nor its label.
     const bare = calendarDescription({ ...event, excerpt: null, scheduleJson: null, locationName: null }, labelsRo);

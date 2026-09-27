@@ -24,6 +24,7 @@ import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
+import CalendarIntroFold from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
@@ -145,10 +146,19 @@ export default async function CalendarPage({ params, searchParams }: Props) {
           page's one `<h1>`; the font is the layout's, already loaded for every page. */}
       <Wordmark />
 
-      <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
-        {t("calendar.pageTitle")}
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
+      {/* On a phone the head is the H1 and a «?» (§487): the intro sentence moves into the «?»'s
+          fold, with the two calendar links it promises, so the month starts a paragraph higher.
+          The fold's panel is anchored to this row (`position: relative`). From `sm` the sentence
+          stands under the heading as before and the «?» is not drawn — never both. */}
+      <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", gap: 0.5, mt: 1 }}>
+        <Typography variant="h1" gutterBottom sx={headingRule}>
+          {t("calendar.pageTitle")}
+        </Typography>
+        <Box sx={{ display: { xs: "block", sm: "none" } }}>
+          <CalendarIntroFold locale={locale} baseUrl={env.APP_BASE_URL} />
+        </Box>
+      </Box>
+      <Typography variant="body1" color="text.secondary" sx={{ display: { xs: "none", sm: "block" }, mb: { xs: DENSITY.gapSm, sm: 2 } }}>
         {t("calendar.pageIntro")}
       </Typography>
 

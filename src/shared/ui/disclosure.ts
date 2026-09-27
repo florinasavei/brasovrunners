@@ -62,6 +62,13 @@ export const DISCLOSURE_SUMMARY_SX = {
   "details[open] > &::before": { transform: "rotate(90deg)" },
   py: 1.25,
   ...TAP_TARGET,
+  // §480 (the 360-px density pass): the 44 includes the ten pixels above and below the words, as
+  // the comment above always said ("the height comes from padding here"). A `<summary>` is slotted
+  // into its `<details>`'s shadow tree, where MUI's `box-sizing: inherit` does not reach (§366), so
+  // it sized its content box: 44 of words' box plus twenty of padding, a 64-pixel fold on every
+  // public page — the listing's past events, the calendar's feed address, a race's steps and start
+  // list, the partners, the registration form's sections. Said here, the fold is the 44 it claims.
+  boxSizing: "border-box",
   "&:hover": { textDecoration: "underline" },
   "&:focus-visible": { textDecoration: "underline" },
 } as const;
@@ -104,6 +111,9 @@ export const BOXED_DISCLOSURE_SX = {
   bgcolor: "background.paper",
   "& > summary": {
     ...DISCLOSURE_SUMMARY_SX,
+    // The backoffice's bars keep the height the owner approved them at (§269): the 360-px density
+    // pass (§480) was the public pages', and a bar is a header row, not a line of prose.
+    boxSizing: "content-box",
     mx: -2,
     px: 2,
     bgcolor: "action.hover",

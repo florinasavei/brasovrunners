@@ -57,7 +57,7 @@ const THUMB_QUALITY = 78;
 const RUNG_QUALITY = 82;
 
 /**
- * "Înaltă" (§414) is two things, and the re-review found the first version had only one of them.
+ * "Mare" (§414) is two things, and the re-review found the first version had only one of them.
  *
  * **More pixels.** The master keeps up to `HIGH_WEB_MAX` (4000) on its long side rather than
  * 2400, and the browser sends up to 4000 for this choice rather than 3000
@@ -77,12 +77,12 @@ const RUNG_QUALITY = 82;
  * megabytes more. 90 rather than 92: on a 4000-pixel master 92 measured 9–25% more bytes.
  *
  * **The bytes, measured** (four phone photographs of 6.5–12 megapixels and a 3200 × 4000
- * poster, on the shared machine): a photograph's master at «Normală» is 279–418 KB (1542 KB for
- * a leaf-covered hillside, the worst case), 0.7–1.1 MB in all its files; at «Înaltă» 650–742 KB
+ * poster, on the shared machine): a photograph's master at «Medie» is 279–418 KB (1542 KB for
+ * a leaf-covered hillside, the worst case), 0.7–1.1 MB in all its files; at «Mare» 650–742 KB
  * (3.8 MB for the hillside), 1.8–2.4 MB in all (8.6 MB), in 5–11 seconds rather than 2–3.5. The
- * poster at «Înaltă» is near-lossless: 218 KB for the 3200 × 4000 master, 1.3 MB in all. A
+ * poster at «Mare» is near-lossless: 218 KB for the 3200 × 4000 master, 1.3 MB in all. A
  * phone still takes a rung, at 90 rather than 82 — 1.3–1.7 times the bytes of the same rung at
- * «Normală» — and a laptop at 2× takes the 2400 rung, 305–453 KB (1.7 MB for the hillside).
+ * «Medie» — and a laptop at 2× takes the 2400 rung, 305–453 KB (1.7 MB for the hillside).
  */
 const HIGH_QUALITY = 90;
 
@@ -192,7 +192,7 @@ export async function processUploadedImage(
  * The thumbnail and the rungs under a master, from its decoded pixels — the one ladder pipeline,
  * called by the upload and by the older pictures' button (§430), so a change to the thumbnail or
  * the rungs' settings reaches both. The caller chooses the rungs' encoding (the upload's
- * «Înaltă» may be near-lossless) and owns the master.
+ * «Mare» may be near-lossless) and owns the master.
  */
 async function encodeLadder(
   pixels: () => Sharp,
@@ -225,8 +225,8 @@ export type LadderFromMaster = {
  *
  * The master itself is not re-encoded — the caller stores its bytes as they are, so the file a
  * wide screen loads is exactly the one it loaded before — and every rung and the thumbnail are
- * made from it at «Normală»'s own settings, the same `RUNG_QUALITY` and `THUMB_QUALITY` an upload
- * uses: such a master is at most 2400 pixels, which is «Normală»'s ceiling, and a rung is drawn at
+ * made from it at «Medie»'s own settings, the same `RUNG_QUALITY` and `THUMB_QUALITY` an upload
+ * uses: such a master is at most 2400 pixels, which is «Medie»'s ceiling, and a rung is drawn at
  * its own width, so the second generation is a reduction and its artefacts are never magnified.
  * The thumbnail is made again rather than kept, because a picture from before §176 has a 480-pixel
  * one where the site now draws 640.

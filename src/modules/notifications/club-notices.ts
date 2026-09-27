@@ -23,9 +23,11 @@ import { type ClubNotices, clubNoticesSchema, DEFAULT_CLUB_NOTICES } from "./dom
 export const CLUB_NOTICES_SETTING_KEY = "clubNotices";
 /**
  * `audit_logs.entity_id` is a UUID and a setting has a key, so each setting names itself by a
- * fixed id of its own: `…e001` is the email plan, `…e002` the contact recipients, this is the third.
+ * fixed id of its own. It was `…e003` until §483, which the delivery timing had taken the same
+ * morning: the audit rows written before keep that id and are told apart by their `action`.
+ * `tests/unit/settings/entity-ids.test.ts` holds every setting's id unique.
  */
-export const CLUB_NOTICES_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e003";
+export const CLUB_NOTICES_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00e";
 
 export type ClubNoticesState = ClubNotices & { updatedAt: Date | null };
 

@@ -375,6 +375,18 @@ describe("§448 the declaration card under «Regulamentul» says what a runner s
     expect(declarationSummary(wordsEn, { registrationMode: "NONE", offersGroupRunDeclaration: true }, groupRun)).toBe("declaration for Trail");
   });
 
+  it("says a ticked group run has no text in force when its surface's text is withdrawn or was never approved (§483)", () => {
+    const ticked = { registrationMode: "NONE", offersGroupRunDeclaration: true } as const;
+    expect(declarationSummary(words, ticked, { ...groupRun, groupRunTextInForce: false })).toBe(
+      "declarație pentru Trail — niciun text aprobat în vigoare, butonul nu apare",
+    );
+    expect(declarationSummary(wordsEn, ticked, { ...groupRun, groupRunTextInForce: false })).toBe(
+      "declaration for Trail — no approved text in force, the button does not show",
+    );
+    expect(declarationSummary(words, ticked, { ...groupRun, groupRunTextInForce: true })).toBe("declarație pentru Trail");
+    expect(declarationSummary(words, { ...ticked, offersGroupRunDeclaration: false }, { ...groupRun, groupRunTextInForce: false })).toBe("fără declarație");
+  });
+
   it("names a race's declaration only while it registers on the site, and the missing one as the gap it is", () => {
     expect(declarationSummary(words, { registrationMode: "INTERNAL", offersGroupRunDeclaration: false }, race)).toBe("declarația v3");
     expect(declarationSummary(words, { registrationMode: "INTERNAL", offersGroupRunDeclaration: false }, { ...race, declarationVersion: null })).toBe(

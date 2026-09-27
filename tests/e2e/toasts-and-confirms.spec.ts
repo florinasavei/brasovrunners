@@ -71,7 +71,7 @@ test.describe("§384 toasts and confirmations", () => {
 
     // A draft save: no question, a toast — and it never sits over the button that produced it.
     // The editor's boxes start closed (§336): the place is behind "Locul".
-    await openEditorBox(page, "Locul");
+    await openEditorBox(page, "Când și unde");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
     await field("event.locationNameEn").fill(`Poiana Brașov ${suffix}`);
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();

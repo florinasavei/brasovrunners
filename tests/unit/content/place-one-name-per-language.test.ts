@@ -117,8 +117,15 @@ describe("BR-REQ-011-01 criterion 30 the schema: a meeting point in each languag
     expect(eventFormFieldName("locationNameEn")).toBe("event.locationNameEn");
     const { eventFormFieldLabels } = await import("@/modules/content/events/ui/field-labels");
     const labels = await eventFormFieldLabels();
-    expect(labels["event.locationName"]).toBe("Locul › Punct de întâlnire (Română)");
-    expect(labels["event.locationNameEn"]).toBe("Locul › Punct de întâlnire (English)");
+    // The place is asked inside «Când și unde» since §481: the refusal names that card.
+    expect(labels["event.locationName"]).toBe("Când și unde › Punct de întâlnire (Română)");
+    expect(labels["event.locationNameEn"]).toBe("Când și unde › Punct de întâlnire (English)");
+    expect(labels["event.startsAtDate"]).toMatch(/^Când și unde › /);
+    expect(labels["event.declarationDocumentId"]).toBe(
+      "Program, regulament și declarație › Declarația pe propria răspundere › Declarația pe care o semnează participantul",
+    );
+    expect(labels["translations.en.rules"]).toMatch(/^Program, regulament și declarație › Regulamentul › English › /);
+    expect(labels["event.schedule[].date"]).toMatch(/^Program, regulament și declarație › Programul zilei și ce să aduci › /);
   });
 });
 

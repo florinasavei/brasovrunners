@@ -36,7 +36,7 @@ const { isLadderKeyPrefix, LADDER_WIDTHS, ladderWidths } = await import("@/modul
 
 const T0 = new Date("2026-09-25T10:00:00.000Z");
 
-/** A poster: a flat field and lettering, the case "Înaltă" exists for. */
+/** A poster: a flat field and lettering, the case "Mare" exists for. */
 const poster = () =>
   sharp({ create: { width: 1080, height: 1350, channels: 3, background: "#0b3d91" } })
     .composite([
@@ -81,7 +81,7 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
     state.actor = editor;
   });
 
-  it("stores a picture from the editor at «Înaltă» near-lossless, with every rung, and says so", async () => {
+  it("stores a picture from the editor at «Mare» near-lossless, with every rung, and says so", async () => {
     const response = await uploadBodyPicture(form(await poster(), "afis.png", "high"));
     expect(response.status).toBe(201);
     const answer = (await response.json()) as {
@@ -124,7 +124,7 @@ describe("§414 the quality beside the upload, and the ladder it leaves", () => 
     expect(await db.select().from(mediaAssets)).toHaveLength(2);
   });
 
-  it("reads no choice as «Normală», and refuses a value that is neither, writing nothing", async () => {
+  it("reads no choice as «Medie», and refuses a value that is neither, writing nothing", async () => {
     const plain = await uploadBodyPicture(form(await photo(), "start.jpg"));
     expect(plain.status).toBe(201);
     expect(((await plain.json()) as { stored: { quality: string; encoding: string } }).stored).toMatchObject({ quality: "normal", encoding: "lossy" });

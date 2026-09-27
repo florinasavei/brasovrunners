@@ -133,6 +133,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
             <Box sx={{ mb: 2 }}>
               <PhotoUploader
                 uploadUrl={`/api/admin/gallery/${album.id}/photos`}
+                albumId={album.id}
                 labels={{
                   choose: t("gallery.upload"),
                   uploading: t.raw("gallery.uploading") as string,
@@ -167,6 +168,27 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                     original: t("gallery.storedOriginal"),
                     nearLossless: t.raw("gallery.storedNearLossless") as string,
                   },
+                  // A picture the club already stored, into this album (§485).
+                  fromGallery: t("gallery.fromGallery"),
+                  gallery: {
+                    loading: t("richText.imageGalleryLoading"),
+                    empty: t("richText.imageGalleryEmpty"),
+                    close: t("richText.linkCancel"),
+                    filter: t("richText.imageGalleryFilter"),
+                    noMatch: t("richText.imageGalleryNoMatch"),
+                    sourceLegend: t("richText.imageGallerySourceLegend"),
+                    sources: {
+                      all: t("richText.imageGallerySourceAll"),
+                      event: t("richText.imageGallerySourceEvent"),
+                      album: t("richText.imageGallerySourceAlbum"),
+                      page: t("richText.imageGallerySourcePage"),
+                      team: t("richText.imageGallerySourceTeam"),
+                    },
+                    here: t("richText.imageGalleryHereAlbum"),
+                  },
+                  galleryAdded: t.raw("gallery.galleryAdded") as string,
+                  galleryAlready: t.raw("gallery.galleryAlready") as string,
+                  galleryFailed: t.raw("gallery.galleryFailed") as string,
                 }}
               />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

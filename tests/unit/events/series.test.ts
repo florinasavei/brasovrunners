@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editionDifference, groupSeries, recurrenceOf, seriesKey, usualOf } from "@/modules/events/domain/series";
+import { editionDifference, groupSeries, recurrenceOf, seriesKey, seriesLookup, usualOf } from "@/modules/events/domain/series";
 
 /** BR-REQ-020-01 criterion 9, BR-REQ-050-02 criterion 11 (`DECISIONS.md` §113) — a repeated event is one line. */
 const ZONE = "Europe/Bucharest";
@@ -31,6 +31,24 @@ describe("a series is the same title and type again", () => {
       at("2026-09-23T18:30").toISOString(),
       at("2026-09-28T18:30").toISOString(),
     ]);
+  });
+});
+
+describe("§486 a date left alone on its card still knows its series", () => {
+  it("answers the whole series, soonest first, for any of its dates, and nothing for a one-off", () => {
+    const rows = [
+      run("Crosul", "2026-10-11T09:00", "RACE"),
+      run("Running up that hill", "2026-09-28T18:30"),
+      run("Running up that hill", "2026-09-21T18:30"),
+    ];
+    const seriesOf = seriesLookup(rows);
+    expect(seriesOf(run(" running UP that hill", "2026-12-01T18:30"))?.map((m) => m.startsAt.toISOString())).toEqual([
+      at("2026-09-21T18:30").toISOString(),
+      at("2026-09-28T18:30").toISOString(),
+    ]);
+    expect(seriesOf(rows[0])).toBeUndefined();
+    // The same title of another type is another event.
+    expect(seriesOf(run("Running up that hill", "2026-09-21T18:30", "RACE"))).toBeUndefined();
   });
 });
 

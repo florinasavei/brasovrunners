@@ -58,7 +58,7 @@ export default function EventRoute({
   for (const link of partitionEventLinks(links, true).route) rows.push(eventLinkRow(link, locale, kindLabels));
 
   return (
-    <Box component="section" id="route" data-testid="event-route" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+    <Box component="section" id="route" data-testid="event-route" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
         {heading}
       </Typography>

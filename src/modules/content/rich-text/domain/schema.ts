@@ -498,10 +498,22 @@ const youtubeNode = z.object({
      * A club poster's stored size (§414), written by the panel's upload beside its address, so
      * the page can offer the poster's ladder as a `srcset` — the width is what says which rungs
      * exist. Absent stays absent (no transform), so a film stored before keeps its exact JSON and
-     * renders its one `src` as it did; YouTube's own thumbnail never has one.
+     * renders its one `src` as it did. Since §485 it is also written when a crop is drawn over
+     * the poster, YouTube's own thumbnail included — the crop's shape needs the photograph's ratio;
+     * `pictureSrcSet` still ignores a `yt-` address, which has no ladder, so the size there only
+     * shapes the window.
      */
     posterWidth: z.number().int().min(1).max(12_000).nullable().optional(),
     posterHeight: z.number().int().min(1).max(12_000).nullable().optional(),
+    /**
+     * The part of the poster the film's 16∶9 box shows (§485): §241's four fractions, drawn in
+     * the panel's crop box with the box's own shape, over whichever poster the film has — the
+     * club's upload, a picture from the gallery, or YouTube's own thumbnail. Absent stays absent
+     * (no transform), so a film stored before keeps its exact JSON and is covered, centred, as
+     * it always was. Drawn only with the poster's size beside it: a window cannot be shaped from
+     * a photograph whose ratio nobody recorded.
+     */
+    posterCrop: imageCrop.nullable().optional(),
   }).strict(),
 });
 

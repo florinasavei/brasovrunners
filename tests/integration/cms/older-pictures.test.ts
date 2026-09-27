@@ -6,7 +6,10 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { eventTranslations, events } from "@/db/schema/events";
 import { galleryAlbums, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { teamMembers } from "@/db/schema/team";
+import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import { createAlbum } from "@/modules/content/gallery/service";
 import { createPage } from "@/modules/content/pages/service";
 import {
@@ -163,6 +166,29 @@ describe("§430 the pictures from before §414 get their ladder, a batch per pre
 
     // A second press finds nothing to do.
     expect(await giveOlderPicturesTheirLadder(db, admin, { now: T0 })).toEqual({ converted: 0, failed: 0, left: 0 });
+  });
+
+  it("rewrites «Echipa»'s texts too — a person's words and the page's introduction (§483)", async () => {
+    const older = await olderPicture(db, "echipa.jpg", T0, { width: 800 });
+    const oldPrefix = older.row.keyPrefix;
+    const doc = JSON.parse(bodyWith(older.src, 800));
+    const [member] = await db.insert(teamMembers).values({ name: "Ana", position: 1, bioRoJson: doc, bioEnJson: doc }).returning();
+    const [other] = await db.insert(teamMembers).values({ name: "Bogdan", position: 2 }).returning();
+    await db.insert(platformSettings).values({ key: TEAM_PAGE_SETTING_KEY, value: { status: "PUBLISHED", introRoJson: doc, introEnJson: null } });
+
+    expect(await giveOlderPicturesTheirLadder(db, admin, { now: T0 })).toEqual({ converted: 1, failed: 0, left: 0 });
+
+    const newSrc = bodyImageSrc(objectKey(ladderKeyPrefixOf(oldPrefix), "web"));
+    const [memberAfter] = await db.select().from(teamMembers).where(eq(teamMembers.id, member.id));
+    expect(JSON.stringify([memberAfter.bioRoJson, memberAfter.bioEnJson])).not.toContain(oldPrefix);
+    expect(JSON.stringify(memberAfter.bioRoJson)).toContain(newSrc);
+    expect(memberAfter.version).toBe(member.version + 1);
+    const [otherAfter] = await db.select().from(teamMembers).where(eq(teamMembers.id, other.id));
+    expect(otherAfter.version).toBe(other.version);
+    const [intro] = await db.select().from(platformSettings).where(eq(platformSettings.key, TEAM_PAGE_SETTING_KEY));
+    expect(JSON.stringify(intro.value)).toContain(newSrc);
+    expect(JSON.stringify(intro.value)).not.toContain(oldPrefix);
+    expect(intro.value).toMatchObject({ status: "PUBLISHED", introEnJson: null });
   });
 
   it("takes the oldest first, at most a batch, and starts nothing once the time is spent", async () => {

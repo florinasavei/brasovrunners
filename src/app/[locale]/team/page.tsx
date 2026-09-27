@@ -11,6 +11,7 @@ import { notFound, unstable_rethrow } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { teamLinkHost, type TeamLinkKind } from "@/modules/content/team/links";
+import { teamMetaDescription } from "@/modules/content/team/meta-description";
 import { type PublicTeamLink, type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
 import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
 import TeamLinkGlyph from "@/modules/content/team/ui/TeamLinkGlyph";
@@ -51,7 +52,7 @@ const BIO_SX = {
 } as const;
 
 /** The club's introduction (§474): the page's lead, in the renderer's own type, a little quieter. */
-const INTRO_SX = { color: "text.secondary", mb: 3, "& > :last-child": { mb: 0 } } as const;
+const INTRO_SX = { color: "text.secondary", mb: { xs: DENSITY.sectionGap, sm: 3 }, "& > :last-child": { mb: 0 } } as const;
 
 /**
  * The page's state and cards, or null when the database cannot say. A DRAFT page is a 404, as an
@@ -75,7 +76,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await teamOrNull(locale);
   return {
     title: t("title"),
-    description: page?.introText ?? t("lead", { club: CLUB_NAME }),
+    // About 160 characters of the introduction, never the whole of it (§483).
+    description: page?.introText ? teamMetaDescription(page.introText) : t("lead", { club: CLUB_NAME }),
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/team")),
     // An address with nobody on it is not for a search engine; the sitemap leaves it out too.
     ...(page && teamPageOnSite(page) ? {} : { robots: { index: false, follow: true } }),
@@ -114,7 +116,7 @@ export default async function TeamPage({ params }: Props) {
           <RichText body={page.intro} />
         </Box>
       ) : (
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("lead", { club: CLUB_NAME })}
         </Typography>
       )}
@@ -176,7 +178,7 @@ export default async function TeamPage({ params }: Props) {
         </Box>
       )}
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
         {t.rich("contact", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
     </Container>

@@ -47,7 +47,7 @@ import {
 } from "@/modules/registrations/family-entries";
 import type { PendingFamilyEntry } from "@/db/schema/family-entries";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
-import { weatherForEvent } from "@/modules/weather/source";
+import { forecastForEvent } from "@/modules/weather/source";
 import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import { emailEventFacts } from "./event-facts-row";
@@ -511,7 +511,7 @@ async function renderRow(
     never later for it.
   */
   if (row.messageType === "EVENT_REMINDER" && eventDetails) {
-    const weather = await weatherForEvent(eventDetails, now);
+    const weather = await forecastForEvent(eventDetails, now);
     if (weather) data.eventWeather = weather;
   }
   // The thank-you's optional link (§82) rides in the payload; it is the action, and not a token.

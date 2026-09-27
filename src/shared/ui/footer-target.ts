@@ -59,6 +59,21 @@ export const PHONE_WIDE = "@media (min-width:360px) and (max-width:599.95px)";
 export const SM_UP = "@media (min-width:600px)";
 
 /**
+ * The height of one line of the "Despre club" fold's panel: 24 pixels on every phone, 44 from `sm`
+ * (§480, the 360-px density pass, second round). 24 is the bar's own smallest target (WCAG 2.2 SC
+ * 2.5.8's AA floor) — not the bar's 28 from 360: the panel is four lines of links (the terms and
+ * "my registrations"; "Scrie-ne" with the address; Open-Meteo's credit; the build stamp), abutting,
+ * never overlapping, and four lines of 28 are 112 pixels where the owner asked for the fold to be
+ * about a hundred ("Informațiile din footer sunt mult prea spațiate", 2026-09-26). Four of 24 are 96.
+ */
+export const FOLD_LINE = { xs: 24, sm: 44 } as const;
+
+/** The given properties set to the fold's line (`FOLD_LINE`): 24px on a phone, 44px from `sm`. */
+export function foldLineSx(properties: readonly string[]) {
+  return Object.fromEntries(properties.map((property) => [property, { xs: `${FOLD_LINE.xs}px`, sm: `${FOLD_LINE.sm}px` }]));
+}
+
+/**
  * The given properties set to the bar's target at each width: 24px, then 28px from 360, then
  * 44px from `sm`. Pixel strings, not numbers — `lineHeight: 24` would be 24 times the font size.
  */

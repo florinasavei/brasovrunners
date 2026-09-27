@@ -79,8 +79,8 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect((await processUploadedImage(await phonePhoto(640, 480))).rungs).toEqual([]);
   });
 
-  it("keeps up to 4000 pixels at «Înaltă», with a 2400 rung, and 2400 at «Normală» (§414)", async () => {
-    // Found by re-review: «Înaltă» kept the same 2400-pixel master, so it was no sharper.
+  it("keeps up to 4000 pixels at «Mare», with a 2400 rung, and 2400 at «Medie» (§414)", async () => {
+    // Found by re-review: «Mare» kept the same 2400-pixel master, so it was no sharper.
     expect([masterMaxEdge("normal"), masterMaxEdge("high")]).toEqual([WEB_MAX, HIGH_WEB_MAX]);
     const wide = await sharp({ create: { width: 4200, height: 2800, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
     const high = await processUploadedImage(wide, { quality: "high" });
@@ -134,7 +134,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect(original.web.byteLength).toBeGreaterThan(high.web.byteLength);
   }, 120_000);
 
-  it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§414)", async () => {
+  it("keeps a poster's lettering near-lossless at «Mare», and a photograph lossy (§414)", async () => {
     // Flat colour and hard edges: what near-lossless WebP stores for almost nothing.
     const poster = await sharp({ create: { width: 1080, height: 1350, channels: 3, background: "#0b3d91" } })
       .composite([{ input: Buffer.from("<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='300'><text x='40' y='200' font-size='120' fill='#fff'>CROSUL 2026</text></svg>"), top: 200, left: 0 }])
@@ -150,7 +150,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     const photo = await sharp(noise, { raw: { width: 1200, height: 900, channels: 3 } }).jpeg({ quality: 95 }).toBuffer();
     const highPhoto = await processUploadedImage(photo, { quality: "high" });
     expect(highPhoto.encoding).toBe("lossy");
-    // "Înaltă" is a larger file than "Normală" for the same photograph — which is what it says.
+    // "Mare" is a larger file than "Medie" for the same photograph — which is what it says.
     const normalPhoto = await processUploadedImage(photo, { quality: "normal" });
     expect(highPhoto.rungs[0].body.byteLength).toBeGreaterThan(normalPhoto.rungs[0].body.byteLength);
   });

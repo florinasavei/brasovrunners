@@ -314,7 +314,7 @@ export function minimumAgeRule(eventDay: string, minAge: number) {
 /**
  * An emergency contact is somebody **else** (`DECISIONS.md` §228).
  *
- * Amalia, testing: "și poți pune la persoana de contact numele tău și nr tău". You could, and
+ * The Administrator, testing: "și poți pune la persoana de contact numele tău și nr tău". You could, and
  * the field was then worth nothing — the whole point of it is a number somebody can ring when
  * the runner cannot answer their own. A contact who is the runner is not a contact; it is a
  * blank the form let through.

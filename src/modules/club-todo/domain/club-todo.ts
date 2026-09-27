@@ -3,7 +3,7 @@ import { canReadContent, type StaffRole } from "@/modules/staff-identity/domain/
 
 /**
  * «De făcut» / "To do" — the club's own checklist on `/admin/tasks` (§438; the owner, 2026-09-26:
- * "I need another folder — a list for Amalia (the club's to-do)", and "vreau aceste to-do-uri și
+ * "I need another folder — a list for [the Administrator] (the club's to-do)", and "vreau aceste to-do-uri și
  * pe site").
  *
  * The «Club» panel beside it is read from the system and never ticked by hand (§41, §149); this
@@ -20,10 +20,12 @@ import { canReadContent, type StaffRole } from "@/modules/staff-identity/domain/
 
 export const CLUB_TODO_SETTING_KEY = "clubTodo";
 /**
- * One fixed id per setting for the audit row (`jobs/cadence.ts`'s convention): `…e001`–`…e009`
- * are taken on qa; `…e00a` is left for the work in flight beside this one.
+ * One fixed id per setting for the audit row (`jobs/cadence.ts`'s convention). It was `…e00b`
+ * until §483, which the budget thresholds had taken the same afternoon: the audit rows written
+ * before keep that id and are told apart by their `action`. `tests/unit/settings/entity-ids.test.ts`
+ * holds every setting's id unique.
  */
-export const CLUB_TODO_ENTITY_ID = "00000000-0000-4000-8000-00000000e00b";
+export const CLUB_TODO_ENTITY_ID = "00000000-0000-4000-8000-00000000e00f";
 
 /** A line is a sentence or a short paragraph — the longest starting item is about 700 characters. */
 export const CLUB_TODO_TEXT_MAX = 2000;
@@ -74,7 +76,7 @@ export const clubTodoItemSchema = z
   .object({
     id: z.string().min(1).max(64),
     text: z.string().min(1).max(CLUB_TODO_TEXT_MAX),
-    /** «Pentru cine»: free text — "Amalia", "Dani", "Florin" are offered, anything else is kept. */
+    /** «Pentru cine»: free text — the roles are offered, anything else is kept. */
     owner: z.string().min(1).max(CLUB_TODO_OWNER_MAX).nullable(),
     done: z.boolean(),
     /** When it was ticked, as an ISO instant; null while open. */
@@ -179,7 +181,7 @@ export function resolveClubTodoOwner(items: readonly ClubTodoItem[], requested: 
   return clubTodoOwners(items).find((owner) => owner.toLocaleLowerCase("ro") === wanted);
 }
 
-/** The lines for one owner, compared without case — "dani" and "Dani" are one person. */
+/** The lines for one owner, compared without case — "organizator" and "Organizator" are one owner. */
 export function filterClubTodo(items: readonly ClubTodoItem[], owner: string | undefined): ClubTodoItem[] {
   const sorted = sortClubTodo(items);
   if (!owner) return sorted;

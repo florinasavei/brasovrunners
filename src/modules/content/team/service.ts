@@ -7,7 +7,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canEditTeamPage, canShowTeamMember } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { type TeamMemberFields, teamFieldName, teamMemberFieldsSchema } from "./fields";
-import { mediaAssetExists } from "./repository";
+import { mediaAssetKeyPrefix } from "./repository";
 
 /**
  * «Echipa» — the team page's cards (§459): add, write, show or hide, move, delete.
@@ -46,8 +46,15 @@ function parseOrThrow(value: unknown): TeamMemberFields {
 
 /** A photo id must name a stored picture; one that does not is refused on the photo box. */
 async function assertPhotoExists<T extends Record<string, unknown>>(db: Database<T>, fields: TeamMemberFields): Promise<void> {
-  if (fields.photoAssetId && !(await mediaAssetExists(db, fields.photoAssetId))) {
+  if (!fields.photoAssetId) return;
+  const keyPrefix = await mediaAssetKeyPrefix(db, fields.photoAssetId);
+  if (keyPrefix === null) {
     throw new DomainError("VALIDATION_ERROR", "the photo is not a stored picture", ["photoAssetId"]);
+  }
+  // A film's automatic poster is YouTube's 480-pixel thumbnail, not a person's photo (§485) — the
+  // same refusal an album gives it (`addStoredPhoto`), held here and not only in the picker.
+  if (keyPrefix.startsWith("yt-")) {
+    throw new DomainError("VALIDATION_ERROR", "a film's poster is not a card's photo", ["photoAssetId"]);
   }
 }
 

@@ -21,7 +21,7 @@ import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
  * BR-REQ-090-05 and BR-REQ-060-01 — «De făcut», the club's own checklist on `/admin/tasks`
- * (`DECISIONS.md` §438; the owner, 2026-09-26: "I need another folder — a list for Amalia (the
+ * (`DECISIONS.md` §438; the owner, 2026-09-26: "I need another folder — a list for [the Administrator] (the
  * club's to-do)"). The list operations, the count, the owner filter, the starting list's shape
  * and the role gate, all pure; the stored row and the audit trail are `tests/integration/
  * club-todo/club-todo.test.ts`.
@@ -53,8 +53,8 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
 
   it("is nineteen lines: the Administrator's twelve, then the Organizer's seven, in their order", () => {
     expect(items).toHaveLength(19);
-    expect(items.slice(0, 12).every((item) => item.owner === "Amalia")).toBe(true);
-    expect(items.slice(12).every((item) => item.owner === "Dani")).toBe(true);
+    expect(items.slice(0, 12).every((item) => item.owner === "Administrator")).toBe(true);
+    expect(items.slice(12).every((item) => item.owner === "Organizator")).toBe(true);
     expect(items.map((item) => item.order)).toEqual(Array.from({ length: 19 }, (_, index) => index + 1));
     expect(items[0].text).toMatch(/^Intră în backoffice/);
     expect(items[12].text).toMatch(/^Intră în backoffice .*«Înscrieri»/);
@@ -63,8 +63,8 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
   it("has fixed, unique ids, so a tick pressed before anything is stored finds its line", () => {
     const ids = items.map((item) => item.id);
     expect(new Set(ids).size).toBe(19);
-    expect(ids[0]).toBe("start-amalia-01");
-    expect(ids[18]).toBe("start-dani-07");
+    expect(ids[0]).toBe("start-admin-01");
+    expect(ids[18]).toBe("start-organizer-07");
     expect(startingClubTodo().map((item) => item.id)).toEqual(ids);
   });
 
@@ -81,9 +81,9 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
   it("dates the Mailgun line and the two «după 10 octombrie» lines, and only those", () => {
     const dated = items.filter((item) => item.due !== null);
     expect(dated.map((item) => [item.id, item.due])).toEqual([
-      ["start-amalia-04", "2026-11-01"],
-      ["start-amalia-12", "2026-10-10"],
-      ["start-dani-07", "2026-10-10"],
+      ["start-admin-04", "2026-11-01"],
+      ["start-admin-12", "2026-10-10"],
+      ["start-organizer-07", "2026-10-10"],
     ]);
     const afterTheTenth = dated.filter((item) => item.due === "2026-10-10");
     expect(afterTheTenth).toHaveLength(2);
@@ -95,8 +95,8 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
     expect(readClubTodoValue({ items })).toEqual(items);
   });
 
-  it("offers Amalia, Dani and Florin as «pentru cine»", () => {
-    expect(CLUB_TODO_OWNER_SUGGESTIONS).toEqual(["Amalia", "Dani", "Florin"]);
+  it("offers the roles as «pentru cine», never a colleague's first name (§483)", () => {
+    expect(CLUB_TODO_OWNER_SUGGESTIONS).toEqual(["Administrator", "Organizator"]);
   });
 });
 
@@ -118,7 +118,7 @@ describe("§438 reading the stored row", () => {
 describe("§438 what a form posts", () => {
   it("trims the line, reads a blank owner and a blank day as none", () => {
     expect(input("  Sună primăria  ", "  ", "")).toEqual({ text: "Sună primăria", owner: null, due: null });
-    expect(input("x", " Dani  Popescu ", "2026-10-10")).toEqual({ text: "x", owner: "Dani Popescu", due: "2026-10-10" });
+    expect(input("x", " Ana  Popescu ", "2026-10-10")).toEqual({ text: "x", owner: "Ana Popescu", due: "2026-10-10" });
   });
 
   it("refuses an empty line, a day that does not exist and an owner longer than a name", () => {
@@ -137,13 +137,13 @@ describe("§438 what a form posts", () => {
 });
 
 describe("§438 the list operations", () => {
-  const list = [line("a", 1, { owner: "Amalia" }), line("b", 2, { owner: "Dani" }), line("c", 3, { owner: "Amalia" })];
+  const list = [line("a", 1, { owner: "Administrator" }), line("b", 2, { owner: "Organizator" }), line("c", 3, { owner: "Administrator" })];
 
   it("adds a line at the end, open, with the next order number", () => {
-    const result = applyClubTodo(list, { kind: "add", input: input("Nou", "Florin", "2026-10-01") }, context);
+    const result = applyClubTodo(list, { kind: "add", input: input("Nou", "Ana", "2026-10-01") }, context);
     expect(result.changed).toBe(true);
     expect(result.items).toHaveLength(4);
-    expect(result.item).toMatchObject({ text: "Nou", owner: "Florin", due: "2026-10-01", done: false, order: 4, createdAt: NOW.toISOString() });
+    expect(result.item).toMatchObject({ text: "Nou", owner: "Ana", due: "2026-10-01", done: false, order: 4, createdAt: NOW.toISOString() });
     expect(result.items.at(-1)?.id).toBe(result.item.id);
   });
 
@@ -153,11 +153,11 @@ describe("§438 the list operations", () => {
   });
 
   it("edits the words, the owner and the day, and says so only when something changed", () => {
-    const edited = applyClubTodo(list, { kind: "edit", id: "b", input: input("Line b", "Dani", "2026-10-10") }, context);
+    const edited = applyClubTodo(list, { kind: "edit", id: "b", input: input("Line b", "Organizator", "2026-10-10") }, context);
     expect(edited.changed).toBe(true);
     expect(edited.item).toMatchObject({ id: "b", due: "2026-10-10", order: 2 });
     expect(edited.before?.due).toBeNull();
-    const same = applyClubTodo(list, { kind: "edit", id: "b", input: input("Line b", "Dani") }, context);
+    const same = applyClubTodo(list, { kind: "edit", id: "b", input: input("Line b", "Organizator") }, context);
     expect(same.changed).toBe(false);
   });
 
@@ -180,8 +180,8 @@ describe("§438 the list operations", () => {
     expect(applyClubTodo(list, { kind: "move", id: "c", direction: "down" }, context).changed).toBe(false);
   });
 
-  it("moves among the lines the filter shows: Amalia's «c» up goes above Amalia's «a», past Dani's", () => {
-    const moved = applyClubTodo(list, { kind: "move", id: "c", direction: "up", owner: "amalia" }, context);
+  it("moves among the lines the filter shows: the Administrator's «c» up goes above the Administrator's «a», past the Organizer's", () => {
+    const moved = applyClubTodo(list, { kind: "move", id: "c", direction: "up", owner: "administrator" }, context);
     expect(moved.items.map((item) => item.id)).toEqual(["c", "b", "a"]);
   });
 
@@ -214,9 +214,9 @@ describe("§438 the list operations", () => {
 
 describe("§438 the count and the owner filter", () => {
   const list = [
-    line("a", 1, { owner: "Amalia" }),
-    line("b", 2, { owner: "Dani", done: true, doneAt: NOW.toISOString(), by: "x" }),
-    line("c", 3, { owner: "dani" }),
+    line("a", 1, { owner: "Administrator" }),
+    line("b", 2, { owner: "Organizator", done: true, doneAt: NOW.toISOString(), by: "x" }),
+    line("c", 3, { owner: "organizator" }),
     line("d", 4),
   ];
 
@@ -225,16 +225,16 @@ describe("§438 the count and the owner filter", () => {
   });
 
   it("lists each owner once, in the list's order, whatever the case they were typed in", () => {
-    expect(clubTodoOwners(list)).toEqual(["Amalia", "Dani"]);
+    expect(clubTodoOwners(list)).toEqual(["Administrator", "Organizator"]);
   });
 
   it("filters by owner without case, and shows everything with no owner asked", () => {
-    expect(filterClubTodo(list, "DANI").map((item) => item.id)).toEqual(["b", "c"]);
+    expect(filterClubTodo(list, "ORGANIZATOR").map((item) => item.id)).toEqual(["b", "c"]);
     expect(filterClubTodo(list, undefined).map((item) => item.id)).toEqual(["a", "b", "c", "d"]);
   });
 
   it("reads a ?for= naming nobody on the list as everybody", () => {
-    expect(resolveClubTodoOwner(list, "dani")).toBe("Dani");
+    expect(resolveClubTodoOwner(list, "organizator")).toBe("Organizator");
     expect(resolveClubTodoOwner(list, "Ghost")).toBeUndefined();
     expect(resolveClubTodoOwner(list, undefined)).toBeUndefined();
   });

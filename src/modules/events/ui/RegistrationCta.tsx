@@ -50,7 +50,7 @@ export default async function RegistrationCta({
 
   if (cta.kind === "EXTERNAL") {
     return (
-      <Box sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+      <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} />
       </Box>
     );
@@ -60,7 +60,7 @@ export default async function RegistrationCta({
     // How full it is (§346): the free places read against the event's size. Null — and nothing
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     return (
-      <Stack spacing={1} sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, alignItems: "flex-start" }}>
+      <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} />
 
         {fill && (
@@ -100,7 +100,7 @@ export default async function RegistrationCta({
   */
   if (cta.kind === "WAITLIST_FULL" || cta.kind === "FULL_NO_WAITLIST") {
     return (
-      <Stack spacing={1} sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, alignItems: "flex-start" }}>
+      <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
         <Typography variant="body1" data-testid="registration-full" sx={{ fontWeight: 500 }}>
           {cta.kind === "WAITLIST_FULL" ? t("cta.waitlistFull") : t("cta.fullNoWaitlist")}
         </Typography>
@@ -142,7 +142,7 @@ export default async function RegistrationCta({
         variant="h3"
         component="p"
         data-testid="registration-opens-on"
-        sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main" }}
+        sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main" }}
       >
         {sentence}
       </Typography>
@@ -150,7 +150,7 @@ export default async function RegistrationCta({
   }
 
   return (
-    <Typography variant="body1" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 }, fontWeight: 500 }}>
+    <Typography variant="body1" sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, fontWeight: 500 }}>
       {sentence}
     </Typography>
   );
@@ -168,7 +168,7 @@ async function CapacityUnknown({ slug }: { slug: string }) {
   return (
     <Alert
       severity="warning"
-      sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}
+      sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}
       action={
         // This page again, by its own address: the only thing that can change the answer is
         // asking the database a second time.

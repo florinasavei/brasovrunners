@@ -76,20 +76,26 @@ async function rules(event: EditableEvent | null, options: { mayEditSettings?: b
   return markup(renderToStaticMarkup(element as ReactElement));
 }
 
-describe("§448 the declaration card sits under «Regulamentul»", () => {
-  it("is a named level-3 card, on the create page too, drawn inside the rules box after its tabs", async () => {
+describe("§448 the declaration card sits with «Regulamentul» (in one card since §481)", () => {
+  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Program, regulament și declarație» (§481)", async () => {
     for (const event of [TRAIL_RUN, RACE, null]) {
       const html = await rules(event);
       expect(namedFolds(html)).toEqual(["box-declaration"]);
       expect(html).toMatch(/<h3[^>]*>Declarația pe propria răspundere<span/);
     }
     expect(await rules(TRAIL_RUN, { locale: "en" })).toMatch(/<h3[^>]*>Self-declaration<span/);
-    // The rules box awaits the card and draws it under its language tabs, its line joined to its own.
-    const text = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/TextBoxes.tsx"), "utf8");
-    const box = text.slice(text.indexOf("export async function RulesBox"), text.indexOf("export async function AddressBox"));
+    // The card that holds the three awaits each and draws them in the page's order — the programme,
+    // the rules, the declaration — its line joined to theirs, open while the declaration is missing.
+    const box = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/ProgrammeRulesBox.tsx"), "utf8");
     expect(box).toContain("await DeclarationCard({");
-    expect(box.indexOf("<LanguageTabs")).toBeLessThan(box.indexOf("{declaration}"));
+    expect(box.indexOf("{programme}")).toBeLessThan(box.indexOf("{rules}"));
+    expect(box.indexOf("{rules}")).toBeLessThan(box.indexOf("{declaration}"));
     expect(box).toContain("openWhen={{ attention: line.missing }}");
+    // «Regulamentul» is a level-3 card of its own now, the declaration no longer inside it.
+    const text = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/TextBoxes.tsx"), "utf8");
+    const rulesCard = text.slice(text.indexOf("export async function RulesBox"), text.indexOf("export async function AddressBox"));
+    expect(rulesCard).toContain('level={3} id="box-rules"');
+    expect(rulesCard).not.toContain("DeclarationCard");
     // Neither «Traseul» nor «Condiții de participare» asks any more.
     const course = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/CourseBox.tsx"), "utf8");
     const registration = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/RegistrationBox.tsx"), "utf8");
@@ -103,6 +109,15 @@ describe("§448 the declaration card sits under «Regulamentul»", () => {
     expect((await declarationLine({ ...RACE, declarationDocumentId: null } as unknown as EditableEvent, DECLARATIONS, WORDS)).missing).toBe(true);
     expect(await declarationLine({ ...RACE, registrationMode: "EXTERNAL" } as unknown as EditableEvent, DECLARATIONS, WORDS)).toEqual({ text: null, missing: false });
     expect((await declarationLine(null, DECLARATIONS, WORDS)).missing).toBe(false);
+  });
+
+  it("reads the texts in force for a ticked group run: none for its surface is a gap, never «declarație pentru Trail» (§483)", async () => {
+    const withdrawn = await declarationLine(TRAIL_RUN, DECLARATIONS, WORDS, { ASPHALT: { version: 1 }, TRAIL: null });
+    expect(withdrawn).toEqual({ text: "declarație pentru Trail — niciun text aprobat în vigoare, butonul nu apare", missing: true });
+    expect(await declarationLine(TRAIL_RUN, DECLARATIONS, WORDS, { ASPHALT: null, TRAIL: { version: 2 } })).toEqual({
+      text: "declarație pentru Trail",
+      missing: false,
+    });
   });
 
   it("offers a group run's tick with the surface from «Traseul» and the text in force for it", async () => {

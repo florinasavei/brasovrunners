@@ -46,7 +46,7 @@ export default function IdDocumentFields({
   return (
     <>
       {/*
-        Which document, chosen rather than described (§283; Amalia: "we must give some hints on
+        Which document, chosen rather than described (§283; the Administrator: "we must give some hints on
         the ID document or select ID doc type"). A native select, like the telephone's country
         (§198): it works before hydration and it is the control a phone knows how to open.
       */}

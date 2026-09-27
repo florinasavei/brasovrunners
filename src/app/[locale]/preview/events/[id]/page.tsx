@@ -109,8 +109,6 @@ export default async function PreviewEventPage({ params }: Props) {
     latitude: placeLater ? null : event.latitude,
     longitude: placeLater ? null : event.longitude,
     routeUrl: event.routeUrl,
-    videoUrl: event.videoUrl,
-    videoPosterUrl: event.videoPosterUrl,
     stravaEventUrl: event.stravaEventUrl,
     facebookEventUrl: event.facebookEventUrl,
     featured: event.featured,

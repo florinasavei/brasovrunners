@@ -37,7 +37,7 @@ export default async function EventProgramme({
   const time = (at: Date) => formatTime(at, { locale, timeZone });
 
   return (
-    <Box component="section" id="schedule" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+    <Box component="section" id="schedule" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
         {heading}
       </Typography>

@@ -36,7 +36,7 @@ import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { submitContactAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -124,11 +124,17 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
   const formAvailable = await cachedContactFormReaches();
-  const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
+  // A thumb's 44 pixels that do not stretch the sentence's line (§480, the 360-px density pass).
+  const inlineLink = INLINE_TAP_TARGET;
+  // The first address reaches above its words; a second one («a sau b») may wrap to the line under
+  // the first, where that reach would cover the first's lower half and win its press (it is painted
+  // later). So a later address takes `TAP_TARGET`'s own shape — 44 tall in its line, the line a
+  // little taller — and no two addresses share a pixel.
+  const stretchedLink = { display: "inline-flex", alignItems: "center", ...TAP_TARGET } as const;
   const addressLinks = writeTo.map((address, index) => (
     <span key={address}>
       {index > 0 && ` ${t("off.or")} `}
-      <MuiLink href={`mailto:${address}`} sx={inlineLink}>
+      <MuiLink href={`mailto:${address}`} sx={index === 0 ? inlineLink : stretchedLink}>
         {address}
       </MuiLink>
     </span>
@@ -167,7 +173,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom sx={{ mt: 1 }}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
         {t("intro")}
       </Typography>
 
@@ -222,24 +228,26 @@ export default async function ContactPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
             {t("requiredLegend")}
           </Typography>
 
           <form action={submitContactAction}>
+            {/* Outside the column (§480, the 360-px density pass): as its first children they made
+                the name box the column's second, and a column gives every item after its first the
+                column's gap — sixteen pixels above the first box on top of the legend's own margin. */}
+            <input type="hidden" name="locale" value={locale} />
+            {/* Bots fill every field; a human never sees or fills this one. */}
+            <input
+              type="text"
+              name="honeypot"
+              autoComplete="off"
+              tabIndex={-1}
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
+            />
+            <input type="hidden" name="renderedAt" value={now.toISOString()} />
             <Stack spacing={2}>
-              <input type="hidden" name="locale" value={locale} />
-              {/* Bots fill every field; a human never sees or fills this one. */}
-              <input
-                type="text"
-                name="honeypot"
-                autoComplete="off"
-                tabIndex={-1}
-                aria-hidden="true"
-                style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
-              />
-              <input type="hidden" name="renderedAt" value={now.toISOString()} />
-
               <TextField {...field("name")} label={t("name")} required autoComplete="name" fullWidth />
               <TextField
                 {...field("email", t("emailHelp"))}
@@ -300,6 +308,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
           {/* The club's address beside the form, always (§449): a visitor who prefers their own
               mail client, or whose message the form cannot carry, writes straight to the club. */}
           {writeTo.length > 0 && error !== "DELIVERY" && (
+            // 24 pixels over it at every width, not the phone's 16: the first address's reach
+            // (21.6 pixels above its words, `INLINE_TAP_TARGET`) must stay in the gap, never over
+            // the send button's lower edge (§480).
             <Typography variant="body1" sx={{ mt: 3 }}>
               {t("direct")} {addressLinks}
             </Typography>

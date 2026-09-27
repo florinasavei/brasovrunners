@@ -14,16 +14,17 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
+import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
 import WeatherHelp from "@/modules/weather/ui/WeatherHelp";
-import { weatherWords } from "@/modules/weather/words";
+import { weatherSpanWords, weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
 import { hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
+import { CLUB_LOCALITY } from "../domain/place";
 import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEvent } from "../repository";
@@ -107,6 +108,32 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 const RACE_ROW_GAP = 0.5;
 
 // The weather row is one line since §469; the hours strip, details and place line went with it.
+
+/**
+ * The weather line's pieces with where and when before the first one (§484): the row's label and
+ * the scope read as one sentence — «Vremea | la Brașov, sâmbătă, 26 sept. 18:00–20:00: Ploaie · …» —
+ * the scope in the same flow item as the sky's word, so no middle dot stands after the colon, and
+ * the «?» (§473) in the last item, last.
+ */
+function withScope(pieces: ReactNode[], words: { scope: string; help: string }): ReactNode[] {
+  const scoped = pieces.map((piece, index) => <Fragment key={index}>{piece}</Fragment>);
+  scoped[0] = (
+    <Fragment key="scoped">
+      <Box component="span" data-testid="event-weather-scope" sx={{ color: "text.secondary" }}>
+        {words.scope}:
+      </Box>{" "}
+      {pieces[0]}
+    </Fragment>
+  );
+  const lastIndex = scoped.length - 1;
+  scoped[lastIndex] = (
+    <Fragment key="last">
+      {scoped[lastIndex]}
+      <WeatherHelp text={words.help} />
+    </Fragment>
+  );
+  return scoped;
+}
 
 /**
  * The facts of an event, grouped by the question they answer.
@@ -573,9 +600,10 @@ export default async function EventFacts({
       the line is as tall as its words — or the sentence while it is to be announced (§328), whose
       query has already withheld the name, the address and the map.
 
-      Tight both ways only when the pills follow it, a group's gap (twelve pixels) under the line,
-      more than the ten the link reaches below its words. Anything else after it is nearer — the
-      state of registration a line's gap (eight) under it, or, when the place is the card's last
+      Tight both ways only when the pills follow it, a group's gap (twelve pixels; ten on a phone
+      since §480, the facts' six and the pills' four) under the line, never less than the ten the
+      link reaches below its words. Anything else after it is nearer — the state of registration
+      a line's gap (eight; six on a phone) under it, or, when the place is the card's last
       fact, the door four pixels under the facts and a series card's fold right on them — and
       would take the bottom of the link, since what comes later paints over it (§366). There it
       gives back only the ten above, and keeps the ten below inside the facts, where nothing sits.
@@ -614,7 +642,11 @@ export default async function EventFacts({
     );
 
     return (
-      <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
+      /* A line's gap between two facts — the density scale's tightest step on a phone (§480, the
+         360-px density pass: 8px to 6), `LINE_GAP` from `sm`. The pills keep their own four above
+         that, so on a phone they sit ten under the place: exactly the place link's reach below
+         its words, never nearer (the comment on `reach`, above). */
+      <Box data-testid="card-facts" sx={{ display: "grid", rowGap: { xs: DENSITY.gapXs, sm: 1 }, minWidth: 0 }}>
         {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113);
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
@@ -1026,9 +1058,22 @@ export default async function EventFacts({
     with «ploaie probabilă» only when rain is likely. No wind, no chance of rain on a dry hour; the
     details, the hours strip and the place line are gone; the reminder keeps its own line.
   */
+  /*
+    Since §484 (the owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul») the line
+    reads the hours the event is out — from the start's hour to the end's, at most six (`pickSpan`) —
+    and opens with where and when, so the label and the line are one sentence: «Vremea | la Parcul
+    Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie · 12–15 °C · ☂ ploaie probabilă 70 % ?». The sky's
+    word and the row's glyph are the span's (the wettest hour when rain is likely, else the kind most
+    hours share), the degrees a range when they differ, the umbrella when rain is likely in any hour.
+    The place is the club's locality when the forecast is the club's (`forecastPlaceName`), never a
+    meeting point it was not read at.
+  */
   if (weather) {
-    const words = weatherWords(weather.start, locale);
-    const umbrella = rainLikely(weather.start) ? (
+    const words = weatherSpanWords(weather, locale, {
+      place: forecastPlaceName(weather.place, event.locationName, CLUB_LOCALITY),
+      timeZone: event.timezone,
+    });
+    const umbrella = words.rainLikelyChance !== null ? (
       <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
         <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
         {words.rainLikelyChance}
@@ -1037,11 +1082,10 @@ export default async function EventFacts({
     rows.push({
       key: "weather",
       label: words.label,
-      icon: WEATHER_GLYPH[weather.start.glyph],
+      icon: WEATHER_GLYPH[words.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])])}
-          <WeatherHelp text={words.help} />
+          {flow(withScope([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])], words))}
         </Box>
       ),
     });
@@ -1055,7 +1099,7 @@ export default async function EventFacts({
     its own after the `<dl>` closes, never a `dt`/`dd` pair.
   */
   const partnersSection = coHosts.length > 0 ? (
-    <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+    <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
       {/*
         A native `<details>`, no script needed (§401): closed by default on a phone, where a
         partner's card is the tallest thing on the page and a runner came for the race, not the
@@ -1111,7 +1155,7 @@ export default async function EventFacts({
           `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name,
           the description and the links clear of its edge. Unchanged from §344/§352.
         */}
-        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start", pt: 1.5 }}>
+        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapXs, sm: 1.5 }, justifyItems: "start", pt: 1.5 }}>
           {coHosts.map((host, index) => (
             <Box key={index} data-testid="partner-card" sx={{ ...partnerCardSurface, p: 2, maxWidth: "100%" }}>
               {links ? partnerFacts(host) : host.name}

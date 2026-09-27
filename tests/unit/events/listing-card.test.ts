@@ -46,7 +46,7 @@ const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: SeriesCard } = await import("@/modules/events/ui/SeriesCard");
 const { default: RichText } = await import("@/modules/content/rich-text/ui/RichText");
 const { shortenUrls } = await import("@/modules/content/rich-text/domain/short-url");
-const { CARD_TITLE_SX, LINE_GAP } = await import("@/modules/events/ui/card-layout");
+const { CARD_TAP_SX, CARD_TITLE_SX, LINE_GAP } = await import("@/modules/events/ui/card-layout");
 const { CARD_EXCERPT_SX } = await import("@/modules/events/ui/EventExcerpt");
 
 afterEach(() => {
@@ -223,7 +223,7 @@ describe("BR-REQ-041-01 a web address on a card is its host (§366)", () => {
 });
 
 describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)", () => {
-  it("is no whole-card link: the title, the place and the door are three links side by side, none inside another", async () => {
+  it("is no <a> around the card: the title, the place and the door are three links side by side, none inside another", async () => {
     const html = withoutStyles(await single());
     const links = anchors(html);
     expect(links.map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Descrierea completă a evenimentului"]);
@@ -231,9 +231,111 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // No anchor opens before the one before it has closed, and none holds the heading.
     expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
     expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<h2\b/);
-    // The card itself is the list item, not a link, and nothing is stretched over it.
+    // The card itself is the list item, not a link: the whole-card tap is the title's cover (§486).
     expect(html).toMatch(/^<li\b/);
-    expect(await single()).not.toMatch(/::after\{[^}]*position:absolute/);
+  });
+
+  it("is one tap to the page all the same: the title's link covers the card, and the card's own controls sit above the cover (§486)", async () => {
+    for (const html of [await single(), await repeated()]) {
+      const title = rulesFor(html, titleClass(html));
+      // The cover: the title link's `::after`, laid over its nearest positioned box…
+      expect(title).toMatch(/ a::after\{content:"";position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;\}/);
+      // …which is the card, never the link itself.
+      expect(title).toMatch(/ a\{[^}]*position:static/);
+      const card = /^<li\b[^>]*class="[^"]*\b(css-[\w-]+-MuiPaper-root-MuiCard-root)"/.exec(withoutStyles(html))?.[1] ?? "";
+      expect(card).not.toBe("");
+      const rules = rulesFor(html, card);
+      expect(rules).toMatch(/^\{[^}]*position:relative;isolation:isolate/m);
+      // Every control of the card's own — the map, the dates, the fold, the door, a registration
+      // button, a pill with a tooltip — above the cover, so a press on it is still a press on it.
+      expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip], [data-lifted]){position:relative;z-index:2;}");
+      // The keyboard's ring is the card's, since the title's link targets the whole card (§486)…
+      expect(rules).toMatch(new RegExp(`:has\\(h2 a:focus-visible\\)\\{outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\\}`));
+      // …and the title keeps only its underline, no second ring around its words — where the card
+      // can draw the ring. A browser without `:has` keeps the title's own ring (§486).
+      expect(title).toMatch(new RegExp(` a:focus-visible\{[^}]*;text-decoration:underline;outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\}`));
+      expect(html).toContain(`@supports selector(:has(a)){.${titleClass(html)} a:focus-visible{outline:none;}}`);
+    }
+  });
+
+  it("lifts a film in the summary whole above the cover — the play button, the player and the volume glyph take their own presses (§486)", async () => {
+    const { default: VideoFacade } = await import("@/shared/ui/VideoFacade");
+    const film = withoutStyles(
+      renderToStaticMarkup(
+        createElement(VideoFacade, {
+          embedSrc: "https://www.youtube-nocookie.com/embed/abc",
+          posterUrl: null,
+          title: "Film",
+          labels: { play: "Play", mute: "Mute", unmute: "Unmute", volume: "Volume" },
+        }),
+      ),
+    );
+    // The facade's root is the marked box: the details, the iframe and the volume bar all inside it.
+    expect(film).toMatch(/^<div\b[^>]*data-lifted="true"[^>]*><details\b/);
+    expect(film).toContain("<iframe");
+    // And the card lifts what is marked, as it lifts a link (the rule itself is asserted above).
+    expect(CARD_TAP_SX["& :where(a, button, summary, [data-has-tooltip], [data-lifted])"]).toEqual({ position: "relative", zIndex: 2 });
+  });
+
+  it("marks a pill with a tooltip so the card lifts it above the cover — the night pill's sunset still opens on a tap (§486)", async () => {
+    const { default: GlyphChip } = await import("@/modules/events/ui/GlyphChip");
+    const withTip = renderToStaticMarkup(createElement(GlyphChip, { glyph: "night", label: "Noapte", tooltip: "Soarele apune la 19:00" }));
+    const plain = renderToStaticMarkup(createElement(GlyphChip, { glyph: "night", label: "Noapte" }));
+    expect(withoutStyles(withTip)).toMatch(/<div\b[^>]*data-has-tooltip="true"/);
+    expect(plain).not.toContain("data-has-tooltip");
+  });
+
+  it("wears the series card's repeat chip and rhythm when it is one date of a repeated event, and none on its own (§486)", async () => {
+    const mondays = series();
+    const one = await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays }));
+    expect(chipLabels(one).slice(0, 2)).toEqual(["Alergare de grup", "Săptămânal"]);
+    expect(withoutStyles(one)).toContain('data-testid="AutorenewIcon"');
+    expect(withoutStyles(one)).toMatch(/^<li\b[^>]*data-series="true"/);
+    // The same chip, class for class, the series card wears.
+    const chipOf = (html: string) => /<div class="([^"]*)"[^>]*><svg\b[^>]*data-testid="AutorenewIcon"/.exec(withoutStyles(html))?.[1];
+    expect(chipOf(one)).toBe(chipOf(await repeated()));
+    // The mark is a wheel, «ca o rotiță» (the owner) — Material's Autorenew, not the calendar the
+    // `series` glyph draws — on the featured card too.
+    expect(withoutStyles(one)).not.toContain("EventRepeatIcon");
+    const lead = await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays, featured: { raceWeekDays: 7 } }));
+    expect(withoutStyles(lead)).toContain('data-testid="AutorenewIcon"');
+    // A one-off, or a "series" of one date, wears none.
+    for (const html of [await single(), await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: [mondays[0]] }))]) {
+      expect(withoutStyles(html)).not.toContain("AutorenewIcon");
+      expect(withoutStyles(html)).not.toContain("data-series");
+    }
+    // In English, the catalogue's own word; and a set of dates with no rhythm keeps the count.
+    currentLocale = "en";
+    const english = await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: mondays }));
+    expect(chipLabels(english)).toContain("Weekly");
+    // Mondays a week, then two weeks apart: neither weekly nor fortnightly.
+    const scattered = [mondays[0], mondays[1], row({ ...mondays[2], startsAt: new Date("2026-10-19T15:30:00Z") })];
+    const dates = await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }));
+    expect(chipLabels(dates)).toContain("3 dates");
+  });
+
+  it("says the series' rule on the repeat chip — hover, tap and screen reader — on both cards, in both languages (§486)", async () => {
+    const mondays = series();
+    const repeatChip = (html: string) => /<div\b[^>]*data-has-tooltip="true"[^>]*>(?:(?!<\/div>)[\s\S])*?data-testid="AutorenewIcon"[\s\S]*?<\/div>/.exec(withoutStyles(html))?.[0] ?? "";
+    for (const html of [await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays })), await repeated()]) {
+      const chip = repeatChip(html);
+      expect(chip).not.toBe("");
+      // The visible word stays short; the rule is the chip's tooltip and part of its accessible name.
+      expect(chipLabels(html)).toContain("Săptămânal");
+      expect(text(chip)).toContain("Săptămânal — Se repetă în fiecare luni, la 18:30");
+    }
+    currentLocale = "en";
+    const english = repeatChip(await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: mondays })));
+    expect(text(english)).toContain("Weekly — Repeats every Monday at 18:30");
+    // No weekly or fortnightly rhythm: «Recurring event» / «Eveniment recurent».
+    const scattered = [mondays[0], mondays[1], row({ ...mondays[2], startsAt: new Date("2026-10-19T15:30:00Z") })];
+    expect(text(repeatChip(await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }))))).toContain(
+      "3 dates — Recurring event",
+    );
+    currentLocale = "ro";
+    expect(text(repeatChip(await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }))))).toContain(
+      "3 date — Eveniment recurent",
+    );
   });
 
   it("makes the title the link, in the heading, in the theme's blue visited or not, underlined only under a pointer or the keyboard", async () => {
@@ -263,11 +365,14 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // gap under the title's words is never less than the link's reach below them.
     expect(CARD_EXCERPT_SX.mt).toBe(LINE_GAP);
     const html = await single({ excerptJson: null, excerpt: null });
-    // With no summary the facts follow, a group's gap below.
+    // With no summary the facts follow, a group's gap below: twelve from `sm`, and on a phone the
+    // density scale's short step (§480, the 360-px density pass) — eight, the title's reach below
+    // its words exactly, so still nothing nearer.
     const markup = withoutStyles(html);
     const after = markup.slice(markup.indexOf("</h2>") + "</h2>".length);
     const facts = /^<div\b[^>]*class="[^"]*\b(css-[\w-]+)"/.exec(after)?.[1] ?? "";
-    expect(rulesFor(html, facts)).toContain("margin-top:12px");
+    // The phone's rule first (MUI emits `xs` before `sm`), then the twelve from `sm`.
+    expect(rulesFor(html, facts)).toBe(`{margin-top:${LINE_GAP * 8}px;}\n{margin-top:12px;}`);
   });
 
   it("titles itself exactly as the series card does — one class, one size, one weight, one blue", async () => {

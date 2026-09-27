@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   BLANK_PAGE_SECTION_DATA,
+  cardStates,
   numberedPageSections,
   PAGE_SECTION_IDS,
   PAGE_SECTIONS,
@@ -49,7 +50,6 @@ function pageSequence(): PageSectionId[] {
     ["<EventLinks", "links"],
     ["<EventProgramme ", "programme"],
     ['id="rules"', "rules"],
-    ["<EventVideo ", "video"],
     ["<StartList ", "startList"],
   ];
   const pageBranch = FACTS.slice(FACTS.indexOf("/* ---- The event page"));
@@ -89,20 +89,32 @@ describe("§406 the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 13 in that order, and gives the automatic share links and the nested cost none (§466)", () => {
+  it("numbers the cards 1 to 10 in that order, and gives the automatic share links and the nested sections none (§466, §481)", () => {
     const numbered = numberedPageSections();
-    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 13 }, (_, index) => index + 1));
+    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 10 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
     expect(numbered.find((section) => section.id === "cost")).toMatchObject({ card: "box-cost", nestedIn: "kind", number: null });
+    // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481).
+    expect(numbered.find((section) => section.id === "place")).toMatchObject({ card: "box-place", nestedIn: "when", number: null });
+    expect(numbered.find((section) => section.id === "rules")).toMatchObject({ card: "box-rules", nestedIn: "programme", number: null });
     expect(pageSectionNumber("kind")).toBe(1);
+    expect(pageSectionNumber("when")).toBe(4);
+    expect(pageSectionNumber("place")).toBe(null);
     expect(pageSectionNumber("cost")).toBe(null);
-    expect(pageSectionNumber("registration")).toBe(7);
-    expect(pageSectionNumber("links")).toBe(9);
-    expect(pageSectionNumber("startList")).toBe(13);
+    expect(pageSectionNumber("registration")).toBe(6);
+    expect(pageSectionNumber("links")).toBe(8);
+    expect(pageSectionNumber("programme")).toBe(9);
+    expect(pageSectionNumber("rules")).toBe(null);
+    expect(pageSectionNumber("startList")).toBe(10);
+  });
+
+  it("has no film section: a film is a figure in the description (§481)", () => {
+    expect(ids as string[]).not.toContain("video");
+    expect(PAGE).not.toContain("EventVideo");
   });
 
   it("gives every card section the id of the card the editor draws for it", () => {
-    const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeBox", "VideoBox", "StartListBox"]
+    const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeRulesBox", "ProgrammeBox", "StartListBox"]
       .map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`))
       .join("\n");
     for (const section of PAGE_SECTIONS) {
@@ -118,17 +130,17 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<TitleSummaryBox ", "title"],
   ["<DescriptionBox ", "description"],
   ["<WhenBox ", "when"],
-  ["<PlaceBox ", "place"],
   ["<CourseBox ", "course"],
   ["<RegistrationBox", "registration"],
   ["<CoHostsBox ", "coHosts"],
   ["<AutomaticSection ", "share"],
   ["<LinksBox ", "links"],
-  ["<ProgrammeBox ", "programme"],
-  ["<RulesBox ", "rules"],
-  ["<VideoBox ", "video"],
+  ["<ProgrammeRulesBox ", "programme"],
   ["<StartListBox ", "startList"],
 ];
+
+/** The sections asked inside another card (§466, §481): no card of their own on either page. */
+const NESTED: readonly PageSectionId[] = PAGE_SECTIONS.filter((section) => section.nestedIn).map((section) => section.id);
 
 describe("§406 the editor lays its cards out in the page's order, on both pages", () => {
   for (const [name, source] of [
@@ -142,10 +154,13 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
         expect(source.split(needle).length - 1, `${name}: ${needle} once`).toBe(1);
         return { index, id };
       });
-      // The cost's card is inside the first box since §466: the page still draws it seventh.
-      expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => id !== "cost"));
-      expect(source).not.toContain("<CostBox");
-      expect(source).not.toContain("flow.headings.cost");
+      // The cost's card is inside the first box since §466, the place inside «Când și unde» and the
+      // rules inside «Program, regulament și declarație» since §481: the page still draws each in its place.
+      expect(NESTED).toEqual(["place", "cost", "rules"]);
+      expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => !NESTED.includes(id)));
+      for (const gone of ["<CostBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<VideoBox", "flow.headings.cost", "flow.headings.place", "flow.headings.rules", "flow.headings.video"]) {
+        expect(source, `${name}: ${gone}`).not.toContain(gone);
+      }
       for (const [needle, id] of EDITOR_CARDS) {
         if (id === "share") continue;
         const start = source.indexOf(needle);
@@ -201,7 +216,6 @@ describe("§406 whether the page draws each section", () => {
       coHosts: [{ name: "Brașov Running Festival", links: [] }],
       stravaEventUrl: "https://strava.example.test/e/1",
       scheduleItems: [{ startsAt: "2026-11-21T07:00:00.000Z", endsAt: null, label: { ro: "Start", en: "Start" }, place: null }],
-      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       participantListVisibility: "NAMES",
     };
     data.texts = [{ ...data.texts[0], bodyJson: doc("Despre"), rulesJson: doc("Reguli") }];
@@ -256,10 +270,22 @@ describe("§406 whether the page draws each section", () => {
     expect(drawn(groupRunNone).registration).toBe(false);
   });
 
-  it("draws no film for a link YouTube cannot play, and no list while it is hidden", () => {
+  it("draws no list while it is hidden", () => {
     const data = bare();
-    data.event = { ...data.event, videoUrl: "https://vimeo.example.test/1", participantListVisibility: "HIDDEN" };
-    expect(drawn(data)).toMatchObject({ video: false, startList: false });
+    data.event = { ...data.event, participantListVisibility: "HIDDEN" };
+    expect(drawn(data)).toMatchObject({ startList: false });
+  });
+
+  it("draws a card holding two sections when either is drawn (§481): the programme card from the rules alone", () => {
+    const cards = (data: PageSectionData) => Object.fromEntries(cardStates(data).map((card) => [card.id, card.isDrawn]));
+    expect(cards(bare())).toMatchObject({ when: true, programme: false });
+    const withRules = bare();
+    withRules.texts = [{ ...withRules.texts[0], rulesJson: doc("Reguli") }];
+    expect(drawn(withRules)).toMatchObject({ programme: false, rules: true });
+    expect(cards(withRules)).toMatchObject({ programme: true });
+    // A nested section has no card of its own.
+    expect(cards(withRules)).not.toHaveProperty("place");
+    expect(cardStates(withRules).map((card) => card.id)).toEqual(ids.filter((id) => !["place", "cost", "rules"].includes(id)));
   });
 
   it("starts a new event as the create page opens it: a free group run with no title yet", () => {

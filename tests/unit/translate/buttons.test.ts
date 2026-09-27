@@ -19,7 +19,9 @@ const action: TranslateAction = async () => ({ ok: false, reason: "notConfigured
 
 function render(node: ReturnType<typeof createElement>, withAction: boolean) {
   const intl = { locale: "ro", messages: { Translate: ro.Translate } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
-  const provider = { action: withAction ? action : null } as ComponentProps<typeof TranslateProvider>;
+  // No action: the role may not translate (§482 draws the whole-record button greyed only for a
+  // role that may, on a deployment without a key — `one-button.test.ts`).
+  const provider = { offer: withAction ? { action, setupHref: null } : null } as ComponentProps<typeof TranslateProvider>;
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, provider, node)));
 }
 
@@ -36,7 +38,7 @@ describe("§464 «Tradu din română» buttons", () => {
     expect(one).toContain('data-translate-for="translations.en.title"');
     expect(one).toContain('role="status"');
     const all = render(createElement(TranslateAllButton), true);
-    expect(all).toContain("Tradu tot din română");
+    expect(all).toContain(ro.Translate.all);
     expect(all).toContain(ro.Translate.allHelp);
   });
 

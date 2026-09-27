@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { prepareImageUpload } from "@/modules/media/browser-shrink";
+import GalleryPicker, { type GalleryPickerLabels, type StoredPicture } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
 import {
   type ChosenFacts,
@@ -21,6 +22,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 // A client island already, so it makes the element itself; the glyph is the registry's (§318).
 const UploadGlyph = ACTION_ICONS.upload;
+const GalleryGlyph = ACTION_ICONS.gallery;
 
 /**
  * Photos in, from a phone, without the phone's file sizes.
@@ -46,9 +48,12 @@ const UploadGlyph = ACTION_ICONS.upload;
  */
 export default function PhotoUploader({
   uploadUrl,
+  albumId,
   labels,
 }: {
   uploadUrl: string;
+  /** The album (§485): its picker offers «Acest album» beside «Toate». */
+  albumId: string;
   labels: {
     choose: string;
     uploading: string;
@@ -57,10 +62,43 @@ export default function PhotoUploader({
     quality: ImageQualityLabels;
     chosen: ChosenFactsLabels;
     stored: StoredFactsLabels;
+    /**
+     * «Din galerie» (§485): the button, the picker's words, and what each press did — raw, with
+     * `{name}`, substituted here.
+     */
+    fromGallery: string;
+    gallery: GalleryPickerLabels;
+    galleryAdded: string;
+    galleryAlready: string;
+    galleryFailed: string;
   };
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  /** The pictures added from the gallery in this sitting, marked in the picker; and what the last press did. */
+  const [added, setAdded] = useState<string[]>([]);
+  const [galleryNote, setGalleryNote] = useState<{ text: string; failed: boolean } | null>(null);
+
+  /**
+   * One picture the club already stored, into this album: its id to the same route an upload
+   * posts to, nothing encoded, and the page drawn again with it. The picker stays open, because an
+   * album is usually several photos.
+   */
+  async function addFromGallery(picture: StoredPicture) {
+    const body = new FormData();
+    body.append("assetId", picture.id);
+    try {
+      const response = await fetch(uploadUrl, { method: "POST", body });
+      if (!response.ok) throw new Error(String(response.status));
+      const answer = (await response.json()) as { added?: boolean };
+      setAdded((list) => (list.includes(picture.id) ? list : [...list, picture.id]));
+      setGalleryNote({ text: (answer.added ? labels.galleryAdded : labels.galleryAlready).replace("{name}", picture.name), failed: false });
+      router.refresh();
+    } catch {
+      setGalleryNote({ text: labels.galleryFailed.replace("{name}", picture.name), failed: true });
+    }
+  }
   const [progress, setProgress] = useState<{ done: number; total: number; failed: string[] } | null>(null);
   const [lastStored, setLastStored] = useState<StoredFacts | null>(null);
   /** The photo going up now, or the last one (§437): its own pixels and weight, and what was sent. */
@@ -119,8 +157,28 @@ export default function PhotoUploader({
         <Button component="label" htmlFor="photo-upload" variant="contained" disabled={busy} startIcon={<UploadGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
           {labels.choose}
         </Button>
+        <Button
+          variant="outlined"
+          disabled={busy}
+          aria-expanded={galleryOpen}
+          onClick={() => setGalleryOpen((open) => !open)}
+          startIcon={<GalleryGlyph fontSize="small" />}
+          sx={{ minHeight: 44 }}
+        >
+          {labels.fromGallery}
+        </Button>
         <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={busy} />
       </Box>
+      {galleryOpen && (
+        <Box sx={{ mt: 1.5, border: 1, borderColor: "divider", borderRadius: 1, maxWidth: 640 }}>
+          <GalleryPicker onPick={(picture) => void addFromGallery(picture)} onClose={() => setGalleryOpen(false)} picked={added} scope={{ kind: "album", id: albumId }} opensHere={false} labels={labels.gallery} testId="album-gallery-picker" />
+        </Box>
+      )}
+      {galleryNote && (
+        <Typography variant="body2" color={galleryNote.failed ? "error" : "text.secondary"} sx={{ mt: 0.5 }} aria-live="polite" data-testid="album-gallery-note">
+          {galleryNote.text}
+        </Typography>
+      )}
       {progress && (
         <Box sx={{ mt: 1.5, maxWidth: 480 }} aria-live="polite">
           <Typography variant="body2" color="text.secondary">

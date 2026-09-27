@@ -62,8 +62,8 @@ export default async function EditPagePage({ params, searchParams }: Props) {
 
     This gate was `canEditTexts`, which is a set that deliberately excludes the Organizer
     (§207) — so the one role §208 was written for could see the pages list and could not open
-    a single page on it. "Organizatorul vede cam tot (dar în readonly), practic Dani îi zice
-    Amaliei să modifice X" is impossible if X cannot be read.
+    a single page on it. "Organizatorul vede cam tot (dar în readonly), practic organizatorul îi
+    zice administratorului să modifice X" is impossible if X cannot be read.
 
     Every control below asks its own question, and each asks the one its own Server Action
     asserts — which is the other half of the fix, because they did not.
@@ -175,6 +175,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
               navOrder={page.navOrder}
               translations={translations}
               slugLocked={page.publishedAt !== null}
+              pageId={page.id}
             />
             <Box>
               <GlyphSubmitButton
