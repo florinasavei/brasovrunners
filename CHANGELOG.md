@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.14-2026-09-27
+
+- **The V2.13 review's leftovers**: «Configurație» only under «Setări», its panels in the same row; old `#card` links reach the card's new tab; a waiting-list offer is kept while its email waits for the scheduler; a family's next form keeps the country; `ship` survives «Merge already in progress»; the run declaration's 18 said in the editor and the guide; the greyed translate button named once; the family confirmation previewed on «Emailuri». §520.
+- **A glyph on every button and every fold header** — the backoffice's editors, dialogs and tools, every Panel card (a subject glyph the type now requires) and every fold on the public pages, held by a walk of all of `src/`. §521.
+- **Plain words on every backoffice screen**: 110 notices, dialog bodies, errors, email descriptions, task rows and «?» texts are now one or two short sentences (at most 200 characters) in both languages, and the plain-words test checks every string the backoffice shows, keeping the guide's and the task rows' numbered steps as the place for detail. §522.
+- **A group run's self-declaration is signed once for the whole run:** a runner who signs it on any date of a weekly run does not sign it again. Signing again sends their copy again and keeps one declaration, and a new version of the text replaces the old one. The backoffice lists the run's signatures on every date, deleting one date keeps the declarations on the run's other dates, and the two group-run texts and the privacy notice template are written for the recurring run. §523.
 ## BR-V2.13-2026-09-27
 
 - **The registration form asks the country you live in, right before the city, and «Sex» must be answered.** The country uses the same searchable list as citizenship and starts on România; it is stored, exported in the spreadsheet and shown on the backoffice page, and never shown publicly. «Sex» starts empty instead of on «Prefer să nu spun», which is still one of the choices. §510.

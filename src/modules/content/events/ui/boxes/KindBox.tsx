@@ -77,7 +77,7 @@ export default async function KindBox({
   const cost = await CostBox({ event, mayEditSettings, languages });
 
   return (
-    <Panel
+    <Panel glyph="kind"
       collapsible
       id="box-kind"
       title={heading ?? t("editor.boxes.kind.title")}

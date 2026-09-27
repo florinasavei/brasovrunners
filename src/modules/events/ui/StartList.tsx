@@ -1,3 +1,4 @@
+import GroupsIcon from "@mui/icons-material/Groups";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -15,7 +16,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
@@ -180,6 +181,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
       }}
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+        <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
         {t("startList.titleCount", { count: view.confirmed })}
       </Typography>
 

@@ -373,7 +373,8 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives DEV the configuration report and no participant data", () => {
     const sections = visibleAdminSections("DEV");
 
-    expect(sections).toContain("devs");
+    // «Configurație» is «Setări»'s last tab since §520, not a section of the bar.
+    expect(sections).toContain("settings");
     // Since §397, DEV (Tehnic) is also offered `tasks` — the «Aplicația» panel of it, and since
     // §438 «De făcut» read-only; the page itself refuses the club's ops panels to this role
     // (`task-panels.test.ts`).
@@ -401,7 +402,6 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "staff",
       "legal",
       "guide",
-      "devs",
     ]);
   });
 
@@ -418,7 +418,6 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "staff",
       "legal",
       "guide",
-      "devs",
     ]);
   });
 

@@ -45,7 +45,7 @@ export default async function ShownAddressPanel({ locale, state, mailbox, config
   const replyTo = replyToHeader(resolved) ?? "—";
 
   return (
-    <Panel
+    <Panel glyph="shownAddress"
       title={t("emails.shownAddress.title")}
       intro={t("emails.shownAddress.intro")}
       aside={t("emails.shownAddress.aside", { shown })}

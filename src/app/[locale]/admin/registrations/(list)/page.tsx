@@ -1,3 +1,4 @@
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
@@ -41,11 +42,10 @@ import {
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import Panel from "@/shared/ui/Panel";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
@@ -752,7 +752,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         very cancellation that produced it.
       */}
       {filters.eventId && (bibs.total > 0 || voidBibs.length > 0) && (
-        <Panel
+        <Panel glyph="bibs"
           title={t("panels.bibs")}
           aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
           collapsible
@@ -871,7 +871,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         a number the club is given (§12.6), and the strip would otherwise disagree with the
         list beneath it, which does show them.
       */}
-      <Panel
+      <Panel glyph="summary"
         title={t("panels.summary")}
         aside={
           filters.eventId
@@ -925,7 +925,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         to wait for the monitor. The counter is the ceiling the button respects, and the number
         a newsletter would have to fit under.
       */}
-      <Panel
+      <Panel glyph="outbox"
         title={t("panels.outbox")}
         aside={t("outbox.waitingShort", { count: volume.waitingMessages })}
         collapsible
@@ -982,7 +982,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         come back to, and so both keep working with JavaScript off. `sort` and `dir` ride along
         as hidden fields: filtering should narrow the list, not silently re-sort it.
       */}
-      <Panel
+      <Panel glyph="filters"
         title={t("panels.filters")}
         aside={
           hasFilters
@@ -1168,13 +1168,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
                 {/*
-                  No glyph here, unlike the registration's own full-size "Retrimite" (§318): on
-                  a desktop the envelope made this button 24 pixels wider (84 → 108) and the
-                  actions column with it (244 → 268), in a table already wider than a 1280-pixel
-                  screen. The column was narrowed so eighty rows stay scannable, and a picture
-                  of a verb the label already says is not worth undoing that.
+                  The envelope going back out, as on the registration's own "Retrimite" (§318).
+                  It was left off here once, for 24 pixels of a crowded column; every button
+                  wears its glyph now (§521, the owner: a glyph on every button), and the
+                  compact button keeps the column as narrow as a glyph allows.
                 */}
-                <SubmitButton
+                <GlyphSubmitButton
+                  icon="resend"
                   label={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
@@ -1382,6 +1382,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       {mayManage && rows.length > 0 && (
         <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, borderColor: "warning.light" }}>
           <Typography component="summary" variant="body2">
+            <RemoveCircleIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("registrations.bulkCancelTitle")}
           </Typography>
           {/* A plain form, not an `ActionForm` (§315): its selection is the table's ticks, which a

@@ -7,6 +7,7 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
+import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import { type ForecastRow, forecastAutomaticEmails } from "@/modules/notifications/forecast";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -176,6 +177,34 @@ describe("§383 the forecast of automatic emails", () => {
     });
     const [row] = (await forecast()).filter((candidate) => candidate.send === "reminder");
     expect(row.registrationIds).toEqual([fixture.a2]);
+  });
+
+  it("foresees no lapse for a hold or an offer whose first email is still queued — its send re-bases it (§520)", async () => {
+    const { d } = fixture;
+    const [d1] = await db
+      .select({ id: registrations.id, participantId: registrations.participantId })
+      .from(registrations)
+      .where(eq(registrations.registeredName, "d1"));
+    // The participant's own message, marked as the one that starts the deadline — as the allocator queues it.
+    const firstEmail = (registrationId: string, messageType: EmailMessageType) =>
+      db.insert(emailOutbox).values({
+        participantId: d1.participantId,
+        registrationId,
+        messageType,
+        locale: "ro",
+        recipientEmail: "runner@example.ro",
+        payloadJson: startingDeadline(),
+        idempotencyKey: `first-${messageType}-${registrationId}`,
+      });
+    await firstEmail(d1.id, "COMPLETE_DECLARATION");
+    expect((await forecast()).some((row) => row.eventId === d && row.send === "nextInLine")).toBe(false);
+
+    // The same for a waiting-list offer whose email waits for the tick.
+    await db.delete(emailOutbox);
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED" }).where(eq(registrations.id, d1.id));
+    expect((await forecast()).some((row) => row.eventId === d && row.send === "nextInLine")).toBe(true);
+    await firstEmail(d1.id, "WAITLIST_SPOT_OFFER");
+    expect((await forecast()).some((row) => row.eventId === d && row.send === "nextInLine")).toBe(false);
   });
 
   it("stops at the horizon", async () => {

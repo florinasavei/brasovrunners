@@ -80,7 +80,9 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await hydrated(page);
     const count = page.getByTestId("notice-count");
     await expect(count).toContainText("Participanți care ar primi emailul „Detalii actualizate”: 1");
-    await expect(count).toContainText("cota Mailgun");
+    // The messages and what is left of the plan's allowance, in §522's plain words:
+    // «Mesaje: 1 (planul Free: încă 89 azi)», or «(planul …, fără limită)» on a plan with none.
+    await expect(count).toContainText(/Mesaje: \d+ \(planul [^:(),]+(: încă \d+ (azi|luna aceasta)|, fără limită)\)/);
 
     // The box is unticked on every load, and the note appears only once it is ticked.
     const notify = page.getByRole("checkbox", { name: "Anunță participanții despre schimbare" });

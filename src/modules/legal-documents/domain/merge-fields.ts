@@ -130,16 +130,62 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
   return minAge > 0 ? yearsPhrase(minAge, locale) : "";
 }
 
-/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`). */
-export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD]);
+/**
+ * A group run's series (§523; the owner, 2026-09-27: "one self-declaration per series of group runs:
+ * a returning runner signs once"), as the fields of the group-run declarations' **series sentence**:
+ * `{{series}}` — the run's name —, `{{seriesRhythm}}` — «în fiecare marți, la 18:30» / «every
+ * Tuesday at 18:30» — and `{{seriesPlace}}` — where it usually starts. Filled at signing from the
+ * dates §113 groups, and kept on the row (`signed_facts`) for the PDF.
+ *
+ * **One text, two sentences.** A group-run declaration serves a weekly run and a one-off run alike,
+ * so the template carries both: the series sentence, naming these fields, and the **one-off
+ * sentence**, naming `{{event}}` and `{{eventDate}}` and no series field. The renderer picks one by
+ * what it fills: a run that is one of a series gets the series values and loses the one-off
+ * sentence (`dropsParagraph`: a paragraph naming `{{eventDate}}` and no series field, while
+ * `{{series}}` has a value); a one-off run gets "" for the series fields, and the series sentence
+ * goes as `{{minimumAge}}`'s does. A text that names no series field (every version approved before
+ * §523, and the race's) is given no series value at all (`seriesMergeValues` in the group-run
+ * module), so nothing of it is dropped. The approved text and its hash are untouched (§12.5).
+ */
+export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
-/** Whether a paragraph is left out of a merged text: it names a paragraph field answered with "". */
+/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`). */
+export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS]);
+
+const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
+
+const filled = (value: string | null | undefined): boolean => typeof value === "string" && value.trim() !== "";
+
+/**
+ * The series sentence's second shape (§523): it names `{{series}}` and `{{seriesRhythm}}` but no
+ * `{{seriesPlace}}` — the sentence without «cu plecare de obicei din …», for a run whose place is not
+ * written. The platform's text carries both shapes; a place keeps the first and drops this one, no
+ * place ("" for `{{seriesPlace}}`, only when the text has this shape — `seriesMergeValues`) drops the
+ * first and keeps this one, so the text never loses both.
+ */
+export function isPlacelessSeriesSentence(paragraph: string): boolean {
+  const names = new Set(Array.from(paragraph.matchAll(FIELD_PATTERN), (match) => match[1]));
+  return names.has("series") && names.has("seriesRhythm") && !names.has("seriesPlace");
+}
+
+/**
+ * Whether a paragraph is left out of a merged text: it names a paragraph field answered with "" —
+ * or it is the one-off sentence of a run that is one of a series (`SERIES_MERGE_FIELDS`): it names
+ * `{{eventDate}}` and no series field, while `{{series}}` has a value — or it is the series sentence
+ * without the place clause (`isPlacelessSeriesSentence`) while `{{seriesPlace}}` has a value, the
+ * shape with the place being the one kept then.
+ */
 export function dropsParagraph(paragraph: string, values: MergeValues): boolean {
+  let namesSeries = false;
+  let namesEventDate = false;
   for (const match of paragraph.matchAll(FIELD_PATTERN)) {
     const name = match[1];
     if (PARAGRAPH_MERGE_FIELDS.has(name) && isMergeField(name) && values[name] === "") return true;
+    if (SERIES_FIELD_SET.has(name)) namesSeries = true;
+    if (name === "eventDate") namesEventDate = true;
   }
-  return false;
+  if (namesSeries && filled(values.seriesPlace) && isPlacelessSeriesSentence(paragraph)) return true;
+  return namesEventDate && !namesSeries && filled(values.series);
 }
 
 /**
@@ -196,6 +242,7 @@ export const MERGE_FIELDS = [
   "eventLocation",
   "signedAt",
   MINIMUM_AGE_MERGE_FIELD,
+  ...SERIES_MERGE_FIELDS,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,

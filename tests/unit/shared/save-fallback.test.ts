@@ -257,11 +257,12 @@ describe("§436 the words, in both languages", () => {
   });
 
   it("says, after the simple path, that it was tried — only the §384 confirmation says it landed", () => {
+    // §522 (plain words): the same three claims — tried, landed only with the confirmation, check the page — in one short line.
     expect(catalogues.ro.Network.fallback).toBe(
-      "Rețeaua de la birou a blocat cererea de salvare, așa că am încercat calea simplă. Salvarea a ajuns doar dacă vezi și mesajul de confirmare; dacă nu apare, verifică pagina și încearcă de pe telefon sau de pe altă rețea.",
+      "Rețeaua a blocat salvarea, așa că am încercat calea simplă. A ajuns doar dacă vezi mesajul de confirmare; altfel verifică pagina și încearcă de pe telefon.",
     );
     expect(catalogues.en.Network.fallback).toBe(
-      "The office network blocked the save request, so we tried the simple path. The save went through only if you also see the confirmation message; if it does not appear, check the page and try from your phone or another network.",
+      "The network blocked the save, so we tried the simple way. It arrived only if you see the confirmation message; otherwise check the page and try from your phone.",
     );
     for (const catalogue of Object.values(catalogues)) expect(catalogue.Network.fallback).not.toMatch(/am trimis-o|went through the simple path/);
   });
@@ -278,10 +279,10 @@ describe("§436 the words, in both languages", () => {
       ran before the proxy swallowed its answer: so the page is checked in a new tab first.
     */
     expect(roBlocked.already).toBe(
-      "Salvarea poate să fi ajuns chiar dacă răspunsul ei s-a pierdut. Înainte să apeși, deschide pagina într-un tab nou și verifică: dacă schimbarea e acolo, nu apăsa — o anulare, o ștergere sau un mesaj trimis de două ori se face de două ori.",
+      "Salvarea poate să fi ajuns. Înainte să apeși, verifică pagina într-un tab nou: dacă schimbarea e acolo, nu apăsa — o anulare sau un mesaj s-ar face de două ori.",
     );
     expect(enBlocked.already).toBe(
-      "The save may have arrived even though its answer was lost. Before you press, open the page in a new tab and check: if the change is there, do not press — a cancellation, an erasure or a message sent twice happens twice.",
+      "The save may have arrived. Before you press, check the page in a new tab: if the change is there, do not press — a cancellation or a message would happen twice.",
     );
     for (const words of [roBlocked, enBlocked]) expect(words.already).not.toMatch(/ai primit deja mesajul|already got the message/);
     // A transport failure does not prove nothing was saved — not even when the simple way could not

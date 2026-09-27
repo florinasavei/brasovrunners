@@ -15,7 +15,7 @@ export default async function PromotionBox({ event, mayEditSettings }: BoxProps)
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   return (
-    <Panel collapsible id="box-promotion" title={t("editor.boxes.promotion.title")} aside={promotionSummary(words, event)}>
+    <Panel glyph="promotion" collapsible id="box-promotion" title={t("editor.boxes.promotion.title")} aside={promotionSummary(words, event)}>
       {mayEditSettings ? (
         <Stack spacing={1.5}>
           <Box>

@@ -152,6 +152,44 @@ export async function waitForRun(read, { sleep, every = 15, polls = 240, maxMiss
   return last ? { status: "timeout", run: last } : { status: "missing" };
 }
 
+/**
+ * Merges one pull request and says whether it is merged (§520).
+ *
+ * `gh pr merge` can exit non-zero on a merge that happens all the same: GitHub answers «Merge
+ * already in progress» when the merge it was asked for is still being written — the V2.12 release
+ * stopped on exactly that while its PR merged. So an exit that is not 0 is never the verdict alone:
+ *
+ * - «Merge already in progress»: the PR's state is read every `every` seconds, for at most
+ *   `capSeconds`, until it says MERGED;
+ * - any other failure: the state is read once — a merge that went through is a merge — and
+ *   otherwise it is the failure it says it is.
+ *
+ *   merge()  → `{ status, stderr }` of the `gh pr merge` call;
+ *   state()  → the PR's state now ("OPEN", "MERGED", "CLOSED"), or "" when it cannot be read.
+ *
+ * Returns { status: "merged", waited } | { status: "failed", error }.
+ *
+ * @param {() => { status: number | null, stderr?: string }} merge
+ * @param {() => string} state
+ * @param {{ sleep: (seconds: number) => Promise<unknown>, every?: number, capSeconds?: number }} options
+ */
+export async function mergePullRequest(merge, state, { sleep, every = 5, capSeconds = 60 }) {
+  const result = merge();
+  if (result.status === 0) return { status: "merged", waited: 0 };
+  const error = String(result.stderr ?? "").trim();
+  const isMerged = () => String(state() ?? "").trim().toUpperCase() === "MERGED";
+  if (!/merge already in progress/i.test(error)) {
+    return isMerged() ? { status: "merged", waited: 0 } : { status: "failed", error };
+  }
+  let waited = 0;
+  for (;;) {
+    if (isMerged()) return { status: "merged", waited };
+    if (waited >= capSeconds) return { status: "failed", error: `${error} — still not merged after ${capSeconds} s` };
+    await sleep(every);
+    waited += every;
+  }
+}
+
 /** A duration as `m:ss` — minutes are not wrapped into hours, a release is read in minutes. */
 export function formatDuration(ms) {
   const seconds = Math.max(0, Math.round(ms / 1000));

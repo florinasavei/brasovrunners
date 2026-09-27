@@ -1,5 +1,7 @@
 "use client";
 
+import DateRangeIcon from "@mui/icons-material/DateRange";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Link from "@mui/material/Link";
@@ -14,7 +16,7 @@ import { countForm } from "@/i18n/count-form";
 import EditionMark from "@/modules/events/ui/EditionMark";
 import type { SeriesDate } from "@/modules/events/ui/SeriesDates";
 import { fillIn } from "@/shared/forms/fill-in";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
@@ -204,6 +206,7 @@ export function SeriesScopeBox({ locale }: { locale: string }) {
       </Typography>
       <Box component="details" sx={BOXED_DISCLOSURE_SX}>
         <Typography component="summary" variant="body2">
+          <HelpOutlineIcon aria-hidden sx={FOLD_GLYPH_SX} />
           {t("editor.scope.whyTitle")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -213,6 +216,7 @@ export function SeriesScopeBox({ locale }: { locale: string }) {
       {/* 15.1 — the exceptions, one date at a time; open while the ticks are hand-picked. */}
       <Box component="details" open={preset === null || undefined} sx={BOXED_DISCLOSURE_SX} data-testid="series-pick-dates">
         <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
+          <DateRangeIcon aria-hidden sx={FOLD_GLYPH_SX} />
           {t("editor.boxes.pickDates.title")}
         </Typography>
         <Stack>

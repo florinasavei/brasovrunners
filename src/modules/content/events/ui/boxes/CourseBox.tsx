@@ -63,6 +63,7 @@ export default async function CourseBox({
   });
   const card = {
     id: "box-course",
+    glyph: "course",
     title: heading ?? t("editor.boxes.course.title"),
     aside: courseSummary(
       words,

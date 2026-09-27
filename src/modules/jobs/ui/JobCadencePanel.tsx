@@ -35,7 +35,7 @@ type Props = {
 };
 
 /**
- * "Cât de des verifică platforma" — the owner's throttle (§334; 2026-09-23: "I want toggles in my
+ * "Cât de des verifică site-ul" — the owner's throttle (§334; 2026-09-23: "I want toggles in my
  * admin area, so I can throttle myself when needed").
  *
  * Beside the Neon plan and built the same way (`NeonPlanPanel`): a Server Component with one
@@ -55,7 +55,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   const when = (at: Date | null) => (at ? clock(at) : "—");
 
   return (
-    <Panel
+    <Panel glyph="jobs"
       level={level}
       id="job-cadence"
       title={t("tasks.jobCadence.title")}
