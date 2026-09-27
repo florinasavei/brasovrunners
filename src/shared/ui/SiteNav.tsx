@@ -30,6 +30,8 @@ const SECTIONS = [
   // «Echipa» (§459): a page this application ships, like the gallery, so it sits with the
   // sections and not with the club's pages — offered while a card is on the site (`showTeam`).
   { segment: "team", href: "/team" },
+  // «Membri» (§NNN): «Beneficiile membrilor» and its sign-in — offered while the page is published.
+  { segment: "members", href: "/members" },
   { segment: "contact", href: "/contact" },
 ] as const;
 
@@ -101,11 +103,13 @@ export default function SiteNav({
   pages = [],
   showGallery = false,
   showTeam = false,
+  showMembers = false,
   showContact = false,
 }: {
   pages?: readonly NavPage[];
   showGallery?: boolean;
   showTeam?: boolean;
+  showMembers?: boolean;
   showContact?: boolean;
 }) {
   const t = useTranslations("Site.nav");
@@ -117,6 +121,7 @@ export default function SiteNav({
       (section) =>
         (section.segment !== "gallery" || showGallery) &&
         (section.segment !== "team" || showTeam) &&
+        (section.segment !== "members" || showMembers) &&
         (section.segment !== "contact" || showContact),
     ).map((section) => ({
       key: section.segment,

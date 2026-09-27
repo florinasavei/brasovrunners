@@ -107,6 +107,18 @@ export async function countSuperadministrators<T extends Record<string, unknown>
 }
 
 /**
+ * How many club members have an account (§NNN) — the members' pages say it, as a number: the list
+ * is the team page's, and personal data.
+ */
+export async function countMembers<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(staffUsers)
+    .where(eq(staffUsers.role, "MEMBER"));
+  return row?.count ?? 0;
+}
+
+/**
  * Bind Zitadel's subject to an invited row, on first sign-in.
  *
  * The invitation is matched by email; the subject is what every later sign-in is matched by,

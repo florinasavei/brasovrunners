@@ -610,13 +610,18 @@ async function renderRow(
   }
   // The staff invitation (§141): everything it says is in the payload — there is no
   // participant and no token; the action is the sign-in page, which asserts who they are.
-  if (row.messageType === "STAFF_INVITATION") {
+  // A member's invitation (§NNN) the same, its button the sign-in page in the members' words, which
+  // lands in the members' zone.
+  if (row.messageType === "STAFF_INVITATION" || row.messageType === "MEMBER_INVITATION") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown };
     data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
     data.staffRole = typeof payload.role === "string" ? payload.role : undefined;
     data.inviterName = typeof payload.inviterName === "string" ? payload.inviterName : undefined;
     data.staffEmail = row.recipientEmail;
-    data.signInUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
+    data.signInUrl =
+      row.messageType === "MEMBER_INVITATION"
+        ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/sign-in", query: { to: "members" } } })}`
+        : `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
     payloadActionUrl = data.signInUrl;
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every

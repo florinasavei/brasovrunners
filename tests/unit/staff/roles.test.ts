@@ -201,7 +201,8 @@ describe("BR-REQ-060-01 what each role may reach", () => {
   it("lets only a Superadministrator make, change or remove a Superadministrator (§450)", () => {
     // An Administrator gives every role up to their own, and never the top one — so no
     // Administrator can promote a colleague (or a second account of their own) past themselves.
-    expect(assignableRoles("ADMIN")).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]);
+    // A club member (§NNN) is added on the same page, with the same invitation.
+    expect(assignableRoles("ADMIN")).toEqual(["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]);
     expect(assignableRoles("SUPERADMIN")).toEqual([...STAFF_ROLES]);
     expect(canAssignRole("ADMIN", "SUPERADMIN")).toBe(false);
     expect(canAssignRole("SUPERADMIN", "SUPERADMIN")).toBe(true);
@@ -328,6 +329,9 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
     // volunteer's whole backoffice: a person handing out numbers is not offered the events.
     expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
+    // A club member (§NNN) has no backoffice at all: not one section, not even the guide — the
+    // session answers "no staff" for them before any section is asked (`session.ts`).
+    expect(visibleAdminSections("MEMBER")).toEqual([]);
     /*
       From the copywriter up, the sections are what a role may *look* at (§208): reading the
       club's content and changing it are two questions now, and the navigation asks the first.
@@ -481,35 +485,40 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
  * capability exported without a row, so the table cannot fall behind the module.
  */
 describe("BR-REQ-060-01 every capability × every role", () => {
-  // Columns in STAFF_ROLES order: Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator.
-  const ORDER = ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
-  const MATRIX: Record<string, readonly [boolean, boolean, boolean, boolean, boolean, boolean]> = {
-    //                          CONTRIB COPYW  MODER  DEV    ADMIN  SUPER
-    isEditorial: /*           */ [false, false, true, true, true, true],
-    canEditTexts: /*          */ [false, true, false, false, true, true],
-    canEditEventFields: /*    */ [false, false, true, true, true, true],
-    canCreateEvent: /*        */ [false, false, false, false, true, true],
-    canCreatePage: /*         */ [false, true, false, false, true, true],
-    canEditTeamPage: /*       */ [false, true, false, false, true, true],
-    canShowTeamMember: /*     */ [false, false, false, false, true, true],
-    canDeleteEvent: /*        */ [false, false, false, false, true, true],
-    canHardDeleteEvent: /*    */ [false, false, false, false, true, true],
-    canReadRegistrations: /*  */ [false, false, true, false, true, true],
-    canMessageParticipants: /**/ [false, false, true, false, true, true],
-    canSendNewsletter: /*     */ [false, false, true, false, true, true],
-    canTranslateTexts: /*     */ [false, true, true, false, true, true],
-    canManageRegistrations: /**/ [false, false, false, false, true, true],
-    canWorkTheDesk: /*        */ [true, true, true, true, true, true],
-    canManageTestRegistrations: [false, false, false, false, true, true],
-    canSeeDiagnostics: /*     */ [false, false, false, true, true, true],
-    canManageStaff: /*        */ [false, false, false, false, true, true],
-    isSuperadmin: /*          */ [false, false, false, false, false, true],
-    canWriteLegalTexts: /*    */ [false, false, false, false, true, true],
-    canManagePlatform: /*     */ [false, false, false, false, false, true],
-    canManageClubSettings: /* */ [false, false, false, false, true, true],
-    canReadContent: /*        */ [false, true, true, true, true, true],
+  // Columns in STAFF_ROLES order: Membru, Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator.
+  const ORDER = ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
+  const MATRIX: Record<string, readonly [boolean, boolean, boolean, boolean, boolean, boolean, boolean]> = {
+    //                          MEMBER CONTRIB COPYW  MODER  DEV    ADMIN  SUPER
+    isEditorial: /*           */ [false, false, false, true, true, true, true],
+    canEditTexts: /*          */ [false, false, true, false, false, true, true],
+    canEditEventFields: /*    */ [false, false, false, true, true, true, true],
+    canCreateEvent: /*        */ [false, false, false, false, false, true, true],
+    canCreatePage: /*         */ [false, false, true, false, false, true, true],
+    canEditTeamPage: /*       */ [false, false, true, false, false, true, true],
+    canShowTeamMember: /*     */ [false, false, false, false, false, true, true],
+    canDeleteEvent: /*        */ [false, false, false, false, false, true, true],
+    canHardDeleteEvent: /*    */ [false, false, false, false, false, true, true],
+    canReadRegistrations: /*  */ [false, false, false, true, false, true, true],
+    canMessageParticipants: /**/ [false, false, false, true, false, true, true],
+    canSendNewsletter: /*     */ [false, false, false, true, false, true, true],
+    canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
+    canManageRegistrations: /**/ [false, false, false, false, false, true, true],
+    canWorkTheDesk: /*        */ [false, true, true, true, true, true, true],
+    canManageTestRegistrations: [false, false, false, false, false, true, true],
+    canSeeDiagnostics: /*     */ [false, false, false, false, true, true, true],
+    canManageStaff: /*        */ [false, false, false, false, false, true, true],
+    isSuperadmin: /*          */ [false, false, false, false, false, false, true],
+    canWriteLegalTexts: /*    */ [false, false, false, false, false, true, true],
+    canManagePlatform: /*     */ [false, false, false, false, false, false, true],
+    canManageClubSettings: /* */ [false, false, false, false, false, true, true],
+    canReadContent: /*        */ [false, false, true, true, true, true, true],
     // «Setări» (§516): every role that reads the club's content — the volunteer has the desk alone.
-    canOpenSettings: /*       */ [false, true, true, true, true, true],
+    canOpenSettings: /*       */ [false, false, true, true, true, true, true],
+    // §NNN: the members' zone is every account's; the backoffice line and the members' pages as for «Echipa».
+    isBackofficeRole: /*      */ [false, true, true, true, true, true, true],
+    canOpenMembersZone: /*    */ [true, true, true, true, true, true, true],
+    canEditMembersPage: /*    */ [false, false, true, false, false, true, true],
+    canPublishMembersPage: /* */ [false, false, false, false, false, true, true],
   };
   // Exported functions of one argument that are not about a role.
   const NOT_A_ROLE_CAPABILITY = new Set(["isLiveContent", "assignableRoles", "visibleAdminSections", "atLeast"]);
@@ -533,13 +542,14 @@ describe("BR-REQ-060-01 every capability × every role", () => {
 
   // Actor (row) × target (column), in STAFF_ROLES order. The Administrator gives and touches every
   // role but the top one; the Superadministrator every role; nobody below the Administrator any.
-  const PAIRS: Record<StaffRole, readonly [boolean, boolean, boolean, boolean, boolean, boolean]> = {
-    CONTRIBUTOR: [false, false, false, false, false, false],
-    COPYWRITER: [false, false, false, false, false, false],
-    MODERATOR: [false, false, false, false, false, false],
-    DEV: [false, false, false, false, false, false],
-    ADMIN: [true, true, true, true, true, false],
-    SUPERADMIN: [true, true, true, true, true, true],
+  const PAIRS: Record<StaffRole, readonly [boolean, boolean, boolean, boolean, boolean, boolean, boolean]> = {
+    MEMBER: [false, false, false, false, false, false, false],
+    CONTRIBUTOR: [false, false, false, false, false, false, false],
+    COPYWRITER: [false, false, false, false, false, false, false],
+    MODERATOR: [false, false, false, false, false, false, false],
+    DEV: [false, false, false, false, false, false, false],
+    ADMIN: [true, true, true, true, true, true, false],
+    SUPERADMIN: [true, true, true, true, true, true, true],
   };
   const pairs = ORDER.flatMap((actor) => ORDER.map((target, index) => [actor, target, PAIRS[actor][index]] as const));
 

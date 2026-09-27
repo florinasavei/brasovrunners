@@ -254,6 +254,13 @@ export type AuditAction =
   | "team_page.unpublished"
   | "team_page.intro_saved"
   /**
+   * The members' pages (§NNN): «Beneficiile membrilor» on or off the site, and either of its two
+   * texts saved — which text, and whether it is written; never the words.
+   */
+  | "members_page.published"
+  | "members_page.unpublished"
+  | "members_page.text_saved"
+  /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
    * translation budget sums these rows' `characters` since the club's midnight.

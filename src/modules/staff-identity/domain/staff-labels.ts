@@ -51,6 +51,8 @@ export const EDITORIAL_TRANSITION_ICON: Record<EditorialStatus, ActionIconName> 
 
 /** The names the club uses (§103): what each role is for, not a rank. */
 export const STAFF_ROLE_LABEL: Record<StaffRole, string> = {
+  // A club member with a sign-in and no backoffice (§NNN): the members' zone.
+  MEMBER: "Membru",
   CONTRIBUTOR: "Voluntar",
   COPYWRITER: "Redactor",
   MODERATOR: "Organizator",

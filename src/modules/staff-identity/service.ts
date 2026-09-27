@@ -3,7 +3,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { DomainError } from "@/shared/errors/domain-error";
-import { canAssignRole, canManageMember, canManageStaff, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
+import { canAssignRole, canManageMember, canManageStaff, isBackofficeRole, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
   countSuperadministrators,
@@ -153,7 +153,9 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
   await enqueueEmail(tx, {
     participantId: null,
     registrationId: null,
-    messageType: "STAFF_INVITATION",
+    // A club member is invited to the members' zone, never to "the team that runs the site"
+    // (§NNN): the same row, the same sign-in, its own words.
+    messageType: isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION",
     locale: member.preferredLocale,
     recipientEmail: member.email,
     payload: { displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName },

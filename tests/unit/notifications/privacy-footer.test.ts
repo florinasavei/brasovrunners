@@ -22,7 +22,8 @@ const DATA: TemplateData = {
   currentStatus: "CONFIRMED",
 };
 
-const CLUB_MAIL: readonly EmailMessageType[] = ["DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION"];
+// A member's invitation (§NNN) says what the account keeps in its own body, as the colleague's does.
+const CLUB_MAIL: readonly EmailMessageType[] = ["DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION", "MEMBER_INVITATION"];
 
 const noticeUrl = (locale: "ro" | "en") => `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;
 
@@ -103,6 +104,16 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§323)", 
     const email = render("STAFF_INVITATION", "ro");
     expect(email.text).toContain("Pentru cont folosim Zitadel");
     expect(email.text).toContain("Your account is held by Zitadel");
+    expect(email.html).toContain(`href="${noticeUrl("ro")}"`);
+    expect(email.html).toContain(`href="${noticeUrl("en")}"`);
+  });
+
+  it("tells an invited club member the same, and never that they joined the team that runs the site (§NNN)", () => {
+    const email = render("MEMBER_INVITATION", "ro");
+    expect(email.text).toContain("Pentru cont folosim Zitadel");
+    expect(email.text).toContain("Your account is held by Zitadel");
+    expect(email.text).toContain("zona membrilor");
+    expect(email.text).not.toContain("backoffice");
     expect(email.html).toContain(`href="${noticeUrl("ro")}"`);
     expect(email.html).toContain(`href="${noticeUrl("en")}"`);
   });

@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-import { and, count, eq, gte, lte } from "drizzle-orm";
+import { and, count, eq, gte, lte, ne } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
@@ -317,8 +317,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
   const contactRecipients = await readContactRecipients(db);
   // One row is the Administrator inserted by hand; a second is somebody invited from
-  // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
-  const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
+  // `/admin/staff`. The count is the whole of what "the team is invited" can mean here — the team,
+  // so a club member's account (§NNN) is not a colleague and is not counted.
+  const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers).where(ne(staffUsers.role, "MEMBER"));
   /**
    * Whether the invitation key can create an account, asked of Zitadel with a real search
    * (§288) — the reader is signed in through it, so a key that cannot find them is a key that

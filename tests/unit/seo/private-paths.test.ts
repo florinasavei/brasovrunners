@@ -20,6 +20,9 @@ describe("BR-REQ-051-02 which paths must never be indexed or cached", () => {
     "/en/sign-in",
     // Unprefixed, on its way to being redirected to a locale.
     "/admin",
+    // The members' zone (§NNN), behind the sign-in.
+    "/ro/zona-membri",
+    "/en/members-area",
   ])("treats %s as private", (path) => {
     expect(isPrivatePath(path)).toBe(true);
   });
@@ -31,6 +34,9 @@ describe("BR-REQ-051-02 which paths must never be indexed or cached", () => {
     "/en/events/tampa-trail",
     "/sitemap.xml",
     "/",
+    // «Beneficiile membrilor» (§NNN) is a public page a search engine may read.
+    "/ro/membri",
+    "/en/members",
   ])("leaves %s public", (path) => {
     expect(isPrivatePath(path)).toBe(false);
   });

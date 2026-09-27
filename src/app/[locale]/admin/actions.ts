@@ -38,6 +38,7 @@ import {
   type DevIdentityKey,
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
+import { landingFor, signInTargetOf } from "@/modules/staff-identity/domain/landing";
 import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -1170,6 +1171,7 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
 
   let outcome: { error?: string; saved?: string } | undefined;
+  let landing: "/admin" | "/members-area" = "/admin";
   try {
     assertDevStaffSwitcherEnabled();
     const staffUser = await ensureDevStaffUser(getDb(), text(form, "identity") as DevIdentityKey);
@@ -1179,12 +1181,15 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
       sameSite: "lax",
       path: "/",
     });
+    // Where the provider's sign-in would land (§NNN): the page the person came from, and a member
+    // always the members' zone.
+    landing = landingFor(staffUser.role, signInTargetOf(text(form, "to")));
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
   if (outcome) return backTo(getPathname({ locale, href: "/sign-in" }), outcome);
-  return backTo(getPathname({ locale, href: "/admin" }), {});
+  return backTo(getPathname({ locale, href: landing }), {});
 }
 
 /**
@@ -1197,12 +1202,14 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
  */
 export async function signOutAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
+  // Signing out of the members' zone lands on the members' page, not the team's door (§NNN).
+  const after = signInTargetOf(text(form, "from")) === "members" ? "/members" : "/sign-in";
   (await cookies()).delete(DEV_STAFF_COOKIE);
 
   if (env.STAFF_AUTH_MODE === "provider") {
     // `signOut` performs the redirect itself.
-    await signOut({ redirectTo: getPathname({ locale, href: "/sign-in" }) });
+    await signOut({ redirectTo: getPathname({ locale, href: after }) });
   }
 
-  return backTo(getPathname({ locale, href: "/sign-in" }), {});
+  return backTo(getPathname({ locale, href: after }), {});
 }

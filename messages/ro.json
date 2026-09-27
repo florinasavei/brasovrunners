@@ -28,7 +28,8 @@
       "gallery": "Galerie",
       "team": "Echipa",
       "more": "Meniu",
-      "contact": "Contact"
+      "contact": "Contact",
+      "members": "Membri"
     },
     "newBuild": {
       "body": "S-a publicat o versiune nouă a site-ului — reîncarcă pagina când vrei, dar vei pierde ce ai completat în formularele deschise.",
@@ -1772,7 +1773,9 @@
       "title": "Autentificare echipă",
       "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
       "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale.",
-      "action": "Autentificare"
+      "action": "Autentificare",
+      "membersTitle": "Autentificare membri",
+      "membersLead": "Intră cu adresa pentru care clubul ți-a făcut contul de membru."
     },
     "staff": {
       "title": "Echipa",
@@ -1818,7 +1821,8 @@
         "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
         "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
-        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date, verificarea anti-robot) și numirea altui Superadministrator."
+        "SUPERADMIN": "plus setările platformei care pot opri serviciul (cât de des verifică platforma, limitele bazei de date, verificarea anti-robot) și numirea altui Superadministrator.",
+        "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
       "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
       "passwordReset": "Trimite resetare de parolă",
@@ -3080,7 +3084,8 @@
       "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
       "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
       "tabPages": "Paginile clubului",
-      "tabTeam": "Pagina Echipa"
+      "tabTeam": "Pagina Echipa",
+      "tabMembers": "Membri"
     },
     "appearance": {
       "title": "Aspectul site-ului",
@@ -3153,7 +3158,8 @@
       "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
       "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți.",
       "usedInTeam": "Pe pagina Echipa: {title}",
-      "usedInTeamIntro": "Pe pagina Echipa: introducerea"
+      "usedInTeamIntro": "Pe pagina Echipa: introducerea",
+      "usedInMembersPage": "Pe paginile membrilor"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -3436,7 +3442,8 @@
         "REGISTER_ANOTHER_PERSON": "Înscrierea altei persoane cu aceeași adresă",
         "NEWSLETTER_CONFIRM": "Confirmarea abonării la noutăți",
         "NEWSLETTER": "Newsletter",
-        "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar"
+        "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar",
+        "MEMBER_INVITATION": "Invitația de membru"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "După trimiterea formularului. Linkul e valabil {confirmation}, de când pleacă emailul.",
@@ -3465,7 +3472,8 @@
         "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link.",
         "NEWSLETTER_CONFIRM": "Când cineva se abonează din pop-up-ul de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}. Unei adrese deja abonate îi trimite, în loc, linkul spre abonamentul ei, fără să schimbe nimic. Altceva nu primește o adresă neconfirmată.",
         "NEWSLETTER": "Doar când un organizator scrie și trimite un newsletter din pagina „Newsletter” a backoffice-ului. Către abonații temei alese și cei care primesc tot, fiecare în limba lui întâi, cu linkul de dezabonare. Pleacă după celelalte emailuri și doar din partea limitei care rămâne după rezerva pentru înscrieri.",
-        "NEW_EVENT_ALERT": "Automat, o singură dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), la prima rulare a jobului după publicare: către abonații la evenimente noi și la temele evenimentului (concurs, eveniment special, testare de echipament) și cei care primesc tot, cu linkul de dezabonare."
+        "NEW_EVENT_ALERT": "Automat, o singură dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), la prima rulare a jobului după publicare: către abonații la evenimente noi și la temele evenimentului (concurs, eveniment special, testare de echipament) și cei care primesc tot, cu linkul de dezabonare.",
+        "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa membrului, fără token: butonul duce la autentificare, care decide cine e, apoi în zona membrilor."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -3494,7 +3502,8 @@
         "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană",
         "NEWSLETTER_CONFIRM": "imediat ce cineva se abonează",
         "NEWSLETTER": "doar când un organizator trimite un newsletter",
-        "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou"
+        "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou",
+        "MEMBER_INVITATION": "când e adăugat un membru"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -4432,6 +4441,15 @@
                 "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
                 "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
               ]
+            },
+            {
+              "title": "Membrii clubului și zona membrilor",
+              "steps": [
+                "Un membru are cont, dar nu intră în backoffice: după «Autentificare» vede doar zona membrilor.",
+                "«Echipa» → «Adaugă o persoană», cu «Rol» «Membru». Apasă «Adaugă» și confirmă; membrul primește invitația pe email.",
+                "Textele: «Pagini» → «Membri». «Beneficiile membrilor» e pagina publică, cu butonul de autentificare; «Zona membrilor» e ce vede membrul după autentificare. Ambele în română și în engleză.",
+                "Pune pagina pe site: «Publică pagina» (doar Administratorul)."
+              ]
             }
           ]
         },
@@ -4962,6 +4980,39 @@
       "costs": "Costuri",
       "platform": "Platformă",
       "configuration": "Configurație"
+    },
+    "members": {
+      "title": "Membri",
+      "intro": "Pagina publică «Beneficiile membrilor», cu butonul de autentificare, și zona membrilor. Un membru e un cont adăugat pe Echipa cu rolul Membru: intră pe site, nu în backoffice.",
+      "count": "Membri cu cont: {count}.",
+      "addOnTeam": "Adaugă un membru pe Echipa",
+      "readOnly": "Poți citi aceste texte; le scriu Redactorul și Administratorul.",
+      "publishIsAdmin": "Pagina o pune pe site Administratorul.",
+      "pageHeading": "Pagina Beneficiile membrilor",
+      "pagePublished": "Pe site",
+      "pageDraft": "Ciornă",
+      "pagePublishedHelp": "Pe site la {ro} și {en}, cu «Membri» în meniu. Zona membrilor se deschide oricum, după autentificare.",
+      "pageDraftHelp": "Nu e pe site: adresa răspunde „pagina nu există”. Zona membrilor merge și așa, pentru cine are cont.",
+      "publish": "Publică pagina",
+      "unpublish": "Scoate pagina de pe site",
+      "publishTitle": "Publici pagina membrilor?",
+      "publishBody": "Pagina apare în ambele limbi, la {ro} și {en}, cu «Membri» în meniu.",
+      "unpublishTitle": "Scoți pagina de pe site?",
+      "unpublishBody": "Adresa va răspunde „pagina nu există”, iar «Membri» dispare din meniu. Zona membrilor rămâne deschisă pentru cine are cont.",
+      "written": "Scris",
+      "notWritten": "Nescris",
+      "benefitsHeading": "Beneficiile membrilor",
+      "benefitsHelp": "Pe pagina publică, deasupra butonului de autentificare: ce primește un membru al clubului. Nescris, pagina spune o frază a platformei.",
+      "benefitsFold": "Scrie beneficiile",
+      "benefitsRo": "Beneficiile (română)",
+      "benefitsEn": "Beneficiile (engleză)",
+      "zoneHeading": "Zona membrilor",
+      "zoneHelp": "Ce vede un membru după autentificare. Nu apare pe nicio pagină publică. O poză din text are o adresă greu de ghicit, dar nu secretă.",
+      "zoneFold": "Scrie zona membrilor",
+      "zoneRo": "Zona membrilor (română)",
+      "zoneEn": "Zona membrilor (engleză)",
+      "textEmpty": "Nescris încă.",
+      "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel."
     }
   },
   "NotFound": {
@@ -5721,7 +5772,8 @@
       "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
       "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
-      "SUPERADMIN": "plus setările platformei care pot opri serviciul și numirea altui Superadministrator"
+      "SUPERADMIN": "plus setările platformei care pot opri serviciul și numirea altui Superadministrator",
+      "MEMBER": "zona membrilor de pe site. Fără backoffice"
     },
     "settings": "Setări",
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
@@ -6286,7 +6338,10 @@
         "one": "Gata: {count} câmp tradus în „{card}”, dar textul a fost scurtat la limita câmpului. Verifică-l în English și apasă Salvează.",
         "few": "Gata: {count} câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează.",
         "other": "Gata: {count} de câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează."
-      }
+      },
+      "membersTextSaved": "Textul paginilor membrilor a fost salvat.",
+      "membersPagePublished": "Pagina Beneficiile membrilor este pe site, în ambele limbi.",
+      "membersPageUnpublished": "Pagina Beneficiile membrilor a fost retrasă de pe site."
     }
   },
   "Network": {
@@ -6508,5 +6563,22 @@
       "slow": "Verificarea durează mai mult decât de obicei. Apasă «Reîncearcă verificarea» — sau trimite oricum.",
       "failed": "Verificarea a eșuat; poți trimite oricum. Poți apăsa și «Reîncearcă verificarea»."
     }
+  },
+  "Members": {
+    "title": "Beneficiile membrilor",
+    "lead": "Membrii {club} au o zonă a lor pe site. Clubul scrie aici, în curând, ce primește un membru.",
+    "doorTitle": "Zona membrilor",
+    "doorHelp": "Ești membru și ai primit invitația pe email? Intră cu adresa ta.",
+    "doorSignedIn": "Ești autentificat.",
+    "signIn": "Intră în cont",
+    "openZone": "Intră în zona membrilor",
+    "signInUnavailable": "Autentificarea nu este încă disponibilă pe acest site.",
+    "noAccount": "Nu ai cont? Conturile de membru le face clubul. <contact>Scrie-ne</contact>.",
+    "zoneTitle": "Zona membrilor",
+    "zoneGreeting": "Bun venit, {name}.",
+    "zoneEmpty": "Clubul pune aici, în curând, ce e doar pentru membri.",
+    "zoneAway": "Baza de date a site-ului se odihnește acum. Revino în câteva minute.",
+    "openBackoffice": "Deschide backoffice-ul",
+    "signOut": "Ieși din cont"
   }
 }

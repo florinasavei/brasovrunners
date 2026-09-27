@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { isBackofficeRole, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
  * BR-REQ-060-01 criterion 38 — the guide's «words» are the screen's words (§441).
@@ -147,7 +147,10 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
   it("names only roles that exist, and gives every role at least one section of its own", () => {
     const guide = guideOf(locales.ro);
     for (const section of guide.sections) for (const role of section.roles) expect(STAFF_ROLES).toContain(role);
-    for (const role of STAFF_ROLES) expect(guide.sections.some((section) => section.roles.includes(role)), role).toBe(true);
+    // Every staff role: a club member (§NNN) has no backoffice, so no guide to open.
+    for (const role of STAFF_ROLES.filter(isBackofficeRole)) {
+      expect(guide.sections.some((section) => section.roles.includes(role)), role).toBe(true);
+    }
   });
 
   /*

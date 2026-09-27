@@ -12,7 +12,9 @@ import SubNav from "@/shared/ui/SubNav";
  *
  * The shared `SubNav` (§360), hrefs resolved here on the server because `SubNav` takes strings.
  */
-export default async function PagesSubNav({ locale, active }: { locale: Locale; active: "pages" | "team" }) {
+// «Membri» (§NNN): the members' pages — «Beneficiile membrilor» and the members' zone — platform
+// pages like «Echipa», one press away from it.
+export default async function PagesSubNav({ locale, active }: { locale: Locale; active: "pages" | "team" | "members" }) {
   const t = await getTranslations("Admin");
 
   return (
@@ -21,6 +23,7 @@ export default async function PagesSubNav({ locale, active }: { locale: Locale; 
       items={[
         { href: getPathname({ locale, href: "/admin/pages" }), label: t("pages.tabPages"), active: active === "pages" },
         { href: getPathname({ locale, href: "/admin/pages/team" }), label: t("pages.tabTeam"), active: active === "team" },
+        { href: getPathname({ locale, href: "/admin/pages/members" }), label: t("pages.tabMembers"), active: active === "members" },
       ]}
     />
   );
