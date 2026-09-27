@@ -163,7 +163,7 @@ export default async function BibDesignPanel({
   );
 
   return (
-    <Panel collapsible level={4} id="box-bib-design" title={t("editor.bibDesign.title")} aside={summary} data-testid="bib-design">
+    <Panel glyph="bibDesign" collapsible level={4} id="box-bib-design" title={t("editor.bibDesign.title")} aside={summary} data-testid="bib-design">
       {/* What tells the action that this panel was on the form; see the note above. */}
       <input type="hidden" name="event.bibDesign.present" value="1" />
 

@@ -163,8 +163,8 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
   it("a job that needs a Superadministrator says so in its first line, and only such a job", () => {
     const platform = {
       // «Setări» since §516: the costs and the anti-robot check moved out of «Sarcini».
-      ro: ["«Setări» → «Costuri» → «Cât de des verifică platforma»", "«Setări» → «Costuri» → «Limitele bazei de date»", "«Setări» → «Costuri» → «Bugetul lunii»", "«Setări» → «Platformă»"],
-      en: ["«Settings» → «Costs» → «How often the platform checks»", "«Settings» → «Costs» → «The database's limits»", "«Settings» → «Costs» → «This month's budget»", "«Settings» → «Platform»"],
+      ro: ["«Setări» → «Costuri» → «Cât de des verifică site-ul»", "«Setări» → «Costuri» → «Limitele bazei de date»", "«Setări» → «Costuri» → «Bugetul lunii»", "«Setări» → «Anti-robot»"],
+      en: ["«Settings» → «Costs» → «How often the site checks»", "«Settings» → «Costs» → «The database's limits»", "«Settings» → «Costs» → «This month's budget»", "«Settings» → «Anti-bot»"],
     };
     const club = { ro: ["→ «Versiune nouă»", "«Echipa» → «Adaugă o persoană»"], en: ["→ «New version»", "«Staff» → «Add someone»"] };
     const lead = { ro: "Rol necesar: Superadministrator.", en: "Role needed: Superadministrator." };

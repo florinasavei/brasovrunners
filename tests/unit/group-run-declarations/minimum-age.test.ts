@@ -26,8 +26,12 @@ const TEXTS = [
   { name: "trail en", body: groupRunTrailEn, locale: "en" },
 ] as const;
 
-// §515: one age rule, the run's, with its day — the text's own «18» is gone.
-const SENTENCE = { ro: "Declar că am cel puțin {{minimumAge}} împliniți la data alergării.", en: "I declare that I am at least {{minimumAge}} old on the day of the run." } as const;
+// §515: one age rule, the run's, with its day — the text's own «18» is gone; on the day of each run
+// since the text covers every date of a repeated run (§523, one declaration per series).
+const SENTENCE = {
+  ro: "Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.",
+  en: "I declare that I am at least {{minimumAge}} old on the day of each run I take part in.",
+} as const;
 const paragraphs = (body: LegalDocumentBody) => body.sections.flatMap((section) => [...section.paragraphs]);
 
 describe("§440 {{minimumAge}} in the group-run templates", () => {
@@ -40,7 +44,9 @@ describe("§440 {{minimumAge}} in the group-run templates", () => {
   it("fills sixteen with its unit, and twenty with Romanian's 'de'", () => {
     for (const { name, body, locale } of TEXTS) {
       const merged = paragraphs(mergeLegalBody(body, { minimumAge: minimumAgeMergeValue(16, locale) }));
-      expect(merged[1], name).toBe(locale === "ro" ? "Declar că am cel puțin 16 ani împliniți la data alergării." : "I declare that I am at least 16 years old on the day of the run.");
+      expect(merged[1], name).toBe(
+        locale === "ro" ? "Declar că am cel puțin 16 ani împliniți la data fiecărei alergări la care particip." : "I declare that I am at least 16 years old on the day of each run I take part in.",
+      );
       expect(merged.join(" "), name).not.toContain("{{minimumAge}}");
     }
     expect(minimumAgeMergeValue(20, "ro")).toBe("20 de ani");
@@ -60,7 +66,7 @@ describe("§440 {{minimumAge}} in the group-run templates", () => {
 
   it("keeps the sentence with its dotted blank when no event gave a value (a preview, the blank form)", () => {
     expect(dropsParagraph(SENTENCE.ro, {})).toBe(false);
-    expect(mergeTextSegments(SENTENCE.ro, {}).map((segment) => segment.text).join("")).toBe(`Declar că am cel puțin ${BLANK} împliniți la data alergării.`);
+    expect(mergeTextSegments(SENTENCE.ro, {}).map((segment) => segment.text).join("")).toBe(`Declar că am cel puțin ${BLANK} împliniți la data fiecărei alergări la care particip.`);
   });
 
   it("is registered in the token legend, with an example and words in both catalogues", () => {
@@ -181,5 +187,27 @@ describe("§440 the age gate: one rule, the race's", () => {
       expect(sentence).not.toContain(String(MIN_PARTICIPANT_AGE));
       expect(sentence).toContain("21");
     }
+  });
+});
+
+/**
+ * §520 — V2.12 folded the group run's own 18+ box into the one «Vârsta minimă» box of every type
+ * (§505). The rule did not change — the run declaration is for adults (`groupRunMinimumAge`) — so the
+ * editor's help under «Declarație opțională pe propria răspundere» and the guide say it in words.
+ */
+describe("§520 the run declaration's 18 is said where the box used to be", () => {
+  const RO = "Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.";
+  const EN = "The run declaration is signed from 18, whatever the run's minimum age.";
+
+  it("in the editor's help under the declaration's box and in the guide, both languages", () => {
+    expect(ro.Admin.editor.groupRunDeclaration.help).toContain(RO);
+    expect(en.Admin.editor.groupRunDeclaration.help).toContain(EN);
+    expect(JSON.stringify(ro.Admin.guide)).toContain(RO);
+    expect(JSON.stringify(en.Admin.guide)).toContain(EN);
+  });
+
+  it("which is what the signing page applies, whatever the run's own minimum", () => {
+    for (const minAge of [MIN_PARTICIPANT_AGE, 16, 18]) expect(groupRunMinimumAge(minAge)).toBe(18);
+    expect(groupRunMinimumAge(21)).toBe(21);
   });
 });

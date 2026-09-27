@@ -28,7 +28,7 @@ export default async function LinksBox({ event, mayEditSettings, locale, heading
   const tEvent = await getTranslations("Event");
   const { words } = await summaryWords();
   const kindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
-  const card = { id: "box-links", title: heading ?? t("editor.boxes.links.title"), aside: linksSummary(words, event, kindLabels, locale) } as const;
+  const card = { id: "box-links", glyph: "links", title: heading ?? t("editor.boxes.links.title"), aside: linksSummary(words, event, kindLabels, locale) } as const;
   if (!mayEditSettings) return <Panel {...card} />;
 
   const linkRows = readEventLinks(event?.links ?? null).map((link) => ({

@@ -121,7 +121,7 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
 export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null }: Props) {
   const t = await getTranslations("Admin");
   return (
-    <Panel
+    <Panel glyph="print"
       collapsible
       level={4}
       id="box-bib-print"

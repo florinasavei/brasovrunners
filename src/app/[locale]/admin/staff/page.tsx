@@ -228,7 +228,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         (§315); a successful one is shown in the list below and in the banner, so it does not
         reopen an empty form.
       */}
-      <Panel
+      <Panel glyph="invite"
         title={t("staff.inviteTitle")}
         // What "Add" does, readable while the fold is shut, like every other fold's aside (§336,
         // folds start closed): the account too when the Zitadel key can make it (§123).

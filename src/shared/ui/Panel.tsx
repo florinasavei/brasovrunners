@@ -3,7 +3,8 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { BOXED_DISCLOSURE_SX } from "./disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX } from "./disclosure";
+import { PANEL_GLYPHS, type PanelGlyphName } from "./panel-glyphs";
 import QuietHelp from "./QuietHelp";
 import { type FoldOpenWhen, opensByItself } from "./fold";
 
@@ -59,7 +60,7 @@ const HELP_CARET_SX = {
   "[open] > summary &": { transform: "rotate(180deg)" },
 } as const;
 
-type Props = {
+type CommonProps = {
   /** The heading, and — when the panel folds — the words that open it. */
   title: string;
   /** One line under the heading saying what the panel is for. Optional. */
@@ -93,18 +94,6 @@ type Props = {
   /** The border's meaning (`PanelTone`); the plain box when absent. */
   tone?: PanelTone;
   /**
-   * The look this panel draws as (§398). `"card"` (the default, and every existing call) is the
-   * boxed folder `BOXED_DISCLOSURE_SX` draws. `"help"` is a small clickable line instead — no
-   * border, no elevation, `body2` in the secondary ink, a caret that turns — for an explainer
-   * nobody needs a heading to find: "Ce înseamnă fiecare tip?" under the event editor's type
-   * select, and the field legend on `/admin/emails`, which also takes `legendIcon="info"`.
-   * `level` and `tone` are ignored on this variant; there is no card to nest or to warn about.
-   * The line always folds
-   * (`collapsible` and `static` are read only by the `card` variant): a `help` line's whole
-   * point is a caret, so there is no reading to give it that leaves the caret behind.
-   */
-  variant?: "card" | "help";
-  /**
    * A glyph leading a `help` panel's line, `aria-hidden`: `"info"` for a legend. Not `icon` —
    * that name is `action-icons.ts`'s own lookup-by-name prop (§318), and this is a plain MUI
    * icon Panel renders itself; the two must never be read as the same thing by the source walk
@@ -125,6 +114,37 @@ type Props = {
    */
   children?: ReactNode;
 };
+
+/**
+ * Every card wears a glyph before its heading (§521; the owner, 2026-09-27: a glyph on every
+ * button and every fold header): the subject's picture from `panel-glyphs.ts`, by name, so a
+ * closed fold is found by its picture as well as its words. Required on a card — the type
+ * refuses a card without one, spread `{...card}` objects included — and absent on the `help`
+ * line, whose caret (and `legendIcon`) is its picture already.
+ */
+type Props = CommonProps &
+  (
+    | {
+        /**
+         * The look this panel draws as (§398). `"card"` (the default, and every existing call) is
+         * the boxed folder `BOXED_DISCLOSURE_SX` draws. `"help"` is a small clickable line instead
+         * — no border, no elevation, `body2` in the secondary ink, a caret that turns — for an
+         * explainer nobody needs a heading to find: "Ce înseamnă fiecare tip?" under the event
+         * editor's type select, and the field legend on `/admin/emails`, which also takes
+         * `legendIcon="info"`. `level` and `tone` are ignored on that variant; there is no card to
+         * nest or to warn about. The line always folds (`collapsible` and `static` are read only
+         * by the `card` variant): a `help` line's whole point is a caret.
+         */
+        variant?: "card";
+        /** The subject's glyph before the heading, by name (`panel-glyphs.ts`). */
+        glyph: PanelGlyphName;
+      }
+    | {
+        /** A small clickable line instead of a card (§398); see `legendIcon`. */
+        variant: "help";
+        glyph?: undefined;
+      }
+  );
 
 /**
  * One box around one thing in the backoffice (`DECISIONS.md` §269; the owner, 2026-09-22:
@@ -170,6 +190,7 @@ export default function Panel({
   level = 2,
   tone = "default",
   variant = "card",
+  glyph,
   legendIcon,
   static: isStatic = false,
   id,
@@ -222,8 +243,10 @@ export default function Panel({
   // A fold inside a panel reads a step smaller, so the card and its cards are told apart.
   const headingSize = level === 4 ? "0.95rem" : level === 3 ? "1rem" : "1.1rem";
 
+  const Glyph = glyph ? PANEL_GLYPHS[glyph] : null;
   const heading = (
     <>
+      {Glyph && <Glyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />}
       {title}
       {aside ? (
         <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }}>

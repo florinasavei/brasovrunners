@@ -1,3 +1,5 @@
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
@@ -42,7 +44,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import {
   cancelRegistrationAction,
@@ -475,6 +477,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   >
                   <RecallDetails sx={BOXED_DISCLOSURE_SX}>
                     <Typography component="summary" variant="body2" color="primary">
+                      <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
                       {tr("registrations.bibChange")}
                     </Typography>
                     <Box>
@@ -758,6 +761,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           >
           <RecallDetails sx={{ ...BOXED_DISCLOSURE_SX, mt: 3, borderColor: "error.light" }}>
             <Typography component="summary" variant="subtitle2" color="error.main">
+              <DeleteForeverIcon aria-hidden sx={FOLD_GLYPH_SX} />
               {tr("registrations.deleteTitle")}
             </Typography>
               <input type="hidden" name="uiLocale" value={locale} />

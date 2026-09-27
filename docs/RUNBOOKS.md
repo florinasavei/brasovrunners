@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.13-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.14-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -620,8 +620,8 @@ red and the button is withheld — set it in Vercel, redeploy, come back.
 
 ### The short path: start from the platform's text (2026-09-18)
 
-`/admin/legal` → "Versiune nouă" → the link for the document under "or start from the
-platform's text". The draft is prefilled with the complete text in both languages; fill the
+`/admin/legal` → "Versiune nouă" → the link for the document under "Sau pornește de la
+șablon" / "Or start from the template". The draft is prefilled with the complete text in both languages; fill the
 four facts in angle brackets (legal name, registered address, registration number, contact
 email), read it, save, open the PDF, approve. The declaration's text carries tokens —
 `{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,

@@ -174,11 +174,11 @@ describe("§448 the first box holds the type and the status, and its line says b
     expect(foldsAround(kind, "box-cost")).toEqual(["box-kind"]);
     expect(kind).toContain('name="event.costType"');
     // A plain «Cost» card, never a page-numbered one (§466).
-    expect(kind).toMatch(/<h3[^>]*>Cost<span/);
+    expect(kind).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Cost<span/);
     expect(kind).not.toMatch(/\d+ · Cost/);
     for (const id of ["box-course", "box-links"]) expect(kind).not.toContain(`id="${id}"`);
     expect(isOpen(foldTags(kind)[0])).toBe(false);
-    expect(kind).toMatch(/<h3[^>]*>Starea evenimentului<span[^>]*>Programat<\/span>/);
+    expect(kind).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Starea evenimentului<span[^>]*>Programat<\/span>/);
     // The type select and "Ce înseamnă fiecare tip?" stay in it; the status select is inside it now.
     expect(kind).toContain('name="event.type"');
     expect(kind).toContain('name="event.eventStatus"');
@@ -186,12 +186,12 @@ describe("§448 the first box holds the type and the status, and its line says b
   });
 
   it("says the type, the status and the cost on its closed line, in both catalogues (§466)", async () => {
-    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat<\/span>/);
+    expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat<\/span>/);
     const cancelled = { ...EVENT, type: "RACE", eventStatus: "CANCELLED" } as unknown as EditableEvent;
     expect(summaryOf((await boxes(cancelled)).kind)).toContain("Concurs · Anulat");
     const paid = { ...EVENT, costType: "PAID", costAmount: "50 lei" } as unknown as EditableEvent;
     expect(summaryOf((await boxes(paid)).kind)).toContain("Alergare de grup · Programat · Cu taxă, 50 lei");
-    expect(summaryOf((await boxes(EVENT, { locale: "en" })).kind)).toMatch(/<h2[^>]*>What kind of event<span[^>]*>Group run · Programat · [^<]+<\/span>/);
+    expect(summaryOf((await boxes(EVENT, { locale: "en" })).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?What kind of event<span[^>]*>Group run · Programat · [^<]+<\/span>/);
   });
 
   it("keeps the course and the links as closed level-2 boxes, with the ids and lines they always had", async () => {
@@ -205,13 +205,13 @@ describe("§448 the first box holds the type and the status, and its line says b
       expect(idOf(first), key).toBe(id);
       expect(isOpen(first), key).toBe(false);
       expect(foldsAround(html, id), key).toEqual([]);
-      expect(html, key).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
+      expect(html, key).toMatch(new RegExp(`<h2[^>]*>(?:<svg[\\s\\S]*?</svg>)?${name}<span`));
     }
     expect(drawn.course).toContain("Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu");
     expect(drawn.links).toContain("Strava · 1 link (Traseul (GPX))");
     const en = await boxes(EVENT, { locale: "en" });
-    for (const name of ["The course", "Links and files"]) expect(`${en.course}${en.links}`).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
-    expect(en.kind).toMatch(/<h3[^>]*>Event status<span/);
+    for (const name of ["The course", "Links and files"]) expect(`${en.course}${en.links}`).toMatch(new RegExp(`<h2[^>]*>(?:<svg[\\s\\S]*?</svg>)?${name}<span`));
+    expect(en.kind).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Event status<span/);
   });
 
   it("posts the same names as before, each from its own box — and no declaration from «Traseul» (§448)", async () => {
@@ -265,7 +265,7 @@ describe("§358 a role that may only read the settings", () => {
       const html = drawn[key];
       expect(foldTags(html), key).toEqual([]);
       const section = html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)</section>`))?.[1] ?? "";
-      expect(section, id).toMatch(new RegExp(`^<h2[^>]*>${name}`));
+      expect(section, id).toMatch(new RegExp(`^<h2[^>]*>(?:<svg[\\s\\S]*?</svg>)?${name}`));
       expect(section, id).toContain(line);
       expect(section.replace(/<h2[\s\S]*<\/h2>/, ""), id).toBe("");
     }
@@ -288,9 +288,9 @@ describe("§448 the create page's status is the editor's select", () => {
     // While "Programat" is chosen, no cancellation block — and never a "tell them" box on a create.
     expect(drawn.kind).not.toContain('data-testid="cancel-fields"');
     expect(drawn.kind).not.toContain('name="cancel.notify"');
-    expect(drawn.kind).toContain("De obicei Programat. Alege Anulat pentru un eveniment deja anulat");
+    expect(drawn.kind).toContain("Implicit Programat. Alege Anulat pentru un eveniment deja anulat");
     const en = await boxes(null, { locale: "en" });
-    expect(en.kind).toContain("Usually Scheduled. Choose Cancelled for an event already called off");
+    expect(en.kind).toContain("Scheduled by default. Choose Cancelled for an event already called off");
   });
 
   it("offers all three statuses, and the cancellation's reason with nobody to tell", () => {

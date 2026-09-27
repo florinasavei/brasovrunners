@@ -29,6 +29,7 @@ const LAUNCHED: OwnerTaskInputs = {
   newsletterDescribed: true,
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
+  groupRunSeriesTextsCurrent: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
@@ -259,6 +260,7 @@ describe("owner tasks", () => {
       "newsletterNotice",
       "teamPageNotice",
       "raceDeclarations",
+      "groupRunSeriesTexts",
       "liveEmail",
       "inviteStaff",
       "inviteKey",
@@ -272,6 +274,20 @@ describe("owner tasks", () => {
       "domainRenewal",
       "neonLimits",
     ]);
+  });
+
+  // §523: the group-run declarations written for one signature per series, approved again.
+  it("asks for the group-run declarations again while one in force is older, and says nothing while none is in force", () => {
+    expect(stateOf({ ...LAUNCHED, groupRunSeriesTextsCurrent: false }, "groupRunSeriesTexts")).toBe("open");
+    expect(stateOf(LAUNCHED, "groupRunSeriesTexts")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, groupRunSeriesTextsCurrent: null }).some((task) => task.id === "groupRunSeriesTexts")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, groupRunSeriesTextsCurrent: false }).find((task) => task.id === "groupRunSeriesTexts")).toMatchObject({ owner: "club", kind: "text" });
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.groupRunSeriesTexts;
+      expect(item.how.length).toBeGreaterThan(0);
+      expect(item.todo).not.toBe("");
+      expect(item.done).not.toBe("");
+    }
   });
 
   // «Tradu din română» (§464): built, open until DeepL's key is on the deployment, never blocking.

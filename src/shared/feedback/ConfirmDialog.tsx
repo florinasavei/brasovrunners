@@ -1,5 +1,8 @@
 "use client";
 
+import AltRouteIcon from "@mui/icons-material/AltRoute";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -86,12 +89,13 @@ export default function ConfirmDialog({
         paper — where the second button's middle lands outside it and a tap hits the backdrop.
       */}
       <DialogActions sx={{ flexWrap: "wrap", gap: 1, "& > :not(:first-of-type)": { ml: 0 } }}>
-        <Button onClick={onCancel} autoFocus sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }} data-testid="confirm-dialog-cancel">
+        <Button onClick={onCancel} autoFocus startIcon={<CloseIcon fontSize="small" />} sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }} data-testid="confirm-dialog-cancel">
           {spec.cancelLabel}
         </Button>
         {alternative && (
           <Button
             variant="outlined"
+            startIcon={<AltRouteIcon fontSize="small" />}
             onClick={alternative.onClick}
             sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
             data-testid="confirm-dialog-alternative"
@@ -102,6 +106,7 @@ export default function ConfirmDialog({
         <Button
           variant="contained"
           color={spec.destructive ? "error" : "primary"}
+          startIcon={<CheckIcon fontSize="small" />}
           onClick={onConfirm}
           sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
           data-testid="confirm-dialog-confirm"

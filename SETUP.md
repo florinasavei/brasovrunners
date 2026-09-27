@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.13-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.14-2026-09-27 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.13-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.14-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1510,5 +1510,5 @@ production; 125 on QA, which carries `PINGER_CADENCE_MINUTES=60`):
    passes the health check (a 30-minute gap against 35), but by day a hold or a waiting-list offer
    is then released up to 30 minutes late instead of 15, at no saving: tick minute **45** too, so
    it reads `*/15 7-22 * * *` like the outbox.
-2. On QA, `/admin/tasks` → Costuri → „Cât de des verifică platforma" → **2 ore** (the card is
+2. On QA, `/admin/tasks` → Costuri → „Cât de des verifică site-ul" → **2 ore** (the card is
    live since BR-V1.70); production stays on „La nevoie".

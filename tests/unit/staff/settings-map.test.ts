@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { routing } from "@/i18n/routing";
-import { ADMIN_SECTIONS, canOpenSettings, STAFF_ROLES, type StaffRole, visibleAdminSections } from "@/modules/staff-identity/domain/roles";
+import { ADMIN_SECTIONS, canOpenSettings, canSeeDiagnostics, STAFF_ROLES, type StaffRole, visibleAdminSections } from "@/modules/staff-identity/domain/roles";
 import {
   canOpenSettingsTab,
   defaultSettingsTab,
@@ -32,7 +32,7 @@ const routeExists = (route: string) =>
   existsSync(path.join(ROOT, pageOf(route))) || existsSync(path.join(ROOT, "src/app/[locale]", route, "(list)", "page.tsx"));
 
 describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
-  it("offers the four content tabs from the Redactor up, «Costuri» and «Platformă» to the Administrators, nothing to the volunteer", () => {
+  it("offers the four content tabs from the Redactor up, «Costuri» and «Anti-robot» to the Administrators, nothing to the volunteer", () => {
     const content = ["emails", "deadlines", "contact", "appearance"];
     const expected: Record<StaffRole, string[]> = {
       // A club member (§NNN) has no backoffice at all.
@@ -47,7 +47,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
     for (const role of STAFF_ROLES) expect(visibleSettingsTabs(role), role).toEqual(expected[role]);
   });
 
-  it("keeps the gates of the panels that moved: «Costuri» and «Platformă» were `canManageRegistrations` on «Sarcini»", () => {
+  it("keeps the gates of the panels that moved: «Costuri» and «Anti-robot» were `canManageRegistrations` on «Sarcini»", () => {
     for (const role of STAFF_ROLES) {
       expect(canOpenSettingsTab(role, "costs"), role).toBe(role === "ADMIN" || role === "SUPERADMIN");
       expect(canOpenSettingsTab(role, "platform"), role).toBe(role === "ADMIN" || role === "SUPERADMIN");
@@ -63,7 +63,15 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
   });
 
   it("ends the row with «Configurație» (/devs) for exactly the roles that page opens to, and /devs draws the row with it marked", () => {
-    for (const role of STAFF_ROLES) expect(offersConfigurationTab(role), role).toBe(visibleAdminSections(role).includes("devs"));
+    for (const role of STAFF_ROLES) expect(offersConfigurationTab(role), role).toBe(canSeeDiagnostics(role));
+    // One way in (§520): the main bar has no «Configurație» of its own; «Setări» lights on /devs.
+    for (const role of STAFF_ROLES) {
+      expect(visibleAdminSections(role) as string[], role).not.toContain("devs");
+      if (offersConfigurationTab(role)) expect(visibleAdminSections(role), role).toContain("settings");
+    }
+    expect(read("src/modules/staff-identity/ui/BackofficeShell.tsx")).toContain('alsoActiveOn: [getPathname({ locale, href: "/devs" })]');
+    expect(ro.Admin.nav).not.toHaveProperty("devs");
+    expect(en.Admin.nav).not.toHaveProperty("devs");
     expect(STAFF_ROLES.filter(offersConfigurationTab)).toEqual(["DEV", "ADMIN", "SUPERADMIN"]);
     expect(ro.Admin.settingsTabs.configuration).toBe("Configurație");
     expect(en.Admin.settingsTabs.configuration).toBe("Configuration");
@@ -71,7 +79,11 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
     expect(nav).toContain('offersConfigurationTab(role)');
     expect(nav).toContain('href: getPathname({ locale, href: "/devs" })');
     const devs = read("src/app/[locale]/devs/page.tsx");
-    expect(devs).toContain('<SettingsSubNav locale={locale} role={actor.role} active="configuration" />');
+    expect(devs).toContain('active="configuration"');
+    // One row only (§360, §520): the page's panels are entries of «Setări»'s row, not a second SubNav.
+    expect(devs).toContain("configurationPanels={DEVS_PANELS.map(");
+    expect(devs).not.toMatch(/<SubNav\b/);
+    expect(nav).toContain("configurationPanels && configurationPanels.length > 0");
     // The Neon block always names where its limits are set, whatever the plan's source: a link for
     // a role that opens «Costuri», a sentence for the rest.
     expect(devs).toContain('<Link href={{ pathname: "/admin/settings/costs", hash: "neon-limits" }}>{t("neon.limitsLink")}</Link>');
@@ -93,7 +105,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
 
 describe("§516 the main bar, in the order the club opens things", () => {
   it("is events, registrations, the desk, gallery, pages, newsletter, settings, tasks, team, legal, guide, system", () => {
-    expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "checkin", "gallery", "pages", "newsletter", "settings", "tasks", "staff", "legal", "guide", "devs"]);
+    expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "checkin", "gallery", "pages", "newsletter", "settings", "tasks", "staff", "legal", "guide"]);
     expect(ADMIN_SECTIONS).not.toContain("emails");
   });
 

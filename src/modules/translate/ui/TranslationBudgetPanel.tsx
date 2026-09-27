@@ -44,7 +44,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
   const clock = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
   return (
-    <Panel
+    <Panel glyph="translation"
       id="translation-budget"
       title={t("tasks.translationBudget.title")}
       intro={t("tasks.translationBudget.intro")}

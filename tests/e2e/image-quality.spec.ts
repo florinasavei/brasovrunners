@@ -68,15 +68,16 @@ test.describe.serial("BR-REQ-050-03 «Mare» in the text editor (§414, the four
     await roEditor.getByRole("button", { name: "Imagine (încarcă din telefon sau calculator)" }).click();
     const bar = roEditor.getByTestId("rich-text-image-bar");
     await expect(bar.getByRole("radio", { name: "Medie (recomandat)" })).toBeChecked();
-    // The help says what each choice keeps, from the same numbers the server resizes to.
-    await expect(bar).toContainText("până la 2400 px");
-    await expect(bar).toContainText("Mare păstrează 4000 px");
+    // The help says what each choice keeps, from the same numbers the server resizes to — one
+    // plain sentence since §511.
+    await expect(bar).toContainText("Medie (2400 px) pentru fotografii");
+    await expect(bar).toContainText("Mare (4000 px) pentru afișe cu text");
     // Four levels (§437), and the help says what the new two keep.
     for (const name of ["Minimă (fișier mic)", "Medie (recomandat)", "Mare", "Originală (fișier mare)"]) {
       await expect(bar.getByRole("radio", { name, exact: true })).toBeVisible();
     }
-    await expect(bar).toContainText("1280 px");
-    await expect(bar).toContainText("până la 6000 px");
+    await expect(bar).toContainText("Minimă (1280 px) pentru o imagine mică");
+    await expect(bar).toContainText("Originală, până la 6000 px");
     await bar.getByRole("radio", { name: "Mare", exact: true }).check();
     await chooseFile(page, () => bar.getByRole("button", { name: "Alege imaginea" }).click(), "afis.png", await poster(2700, 1800));
     await expect(roEditor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 30_000 });
