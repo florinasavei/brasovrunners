@@ -1915,14 +1915,18 @@ export function buildTemplateContent(
     before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
   */
   // Where and for which hours (§NNN): this half's name for the place — or the club's locality when
-  // the forecast is the club's — and the event's own clock.
-  const weatherRow =
+  // the forecast is the club's — and the event's own clock. The row's label is the sentence's head,
+  // «Vremea la <loc>, <zi> 08:00–10:00», so the text reads it whole, a colon, the sky.
+  const weatherWordsForRow =
     messageType === "EVENT_REMINDER" && data.eventWeather && data.eventFacts
       ? weatherSpanWords(data.eventWeather, locale, {
           place: forecastPlaceName(data.eventWeather.place, data.eventFacts.locationToBeAnnounced ? null : data.eventFacts.locationName, CLUB_LOCALITY),
           timeZone: data.eventFacts.timezone,
         })
       : undefined;
+  const weatherRow = weatherWordsForRow
+    ? { label: weatherWordsForRow.heading, line: weatherWordsForRow.line, credit: weatherWordsForRow.credit }
+    : undefined;
   const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale, weatherRow) : undefined;
   const linkData: TemplateData = factsBlock
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }

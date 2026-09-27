@@ -255,7 +255,11 @@ export function pickSpan(
  * What a span of hours says as one line (§NNN): the first and last hour read, the coldest and the
  * warmest degrees among them (null when no hour has one), and whether rain is likely in any hour of
  * it (`rainLikely`) — with the highest chance among those hours, null when none of them names one.
- * The sky's word and glyph stay the start's: the line opens with what the runner steps out into.
+ *
+ * `sky` is the hour whose word and glyph speak for the span: the worst when rain is likely in any
+ * hour — the wettest of those hours (the highest chance; the earlier on a tie) — so the line never
+ * says «Parțial noros» beside an umbrella; otherwise the dominant sky, the kind most hours share
+ * (a tie goes to the earlier hour, the start's first). Null only for an empty span.
  */
 export type WeatherSpanSummary = {
   fromHour: number;
@@ -264,13 +268,29 @@ export type WeatherSpanSummary = {
   maxC: number | null;
   rainLikely: boolean;
   rainChance: number | null;
+  sky: WeatherReading | null;
 };
+
+/** The hour whose sky speaks for the span: the wettest likely-rain hour, else the most frequent kind (`WeatherSpanSummary.sky`). */
+function spanSky(span: readonly WeatherReading[], wet: readonly WeatherReading[]): WeatherReading | null {
+  if (wet.length > 0) {
+    return wet.reduce((worst, hour) => ((hour.precipitationProbability ?? -1) > (worst.precipitationProbability ?? -1) ? hour : worst));
+  }
+  const counts = new Map<WeatherReading["kind"], number>();
+  for (const hour of span) counts.set(hour.kind, (counts.get(hour.kind) ?? 0) + 1);
+  let dominant: WeatherReading | null = null;
+  for (const hour of span) {
+    if (!dominant || (counts.get(hour.kind) ?? 0) > (counts.get(dominant.kind) ?? 0)) dominant = hour;
+  }
+  return dominant;
+}
 
 export function summarizeSpan(span: readonly WeatherReading[]): WeatherSpanSummary {
   const temperatures = span.map((hour) => hour.temperatureC).filter((value): value is number => value !== null);
   const wet = span.filter((hour) => rainLikely(hour));
   const chances = wet.map((hour) => hour.precipitationProbability).filter((value): value is number => value !== null);
   return {
+    sky: spanSky(span, wet),
     fromHour: span[0]?.hourAt ?? 0,
     toHour: span.at(-1)?.hourAt ?? 0,
     minC: temperatures.length > 0 ? Math.min(...temperatures) : null,

@@ -22,7 +22,7 @@ import {
   stubForecast,
   WEATHER_CACHE_SECONDS,
   WEATHER_TIMEOUT_MS,
-  weatherForEvent,
+  forecastForEvent,
 } from "@/modules/weather/source";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
 import { weatherWords } from "@/modules/weather/words";
@@ -61,6 +61,9 @@ function answer(overrides: Partial<Record<"weather_code" | "temperature_2m" | "p
 
 const json = (body: unknown, status = 200) =>
   vi.fn(async () => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })) as unknown as typeof fetch;
+
+/** The start's reading through the one call the page, the listing and the reminder make. */
+const weatherForEvent = async (...args: Parameters<typeof forecastForEvent>) => (await forecastForEvent(...args))?.start ?? null;
 
 function forecast(): HourlyForecast {
   const parsed = parseOpenMeteo(answer(), NOW.getTime());

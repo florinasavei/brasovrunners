@@ -136,19 +136,19 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r1"), db, NOW);
     const lines = message.text.split("\n");
     // Romanian half: right under «Când», the credit the licence asks for under it, then «Unde».
-    const ro = lines.indexOf("Vremea: Ploaie, 6 °C, ploaie probabilă 80 % (Brașov, la 08:00)");
+    const ro = lines.indexOf("Vremea la Brașov, sâmbătă, 26 sept. 08:00: Ploaie, 6 °C, ploaie probabilă 80 %");
     expect(ro).toBeGreaterThan(0);
     expect(lines[ro - 1]).toMatch(/^Când: /);
     expect(lines[ro + 1]).toBe("  Prognoză: Open-Meteo");
     expect(lines[ro + 2]).toMatch(/^Unde: /);
     // English half, in its own words.
-    const en = lines.indexOf("Weather: Rain, 6 °C, rain likely 80% (Brașov, at 08:00)");
+    const en = lines.indexOf("Weather at Brașov, Saturday, 26 Sept 08:00: Rain, 6 °C, rain likely 80%");
     expect(en).toBeGreaterThan(ro);
     expect(lines[en - 1]).toMatch(/^When: /);
     expect(lines[en + 1]).toBe("  Forecast: Open-Meteo");
     // In the HTML, inside the facts block, the label bold as every row's.
     const block = message.html.match(/<div data-email-part="event-facts"[^]*?<\/div>/)?.[0] ?? "";
-    expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, ploaie probabilă 80 % (Brașov, la 08:00)<br>Prognoză: Open-Meteo");
+    expect(block).toContain("<strong>Vremea la Brașov, sâmbătă, 26 sept. 08:00</strong><br>Ploaie, 6 °C, ploaie probabilă 80 %<br>Prognoză: Open-Meteo");
   });
 
   it("stays one line — the start hour's facts, never the page's details (§416)", async () => {
@@ -175,8 +175,8 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
   it("says where and for which hours (§NNN): the meeting point once read at its own pair, and the hours to the end", async () => {
     await db.update(events).set({ latitude: 45.51234, longitude: 25.36789, endsAt: new Date("2026-09-26T07:00:00.000Z") });
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r6"), db, NOW);
-    expect(message.text).toContain("Vremea: Ploaie, 6 °C, ploaie probabilă 80 % (Parcul Tractorul, 08:00–10:00)");
-    expect(message.text).toContain("Weather: Rain, 6 °C, rain likely 80% (Parcul Tractorul, 08:00–10:00)");
+    expect(message.text).toContain("Vremea la Parcul Tractorul, sâmbătă, 26 sept. 08:00–10:00: Ploaie, 6 °C, ploaie probabilă 80 %");
+    expect(message.text).toContain("Weather at Parcul Tractorul, Saturday, 26 Sept 08:00–10:00: Rain, 6 °C, rain likely 80%");
   });
 
   it("goes out without the row when Open-Meteo fails", async () => {

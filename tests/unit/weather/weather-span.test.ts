@@ -20,12 +20,12 @@ const HOUR = 60 * 60 * 1000;
 const START = new Date("2026-09-26T15:00:00.000Z");
 const ZONE = "Europe/Bucharest";
 
-/** Twelve hours from the start's, each with its own temperature, chance and code. */
-function forecast(overrides: { temperature?: number[]; chance?: number[]; code?: number[] } = {}): HourlyForecast {
-  const time = Array.from({ length: 12 }, (_, index) => START.getTime() + index * HOUR);
+/** Twelve hours from the start's (or `from`), each with its own temperature, chance and code. */
+function forecast(overrides: { temperature?: number[]; chance?: number[]; code?: number[] } = {}, from: Date = START): HourlyForecast {
+  const time = Array.from({ length: 12 }, (_, index) => from.getTime() + index * HOUR);
   const pick = (values: number[] | undefined, fallback: number) => time.map((_, index) => values?.[index] ?? fallback);
   return {
-    fetchedAt: START.getTime() - HOUR,
+    fetchedAt: from.getTime() - HOUR,
     time,
     temperatureC: pick(overrides.temperature, 14),
     precipitationProbability: pick(overrides.chance, 20),
@@ -79,32 +79,79 @@ describe("summarizeSpan", () => {
     const span = pickSpan(forecast({ chance: [20, 40, 49] }), START, new Date(START.getTime() + 2 * HOUR));
     expect(summarizeSpan(span)).toMatchObject({ rainLikely: false, rainChance: null });
   });
+
+  it("takes the sky of the wettest hour when rain is likely in any, however dry the start", () => {
+    const span = pickSpan(forecast({ code: [2, 61, 63], chance: [20, 55, 70] }), START, new Date(START.getTime() + 2 * HOUR));
+    const sky = summarizeSpan(span).sky;
+    expect(sky?.hourAt).toBe(START.getTime() + 2 * HOUR);
+    expect(sky).toMatchObject({ kind: "rain", glyph: "rain" });
+  });
+
+  it("takes the kind most hours share when it is dry, a tie going to the start's", () => {
+    const most = pickSpan(forecast({ code: [2, 3, 3] }), START, new Date(START.getTime() + 2 * HOUR));
+    expect(summarizeSpan(most).sky?.kind).toBe("overcast");
+    const tie = pickSpan(forecast({ code: [2, 3] }), START, new Date(START.getTime() + HOUR));
+    expect(summarizeSpan(tie).sky?.kind).toBe("partlyCloudy");
+  });
 });
 
-describe("weatherSpanWords: the line with where and when (§NNN)", () => {
-  it("one hour: the start's sky, the degrees and «(place, la 18:00)» in Romanian, «at 18:00» in English", () => {
+describe("weatherSpanWords: the sentence with where and when (§NNN)", () => {
+  it("one hour: «Vremea la <loc>, <zi> <HH:MM>: …» in Romanian, «Weather at <place>, <day> <HH:MM>: …» in English, no dash", () => {
     const span = pickSpan(forecast(), START, null);
-    expect(words(span, "ro", "Parcul Tractorul").line).toBe("Parțial noros, 14 °C (Parcul Tractorul, la 18:00)");
-    expect(words(span, "en", "Tractorul Park").line).toBe("Partly cloudy, 14 °C (Tractorul Park, at 18:00)");
+    expect(words(span, "ro", "Parcul Tractorul").sentence).toBe("Vremea la Parcul Tractorul, sâmbătă, 26 sept. 18:00: Parțial noros, 14 °C");
+    expect(words(span, "en", "Tractorul Park").sentence).toBe("Weather at Tractorul Park, Saturday, 26 Sept 18:00: Partly cloudy, 14 °C");
   });
 
   it("several hours: the degrees as a range and the hours as an interval on the event's clock", () => {
     const span = pickSpan(forecast({ temperature: [15.2, 13, 11.6], chance: [20, 70, 30] }), START, new Date(START.getTime() + 2 * HOUR));
     const ro = words(span, "ro", "Tâmpa");
-    expect(ro.line).toBe("Parțial noros, 12–15 °C, ploaie probabilă 70 % (Tâmpa, 18:00–20:00)");
-    expect(ro.scope).toBe("Tâmpa, 18:00–20:00");
-    expect(words(span, "en", "Tâmpa").line).toBe("Partly cloudy, 12–15 °C, rain likely 70% (Tâmpa, 18:00–20:00)");
+    expect(ro.sentence).toBe("Vremea la Tâmpa, sâmbătă, 26 sept. 18:00–20:00: Parțial noros, 12–15 °C, ploaie probabilă 70 %");
+    expect(ro.scope).toBe("la Tâmpa, sâmbătă, 26 sept. 18:00–20:00");
+    expect(ro.heading).toBe("Vremea la Tâmpa, sâmbătă, 26 sept. 18:00–20:00");
+    expect(ro.line).toBe("Parțial noros, 12–15 °C, ploaie probabilă 70 %");
+    expect(words(span, "en", "Tâmpa").sentence).toBe("Weather at Tâmpa, Saturday, 26 Sept 18:00–20:00: Partly cloudy, 12–15 °C, rain likely 70%");
+  });
+
+  it("a dry start with rain later: the rainy hour's word and glyph beside the umbrella, never «Parțial noros»", () => {
+    const span = pickSpan(forecast({ code: [2, 2, 61], chance: [10, 20, 70] }), START, new Date(START.getTime() + 2 * HOUR));
+    const ro = words(span, "ro", "Tâmpa");
+    expect(ro.line).toBe("Ploaie, 14 °C, ploaie probabilă 70 %");
+    expect(ro.glyph).toBe("rain");
+    expect(words(span, "en", "Tâmpa").line).toBe("Rain, 14 °C, rain likely 70%");
+  });
+
+  it("an interval across midnight keeps the start's day: «22:00–01:00»", () => {
+    const late = new Date("2026-09-26T19:00:00.000Z"); // 22:00 in Brașov
+    const span = pickSpan(forecast({}, late), late, new Date(late.getTime() + 3 * HOUR));
+    expect(span).toHaveLength(4);
+    expect(words(span, "ro", "Tâmpa").scope).toBe("la Tâmpa, sâmbătă, 26 sept. 22:00–01:00");
+    expect(words(span, "en", "Tâmpa").scope).toBe("at Tâmpa, Saturday, 26 Sept 22:00–01:00");
   });
 
   it("one temperature when the hours round to the same degree", () => {
     const span = pickSpan(forecast({ temperature: [14.2, 13.8] }), START, new Date(START.getTime() + HOUR));
     expect(words(span, "ro", "Tâmpa").temperature).toBe("14 °C");
+    expect(words(span, "en", "Tâmpa").sentence).toBe("Weather at Tâmpa, Saturday, 26 Sept 18:00–19:00: Partly cloudy, 14 °C");
   });
 
-  it("names «locul evenimentului» / «the event’s place» when the event names none", () => {
+  it("says no rain words when every hour's chance is under fifty, in either language", () => {
+    const span = pickSpan(forecast({ chance: [20, 45, 49] }), START, new Date(START.getTime() + 2 * HOUR));
+    const ro = words(span, "ro", "Tâmpa");
+    const en = words(span, "en", "Tâmpa");
+    expect(ro.rainLikelyChance).toBeNull();
+    expect(en.rainLikelyChance).toBeNull();
+    expect(ro.sentence).not.toMatch(/ploaie/i);
+    expect(en.sentence).not.toMatch(/rain/i);
+    expect(ro.sentence).toBe("Vremea la Tâmpa, sâmbătă, 26 sept. 18:00–20:00: Parțial noros, 14 °C");
+  });
+
+  it("names «locul evenimentului» / «the event’s place» when the event names none, and the club's locality on its fallback", () => {
     const span = pickSpan(forecast(), START, null);
-    expect(words(span, "ro", null).scope).toBe("locul evenimentului, la 18:00");
-    expect(words(span, "en", null).scope).toBe("the event’s place, at 18:00");
+    expect(words(span, "ro", null).scope).toBe("la locul evenimentului, sâmbătă, 26 sept. 18:00");
+    expect(words(span, "en", null).scope).toBe("at the event’s place, Saturday, 26 Sept 18:00");
+    const club = forecastPlaceName("club", "Parcul Tractorul", CLUB_LOCALITY);
+    expect(words(span, "ro", club).scope).toBe(`la ${CLUB_LOCALITY}, sâmbătă, 26 sept. 18:00`);
+    expect(words(span, "en", club).scope).toBe(`at ${CLUB_LOCALITY}, Saturday, 26 Sept 18:00`);
   });
 });
 

@@ -5666,9 +5666,9 @@
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
     "temperatureRange": "{from}–{to} °C",
-    "atHour": "at {time}",
     "hourRange": "{from}–{to}",
-    "scope": "{place}, {hours}",
+    "scope": "at {place}, {day} {hours}",
+    "heading": "Weather {scope}",
     "eventPlace": "the event’s place",
     "atStart": "Weather at the start",
     "codes": {

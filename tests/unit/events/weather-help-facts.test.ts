@@ -106,7 +106,7 @@ describe("the weather row's help glyph (§473)", () => {
     expect(helpButton(html)).toContain('aria-label="An indicative forecast; it may change before the start. Data from Open-Meteo."');
   });
 
-  it("says where and for which hours before the «?» (§NNN): the meeting point for a typed pair, the club's locality for the club's point", async () => {
+  it("opens with where and when and ends with the «?» (§NNN): the meeting point for a typed pair, the club's locality for the club's point", async () => {
     const start = new Date("2026-09-26T05:00:00Z").getTime();
     const first = reading({ hourAt: start, temperatureC: 11 });
     const span = [first, reading({ hourAt: start + 3_600_000, temperatureC: 13 })];
@@ -116,16 +116,16 @@ describe("the weather row's help glyph (§473)", () => {
       ),
     );
     const scope = /data-testid="event-weather-scope"[^>]*>([^<]*)</.exec(typed)?.[1] ?? "";
-    expect(scope).toBe("(Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, 08:00–09:00)");
+    expect(scope).toBe("la Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, sâmbătă, 26 sept. 08:00–09:00:");
     expect(typed.indexOf("event-weather-scope")).toBeLessThan(typed.indexOf("event-weather-help"));
     expect(typed).toContain("11–13 °C");
-    // The scope follows the last piece in the same item: no middle dot before the bracket.
-    expect(typed.replace(/<[^>]+>/g, "")).not.toMatch(/·\s*\(/);
+    // The scope leads the sky's word in the same item: no middle dot after the colon.
+    expect(typed.replace(/<[^>]+>/g, "")).not.toMatch(/:\s*·/);
 
     const club = withoutStyles(
       renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true, weather: { start: first, hours: [first], span: [first], place: "club" } })),
     );
-    expect(/data-testid="event-weather-scope"[^>]*>([^<]*)</.exec(club)?.[1]).toBe("(Brașov, la 08:00)");
+    expect(/data-testid="event-weather-scope"[^>]*>([^<]*)</.exec(club)?.[1]).toBe("la Brașov, sâmbătă, 26 sept. 08:00:");
   });
 
   it("is absent when there is no forecast", async () => {

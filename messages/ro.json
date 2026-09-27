@@ -5666,9 +5666,9 @@
     "uv": "indice UV {index}",
     "rainShort": "{percent}% ploaie",
     "temperatureRange": "{from}–{to} °C",
-    "atHour": "la {time}",
     "hourRange": "{from}–{to}",
-    "scope": "{place}, {hours}",
+    "scope": "la {place}, {day} {hours}",
+    "heading": "Vremea {scope}",
     "eventPlace": "locul evenimentului",
     "atStart": "Vremea la start",
     "codes": {

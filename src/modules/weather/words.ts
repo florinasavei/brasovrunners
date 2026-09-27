@@ -1,7 +1,7 @@
 import { createTranslator } from "next-intl";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { formatTime } from "@/i18n/dates";
+import { formatDay, formatTime } from "@/i18n/dates";
 import { rainLikely as isRainLikely, summarizeSpan, type WeatherReading } from "./domain/forecast";
 
 /**
@@ -94,26 +94,39 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
 
 /**
  * The event page's «Vremea» line and the reminder's, for the hours the event is out (§NNN; the
- * owner: the weather line should say where and for which hours). The start's sky, the degrees over
- * the span — «14 °C», or «12–15 °C» when the hours differ — and «ploaie probabilă 60 %» when rain is
- * likely in any hour of it, then, in brackets, the place the numbers are for and the hours:
- * «Parțial noros, 12–15 °C (Parcul Tractorul, 18:00–20:00)», «Ploaie, 6 °C (Brașov, la 08:00)».
+ * owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul»). One sentence, where and when
+ * first, then what: «Vremea la Parcul Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie, 12–15 °C,
+ * ploaie probabilă 70 %» / «Weather at Tractorul Park, Saturday, 26 Sept 18:00–20:00: Rain, 12–15 °C,
+ * rain likely 70%». One hour alone — an event with no end — is «sâmbătă, 26 sept. 18:00», no dash.
+ *
+ * The sky is the span's (`summarizeSpan`'s `sky`: the wettest hour when rain is likely in any, else
+ * the kind most hours share), the degrees its coldest and warmest — one figure when they round
+ * alike — and «ploaie probabilă N %» only when rain is likely in any hour (§469's rule), N the
+ * highest chance among those hours.
  *
  * `place` is `forecastPlaceName`'s answer — the club's locality when the forecast is the club's,
- * else the meeting point in this language — and null reads «locul evenimentului». The hours are on
- * the event's own clock (`timeZone`), through the one date helper (§349, §439).
+ * else the meeting point in this language (§362) — and null reads «locul evenimentului». The day
+ * and the hours are on the event's own clock (`timeZone`), through the one date helper (§349, §439).
  */
 export type WeatherSpanWords = {
+  /** «Vremea» — the event page's row label, which the scope follows. */
   label: string;
+  /** «Vremea la Brașov, sâmbătă, 26 sept. 18:00–20:00» — the reminder's row label, the values after it. */
+  heading: string;
+  /** Where and when, as it follows the label: «la Brașov, sâmbătă, 26 sept. 18:00–20:00». */
+  scope: string;
+  /** The span's sky in words: «Ploaie». */
   summary: string;
+  /** The span's sky as a glyph name — the event page's row icon. */
+  glyph: WeatherReading["glyph"];
   /** «14 °C» or «12–15 °C»; null when no hour of the span has a temperature. */
   temperature: string | null;
   /** «ploaie probabilă 60 %» when rain is likely in the span (the chance only when one is named), else null. */
   rainLikelyChance: string | null;
-  /** Where and when, without brackets: «Parcul Tractorul, 18:00–20:00». */
-  scope: string;
-  /** The whole line, the scope in brackets at its end — the reminder's row says exactly this. */
+  /** What, without where and when: «Ploaie, 12–15 °C, ploaie probabilă 70 %» — the reminder row's line. */
   line: string;
+  /** The whole sentence: `heading`, a colon, `line`. */
+  sentence: string;
   credit: string;
   help: string;
 };
@@ -131,7 +144,8 @@ export function weatherSpanWords(
   };
   const span = forecast.span.length > 0 ? forecast.span : [forecast.start];
   const summed = summarizeSpan(span);
-  const summary = t(`codes.${forecast.start.kind}`);
+  const sky = summed.sky ?? forecast.start;
+  const summary = t(`codes.${sky.kind}`);
   const temperature =
     summed.minC === null || summed.maxC === null
       ? null
@@ -144,17 +158,22 @@ export function weatherSpanWords(
       ? t("rainLikelyChance", { percent: whole(summed.rainChance) })
       : t("rainLikely");
   const time = (at: number) => formatTime(new Date(at), { locale, timeZone: where.timeZone });
-  const hours =
-    summed.toHour > summed.fromHour ? t("hourRange", { from: time(summed.fromHour), to: time(summed.toHour) }) : t("atHour", { time: time(summed.fromHour) });
-  const scope = t("scope", { place: where.place ?? t("eventPlace"), hours });
-  const values = [summary, ...(temperature !== null ? [temperature] : []), ...(rainLikelyChance !== null ? [rainLikelyChance] : [])].join(", ");
+  const hours = summed.toHour > summed.fromHour ? t("hourRange", { from: time(summed.fromHour), to: time(summed.toHour) }) : time(summed.fromHour);
+  // The day the first hour falls on — an interval past midnight keeps the start's day, «22:00–01:00».
+  const day = formatDay(new Date(summed.fromHour), { locale, timeZone: where.timeZone, style: "long", year: false, position: "inline" });
+  const scope = t("scope", { place: where.place ?? t("eventPlace"), day, hours });
+  const heading = t("heading", { scope });
+  const line = [summary, ...(temperature !== null ? [temperature] : []), ...(rainLikelyChance !== null ? [rainLikelyChance] : [])].join(", ");
   return {
     label: t("label"),
+    heading,
+    scope,
     summary,
+    glyph: sky.glyph,
     temperature,
     rainLikelyChance,
-    scope,
-    line: `${values} (${scope})`,
+    line,
+    sentence: `${heading}: ${line}`,
     credit: t("credit", { source: t("source") }),
     help: t("help", { source: t("source") }),
   };

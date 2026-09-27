@@ -110,22 +110,29 @@ const RACE_ROW_GAP = 0.5;
 // The weather row is one line since §469; the hours strip, details and place line went with it.
 
 /**
- * The weather line's pieces with where and when after the last one (§NNN): in the same flow item,
- * so no middle dot stands before the bracket — it qualifies the line, it is not one more fact — and
- * the «?» (§473) after it, last.
+ * The weather line's pieces with where and when before the first one (§NNN): the row's label and
+ * the scope read as one sentence — «Vremea | la Brașov, sâmbătă, 26 sept. 18:00–20:00: Ploaie · …» —
+ * the scope in the same flow item as the sky's word, so no middle dot stands after the colon, and
+ * the «?» (§473) in the last item, last.
  */
 function withScope(pieces: ReactNode[], words: { scope: string; help: string }): ReactNode[] {
-  const last = pieces.at(-1);
-  return [
-    ...pieces.slice(0, -1),
+  const scoped = pieces.map((piece, index) => <Fragment key={index}>{piece}</Fragment>);
+  scoped[0] = (
     <Fragment key="scoped">
-      {last}{" "}
-      <Box component="span" data-testid="event-weather-scope" sx={{ color: "text.secondary", fontSize: "0.875em" }}>
-        ({words.scope})
-      </Box>
+      <Box component="span" data-testid="event-weather-scope" sx={{ color: "text.secondary" }}>
+        {words.scope}:
+      </Box>{" "}
+      {pieces[0]}
+    </Fragment>
+  );
+  const lastIndex = scoped.length - 1;
+  scoped[lastIndex] = (
+    <Fragment key="last">
+      {scoped[lastIndex]}
       <WeatherHelp text={words.help} />
-    </Fragment>,
-  ];
+    </Fragment>
+  );
+  return scoped;
 }
 
 /**
@@ -1047,12 +1054,14 @@ export default async function EventFacts({
     details, the hours strip and the place line are gone; the reminder keeps its own line.
   */
   /*
-    Since §NNN (the owner: the weather line should say where and for which hours) the line reads the
-    hours the event is out — from the start's hour to the end's, at most six (`pickSpan`) — the
-    degrees as a range when they differ and the umbrella when rain is likely in any of them, and it
-    ends with the place the numbers are for and those hours, in the smaller grey type, the «?» last:
-    «Parțial noros · 12–15 °C (Parcul Tractorul, 18:00–20:00)». The place is the club's locality when
-    the forecast is the club's (`forecastPlaceName`), never a meeting point it was not read at.
+    Since §NNN (the owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul») the line
+    reads the hours the event is out — from the start's hour to the end's, at most six (`pickSpan`) —
+    and opens with where and when, so the label and the line are one sentence: «Vremea | la Parcul
+    Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie · 12–15 °C · ☂ ploaie probabilă 70 % ?». The sky's
+    word and the row's glyph are the span's (the wettest hour when rain is likely, else the kind most
+    hours share), the degrees a range when they differ, the umbrella when rain is likely in any hour.
+    The place is the club's locality when the forecast is the club's (`forecastPlaceName`), never a
+    meeting point it was not read at.
   */
   if (weather) {
     const words = weatherSpanWords(weather, locale, {
@@ -1068,7 +1077,7 @@ export default async function EventFacts({
     rows.push({
       key: "weather",
       label: words.label,
-      icon: WEATHER_GLYPH[weather.start.glyph],
+      icon: WEATHER_GLYPH[words.glyph],
       value: (
         <Box data-testid="event-weather">
           {flow(withScope([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])], words))}
