@@ -1715,15 +1715,12 @@
           "title": "Title",
           "description": "Description",
           "when": "When and where",
-          "place": "Where",
           "course": "The course",
-          "cost": "Cost",
           "registration": "Registration",
           "coHosts": "Together with",
           "share": "Share",
           "links": "Links and files",
           "programme": "Programme and rules",
-          "rules": "Rules",
           "startList": "Participant list"
         }
       },
@@ -3929,7 +3926,7 @@
             {
               "title": "Add a YouTube film",
               "steps": [
-                "In the editor press «YouTube».",
+                "In the editor's toolbar press «Add a YouTube film».",
                 "Paste the address into «The film's address (YouTube)» and press «Add the film».",
                 "Press the film to write its «Caption (under the film)».",
                 "Press «Save». On the page the film loads only when the reader presses it."
@@ -4052,7 +4049,7 @@
               "title": "Change a setting of the event",
               "steps": [
                 "«Events» → «Edit».",
-                "Open the card: «When and where», «The course», «Cost» or «Taking part and registration». Change what is needed.",
+                "Open the card: «When and where», «The course», «What kind of event» (the cost is inside it) or «Taking part and registration». Change what is needed.",
                 "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
                 "Must the participants know? Tick «Tell participants about the change» and write the note in both languages.",
                 "Press «Save». The texts (the title, the description) are not yours to save: tell the Administrator what is wrong."
@@ -4062,7 +4059,7 @@
               "title": "The English in one press",
               "steps": [
                 "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
-                "At the top of the editor press «Copy and translate everything: RO → EN». Every box goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
+                "At the top of the editor press «Copy and translate everything: RO → EN». Every box you may edit goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
                 "Read the English and correct what reads wrong.",
                 "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
@@ -4099,7 +4096,7 @@
                 "«What kind of event» → «Event type» (Race, Group run and the others).",
                 "«Title and summary»: «Title» and «Summary», in the «Română» tab and in the «English» tab.",
                 "«When and where»: the date and time, then the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
-                "The other cards as needed: «Event description» (a YouTube film goes here, with the «YouTube» button), «The course», «Cost», «Taking part and registration», «Programme, rules and declaration».",
+                "The other cards as needed: «Event description» (a YouTube film goes here, with the «Add a YouTube film» button), «The course», «Taking part and registration», «Programme, rules and declaration».",
                 "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
                 "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
                 "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."

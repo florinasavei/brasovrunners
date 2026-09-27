@@ -117,8 +117,9 @@ export default async function CalendarHeader({
       <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1, rowGap: { xs: 0, sm: 1 }, width: { xs: "100%", sm: "auto" } }}>
         {/* Month or year, by select (§116) — the arrows step one at a time, "today" resets.
             One row that never wraps (§487): on a phone the selects give up their width to the
-            arrows and «Azi», which keep their 44-pixel targets. */}
-        <Box data-testid="calendar-period-row" sx={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 0.5, width: { xs: "100%", sm: "auto" }, minWidth: 0 }}>
+            arrows and «Azi», which keep their 44-pixel targets. From `sm` the selects stand eight
+            pixels from ‹ Azi ›, as they did before the row existed (§NNN). */}
+        <Box data-testid="calendar-period-row" sx={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: { xs: 0.5, sm: 1 }, width: { xs: "100%", sm: "auto" }, minWidth: 0 }}>
         <CalendarPicker
           basePath={basePath}
           query={query}

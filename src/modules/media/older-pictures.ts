@@ -39,7 +39,8 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
  *    and the rungs are made from it (`ladderFromStoredMaster`).
  * 2. **One transaction** moves the row to the new prefix and rewrites the old prefix to the new one
  *    in every text the reference check reads (`references.ts`: a page's body, an event
- *    translation's five rich texts, the event's film poster), and bumps the `version` of every
+ *    translation's five rich texts, a film's poster being an attribute of the description's
+ *    youtube figure since §481), and bumps the `version` of every
  *    row it rewrote — an editor open on one of them is then refused at save as for any other
  *    change made meanwhile (AGENTS.md §11.5), instead of writing the old address back.
  * 3. **The old two files stay** at the old address. The pictures page offers a picture's address

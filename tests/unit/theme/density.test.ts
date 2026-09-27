@@ -76,6 +76,11 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
   },
   {
     file: "src/modules/events/ui/CalendarHeader.tsx",
+    line: "gap: { xs: 0.5, sm: 1 }",
+    reason: "four pixels on a phone, under the scale's smallest step, so the selects, ‹ Azi › and › fit one row at 320px (§487); from sm the eight pixels the head always had (§NNN)",
+  },
+  {
+    file: "src/modules/events/ui/CalendarHeader.tsx",
     line: "spacing={{ xs: 0, sm: 0.5 }}",
     reason: "zero on a phone: ‹, «Azi» and › are adjacent 44-pixel targets, so the row fits beside the selects at 320px (§487)",
   },

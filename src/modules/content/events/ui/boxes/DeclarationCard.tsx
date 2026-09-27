@@ -18,7 +18,8 @@ const SURFACES_WITH_TEXT = ["ASPHALT", "TRAIL"] as const;
 /**
  * The card's closed line — «declarație pentru Trail», «fără declarație», «declarația v3» — and
  * whether a saved event that registers on the site lacks its declaration (the card and «Program,
- * regulament și declarație» around it open themselves then). Null text: the event asks for no
+ * regulament și declarație» around it open themselves then), or a group run offering its
+ * self-declaration has no approved, not-withdrawn text for its surface (§483). Null text: the event asks for no
  * declaration at all.
  */
 export async function declarationLine(
