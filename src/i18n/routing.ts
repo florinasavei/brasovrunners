@@ -210,6 +210,7 @@ export const routing = defineRouting({
     "/admin/pages/new": "/admin/pages/new",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
+    "/admin/pages/appearance": "/admin/pages/appearance",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",

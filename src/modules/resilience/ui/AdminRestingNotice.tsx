@@ -30,7 +30,7 @@ export default async function AdminRestingNotice({
   const t = await getTranslations("Error");
   const tAdmin = await getTranslations("Admin");
   return (
-    <Box component="main" id="main" sx={{ py: { xs: 2, sm: 4 }, px: 2, maxWidth: 720, mx: "auto" }} data-testid="admin-resting">
+    <Box component="main" id="main" sx={{ py: { xs: 2, sm: 4 }, px: 2, maxWidth: 720, mx: "auto" }} data-testid="admin-resting" data-backoffice="">
       <Typography variant="h1" gutterBottom>
         {t("staffTitle")}
       </Typography>
