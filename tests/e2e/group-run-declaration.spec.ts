@@ -56,8 +56,8 @@ async function noSidewaysScroll(page: Page) {
 async function sign(page: Page, locale: "ro" | "en", name: string, email: string) {
   const words =
     locale === "ro"
-      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am cel puțin 18 ani împliniți, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data alergării." }
-      : { document: "Identity document (series and number)", email: "Email address", accept: "I am at least 18 years old, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of the run." };
+      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am cel puțin 18 ani împliniți, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data fiecărei alergări la care particip." }
+      : { document: "Identity document (series and number)", email: "Email address", accept: "I am at least 18 years old, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of each run I take part in." };
   await hydrated(page);
   // The approved text, before anything is asked (§57): the sample's banner says what it is, and the
   // text states the run's age through {{minimumAge}} — never under eighteen, the declaration covers
@@ -265,7 +265,8 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     // A named section: its heading is its accessible name — without «(opțional)» since §498.
     await expect(page.getByRole("region", { name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
     await expect(offer.getByRole("heading", { level: 3, name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
-    await expect(offer).toContainText("Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri");
+    // Once for every date of the run (§NNN).
+    await expect(offer).toContainText(`Semnează declarația pe propria răspundere o singură dată, pentru toate datele alergării ${title}: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri`);
     await expect(offer).not.toContainText("Dacă vrei");
     // The photographs notice comes before it in the fold, the declaration last (§498).
     expect(
@@ -299,7 +300,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const offer = page.getByTestId("group-run-declaration-offer");
     await openFold(page.getByTestId("conditions-fold"));
     await expect(offer.getByRole("heading", { level: 3, name: "Self-declaration", exact: true })).toBeVisible();
-    await expect(offer).toContainText("Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask");
+    await expect(offer).toContainText(`Sign the self-declaration once, for every date of ${englishTitle}: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask`);
     await expect(offer).not.toContainText("If you wish");
     await offer.getByRole("link", { name: "Sign the declaration", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/en/events/${englishSlug}/declaration$`));

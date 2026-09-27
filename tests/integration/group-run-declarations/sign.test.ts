@@ -103,8 +103,11 @@ async function approveTemplate(key: LegalDocumentKey, { privacy = true, idDocume
   if (privacy) await approveOne("PRIVACY_NOTICE");
 }
 
-/** The Tâmpa trail run: a published group run on a trail, offering the declaration. */
-async function trailRun(overrides: Partial<typeof events.$inferInsert> = {}) {
+/**
+ * The Tâmpa trail run: a published group run on a trail, offering the declaration. Every call with
+ * the same title is another date of the same run (§113, §NNN); a title of its own makes another run.
+ */
+async function trailRun(overrides: Partial<typeof events.$inferInsert> = {}, title = { ro: "Tura pe munte", en: "The mountain loop" }) {
   const [event] = await db
     .insert(events)
     .values({
@@ -120,8 +123,8 @@ async function trailRun(overrides: Partial<typeof events.$inferInsert> = {}) {
     })
     .returning();
   await db.insert(eventTranslations).values([
-    { eventId: event.id, locale: "ro", title: "Tura pe munte", slug: `tura-${event.id.slice(0, 6)}` },
-    { eventId: event.id, locale: "en", title: "The mountain loop", slug: `loop-${event.id.slice(0, 6)}` },
+    { eventId: event.id, locale: "ro", title: title.ro, slug: `tura-${event.id.slice(0, 6)}` },
+    { eventId: event.id, locale: "en", title: title.en, slug: `loop-${event.id.slice(0, 6)}` },
   ]);
   return event;
 }
@@ -423,9 +426,11 @@ describe("§393 erasing one (§67, §88)", () => {
   it("takes the declarations' messages with the event when the event itself is deleted or erased, and no other message", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const actor = await admin();
-    const deleted = await trailRun();
-    const erased = await trailRun();
-    const kept = await trailRun();
+    // Three runs of one date each: a run's declarations go with its only date (§NNN keeps them
+    // while the run has another — the test below).
+    const deleted = await trailRun({}, { ro: "Tura A", en: "Loop A" });
+    const erased = await trailRun({}, { ro: "Tura B", en: "Loop B" });
+    const kept = await trailRun({}, { ro: "Tura C", en: "Loop C" });
     for (const [event, email] of [[deleted, "ana@example.ro"], [erased, "ion@example.ro"], [kept, "mara@example.ro"]] as const) {
       expect((await signGroupRunDeclaration(db, await input(event.id, { email }), NOW)).outcome).toBe("signed");
     }
@@ -444,6 +449,122 @@ describe("§393 erasing one (§67, §88)", () => {
     expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([kept.id]);
     const left = (await db.select().from(emailOutbox)).map((row) => row.recipientEmail).sort();
     expect(left).toEqual(["club@example.ro", "mara@example.ro"]);
+  });
+});
+
+/*
+  §NNN — one self-declaration per person per series. The owner, 2026-09-27: "a returning runner
+  signs once; it has no end date and is deleted only at their request". A series is §113's: the
+  same type and the same title, so every `trailRun()` with the default title is another date of
+  the same run.
+*/
+describe("§NNN one declaration per person per series", () => {
+  const OCT = (day: number) => new Date(`2026-10-${String(day).padStart(2, "0")}T16:00:00.000Z`);
+  const archiveOn = async () =>
+    updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
+
+  it("a returning runner signs once: another date of the run writes no second row, sends their copy again, and no second archive copy", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    await archiveOn();
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+
+    const signed = await signGroupRunDeclaration(db, await input(first.id), NOW);
+    expect(signed).toMatchObject({ outcome: "signed", kept: false });
+    if (signed.outcome !== "signed") throw new Error("not signed");
+    // The same person, typed a little differently, on the next week's page.
+    const again = await signGroupRunDeclaration(db, await input(second.id, { email: " ANA@example.ro ", typedName: "ana  popescu" }), new Date(NOW.getTime() + 60_000));
+    expect(again).toEqual({ outcome: "signed", id: signed.id, kept: true });
+
+    const rows = await db.select().from(groupRunDeclarations);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ eventId: first.id, typedName: "Ana Popescu", email: "ana@example.ro" });
+
+    const outbox = await db.select().from(emailOutbox);
+    expect(outbox.map((row) => [row.messageType, row.recipientEmail]).sort()).toEqual([
+      ["GROUP_RUN_DECLARATION_ARCHIVE", ARCHIVE],
+      ["GROUP_RUN_DECLARATION_SIGNED", "ana@example.ro"],
+      ["GROUP_RUN_DECLARATION_SIGNED", "ana@example.ro"],
+    ]);
+    // The copy sent again is the kept declaration, rendered like the first, with its PDF.
+    for (const message of outbox.filter((row) => row.messageType === "GROUP_RUN_DECLARATION_SIGNED")) {
+      expect(message.payloadJson).toEqual({ groupRunDeclarationId: signed.id });
+      const email = await renderOutboxMessage(claimed(message), db, NOW);
+      expect(email.attachments?.map((file) => file.contentType)).toEqual(["application/pdf"]);
+    }
+
+    // Both dates' backoffice pages list the run's one signature, linked under the date it was signed on.
+    for (const date of [first, second]) {
+      expect(await listGroupRunDeclarations(db, date.id)).toMatchObject([{ id: signed.id, eventId: first.id, typedName: "Ana Popescu" }]);
+    }
+  });
+
+  it("another person on the same address, or the same person on another run, is another declaration", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+    const otherRun = await trailRun({ startsAt: OCT(8) }, { ro: "Tura de joi", en: "The Thursday loop" });
+
+    await signGroupRunDeclaration(db, await input(first.id), NOW);
+    // A family on one address (§389): the parent's own declaration.
+    expect(await signGroupRunDeclaration(db, await input(second.id, { typedName: "Ion Popescu" }), NOW)).toMatchObject({ kept: false });
+    // Another run is another declaration: its own risks, its own name.
+    expect(await signGroupRunDeclaration(db, await input(otherRun.id), NOW)).toMatchObject({ kept: false });
+
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(3);
+    expect((await listGroupRunDeclarations(db, second.id)).map((row) => row.typedName)).toEqual(["Ana Popescu", "Ion Popescu"]);
+    expect((await listGroupRunDeclarations(db, otherRun.id)).map((row) => row.typedName)).toEqual(["Ana Popescu"]);
+  });
+
+  it("a newer version signed replaces the older signature and its messages: one row per person, and the old version free again", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+    const old = await signGroupRunDeclaration(db, await input(first.id), NOW);
+    if (old.outcome !== "signed") throw new Error("not signed");
+
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
+      locale,
+      title: LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].title,
+      body: { sections: [...LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].body.sections, { paragraphs: ["v2"] }] },
+    }));
+    await insertLegalDocumentVersion(db, { key: "GROUP_RUN_DECLARATION_TRAIL", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+
+    const renewed = await signGroupRunDeclaration(db, await input(second.id), NOW);
+    expect(renewed).toMatchObject({ outcome: "signed", kept: false });
+    if (renewed.outcome !== "signed") throw new Error("not signed");
+    expect(renewed.id).not.toBe(old.id);
+
+    const rows = await db.select().from(groupRunDeclarations);
+    expect(rows.map((row) => [row.id, row.declarationVersion, row.eventId])).toEqual([[renewed.id, 2, second.id]]);
+    // The old one's messages carried the address and could never render: gone with it.
+    const outbox = await db.select().from(emailOutbox);
+    expect(outbox.every((row) => (row.payloadJson as { groupRunDeclarationId?: string }).groupRunDeclarationId === renewed.id)).toBe(true);
+    // Nobody relies on version 1 any more.
+    const [v1] = (await listVersionsForBackoffice(db)).filter((version) => version.key === "GROUP_RUN_DECLARATION_TRAIL" && version.version === 1);
+    expect(v1.acceptanceCount).toBe(0);
+  });
+
+  it("deleting a date moves its declarations to the run's earliest other date, messages kept; the run's last date takes them with it", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const actor = await admin();
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+    const third = await trailRun({ startsAt: OCT(21) });
+    const signed = await signGroupRunDeclaration(db, await input(second.id), NOW);
+    if (signed.outcome !== "signed") throw new Error("not signed");
+
+    await deleteEvent(db, { actor, eventId: second.id });
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([first.id]);
+    expect(await db.select().from(emailOutbox)).toHaveLength(1);
+
+    const titleOf = async (id: string) => (await db.select({ title: eventTranslations.title }).from(eventTranslations).where(eq(eventTranslations.eventId, id)))[0]?.title ?? id;
+    await hardDeleteEvent(db, { actor, eventId: first.id, typedTitle: await titleOf(first.id), reason: "dată greșită", now: NOW });
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([third.id]);
+
+    await hardDeleteEvent(db, { actor, eventId: third.id, typedTitle: await titleOf(third.id), reason: "sezon încheiat", now: NOW });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+    expect(await db.select().from(emailOutbox)).toHaveLength(0);
   });
 });
 
@@ -523,7 +644,7 @@ describe("§440 a group run's minimum age at the signing door", () => {
     await renderOutboxMessage(claimed(signed), db, NOW);
     const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
     expect(drawn.entries[0].values?.minimumAge).toBe("21 de ani");
-    expect(JSON.stringify(drawn.entries[0].body)).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data alergării.");
+    expect(JSON.stringify(drawn.entries[0].body)).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.");
   });
 
   it("counts the day in the run's zone: a start at 01:30 in Brașov is the 7th, the 6th in UTC", async () => {

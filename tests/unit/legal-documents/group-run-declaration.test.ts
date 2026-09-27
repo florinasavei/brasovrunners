@@ -167,10 +167,40 @@ describe("§393 the two templates", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       expect(TEXTS[surface].ro.join(" ")).toMatch(/este opțională și nu este o condiție/);
       expect(TEXTS[surface].ro.join(" ")).toMatch(/Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului/);
-      expect(TEXTS[surface].ro.join(" ")).toMatch(/copia din arhiva clubului se păstrează trei ani de la alergare/);
+      // From the signing (§NNN): a declaration that covers every date of the run names no one run to count from.
+      expect(TEXTS[surface].ro.join(" ")).toMatch(/copia din arhiva clubului se păstrează trei ani de la semnare/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/optional and is not a condition/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address/);
-      expect(TEXTS[surface].en.join(" ")).toMatch(/kept for three years from the run/);
+      expect(TEXTS[surface].en.join(" ")).toMatch(/kept for three years from the signing/);
+      for (const locale of ["ro", "en"] as const) {
+        expect(TEXTS[surface][locale].join(" "), `${surface} ${locale}`).not.toMatch(/trei ani de la alergare|three years from the run/);
+      }
+    }
+  });
+
+  /*
+    §NNN — the owner, 2026-09-27: "one self-declaration per series of group runs: a returning runner
+    signs once; it has no end date and is deleted only at their request". The text is written for
+    the recurring run: from the date signed on, every date that follows, no end date, a differing
+    date read on its own page.
+  */
+  it("is written for the recurring run: once, every date from the one signed on, no end date, until deletion or a new version (§NNN)", () => {
+    for (const surface of ["asphalt", "trail"] as const) {
+      const roText = TEXTS[surface].ro.join(" ");
+      const enText = TEXTS[surface].en.join(" ");
+      expect(roText).toContain("particip la alergarea de grup {{event}}, începând cu alergarea de {{eventDate}}");
+      expect(roText).toContain("înainte de fiecare alergare îi citesc detaliile pe pagina ei");
+      expect(roText).toContain("Această declarație acoperă fiecare dată a alergării {{event}} la care particip de la semnare, fără termen de încetare: nu o semnez din nou la fiecare alergare.");
+      expect(roText).toContain("aflu acest lucru de pe pagina acelei date, iar declarația se aplică și ei");
+      expect(roText).toContain("Rămâne valabilă până când cer ștergerea ei sau până când semnez o versiune nouă a ei.");
+      expect(enText).toContain("I take part in the group run {{event}}, from the run on {{eventDate}} onwards");
+      expect(enText).toContain("before each run I read its details on its page");
+      expect(enText).toContain("This declaration covers every date of the run {{event}} that I take part in from the moment I sign it, with no end date: I do not sign it again for each run.");
+      expect(enText).toContain("I learn it from that date's page, and the declaration applies to that date too");
+      expect(enText).toContain("It stays valid until I ask for its deletion or until I sign a new version of it.");
+      // The evidence is about these runs, not one run.
+      expect(roText).toContain("riscurile acestor alergări");
+      expect(enText).toContain("the risks of these runs");
     }
   });
 
@@ -201,8 +231,9 @@ describe("§393 the two templates", () => {
         expect(text, `${surface} ${locale}`).not.toMatch(/\b18\b|împlinit 18|18 or older/);
         expect(text.match(/\{\{minimumAge\}\}/g)?.length, `${surface} ${locale}`).toBe(1);
       }
-      expect(TEXTS[surface].ro).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data alergării.");
-      expect(TEXTS[surface].en).toContain("I declare that I am at least {{minimumAge}} old on the day of the run.");
+      // On the day of each run (§NNN): the text covers every date of the run.
+      expect(TEXTS[surface].ro).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.");
+      expect(TEXTS[surface].en).toContain("I declare that I am at least {{minimumAge}} old on the day of each run I take part in.");
       // Signed personally, for oneself: it covers nobody else, no minor.
       expect(TEXTS[surface].ro.join(" ")).toContain("Semnez această declarație personal, doar pentru mine.");
       expect(TEXTS[surface].en.join(" ")).toContain("I sign this declaration personally, for myself only.");
@@ -221,6 +252,17 @@ describe("§393 the public offer line states the retention truthfully", () => {
     expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it while you keep coming to the runs and deletes it when you ask/);
     expect(ro.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|zile/);
     expect(en.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|days/);
+  });
+
+  it("says a returning runner signs once, for every date of the run — on the offer, the signing page and its answer (§NNN)", () => {
+    expect(ro.Event.groupRunDeclaration.line).toContain("o singură dată, pentru toate datele alergării {event}");
+    expect(en.Event.groupRunDeclaration.line).toContain("once, for every date of {event}");
+    expect(ro.Event.groupRunDeclaration.page.intro).toContain("o singură dată: acoperă fiecare dată a ei");
+    expect(en.Event.groupRunDeclaration.page.intro).toContain("once: it covers every date of it");
+    // The same answer whether a row was written or the kept one sent again: nothing tells them apart.
+    expect(ro.Event.groupRunDeclaration.page.done).toContain("nu o mai semnezi la următoarele");
+    expect(en.Event.groupRunDeclaration.page.done).toContain("you do not sign it again for the next ones");
+    for (const catalogue of [ro, en]) expect(catalogue.Event.groupRunDeclaration.page.done).not.toMatch(/deja|already/i);
   });
 
   it("offers no language select: the signature is in the page's language, the text that was read (§57)", () => {

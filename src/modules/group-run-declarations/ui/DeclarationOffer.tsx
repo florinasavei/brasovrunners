@@ -39,7 +39,7 @@ export default async function DeclarationOffer({
   slug,
   now,
 }: {
-  event: { type: string; surface: string | null; offersGroupRunDeclaration: boolean; eventStatus: string; startsAt: Date };
+  event: { title: string; type: string; surface: string | null; offersGroupRunDeclaration: boolean; eventStatus: string; startsAt: Date };
   locale: Locale;
   slug: string;
   now: Date;
@@ -70,8 +70,9 @@ export default async function DeclarationOffer({
       <Typography component="h3" variant="h3" id="declaratie-heading" sx={{ fontSize: "1.0625rem", mb: 0.5 }}>
         {t("groupRunDeclaration.heading")}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {t("groupRunDeclaration.line")}
+      {/* Once for the whole run (§NNN): a returning runner reads here that they need not sign again. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="group-run-declaration-line">
+        {t("groupRunDeclaration.line", { event: event.title })}
       </Typography>
       <Button component="a" href={href} variant="outlined" size="small" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
         <DrawIcon aria-hidden="true" data-testid="declaration-offer-glyph" sx={glyphSx("small")} />

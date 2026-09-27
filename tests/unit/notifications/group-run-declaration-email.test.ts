@@ -30,6 +30,9 @@ describe("§393 the group run's declaration messages", () => {
       expect(email.text).toContain("registers you for nothing");
       expect(email.text).toContain("pentru că ai semnat o declarație pe site-ul clubului");
       expect(email.text).toContain("because you signed a declaration on the club's website");
+      // Once for every date of the run (§NNN).
+      expect(email.text).toContain("Declarația acoperă fiecare dată a acestei alergări, așa că nu o mai semnezi la următoarele.");
+      expect(email.text).toContain("The declaration covers every date of this run, so you do not sign it again for the next ones.");
       // No button and no registration's link: there is nothing to manage.
       expect(email.text).not.toMatch(/\/(inregistrari|registrations)\//);
     }
@@ -43,8 +46,11 @@ describe("§393 the group run's declaration messages", () => {
       // The legitimate-interest, three-year choice, from the sweep's own constant, and the objection.
       const ro = durationPhrase("ro", RETENTION.registrationsYearsAfterEvent, "years");
       const en = durationPhrase("en", RETENTION.registrationsYearsAfterEvent, "years");
-      expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la alergare`);
-      expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the run`);
+      // From the signing (§NNN): the declaration covers every date of the run, so no one run counts.
+      expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la semnare`);
+      expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the signing`);
+      expect(email.text).toContain("Declarația acoperă fiecare dată a acestei alergări.");
+      expect(email.text).toContain("The declaration covers every date of this run.");
       expect(email.text).toContain("dacă alergătorul se opune");
       // Kept while the runner comes to the runs, deleted when they ask (§503), never a number of days.
       expect(email.text).toContain("cât timp alergătorul vine la alergări; când cere ștergerea ei");

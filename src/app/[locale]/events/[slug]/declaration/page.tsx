@@ -96,8 +96,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
+        {/* The same words whether a row was written or the one already kept was sent again (§NNN):
+            the page tells nobody whether the address had signed before. */}
         <Alert severity="success" data-testid="group-run-declaration-done">
-          {t("groupRunDeclaration.page.done")}
+          {t("groupRunDeclaration.page.done", { event: event.title })}
         </Alert>
       </Container>
     );

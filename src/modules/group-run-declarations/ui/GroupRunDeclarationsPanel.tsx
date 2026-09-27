@@ -16,7 +16,9 @@ import type { GroupRunDeclarationListRow } from "../repository";
 
 /**
  * "Declarații semnate (alergare de grup)" on the event's backoffice page (§393): who signed the
- * run's optional self-declaration, and when, with each one's PDF. A closed fold (§336).
+ * run's optional self-declaration, and when, with each one's PDF. A closed fold (§336). The run's,
+ * not the date's (§NNN): one signature covers every date of a repeated run, so every date's page
+ * lists the same people, one row each.
  *
  * For whoever may read the registrations — the Organizer and the Administrator (§289); the page
  * draws it only for them, and the PDF route asserts it again (BR-REQ-060-01). The name and the
@@ -71,7 +73,8 @@ export default async function GroupRunDeclarationsPanel({
                 </Typography>
                 <GlyphButton
                   icon="pdf"
-                  href={`/api/admin/events/${eventId}/group-run-declarations/${row.id}`}
+                  // Under the date it was signed on (§NNN): the list is the run's, the route checks the pair.
+                  href={`/api/admin/events/${row.eventId}/group-run-declarations/${row.id}`}
                   variant="text"
                   size="small"
                   sx={{ minHeight: 44 }}

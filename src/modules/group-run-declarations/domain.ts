@@ -2,6 +2,7 @@
  * The pure rules of a group run's optional self-declaration (§393), shared by the run's page, the
  * signing page and the service, with no database behind them.
  */
+import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 import { ADULT_AGE, ageOn, dayIn, isUnderMinimumAge } from "@/modules/registrations/domain/age";
 import { GROUP_RUN_TOO_YOUNG } from "./form";
 
@@ -86,6 +87,64 @@ export const ERASE_REASON_MAX = 500;
  * sentence.
  */
 export const GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS = 7;
+
+/**
+ * Who a signature is, for "one declaration per person per series" (§NNN): the canonical address
+ * (§10.4 — never a raw compare, so `Ana@Example.ro` is `ana@example.ro`) and the name as typed, read
+ * loosely — case, accents and spacing make no other person («Ana  Popescu», «ana popescu», «Ană
+ * Popescu»). The name is part of it because an address may be a family's (§389): a parent and a
+ * grown child who share one sign one declaration each. Null for an address that is not one.
+ */
+export function signerIdentity(email: string, typedName: string): string | null {
+  let canonical: string;
+  try {
+    canonical = canonicalizeEmail(email).canonicalEmail;
+  } catch (error) {
+    if (error instanceof InvalidEmailError) return null;
+    throw error;
+  }
+  const name = typedName
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+  return `${canonical}\n${name}`;
+}
+
+/** A signature already kept for the run's series, as the signing press reads it (§NNN). */
+export type SeriesSignature = { id: string; legalDocumentId: string; email: string; typedName: string; acceptedAt: Date };
+
+/**
+ * What a press on «Semnează declarația» does to the series' signatures (§NNN; the owner, 2026-09-27:
+ * "a returning runner signs once; it has no end date and is deleted only at their request").
+ *
+ * - **kept** — the same person already signed the version in force for some date of this run: no
+ *   second row. Their earliest such signature is the one kept, and a copy of it is sent again (the
+ *   page answers exactly as a signature does, so it tells nobody whether the address had signed).
+ * - **new** — they have not signed this version: a row is written.
+ *
+ * Either way the person's other rows in the series — an older version's signature, which the new
+ * one replaces, or a duplicate from before this rule, when every date took its own — are listed in
+ * `superseded`, and the service deletes them in the same transaction: one declaration per person
+ * per series, whatever was there before. Another person, or another kind of text (asphalt and
+ * trail are different declarations), is never touched: `existing` holds one kind only.
+ */
+export type SeriesSigningPlan = { kind: "kept"; id: string; email: string; superseded: string[] } | { kind: "new"; superseded: string[] };
+
+export function planSeriesSignature(
+  existing: readonly SeriesSignature[],
+  signer: { email: string; typedName: string },
+  documentId: string,
+): SeriesSigningPlan {
+  const who = signerIdentity(signer.email, signer.typedName);
+  const same = who === null ? [] : existing.filter((row) => signerIdentity(row.email, row.typedName) === who);
+  const [keep] = same
+    .filter((row) => row.legalDocumentId === documentId)
+    .sort((a, b) => a.acceptedAt.getTime() - b.acceptedAt.getTime());
+  if (keep) return { kind: "kept", id: keep.id, email: keep.email, superseded: same.filter((row) => row.id !== keep.id).map((row) => row.id) };
+  return { kind: "new", superseded: same.map((row) => row.id) };
+}
 
 /**
  * Whether the event's backoffice page draws "Declarații semnate (alergare de grup)" (§393): when

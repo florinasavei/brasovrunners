@@ -26,8 +26,14 @@ import { locale } from "./locale";
  * the run here. The signer keeps the PDF that was emailed; the club's archive copy leaves with the
  * document masked (§320). Insert-only apart from that clearing and the erase.
  *
+ * **One per person per series (§NNN).** `event_id` is the date it was signed on, but the declaration
+ * covers every date of that run (§113's series: the same type and title), and the signing press
+ * keeps one row per person and kind of text across them (`planSeriesSignature`). No column records
+ * the series: it is recognised, as the listing recognises it.
+ *
  * `event_id` cascades: an event erased outright takes its declarations with it (the event's own
- * audit row records the erase). `legal_document_id` does not: a version somebody signed is
+ * audit row records the erase) — once the delete has moved them to another date of the run, if the
+ * run has one (`rehomeGroupRunDeclarationsOfEvent`, §NNN). `legal_document_id` does not: a version somebody signed is
  * relied upon and is never deleted (§53, §151, `deletability.ts`).
  */
 export const groupRunDeclarations = pgTable(
