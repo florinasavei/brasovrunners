@@ -1,10 +1,8 @@
-import Alert from "@mui/material/Alert";
-import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { updateNeonLimitsAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateNeonLimitsAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -12,7 +10,6 @@ import {
   NEON_ALWAYS_ON_ALLOWED,
   NEON_MAX_CU_STEPS,
   NEON_MIN_CU,
-  NEON_QUOTA_MARGIN_CU_HOURS,
   NEON_SUSPEND_MODES,
   type NeonComputeSettings,
   type NeonLimitsReading,
@@ -33,6 +30,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 type Props = {
   locale: Locale;
@@ -114,7 +112,8 @@ export function moneySentence(
  * A Server Component with one form, the Neon plan panel's shape: native selects, a plain box for
  * the number (a Romanian keyboard types a decimal comma, which `type="number"` refuses), and the
  * confirmation as a `CheckboxField` whose label is a string (the element made on the client side
- * of the boundary). The warning about the limit is not folded: it is the point of the form.
+ * of the boundary). The limit's part is the owner's four things and nothing else (§511): the
+ * label, «Fără limită / Cu limită», the number and one sentence; what else it could say is a «?».
  */
 export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit, level = 2 }: Props) {
   const t = await getTranslations("Admin");
@@ -133,10 +132,18 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   if (!reading.ok) {
     const { failure } = reading;
     return (
-      <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+      <Panel
+        level={level}
+        id="neon-limits"
+        title={t("tasks.neonLimits.title")}
+        intro={t("tasks.neonLimits.intro")}
+        introMore={t("tasks.neonLimits.introMore")}
+        data-testid="neon-limits"
+      >
         {failure.kind === "unconfigured" ? (
           <Typography variant="body2" data-testid="neon-limits-unconfigured">
             {t("tasks.neonLimits.unconfigured", { missing: failure.missing.join(", ") })}
+            <QuietHelp text={t("tasks.neonLimits.unconfiguredMore")} />
           </Typography>
         ) : (
           <Typography variant="body2" data-testid="neon-limits-failed">
@@ -145,6 +152,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
         )}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           {t("tasks.neonLimits.keyNeeded")}
+          <QuietHelp text={t("tasks.neonLimits.keyNeededMore")} />
         </Typography>
       </Panel>
     );
@@ -162,10 +170,11 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
 
   /*
     The confirmation (§384) with the money in it (§479): one dialog per combination of the three
-    selects the form can post, each naming what that combination does to the month's bill against
-    what Neon holds now — the dialog reads the form as it stands at the press, so the sentence is
-    the one for what is being sent. A combination the form cannot post (a ceiling not offered, a
-    floor above the ceiling) falls through to the plain dialog at the end.
+    selects and the limit's choice the form can post, each naming what that combination does to
+    the month's bill against what Neon holds now — the dialog reads the form as it stands at the
+    press. The limit is said first, in the owner's words (§511): «Limita nouă: 100 ore-CU.», the
+    number filled from the box at the press (`fillFrom`). A combination the form cannot post (a
+    ceiling not offered, a floor above the ceiling) falls through to the plain dialogs at the end.
   */
   const before: NeonComputeSettings = { minCu: currentMin, maxCu: model.maxCu ?? currentMin, suspendMode: model.suspendMode };
   const baseConfirm = {
@@ -174,6 +183,12 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
     cancelLabel: words.cancel,
     destructive: true,
   };
+  // The limit's sentence per choice; `{quotaCuHours}` stays literal here and is filled in the browser.
+  const quotaSentence = {
+    limit: t("tasks.neonLimits.confirmLimit", { hours: "{quotaCuHours}" }),
+    none: t("tasks.neonLimits.confirmNone"),
+  } as const;
+  const quotaModes = ["limit", "none"] as const;
   const translate = (key: string, values?: Record<string, string>) => t(key as "tasks.neonLimits.save", values);
   const numbers = { number: (value: number, options?: { minimumFractionDigits?: number; maximumFractionDigits?: number }) => format.number(value, options) };
   const confirms: ConfirmSpec[] = [
@@ -181,22 +196,34 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
       ceilings
         .filter((floor) => floor.cu <= ceiling.cu)
         .flatMap((floor) =>
-          suspendModes.map((mode) => ({
-            ...baseConfirm,
-            body: `${t("confirm.neonLimitsBody")} ${moneySentence(translate, numbers, before, { minCu: floor.cu, maxCu: ceiling.cu, suspendMode: mode }, limits.reportedPlan)}`,
-            when: [
-              { field: "maxCu", equals: String(ceiling.cu) },
-              { field: "minCu", equals: String(floor.cu) },
-              { field: "suspendMode", equals: mode },
-            ],
-          })),
+          suspendModes.flatMap((mode) =>
+            quotaModes.map((quotaMode) => ({
+              ...baseConfirm,
+              body: `${quotaSentence[quotaMode]} ${moneySentence(translate, numbers, before, { minCu: floor.cu, maxCu: ceiling.cu, suspendMode: mode }, limits.reportedPlan)}`,
+              fillFrom: quotaMode === "limit" ? ["quotaCuHours"] : undefined,
+              when: [
+                { field: "maxCu", equals: String(ceiling.cu) },
+                { field: "minCu", equals: String(floor.cu) },
+                { field: "suspendMode", equals: mode },
+                { field: "quotaMode", equals: quotaMode },
+              ],
+            })),
+          ),
         ),
     ),
-    { ...baseConfirm, body: t("confirm.neonLimitsBody") },
+    { ...baseConfirm, body: quotaSentence.limit, fillFrom: ["quotaCuHours"], when: [{ field: "quotaMode", equals: "limit" }] },
+    { ...baseConfirm, body: quotaSentence.none },
   ];
 
   return (
-    <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+    <Panel
+      level={level}
+      id="neon-limits"
+      title={t("tasks.neonLimits.title")}
+      intro={t("tasks.neonLimits.intro")}
+      introMore={t("tasks.neonLimits.introMore")}
+      data-testid="neon-limits"
+    >
       {/* What Neon holds now, in words: the ceiling and its memory, and the limit. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-readout">
         {t("tasks.neonLimits.readout", {
@@ -207,31 +234,28 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
           quota: model.quotaCuHours === null ? t("tasks.neonLimits.quotaNone") : t("tasks.neonLimits.quotaSet", { hours: hours(model.quotaCuHours) }),
         })}
       </Typography>
-      {model.price && (
-        <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="neon-limits-price">
-          {t("tasks.neonLimits.price", { rate: usdPerHour(rate), perHour: usdPerHour(model.price.usdPerHour), perMonth: usd(model.price.usdPerMonth) })}
-        </Typography>
-      )}
       <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="neon-limits-usage">
         {t("tasks.neonLimits.usage", { used: hours(model.usedCuHours), active: hours(model.activeHours), end: periodEnd })}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 0.5 }} data-testid="neon-limits-defaults">
-        {model.defaults.maxCu === null
-          ? t("tasks.neonLimits.defaultsUnset")
-          : t("tasks.neonLimits.defaults", { min: cu(model.defaults.minCu ?? NEON_MIN_CU), max: cu(model.defaults.maxCu) })}
-        {model.computeCount > 1 && ` ${t("tasks.neonLimits.manyComputes", { count: model.computeCount })}`}
-      </Typography>
+      {model.computeCount > 1 && (
+        <Typography variant="caption" color="text.secondary" component="div">
+          {t("tasks.neonLimits.manyComputes", { count: model.computeCount })}
+        </Typography>
+      )}
       <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="neon-limits-compute">
         {t("tasks.neonLimits.computeReadout", {
           min: cu(currentMin),
           suspend: t(`tasks.neonLimits.suspend.${model.suspendMode}`),
         })}
+        {/* What a compute created anew would get — a detail, behind the «?» (§511). */}
+        <QuietHelp
+          text={
+            model.defaults.maxCu === null
+              ? t("tasks.neonLimits.defaultsUnset")
+              : t("tasks.neonLimits.defaults", { min: cu(model.defaults.minCu ?? NEON_MIN_CU), max: cu(model.defaults.maxCu) })
+          }
+        />
       </Typography>
-      {model.quotaCuHours !== null && (
-        <Alert severity="warning" sx={{ mt: 1 }} data-testid="neon-limits-quota-active">
-          {t("tasks.neonLimits.quotaActive", { hours: hours(model.quotaCuHours), used: hours(model.usedCuHours), end: periodEnd })}
-        </Alert>
-      )}
 
       {!mayEdit ? (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
@@ -264,7 +288,8 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 label={t("tasks.neonLimits.maxCu")}
                 defaultValue={currentIsOffered ? String(model.maxCu) : ""}
                 slotProps={{ select: { native: true } }}
-                helperText={t("tasks.neonLimits.maxCuHelp", { min: cu(NEON_MIN_CU) })}
+                helperText={t("tasks.neonLimits.maxCuHelp")}
+                helpMore={t("tasks.neonLimits.maxCuHelpMore", { min: cu(NEON_MIN_CU) })}
               >
                 {/* A ceiling Neon holds that is not one of the six is not silently replaced by the first. */}
                 {!currentIsOffered && <option value="">{t("tasks.neonLimits.choose")}</option>}
@@ -293,6 +318,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 defaultValue={minIsOffered ? String(currentMin) : ""}
                 slotProps={{ select: { native: true } }}
                 helperText={t("tasks.neonLimits.minCuHelp", { min: cu(NEON_MIN_CU) })}
+                helpMore={t("tasks.neonLimits.minCuHelpMore")}
               >
                 {!minIsOffered && <option value="">{t("tasks.neonLimits.choose")}</option>}
                 {ceilings.map((floor) => (
@@ -309,7 +335,8 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 label={t("tasks.neonLimits.suspendMode")}
                 defaultValue={model.suspendMode}
                 slotProps={{ select: { native: true } }}
-                helperText={t(alwaysOnAllowed ? "tasks.neonLimits.suspendHelp" : "tasks.neonLimits.suspendHelpFree", { rate: usdPerHour(rate) })}
+                helperText={t(alwaysOnAllowed ? "tasks.neonLimits.suspendHelp" : "tasks.neonLimits.suspendHelpFree")}
+                helpMore={alwaysOnAllowed ? t("tasks.neonLimits.suspendHelpMore", { rate: usdPerHour(rate) }) : undefined}
               >
                 {suspendModes.map((mode) => (
                   <option key={mode} value={mode}>
@@ -318,21 +345,12 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 ))}
               </RecallField>
 
-              {/* The warning is the form's reason to exist: never folded, above the box it is about. */}
-              <Alert severity="error" data-testid="neon-limits-warning">
-                <AlertTitle>{t("tasks.neonLimits.warningTitle")}</AlertTitle>
-                {t("tasks.neonLimits.warning", { end: periodEnd })}
-              </Alert>
               {/*
-                The advice is a limit with room plus Neon's spending notification, on every
-                environment (the owner, 2026-09-23: production capped too; `SETUP.md` §40). The
-                confirmation sentence is production's guard on the click, not advice against it.
+                The monthly limit, exactly as the owner asked (§511, 2026-09-27: «prea multe
+                detalii»): the label, «Fără limită / Cu limită», the number and one sentence with
+                the recommendation. The smallest limit Neon accepts now is the «?»; production's
+                confirmation box is its guard on the click (§327), not advice against a limit.
               */}
-              <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-recommendation">
-                {t("tasks.neonLimits.recommend", { hours: hours(recommendedNeonQuotaCuHours(appEnv)) })}
-                {production && ` ${t("tasks.neonLimits.recommendConfirm")}`}
-              </Typography>
-
               <RecallField
                 select
                 name="quotaMode"
@@ -350,23 +368,11 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 // unchanged — and `writeNeonLimits` then sends no quota at all.
                 defaultValue={quotaBoxValue(model.quotaCuHours)}
                 slotProps={{ htmlInput: { inputMode: "decimal", autoComplete: "off" } }}
-                helperText={t("tasks.neonLimits.quotaCuHoursHelp", { smallest: hours(model.smallestQuotaCuHours) })}
+                helperText={t("tasks.neonLimits.quotaCuHoursHelp", { hours: hours(recommendedNeonQuotaCuHours(appEnv)) })}
+                helpMore={t("tasks.neonLimits.floor", { used: hours(model.usedCuHours), smallest: hours(model.smallestQuotaCuHours) })}
               />
-              {/* Outside the helper text on purpose: a refusal replaces that with "check this field", and this is the sentence that says why. */}
-              <Typography variant="body2" color="text.secondary" data-testid="neon-limits-floor">
-                {t("tasks.neonLimits.floor", {
-                  used: hours(model.usedCuHours),
-                  smallest: hours(model.smallestQuotaCuHours),
-                  margin: NEON_QUOTA_MARGIN_CU_HOURS,
-                })}
-              </Typography>
-              {production && (
-                <CheckboxField name="confirmSuspension">{t("tasks.neonLimits.confirm", { end: periodEnd })}</CheckboxField>
-              )}
+              {production && <CheckboxField name="confirmSuspension">{t("tasks.neonLimits.confirm")}</CheckboxField>}
 
-              <Typography variant="caption" color="text.secondary">
-                {t("tasks.neonLimits.writeNote")}
-              </Typography>
               <Box>
                 <GlyphSubmitButton label={t("tasks.neonLimits.save")} pendingLabel={t("tasks.neonLimits.saving")} icon="save" />
               </Box>

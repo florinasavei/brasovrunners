@@ -1,6 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 
 /**
  * Where a runner is in the registration journey, and what happens next.
@@ -28,6 +30,16 @@ export default async function RegistrationJourney({ current }: { current: Journe
   const t = await getTranslations("Registration.journey");
 
   const currentIndex = current === "done" ? ORDER.length : ORDER.indexOf(current);
+  /*
+    The signing step promises when the signed PDF and the number arrive. Under the scheduled
+    delivery (§513) that is the outbox job's wait, which «cel târziu într-o oră» would get wrong
+    under the budget governor's floor (§447) — the same real wait the screen after the form says.
+  */
+  const waitMinutes = current === "declare" ? await cachedEmailWaitMinutes(new Date()) : null;
+  const now =
+    current === "declare" && waitMinutes !== null
+      ? t("now.declareScheduled", { wait: minutesPhrase(await getLocale(), waitMinutes) })
+      : t(`now.${current}`);
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -97,7 +109,7 @@ export default async function RegistrationJourney({ current }: { current: Journe
         say so before somebody registers a second time.
       */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-        {t(`now.${current}`)}
+        {now}
       </Typography>
     </Box>
   );

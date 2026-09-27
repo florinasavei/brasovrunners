@@ -12,7 +12,8 @@ import { groupRunMinimumAge } from "@/modules/group-run-declarations/domain";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { asksForMinorSignature, deadlineMergeValues, type MergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findEventDeclaration } from "@/modules/legal-documents/repository";
+import { effectiveMinimumAge } from "./domain/age";
 import { listStatesMergeValues } from "./list-state-words";
 import { listSocialsMergeValues } from "./list-socials-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
@@ -198,10 +199,11 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The city while the place is to be announced (§328), never the typed place: a signed PDF
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
-      // The event's own minimum age (§329) with its unit — "16 ani", "20 de ani" — for the group-run
-      // declarations' sentence (§440); "" when the event has none, which leaves the sentence out.
-      // A group run's only above eighteen, which its adults-only text already says (§440).
-      minimumAge: minimumAgeMergeValue(event.type === "GROUP_RUN" ? groupRunMinimumAge(event.minAge) : event.minAge, locale),
+      // The event's own minimum age (§329) with its unit — "16 ani", "20 de ani" — for the sentence
+      // every declaration opens with (§440, §515): a race's never under the platform's fourteen
+      // (`effectiveMinimumAge`), a group run's never under eighteen, the age its self-declaration is
+      // signed at (`groupRunMinimumAge`).
+      minimumAge: minimumAgeMergeValue(event.type === "GROUP_RUN" ? groupRunMinimumAge(event.minAge) : effectiveMinimumAge(event.minAge), locale),
       // The club's deadlines, should the declaration name one (§377): read when the PDF is drawn,
       // like the event's facts above — from the instance's memo, once per batch of PDFs.
       ...deadlineMergeValues(locale, await currentDeadlines(db)),
@@ -322,7 +324,8 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
 }
 
 /**
- * The blank form for one event, on the current approved declaration — for the desk.
+ * The blank form for one event, on its current approved declaration — trail or road, as the event
+ * signs it (§515, `findEventDeclaration`) — for the desk.
  *
  * `forMinor` (§330) prints the form a minor signs with a parent or guardian: two signature lines
  * and two identity-document lines, the minor's and the parent's, under "DREPT PENTRU CARE SEMNĂM".
@@ -342,7 +345,7 @@ export async function renderBlankDeclarationPdf<T extends Record<string, unknown
   { forMinor = false }: { forMinor?: boolean } = {},
 ): Promise<Buffer | undefined> {
   const [document, event] = await Promise.all([
-    findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now),
+    findEventDeclaration(db, eventId, locale, now),
     eventMergeValues(db, eventId, locale),
   ]);
   if (!document || !event) return undefined;

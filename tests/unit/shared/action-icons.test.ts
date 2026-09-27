@@ -363,7 +363,8 @@ describe("§318 one glyph per verb, by name", () => {
 
   it("keeps the send button's pending runner, sized to the glyph it replaces (§304 untouched)", () => {
     const button = read("src/shared/ui/SubmitButton.tsx");
-    expect(button).toMatch(/pending \? \(\s*<RunnerLoader size=\{GLYPH_PX\[size\]\} color="inherit" \/>/);
+    // Running while pending, and while a press is held for the anti-bot check (§518).
+    expect(button).toMatch(/pending \|\| holding \? \(\s*<RunnerLoader size=\{GLYPH_PX\[size\]\} color="inherit" \/>/);
     expect(button).toContain("const GLYPH_PX = { small: 18, medium: 20, large: 22 } as const;");
     // The runner the public buttons wear at rest is the figure RunnerLoader animates (§166): one
     // file, imported directly by both, so the send button costs no glyph it did not already carry.

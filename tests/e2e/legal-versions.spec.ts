@@ -39,8 +39,8 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await page.getByRole("combobox").first().click();
     await page
       .getByRole("option", {
-        // The race's declaration, named as the owner named the three since §393.
-        name: wantsTerms ? /Termeni|Terms/ : /\(concurs\)|\(race\)/,
+        // The race's trail declaration, named by its course since §515.
+        name: wantsTerms ? /Termeni|Terms/ : /— cursă trail|— trail race/,
       })
       .click();
 
@@ -54,7 +54,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}\?saved=/);
     await expect(
       page.getByRole("heading", {
-        name: wantsTerms ? /Termeni de concurs · v\d+/ : /Declarație pe propria răspundere \(concurs\) · v\d+/,
+        name: wantsTerms ? /Termeni de concurs · v\d+/ : /Declarație pe propria răspundere — cursă trail · v\d+/,
       }),
     ).toBeVisible();
     await expect(page.getByText("Ciornă", { exact: false }).first()).toBeVisible();

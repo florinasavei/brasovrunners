@@ -266,6 +266,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
               birthDate: "1990-05-17",
               sex: "UNSPECIFIED",
               nationality: "RO",
+              country: "RO",
               city: "Brașov",
               phone: "+40711111111",
               emergencyContactName: "Contact Urgență",

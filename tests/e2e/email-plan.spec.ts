@@ -8,7 +8,7 @@ import { openFold } from "./support/fold";
  * backoffice and the counters follow it. One round trip: Free → Basic → Free, reading the
  * sentence above the form each time, because the sentence is the whole point of the setting.
  */
-test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
+test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", () => {
   // One `platform_settings` row, two projects against one database: run these on desktop only,
   // as the contact-recipients block below already does, or the two runs overwrite each other's
   // plan mid-assertion.
@@ -18,7 +18,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
 
   test("an Administrator sets the plan and the counter changes period", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");
 
     const plan = main.getByTestId("email-plan");
@@ -61,13 +61,13 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
       reads the plan's figures, the queue and the club's copies, and no verb is drawn for them.
     */
     await signIn(page, "Dev Moderator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");
 
     // Every panel is a closed fold (§336). Opened here before anything is counted, because a
     // control inside a closed fold is not in the accessibility tree — "no Save button" would be
     // true of a hidden one.
-    for (const id of ["email-plan", "outbox-queue", "club-notices", "contact-recipients"]) {
+    for (const id of ["email-plan", "outbox-queue", "club-notices"]) {
       await openFold(main.getByTestId(id));
     }
 
@@ -90,7 +90,10 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     // The sentence in force depends on the shared row and on `CONTACT_FORM_TO`: with an address
     // in either it names the Bcc ("Copie ascunsă: …"); with neither — CI sets no variable, and the
     // Administrator's test below clears the row — it says nobody receives them, and names no copy.
-    // Whichever state this database is in, the Organizer is shown the sentence.
+    // Whichever state this database is in, the Organizer is shown the sentence. On «Setări» →
+    // «Contact» since §516, where the card arrives open.
+    await page.goto("/ro/admin/settings/contact");
+    await openFold(main.getByTestId("contact-recipients"));
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
     await expect(main.getByText("Cine primește mesajele de contact stabilește Administratorul", { exact: false })).toBeVisible();
     await expect(main.getByText(/Copie ascunsă:|Nu le primește nimeni/)).toBeVisible();
@@ -105,7 +108,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     // Redactor (who may not read the registrations) is shown the plan's figures and the words,
     // and nothing that names a person.
     await signIn(page, "Dev Copywriter");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");
 
     await openFold(main.getByTestId("email-plan"));
@@ -136,14 +139,14 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   // Set and cleared again, so the next test on this database starts from the environment's list.
   test("an Administrator sets who receives the contact messages, with a Cc and a Bcc", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/contact");
     const main = page.locator("#main");
 
     const contacts = main.getByTestId("contact-recipients");
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
-    // Closed by default (§336; the owner: "should be closed by default"), saying in its summary
-    // where the messages go right now.
-    await expect(contacts).not.toHaveAttribute("open");
+    // «Setări» → «Contact» is this card and the shown address alone, so it arrives open (§516),
+    // its summary still saying where the messages go right now.
+    await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: ");
     await openFold(contacts);
 
@@ -199,7 +202,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   */
   test("a refused list stays in view, with JavaScript on and with it off", async ({ page, browser }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/contact");
     await hydrated(page);
     const contacts = page.locator("#main").getByTestId("contact-recipients");
     const to = "Către (adrese despărțite prin virgulă)";
@@ -213,8 +216,8 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await expect(contacts).toHaveAttribute("open", "");
     expect(page.url()).not.toContain("saved=");
 
-    // With JavaScript off the refused POST renders the page afresh and every fold arrives closed —
-    // and the refusal, with the address as typed, is shown anyway.
+    // With JavaScript off the refused POST renders the page afresh — the tab's card open, as it
+    // arrives (§516) — and the refusal, with the address as typed, is shown in it.
     const { baseURL, viewport } = test.info().project.use;
     const scriptless = await browser.newContext({
       baseURL,
@@ -223,14 +226,14 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
       storageState: await page.context().storageState(),
     });
     const bare = await scriptless.newPage();
-    await bare.goto("/ro/admin/emails");
+    await bare.goto("/ro/admin/settings/contact");
     const fold = bare.locator("#main").getByTestId("contact-recipients");
     await openFold(fold);
     await fold.getByLabel(to).fill("nope");
     const posted = bare.waitForResponse((response) => response.request().method() === "POST");
     await fold.getByRole("button", { name: "Salvează destinatarii" }).click();
     await posted;
-    await expect(fold).not.toHaveAttribute("open");
+    await expect(fold).toHaveAttribute("open", "");
     await expect(fold.getByTestId("form-refusal")).toBeVisible();
     await expect(fold.getByLabel(to)).toHaveValue("nope");
     await scriptless.close();
@@ -245,7 +248,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
 test.describe("§336 the emails participants receive, as a card of cards", () => {
   test("closed on arrival; the language switch is inside it; each message is a closed card of its own", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");
     const card = main.getByTestId("participant-emails");
     const messages = card.getByTestId("participant-email");
@@ -289,11 +292,12 @@ test.describe("§336 the emails participants receive, as a card of cards", () =>
 
   test("a #fragment naming a closed panel opens it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails#contact-recipients");
+    // A closed card of the email tab: the contact recipients are open on their own tab (§516).
+    await page.goto("/ro/admin/settings/emails#email-plan");
     await hydrated(page);
-    await expect(page.locator("#main").getByTestId("contact-recipients")).toHaveAttribute("open", "");
+    await expect(page.locator("#main").getByTestId("email-plan")).toHaveAttribute("open", "");
     // And a message inside the closed card: both folds open.
-    await page.goto("/ro/admin/emails#email-EVENT_REMINDER");
+    await page.goto("/ro/admin/settings/emails#email-EVENT_REMINDER");
     await hydrated(page);
     await expect(page.locator("#participant-emails")).toHaveAttribute("open", "");
     await expect(page.locator("#email-EVENT_REMINDER")).toHaveAttribute("open", "");
@@ -317,7 +321,7 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
   // Set and cleared again, so the next test on this database starts with no hidden copy.
   test("an Administrator sets it, the sentence in force names it, and the forecast counts it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");
     const panel = main.getByTestId("club-notices");
     const forecast = main.getByTestId("email-forecast");

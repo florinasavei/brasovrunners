@@ -21,6 +21,11 @@ import { staffUsers } from "./staff-users";
  * without (BR-REQ-053-01). The two group-run declarations (§393) are optional self-declarations
  * a runner may sign on a group run's page, one per surface: the Tâmpa trail run and the asphalt
  * runs carry different risks. They gate nothing — no registration, no place.
+ *
+ * Since §515 a race has two declarations, one per kind of course, built from one shared body:
+ * the trail one is `EVENT_DECLARATION` — the key every signature so far was given, so nothing
+ * recorded changes meaning — and the road or park one is `EVENT_DECLARATION_ROAD`, appended last
+ * because an enum value is only ever added (AGENTS.md §7.6).
  */
 export const legalDocumentKey = pgEnum("legal_document_key", [
   "PRIVACY_NOTICE",
@@ -28,6 +33,7 @@ export const legalDocumentKey = pgEnum("legal_document_key", [
   "EVENT_DECLARATION",
   "GROUP_RUN_DECLARATION_ASPHALT",
   "GROUP_RUN_DECLARATION_TRAIL",
+  "EVENT_DECLARATION_ROAD",
 ]);
 
 export type LegalDocumentKey = (typeof legalDocumentKey.enumValues)[number];

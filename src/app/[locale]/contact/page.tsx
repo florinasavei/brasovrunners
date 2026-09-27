@@ -30,7 +30,7 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
@@ -271,7 +271,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
                   {invalid.has("captcha") && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}

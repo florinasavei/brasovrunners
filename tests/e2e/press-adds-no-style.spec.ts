@@ -1,5 +1,6 @@
 import { expect, type Page, type Route, test } from "@playwright/test";
 import { ensureRegistrationIsOpen, FEATURED, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 
 /**
  * BR-REQ-041-01 (§371) — pressing a form's send or save button adds no CSS rule to the page.
@@ -46,7 +47,7 @@ test("BR-REQ-041-01 the email wording's Salvează textul, the page's first press
   await page.addInitScript(countInsertedRules);
   await signIn(page, "Dev Administrator");
   const abandon = await holdServerActions(page);
-  await page.goto("/ro/admin/emails");
+  await page.goto("/ro/admin/settings/emails");
   await hydrated(page);
   const editor = page.locator('[data-testid^="email-copy-"]').first();
   // Its folds opened by the keyboard, as a person would: no pointer press before the one measured.
@@ -86,6 +87,8 @@ test("BR-REQ-041-01 the registration form's Trimite înscrierea adds no style", 
     emergencyContactPhone: "+40722222222",
   };
   for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
+  // «Sex» starts empty (§510): the form is refused without an answer.
+  await chooseSex(page);
   for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     const box = page.locator(`[name="${name}"]`);
     if ((await box.count()) && (await box.isEditable())) await box.check();

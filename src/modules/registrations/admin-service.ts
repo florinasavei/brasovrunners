@@ -230,6 +230,7 @@ export type CreateRegistrationByStaffInput = {
     birthDate?: string;
     sex?: "FEMALE" | "MALE" | "UNSPECIFIED";
     nationality?: string;
+    country?: string;
     city?: string;
     phone?: string;
     emergencyContactName?: string;

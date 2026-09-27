@@ -9,6 +9,41 @@ Legend: **building** — a change is being implemented, reviewed and fixed on it
 **ready** — reviewed, waiting for the next small release · **waiting on the owner** — a
 decision or a click only the club can make · **released** — on production, with its baseline.
 
+## Release plan (2026-09-27, evening)
+
+What the next releases carry, in the owner's order. A line moves to «Released» below when its baseline is on production.
+
+### BR-V2.13 — landing tonight
+
+- **A family registers in one sitting.** After the form: «Mai înscrii pe cineva cu aceeași adresă?» → «Da, încă o persoană» (the address fixed) or «Nu, gata — trimite-mi emailul». Nothing is sent before «Gata» or the window in «Termene» (10 minutes by default). ONE family email, «Înscriere de familie: N persoane», with one button that confirms everybody and opens the declarations wizard («Declarația 1 din N»). After the signatures ONE email «Confirmat: N persoane» with every person's QR code, desk code and race number. «Toate înscrierile mele» and «Declarațiile de pe această adresă» show the race numbers too. Migration `0099`.
+- **Emails leave on the scheduler's tick**, not right after the request — «Termene» → «Când pleacă emailurile». Every deadline an email starts (the address link, the declaration hold, the waiting-list offer, the family link) counts from the moment the email leaves, once; a held place is never released while its email is still in the queue; every screen says the real wait.
+- **«Setări»** in the main bar: Emailuri, Termene, Contact, Aspect, Costuri, Platformă as one row of tabs; «Sarcini» rows link into the right tab; every old address answers a 308.
+- **The race declaration is two texts from one body** — trail and road/park — the event signs the one its course reads; the minimum age is at least 14 everywhere; «Aprobă textele platformei» approves all six texts in one press. Migration `0098`.
+- **The registration form asks the country before the city** (România by default) and the sex must be chosen.
+- **«Costuri» opens with the total**, one plain sentence per line.
+- **The public participant list** is set inside the «Program, regulament și declarație» card.
+- **«Tradu cardul: RO → EN»** at the end of every card's tab row, beside the whole-editor button; on a phone the glyph alone.
+- **The anti-bot check says every state** under itself and on the send button — «Se verifică…», «Bifează căsuța», «A expirat», «Încearcă din nou» — and never holds a press for a check that gave up.
+- **The newsletter no longer offers «Coduri de reducere»** — discount codes belong to the members' zone (V2.15). Migration `0100` strips the tick from stored subscriptions.
+
+### BR-V2.14 — tomorrow
+
+- **One self-declaration per series of group runs**: a returning runner signs once; it has no end date and is deleted only at their request.
+- **A glyph on every button and every fold**, public site and backoffice (the owner reads icons before words).
+- **Plain words across the rest of the backoffice**: one sentence per field, no explanations that repeat the label.
+- The small leftovers of V2.13's reviews: «Configurație» only under «Setări», the waiting-list offer kept while its email is queued, the ship's merge message.
+
+### BR-V2.15 — the members' zone
+
+- A **Membru** role below Voluntar, with a Zitadel account through the same invitation from «Echipa» (many at once).
+- **/admin/membri**, the only backoffice page a member sees: the club's text from Pagini → «Zona membrilor» (discount codes, offers, useful things) and the next runs.
+- The public page **«Beneficiile membrilor»**, in the menu while it has content, with the button «Intră în zona membrilor» → sign-in.
+- A paragraph in the privacy notice; Zitadel's free-plan limits written down before inviting dozens.
+
+### BR-V2.16 — the FAQ page
+
+- **Pagini** in two groups: «Pagini standard» — Contact, Echipa, Întrebări (and, from V2.15, Beneficii and Zona membrilor) — then «Pagini personalizate» (today's standing pages).
+- **«Întrebări frecvente»** like «Echipa»: the club adds, orders and removes questions with rich-text answers in both languages; on the site as folds with a glyph, grouped by category, deep-linkable, `FAQPage` structured data; in the menu while a question is live.
 ## Building
 
 Since the evening of 2026-09-24 at most four changes are built at once: eleven in parallel exhausted the development machine and every run had to be recovered.
@@ -20,7 +55,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.12` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.13` |
 
 ## Next, queued
 
@@ -54,6 +89,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.13` | the country before the city on the form, România by default, and a sex the person chooses (§510) · Costuri opens with the month's total and the backoffice speaks one plain sentence per field (§511) · the public list's card inside «Program, regulament și declarație» (§512) · emails leave on the scheduler's tick, never right after the request — a «Termene» setting (§513) · a «Tradu cardul: RO → EN» in every card's tab row beside the whole-editor button (§514) · the declarations reviewed — the race declaration as trail and road from one shared body, minimum age 14 with no under-14 flow, the group-run texts on the event's minimum age (§515) · one «Setări» area with tabs, Sarcini pointing into it, every old address redirected (§516) · the newsletter no longer offers «Coduri de reducere» — members-only from the members' zone — retired from every screen and stripped from stored subscriptions by migration `0100` (§517) · the anti-bot check says every state under itself and on the send button, offers «Reîncearcă verificarea» wherever a person could be stuck, never holds a press for a check that gave up, and `/api/health` says a level for the presses the valve sent (§518) · several people on one address in one sitting — one held family email with every person, one confirm-all link, «Toate înscrierile mele», one declarations wizard (§519) |
 | `BR-V2.12` | the registration form's held press sends again once Turnstile answers, proven with Cloudflare's test keys in an end-to-end spec (§506) · the group run's optional self-declaration is kept while the person takes part and deleted at their request — the seven-day purge, its sentences, the legal templates and the emails follow (§507) · the release tests one tree once — a passing run records its tree and a later run of the same tree within 24 h skips the heavy jobs, eight shards on every pull request, `yarn ship` polls each run to its end and times every step, the landing commit skips the hook after docs:check (§508) · «Vârsta minimă de participare» is one field in the Regulament card for every event type and the page says it for every type (§509) |
 | `BR-V2.12` | the registration form's held press sends again once Turnstile answers, proven with Cloudflare's test keys in an end-to-end spec (§502) · the group run's optional self-declaration is kept while the person takes part and deleted at their request — the seven-day purge, its sentences, the legal templates and the emails follow (§503) · the release tests one tree once — a passing run records its tree and a later run of the same tree within 24 h skips the heavy jobs, eight shards on every pull request, `yarn ship` polls each run to its end and times every step, the landing commit skips the hook after docs:check (§504) · «Vârsta minimă de participare» is one field in the Regulament card for every event type and the page says it for every type (§505) |
 | `BR-V2.11` | chore/migration-0095-film-columns-dropped (§494) · chore/queue-after-v203-rest (§495) · fix/toasts-on-top-and-translate-done-toast (§496) · fix/deepl-credit-from-usage-api (§497) · fix/event-page-conditions-fold-and-public-buttons (§498) · fix/declaration-documents-say-their-version (§499) · feat/start-list-socials (§500) · chore/cloud-session-setup (§501) |

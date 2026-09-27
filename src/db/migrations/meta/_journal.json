@@ -659,6 +659,34 @@
       "when": 1790513812655,
       "tag": "0096_list_socials",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1790521914565,
+      "tag": "0097_registration_country",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1790525629959,
+      "tag": "0098_race_declaration_road",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1790527586432,
+      "tag": "0099_family_sittings",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1790530231563,
+      "tag": "0100_newsletter_discounts_retired",
+      "breakpoints": true
     }
   ]
 }

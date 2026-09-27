@@ -12,7 +12,9 @@ import { getTranslations } from "next-intl/server";
 import { submitNewsletterAction } from "@/app/[locale]/contact/actions";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -69,6 +71,9 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
   const ticked = new Set(typed.topics ?? []);
   const invalid = new Set<string>(refused);
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
+  // The confirmation link leaves on the scheduler's tick by default (§513): the sentence says that
+  // wait, or "a few minutes" when the club sends right after the request. Read only on "sent".
+  const waitMinutes = outcome === "sent" ? await cachedEmailWaitMinutes(new Date()) : null;
   const errorText =
     outcome === "invalid"
       ? null
@@ -96,7 +101,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       {outcome === "sent" && (
         <Alert severity="success" role="status" sx={{ mb: 2 }} data-testid="newsletter-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
-          {t("sent.body")}
+          {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
         </Alert>
       )}
       {outcome === "unavailable" && (
@@ -271,7 +276,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
 
             {siteKey && (
               <Box id="newsletter-captcha">
-                <TurnstileWidget siteKey={siteKey} locale={locale} attempt={attempt} />
+                <BotCheck siteKey={siteKey} locale={locale} attempt={attempt} />
               </Box>
             )}
 

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateTranslationBudgetAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateTranslationBudgetAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -11,6 +11,7 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import type { TranslationBudgetState } from "../budget";
 import type { CreditReading } from "../credit";
 import { TRANSLATION_BUDGET_RULE } from "../domain/budget";
@@ -43,7 +44,13 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
   const clock = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
   return (
-    <Panel title={t("tasks.translationBudget.title")} intro={t("tasks.translationBudget.intro")} data-testid="translation-budget">
+    <Panel
+      id="translation-budget"
+      title={t("tasks.translationBudget.title")}
+      intro={t("tasks.translationBudget.intro")}
+      introMore={t("tasks.translationBudget.introMore")}
+      data-testid="translation-budget"
+    >
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="translation-budget-in-force">
         {state.budget.dailyCharacters === 0
           ? t("tasks.translationBudget.inForce.off")
@@ -74,6 +81,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("tasks.translationBudget.privacy")}
+        <QuietHelp text={t("tasks.translationBudget.privacyMore")} />
       </Typography>
       {state.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
@@ -107,6 +115,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
                 defaultValue={String(state.budget.dailyCharacters)}
                 size="small"
                 helperText={t("tasks.translationBudget.fieldHelp", { max: number(TRANSLATION_BUDGET_RULE.max) })}
+                helpMore={t("tasks.translationBudget.fieldHelpMore")}
                 slotProps={{
                   htmlInput: { inputMode: "numeric", pattern: "[0-9]*", min: TRANSLATION_BUDGET_RULE.min, max: TRANSLATION_BUDGET_RULE.max, required: true },
                 }}

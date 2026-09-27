@@ -119,6 +119,7 @@ async function registerPublicly(event: EventForRegistration, email: string, at: 
       birthDate: "1990-05-17",
       sex: "UNSPECIFIED",
       nationality: "RO",
+      country: "RO",
       city: "Brașov",
       phone: "+40711111111",
       emergencyContactName: "Contact Urgență",
@@ -381,6 +382,31 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
     expect(entry.action).toBe("registration.created_by_staff");
     expect(entry.actorStaffUserId).toBe(admin.id);
     expect(entry.entityType).toBe("registration");
+  });
+});
+
+describe("§510 the country of residence on a staff entry", () => {
+  async function enter(email: string, details: { country?: string; city?: string }) {
+    await createRegistrationByStaff(
+      db,
+      admin,
+      { eventId: (await createInternalEvent(10)).id, firstName: "Desk", lastName: email, email, locale: "ro", listOptOut: false, relayedByParticipantRequest: true, details },
+      NOW,
+    );
+    const [participant] = await db.select().from(participants).where(eq(participants.canonicalEmail, email));
+    const [row] = await db.select().from(registrations).where(eq(registrations.participantId, participant.id));
+    return row;
+  }
+
+  it("stores the country the volunteer picked, beside the city", async () => {
+    const row = await enter("desk.de@example.org", { country: "de", city: "München" });
+    expect(row).toMatchObject({ country: "DE", city: "München" });
+  });
+
+  it("reads România when the entry carries none, the column's own default — never a null", async () => {
+    const row = await enter("desk.none@example.org", {});
+    expect(row.country).toBe("RO");
+    expect(row.city).toBeNull();
   });
 });
 

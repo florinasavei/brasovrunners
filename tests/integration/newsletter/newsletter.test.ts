@@ -146,7 +146,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
   describe("the pop-up's gate and its one answer", () => {
     it("takes no address while the notice in force does not describe the newsletter", async () => {
       await approveNotice({ describesNewsletter: false });
-      const refusal = await subscribeToNewsletter(db, form("ana@example.org", ["DISCOUNTS"]), NOW).catch((error: unknown) => error);
+      const refusal = await subscribeToNewsletter(db, form("ana@example.org", ["GEAR_TESTING"]), NOW).catch((error: unknown) => error);
       expect(isDomainError(refusal) && refusal.code).toBe("CONFLICT");
       expect(await db.select().from(newsletterSubscribers)).toEqual([]);
       expect(await db.select().from(emailOutbox)).toEqual([]);
@@ -154,9 +154,9 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
 
     it("keeps an unconfirmed address, and sends it the confirmation link and nothing else", async () => {
       await approveNotice({ describesNewsletter: true, version: 3 });
-      expect(await subscribeToNewsletter(db, form("Ana.Pop+club@gmail.com", ["DISCOUNTS", "BIG_EVENTS"]), NOW)).toBe("done");
+      expect(await subscribeToNewsletter(db, form("Ana.Pop+club@gmail.com", ["GEAR_TESTING", "BIG_EVENTS"]), NOW)).toBe("done");
       const [subscriber] = await db.select().from(newsletterSubscribers);
-      expect(subscriber).toMatchObject({ canonicalEmail: "ana.pop@gmail.com", topics: ["BIG_EVENTS", "DISCOUNTS"], confirmedAt: null, privacyNoticeVersion: 3 });
+      expect(subscriber).toMatchObject({ canonicalEmail: "ana.pop@gmail.com", topics: ["BIG_EVENTS", "GEAR_TESTING"], confirmedAt: null, privacyNoticeVersion: 3 });
       const rows = await db.select().from(emailOutbox);
       expect(rows.map((row) => row.messageType)).toEqual(["NEWSLETTER_CONFIRM"]);
       // Nothing about a participant, no registration, and no club copy (§320).
@@ -164,7 +164,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
 
       const message = await renderOutboxMessage(rows[0], db, NOW);
       expect(message.subject).toContain("Confirmă abonarea");
-      expect(message.text).toContain("„Evenimente mari” și „Coduri de reducere”");
+      expect(message.text).toContain("„Evenimente mari” și „Testări de încălțăminte”");
       // The secret is in the message alone: only its hash is stored.
       const secret = secretIn(message, "confirm");
       const tokens = await db.select().from(newsletterTokens);
@@ -201,22 +201,22 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
 
     it("says 'everything' alone when everything is ticked with the rest", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribeToNewsletter(db, form("ana@example.org", ["DISCOUNTS", "ALL", "VOLUNTEERING"]), NOW);
+      await subscribeToNewsletter(db, form("ana@example.org", ["GEAR_TESTING", "ALL", "VOLUNTEERING"]), NOW);
       const [subscriber] = await db.select().from(newsletterSubscribers);
       expect(subscriber.topics).toEqual(["ALL"]);
     });
 
     it("answers an address already subscribed with the link to its own page, and changes nothing", async () => {
       await approveNotice({ describesNewsletter: true });
-      const subscriber = await subscribed("ana@example.org", ["DISCOUNTS"]);
+      const subscriber = await subscribed("ana@example.org", ["GEAR_TESTING"]);
       expect(await subscribeToNewsletter(db, form("ANA@example.org", ["ALL"]), new Date(NOW.getTime() + 1000))).toBe("done");
       const [after] = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriber.id));
-      expect(after.topics).toEqual(["DISCOUNTS"]);
+      expect(after.topics).toEqual(["GEAR_TESTING"]);
       const confirmations = await outboxOf("NEWSLETTER_CONFIRM");
       expect(confirmations).toHaveLength(2);
       const message = await renderOutboxMessage(confirmations[1], db, NOW);
       expect(message.subject).toContain("Abonamentul tău");
-      expect(await readNewsletterSubscription(db, secretIn(message, "manage"), NOW)).toMatchObject({ topics: ["DISCOUNTS"] });
+      expect(await readNewsletterSubscription(db, secretIn(message, "manage"), NOW)).toMatchObject({ topics: ["GEAR_TESTING"] });
     });
 
     it("throttles one mailbox at three an hour, whoever is typing it", async () => {
@@ -250,9 +250,9 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
 
     it("spends the manage link on every press: a topic change lands on its successor, the old link opens nothing; refuses none; unsubscribing deletes everything", async () => {
       await approveNotice({ describesNewsletter: true });
-      const subscriber = await subscribed("ana@example.org", ["DISCOUNTS"]);
+      const subscriber = await subscribed("ana@example.org", ["GEAR_TESTING"]);
       const actor = await staff("MODERATOR");
-      await sendNewsletter(db, actor, { topic: "DISCOUNTS", subject: { ro: "Reducere", en: "Discount" }, body: { ro: "Cod", en: "Code" }, sendId: SEND_ID }, NOW);
+      await sendNewsletter(db, actor, { topic: "GEAR_TESTING", subject: { ro: "Testare", en: "Shoe test" }, body: { ro: "Sâmbătă", en: "Saturday" }, sendId: SEND_ID }, NOW);
       const [row] = await outboxOf("NEWSLETTER");
       const message = await renderOutboxMessage(row, db, NOW);
       const secret = secretIn(message, "manage");
@@ -308,50 +308,78 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
 
     it("goes to the topic's subscribers and to everything's, each in their language, once per press, audited without an address", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribed("ana@example.org", ["DISCOUNTS"]);
+      await subscribed("ana@example.org", ["GEAR_TESTING"]);
       await subscribed("ion@example.org", ["ALL"], "en");
       await subscribed("eva@example.org", ["VOLUNTEERING"]);
       // An address never confirmed hears nothing.
-      await subscribeToNewsletter(db, form("mara@example.org", ["DISCOUNTS"]), NOW);
+      await subscribeToNewsletter(db, form("mara@example.org", ["GEAR_TESTING"]), NOW);
       const actor = await staff("MODERATOR");
 
-      const words = { subject: { ro: "Cod de reducere", en: "A discount code" }, body: { ro: "Cod: X1\n\nValabil o lună.", en: "Code: X1\n\nValid a month." } };
-      expect(await sendNewsletter(db, actor, { topic: "DISCOUNTS", ...words, sendId: SEND_ID }, NOW)).toEqual({ kind: "queued", recipients: 2 });
-      expect(await sendNewsletter(db, actor, { topic: "DISCOUNTS", ...words, sendId: SEND_ID }, NOW)).toEqual({ kind: "duplicate" });
+      const words = { subject: { ro: "Testare de încălțăminte", en: "A shoe test" }, body: { ro: "Cod: X1\n\nValabil o lună.", en: "Code: X1\n\nValid a month." } };
+      expect(await sendNewsletter(db, actor, { topic: "GEAR_TESTING", ...words, sendId: SEND_ID }, NOW)).toEqual({ kind: "queued", recipients: 2 });
+      expect(await sendNewsletter(db, actor, { topic: "GEAR_TESTING", ...words, sendId: SEND_ID }, NOW)).toEqual({ kind: "duplicate" });
 
       const rows = await outboxOf("NEWSLETTER");
       expect(rows.map((row) => `${row.recipientEmail}:${row.locale}`).sort()).toEqual(["ana@example.org:ro", "ion@example.org:en"]);
       const english = await renderOutboxMessage(rows.find((row) => row.locale === "en")!, db, NOW);
-      expect(english.subject).toBe("A discount code / Cod de reducere");
+      expect(english.subject).toBe("A shoe test / Testare de încălțăminte");
       expect(english.text).toContain("Valid a month.");
       expect(english.text).toContain("Choose what you receive, or unsubscribe");
 
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "newsletter.sent"));
       expect(JSON.stringify(audit.metadataJson)).not.toContain("@");
-      expect(audit.metadataJson).toMatchObject({ topic: "DISCOUNTS", recipients: 2 });
+      expect(audit.metadataJson).toMatchObject({ topic: "GEAR_TESTING", recipients: 2 });
       expect(JSON.stringify(audit.metadataJson)).not.toContain("Valabil");
     });
 
     it("refuses a missing language by its box, a placeholder by name, and a topic nobody reads", async () => {
       await approveNotice({ describesNewsletter: true });
       const actor = await staff("ADMIN");
-      const half = await sendNewsletter(db, actor, { topic: "DISCOUNTS", subject: { ro: "a", en: "" }, body: { ro: "{participantName}", en: "b" }, sendId: SEND_ID }, NOW).catch(
+      const half = await sendNewsletter(db, actor, { topic: "GEAR_TESTING", subject: { ro: "a", en: "" }, body: { ro: "{participantName}", en: "b" }, sendId: SEND_ID }, NOW).catch(
         (error: unknown) => error,
       );
       expect(isDomainError(half) && half.fields).toEqual(["subjectEn", "bodyRo"]);
-      expect(await sendNewsletter(db, actor, { topic: "DISCOUNTS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW)).toEqual({ kind: "nobody" });
+      expect(await sendNewsletter(db, actor, { topic: "GEAR_TESTING", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW)).toEqual({ kind: "nobody" });
       expect(await db.select().from(newsletterSends)).toEqual([]);
     });
 
     it("counts the audience per topic, 'everything' in each, the unconfirmed apart", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribed("ana@example.org", ["DISCOUNTS"]);
+      await subscribed("ana@example.org", ["GEAR_TESTING"]);
       await subscribed("ion@example.org", ["ALL"]);
-      await subscribeToNewsletter(db, form("mara@example.org", ["DISCOUNTS"]), NOW);
+      await subscribeToNewsletter(db, form("mara@example.org", ["GEAR_TESTING"]), NOW);
       const audience = await countNewsletterAudience(db);
       expect(audience).toMatchObject({ confirmed: 2, unconfirmed: 1 });
-      expect(audience.byTopic.DISCOUNTS).toBe(2);
+      expect(audience.byTopic.GEAR_TESTING).toBe(2);
       expect(audience.byTopic.VOLUNTEERING).toBe(1);
+      // The retired discount codes are no topic a message may be counted for (§517).
+      expect(audience.byTopic).not.toHaveProperty("DISCOUNTS");
+    });
+
+    it("§517 offers no discount codes: a pop-up asking for them alone is refused, beside others they are dropped, the composer refuses them", async () => {
+      await approveNotice({ describesNewsletter: true });
+      const refusal = await subscribeToNewsletter(db, form("ana@example.org", ["DISCOUNTS"]), NOW).catch((error: unknown) => error);
+      expect(isDomainError(refusal) && refusal.fields).toContain("topics");
+      expect(await subscribeToNewsletter(db, form("ion@example.org", ["DISCOUNTS", "VOLUNTEERING"]), NOW)).toBe("done");
+      const [subscriber] = await db.select().from(newsletterSubscribers);
+      expect(subscriber.topics).toEqual(["VOLUNTEERING"]);
+
+      const actor = await staff("ADMIN");
+      const composed = await sendNewsletter(db, actor, { topic: "DISCOUNTS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW).catch(
+        (error: unknown) => error,
+      );
+      expect(isDomainError(composed) && composed.fields).toEqual(["topic"]);
+    });
+
+    it("§517 reads a subscription the old code wrote with discount codes without them", async () => {
+      await approveNotice({ describesNewsletter: true });
+      const subscriber = await subscribed("ana@example.org", ["WEEKLY_RUNS"]);
+      // What the code serving before the migration could still write (§517).
+      await db.update(newsletterSubscribers).set({ topics: ["DISCOUNTS", "WEEKLY_RUNS"] }).where(eq(newsletterSubscribers.id, subscriber.id));
+      const actor = await staff("ADMIN");
+      await sendNewsletter(db, actor, { topic: "WEEKLY_RUNS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW);
+      const message = await renderOutboxMessage((await outboxOf("NEWSLETTER"))[0], db, NOW);
+      expect(await readNewsletterSubscription(db, secretIn(message, "manage"), NOW)).toMatchObject({ topics: ["WEEKLY_RUNS"] });
     });
   });
 
@@ -361,7 +389,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       await subscribed("weekly@example.org", ["WEEKLY_RUNS"]);
       await subscribed("big@example.org", ["BIG_EVENTS"]);
       await subscribed("all@example.org", ["ALL"], "en");
-      await subscribed("disc@example.org", ["DISCOUNTS"]);
+      await subscribed("gear@example.org", ["GEAR_TESTING"]);
       const race = await seedEvent();
 
       expect(await queueNewEventAlerts(db, NOW)).toBe(2);
@@ -448,7 +476,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
     it("announces a weekly series once, to the weekly runs, by its first event — never its dates, a draft, a cancelled event or one published long ago", async () => {
       await approveNotice({ describesNewsletter: true });
       await subscribed("weekly@example.org", ["WEEKLY_RUNS"]);
-      await subscribed("disc@example.org", ["DISCOUNTS"]);
+      await subscribed("gear@example.org", ["GEAR_TESTING"]);
       const weekly = await seedEvent({ type: "GROUP_RUN", repeatRule: { cadence: "WEEKLY", weekdays: [3], until: null } });
       // The series' later dates, published by the series itself (§341): never announced one by one.
       const dates = [];
@@ -661,12 +689,12 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
   describe("§445 the club's copy of a send, and what the panel says waits", () => {
     it("gives the club one copy of a newsletter and of an alert, with the count and no link of anybody's", async () => {
       await approveNotice({ describesNewsletter: true });
-      await subscribed("ana@example.org", ["DISCOUNTS"]);
+      await subscribed("ana@example.org", ["GEAR_TESTING"]);
       await subscribed("ion@example.org", ["ALL"], "en");
       const admin = await staff("ADMIN");
       await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
 
-      await sendNewsletter(db, admin, { topic: "DISCOUNTS", subject: { ro: "Cod", en: "Code" }, body: { ro: "Textul", en: "The text" }, sendId: SEND_ID }, NOW);
+      await sendNewsletter(db, admin, { topic: "GEAR_TESTING", subject: { ro: "Cod", en: "Code" }, body: { ro: "Textul", en: "The text" }, sendId: SEND_ID }, NOW);
       const newsletters = await outboxOf("NEWSLETTER");
       const copy = newsletters.find((row) => row.recipientEmail === "arhiva@club.test");
       expect(newsletters).toHaveLength(3);

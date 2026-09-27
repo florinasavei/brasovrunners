@@ -52,7 +52,7 @@ export function drainOutboxAfterResponse(): void {
           about to open a connection anyway.
 
           `scheduled` means the request does nothing and the pinger sends — up to fifteen
-          minutes later by day (§68). Nothing is lost either way: the row stays PENDING and
+          minutes later by day (§68). It is the default since §513, a «Termene» setting. Nothing is lost either way: the row stays PENDING and
           whoever gets there first claims it under `FOR UPDATE SKIP LOCKED`.
         */
         const { timing } = await readDeliveryTiming(db);

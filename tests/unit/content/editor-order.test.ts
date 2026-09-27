@@ -47,9 +47,8 @@ const EDITOR_ORDER = [
   "<CoHostsBox",
   "<AutomaticSection",
   "<LinksBox",
-  // «Program, regulament și declarație»: three cards in one (§481).
+  // «Program, regulament și declarație»: three cards in one (§481), and the public list (§512).
   "<ProgrammeRulesBox",
-  "<StartListBox",
   't("editor.groups.offPage")',
   "<PromotionBox",
   "<AddressBox",
@@ -76,11 +75,11 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       expect(source, page).not.toContain("<StatusBox");
       // The cost is a card inside the first box since §466, drawn by the box, never by the page.
       expect(source, page).not.toContain("<CostBox");
-      for (const card of ["<CourseBox", "<LinksBox", "<StartListBox", "<WhenBox", "<ProgrammeRulesBox"]) {
+      for (const card of ["<CourseBox", "<LinksBox", "<WhenBox", "<ProgrammeRulesBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
-      // No film card (§481); the place and the rules are drawn by the cards that hold them.
-      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox "]) expect(source, `${page}: ${gone}`).not.toContain(gone);
+      // No film card (§481); the place, the rules and the public list (§512) are drawn by the cards that hold them.
+      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<StartListBox"]) expect(source, `${page}: ${gone}`).not.toContain(gone);
     }
     // The status: a level-3 card inside the first box, with the id it always had (§448).
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
@@ -150,10 +149,18 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     }
     // The first box holds the status again (§448) and wears the mark for it; the course, the
     // links, the partners, the promotion and the list reach nobody.
-    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<StartListBox"]) {
+    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }
+    // The public list is drawn by «Program, regulament și declarație», its last card (§512), and
+    // reaches nobody either: the programme card wears the mark for the programme.
+    const programmeRules = read("src/modules/content/events/ui/boxes/ProgrammeRulesBox.tsx");
+    expect(programmeRules).toContain("await StartListBox({ event, mayEditSettings })");
+    expect(programmeRules.indexOf("{declaration}")).toBeLessThan(programmeRules.indexOf("{startList}"));
+    expect(programmeRules.indexOf("{startList}")).toBeLessThan(programmeRules.indexOf("</Stack>"));
+    expect(read("src/modules/content/events/ui/boxes/StartListBox.tsx")).toMatch(/const card = \{\s+id: "box-start-list",\s+level: 3/);
+    expect(read("src/modules/content/events/ui/field-labels.ts")).toContain('"event.participantListVisibility": inProgrammeRules("startList",');
     // Real registrations only: a test row is counted nowhere the club looks (§12.6).
     expect(EDIT).toContain("const realCount = registered.total - registered.test;");
   });

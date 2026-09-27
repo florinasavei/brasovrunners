@@ -18,7 +18,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
-import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
+import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, groupRunAsksBirthDate, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
 import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
@@ -32,7 +32,7 @@ import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-error
 import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import IdDocumentFields, { ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import LegalLink from "@/shared/ui/LegalLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -138,9 +138,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
     (`latestBirthDateFor`, `isUnderMinimumAge`), today a bound as well. A refusal for age says the
     number, in the summary and under the box, rather than "fill it in" (§47, as the race's §321).
   */
-  // Only a minimum above the adults-only text's eighteen binds anyone (`groupRunMinimumAge`).
+  // The age the text states, never under eighteen (`groupRunMinimumAge`, §515); a birth date is
+  // asked only above it (`groupRunAsksBirthDate`).
   const minAge = groupRunMinimumAge(event.minAge);
-  const hasMinimumAge = minAge > 0;
+  const hasMinimumAge = groupRunAsksBirthDate(event.minAge);
   const minimumAge = { age: yearsPhrase(minAge, locale) };
   const tooYoung = hasMinimumAge && refusedTooYoung(invalid);
   const today = now.toISOString().slice(0, 10);
@@ -154,10 +155,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         {t("groupRunDeclaration.page.title")}
       </Typography>
       <Typography sx={{ mb: 1 }}>{t("groupRunDeclaration.page.intro", { event: event.title })}</Typography>
-      {/* Adults only (the text says so in its first sentence), and the text is this page's language:
+      {/* For oneself, from the run's age — never under eighteen (§515) — and the text is this page's language:
           what is signed is what is shown (§57); the header's switch brings the other language's text. */}
       <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-adults">
-        {t("groupRunDeclaration.page.adultsOnly")}
+        {t("groupRunDeclaration.page.adultsOnly", minimumAge)}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         {t("groupRunDeclaration.page.languageNote")}
@@ -274,9 +275,9 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             required
             autoComplete="email"
           />
-          {/* The consent box carries the age statement the text opens with: adults only, for now. */}
+          {/* The consent box repeats the run's age, the one the text states through {{minimumAge}} (§515). */}
           <CheckboxField id="accepted" name="accepted" required defaultChecked={draft?.accepted === "on"}>
-            {t("groupRunDeclaration.page.accept")}
+            {t("groupRunDeclaration.page.accept", minimumAge)}
           </CheckboxField>
           {/* The signature in a hand (§86): the name typed is the signature itself. */}
           <SignatureField
@@ -296,7 +297,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {/* Cloudflare Turnstile, when the club switched it on (§97). */}
           {siteKey && (
             <Box id="captcha">
-              <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+              <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
               {refused.includes("captcha") && (
                 <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                   {t("groupRunDeclaration.page.captcha")}

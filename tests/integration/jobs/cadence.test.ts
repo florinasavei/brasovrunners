@@ -93,17 +93,7 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
 });
 
 /*
-  BR-REQ-060-01 (§450) — the email delivery timing (§221) is the other platform setting beside the
-  throttle: "scheduled" holds every message for the pinger. It rode on `canManageStaff`, which
-  the Administrator now holds for the team, so it asks `canManagePlatform` of its own.
+  The email delivery timing (§221) sat beside the throttle as a Superadministrator's platform
+  setting until §513 moved it into «Termene», the Administrator's: its tests are in
+  `tests/integration/notifications/delivery-timing.test.ts`.
 */
-describe("BR-REQ-060-01 the email delivery timing is a Superadministrator's (§450)", () => {
-  it("refuses an Administrator and lets a Superadministrator set it", async () => {
-    const { readDeliveryTiming, updateDeliveryTiming } = await import("@/modules/notifications/delivery-timing");
-    expect(await refusal(updateDeliveryTiming(db, await staff("ADMIN"), { timing: "scheduled" }, NOW))).toBe("FORBIDDEN");
-    expect((await readDeliveryTiming(db)).timing).toBe("immediate");
-
-    await updateDeliveryTiming(db, await staff("SUPERADMIN"), { timing: "scheduled" }, NOW);
-    expect((await readDeliveryTiming(db)).timing).toBe("scheduled");
-  });
-});

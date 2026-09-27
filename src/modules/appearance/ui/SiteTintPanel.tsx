@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateSiteTintAction } from "@/app/[locale]/admin/pages/appearance/actions";
+import { updateSiteTintAction } from "@/app/[locale]/admin/settings/appearance/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CUSTOM_SITE_TINT, DEFAULT_SITE_TINT, SITE_TINT_PRESETS } from "@/modules/appearance/domain/site-tint";
@@ -12,6 +12,7 @@ import { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
 import { CLUB_NAME, COLOR, SITE_TINT } from "@/theme/brand";
 import CustomTintOption from "./CustomTintOption";
@@ -22,6 +23,8 @@ type Props = {
   state: SiteTintState;
   /** Administrator only (§450); the action and the service refuse anybody else. */
   mayEdit: boolean;
+  /** Why the fold opens on arrival (§336): «Setări» → «Aspect» is this card alone (§516). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -35,7 +38,7 @@ type Props = {
  * confirmation. «Personalizat» is the one client island (`CustomTintOption`), live as the colour
  * is typed. A role that may not change it reads the choice in force and who changes it.
  */
-export default async function SiteTintPanel({ locale, state, mayEdit }: Props) {
+export default async function SiteTintPanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const { setting } = state;
@@ -44,7 +47,7 @@ export default async function SiteTintPanel({ locale, state, mayEdit }: Props) {
   const preview = { header: CLUB_NAME, card: t("appearance.preview.card"), text: t("appearance.preview.text") };
 
   return (
-    <Panel title={t("appearance.title")} intro={t("appearance.intro")} id="site-tint" data-testid="site-tint">
+    <Panel title={t("appearance.title")} intro={t("appearance.intro")} id="site-tint" data-testid="site-tint" openWhen={openWhen}>
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-tint-current">
         {t("appearance.current", { tint: current })}
       </Typography>

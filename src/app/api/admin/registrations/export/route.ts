@@ -23,12 +23,13 @@ function isRegistrationStatus(value: string | null): value is RegistrationStatus
 }
 
 /** The spreadsheet's own columns for one row (§322), blank when the row has none. */
-function workbookExtras(details: WorkbookDetails | undefined): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "city" | "tshirtSize"> {
+function workbookExtras(details: WorkbookDetails | undefined): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "country" | "city" | "tshirtSize"> {
   if (!details) return {};
   return {
     sex: details.sex,
     ageOnRaceDay: ageOnRaceDay(details.birthDate, details.eventStartsAt, details.eventTimezone),
     nationality: details.nationality,
+    country: details.country,
     city: details.city,
     tshirtSize: details.tshirtSize,
   };

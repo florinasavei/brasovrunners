@@ -10,7 +10,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageTestRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
-import { ageOn, dayIn, latestBirthDateFor, MIN_PARTICIPANT_AGE } from "./domain/age";
+import { ageOn, dayIn, effectiveMinimumAge, latestBirthDateFor } from "./domain/age";
 import { waitlistRefusalOf } from "./domain/waitlist";
 import { findRegistrationByEventAndParticipant } from "./repository";
 import { confirmEmail, type EventForRegistration, submitRegistration } from "./service";
@@ -109,7 +109,7 @@ const SYNTHETIC_BIRTH_DATE = "1990-01-01";
  */
 function syntheticBirthDate(event: EventForRegistration): string {
   const eventDay = dayIn(event.startsAt, event.timezone ?? CLUB_TIME_ZONE);
-  const minAge = event.minAge ?? MIN_PARTICIPANT_AGE;
+  const minAge = effectiveMinimumAge(event.minAge);
   const age = ageOn(SYNTHETIC_BIRTH_DATE, eventDay);
   return age !== null && age >= minAge ? SYNTHETIC_BIRTH_DATE : latestBirthDateFor(minAge, eventDay);
 }
@@ -210,6 +210,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
       birthDate: syntheticBirthDate(event),
       sex: "UNSPECIFIED",
       nationality: "RO",
+      country: "RO",
       city: "Brașov",
       phone: "+40000000000",
       emergencyContactName: "Test Contact",

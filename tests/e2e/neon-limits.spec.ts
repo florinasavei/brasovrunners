@@ -15,14 +15,16 @@ import { signIn } from "./support/featured-event";
 test.describe("BR-REQ-090-07 the database's limits card without a key", () => {
   test("names the missing variables, offers no form, and leaves the to-do row open", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93).
     const main = page.locator("#main");
     const card = main.getByTestId("neon-limits");
 
     await expect(card.getByRole("heading", { name: "Limitele bazei de date" })).toBeVisible();
     await expect(card.getByTestId("neon-limits-unconfigured")).toContainText("Lipsește NEON_API_KEY, NEON_PROJECT_ID pe acest mediu");
-    await expect(card.getByTestId("neon-limits-unconfigured")).toContainText("SETUP.md §33");
+    // No file name or §-number on the screen (§511): where the variables go is the «?» beside it.
+    await expect(card.getByTestId("neon-limits-unconfigured")).not.toContainText("SETUP.md");
+    await expect(card.getByTestId("neon-limits-unconfigured").getByRole("button", { name: /proiectul Vercel al mediului/ })).toHaveCount(1);
     // Which key would do, per Neon's own documentation: a project-scoped one has Editor access.
     await expect(card).toContainText("„Project-scoped”");
     await expect(card.getByTestId("neon-limits-form")).toHaveCount(0);

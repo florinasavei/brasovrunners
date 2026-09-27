@@ -1,5 +1,6 @@
 import { env } from "@/shared/config/env";
 import { coHostDescription, primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
+import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { forecastPlace } from "@/modules/weather/domain/place";
 import { CLUB_LOCALITY } from "./domain/place";
 import type { PublicEvent } from "./repository";
@@ -261,10 +262,10 @@ export function sportsEventJsonLd(
     sport: "Running",
     /*
       Who may enter (§329): schema.org's own spelling of an open-ended range, "14-". Wherever
-      the page states a minimum — every type since §505 (`publicAgeRule`) — and only for a
-      minimum: zero is no minimum, and "0-" would state a rule nobody set.
+      the page states a minimum — every type since §505 (`publicAgeRule`) — with the number that
+      binds, never under fourteen since §NNN (`effectiveMinimumAge`).
     */
-    ...(event.minAge > 0 ? { typicalAgeRange: `${event.minAge}-` } : {}),
+    typicalAgeRange: `${effectiveMinimumAge(event.minAge)}-`,
     // No `remainingAttendeeCapacity`: criterion 3 requires it to equal the free-place count
     // shown on the page, and the pilot has no capped events — the database refuses a capacity.
     // It arrives with the capacity transaction, not before.

@@ -1,8 +1,5 @@
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
-import FemaleIcon from "@mui/icons-material/Female";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
-import MaleIcon from "@mui/icons-material/Male";
-import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -43,7 +40,7 @@ import { countryOptions } from "@/modules/registrations/countries";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
-import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
+import { ageRuleVariant, dayIn, effectiveMinimumAge, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { acceptanceAfterRefusal, ERROR_SUMMARY_ID, parseInvalidFields, REGISTRATION_FORM_FIELDS } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
@@ -51,12 +48,6 @@ import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice"
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import {
-  OPTION_GLYPH_SX,
-  OPTION_LABEL_SX,
-  OPTION_ROW_SX,
-  SELECT_WITH_GLYPHS_SX,
-} from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
@@ -67,18 +58,23 @@ import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import NationalityField from "@/modules/registrations/ui/NationalityField";
+import SexField from "@/modules/registrations/ui/SexField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
-import { submitRegistrationAction } from "./actions";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
+import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistrationAction } from "./actions";
+import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
+import { FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string; fields?: string; retry?: string; another?: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string; fields?: string; retry?: string; another?: string; family?: string; sent?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -170,7 +166,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   );
   if (state !== "OPEN") notFound();
 
-  const { submitted, error, fields, retry, another } = await searchParams;
+  const { submitted, error, fields, retry, another, family, sent } = await searchParams;
+  /*
+    The family sitting (§519): the browser's sealed half, when its email has not left yet. After the
+    form it is the screen that asks «Mai înscrii pe cineva cu aceeași adresă?»; with `?family=1` it is
+    the next form, the address fixed. Everything it shows was typed on this browser (§39).
+  */
+  const sittingCookie = resting ? null : await readFamilySittingCookie();
+  const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
+  const sittingScreen = Boolean(submitted) && sent !== "1" && sitting !== null;
+  const familyForm = !submitted && family === "1" && sitting !== null;
   /*
     A link from an email sent before §446, which opened this form for another person on the address
     (§389). Retired: the email now carries one confirmation of the person the form named
@@ -229,10 +234,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   /**
    * Under the event's minimum age on the day of the race (§321, §329). The same kind of marker
    * as the one above: the summary links the birth date, and this says which rule refused it —
-   * "complete this field correctly" about somebody's real birth date would be untrue. Never on
-   * an event with no minimum, whatever a typed-in address says: "the minimum age is 0" is no rule.
+   * "complete this field correctly" about somebody's real birth date would be untrue. Every event
+   * has a minimum since §515, never under fourteen (`effectiveMinimumAge`), so the marker always
+   * has a number to say.
    */
-  const tooYoung = event.minAge > 0 && (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
+  const minAge = effectiveMinimumAge(event.minAge);
+  const tooYoung = (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
   /**
    * No place, and the waiting list full — or no waiting list at all (§348). A rule about the
    * event, like the throttle's marker: read from the raw parameter, matched against the two
@@ -267,15 +274,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     them too. The upper bound is the latest birth date that still reaches this event's own
     minimum (`events.min_age`, §329) on the race's own day in the race's own zone — computed here,
     for this event, from the arithmetic the server refuses with — so the picker never offers a
-    date the submission would be turned back for. Today stays a bound as well: for an event with
-    no minimum, and for the event absurdly far ahead that would allow a future date.
+    date the submission would be turned back for. Today stays a bound as well, for the event
+    absurdly far ahead that would allow a future date.
   */
   const today = now.toISOString().slice(0, 10);
-  const youngestAllowed = latestBirthDateFor(event.minAge, dayIn(event.startsAt, event.timezone));
+  const youngestAllowed = latestBirthDateFor(minAge, dayIn(event.startsAt, event.timezone));
   const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
   // "14 ani", "20 de ani" — the event's number as this page's sentences say it (§329).
-  const minimumAge = { age: yearsPhrase(event.minAge, locale) };
-  const hasMinimumAge = event.minAge > 0;
+  const minimumAge = { age: yearsPhrase(minAge, locale) };
   const earliestBirthDate = new Date(
     Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()),
   )
@@ -355,7 +361,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
   // While resting too (§447): a press the database refused left the answers in the draft cookie.
-  const draft = error || resting ? await readFormDraft() : null;
+  /*
+    The next form of a family sitting (§519) starts with the boxes the family shares — the city, the
+    citizenship, the guardian, the emergency contact, the emails' language — as this browser posted
+    them on the sitting's earlier forms; the person's own boxes start empty. A refusal's draft, which
+    holds everything typed, outranks them.
+  */
+  const draft = error || resting ? await readFormDraft() : familyForm && sitting?.shared ? sitting.shared : null;
   /*
   What was typed before a rejected submission (§142), by field name.
 
@@ -468,13 +480,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         {/* Who may enter, among the facts of what is being signed up for and before the first
             field (§321): the event's own minimum age (§329), and who fills the form in for a
             minor (§108). A line, not a banner — it is a condition of the race like its date, not
-            a warning. Three sentences, so it reads right whatever the number: no minimum says
-            only who registers a minor, eighteen or more says nothing about parents, and the
+            a warning. Two forms, so it reads right whatever the number (§515: never under
+            fourteen): under eighteen it names who registers a minor, eighteen or more says nothing about parents, and the
             same sentence stands on the event page. Gone once the form has been sent: by then it
             has been answered. */}
         {!submitted && (
           <Typography variant="body2" color="text.secondary" data-testid="age-rule">
-            {t(`ageRule.${ageRuleVariant(event.minAge)}`, minimumAge)}
+            {t(`ageRule.${ageRuleVariant(minAge)}`, minimumAge)}
           </Typography>
         )}
       </Box>
@@ -493,7 +505,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}
-      <RegistrationJourney current={submitted ? "confirm" : "details"} />
+      <RegistrationJourney current={submitted && !sittingScreen ? "confirm" : "details"} />
 
       {/* The five steps and the waiting list, folded: the journey above says where they are,
           this says the whole of it (`DECISIONS.md` §91). */}
@@ -503,7 +515,27 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         </Box>
       )}
 
-      {submitted ? (
+      {sittingScreen && sitting ? (
+        /*
+          «Mai înscrii pe cineva cu aceeași adresă?» (§519) — before anything is mailed: «Încă o
+          persoană» opens the form again with the address fixed, «Gata» sends the one email. The
+          same screen after every form, whatever the address holds (§39).
+        */
+        <FamilySittingNext
+          email={sitting.email}
+          names={sittingNames(sitting.people)}
+          sameBirthDate={sitting.sameBirthDate ?? null}
+          releaseInMs={sitting.heldUntil.getTime() - now.getTime()}
+          firstName={submittedFacts?.firstName ?? null}
+          eventTitle={event.title}
+          atOnce={sitting.atOnce === true}
+          windowMinutes={sitting.windowMinutes ?? null}
+          locale={locale}
+          slug={slug}
+          continueAction={continueFamilySittingAction}
+          releaseAction={releaseFamilySittingAction}
+        />
+      ) : submitted ? (
         /*
           "Aproape gata, Ana!" — the screen after the form, in `CheckYourEmail.tsx`. It carries
           every fact the receipt it replaced had: the address (§224), the wait in bold and once
@@ -628,7 +660,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Box component="ul" sx={{ m: 0, mt: 1, pl: 3 }}>
                     {rejected.map((name) => (
                       <li key={name}>
-                        <MuiLink href={`#${fieldId(name)}`}>{t(`fieldNames.${name}`)}</MuiLink>
+                        <MuiLink href={`#${fieldId(name)}`}>
+                          {/* «Sex» says what to do, and that "prefer not to say" is an answer (§510). */}
+                          {name === "sex" ? t("sexMissing") : t(`fieldNames.${name}`)}
+                        </MuiLink>
                         {/* The rule, where the browser lands (§321): a birth date refused for age
                             is not a typo to hunt for, and the sentence says what would be accepted. */}
                         {name === "birthDate" && tooYoung && <>: {t("errors.tooYoung", minimumAge)}</>}
@@ -687,6 +722,29 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
+          {/*
+            The next person of a family sitting (§519): who was sent so far, that nothing is mailed
+            yet, and the way back to «Gata» without filling this one in.
+          */}
+          {familyForm && sitting && (
+            <Alert severity="success" icon={false} sx={{ mb: 2 }} data-testid="family-sitting-intro">
+              <AlertTitle>{t("sitting.formTitle")}</AlertTitle>
+              <Typography variant="body2">{t("sitting.formSoFar", { names: sittingNames(sitting.people).join(", ") })}</Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {/*
+                  How long is left, on the server's clock at this render (§519): the email leaves by
+                  itself then unless this form is sent — sending it starts the window again. At a
+                  window of 0 nothing waits: this person's email leaves when the form is sent.
+                */}
+                {sitting.atOnce
+                  ? t("sitting.formAtOnce")
+                  : t("sitting.formLeft", { minutes: minutesPhrase(locale, Math.max(1, sittingMinutesLeft(sitting.heldUntil.getTime() - now.getTime()))) })}{" "}
+                <MuiLink href={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?submitted=1`} sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}>
+                  {t("sitting.formBack")}
+                </MuiLink>
+              </Typography>
+            </Alert>
+          )}
           <form action={submitRegistrationAction} id={REGISTRATION_FORM_ID}>
             {/*
               The try after a refusal (§282). The action reads this back and lets the submission
@@ -722,6 +780,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   runner
                   awaitsBotCheck={Boolean(siteKey)}
                   botCheckHint={t("botCheckWait")}
+                  botCheckTickHint={t("botCheckTick")}
+                  botCheckExpiredHint={t("botCheckExpired")}
+                  botCheckValveHint={t("botCheckValve")}
                   slowHint={t("submitSlow")}
                   size="medium"
                 />
@@ -799,8 +860,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate")}
-                /* The event's minimum age and the categories, in the help (§321, §329) — only the
-                   categories on an event with no minimum; a refusal for age says the rule again
+                /* The event's minimum age and the categories, in the help (§321, §329; never under
+                   fourteen since §515); a refusal for age says the rule again
                    rather than "complete this field correctly". Left native, not the backoffice's
                    MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a runner's own birth
                    date is decades back, faster typed than paged through a calendar month by
@@ -810,9 +871,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     ? tooYoung
                       ? t("errors.tooYoung", minimumAge)
                       : t("errors.field")
-                    : hasMinimumAge
-                      ? t("birthDateHelp", minimumAge)
-                      : t("birthDateHelpNoMinimum")
+                    : t("birthDateHelp", minimumAge)
                 }
                 type="date"
                 label={t("birthDate")}
@@ -838,59 +897,46 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/* The city, required and right after the birth date (§467; the owner, 2026-09-26:
                   "orașul ar trebui să fie obligatoriu, pune după data nașterii"), reversing
-                  §322's optional fold. */}
-              <TextField
-                {...field("city", t("originHelp"))}
-                label={t("city")}
-                required
-                autoComplete="address-level2"
-              />
-
-              {/* What the answer is for, under the field (§322): a category ranking, and "prefer
-                  not to say" is an answer. */}
+                  §322's optional fold. The country the runner lives in comes first (§510): a city
+                  means little without it, and a citizenship is not where somebody lives. The
+                  citizenship's own searchable native select (§463), required and on Romania unless
+                  the runner says otherwise; stored and exported, never shown publicly. */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <NationalityField
+                  {...field("country")}
+                  label={t("country")}
+                  // A blank from an older draft comes back as Romania, as the citizenship does.
+                  defaultValue={prefill("country") || "RO"}
+                  countries={countries}
+                  words={countrySearchWords}
+                />
                 <TextField
-                  {...field("sex", t("sexHelp"))}
-                  label={t("sex")}
-                  select
+                  {...field("city", t("originHelp"))}
+                  label={t("city")}
                   required
                   fullWidth
-                  defaultValue={prefill("sex", "UNSPECIFIED")}
-                  sx={SELECT_WITH_GLYPHS_SX}
-                >
-                  {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
-                      sex"). As **children** of the item, never as a prop across the boundary —
-                      see `CheckboxField` for what an element-valued prop costs — and MUI shows
-                      the chosen item's children in the closed field, so the mark stays.
+                  autoComplete="address-level2"
+                />
+              </Stack>
 
-                      Which is also why the row is declared twice: the children travel to the
-                      closed field, the item's own `sx` does not. `select-option.ts` says what
-                      that cost before it was laid out in both places. */}
-                  <MenuItem value="FEMALE" sx={OPTION_ROW_SX}>
-                    <Box component="span" sx={OPTION_GLYPH_SX}>
-                      <FemaleIcon fontSize="small" aria-hidden="true" />
-                    </Box>
-                    <Box component="span" sx={OPTION_LABEL_SX}>
-                      {t("sexOptions.FEMALE")}
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="MALE" sx={OPTION_ROW_SX}>
-                    <Box component="span" sx={OPTION_GLYPH_SX}>
-                      <MaleIcon fontSize="small" aria-hidden="true" />
-                    </Box>
-                    <Box component="span" sx={OPTION_LABEL_SX}>
-                      {t("sexOptions.MALE")}
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="UNSPECIFIED" sx={OPTION_ROW_SX}>
-                    <Box component="span" sx={OPTION_GLYPH_SX}>
-                      <PersonIcon fontSize="small" aria-hidden="true" />
-                    </Box>
-                    <Box component="span" sx={OPTION_LABEL_SX}>
-                      {t("sexOptions.UNSPECIFIED")}
-                    </Box>
-                  </MenuItem>
-                </TextField>
+              {/* What the answer is for, under the field (§322): a category ranking, and "prefer
+                  not to say" is an answer. It starts empty (§510): pre-chosen on «Prefer să nu
+                  spun», a runner who never looked at it sent an answer they did not give, and the
+                  category ranking could not tell the two apart. Now the browser, the §422 list
+                  and the server (the enum has no blank) refuse a form with no answer, and "prefer
+                  not to say" stays one press away. A native select behind an «Alege…» placeholder,
+                  so it answers without JavaScript as the citizenship does (§463). */}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <SexField
+                  {...field("sex", t("sexHelp"))}
+                  label={t("sex")}
+                  placeholder={t("sexChoose")}
+                  answers={{
+                    FEMALE: t("sexOptions.FEMALE"),
+                    MALE: t("sexOptions.MALE"),
+                    UNSPECIFIED: t("sexOptions.UNSPECIFIED"),
+                  }}
+                />
                 {/*
                   Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
                   "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
@@ -921,6 +967,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 messages to "…@gmail.con": one letter, and the confirmation link goes nowhere
                 while the screen says to check the inbox.
               */}
+              {/*
+                The next form of a family sitting (§519): the address is the sitting's, said back in
+                bold and not asked again — the server takes it from the browser's sealed half.
+              */}
+              {familyForm && sitting ? (
+                <Box data-testid="family-sitting-address">
+                  <input type="hidden" name={FAMILY_SITTING_FIELD} value="1" />
+                  <Typography variant="body2" color="text.secondary">
+                    {t("sitting.addressLabel")}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{sitting.email}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("sitting.addressHelp")}
+                  </Typography>
+                </Box>
+              ) : (
               <EmailTwice
                 name="email"
                 confirmName="emailConfirm"
@@ -940,6 +1002,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 error={invalid.has("email") || invalid.has("emailConfirm")}
                 helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
+              )}
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 invalidLabel={t("phoneInvalid")}
@@ -1392,7 +1455,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                  {/* The one form whose send button holds a press for the check (§518). */}
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} heldPress />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
@@ -1441,6 +1505,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   // rules of its own shows a plain box linking to its page, where the field's
                   // own name is the right thing to list (review finding 1).
                   ...(hasRules ? { rulesAcknowledged: t("rules.missing") } : {}),
+                  // «Sex» likewise: it starts empty, and "prefer not to say" is an answer (§510).
+                  sex: t("sexMissing"),
                 }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the
@@ -1449,6 +1515,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 */
                 awaitsBotCheck={Boolean(siteKey)}
                 botCheckHint={t("botCheckWait")}
+                botCheckTickHint={t("botCheckTick")}
+                botCheckExpiredHint={t("botCheckExpired")}
+                botCheckValveHint={t("botCheckValve")}
                 slowHint={t("submitSlow")}
                 size="large"
                 fullWidth

@@ -130,6 +130,7 @@ const submission = (overrides: Record<string, unknown> = {}) => ({
   birthDate: FOURTEEN_THE_DAY_AFTER,
   sex: "FEMALE",
   nationality: "RO",
+  country: "RO",
   city: "Brașov",
   phone: "+40711111111",
   emergencyContactName: "Ion Popescu",
@@ -455,21 +456,25 @@ describe("§329 an event with a minimum of its own", () => {
   });
 });
 
-describe("§329 an event with no minimum", () => {
-  it("takes anyone the birth-date range allows — a six-year-old, through a parent", async () => {
+describe("§515 an older event saved with no minimum binds at fourteen", () => {
+  it("refuses a six-year-old and a thirteen-year-old at every door, and takes fourteen on the day", async () => {
+    // Stored under §329 as 0 ("no minimum"); since §515 nobody under fourteen enters any event.
     const event = await createRace(RACE_START, "Europe/Bucharest", 0);
-    expect(await refusal(submitRegistration(db, event, submission({ birthDate: "2020-03-01" }), NOW))).toBeNull();
-    const [row] = await db.select().from(registrations);
-    expect(row.birthDate).toBe("2020-03-01");
-    expect(row.guardianName).toBe("Ion Popescu");
+    for (const birthDate of ["2020-03-01", FOURTEEN_THE_DAY_AFTER]) {
+      const refused = await refusal(submitRegistration(db, event, submission({ birthDate }), NOW));
+      expect(refused?.fields, birthDate).toEqual(expect.arrayContaining(["birthDate", UNDER_MINIMUM_AGE]));
+    }
+    const staff = await refusal(createRegistrationByStaff(db, volunteer, staffEntryFor(event, FOURTEEN_THE_DAY_AFTER, true), NOW));
+    expect(staff?.fields).toContain(UNDER_MINIMUM_AGE);
+    await nothingWritten();
+    expect(await refusal(submitRegistration(db, event, submission({ birthDate: FOURTEEN_ON_RACE_DAY }), NOW))).toBeNull();
   });
 
-  it("still refuses a birth date outside the range (BR-REQ-031-04 criterion 4), for the date and never for the age", async () => {
+  it("still refuses a birth date outside the range (BR-REQ-031-04 criterion 4) for the date", async () => {
     const event = await createRace(RACE_START, "Europe/Bucharest", 0);
     for (const birthDate of ["2027-01-01", "1890-01-01"]) {
       const refused = await refusal(submitRegistration(db, event, submission({ birthDate }), NOW));
       expect(refused?.fields, birthDate).toContain("birthDate");
-      expect(refused?.fields, birthDate).not.toContain(UNDER_MINIMUM_AGE);
     }
     await nothingWritten();
   });
@@ -491,9 +496,9 @@ describe("§329 an event that never said", () => {
 });
 
 describe("§329 a staff entry and the desk's walk-in follow the chosen event", () => {
-  it("refuses twenty at a race that asks for twenty-one and takes the same person at one that asks for nothing", async () => {
+  it("refuses twenty at a race that asks for twenty-one and takes the same person at one that asks for fourteen", async () => {
     const adultsOnly = await createRace(RACE_START, "Europe/Bucharest", 21);
-    const open = await createRace(RACE_START, "Europe/Bucharest", 0);
+    const open = await createRace(RACE_START, "Europe/Bucharest", 14);
     for (const fastTrack of [false, true]) {
       const refused = await refusal(
         createRegistrationByStaff(db, volunteer, staffEntryFor(adultsOnly, TWENTY_ON_RACE_DAY, fastTrack), NOW),

@@ -27,8 +27,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
   // «Când și unde» holds the date, the place and the time zone since §481: one card, its fields named by it.
   const inWhenWhere = (label: string) => inBox("whenWhere", label);
-  // «Program, regulament și declarație» holds three cards since §481: a field is named by the card and its card.
-  const inProgrammeRules = (card: "programme" | "rules" | "declaration", label: string) =>
+  // «Program, regulament și declarație» holds three cards since §481, and the public list since §512: a field is named by the card and its card.
+  const inProgrammeRules = (card: "programme" | "rules" | "declaration" | "startList", label: string) =>
     inBox("programmeRules", `${t(`editor.boxes.${card}.title`)} › ${label}`);
 
   const labels: Record<string, string> = {
@@ -72,7 +72,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.bibColour": inBox("bibs", t("editor.bibColour")),
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
     "event.declarationDocumentId": inProgrammeRules("declaration", t("editor.declarationDocument")),
-    "event.participantListVisibility": inBox("startList", t("editor.participantList")),
+    "event.participantListVisibility": inProgrammeRules("startList", t("editor.participantList")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
     "event.difficulty": inBox("course", t("editor.fields.difficulty")),

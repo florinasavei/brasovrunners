@@ -56,6 +56,7 @@ const submission = (when: Date, overrides: Record<string, unknown> = {}) => ({
   emergencyContactName: "Ion Vecinul",
   emergencyContactPhone: "+40722222222",
   nationality: "RO",
+  country: "RO",
   city: "Brașov",
   email: "ana@example.ro",
   locale: "ro",

@@ -6,7 +6,8 @@ import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §377 — "Termene" on `/admin/emails`: the club's deadlines, one box each, the Administrator's.
+ * §377 — "Termene": the club's deadlines, one box each, the Administrator's — «Setări» → «Termene»
+ * since §516, one tab over from the messages whose when-lines state them.
  *
  * One round trip that ends where it began: the defaults are read, one deadline is changed and read
  * back in the panel's line and in the reminder's when-line under it. The defaults come back in an
@@ -33,7 +34,7 @@ async function restoreDefaults(browser: Browser, defaults: Record<string, string
   const page = await context.newPage();
   try {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/deadlines");
     const panel = page.locator("#main").getByTestId("deadlines");
     await openFold(panel);
     for (const [name, value] of Object.entries(defaults)) await panel.locator(`input[name="${name}"]`).fill(value);
@@ -52,7 +53,7 @@ async function restoreDefaults(browser: Browser, defaults: Record<string, string
     await context.close();
   }
 }
-test.describe("§377 the club's deadlines on /admin/emails", () => {
+test.describe("§377 the club's deadlines on «Setări» → «Termene»", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });
@@ -80,12 +81,12 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
 
   test("an Administrator changes a deadline, and the page says it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/deadlines");
     const main = page.locator("#main");
     const panel = main.getByTestId("deadlines");
 
-    // A closed fold, whose line already says the four a participant meets most.
-    await expect(panel).not.toHaveAttribute("open");
+    // The tab is this card alone, so it arrives open (§516); its line says the four a participant meets most.
+    await expect(panel).toHaveAttribute("open", "");
     await expect(panel.locator(":scope > summary")).toContainText("Link 48 de ore · loc ținut 30 de minute · ofertă 24 de ore · reminder 2 zile");
     await openFold(panel);
     for (const [name, value] of Object.entries(DEFAULTS)) await expect(panel.locator(`input[name="${name}"]`)).toHaveValue(value);
@@ -100,8 +101,12 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
     await expect(main.getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
     await expect(panel).toHaveAttribute("open", "");
     await expect(panel.locator(":scope > summary")).toContainText("reminder 3 zile");
-    // The reminder's card under it says the new lead before it is opened.
+    // The reminder's card, one tab over on «Emailuri», says the new lead before it is opened.
+    await main.getByRole("navigation", { name: "Setări" }).getByRole("link", { name: "Emailuri" }).click();
+    await expect(page).toHaveURL(/\/ro\/admin\/settings\/emails/);
     await expect(main.locator("#email-EVENT_REMINDER > summary")).toContainText("cu 3 zile înainte de start");
+    await main.getByRole("navigation", { name: "Setări" }).getByRole("link", { name: "Termene" }).click();
+    await expect(page).toHaveURL(/\/ro\/admin\/settings\/deadlines/);
 
     // A number outside its bounds is refused, naming the box, and nothing is saved.
     await panel.locator('input[name="holdMinutes"]').fill("5");
@@ -116,7 +121,7 @@ test.describe("§377 the club's deadlines on /admin/emails", () => {
 
   test("an Organizer reads the numbers in force and is offered no form", async ({ page }) => {
     await signIn(page, "Dev Moderator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/deadlines");
     const panel = page.locator("#main").getByTestId("deadlines");
     await openFold(panel);
     await expect(panel.getByText("Termenele le schimbă Administratorul", { exact: false })).toBeVisible();

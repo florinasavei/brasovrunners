@@ -9,9 +9,11 @@ import OnlyForType from "../OnlyForType";
 import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * "Lista publică a participanților" (BR-REQ-039-01, §32, §406): the last card, because the page
- * draws the list last — under the film, at the bottom (§406; it was card 8.5 inside "Participare
- * și înscrieri", and moved whole: the same checkbox, the same name, the same id, the same help).
+ * "Lista publică a participanților" (BR-REQ-039-01, §32, §406): a level-3 card inside «Program,
+ * regulament și declarație» since §512, after the declaration — the page draws the list last, under
+ * the rules, so it is the last of that card's cards (it was card 8.5 inside "Participare și
+ * înscrieri" until §406, then card 10 of its own; it moved whole each time: the same checkbox, the
+ * same name, the same id `#box-start-list`, the same help).
  *
  * Off unless somebody deliberately turns it on: a disclosure, so the help says what it publishes.
  * Only an event that takes registrations here has anybody to list (§32 refuses `NAMES` for `NONE`
@@ -21,14 +23,19 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
  * place otherwise.
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
- * open, as Status and Links are: the type's box says once that the settings are not theirs (§358).
+ * open, as the declaration card beside it is: the type's box says once that the settings are not theirs (§358).
  */
-export default async function StartListBox({ event, mayEditSettings, heading }: BoxProps) {
+export default async function StartListBox({ event, mayEditSettings }: Pick<BoxProps, "event" | "mayEditSettings">) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
-  const card = { id: "box-start-list", title: heading ?? t("editor.boxes.startList.title"), aside: startListSummary(words, event?.participantListVisibility) } as const;
+  const card = {
+    id: "box-start-list",
+    level: 3,
+    title: t("editor.boxes.startList.title"),
+    aside: startListSummary(words, event?.participantListVisibility),
+  } as const;
   if (!mayEditSettings) return <Panel {...card} />;
   return (
     <Panel collapsible {...card}>
@@ -39,7 +46,7 @@ export default async function StartListBox({ event, mayEditSettings, heading }: 
               <CheckboxField name="event.participantListVisibility" defaultChecked={event?.participantListVisibility === "NAMES"}>
                 {t("editor.participantList")}
               </CheckboxField>
-              <BoxNote>{t("editor.participantListHelp")}</BoxNote>
+              <BoxNote more={t("editor.participantListHelpMore")}>{t("editor.participantListHelp")}</BoxNote>
             </Box>
           </OnlyForMode>
           <OnlyForMode mode={["NONE", "EXTERNAL"]} initialMode={initialMode}>

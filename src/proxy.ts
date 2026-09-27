@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
+import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
 import { REQUEST_PATH_HEADER } from "@/modules/resilience/domain/resting-page";
@@ -35,6 +36,22 @@ export default function proxy(request: NextRequest) {
     const redirect = NextResponse.redirect(target);
     // The redirect is a response of its own, and it is a staff path: it must not be indexed or
     // cached any more than the page it points at.
+    redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
+    redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+    return redirect;
+  }
+
+  /**
+   * A backoffice address that moved into «Setări» (§516): a real 308 to where it lives now, the
+   * query kept, before anything renders — so a bookmark, an old link or a tab left open keeps
+   * working, and a POST from a page loaded before the move stays a POST.
+   */
+  const moved = resolveMovedBackofficePath(url.pathname, url.search);
+  if (moved) {
+    const target = new URL(moved.pathname, url);
+    target.search = moved.search;
+    const redirect = NextResponse.redirect(target, 308);
+    // A staff path, like the alias above: never indexed, never cached.
     redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
     redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
     return redirect;

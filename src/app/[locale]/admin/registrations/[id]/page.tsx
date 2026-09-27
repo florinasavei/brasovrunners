@@ -31,6 +31,7 @@ import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { countryName } from "@/modules/registrations/names";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -95,7 +96,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       declaration in effect in this registration's language — the one the press binds to — asks
       the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
     */
-    registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date()) : false,
+    registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date(), registration.eventId) : false,
   ]);
 
   const { resent, saved, error, health } = await searchParams;
@@ -142,16 +143,20 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     .filter((entry) => entry.action === "registration.resubmitted")
     .reverse()
     .map((entry) => {
-      const metadata = entry.metadataJson as { status?: unknown; resent?: unknown };
+      const metadata = entry.metadataJson as { status?: unknown; resent?: unknown; held?: unknown };
       const status = registrationStatus.enumValues.find((value) => value === metadata.status);
       const resent = emailMessageType.enumValues.find((value) => value === metadata.resent);
       const values = {
         date: dt(entry.createdAt) ?? "",
         state: status ? REGISTRATION_STATUS_LABEL[status] : "—",
       };
+      // `held`: sent again inside a family sitting (§519) — nothing new queued, the held email leaves once.
       return {
         text: resent
-          ? tr("registrations.resubmittedSent", { ...values, message: tr(`emails.types.${resent}`) })
+          ? tr(metadata.held === true ? "registrations.resubmittedHeld" : "registrations.resubmittedSent", {
+              ...values,
+              message: tr(`emails.types.${resent}`),
+            })
           : tr("registrations.resubmittedNothing", values),
         actorName: entry.actorName,
       };
@@ -249,6 +254,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {registration.guardianName && (
         <Typography variant="body2" color="text.secondary">
           {tr("desk.guardian", { name: registration.guardianName })}
+        </Typography>
+      )}
+      {/* Where the person lives (§510): the city, then the country named in the reader's language;
+          for the club's "where do our runners come from", never shown publicly. */}
+      {(registration.city || registration.country) && (
+        <Typography variant="body2" color="text.secondary">
+          {tr("registrations.livesIn", {
+            place: [registration.city, registration.country ? countryName(registration.country, locale) : null].filter(Boolean).join(", "),
+          })}
         </Typography>
       )}
       {/* The socials the person offered (§106): links to follow back — and whether the public

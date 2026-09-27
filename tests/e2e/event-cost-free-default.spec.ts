@@ -28,7 +28,8 @@ test.describe("a new event starts free (§398)", () => {
     expect(await help.getAttribute("open")).toBeNull();
     await help.locator(":scope > summary").click();
     await expect(help).toHaveAttribute("open", "");
-    await expect(page.getByText(/La o alergare de grup se vine pur și simplu/)).toBeVisible();
+    // The types in one plain sentence (§511).
+    await expect(help.getByText(/^O alergare de grup nu are înscriere; o cursă are înscriere și program;/)).toBeVisible();
     // It closes again on a second click — a real toggle, not a one-way reveal.
     await help.locator(":scope > summary").click();
     await expect(help).not.toHaveAttribute("open");

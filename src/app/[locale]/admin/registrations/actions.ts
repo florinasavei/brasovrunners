@@ -21,7 +21,7 @@ import {
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { findEventForRegistrationById } from "@/modules/events/repository";
-import { MIN_PARTICIPANT_AGE, yearsPhrase } from "@/modules/registrations/domain/age";
+import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
@@ -239,6 +239,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           birthDate: optional(form, "birthDate"),
           sex: optional(form, "sex") as "FEMALE" | "MALE" | "UNSPECIFIED" | undefined,
           nationality: optional(form, "nationality"),
+          country: optional(form, "country"),
           city: optional(form, "city"),
           phone: optional(form, "phone"),
           emergencyContactName: optional(form, "emergencyContactName"),
@@ -312,7 +313,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     return {
       ...refusal,
       error: "UNDER_MINIMUM_AGE",
-      errorValues: { age: yearsPhrase(event?.minAge ?? MIN_PARTICIPANT_AGE, locale) },
+      errorValues: { age: yearsPhrase(effectiveMinimumAge(event?.minAge), locale) },
     };
   }
 

@@ -35,6 +35,7 @@ export const DEADLINE_KEYS = [
   "raceWeekDays",
   "seriesHorizonDays",
   "publicListDays",
+  "familySittingMinutes",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
@@ -74,6 +75,13 @@ export type DeadlineRule = {
  *   season's lists up can say so in its notice — the default is a month, because the names are a
  *   disclosure whose purpose (who is coming, who came) is spent soon after the event, and the
  *   registration itself is kept three years for other reasons.
+ * - the **family sitting** 0 to 60 minutes, 10 by default (§519): how long the screen after the
+ *   form waits for another person on the same address before the one email leaves by itself, when
+ *   nobody presses «Gata» — counted again from every form sent and every «Da, încă o persoană».
+ *   Ten minutes is a second form filled on a phone; 0 holds nothing, every form's email leaving at
+ *   once as before the sitting (the screen still offers the next person, saying the email has
+ *   left); an hour is the most a verification email should wait, and the outbox's health reads a
+ *   row held longer than that as stalled.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -84,6 +92,7 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   raceWeekDays: { unit: "days", min: 0, max: 21, default: 7 },
   seriesHorizonDays: { unit: "days", min: 14, max: 182, default: 56 },
   publicListDays: { unit: "days", min: 1, max: 365, default: 30 },
+  familySittingMinutes: { unit: "minutes", min: 0, max: 60, default: 10 },
 };
 
 export type Deadlines = Record<DeadlineKey, number>;
@@ -129,6 +138,7 @@ export const deadlinesSettingSchema = z
     raceWeekDays: bounded("raceWeekDays"),
     seriesHorizonDays: bounded("seriesHorizonDays"),
     publicListDays: bounded("publicListDays"),
+    familySittingMinutes: bounded("familySittingMinutes"),
   })
   .strict();
 
@@ -167,6 +177,20 @@ const DAY = 24 * HOUR;
  */
 export function emailLinkExpiresAt(now: Date, deadlines: Pick<Deadlines, "confirmationHours">): Date {
   return new Date(now.getTime() + deadlines.confirmationHours * HOUR);
+}
+
+/**
+ * Until when a family sitting holds its one email back (§519): the club's minutes from the last
+ * form sent in it, or the last «Da, încă o persoană». «Gata» sends it before; each further form in the
+ * sitting, and each «Da», moves this forward. At 0 the sitting holds nothing (`familySittingHolds`).
+ */
+export function familySittingHeldUntil(now: Date, deadlines: Pick<Deadlines, "familySittingMinutes">): Date {
+  return new Date(now.getTime() + deadlines.familySittingMinutes * MINUTE);
+}
+
+/** Whether a family sitting holds its email at all (§519): 0 minutes is "every form's email at once". */
+export function familySittingHolds(deadlines: Pick<Deadlines, "familySittingMinutes">): boolean {
+  return deadlines.familySittingMinutes > 0;
 }
 
 /** The natural end of a declaration hold given now, before the close and the start cap it. */

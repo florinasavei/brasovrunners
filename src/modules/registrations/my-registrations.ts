@@ -1,4 +1,7 @@
-import { and, asc, desc, eq, inArray, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, notInArray, or, sql } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { pendingFamilyEntries } from "@/db/schema/family-entries";
+import { personOfEntry } from "./family-entries";
 import { eventTranslations, events } from "@/db/schema/events";
 import { ACTIVE_REGISTRATION_STATUSES, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -101,7 +104,19 @@ export type MyRegistration = {
    */
   holdsHealthNote: boolean;
   holdsSocials: boolean;
+  /**
+   * When this person's declaration was signed — on a link, in the family wizard or on paper at the
+   * desk (§67) — or null while it is not (§519: «Toate înscrierile mele» says each person's
+   * declaration, the owner's «pagina arată starea declarației fiecăruia»).
+   */
+  declarationSignedAt: Date | null;
 };
+
+/**
+ * A family's person still waiting for the address's say-so (§446, §519): a kept form, not a
+ * registration — the page names them, the event, and until when the email's button can register them.
+ */
+export type MyPendingPerson = { id: string; name: string; eventTitle: string | null; eventId: string; expiresAt: Date };
 
 /** Every active registration of one participant, soonest event first, with the event as the page names it. */
 export async function listActiveRegistrationsForParticipant<T extends Record<string, unknown>>(
@@ -130,6 +145,10 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       // Whether each is set, computed in SQL so the values never leave the database (§322).
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
       holdsSocials: sql<boolean>`(${registrations.stravaUrl} IS NOT NULL OR ${registrations.instagramHandle} IS NOT NULL)`.mapWith(Boolean),
+      // The latest acceptance's instant, qualified by hand: a bare "id" in the subquery would be the acceptance's own.
+      declarationSignedAt: sql<Date | null>`(select max(${declarationAcceptances}."accepted_at") from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`.mapWith(
+        (value: unknown) => (value === null || value === undefined ? null : value instanceof Date ? value : new Date(String(value))),
+      ),
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
@@ -221,7 +240,40 @@ export async function readMyRegistrations<T extends Record<string, unknown>>(
 
   const items = await listActiveRegistrationsForParticipant(db, context.token.participantId, locale, now);
   const closed = await listClosedRegistrationsHoldingConsentData(db, context.token.participantId, locale);
-  return { ok: true as const, participantId: context.token.participantId, items, closed };
+  const pending = await listPendingPeopleForParticipant(db, context.token.participantId, locale, now);
+  return { ok: true as const, participantId: context.token.participantId, items, closed, pending };
+}
+
+/**
+ * The address's kept forms still alive (§446, §519): people sent on the form and not yet confirmed
+ * from the email — named on the address's own page, behind its own link, which is the one place a
+ * name on it may be read. The name as the registration would carry it; nothing else of the form.
+ */
+export async function listPendingPeopleForParticipant<T extends Record<string, unknown>>(
+  db: Database<T>,
+  participantId: string,
+  locale: Locale,
+  now: Date,
+): Promise<MyPendingPerson[]> {
+  const rows = await db
+    .select({
+      id: pendingFamilyEntries.id,
+      fields: pendingFamilyEntries.fields,
+      eventId: pendingFamilyEntries.eventId,
+      eventTitle: eventTranslations.title,
+      expiresAt: pendingFamilyEntries.expiresAt,
+    })
+    .from(pendingFamilyEntries)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, pendingFamilyEntries.eventId), eq(eventTranslations.locale, locale)))
+    .where(and(eq(pendingFamilyEntries.participantId, participantId), gt(pendingFamilyEntries.expiresAt, now)))
+    .orderBy(asc(pendingFamilyEntries.createdAt), asc(pendingFamilyEntries.id));
+  return rows.map((row) => ({
+    id: row.id,
+    name: personOfEntry(row).legalName,
+    eventId: row.eventId,
+    eventTitle: row.eventTitle,
+    expiresAt: row.expiresAt,
+  }));
 }
 
 async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<EventForRegistration> {

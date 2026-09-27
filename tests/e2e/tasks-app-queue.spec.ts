@@ -85,8 +85,13 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     // 404 — the same "an address nobody offered reads as nothing asked" the owner/kind filters
     // already use, and the only way to land a real status code from a page this deep under a
     // `loading.tsx` Suspense boundary (`layout.tsx`'s own comment).
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/tasks?panel=club");
     await expect(page).toHaveURL(/panel=app/);
     await expect(main.getByRole("heading", { name: "The work queue" })).toBeVisible();
+
+    // The money moved to «Setări» → «Costuri» (§516), and its old address follows it there — a
+    // real 404 for Tehnic, since «Setări» has no loading boundary to flush a 200 first.
+    expect((await page.goto("/ro/admin/tasks?panel=costs"))?.status()).toBe(404);
+    await expect(page).toHaveURL(/\/admin\/settings\/costs$/);
   });
 });

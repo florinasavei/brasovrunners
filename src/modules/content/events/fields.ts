@@ -764,10 +764,13 @@ export const eventFieldsSchema = z
     /**
      * The youngest a participant may be on the day of the event, in years (§329, amending §321:
      * "actually this min age must be set at event level!"). Absent or empty means the club's
-     * fourteen, which is also the column's default; zero means no minimum. The bounds are the
-     * database's CHECK, said again here so the box carries them (§315).
+     * fourteen, which is also the column's default. Never under fourteen (§515: "aplicația nu
+     * permite un concurs cu minimumAge sub 14") — the "zero means no minimum" of §329 is refused
+     * at the box; the database's CHECK still reads 0 to 99, since tightening it is a contract step,
+     * and an older row under fourteen is read as fourteen (`effectiveMinimumAge`). The box carries
+     * the bounds (§315).
      */
-    minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: 0, max: 99 }),
+    minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: MIN_PARTICIPANT_AGE, max: 99 }),
     /**
      * How many hours before the start this event's reminder goes (§81, §377): empty is "as usual"
      * — the club's number from "Termene", stored as null — zero is no reminder, anything else this

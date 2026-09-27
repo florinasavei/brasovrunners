@@ -31,7 +31,7 @@ const STALE_KEY = "REGISTRATION_CANCELLED:ro";
 test.describe("the fields of an email's words, as a legend", () => {
   test("a closed card that lists every field, this message's first, the ones it never carries dimmed", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
-    await page.goto("/ro/admin/emails?lang=ro");
+    await page.goto("/ro/admin/settings/emails?lang=ro");
     const main = page.locator("#main");
     const card = main.locator("#email-REGISTRATION_CONFIRMED");
     await openFold(card);
@@ -69,7 +69,7 @@ test.describe("the fields of an email's words, as a legend", () => {
 
   test("the preview's second half reads the other language's sample", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
-    await page.goto("/ro/admin/emails?lang=ro");
+    await page.goto("/ro/admin/settings/emails?lang=ro");
     const card = page.locator("#main").locator("#email-EVENT_UPDATE_NOTICE");
     await openFold(card);
     // Each half its own title, in the subject too (§373, email follow-up).
@@ -96,7 +96,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
 
   test("a Redactor is handed {eventTitle}, not the sample's title, and a sample value is refused", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
-    await page.goto("/ro/admin/emails?lang=ro");
+    await page.goto("/ro/admin/settings/emails?lang=ro");
     await hydrated(page);
     const main = page.locator("#main");
 
@@ -142,7 +142,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     );
     try {
       await signIn(page, "Dev Copywriter");
-      await page.goto("/ro/admin/emails?lang=ro");
+      await page.goto("/ro/admin/settings/emails?lang=ro");
       // Every assertion before the press below already holds on the server's HTML, so without this
       // the press can land mid-hydration and be dropped — no refusal, no banner, nothing saved.
       await hydrated(page);
@@ -191,7 +191,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     );
     try {
       await signIn(page, "Dev Copywriter");
-      await page.goto("/ro/admin/emails?lang=ro");
+      await page.goto("/ro/admin/settings/emails?lang=ro");
       const main = page.locator("#main");
 
       const card = main.locator("#email-WAITLIST_OFFER_EXPIRED");

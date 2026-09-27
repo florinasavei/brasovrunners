@@ -39,6 +39,12 @@ import {
   readFamilyEntryLink,
 } from "./family-confirm";
 import {
+  confirmFamilySitting,
+  type FamilySittingLink,
+  type FamilySittingRefusal,
+  readFamilySittingLink,
+} from "./family-sitting-confirm";
+import {
   familyPassHolds,
   type FamilySigningPass,
   familyStepsOfPass,
@@ -449,6 +455,63 @@ export async function consumeAndConfirmFamilyEntry(
   now: Date,
 ): Promise<FamilyConfirmation> {
   return confirmFamilyEntry(getDb(), secret, input, now);
+}
+
+/**
+ * A family's one link (§519, `family-sitting-confirm.ts`): the page's read, uncharged when the page
+ * already charged this request's one attempt reading the link as one person's (§446).
+ */
+export async function readFamilySittingLinkPage(secret: string, locale: Locale, now: Date, options: { charge: boolean }): Promise<FamilySittingLink> {
+  return readFamilySittingLink(getDb(), secret, locale, now, options);
+}
+
+export type FamilySittingPress =
+  | {
+      ok: true;
+      /** Why somebody on the list did not join, as markers (`FamilySittingRefusal`), one each. */
+      refused: FamilySittingRefusal[];
+      /** How many people of the list joined (a place or the waiting list); 0 when every kept form was unticked or refused. */
+      joined: number;
+      /** The wizard's pass over the address's declarations to sign, bound to this spent link; null with nobody to sign. */
+      pass: FamilySigningPass | null;
+    }
+  | { ok: false };
+
+/**
+ * The press (§519): the family confirmed in one transaction, then the wizard's pass (§471) over every
+ * declaration the address has to sign at the event — the family just confirmed first among them, in
+ * the order registered — bound to this link, which the press has spent (`binding: "family"`). No
+ * new token: the wizard runs on the declaration page under this same secret.
+ */
+export async function consumeAndConfirmFamilySitting(
+  secret: string,
+  input: { includedKeys: readonly string[]; fitnessAcknowledged: boolean },
+  now: Date,
+): Promise<FamilySittingPress> {
+  const db = getDb();
+  const result = await confirmFamilySitting(db, secret, input, now);
+  if (!result.ok) return { ok: false };
+  const steps = familySigningSteps(await listFamilySigningRows(db, result.participantId, result.eventId), {
+    originId: null,
+    originSignable: false,
+    signedIds: [],
+  });
+  const joined = result.registrations.length;
+  if (!currentFamilyStep(steps)) return { ok: true, refused: result.refused, joined, pass: null };
+  const { pass } = await nextFamilyPass(
+    db,
+    {
+      binding: "family",
+      participantId: result.participantId,
+      eventId: result.eventId,
+      originId: null,
+      eligibleIds: steps.map((step) => step.id),
+      signedIds: [],
+      skippedIds: [],
+    },
+    now,
+  );
+  return { ok: true, refused: result.refused, joined, pass };
 }
 
 /** «Nu înscriu această persoană» (§468): the token spent, the kept form deleted, nobody registered. */

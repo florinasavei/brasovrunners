@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateBotCheckAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateBotCheckAction } from "@/app/[locale]/admin/settings/platform/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { BotCheckState } from "@/modules/registrations/bot-check";
@@ -47,7 +47,7 @@ export default async function BotCheckPanel({
   const running = keysPresent && state.enabled;
 
   return (
-    <Box component="section" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="bot-check">
+    <Box component="section" id="bot-check" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, scrollMarginTop: 16 }} data-testid="bot-check">
       <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 0.5 }}>
         {t("botCheck.title")}
       </Typography>

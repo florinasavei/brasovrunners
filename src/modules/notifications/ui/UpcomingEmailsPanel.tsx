@@ -13,6 +13,8 @@ import Panel from "@/shared/ui/Panel";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { EmailTransport } from "../domain/email-transport";
 import type { ForecastRow } from "../forecast";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import type { OutboxDelivery } from "../outbox-delivery";
 
 type Props = {
   locale: Locale;
@@ -30,6 +32,12 @@ type Props = {
    */
   roads?: Readonly<Record<EmailMessageType, EmailTransport>>;
   openWhen?: FoldOpenWhen;
+  /**
+   * What waits in the queue now and when the outbox job is next expected to send it (§513,
+   * `outbox-delivery.ts`): under the scheduled default a queue waiting for the tick is normal, and
+   * this line is where the club sees it. Absent, the line is left out.
+   */
+  delivery?: OutboxDelivery;
 };
 
 /** A thumb hits these on a phone at the desk: 44 pixels tall (BR-REQ-041-01 criterion 6). */
@@ -47,7 +55,7 @@ const TAP = { display: "inline-flex", alignItems: "center", minHeight: 44 } as c
  * the cards it links to. Under the list, the club-copy line: whether the club gets a copy of each
  * of these, and where that is set.
  */
-export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, clubCopies, roads, openWhen }: Props) {
+export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, clubCopies, roads, openWhen, delivery }: Props) {
   const t = await getTranslations("Admin");
   const other: Locale = locale === "ro" ? "en" : "ro";
 
@@ -55,12 +63,22 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
     <Panel
       title={t("emails.forecast.title")}
       intro={t("emails.forecast.intro")}
+      introMore={t("emails.forecast.introMore")}
       aside={t(`emails.forecast.aside.${countForm(rows.length, locale)}`, { count: rows.length, days: horizonDays })}
       collapsible
       openWhen={openWhen}
       id="upcoming-emails"
       data-testid="upcoming-emails"
     >
+      {delivery && (
+        <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="upcoming-emails-queue">
+          {t(`emails.forecast.queue.${countForm(delivery.pending, locale)}`, { count: delivery.pending })}{" "}
+          {t(`emails.forecast.tick.${delivery.timing}`, {
+            wait: minutesPhrase(locale, delivery.waitMinutes ?? 0),
+            at: formatDay(new Date(delivery.nextTickAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+          })}
+        </Typography>
+      )}
       {rows.length === 0 ? (
         <Typography variant="body2" color="text.secondary" data-testid="upcoming-emails-empty">
           {t("emails.forecast.empty", { days: horizonDays })}

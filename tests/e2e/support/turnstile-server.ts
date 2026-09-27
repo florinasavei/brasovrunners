@@ -35,6 +35,11 @@ export const BLIND_FIELD_FLAG = "__e2eTurnstileBlindField";
  *   callback would find it empty.
  * - `"write-only"`: the field and no callback.
  *
+ * `window.__failTurnstile()` calls every widget's `error-callback`, and `window.__askTurnstile()` its
+ * `before-interactive-callback` — the states the widget says under itself (§518). And
+ * `window.__expireTurnstile()` its `expired-callback`, leaving the lapsed token in the field, and
+ * `window.__timeoutTurnstile()` its `timeout-callback`, with the field emptied.
+ *
  * On a `type="hidden"` field, as Cloudflare draws it, `.value =` sets the `value` attribute (the
  * HTML standard's "default" value mode), which the held button's MutationObserver sees — so the
  * default field shows the two signals together. With `window.__e2eTurnstileBlindField = true`
@@ -86,6 +91,30 @@ export const FAKE_TURNSTILE_SCRIPT = `
       if (order === "call-then-write") call();
       widget.field.value = token;
       if (order !== "call-then-write") call();
+    }
+  };
+  window.__failTurnstile = () => {
+    for (const widget of widgets.values()) {
+      if (typeof widget.options["error-callback"] === "function") widget.options["error-callback"]("300010");
+    }
+  };
+  // The token lapsed: Cloudflare calls the expired callback, and nothing promises the field is
+  // emptied — the stale token stays in it here on purpose, so a spec proves it is never sent.
+  window.__expireTurnstile = () => {
+    for (const widget of widgets.values()) {
+      if (typeof widget.options["expired-callback"] === "function") widget.options["expired-callback"]();
+    }
+  };
+  // The box to tick waited too long: the timeout callback, with no token in the field.
+  window.__timeoutTurnstile = () => {
+    for (const widget of widgets.values()) {
+      widget.field.value = "";
+      if (typeof widget.options["timeout-callback"] === "function") widget.options["timeout-callback"]();
+    }
+  };
+  window.__askTurnstile = () => {
+    for (const widget of widgets.values()) {
+      if (typeof widget.options["before-interactive-callback"] === "function") widget.options["before-interactive-callback"]();
     }
   };
 })();

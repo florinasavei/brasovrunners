@@ -202,15 +202,16 @@ describe("BR-REQ-090-07 the card's words, in both languages", () => {
     }
   });
 
-  it("never advises leaving production without a limit — the owner capped it (SETUP.md §40)", () => {
+  it("never advises leaving production without a limit — the owner capped it (§335)", () => {
     for (const [locale, messages] of [["ro", ro], ["en", en]] as const) {
       const catalogue = messages as unknown as Catalogue & { Admin: { tasks: { items: { neonLimits: unknown } } } };
       const words = [...flatten(catalogue.Admin.tasks.neonLimits), ...flatten(catalogue.Admin.tasks.items.neonLimits)];
       for (const message of words) {
         expect(message, `${locale} advises no limit`).not.toMatch(/no limit on production|fără limită pe producție|recommends there|recomandă acest ecran acolo/i);
       }
-      expect(catalogue.Admin.tasks.neonLimits.recommend, `${locale} recommend`).toContain("{hours}");
-      expect(catalogue.Admin.tasks.neonLimits.recommendConfirm, `${locale} recommendConfirm`).toBeTruthy();
+      // The recommendation is the limit box's one helper sentence since §511, its figure a placeholder.
+      expect(catalogue.Admin.tasks.neonLimits.quotaCuHoursHelp, `${locale} quotaCuHoursHelp`).toContain("{hours}");
+      expect(catalogue.Admin.tasks.neonLimits.confirm, `${locale} confirm`).toBeTruthy();
     }
   });
 });

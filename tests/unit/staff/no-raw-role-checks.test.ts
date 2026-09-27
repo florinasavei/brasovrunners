@@ -95,6 +95,8 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
       "src/modules/notifications/club-notices.ts",
       "src/modules/deadlines/deadlines.ts",
       "src/modules/registrations/address-cap.ts",
+      // «Când pleacă emailurile», in «Termene» since §513 (was the Superadministrator's, §221/§450).
+      "src/modules/notifications/delivery-timing.ts",
       "src/modules/diagnostics/neon-plan.ts",
       "src/modules/media/older-pictures.ts",
     ];
@@ -103,7 +105,7 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
       expect(source, file).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
       expect(source, file).not.toMatch(/canManageRegistrations\(/);
     }
-    const emailsPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    const emailsPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8");
     expect(emailsPage).toMatch(/const mayEditEmail = canManageClubSettings\(staff\.role\);/);
     const tasksPage = readFileSync(path.join(ROOT, "src/app/[locale]/admin/tasks/page.tsx"), "utf8");
     expect(tasksPage).toMatch(/canManageClubSettings\(actor\.role\) && <OlderPicturesPanel/);

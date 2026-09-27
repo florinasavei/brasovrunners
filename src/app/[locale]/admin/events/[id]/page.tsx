@@ -24,7 +24,6 @@ import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
 import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
-import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
 import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
@@ -43,7 +42,7 @@ import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
 import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
 import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { groupRunDeclarationsInForce, declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, declarationAsksMinorToSign, listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   canCreateEvent,
@@ -194,7 +193,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
 
-  const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
+  const declarations = await listApprovedRaceDeclarations(db, locale);
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const now = new Date();
@@ -208,7 +207,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     The minor's paper form (§330) only where the declaration in effect, in the language the form
     prints in, asks the minor to sign.
   */
-  const minorFormOffered = canReadRegistrations(staffUser.role) && internal ? await declarationAsksMinorToSign(db, locale, now) : false;
+  const minorFormOffered = canReadRegistrations(staffUser.role) && internal ? await declarationAsksMinorToSign(db, locale, now, event.id) : false;
   // The language endonyms are shared with the public switcher.
   const tSite = await getTranslations("Site");
 
@@ -831,7 +830,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
                   <LinksBox {...box} locale={locale} heading={flow.headings.links} />
                   <ProgrammeRulesBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} declarations={declarations} />
-                  <StartListBox {...box} heading={flow.headings.startList} />
 
                   {/* What makes the page without being a section of it: the marks, the address. The
                       status is in the first card since §448 (a notice over the title only once

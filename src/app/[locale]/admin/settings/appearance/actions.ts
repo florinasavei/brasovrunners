@@ -27,7 +27,7 @@ function localeOf(form: FormData): Locale {
  */
 export async function updateSiteTintAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/pages/appearance" });
+  const path = getPathname({ locale, href: "/admin/settings/appearance" });
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);

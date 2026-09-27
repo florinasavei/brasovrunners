@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { getTranslations } from "next-intl/server";
-import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/emails/actions";
+import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/settings/emails/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { OutboxQueue } from "@/modules/notifications/queue";

@@ -83,6 +83,7 @@ export default async function CostBox({
   const discountNotePanels = (
     <LocaleTabPanels
       idPrefix="discount-note"
+      translateCard
       panels={languages.map((entry) => ({
         locale: entry.translation.locale,
         label: entry.label,
