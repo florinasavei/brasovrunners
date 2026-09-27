@@ -226,15 +226,19 @@ test.describe("§389 §446 a family on one address", () => {
     await hydrated(page);
     await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email, false);
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Ana ${lastName}`);
+    // One honest sentence: on «Gata», or by itself after the club's window, with the time left.
+    await expect(page.getByTestId("family-sitting-when")).toContainText("Emailul pleacă când apeși „Gata” sau singur după");
     const add = page.getByTestId("family-sitting-add");
     expect((await add.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    // «Da, încă o persoană»: the same form, the address said back and not asked.
-    await add.click();
+    // «Da, încă o persoană»: a press that starts the window again, then the same form, the address said back and not asked.
+    await add.getByRole("button", { name: "Da, încă o persoană" }).click();
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-address")).toContainText(email);
     await expect(page.locator('[name="emailConfirm"]')).toHaveCount(0);
+    // How long is left, said on the form itself.
+    await expect(page.getByTestId("family-sitting-intro")).toContainText("pleacă singur peste");
     // The boxes a family shares start as the first form left them; the person's own start empty.
     await expect(page.locator('[name="city"]')).toHaveValue("Brașov");
     await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");

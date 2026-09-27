@@ -167,7 +167,11 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
     if (!row || !participant) return { ok: false as const };
     // The whole row the allocator needs, the participation window included (§104, §420), as the form passes it.
     const event = publicFormEvent(row, row.publishedAt);
-    // The wizard asks the signatures now; the emailed requests wait its half hour (§471).
+    /*
+      The wizard asks the signatures now; the emailed requests wait its half hour (§471) — and each
+      place is held the club's minutes from the moment its request can leave, never from the press
+      (`familyHeldDeclaration`, in `confirmEmail`): a request never arrives after its own hold.
+    */
     const declarationNotBefore = new Date(now.getTime() + FAMILY_PASS_MINUTES * 60_000);
 
     const registrations: Registration[] = [];
@@ -224,7 +228,15 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
         now,
       });
     }
-    await tx.update(familySittings).set({ confirmedAt: now }).where(eq(familySittings.id, sitting.id));
+    /*
+      The family's order (§NNN, `compareFamilyOrder`): the sitting's own registrations, then every kept
+      form's in the order the forms were sent — they share this press's `created_at`, so only this list
+      orders them, for the family's confirmation, «Declarațiile de pe această adresă» and the wizard
+      alike. Kept, ids only, until the day after the start, for those three to read.
+    */
+    const order = [...sitting.registrationIds, ...registrations.map((joined) => joined.id).filter((id) => !sitting.registrationIds.includes(id))];
+    const keepUntil = new Date(Math.max(sitting.expiresAt.getTime(), row.startsAt.getTime() + 24 * 60 * 60_000));
+    await tx.update(familySittings).set({ confirmedAt: now, registrationIds: order, expiresAt: keepUntil }).where(eq(familySittings.id, sitting.id));
     return { ok: true as const, participantId: participant.id, eventId: sitting.eventId, registrations, refused };
   });
 }

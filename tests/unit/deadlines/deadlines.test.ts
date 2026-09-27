@@ -43,8 +43,8 @@ describe("§377 the club's deadlines, unset", () => {
       raceWeekDays: 7,
       seriesHorizonDays: 56,
       publicListDays: 30,
-      // The family sitting's window (§NNN): fifteen minutes after the last form, unless «Gata» first.
-      familySittingMinutes: 15,
+      // The family sitting's window (§NNN): ten minutes after the last form, unless «Gata» first.
+      familySittingMinutes: 10,
     });
   });
 

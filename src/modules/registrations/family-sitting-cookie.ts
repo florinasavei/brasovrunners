@@ -50,6 +50,8 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     n: peopleLines(value.people),
     x: String(value.heldUntil.getTime()),
     w: value.sameBirthDate ? `${value.sameBirthDate.typed}\t${value.sameBirthDate.kept}` : "",
+    // The club's window is 0 (§NNN): nothing held, only the offer of another person.
+    a: value.atOnce ? "1" : "",
   };
   /*
     The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
@@ -70,6 +72,7 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
     email: opened.m,
     people: peopleOf(opened.n),
     heldUntil,
+    atOnce: opened.a === "1" ? true : undefined,
     shared: sharedOf(opened.f),
     sameBirthDate: typed !== "" && kept !== "" ? { typed, kept } : null,
   };

@@ -26,12 +26,14 @@ import {
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
   sittingCookieLive,
+  sittingCookieUntil,
   sittingNames,
   sittingSharedValues,
   withSittingPerson,
 } from "@/modules/registrations/domain/family-sitting";
 import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
-import { releaseFamilySitting } from "@/modules/registrations/family-sitting";
+import { continueFamilySitting, releaseFamilySitting } from "@/modules/registrations/family-sitting";
+import { familySittingHeldUntil } from "@/modules/deadlines/domain/deadlines";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
@@ -194,6 +196,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
   const minutes = (await currentDeadlines(db)).familySittingMinutes;
+  // At a window of 0 nothing was held (§NNN): the cookie only keeps the address for the next person.
+  const atOnce = minutes <= 0;
   /*
     Always an id of one shape (§39): a sitting that held nothing — a re-send about somebody already
     registered, the address at its limit — gets a random one that names no row. A sealed cookie
@@ -206,7 +210,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       eventId: publicEvent.id,
       email: input.email.trim(),
       people: typedPerson.people,
-      heldUntil: new Date(now.getTime() + minutes * 60_000),
+      heldUntil: sittingCookieUntil(now, minutes),
+      atOnce,
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
     },
@@ -234,6 +239,29 @@ export async function releaseFamilySittingAction(form: FormData): Promise<void> 
   if (sitting?.sittingId) await releaseFamilySitting(getDb(), sitting.sittingId, new Date());
   await clearFamilySittingCookie(path);
   redirect(`${path}?submitted=1&${SITTING_SENT_PARAM}=1`);
+}
+
+/**
+ * «Da, încă o persoană» (§NNN; the review of 2026-09-27: the window lapsed under the parent's hands while
+ * the next form was open): a press, never a link — it starts the club's window again from now, on the
+ * server's row and every message it holds (`continueFamilySitting`) and on this browser's half, then
+ * opens the same form with the address fixed. The form's page says how long is left. A sitting whose
+ * email has already left opens the ordinary form, as a lapsed one always did (§39: the same screens).
+ */
+export async function continueFamilySittingAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("locale"));
+  const slug = text(form, "slug");
+  const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
+  const db = getDb();
+  const now = new Date();
+  const sitting = await readFamilySittingCookie();
+  const event = await findPublishedEventBySlug(db, locale, slug);
+  if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
+    const deadlines = await currentDeadlines(db);
+    if (!sitting.atOnce && sitting.sittingId) await continueFamilySitting(db, sitting.sittingId, familySittingHeldUntil(now, deadlines), now);
+    await writeFamilySittingCookie({ ...sitting, heldUntil: sittingCookieUntil(now, deadlines.familySittingMinutes), sameBirthDate: null }, path, now);
+  }
+  redirect(`${path}?${FAMILY_SITTING_PARAM}=1`);
 }
 
 /** The same mailbox, as the address's identity compares them (§10.4); a typo is simply another address. */

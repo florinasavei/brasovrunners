@@ -3,15 +3,13 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
-import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { sittingMinutesLeft } from "../domain/family-sitting";
 import PressWhenWindowEnds from "./PressWhenWindowEnds";
 
 type Props = {
@@ -26,10 +24,12 @@ type Props = {
   /** The first name of the form just sent (§224), for the heading; null once its cookie is gone. */
   firstName: string | null;
   eventTitle: string;
-  /** The same form with the address fixed — `?family=1`, resolved by the caller: a string across the boundary. */
-  addHref: string;
+  /** The club's window is 0 (§NNN): nothing was held, the email has already left. */
+  atOnce: boolean;
   locale: string;
   slug: string;
+  /** «Da, încă o persoană»: the window starts again, and the same form opens with the address fixed. */
+  continueAction: (form: FormData) => Promise<void>;
   /** «Gata»: the sitting's one email leaves now (`releaseFamilySittingAction`). */
   releaseAction: (form: FormData) => Promise<void>;
 };
@@ -38,21 +38,37 @@ type Props = {
  * «Mai înscrii pe cineva cu aceeași adresă?» — the screen after the form, before anything is mailed
  * (§NNN; the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»).
  *
- * Two answers, one each, big: «Încă o persoană» opens the form again with the address fixed, and
- * «Gata — trimite-mi emailul» sends the one email, for everybody, with one button in it. Between
- * them, in plain words, what happens: nothing has been mailed yet, one email comes for all, the
- * declarations are signed one after the other, and the email leaves by itself after the club's window
- * («Termene»): pressed by the open screen when the window ends (`PressWhenWindowEnds`), or — the page
- * closed — at the outbox job's next run after it, which the external pinger starts; the sentence says
- * both, and that the second can take up to an hour at night.
+ * First one honest sentence (the review of 2026-09-27: the screen said «nothing until you press
+ * „Gata”» and, two lines later, that the email leaves by itself): the email leaves on «Gata» or by
+ * itself after the club's window («Termene») from the last form, and how long is left of it. Then the
+ * two answers, big: «Da, încă o persoană» starts the window again and opens the form with the address
+ * fixed; «Gata — trimite-mi emailul» sends the one email, for everybody, with one button in it. Then,
+ * one fact a line: one email for all, the declarations one after the other, and that with the page
+ * closed the email waits for the outbox job's next run (`PressWhenWindowEnds` presses «Gata» while it
+ * is open), up to an hour at night. At a window of 0 nothing was held: the sentence says the email has
+ * already left, and the screen still offers the next person.
  *
  * What it lists came from this browser's own forms and nothing else, so it reads the same for a first
  * registration, a family and an address that was registered already (§39, AGENTS.md §19.4). A Server
  * Component: the glyphs are children here, never props across the boundary (§370).
  */
-export default async function FamilySittingNext({ email, names, sameBirthDate, releaseInMs, firstName, eventTitle, addHref, locale, slug, releaseAction }: Props) {
+export default async function FamilySittingNext({
+  email,
+  names,
+  sameBirthDate,
+  releaseInMs,
+  firstName,
+  eventTitle,
+  atOnce,
+  locale,
+  slug,
+  continueAction,
+  releaseAction,
+}: Props) {
   const t = await getTranslations("Registration");
-  const minutes = minutesPhrase(locale, (await cachedDeadlines()).familySittingMinutes);
+  const windowWords = minutesPhrase(locale, (await cachedDeadlines()).familySittingMinutes);
+  // The time left, not the whole window (the review's nit): the screen may be opened again later.
+  const left = minutesPhrase(locale, Math.max(1, sittingMinutesLeft(releaseInMs)));
   // A form that was not kept (§493) is not «the form for …» that arrived: the plain lead then.
   const latest = sameBirthDate ? null : (names.at(-1) ?? null);
 
@@ -83,6 +99,14 @@ export default async function FamilySittingNext({ email, names, sameBirthDate, r
         </Box>
         <Typography variant="body1">
           {latest ? t("sitting.leadNamed", { name: latest, event: eventTitle }) : t("sitting.lead", { event: eventTitle })}
+        </Typography>
+        {/*
+          When the email leaves, in one honest sentence (the review of 2026-09-27): on «Gata», or by
+          itself after the club's window from the last form — and how long is left of it now. At a
+          window of 0 nothing waited: the email has already left.
+        */}
+        <Typography variant="body1" sx={{ fontWeight: 700, mt: 1 }} data-testid="family-sitting-when">
+          {atOnce ? t("sitting.alreadySent") : t("sitting.when", { window: windowWords, left })}
         </Typography>
       </Box>
 
@@ -118,34 +142,42 @@ export default async function FamilySittingNext({ email, names, sameBirthDate, r
           {t("sitting.question")}
         </Typography>
         <Stack spacing={1.5} sx={{ alignItems: "stretch", maxWidth: 480 }}>
-          {/* `component="a"` with a resolved path, never `component={Link}` (§370). */}
-          <Button component="a" href={addHref} variant="outlined" size="large" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="family-sitting-add">
-            <PersonAddIcon aria-hidden="true" sx={glyphSx("medium")} />
-            {t("sitting.add")}
-          </Button>
+          {/*
+            A press, not a link (§NNN): «Da» starts the window again — the server's row, its held
+            messages and this browser's half together — so it never lapses while the next form is open.
+          */}
+          <form action={continueAction} data-testid="family-sitting-add">
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="slug" value={slug} />
+            <SubmitButton label={t("sitting.add")} pendingLabel={t("sitting.addPending")} variant="outlined" size="large" fullWidth>
+              <PersonAddIcon />
+            </SubmitButton>
+          </form>
           <form action={releaseAction} data-testid="family-sitting-done">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="slug" value={slug} />
-            {/* The window's end, while this screen is open: the same press, by itself. */}
-            <PressWhenWindowEnds delayMs={releaseInMs} />
-            <SubmitButton label={t("sitting.done")} pendingLabel={t("sitting.donePending")} size="large" fullWidth>
+            {/* The window's end, while this screen is open: the same press, by itself. Nothing waits at 0. */}
+            {!atOnce && <PressWhenWindowEnds delayMs={releaseInMs} />}
+            <SubmitButton label={atOnce ? t("sitting.doneAtOnce") : t("sitting.done")} pendingLabel={t("sitting.donePending")} size="large" fullWidth>
               <MarkEmailReadIcon />
             </SubmitButton>
           </form>
         </Stack>
       </Box>
 
-      {/* What happens, in the order it happens — the clarity the owner asked for first. */}
-      <Box sx={{ borderLeft: 3, borderColor: "primary.main", pl: 2 }}>
-        <Typography variant="body2" sx={{ fontWeight: 700 }}>
-          {t("sitting.nothingYet")}
-        </Typography>
-        <Typography variant="body2">{t("sitting.oneEmail")}</Typography>
-        <Typography variant="body2">{t("sitting.wizard")}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          {t("sitting.byItself", { minutes })}
-        </Typography>
-      </Box>
+      {/*
+        What happens next, one fact a line and none said twice — the clarity the owner asked for first.
+        At a window of 0 each person's email has left on its own, so there is no «one email» to explain.
+      */}
+      {!atOnce && (
+        <Box sx={{ borderLeft: 3, borderColor: "primary.main", pl: 2 }}>
+          <Typography variant="body2">{t("sitting.oneEmail")}</Typography>
+          <Typography variant="body2">{t("sitting.wizard")}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {t("sitting.pageClosed")}
+          </Typography>
+        </Box>
+      )}
     </Stack>
   );
 }

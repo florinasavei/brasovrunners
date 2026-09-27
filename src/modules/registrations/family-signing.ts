@@ -15,6 +15,8 @@ import {
   familyPassExpiresAt,
   familySigningSteps,
 } from "./domain/family-signing";
+import { withFamilyRank } from "./domain/family-sitting";
+import { sittingOrderFor } from "./family-sitting";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
@@ -295,7 +297,7 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
   participantId: string,
   eventId: string,
 ): Promise<FamilySigningRow[]> {
-  return db
+  const rows = await db
     .select({
       id: registrations.id,
       registeredName: registrations.registeredName,
@@ -303,6 +305,9 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
       createdAt: registrations.createdAt,
       holdExpiresAt: registrations.holdExpiresAt,
       checkinCode: registrations.checkinCode,
+      // The race number beside the desk code (§87, §94, §173; the owner: «aici vreau să văd și BIB-urile»).
+      bibNumber: registrations.bibNumber,
+      provisionalBibNumber: registrations.provisionalBibNumber,
       // Qualified by hand: inside a one-table select Drizzle prints a column bare, and a bare "id"
       // in the subquery would be the acceptance's own.
       declared: sql<boolean>`exists (select 1 from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`,
@@ -310,4 +315,6 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
     .from(registrations)
     .where(and(eq(registrations.participantId, participantId), eq(registrations.eventId, eventId)))
     .orderBy(registrations.createdAt, registrations.id);
+  // In the order the family's forms were sent (§NNN, `compareFamilyOrder`), which `familySigningSteps` sorts by.
+  return withFamilyRank(rows, await sittingOrderFor(db, participantId, eventId));
 }

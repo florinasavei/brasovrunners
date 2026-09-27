@@ -25,8 +25,80 @@ export const FAMILY_SITTING_PARAM = "family";
 /** The screen after «Gata»: `?submitted=1&sent=1`. */
 export const SITTING_SENT_PARAM = "sent";
 
+/**
+ * The payload mark of a verification email a sitting held (§NNN): rendered, its link's life is counted
+ * from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a value.
+ */
+export const SITTING_HELD = "sittingHeld";
+
 /** At most this many names are kept in the browser's half: the club's limit per address is at most ten. */
 export const SITTING_NAMES_MAX = 10;
+
+/**
+ * How long this browser keeps the address for the next form when the club's window is 0 (§NNN):
+ * nothing is held then, so the cookie's life is only the screen's offer of another person.
+ */
+export const SITTING_AT_ONCE_MINUTES = 30;
+
+/**
+ * Until when this browser's half lives after a form or a «Da, încă o persoană» (§NNN): the club's
+ * window from now — the instant the server's row is moved to as well — or, at 0, the at-once offer's.
+ */
+export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
+  return new Date(now.getTime() + (windowMinutes > 0 ? windowMinutes : SITTING_AT_ONCE_MINUTES) * 60_000);
+}
+
+/**
+ * The whole minutes left until the email leaves by itself (§NNN, the review's nit: the screen says the
+ * time left, not the club's whole window), rounded up so "1" is said until the last second; 0 once due.
+ */
+export function sittingMinutesLeft(releaseInMs: number): number {
+  return releaseInMs <= 0 ? 0 : Math.ceil(releaseInMs / 60_000);
+}
+
+/**
+ * The order a family's people are named in (§NNN): the order the forms were sent, everywhere — the
+ * family's confirmed email, «Declarațiile de pe această adresă» and the wizard. Registered earlier is
+ * first; people registered at one instant — the one press that confirmed a family creates every kept
+ * form's registration at the same `created_at` — go in the sitting's own order (`familyRank`, the
+ * index in `family_sittings.registration_ids`, written in the kept forms' own sequence), then by id.
+ */
+export type FamilyOrdered = { id: string; createdAt: Date; familyRank?: number | null };
+
+export function compareFamilyOrder(a: FamilyOrdered, b: FamilyOrdered): number {
+  const rank = (row: FamilyOrdered) => row.familyRank ?? Number.MAX_SAFE_INTEGER;
+  return a.createdAt.getTime() - b.createdAt.getTime() || rank(a) - rank(b) || a.id.localeCompare(b.id);
+}
+
+/** The rows with their place in the sitting's order (`compareFamilyOrder`); a row outside it has none. */
+export function withFamilyRank<R extends { id: string }>(rows: readonly R[], order: readonly string[]): (R & { familyRank: number | null })[] {
+  return rows.map((row) => {
+    const index = order.indexOf(row.id);
+    return { ...row, familyRank: index < 0 ? null : index };
+  });
+}
+
+/**
+ * A family confirmed in one press (§NNN): the declaration request waits for the wizard until
+ * `releaseAt`, so the place must still be held when it leaves — a hold counts from the moment its
+ * message can leave, never before. The hold is the one the allocator would give at `releaseAt`
+ * (`computeHold`, the club's minutes capped by the close and the start, or the participation window's
+ * deadline), never shorter than the one it gave now. When even that ends at or before `releaseAt` —
+ * the close or the start comes first — the request is not held at all: it leaves now.
+ */
+export function familyHeldDeclaration(params: {
+  holdExpiresAt: Date | null;
+  releaseAt: Date;
+  now: Date;
+  computeHold: (at: Date) => Date;
+}): { holdExpiresAt: Date | null; notBefore: Date } {
+  const { holdExpiresAt, releaseAt, now } = params;
+  if (holdExpiresAt === null) return { holdExpiresAt, notBefore: releaseAt };
+  const atRelease = params.computeHold(releaseAt);
+  const held = atRelease.getTime() > holdExpiresAt.getTime() ? atRelease : holdExpiresAt;
+  if (held.getTime() <= releaseAt.getTime()) return { holdExpiresAt, notBefore: now };
+  return { holdExpiresAt: held, notBefore: releaseAt };
+}
 
 /**
  * The browser's half (a sealed cookie on the form's own path): which sitting, for which event, the
@@ -41,8 +113,16 @@ export type FamilySittingCookie = {
   email: string;
   /** Everybody the sitting's forms were sent for, as typed, the latest last (`withSittingPerson`). */
   people: SittingPerson[];
-  /** When the email leaves by itself: the club's window from the last form. */
+  /**
+   * When the email leaves by itself: the club's window from the last form or the last «Da, încă o
+   * persoană». With `atOnce`, only how long this browser keeps the address for the next form.
+   */
   heldUntil: Date;
+  /**
+   * The club's window is 0 (§NNN, «Termene»): nothing is held, every form's email left at once. The
+   * screen still offers the next person, and says the email has already left.
+   */
+  atOnce?: boolean;
   /**
    * The facts the next form of the sitting starts with (`sittingSharedValues`): the city, the
    * citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a

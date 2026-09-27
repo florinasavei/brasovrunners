@@ -3698,7 +3698,7 @@
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the platform's template states this number.",
-          "familySittingMinutes": "After the form, the screen asks whether you are registering anyone else on the same address. One email leaves for everybody: on “Done”, or by itself this many minutes after the last form."
+          "familySittingMinutes": "After the form, the screen asks whether you are registering anyone else on the same address. One email leaves for everybody: on “Done”, or by itself this many minutes after the last form. 0 = no waiting: each person's email leaves at once."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the platform's template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5168,22 +5168,26 @@
     },
     "restingForm": "The form is paused while we cannot check our records — it cannot be sent right now. Whatever you have filled in stays here; come back in a few minutes.",
     "sitting": {
-      "lead": "For {event}. We have not sent any email yet.",
-      "leadNamed": "The form for {name} is in, for {event}. We have not sent any email yet.",
+      "lead": "The form is in, for {event}.",
+      "leadNamed": "The form for {name} is in, for {event}.",
+      "when": "The email leaves when you press “Done”, or by itself {window} after the last form — {left} left.",
+      "alreadySent": "This person's email has already left: you will find it in your inbox.",
       "soFar": "Sent so far, with the address",
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
+      "addPending": "Opening the form…",
       "done": "No, done — send me the email",
+      "doneAtOnce": "No, I am done",
       "donePending": "Sending…",
-      "nothingYet": "We send nothing until you press “Done”.",
-      "oneEmail": "Then you get one email for everybody above, with one button: you confirm the address and every registration at once.",
+      "oneEmail": "You get one email for everybody above, with one button: you confirm the address and every registration at once.",
       "wizard": "You sign the declarations right away, one after the other, on the same page; each person then gets their own QR code.",
-      "byItself": "If you leave this page open, the email leaves by itself in {minutes}. If you close it, it leaves at the first check after that — usually within a quarter of an hour, at night within an hour.",
+      "pageClosed": "With the page closed, the email leaves at the first check after the deadline: usually within a quarter of an hour, at night within an hour.",
       "addressLabel": "Email address (the same as for the person before)",
       "addressHelp": "Every message for this person comes here too.",
       "formTitle": "One more person with the same address",
       "formSoFar": "So far: {names}. Fill in the new person's details — the address stays the same.",
-      "formNothingSent": "We have not sent any email yet.",
+      "formLeft": "The email for the people above leaves by itself in {minutes}, unless you send this form before then.",
+      "formAtOnce": "This person's email leaves as soon as you send the form.",
       "formBack": "I am not registering anyone else — back to “Done”",
       "sameBirthDate": "The form for {name} was not kept: it has the same date of birth as {kept}, sent already. The list below is the one in the email. Did you mean to correct the name? Reply to the email and we will correct it. For a twin, send the form from another email address, or write to us and we will register them."
     }
@@ -5208,11 +5212,11 @@
       "family": {
         "stepsLabel": "The declarations on this address",
         "stepTitle": "Declaration {step} of {total} — {name}",
-        "intro": "Several people are registered for this event on this address. The declarations are signed here, one after the other: one person per step, each with their own name and identity document (a parent for a minor). After each signature the page moves on to the next person, and each receives their own confirmation and the PDF of their declaration by email.",
+        "intro": "Several people are registered for the event on this address. The declarations are signed here, one after the other: one person at each step, each with their own name and document (for a minor, the parent). After each signature the page moves on to the next person; the confirmation, with the QR codes, the race numbers and the declarations' PDFs, comes by email.",
         "lastSigned": "The declaration for {name} is signed. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
         "lastWaitlisted": "The place for {name} was no longer free: {name} is now on the waiting list.",
         "doneTitle": "The declarations on this address",
-        "doneAll": "No declaration is left to sign on this address. Every confirmed person receives their own confirmation by email, with the QR code and the PDF of the declaration.",
+        "doneAll": "No declaration is left to sign on this address. The confirmation, with each confirmed person's QR code, race number and declaration PDF, comes by email.",
         "state": {
           "signed": "signed",
           "waitlisted": "on the waiting list",
@@ -5229,6 +5233,9 @@
         "ownLinksStillWork": "This address still has declarations to sign for this event: each person can sign theirs from the link emailed for them.",
         "what": {
           "confirmed": "Confirmed. The code for the registration desk: {code}. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
+          "number": "Race number: {number}",
+          "numberProvisional": "Race number: {number} (provisional: settled when registration closes)",
+          "noNumber": "Race number: none yet",
           "waitlisted": "On the waiting list: an email comes if a place frees up.",
           "later": "Later: sign from the link emailed for this person.",
           "closed": "No longer waiting for a signature."

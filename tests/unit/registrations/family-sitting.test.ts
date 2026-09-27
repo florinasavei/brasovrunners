@@ -5,6 +5,12 @@ vi.mock("next/headers", () => ({
 }));
 
 const {
+  compareFamilyOrder,
+  familyHeldDeclaration,
+  sittingCookieUntil,
+  sittingMinutesLeft,
+  withFamilyRank,
+  SITTING_AT_ONCE_MINUTES,
   isFamilySitting,
   sittingCookieLive,
   sittingEntryFor,
@@ -18,7 +24,7 @@ const { openFamilySittingCookie, sealFamilySittingCookie } = await import("@/mod
 const { openFormDraft } = await import("@/modules/registrations/form-draft");
 const { declarationStateKey } = await import("@/modules/registrations/domain/family-signing");
 const { buildOutgoingEmail } = await import("@/modules/notifications/templates");
-const { DEADLINE_RULES, familySittingHeldUntil } = await import("@/modules/deadlines/domain/deadlines");
+const { DEADLINE_RULES, familySittingHeldUntil, familySittingHolds } = await import("@/modules/deadlines/domain/deadlines");
 
 /**
  * §NNN — a family registered in one sitting, with one email: the pure half. What the browser keeps,
@@ -124,8 +130,10 @@ describe("§NNN the sitting's decisions", () => {
     expect(sittingLinkExpiresAt([new Date(NOW.getTime() - 1)], NOW)).toBeNull();
   });
 
-  it("waits the club's window from the last form: fifteen minutes unless set, between five and sixty", () => {
-    expect(DEADLINE_RULES.familySittingMinutes).toEqual({ unit: "minutes", min: 5, max: 60, default: 15 });
+  it("waits the club's window from the last form: ten minutes unless set, between 0 (at once) and sixty", () => {
+    expect(DEADLINE_RULES.familySittingMinutes).toEqual({ unit: "minutes", min: 0, max: 60, default: 10 });
+    expect(familySittingHolds({ familySittingMinutes: 0 })).toBe(false);
+    expect(familySittingHolds({ familySittingMinutes: 1 })).toBe(true);
     expect(familySittingHeldUntil(NOW, { familySittingMinutes: 15 }).getTime() - NOW.getTime()).toBe(900_000);
   });
 });
@@ -192,5 +200,74 @@ describe("§NNN each person's declaration on «Toate înscrierile mele»", () =>
     expect(declarationStateKey("PENDING_EMAIL_CONFIRMATION", null)).toBe("afterAddress");
     expect(declarationStateKey("WAITLISTED", null)).toBe("waiting");
     expect(declarationStateKey("CANCELLED", null)).toBeNull();
+  });
+});
+
+describe("§NNN the fix round's pure rules", () => {
+  const MIN = 60_000;
+  const plus = (minutes: number) => new Date(NOW.getTime() + minutes * MIN);
+
+  it("holds a place from the moment its request can leave, never before, and never holds a request past its own hold", () => {
+    const computeHold = (at: Date) => new Date(at.getTime() + 10 * MIN);
+    // A 10-minute hold, the wizard's 30: the hold ends 10 minutes after the request leaves.
+    expect(familyHeldDeclaration({ holdExpiresAt: plus(10), releaseAt: plus(30), now: NOW, computeHold })).toEqual({ holdExpiresAt: plus(40), notBefore: plus(30) });
+    // A window's deadline days away is kept as it is.
+    expect(familyHeldDeclaration({ holdExpiresAt: plus(5000), releaseAt: plus(30), now: NOW, computeHold: () => plus(5000) })).toEqual({ holdExpiresAt: plus(5000), notBefore: plus(30) });
+    // The start cuts the hold before the request could leave: it leaves now.
+    expect(familyHeldDeclaration({ holdExpiresAt: plus(20), releaseAt: plus(30), now: NOW, computeHold: () => plus(20) })).toEqual({ holdExpiresAt: plus(20), notBefore: NOW });
+  });
+
+  it("orders a family by the forms sent: earlier first, one instant by the sitting's own list, then by id", () => {
+    const at = new Date("2026-09-27T10:00:00Z");
+    const rows = withFamilyRank(
+      [
+        { id: "c", createdAt: at },
+        { id: "a", createdAt: at },
+        { id: "z", createdAt: new Date(at.getTime() - MIN) },
+        { id: "b", createdAt: at },
+      ],
+      ["z", "c", "a"],
+    );
+    expect([...rows].sort(compareFamilyOrder).map((row) => row.id)).toEqual(["z", "c", "a", "b"]);
+  });
+
+  it("says the minutes left, rounded up, and keeps the browser's half for the club's window or, at 0, the offer's", () => {
+    expect(sittingMinutesLeft(9 * MIN + 1)).toBe(10);
+    expect(sittingMinutesLeft(MIN)).toBe(1);
+    expect(sittingMinutesLeft(0)).toBe(0);
+    expect(sittingCookieUntil(NOW, 10)).toEqual(plus(10));
+    expect(sittingCookieUntil(NOW, 0)).toEqual(plus(SITTING_AT_ONCE_MINUTES));
+  });
+});
+
+describe("§NNN the family's one confirmation", () => {
+  const data = {
+    participantName: "Ana Pop",
+    eventTitle: "Crosul familiei",
+    eventTitleOther: "The family cross",
+    familyConfirmed: [
+      { name: "Ana Pop", checkinCode: "AAA111", qrUrl: "https://example.test/api/registrations/qr/AAA111.png", raceNumber: 12, provisional: false },
+      { name: "Ion Pop", checkinCode: "BBB222", qrUrl: "https://example.test/api/registrations/qr/BBB222.png", raceNumber: 13, provisional: true },
+      { name: "Radu Pop", checkinCode: "CCC333", qrUrl: "https://example.test/api/registrations/qr/CCC333.png", raceNumber: null, provisional: false },
+    ],
+  };
+  const params = { to: "familia.pop@example.ro", locale: "ro" as const, idempotencyKey: "k", messageType: "REGISTRATION_CONFIRMED" as const };
+
+  it("carries every person's QR code, desk code and race number under their name, once, and the address's page as its button", () => {
+    const email = buildOutgoingEmail({ ...params, data, actionUrl: "https://example.test/ro/inscrieri/ale-mele/secret" });
+    expect(email.subject).toContain("Confirmat: 3 persoane la Crosul familiei");
+    expect(email.subject).toContain("Confirmed: 3 people for The family cross");
+    for (const words of ["Număr de concurs: 12", "Număr de concurs: 13 (provizoriu", "Număr de concurs: încă fără număr", "Codul pentru masă: BBB222", "Race number: 12", "Toate înscrierile mele"]) {
+      expect(email.text).toContain(words);
+    }
+    // The pictures once, in the first half: the second repeats the words.
+    expect(email.html.split('<img src="https://example.test/api/registrations/qr/')).toHaveLength(4);
+  });
+
+  it("gives the club's copy the names and numbers, never a code or a QR (§320)", () => {
+    const email = buildOutgoingEmail({ ...params, data: { ...data, clubCopy: true } });
+    expect(email.text).toContain("Număr de concurs: 12");
+    expect(email.text).not.toContain("AAA111");
+    expect(email.html).not.toContain("/api/registrations/qr/");
   });
 });

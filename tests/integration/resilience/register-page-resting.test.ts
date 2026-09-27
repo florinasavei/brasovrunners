@@ -115,11 +115,11 @@ vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({ default: () => cre
 // The family sitting's browser half (§NNN) and its async screen, stood in for like the parts above.
 vi.mock("@/modules/registrations/family-sitting-cookie", () => ({ readFamilySittingCookie: async () => state.sitting }));
 vi.mock("@/modules/registrations/ui/FamilySittingNext", () => ({
-  default: ({ names, addHref, sameBirthDate, releaseInMs }: { names: string[]; addHref: string; sameBirthDate: { typed: string } | null; releaseInMs: number }) =>
+  default: ({ names, atOnce, sameBirthDate, releaseInMs }: { names: string[]; atOnce: boolean; sameBirthDate: { typed: string } | null; releaseInMs: number }) =>
     createElement("div", {
       "data-testid": "family-sitting",
       "data-names": names.join("|"),
-      "data-add": addHref,
+      "data-at-once": atOnce ? "yes" : "no",
       "data-same": sameBirthDate?.typed ?? "",
       "data-release": releaseInMs > 0 ? "later" : "now",
     }),
@@ -190,7 +190,8 @@ describe("§447 the registration page while the database is away", () => {
     // The form not kept (§493) is said on the screen, and the open screen presses «Gata» when the window ends.
     expect(asking).toContain('data-same="Ioana Pop"');
     expect(asking).toContain('data-release="later"');
-    expect(asking).toContain("?family=1");
+    // «Da, încă o persoană» is a press that starts the window again (§NNN), not a link; nothing was sent at once.
+    expect(asking).toContain('data-at-once="no"');
     expect(asking).not.toContain('data-testid="check-your-email"');
 
     const sent = await render({ submitted: "1", sent: "1" });
@@ -218,6 +219,8 @@ describe("§447 the registration page while the database is away", () => {
     expect(next).not.toContain('name="emailConfirm"');
     expect(next).toContain('data-testid="family-sitting-intro"');
     expect(next).toContain("Până acum: Ana Pop.");
+    // How long is left, on the server's clock at this render (§NNN): ten minutes from now.
+    expect(next).toContain("pleacă singur peste 10 minute");
     // The boxes a family shares start filled (§NNN); the person's own start empty.
     expect(next).toMatch(/name="city"[^>]*value="Brașov"|value="Brașov"[^>]*name="city"/);
     expect(next).toMatch(/name="guardianName"[^>]*value="Ana Pop"|value="Ana Pop"[^>]*name="guardianName"/);

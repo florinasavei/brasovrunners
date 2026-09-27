@@ -71,9 +71,10 @@ import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
-import { releaseFamilySittingAction, submitRegistrationAction } from "./actions";
+import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistrationAction } from "./actions";
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
-import { FAMILY_SITTING_FIELD, FAMILY_SITTING_PARAM, sittingCookieLive, sittingNames } from "@/modules/registrations/domain/family-sitting";
+import { FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -534,9 +535,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           releaseInMs={sitting.heldUntil.getTime() - now.getTime()}
           firstName={submittedFacts?.firstName ?? null}
           eventTitle={event.title}
-          addHref={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?${FAMILY_SITTING_PARAM}=1`}
+          atOnce={sitting.atOnce === true}
           locale={locale}
           slug={slug}
+          continueAction={continueFamilySittingAction}
           releaseAction={releaseFamilySittingAction}
         />
       ) : submitted ? (
@@ -732,7 +734,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <AlertTitle>{t("sitting.formTitle")}</AlertTitle>
               <Typography variant="body2">{t("sitting.formSoFar", { names: sittingNames(sitting.people).join(", ") })}</Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {t("sitting.formNothingSent")}{" "}
+                {/*
+                  How long is left, on the server's clock at this render (§NNN): the email leaves by
+                  itself then unless this form is sent — sending it starts the window again. At a
+                  window of 0 nothing waits: this person's email leaves when the form is sent.
+                */}
+                {sitting.atOnce
+                  ? t("sitting.formAtOnce")
+                  : t("sitting.formLeft", { minutes: minutesPhrase(locale, Math.max(1, sittingMinutesLeft(sitting.heldUntil.getTime() - now.getTime()))) })}{" "}
                 <MuiLink href={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?submitted=1`} sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}>
                   {t("sitting.formBack")}
                 </MuiLink>

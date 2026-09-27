@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { EmailActionTokenPurpose } from "@/db/schema/email-action-tokens";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { participants } from "@/db/schema/participants";
-import { registrations } from "@/db/schema/registrations";
+import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -46,7 +46,16 @@ import {
   registeredOnAddress,
 } from "@/modules/registrations/family-entries";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
-import { extendSittingLinks, findSittingById, linkSittingToken, sittingPeople, sittingStillOpen } from "@/modules/registrations/family-sitting";
+import {
+  extendHeldVerificationLink,
+  extendSittingLinks,
+  findSittingById,
+  linkSittingToken,
+  sittingPeople,
+  sittingStillOpen,
+} from "@/modules/registrations/family-sitting";
+import { compareFamilyOrder, SITTING_HELD, withFamilyRank } from "@/modules/registrations/domain/family-sitting";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
@@ -215,6 +224,32 @@ async function renderRow(
     throw new OutboxMessageWithdrawn("the family's declaration was signed in the wizard");
   }
 
+  /*
+    A family's one confirmation (§NNN, `queueFamilyConfirmed`): everybody the family's one button
+    confirmed who is confirmed now, read at send time, in the order the forms were sent — each with
+    their QR code, desk code and race number. Nobody confirmed any more (cancelled, erased): nothing
+    to say, and the message is withdrawn rather than sent.
+  */
+  const familyConfirmedSittingId =
+    row.messageType === "REGISTRATION_CONFIRMED" ? (row.payloadJson as { familySittingId?: unknown } | null)?.familySittingId : undefined;
+  let familyConfirmed: Registration[] | null = null;
+  /** Who the family's confirmation greets: the person of the sitting's first form, whom its link was scoped to. */
+  let familyGreeting: string | undefined;
+  if (typeof familyConfirmedSittingId === "string") {
+    const sitting = await findSittingById(db, familyConfirmedSittingId);
+    const confirmedRows =
+      sitting && sitting.registrationIds.length > 0
+        ? await db
+            .select()
+            .from(registrations)
+            .where(and(inArray(registrations.id, [...sitting.registrationIds]), eq(registrations.status, "CONFIRMED")))
+        : [];
+    if (!sitting || confirmedRows.length === 0) throw new OutboxMessageWithdrawn("nobody of the family is confirmed any more");
+    familyConfirmed = withFamilyRank(confirmedRows, sitting.registrationIds).sort(compareFamilyOrder);
+    const [first] = await db.select({ registeredName: registrations.registeredName }).from(registrations).where(eq(registrations.id, sitting.registrationId)).limit(1);
+    familyGreeting = first?.registeredName ?? familyConfirmed[0]?.registeredName;
+  }
+
   // A club copy's greeting still names the runner, read through the registration it is about.
   const participantId = row.participantId ?? (clubCopy ? registration?.participantId : undefined);
   const [participant] = participantId
@@ -251,7 +286,8 @@ async function renderRow(
       `organizerMessageParts` (`templates.ts`) is what turns that blank into a neutral word wherever
       the organizer's own body used `{participantName}` (§419, review finding).
     */
-    participantName: registration?.registeredName ?? participant?.defaultName ?? "",
+    // A family's one confirmation greets the person of the sitting's first form, not the first to sign (§NNN).
+    participantName: (familyConfirmed ? familyGreeting : registration?.registeredName) ?? participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
     // The place in the runner's language (§362), nullable on an event row from before the column
     // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
@@ -585,7 +621,8 @@ async function renderRow(
 
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER" || row.messageType === "BIB_ASSIGNED") &&
-    registration?.status === "CONFIRMED"
+    registration?.status === "CONFIRMED" &&
+    !familyConfirmed
   ) {
     // The desk hands the number against this code; a club mailbox has no use for it (§245's
     // reasoning for the club's own notice, and §320's for the club copy).
@@ -614,6 +651,32 @@ async function renderRow(
     */
     data.bibNumber = registration.bibNumber ?? registration.provisionalBibNumber ?? undefined;
     data.bibProvisional = registration.bibNumber === null && registration.provisionalBibNumber !== null;
+  }
+
+  /*
+    A family's one confirmation (§NNN): one block per person, headed by the name — the QR code and the
+    desk code the desk hands the number against, and the race number from the one helper the page and
+    the export read (`raceNumberOf`: settled, or provisional and said so, §237), or «încă fără număr».
+    A code is given here to a person confirmed before codes existed, as above. The club's copy names
+    the people and their numbers, never a code or a QR (§320).
+  */
+  if (familyConfirmed) {
+    const people: NonNullable<TemplateData["familyConfirmed"]>[number][] = [];
+    for (const person of familyConfirmed) {
+      let code = person.checkinCode;
+      if (!clubCopy && !code) {
+        code = newCheckinCode();
+        await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, person.id));
+      }
+      const number = raceNumberOf(person);
+      people.push({
+        name: person.registeredName,
+        ...(clubCopy || !code ? {} : { checkinCode: code, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${code}.png` }),
+        raceNumber: number?.value ?? null,
+        provisional: number !== null && !number.settled,
+      });
+    }
+    data.familyConfirmed = people;
   }
 
   /*
@@ -739,6 +802,20 @@ async function renderRow(
       */
       data.familyDeclineUrl = `${actionUrl}?decline=1`;
     }
+  } else if (familyConfirmed && row.participantId && !clubCopy) {
+    /*
+      A family's one confirmation (§NNN): its button is «Toate înscrierile mele» (§77) — every person's
+      state, number, «nu mai pot veni» and the public list's switch, behind the address's own link —
+      rather than one person's manage link. Its own token, superseding the older one (§12.8).
+    */
+    const mine = await issueActionToken(db, {
+      participantId: row.participantId,
+      registrationId: null,
+      purpose: "MANAGE_PROFILE",
+      expiresAt: new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000),
+      now,
+    });
+    actionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/registrations/mine/[token]", params: { token: mine.secret } } })}`;
   } else if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
@@ -766,11 +843,19 @@ async function renderRow(
       the link was still good, was spent on a click, and the page said "confirmed, now sign" to a
       registration that no longer existed (BR-REQ-031-03 criterion 2).
     */
+    /*
+      A verification email a family sitting held (§NNN): it is leaving now, so its link lives the club's
+      window from this send — the sentence «valabil 48 de ore» is true of the link it carries.
+    */
+    const heldLink =
+      purpose === "VERIFY_REGISTRATION_EMAIL" && registration && (row.payloadJson as Record<string, unknown> | null)?.[SITTING_HELD] === true
+        ? await extendHeldVerificationLink(db, registration.id, emailLinkExpiresAt(now, settings), now)
+        : null;
     const placeUntil =
       purpose === "COMPLETE_DECLARATION"
         ? (eventStartsAt ?? holdExpiresAt)
         : purpose === "VERIFY_REGISTRATION_EMAIL"
-          ? (registration?.emailLinkExpiresAt ?? emailLinkExpiresAt(now, settings))
+          ? (heldLink ?? registration?.emailLinkExpiresAt ?? emailLinkExpiresAt(now, settings))
           : holdExpiresAt;
     const expiresAt = placeUntil && placeUntil.getTime() > now.getTime() ? placeUntil : defaultExpiresAt;
     const issued = await issueActionToken(db, {
@@ -801,7 +886,7 @@ async function renderRow(
     what the table enforces. The lifetime is the same fortnight the manage link gets; after it,
     "Înscrierile mele" and the manage page carry the same button under their own links.
   */
-  if (row.messageType === "REGISTRATION_CONFIRMED" && row.participantId && registration && !clubCopy) {
+  if (row.messageType === "REGISTRATION_CONFIRMED" && row.participantId && registration && !clubCopy && !familyConfirmed) {
     const issued = await issueActionToken(db, {
       participantId: row.participantId,
       registrationId: registration.id,
@@ -863,7 +948,8 @@ async function renderRow(
   const pdfAudience = declarationPdfAudience(row.messageType, clubCopy);
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
-    registration
+    registration &&
+    !familyConfirmed
   ) {
     const signed = await findSignedDeclaration(db, registration.id);
     if (signed) {
@@ -877,6 +963,15 @@ async function renderRow(
       const signedZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
       data.signedAtFormatted = formatInSentence(signed.acceptedAt, signedZone, locale);
       data.signedAtFormattedOther = formatInSentence(signed.acceptedAt, signedZone, otherLocale(locale));
+    }
+  }
+  // A family's one confirmation (§NNN): every person's signed declaration, numbered in the family's order.
+  if (familyConfirmed && pdfAudience) {
+    for (const [index, person] of familyConfirmed.entries()) {
+      const signed = await findSignedDeclaration(db, person.id);
+      if (!signed) continue;
+      const pdf = await renderSignedDeclarationPdf(db, signed, person.eventId, declarationWords(signed.locale, now), now, pdfAudience);
+      if (pdf) attachments = [...(attachments ?? []), { filename: `declaratie-semnata-${index + 1}.pdf`, contentType: "application/pdf", data: pdf }];
     }
   }
 

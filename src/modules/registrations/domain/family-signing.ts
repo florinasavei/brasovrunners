@@ -1,4 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import { compareFamilyOrder } from "./family-sitting";
+import { type RaceNumber, raceNumberOf } from "./race-number";
 
 /**
  * The declarations of a family on one address, signed as a wizard (§471, over §389 and §446).
@@ -33,6 +35,11 @@ export type FamilySigningRow = {
   checkinCode?: string | null;
   /** Whether a declaration acceptance exists for the registration — signed on a link or on paper (§67). */
   declared?: boolean;
+  /** The race number's two columns (§214), for the number beside the desk code (`raceNumberOf`). */
+  bibNumber?: number | null;
+  provisionalBibNumber?: number | null;
+  /** The place in the family's order (§NNN, `compareFamilyOrder`), when the family's one button confirmed it. */
+  familyRank?: number | null;
 };
 
 /**
@@ -61,6 +68,8 @@ export type FamilyStep = {
   state: FamilyStepState;
   holdExpiresAt: Date | null;
   checkinCode: string | null;
+  /** The number the person has, settled or provisional (`raceNumberOf`, §420), or null while there is none. */
+  raceNumber: RaceNumber | null;
 };
 
 export type FamilyStepsInput = {
@@ -93,8 +102,8 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
   const ordered = [...rows].sort(
     (a, b) =>
       Number(b.id === input.originId) - Number(a.id === input.originId) ||
-      a.createdAt.getTime() - b.createdAt.getTime() ||
-      a.id.localeCompare(b.id),
+      // The order the family's forms were sent (§NNN): one helper for the email, the page and the wizard.
+      compareFamilyOrder(a, b),
   );
   const included = ordered.filter(
     (row) =>
@@ -120,6 +129,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
       state,
       holdExpiresAt: row.holdExpiresAt ?? null,
       checkinCode: row.checkinCode ?? null,
+      raceNumber: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null }),
     };
   });
 }

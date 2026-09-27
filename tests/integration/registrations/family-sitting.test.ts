@@ -28,7 +28,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
 const EMAIL = "familia.pop@example.ro";
-const WINDOW_MS = 15 * 60_000;
+const WINDOW_MS = 10 * 60_000;
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -36,7 +36,12 @@ let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 
 const { submitRegistration } = await import("@/modules/registrations/service");
-const { releaseFamilySitting } = await import("@/modules/registrations/family-sitting");
+const { continueFamilySitting, releaseFamilySitting } = await import("@/modules/registrations/family-sitting");
+const { familySigningSteps } = await import("@/modules/registrations/domain/family-signing");
+const { listFamilySigningRows } = await import("@/modules/registrations/family-signing");
+const { updateDeadlines } = await import("@/modules/deadlines/deadlines");
+const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
+const { DEFAULT_DEADLINES } = await import("@/modules/deadlines/domain/deadlines");
 const { confirmFamilySitting, readFamilySittingLink } = await import("@/modules/registrations/family-sitting-confirm");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { OutboxMessageWithdrawn } = await import("@/modules/notifications/outbox");
@@ -53,6 +58,8 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
+  // The club's deadlines as unset: a case below changes them, and the instance's memo would keep them.
+  forgetCachedDeadlines();
   const privacy: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -410,5 +417,157 @@ describe("§NNN a family in one sitting", () => {
     expect(pending.map((person) => [person.name, person.eventTitle])).toEqual([["Ion Pop", "Crosul familiei"]]);
     const [mine] = await listActiveRegistrationsForParticipant(db, participant.id, "ro", at(2));
     expect(mine).toMatchObject({ registeredName: "Ana Pop", status: "PENDING_EMAIL_CONFIRMATION", declarationSignedAt: null });
+  });
+});
+
+/** The club's deadlines, as an Administrator saves them on «Termene» (§377). */
+async function setDeadlines(changes: Partial<typeof DEFAULT_DEADLINES>) {
+  const [admin] = await db.insert(staffUsers).values({ email: "termene@example.ro", displayName: "Admin", role: "ADMIN" }).returning();
+  await updateDeadlines(db, admin, { ...DEFAULT_DEADLINES, ...changes }, NOW);
+}
+
+describe("§NNN the fix round of 2026-09-27", () => {
+  it("holds each place from the moment its declaration request can leave: a 10-minute hold and the wizard's half hour", async () => {
+    await setDeadlines({ holdMinutes: 10 });
+    const event = await createEvent();
+    // No participation window: the club's minutes are the hold (§104, §377).
+    await db.update(events).set({ confirmationOpensDaysBefore: 0 }).where(eq(events.id, event.id));
+    const sittingId = await send(event, "Ana", 0, null);
+    await send(event, "Ion", 1, sittingId);
+    const { secret } = await familyLink(at(20));
+    const page = await readFamilySittingLink(db, secret!, "ro", at(21));
+    if (!page.ok) throw new Error("the page could not read its link");
+    const result = await confirmFamilySitting(db, secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(22));
+    if (!result.ok) throw new Error("the press did nothing");
+
+    const leaves = new Date(at(22).getTime() + 30 * 60_000);
+    const requests = (await outbox()).filter((row) => row.messageType === "COMPLETE_DECLARATION" && row.participantId !== null);
+    expect(requests).toHaveLength(2);
+    for (const request of requests) {
+      expect(request.nextAttemptAt?.toISOString()).toBe(leaves.toISOString());
+      const [held] = await db.select().from(registrations).where(eq(registrations.id, request.registrationId!));
+      // The hold counts from the send: ten minutes after the request leaves, never before it.
+      expect(held.holdExpiresAt?.toISOString()).toBe(new Date(leaves.getTime() + 10 * 60_000).toISOString());
+      expect(held.holdExpiresAt!.getTime()).toBeGreaterThan(request.nextAttemptAt!.getTime());
+    }
+  });
+
+  it("at a window of 0 nothing is held: the verification email is due at once and no sitting is written", async () => {
+    await setDeadlines({ familySittingMinutes: 0 });
+    const event = await createEvent();
+    expect(await send(event, "Ana", 0, null)).toBeNull();
+    const [row] = await outbox();
+    expect(row.messageType).toBe("VERIFY_REGISTRATION_EMAIL");
+    expect(row.nextAttemptAt).toBeNull();
+    expect(await db.select().from(familySittings)).toHaveLength(0);
+  });
+
+  it("«Da, încă o persoană» starts the window again: the row and the message it holds move together", async () => {
+    const event = await createEvent();
+    const sittingId = await send(event, "Ana", 0, null);
+    await send(event, "Ion", 1, sittingId);
+    const until = new Date(at(8).getTime() + WINDOW_MS);
+    await continueFamilySitting(db, sittingId!, until, at(8));
+    const [sitting] = await db.select().from(familySittings);
+    expect(sitting.heldUntil.toISOString()).toBe(until.toISOString());
+    const [row] = await outbox();
+    expect(row.nextAttemptAt?.toISOString()).toBe(until.toISOString());
+    // Sent already: a later «Da» moves nothing.
+    await releaseFamilySitting(db, sittingId!, at(9));
+    await continueFamilySitting(db, sittingId!, new Date(at(12).getTime() + WINDOW_MS), at(12));
+    const [released] = await outbox();
+    expect(released.nextAttemptAt?.toISOString()).toBe(at(9).toISOString());
+  });
+
+  it("a held verification email's link lives the club's window from its send, as the message says", async () => {
+    const event = await createEvent();
+    const sittingId = await send(event, "Ana", 0, null);
+    await releaseFamilySitting(db, sittingId!, at(1));
+    const [row] = await outbox();
+    const sentAt = at(9);
+    await render(row, sentAt);
+    const lapse = new Date(sentAt.getTime() + 48 * 3_600_000).toISOString();
+    const [ana] = await db.select().from(registrations);
+    expect(ana.emailLinkExpiresAt?.toISOString()).toBe(lapse);
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "VERIFY_REGISTRATION_EMAIL"));
+    expect(token.expiresAt.toISOString()).toBe(lapse);
+  });
+
+  it("three people, one press: one confirmation with three QR codes and three race numbers, in the order the forms were sent, and the page lists the three numbers", async () => {
+    const event = await createEvent();
+    const sittingId = await send(event, "Ana", 0, null);
+    await send(event, "Ion", 1, sittingId);
+    await send(event, "Radu", 2, sittingId);
+    const { secret } = await familyLink(at(20));
+    const page = await readFamilySittingLink(db, secret!, "ro", at(21));
+    if (!page.ok) throw new Error("the page could not read its link");
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(22));
+    if (!press.ok || !press.pass) throw new Error("the press opened no wizard");
+
+    // Ion and Radu were created at one instant: the wizard still follows the order the forms were sent.
+    const nameOf = new Map((await db.select().from(registrations)).map((row) => [row.id, row.registeredName]));
+    expect(press.pass.eligibleIds.map((id) => nameOf.get(id))).toEqual(["Ana Pop", "Ion Pop", "Radu Pop"]);
+
+    const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", "ro", NOW);
+    const signing = (typedName: string) => ({ accepted: true, typedName, idDocument: "BV 123456", documentId: document!.id, contentSha256: document!.contentSha256 });
+    const signedIds: string[] = [];
+    for (const [index, id] of press.pass.eligibleIds.entries()) {
+      const signed = await consumeAndSignFamilyDeclaration(secret!, { ...press.pass, signedIds: [...signedIds] }, id, signing(nameOf.get(id)!), at(23 + index));
+      expect(signed).toMatchObject({ ok: true, registration: { id, status: "CONFIRMED" } });
+      signedIds.push(id);
+    }
+
+    // One confirmation for the family, never one each; everybody signed, so it is due at the last signature.
+    const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
+    expect(confirmations).toHaveLength(1);
+    expect(confirmations[0].payloadJson).toEqual({ familySittingId: sittingId });
+    expect(confirmations[0].nextAttemptAt?.toISOString()).toBe(at(25).toISOString());
+
+    const message = await render(confirmations[0], at(26));
+    expect(message.subject).toContain("Confirmat: 3 persoane la Crosul familiei");
+    expect(message.html.match(/\/api\/registrations\/qr\//g)).toHaveLength(3);
+    const rows = await db.select().from(registrations);
+    const inOrder = ["Ana Pop", "Ion Pop", "Radu Pop"].map((name) => rows.find((row) => row.registeredName === name)!);
+    // The blocks, after the greeting (which names the person of the first form).
+    const blocks = message.text.indexOf("Înscrierile de mai jos");
+    const positions = inOrder.map((row) => message.text.indexOf(row.registeredName, blocks));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    for (const row of inOrder) {
+      const number = row.bibNumber ?? row.provisionalBibNumber;
+      expect(number).not.toBeNull();
+      expect(message.text).toContain(`Număr de concurs: ${number}`);
+      expect(message.text).toContain(`Codul pentru masă: ${row.checkinCode}`);
+    }
+    expect(message.text).toContain("Toate înscrierile mele");
+
+    // «Declarațiile de pe această adresă»: the three numbers, in the same order.
+    const [participant] = await db.select().from(participants);
+    const steps = familySigningSteps(await listFamilySigningRows(db, participant.id, event.id), { originId: null, originSignable: false, signedIds: [] });
+    expect(steps.map((step) => step.registeredName)).toEqual(["Ana Pop", "Ion Pop", "Radu Pop"]);
+    expect(steps.map((step) => step.raceNumber?.value)).toEqual(inOrder.map((row) => row.bibNumber ?? row.provisionalBibNumber));
+  });
+  it("a person who signs after the family's confirmation has left gets their own, as before", async () => {
+    const event = await createEvent();
+    const sittingId = await send(event, "Ana", 0, null);
+    await send(event, "Ion", 1, sittingId);
+    const { secret } = await familyLink(at(20));
+    const page = await readFamilySittingLink(db, secret!, "ro", at(21));
+    if (!page.ok) throw new Error("the page could not read its link");
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(22));
+    if (!press.ok || !press.pass) throw new Error("the press opened no wizard");
+    const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", "ro", NOW);
+    const signing = (typedName: string) => ({ accepted: true, typedName, idDocument: "BV 123456", documentId: document!.id, contentSha256: document!.contentSha256 });
+    const [anaId, ionId] = press.pass.eligibleIds;
+    await consumeAndSignFamilyDeclaration(secret!, press.pass, anaId, signing("Ana Pop"), at(23));
+    // Ion is still to sign: the family's confirmation waits the wizard's half hour for him.
+    const [family] = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
+    expect(family.nextAttemptAt?.toISOString()).toBe(new Date(at(23).getTime() + 30 * 60_000).toISOString());
+    // It left with Ana alone; Ion signs afterwards and hears of his own confirmation.
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at(54), attemptCount: 1 }).where(eq(emailOutbox.id, family.id));
+    await consumeAndSignFamilyDeclaration(secret!, { ...press.pass, signedIds: [anaId] }, ionId, signing("Ion Pop"), at(60));
+    const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
+    expect(confirmations).toHaveLength(2);
+    expect(confirmations.find((row) => row.id !== family.id)).toMatchObject({ registrationId: ionId, payloadJson: {} });
   });
 });

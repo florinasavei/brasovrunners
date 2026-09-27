@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type Participant, participants } from "@/db/schema/participants";
 import type {
   Registration,
@@ -27,7 +27,7 @@ import {
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { type Deadlines, emailLinkExpiresAt, familySittingHeldUntil, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { type Deadlines, emailLinkExpiresAt, familySittingHeldUntil, familySittingHolds, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { maintenanceDueFor } from "@/modules/jobs/schedule";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -45,8 +45,8 @@ import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmiss
 import { registrationNameKey } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
-import { holdInSitting, lockLiveSitting, openSitting, settleSitting } from "./family-sitting";
-import { sittingEntryFor } from "./domain/family-sitting";
+import { confirmedSittingOf, holdInSitting, lockLiveSitting, openSitting, queueFamilyConfirmed, settleSitting } from "./family-sitting";
+import { familyHeldDeclaration, SITTING_HELD, sittingEntryFor } from "./domain/family-sitting";
 import { addressHasRoom } from "./domain/address-cap";
 import { familyRegistrationOpen } from "./family-gate";
 import {
@@ -437,6 +437,28 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   */
   await ensureProvisionalBibNumber(db, { eventId: event.id, registrationId, now });
   return (await repo.findRegistrationById(db, registrationId)) ?? updated;
+}
+
+/**
+ * The confirmation a signature earns (§91: the QR and the number) — one person's, or, for a person
+ * the family's one button confirmed (§NNN), the family's one confirmation with everybody's QR code,
+ * desk code and race number (`queueFamilyConfirmed`), for as long as it has not left. The signed
+ * declaration's copies and the club's notice stay one per person, whoever the confirmation names.
+ */
+async function enqueueConfirmation<T extends Record<string, unknown>>(tx: Transaction<T>, confirmed: Registration, now: Date): Promise<void> {
+  const recipientEmail = await deliveryEmailOf(tx, confirmed.participantId);
+  const sitting = await confirmedSittingOf(tx, confirmed.id);
+  if (sitting && (await queueFamilyConfirmed(tx, sitting, confirmed, recipientEmail, now))) return;
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    registrationId: confirmed.id,
+    messageType: "REGISTRATION_CONFIRMED",
+    locale: confirmed.locale,
+    recipientEmail,
+    payload: {},
+    idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
+    now,
+  });
 }
 
 /**
@@ -1383,9 +1405,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       persoană» — for somebody else on the same address. Read under the event's lock, like the
       address's rows above, so two forms of one sitting are one after the other. A sitting that no
       longer takes forms (sent by «Gata», past its window, of another address) is none: this form
-      opens a new one where it has something to hold.
+      opens a new one where it has something to hold. At a window of 0 («Termene») nothing is held:
+      every form's email leaves at once, as before the sitting.
     */
-    const inSitting = origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined;
+    const inSitting = origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined && familySittingHolds(settings);
     let sitting =
       inSitting && origin.sitting?.id
         ? await lockLiveSitting(tx, origin.sitting.id, { eventId: event.id, participantId: participant.id }, now)
@@ -1677,7 +1700,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         heldUntil,
         now,
       });
-      const queued = await enqueueVerificationEmail(tx, participant, registration, now, {}, heldUntil);
+      const queued = await enqueueVerificationEmail(tx, participant, registration, now, { [SITTING_HELD]: true }, heldUntil);
       sitting = await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId: queued?.id ?? null });
     };
 
@@ -1874,14 +1897,46 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     }
 
     await markEmailVerified(tx, current.participantId, now);
-    const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
+    let allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
+    /*
+      A family confirmed in one press (§NNN): the declaration request waits for the wizard, and the
+      hold counts from the moment it can leave, never before — the allocator's own formula at that
+      instant, written to the allocator's own column, so the sweep and the message read one value. A
+      hold the close or the start cuts before then is not waited on: the request leaves now.
+    */
+    let declarationNotBefore = options.declarationNotBefore;
+    if (declarationNotBefore && allocated.status === "PENDING_DECLARATION") {
+      const locked = withLockedRow(event, lockedEvent);
+      const held = familyHeldDeclaration({
+        holdExpiresAt: allocated.holdExpiresAt,
+        releaseAt: declarationNotBefore,
+        now,
+        computeHold: (at) =>
+          computeDeclarationHoldExpiry({
+            now: at,
+            registrationClosesAt: locked.registrationClosesAt,
+            eventStartsAt: locked.startsAt,
+            window: confirmationWindow(locked),
+            deadlines: settings,
+          }),
+      });
+      declarationNotBefore = held.notBefore;
+      if (held.holdExpiresAt && held.holdExpiresAt.getTime() !== allocated.holdExpiresAt?.getTime()) {
+        const [moved] = await tx
+          .update(registrations)
+          .set({ holdExpiresAt: held.holdExpiresAt, updatedAt: now })
+          .where(and(eq(registrations.id, allocated.id), eq(registrations.status, "PENDING_DECLARATION")))
+          .returning();
+        if (moved) allocated = moved;
+      }
+    }
     await enqueueAllocationEmail(
       tx,
       allocated,
       await deliveryEmailOf(tx, current.participantId),
       `registration:${allocated.id}:email-confirmed:${now.toISOString()}`,
       now,
-      options.declarationNotBefore,
+      declarationNotBefore,
     );
 
     return { registration: allocated, allocated: true };
@@ -2080,16 +2135,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     });
     if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
 
-    await enqueueEmail(tx, {
-      participantId: confirmed.participantId,
-      registrationId: confirmed.id,
-      messageType: "REGISTRATION_CONFIRMED",
-      locale: confirmed.locale,
-      recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
-      payload: {},
-      idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
-      now,
-    });
+    await enqueueConfirmation(tx, confirmed, now);
     await enqueueDeclarationCopies(tx, confirmed, now);
     await enqueueClubConfirmationNotice(tx, confirmed, now);
 
@@ -2241,16 +2287,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   });
   if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
 
-  await enqueueEmail(tx, {
-    participantId: confirmed.participantId,
-    registrationId: confirmed.id,
-    messageType: "REGISTRATION_CONFIRMED",
-    locale: confirmed.locale,
-    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
-    payload: {},
-    idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
-    now,
-  });
+  await enqueueConfirmation(tx, confirmed, now);
   // The copy of the paper declaration's record, by email, as after an electronic signature (§95).
   await enqueueDeclarationCopies(tx, confirmed, now);
   await enqueueClubConfirmationNotice(tx, confirmed, now);

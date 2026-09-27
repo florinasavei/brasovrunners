@@ -1,13 +1,14 @@
-import { and, asc, eq, gt, inArray, lt, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, like, lt, lte, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { type FamilySitting, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
-import { registrations } from "@/db/schema/registrations";
+import { type Registration, registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
 import { isFamilySitting, sittingLinkExpiresAt } from "./domain/family-sitting";
+import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
 
 /**
@@ -173,6 +174,154 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
   });
   // Sent after this response, as a message queued now would be (§68).
   if (released) drainOutboxAfterResponse();
+}
+
+/**
+ * «Da, încă o persoană» (§NNN, the review of 2026-09-27: the window lapsed under the parent's hands
+ * while the next form was open): the sitting's window starts again from this press, as it does from
+ * every form sent — the row's `held_until` and every message it still holds, together. A sitting
+ * already sent, confirmed or past its window is left as it is: its email has left, and the next form
+ * opens a sitting of its own. The id comes from the browser's sealed half; nothing is said back (§39).
+ */
+export async function continueFamilySitting<T extends Record<string, unknown>>(
+  db: Database<T>,
+  sittingId: string,
+  heldUntil: Date,
+  now: Date,
+): Promise<void> {
+  if (!isUuid(sittingId)) return;
+  await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, sittingId)).limit(1).for("update");
+    if (!row || row.releasedAt !== null || row.confirmedAt !== null || row.heldUntil.getTime() <= now.getTime()) return;
+    if (row.heldOutboxIds.length > 0) {
+      await tx
+        .update(emailOutbox)
+        .set({ nextAttemptAt: heldUntil })
+        .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+    }
+    await tx
+      .update(familySittings)
+      .set({ heldUntil, expiresAt: row.expiresAt.getTime() < heldUntil.getTime() ? heldUntil : row.expiresAt })
+      .where(eq(familySittings.id, row.id));
+  });
+}
+
+/**
+ * A verification email a sitting held (§NNN), rendered now — it is leaving: the registration's link
+ * lives the club's email-link window («Termene», §377) from this send, as the message says («valabil
+ * 48 de ore»), not from the form sent a window and a pinger's wait earlier. The same rule as the
+ * family message's (`extendSittingLinks`): only a link still live, lengthened and never shortened.
+ */
+export async function extendHeldVerificationLink<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+  until: Date,
+  now: Date,
+): Promise<Date | null> {
+  const [row] = await db
+    .update(registrations)
+    .set({ emailLinkExpiresAt: until })
+    .where(
+      and(
+        eq(registrations.id, registrationId),
+        eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+        gt(registrations.emailLinkExpiresAt, now),
+        lt(registrations.emailLinkExpiresAt, until),
+      ),
+    )
+    .returning({ emailLinkExpiresAt: registrations.emailLinkExpiresAt });
+  return row?.emailLinkExpiresAt ?? null;
+}
+
+/**
+ * The family's order (§NNN, `compareFamilyOrder`): the registrations of every sitting of this address
+ * at this event that the family's one button confirmed, in the order the forms were sent — the index
+ * a registration has here is its `familyRank`. Empty for an address that never confirmed a sitting.
+ */
+export async function sittingOrderFor<T extends Record<string, unknown>>(db: Database<T>, participantId: string, eventId: string): Promise<string[]> {
+  const rows = await db
+    .select({ registrationIds: familySittings.registrationIds })
+    .from(familySittings)
+    .where(and(eq(familySittings.participantId, participantId), eq(familySittings.eventId, eventId), isNotNull(familySittings.confirmedAt)))
+    .orderBy(asc(familySittings.confirmedAt), asc(familySittings.id));
+  return rows.flatMap((row) => row.registrationIds);
+}
+
+/** The sitting whose one button confirmed this registration (§NNN), if one did. */
+export async function confirmedSittingOf<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<FamilySitting | undefined> {
+  const [row] = await db
+    .select()
+    .from(familySittings)
+    .where(and(isNotNull(familySittings.confirmedAt), sql`${familySittings.registrationIds} @> ${JSON.stringify([registrationId])}::jsonb`))
+    .orderBy(desc(familySittings.confirmedAt))
+    .limit(1);
+  return row;
+}
+
+/** The idempotency key of a family's one confirmation (§NNN): one per sitting, whoever signs first. */
+export function familyConfirmedMessageKey(sittingId: string): string {
+  return `family-sitting:${sittingId}:confirmed`;
+}
+
+/**
+ * A family confirmed together gets one confirmation (§NNN; the owner, 2026-09-27: «statusul CONFIRMAT
+ * trebuie să fie pentru toată familia, și în mail trebuie să vină toate QR-urile pentru toată familia»):
+ * «Confirmat: 3 persoane la …», every person's QR code, desk code and race number under their name,
+ * read at send time (`render.ts`) — instead of one confirmation per signature.
+ *
+ * Called by each signature of a person the family's button confirmed, under the event's lock. The
+ * first queues the message; each one after it moves it. It leaves once nobody in the family is left
+ * to sign here, or the wizard's half hour after the last signature (`FAMILY_PASS_MINUTES`) — a person
+ * put off for later is not waited for longer than the wizard waits. Its club copy is one message, as
+ * for any confirmation (§320), and moves with it.
+ *
+ * Returns false when the family's message has already left (or is leaving): the signer then gets the
+ * confirmation they always had, of their own. The row is locked first, so a batch claiming it at this
+ * instant either waits for this signature — and renders it — or has it already, and the signer is told
+ * alone (`claimOutboxBatch` skips a locked row).
+ */
+export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  sitting: FamilySitting,
+  confirmed: Registration,
+  recipientEmail: string,
+  now: Date,
+): Promise<boolean> {
+  const key = familyConfirmedMessageKey(sitting.id);
+  const unsigned = await tx
+    .select({ id: registrations.id })
+    .from(registrations)
+    .where(and(inArray(registrations.id, [...sitting.registrationIds]), inArray(registrations.status, [...SIGNABLE_STATUSES])))
+    .limit(1);
+  const releaseAt = unsigned.length === 0 ? now : new Date(now.getTime() + FAMILY_PASS_MINUTES * 60_000);
+
+  const [existing] = await tx.select().from(emailOutbox).where(eq(emailOutbox.idempotencyKey, key)).limit(1).for("update");
+  if (existing) {
+    if (existing.status !== "PENDING") return false;
+    if (existing.attemptCount === 0) {
+      // The participant's message and its club copies, which carry the key as their prefix.
+      await tx
+        .update(emailOutbox)
+        .set({ nextAttemptAt: releaseAt })
+        .where(and(or(eq(emailOutbox.idempotencyKey, key), like(emailOutbox.idempotencyKey, `${key}:club-copy:%`)), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+      if (releaseAt.getTime() <= now.getTime()) drainOutboxAfterResponse();
+    }
+    return true;
+  }
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    // The first signer's: the event, the language and the club copy's test are read through it.
+    registrationId: confirmed.id,
+    messageType: "REGISTRATION_CONFIRMED",
+    locale: sitting.locale,
+    recipientEmail,
+    // The sitting by its id alone — never a name or a number in the outbox (§12.12).
+    payload: { familySittingId: sitting.id },
+    idempotencyKey: key,
+    now,
+    notBefore: releaseAt,
+  });
+  return true;
 }
 
 /**
