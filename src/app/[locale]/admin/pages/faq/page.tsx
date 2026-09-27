@@ -243,7 +243,7 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
             {/* «Copiază și tradu tot: RO → EN» (§464, §482): once, at the top — every English box of the page. */}
             <TranslateAllButton />
 
-            <Panel collapsible level={3} title={t("faq.introHeading")} id="faq-intro" data-testid="faq-intro-card">
+            <Panel glyph="description" collapsible level={3} title={t("faq.introHeading")} id="faq-intro" data-testid="faq-intro-card">
               <LocaleTabPanels
                 idPrefix="faq-intro"
                 translateCard
@@ -351,7 +351,7 @@ function QuestionCard({
   const aside = item ? (item.visible ? t("faq.visible") : t("faq.hidden")) : t("faq.newHelp");
 
   return (
-    <Panel collapsible level={3} title={title} aside={aside} id={item ? `faq-${item.id}` : "faq-new"} data-testid={item ? "faq-card" : "faq-new-card"}>
+    <Panel glyph="help" collapsible level={3} title={title} aside={aside} id={item ? `faq-${item.id}` : "faq-new"} data-testid={item ? "faq-card" : "faq-new-card"}>
       {item && <input type="hidden" name={name("id")} value={item.id} />}
       <LocaleTabPanels
         idPrefix={`faq-q${index}`}
