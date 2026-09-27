@@ -64,6 +64,8 @@ export default async function GroupRunDeclarationsPanel({
                 <Typography variant="body2" color="text.secondary">
                   {t("groupRunDeclarations.signedAt", {
                     when: formatDay(row.acceptedAt, { locale, timeZone, style: "short", withTime: true, position: "inline" }),
+                    // The version signed (§NNN), in the shape the registration's page gives a declaration's.
+                    version: row.version,
                   })}
                 </Typography>
                 <GlyphButton

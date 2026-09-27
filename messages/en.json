@@ -4686,7 +4686,7 @@
       "count": "Signed: {count}",
       "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform deletes the declarations {days} after the run.",
       "none": "No declaration signed yet.",
-      "signedAt": "signed {when}",
+      "signedAt": "signed {when} (v{version})",
       "pdf": "PDF",
       "reason": "Why it is erased",
       "reasonHelp": "It stays in the club's log, with your name. Do not write the person's name.",

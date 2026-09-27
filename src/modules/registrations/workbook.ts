@@ -29,10 +29,12 @@ import { raceNumberOf } from "./domain/race-number";
 /** A row as the sheet wants it: the same data the CSV carries, with the dates still dates. */
 export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
-  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt"
+  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt"
 > & {
   /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
   termsAcceptedAt?: Date | null;
+  /** The moment the latest declaration was signed (§NNN); null while none is. */
+  declarationSignedAt?: Date | null;
   /** The registration's own id, so a re-import knows which row it is about — never edited. */
   id: string;
   /** The runner's own club, as typed (§172) — what a start list is sorted by. */
@@ -119,10 +121,14 @@ const COLUMNS: Array<{
   /*
     The terms the form accepted expressly (§421), the same two columns as the CSV (§425), last so
     every earlier column keeps its place. Blank for a staff or desk entry — the paper carries the
-    terms — and for a row sent before the version was recorded.
+    terms — and for a row sent before the version was recorded. The moment on the club's clock,
+    like every other stamp in the sheet (§439), so it reads beside the declaration's (§NNN).
   */
   { header: "Terms version", width: 10, cell: (row) => ({ value: row.termsVersion ?? null, type: Number }) },
-  { header: "Terms accepted", width: 18, cell: (row) => ({ value: row.termsAcceptedAt ?? null, type: Date, format: "dd.mm.yyyy hh:mm" }) },
+  { header: "Terms accepted", width: 18, cell: (row) => ({ value: onClubClock(row.termsAcceptedAt ?? null), type: Date, format: STAMP_FORMAT }) },
+  // The declaration signed, the same two columns as the CSV (§NNN): the version as a number, the moment on the club's clock.
+  { header: "Declaration version", width: 10, cell: (row) => ({ value: row.declarationVersion ?? null, type: Number }) },
+  { header: "Declaration signed", width: 18, cell: (row) => ({ value: onClubClock(row.declarationSignedAt ?? null), type: Date, format: STAMP_FORMAT }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */

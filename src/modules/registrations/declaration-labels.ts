@@ -8,7 +8,9 @@ import type { DeclarationLabels } from "./signed-declaration";
  * than `next-intl`, like the email templates: the outbox worker renders the PDF outside any
  * request, where there is no locale context to ask.
  */
-const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "signedByLink" | "signedOnPaper" | "idDocumentsNotice"> & {
+const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "signedByLink" | "signedOnPaper" | "idDocumentsNotice" | "versionInForce" | "signedWhen"> & {
+  versionInForce: string;
+  signedWhen: string;
   generatedOn: string;
   page: string;
   signedByLink: string;
@@ -26,6 +28,10 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     date: "Data",
     idDocument: "Act de identitate",
     version: "Versiunea",
+    // The signing pages' own words (`Legal.inForce`), so the page and the PDF name the version alike (§NNN).
+    versionInForce: "Versiunea {version}, în vigoare din {date}",
+    // No preposition: {when} starts with its weekday, "semnată joi, 24 sept. 2026, la 18:05" (§452).
+    signedWhen: "semnată {when}",
     // No preposition before {date} and {when}: each starts with a weekday — "Generat joi, 24 sept.
     // 2026, la 18:05" (§452, reversing §349's "pe").
     generatedOn: "Generat {date}",
@@ -47,6 +53,8 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     date: "Date",
     idDocument: "Identity document",
     version: "Version",
+    versionInForce: "Version {version}, in force since {date}",
+    signedWhen: "signed on {when}",
     generatedOn: "Generated on {date}",
     page: "Page {n} of {total}",
     signedByLink:
@@ -71,6 +79,12 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
     date: words.date,
     idDocument: words.idDocument,
     version: words.version,
+    // The day the version took effect, inside the sentence, on the club's clock as `/admin/legal` and the signing pages show it (§349, §NNN).
+    versionInForce: (version, effectiveAt) =>
+      words.versionInForce
+        .replace("{version}", String(version))
+        .replace("{date}", formatDay(effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" })),
+    signedWhen: (when) => words.signedWhen.replace("{when}", when),
     generatedOn: words.generatedOn.replace("{date}", generated),
     page: (n, total) => words.page.replace("{n}", String(n)).replace("{total}", String(total)),
     signedByLink: (when) => words.signedByLink.replace("{when}", when),
