@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { difficultyBandOf, difficultyStepOf } from "@/modules/events/domain/difficulty";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -51,7 +52,7 @@ const FIELDS = {
   locationNameEn: "The cable car station",
   locationAddress: "",
   surface: "TRAIL",
-  difficulty: "MODERATE",
+  difficulty: "MEDIUM",
   costType: "FREE",
   mapUrl: "",
   routeUrl: "",
@@ -104,7 +105,9 @@ function editorForm(row: typeof events.$inferSelect, offered: boolean, overrides
   put("event.startsAtWallTime", toWallTimeInput(row.startsAt, row.timezone));
   put("event.locationName", row.locationName ?? "");
   put("event.surface", row.surface ?? "");
-  put("event.difficulty", row.difficulty ?? "");
+  // The level as the editor posts it (§NNN): its band and its step.
+  put("event.difficulty", row.difficultyLevel ? difficultyBandOf(row.difficultyLevel) : "");
+  put("event.difficultyStep", row.difficultyLevel ? String(difficultyStepOf(row.difficultyLevel)) : "");
   put("event.costType", row.costType ?? "");
   put("event.distanceMeters", row.distanceMeters === null ? "" : String(row.distanceMeters));
   put("event.elevationGainMeters", row.elevationGainMeters === null ? "" : String(row.elevationGainMeters));

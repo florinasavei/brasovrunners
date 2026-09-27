@@ -69,10 +69,10 @@ describe("§392 the previews draw the block with the sample event", () => {
     const ro = eventFactsBlock(emailSampleEventFacts("ro"), "ro").text;
     expect(ro).toContain("Când: Duminică, 4 oct. 2026 · întâlnire la 09:00 · start la 09:30");
     expect(ro).toContain("Program: 08:00–08:50 — Ridicarea numerelor\n  09:15 — Briefing\n  09:30 — Startul");
-    expect(ro).toContain("Traseu: Trail · Mediu · 12 km · 450 m D+");
+    expect(ro).toContain("Traseu: Trail · Mediu, treapta 2 din 3 · 12 km · 450 m D+");
     const en = eventFactsBlock(emailSampleEventFacts("en"), "en").text;
     expect(en).toContain("When: Sunday, 4 Oct 2026 · gather at 09:00 · start at 09:30");
-    expect(en).toContain("Route: Trail · Moderate · 12 km · 450 m climb");
+    expect(en).toContain("Route: Trail · Medium, step 2 of 3 · 12 km · 450 m climb");
   });
 
   it("escapes what the club typed in the HTML part", () => {

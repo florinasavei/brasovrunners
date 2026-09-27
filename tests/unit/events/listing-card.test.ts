@@ -108,7 +108,7 @@ function row(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Parcul Titulescu, la fântâna arteziană",
     locationAddress: null,
     locationToBeAnnounced: false,
-    difficulty: "MODERATE",
+    difficultyLevel: 5,
     costType: "FREE",
     costAmount: null,
     costUrl: null,
@@ -155,7 +155,7 @@ const anchors = (html: string) =>
   }));
 /** The words of every chip, in order — each label's own first text, before the difficulty pill's
  * visually-hidden `srSuffix` span. */
-const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</g)].map((match) => match[1]);
 /** Where the facts end: the series card's fold, or the door to the page. */
 const AFTER_FACTS = /<details\b|<a\b[^>]*>(?:<svg\b[\s\S]*?<\/svg>)?(?:Descrierea completă|Full event description)/;
 /** One fact line of the card (`data-fact`), from its opening tag up to the next line or the end of the facts. */
@@ -506,9 +506,9 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("draws the route and the cost as the page's pills, in order — surface, difficulty, distance, climb, cost — and says the surface once, not also a chip at the top", async () => {
     const html = await single();
     // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.
-    expect(chipLabels(html)).toEqual(["Alergare de grup", "Colaborare", "Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    expect(chipLabels(html)).toEqual(["Alergare de grup", "Colaborare", "Mixt", "Mediu 2", "8 km", "250 m D+", "Gratuit"]);
     expect(html).toContain('data-testid="HandshakeIcon"');
-    expect(chipLabels(fact(html, "pills"))).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    expect(chipLabels(fact(html, "pills"))).toEqual(["Mixt", "Mediu 2", "8 km", "250 m D+", "Gratuit"]);
     // No middle dot between them and none of the old line's long words.
     expect(text(fact(html, "pills"))).not.toContain("·");
     expect(html).not.toContain("diferență de nivel");
@@ -546,7 +546,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("in English too", async () => {
     currentLocale = "en";
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Group run", "Partnership", "Mixed", "Moderate", "8 km", "250 m climb", "Free"]);
+    expect(chipLabels(html)).toEqual(["Group run", "Partnership", "Mixed", "Medium 2", "8 km", "250 m climb", "Free"]);
     expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
     expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026Sunday, 27 Sept?·10:00$/);
@@ -672,7 +672,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
     expect(html.indexOf('data-testid="card-weather"')).toBeGreaterThan(html.indexOf("<h2"));
     const row = fact(html, "pills");
     expect(row).toContain('data-testid="card-weather"');
-    expect(chipLabels(row)).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    expect(chipLabels(row)).toEqual(["Mixt", "Mediu 2", "8 km", "250 m D+", "Gratuit"]);
     const weatherAt = row.indexOf('data-testid="card-weather"');
     expect(row.lastIndexOf("MuiChip-root")).toBeLessThan(weatherAt);
     // The marks row holds what the event is, and nothing of the day's weather.
@@ -680,7 +680,7 @@ describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   });
 
   it("stands alone in the row on a card with no route pill", async () => {
-    const bare = trailToRoad({ surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, costType: null });
+    const bare = trailToRoad({ surface: null, difficultyLevel: null, distanceMeters: null, elevationGainMeters: null, costType: null });
     const html = withoutStyles(await markup(createElement(EventCard, { event: bare, index: 0, now: NOW, weather: reading })));
     const row = fact(html, "pills");
     expect(row).toContain('data-testid="card-weather"');

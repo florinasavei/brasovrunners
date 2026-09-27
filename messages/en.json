@@ -182,7 +182,9 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — bring a headlamp"
     },
-    "difficulty": "Difficulty",
+    "difficultyLevelShort": "{band} {step}",
+    "difficultyLevelSr": "Difficulty: {band}, step {step} of {steps}",
+    "difficultyWithStep": "{band}, step {step} of {steps}",
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
@@ -303,11 +305,18 @@
       "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
-      "VERY_EASY": "Very easy",
       "EASY": "Easy",
-      "MODERATE": "Moderate",
+      "MEDIUM": "Medium",
+      "FAIRLY_HARD": "Fairly hard",
       "HARD": "Hard",
       "VERY_HARD": "Very hard"
+    },
+    "difficultyBandWords": {
+      "EASY": "easy",
+      "MEDIUM": "medium",
+      "FAIRLY_HARD": "fairly hard",
+      "HARD": "hard",
+      "VERY_HARD": "very hard"
     },
     "costValues": {
       "FREE": "Free",
@@ -1057,6 +1066,7 @@
         "seoTitle": "Search engine title",
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
+        "difficultyStep": "Step",
         "costType": "Cost",
         "checklist": "What to bring — one line, in the emails and the calendar",
         "body": "Content — shown on the event page, under the title",
@@ -1145,12 +1155,19 @@
       "delete": "Delete",
       "deleteHelp": "A duplicate is created as a draft, with its own addresses. Delete only an event nobody registered for; archive the ones that happened.",
       "difficultyValues": {
-        "VERY_EASY": "Very easy",
         "EASY": "Easy",
-        "MODERATE": "Moderate",
+        "MEDIUM": "Medium",
+        "FAIRLY_HARD": "Fairly hard",
         "HARD": "Hard",
         "VERY_HARD": "Very hard"
       },
+      "difficultySteps": {
+        "step1": "Step 1, the easiest in the band",
+        "step2": "Step 2, the middle of the band",
+        "step3": "Step 3, the hardest in the band"
+      },
+      "difficultySummary": "{band} {step}",
+      "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
       "costValues": {
         "FREE": "Free",
         "PAID": "Paid",
@@ -4290,6 +4307,20 @@
               ]
             },
             {
+              "title": "The club's difficulty scale",
+              "steps": [
+                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
+                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
+                "«Easy»: short and flat — for anyone.",
+                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
+                "«Fairly hard»: from a half marathon up.",
+                "«Hard»: marathons.",
+                "«Very hard»: ultramarathons and beyond.",
+                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
+              ]
+            },
+            {
               "title": "The English in one press",
               "steps": [
                 "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
@@ -4346,6 +4377,20 @@
                 "A date of a series: under «Save for:» pick «This date only», «This and the following dates» or «All dates of the series».",
                 "Press «Save». It is on the site at once, in both languages.",
                 "The usual mistake: picking «This date only» when you meant the whole series (or the other way round) — check the message under «Save for:» before you press «Save»."
+              ]
+            },
+            {
+              "title": "The club's difficulty scale",
+              "steps": [
+                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
+                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
+                "«Easy»: short and flat — for anyone.",
+                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
+                "«Fairly hard»: from a half marathon up.",
+                "«Hard»: marathons.",
+                "«Very hard»: ultramarathons and beyond.",
+                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
               ]
             },
             {

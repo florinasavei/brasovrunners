@@ -82,7 +82,7 @@ function race(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Poiana Brașov",
     locationAddress: null,
     locationToBeAnnounced: false,
-    difficulty: "MODERATE",
+    difficultyLevel: 5,
     costType: "FREE",
     costAmount: null,
     costUrl: null,
@@ -102,7 +102,7 @@ const card = (event: PublicEvent, featured?: { raceWeekDays: number }) => markup
 
 // `[\s\S]` rather than the `s` flag: `next build` type-checks the tests against an older target.
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
-const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</g)].map((match) => match[1]);
 /** The `<li>`'s own Emotion class, and every rule Emotion emitted for it. */
 function cardRules(html: string): string {
   const cls = /<li\b[^>]*class="[^"]*\b(css-[\w-]+)"/.exec(html)?.[1] ?? "";

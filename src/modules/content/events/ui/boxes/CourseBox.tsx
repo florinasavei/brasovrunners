@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
-import { DIFFICULTY_LEVELS } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
@@ -29,7 +28,8 @@ import { LanguageTabs } from "./TextBoxes";
  * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
- * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
+ * seen — a separate question from the meeting point (§49). How hard is asked in «Ce fel de eveniment» since §NNN,
+ * with the band and its step side by side. All optional, so folded on both pages. "Nespecificat" is a real answer on the surface select:
  * the page omits the row rather than guessing (migration `0018`).
  *
  * Under the settings, in its own Română | English tabs, the route / training description (§387):
@@ -70,7 +70,6 @@ export default async function CourseBox({
       event,
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
-        difficulty: event?.difficulty ? t(`editor.difficultyValues.${event.difficulty}`) : null,
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
         night: event ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
@@ -100,28 +99,15 @@ export default async function CourseBox({
   return (
     <Panel collapsible {...card}>
       <Stack spacing={2}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <GlyphSelect
-            name="event.surface"
-            label={t("editor.surface")}
-            defaultValue={event?.surface ?? ""}
-            options={[
-              { value: "", label: t("editor.notStated") },
-              ...EVENT_SURFACES.map((surface) => ({ value: surface, label: tEvent(`surface.${surface}`), glyph: `surface:${surface}` as const })),
-            ]}
-            sx={{ flex: 1 }}
-          />
-          <GlyphSelect
-            name="event.difficulty"
-            label={t("editor.fields.difficulty")}
-            defaultValue={event?.difficulty ?? ""}
-            options={[
-              { value: "", label: t("editor.notStated") },
-              ...DIFFICULTY_LEVELS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
-            ]}
-            sx={{ flex: 1 }}
-          />
-        </Stack>
+        <GlyphSelect
+          name="event.surface"
+          label={t("editor.surface")}
+          defaultValue={event?.surface ?? ""}
+          options={[
+            { value: "", label: t("editor.notStated") },
+            ...EVENT_SURFACES.map((surface) => ({ value: surface, label: tEvent(`surface.${surface}`), glyph: `surface:${surface}` as const })),
+          ]}
+        />
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <RecallField
             name="event.distanceMeters"

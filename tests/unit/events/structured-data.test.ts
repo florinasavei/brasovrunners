@@ -37,7 +37,7 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
     excerpt: "Urcare pe Tâmpa și retur.",
     locationName: "Stația de telecabină Tâmpa",
     locationAddress: "Aleea Tiberiu Brediceanu",
-    difficulty: "MODERATE" as const,
+    difficultyLevel: 5,
     costType: "FREE" as const,
     seoTitle: null,
     seoDescription: null,

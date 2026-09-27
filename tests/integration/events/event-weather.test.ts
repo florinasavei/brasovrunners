@@ -71,7 +71,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Stația de telecabină Tâmpa",
     locationAddress: null,
     locationToBeAnnounced: false,
-    difficulty: "MODERATE",
+    difficultyLevel: 5,
     costType: "FREE",
     costAmount: null,
     costUrl: null,

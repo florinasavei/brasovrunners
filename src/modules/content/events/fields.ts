@@ -5,7 +5,7 @@ import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { parseTypedCoordinates } from "@/modules/weather/domain/place";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
-import { DIFFICULTY_LEVELS } from "@/modules/events/domain/difficulty";
+import { DEFAULT_DIFFICULTY_STEP, DIFFICULTY_BANDS, DIFFICULTY_STEPS, type DifficultyStep } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import {
   type CoHost,
@@ -612,7 +612,20 @@ export const eventFieldsSchema = z
      * Closed sets since migration `0018`, and optional because "the club has not said" is a
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
-    difficulty: optionalEnum(DIFFICULTY_LEVELS),
+    difficulty: optionalEnum(DIFFICULTY_BANDS),
+    /**
+     * The step inside the band (§NNN) — the editor's second control, «Treapta» (1 · 2 · 3): 1 the
+     * easiest of the band, 3 the hardest. With the band it is the event's level on the club's scale
+     * of fifteen (`difficultyLevel`), which the save writes. `""`, null or absent — a caller from
+     * before the steps, a fixture — is the band's middle; a step with no band is read by nobody. A
+     * value outside 1 … 3 did not come from the three choices and is refused, like a band outside
+     * the five.
+     */
+    difficultyStep: z
+      .union([z.literal(""), z.coerce.number().int().min(1).max(DIFFICULTY_STEPS.length)])
+      .nullable()
+      .optional()
+      .transform((value): DifficultyStep => (value === "" || value === null || value === undefined ? DEFAULT_DIFFICULTY_STEP : (value as DifficultyStep))),
     // §398 — optional, like `costAmount`/`costUrl` below: absent means this caller is not
     // editing the cost fields at all, not "clear it". The service defaults an *absent* value to
     // `FREE` only on create (`eventColumnsFrom`, the owner: "by default toate evenimentele sunt

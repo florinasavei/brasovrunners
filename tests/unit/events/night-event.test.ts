@@ -251,7 +251,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Stația de telecabină Tâmpa",
     locationAddress: null,
     locationToBeAnnounced: false,
-    difficulty: "MODERATE",
+    difficultyLevel: 5,
     costType: "FREE",
     costAmount: null,
     costUrl: null,
@@ -265,7 +265,7 @@ const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 
 /** Every chip's label, in order. */
 function pillLabels(fragment: string): string[] {
-  return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+  return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</g)].map((match) => match[1]);
 }
 /** Every tooltip's words, in order. */
 function tooltips(fragment: string): string[] {
@@ -279,7 +279,7 @@ function rows(html: string) {
 
 describe("§394 orderRoutePills — the night event where §382 put the headlamp", () => {
   const surface: Pill = { glyph: "surface:TRAIL", label: "Trail" };
-  const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
+  const difficulty: Pill = { glyph: "difficulty:MEDIUM-2", label: "Mediu 2" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
   const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
   const night: Pill = { glyph: "night", label: "Noapte", tooltip: "Soarele apune la 16:44" };
@@ -307,7 +307,7 @@ describe("§394 the event page's facts", () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
     expect(route).toBeDefined();
-    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte"]);
+    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu 2", "8 km", "250 m D+", "Noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");
@@ -321,7 +321,7 @@ describe("§394 the event page's facts", () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Route")!;
-    expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night"]);
+    expect(pillLabels(route.dd)).toEqual(["Trail", "Medium 2", "8 km", "250 m climb", "Night"]);
     expect(tooltips(route.dd)).toEqual(["The sun sets at 16:44"]);
   });
 
@@ -334,7 +334,7 @@ describe("§394 the event page's facts", () => {
 
   it("makes a route row on its own when it is the only fact of the route — it is not the overline again", async () => {
     const html = renderToStaticMarkup(
-      await EventFacts({ event: event({ distanceMeters: null, elevationGainMeters: null, difficulty: null }), now: NOW, stacked: true }),
+      await EventFacts({ event: event({ distanceMeters: null, elevationGainMeters: null, difficultyLevel: null }), now: NOW, stacked: true }),
     );
     expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toEqual(["Trail", "Noapte"]);
   });
@@ -364,7 +364,7 @@ describe("§394 the event page's facts", () => {
 describe("§394 the listing card and the hero", () => {
   it("the card's pills: the route, the night, then the cost", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
-    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte", "Gratuit"]);
+    expect(pillLabels(html)).toEqual(["Trail", "Mediu 2", "8 km", "250 m D+", "Noapte", "Gratuit"]);
     expect(html).toContain('data-testid="ModeNightIcon"');
   });
 
@@ -545,10 +545,10 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
 
   it("in the «Traseul» card's line, after the climb", () => {
     const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: null, nightOverride: null };
-    expect(courseSummary(roWords, course, { surface: "Trail", difficulty: "Mediu", night: true })).toBe("Trail · Mediu · 8 km · +250 m · de noapte (automat)");
-    expect(courseSummary(roWords, { ...course, nightOverride: false }, { surface: null, difficulty: null, night: true })).toBe("8 km · +250 m · de zi");
+    expect(courseSummary(roWords, course, { surface: "Trail", night: true })).toBe("Trail · 8 km · +250 m · de noapte (automat)");
+    expect(courseSummary(roWords, { ...course, nightOverride: false }, { surface: null, night: true })).toBe("8 km · +250 m · de zi");
     // §394 nit: the closed card names an automatic daytime date too, not just an automatic night one.
-    expect(courseSummary(roWords, course, { surface: null, difficulty: null, night: false })).toBe("8 km · +250 m · de zi (automat)");
+    expect(courseSummary(roWords, course, { surface: null, night: false })).toBe("8 km · +250 m · de zi (automat)");
   });
 
   const lineWords = (catalogue: typeof ro | typeof en, locale: string) => ({

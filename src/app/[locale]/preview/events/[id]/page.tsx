@@ -134,7 +134,7 @@ export default async function PreviewEventPage({ params }: Props) {
     locationName: placeLater ? null : placeNameIn(event, translation.locationName),
     locationAddress: placeLater ? null : event.locationAddress,
     locationToBeAnnounced: placeLater,
-    difficulty: event.difficulty,
+    difficultyLevel: event.difficultyLevel,
     costType: event.costType,
     costAmount: event.costAmount,
     costUrl: event.costUrl,

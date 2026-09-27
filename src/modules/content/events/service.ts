@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { costPaidToExternalOrganizer, type EventCostType } from "@/modules/events/domain/cost";
+import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
@@ -398,7 +399,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
   return {
     type: fields.type,
     surface: fields.surface,
-    difficulty: fields.difficulty,
+    // The level on the club's scale of fifteen (§NNN): the band select and «Treapta» make one level;
+    // the retired `difficulty` column gets a best-effort word, for the release before this one.
+    ...storedDifficulty(fields.difficulty ? difficultyLevel(fields.difficulty, fields.difficultyStep) : null),
     eventStatus: fields.eventStatus,
     timezone: fields.timezone,
     startsAt: times.startsAt,
@@ -1603,7 +1606,9 @@ const SERIES_COLUMNS = [
   // Whether the place is announced travels with the place (§328): a series moved to a venue
   // not yet settled is moved on every date it reaches, and announced on them all at once.
   "locationToBeAnnounced",
+  // The level (§NNN), and the retired column's best-effort word written beside it.
   "difficulty",
+  "difficultyLevel",
   "costType",
   "costAmount",
   "costUrl",
@@ -2586,6 +2591,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // hidden place travels with it and stays hidden until somebody switches it on.
     locationToBeAnnounced: source.locationToBeAnnounced,
     difficulty: source.difficulty,
+    difficultyLevel: source.difficultyLevel,
     costType: source.costType,
     costAmount: source.costAmount,
     costUrl: source.costUrl,
