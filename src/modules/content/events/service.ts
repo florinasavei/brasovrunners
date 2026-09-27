@@ -36,6 +36,7 @@ import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-serv
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
 import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/modules/registrations/test-registrations";
+import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { fillAvailableSpots } from "@/modules/registrations/service";
 import {
   canCreateEvent,
@@ -2608,8 +2609,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
-    // of a series keep the source's minimum age, like its capacity.
-    minAge: source.minAge,
+    // of a series keep the source's minimum age, like its capacity — as it binds (§NNN): a source
+    // saved under §329 with 0 or 12 gives a copy fourteen, the number the editor would have asked
+    // for, never a row under the floor that no save could have written.
+    minAge: effectiveMinimumAge(source.minAge),
     // And its reminder rule (§377), like the confirmation window it sits beside.
     reminderHoursBefore: source.reminderHoursBefore,
     registrationMode: source.registrationMode,

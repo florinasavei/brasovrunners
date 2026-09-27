@@ -11,6 +11,7 @@ import {
   raceDeclarationKeysFor,
   REGISTRATION_LEGAL_KEYS,
 } from "@/modules/legal-documents/domain/keys";
+import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 
 /**
  * §NNN — which of the race's two declarations a participant signs: the organizer's choice, else the
@@ -117,9 +118,10 @@ describe("§NNN the editor's start for a race's declaration", () => {
   });
 });
 
-describe("§NNN the one press approves both race declarations", () => {
-  it("covers the registration's three texts and the road declaration, and never the group runs' optional ones", () => {
-    expect([...PLATFORM_APPROVAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD"]);
+describe("§NNN the one press approves every text of the catalogue", () => {
+  it("covers exactly the catalogue's keys: the registration's three, the road declaration and the group runs' two", () => {
+    expect([...PLATFORM_APPROVAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
+    expect([...PLATFORM_APPROVAL_KEYS].sort()).toEqual(Object.keys(LEGAL_TEMPLATES).sort());
   });
 
   it("counts its texts in the messages rather than writing a number", () => {
@@ -133,6 +135,8 @@ describe("§NNN the one press approves both race declarations", () => {
       for (const sentence of words) {
         expect(sentence).toContain("{count");
         expect(sentence).not.toMatch(/\b(trei|three)\b/i);
+        // Plain sentences, never an ICU plural (docs/VIBECODING.md).
+        expect(sentence).not.toMatch(/\bplural\b|\bselectordinal\b/);
       }
     }
   });

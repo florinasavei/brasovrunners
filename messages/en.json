@@ -909,8 +909,8 @@
       "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter the backoffice as soon as they set a password.",
       "changeRoleTitle": "Change the role?",
       "changeRoleBody": "{name} gets the chosen role from the next page they open.",
-      "approvePlatformTitle": "Approve {count, plural, one {# text} other {# texts}}?",
-      "approvePlatformBody": "From this moment they are in effect on the site, as the club's texts; a correction is a new version.",
+      "approvePlatformTitle": "Approve the platform's missing texts ({count} of {total})?",
+      "approvePlatformBody": "To be approved: {texts}. From this moment they are in effect on the site, as the club's texts; a correction is a new version.",
       "approveVersionTitle": "Approve and publish version {version}?",
       "approveVersionBody": "The text becomes public and can no longer be changed. A later correction means a new version.",
       "emailPlanTitle": "Change the Mailgun plan?",
@@ -1871,7 +1871,7 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The texts a participant accepts at registration — the privacy notice, the terms and the race declaration, the latter in two kinds, trail and road or park — and the two optional declarations of the group runs: {count, plural, one {# text} other {# texts}} in all. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "intro": "The texts a participant accepts at registration — the privacy notice, the terms and the race declaration, the latter in two kinds, trail and road or park — and the two optional declarations of the group runs; in all: {count}. An approved version never changes (people signed exactly that text); a correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
@@ -1946,7 +1946,7 @@
       "deleteBlockedTermsAccepted": "Cannot be deleted: registrations were submitted or declarations signed while it was in force, {window} ({count}), and neither records which version of the terms was accepted.",
       "legalVersionDeleted": "The draft has been deleted.",
       "newFromTemplateComplete": "Prefilled with the platform's text and the club's facts, complete. Read it all, save the draft, then approve it from its page.",
-      "platformApproved": "Done: {count, plural, one {# text approved} other {# texts approved}}, with the club's facts. Registrations are open; a new race starts on the declaration that fits its course, in the “Self-declaration” card, and a saved one keeps the one chosen.",
+      "platformApproved": "Done: the platform's missing texts are approved (in all: {count}), with the club's facts. Registrations are open; a new race starts on the declaration that fits its course, in the “Self-declaration” card, and a saved one keeps the one chosen.",
       "platform": {
         "title": "One step: approve the platform's texts with the club's facts",
         "intro": "Not yet approved: {keys}. The button below creates and approves, in your name, version 1 of each from the platform's text, with the facts below written in. A text already approved is not touched.",
@@ -1960,7 +1960,7 @@
         "missing": "not set",
         "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
         "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",
-        "button": "Approve {count, plural, one {# text} other {# texts}} now",
+        "button": "Approve the missing texts now ({count} of {total})",
         "pending": "Approving…"
       },
       "withdraw": "Withdraw the version",
@@ -1981,7 +1981,7 @@
       },
       "tokens": {
         "title": "The fields that fill themselves in",
-        "intro": "Leave them exactly as they are in the text. The participant's and the event's — in the declaration only — are replaced at signing, for each person and each race; the four deadlines, in any of the three texts, with the values under “Deadlines” on the Emails page. The club's own facts are not here: those are already written into the text.",
+        "intro": "Leave them exactly as they are in the text. The participant's and the event's — in the declaration only — are replaced at signing, for each person and each race; the four deadlines, in any of the platform's texts, with the values under “Deadlines” on the Emails page. The club's own facts are not here: those are already written into the text.",
         "inText": "in this text",
         "participant": "The name the participant registered under",
         "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
@@ -2401,7 +2401,7 @@
           "how": [
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes the stages.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
-            "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
+            "Approve the terms and the declaration from the platform's texts as well, if not already, so they all say the same."
           ]
         },
         "listSocialsNotice": {

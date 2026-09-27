@@ -254,6 +254,15 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       const source = await createEvent(db, { actor: admin, fields: withMinAge("18", "optsprezece") });
       expect((await duplicateEvent(db, { actor: admin, eventId: source.id })).minAge).toBe(18);
     });
+
+    it("gives a copy of a race saved under §329 with 0 or 12 the floor of fourteen, never the old number (§NNN)", async () => {
+      for (const [stored, slug] of [[0, "fara-minim"], [12, "doisprezece"]] as const) {
+        const source = await createEvent(db, { actor: admin, fields: withMinAge("14", slug) });
+        // Written straight to the row, as a save before the floor could have left it.
+        await db.update(events).set({ minAge: stored }).where(eq(events.id, source.id));
+        expect((await duplicateEvent(db, { actor: admin, eventId: source.id })).minAge, String(stored)).toBe(14);
+      }
+    });
   });
 
   describe("duplicating", () => {

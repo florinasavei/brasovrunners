@@ -33,11 +33,11 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   // the key every signature so far was recorded under.
   EVENT_DECLARATION: {
     ro: { title: "Declarație pe propria răspundere — cursă trail", body: declarationTrailRo },
-    en: { title: "Declaration of own responsibility — trail race", body: declarationTrailEn },
+    en: { title: "Self-declaration — trail race", body: declarationTrailEn },
   },
   EVENT_DECLARATION_ROAD: {
     ro: { title: "Declarație pe propria răspundere — cursă pe asfalt / în parc", body: declarationRoadRo },
-    en: { title: "Declaration of own responsibility — road / park race", body: declarationRoadEn },
+    en: { title: "Self-declaration — road / park race", body: declarationRoadEn },
   },
   // The group runs' optional self-declarations, one per surface (§393).
   GROUP_RUN_DECLARATION_ASPHALT: {

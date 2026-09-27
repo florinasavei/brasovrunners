@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { approvePlatformTemplates } from "@/modules/legal-documents/service";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
@@ -10,8 +11,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-053-02 criterion 6 (`DECISIONS.md` §132) — the platform's texts a race rests on, with the
- * club's facts written in, approved in one act: the notice, the terms and, since §NNN, both race
- * declarations, trail and road (`PLATFORM_APPROVAL_KEYS`). The long way's rules, in one
+ * club's facts written in, approved in one act: since §NNN every text of the catalogue — the notice,
+ * the terms, both race declarations, trail and road, and the group runs' two optional ones
+ * (`PLATFORM_APPROVAL_KEYS`). The long way's rules, in one
  * call: a placeholder left is a refusal, a text in force is never replaced, and the approver
  * is on the row.
  */
@@ -50,9 +52,9 @@ describe("the platform's texts approved in one act", () => {
 
   it("creates and approves version 1 of each text with the facts in, in the approver's name", async () => {
     const result = await approvePlatformTemplates(db, superadmin, FACTS, NOW);
-    expect(result).toEqual({ approved: ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD"], alreadyApproved: [] });
+    expect(result).toEqual({ approved: [...LEGAL_DOCUMENT_KEYS], alreadyApproved: [] });
 
-    for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD"] as const) {
+    for (const key of LEGAL_DOCUMENT_KEYS) {
       for (const locale of ["ro", "en"] as const) {
         const inForce = await findCurrentApprovedDocument(db, key, locale, NOW);
         expect(inForce, `${key} ${locale}`).toBeDefined();
@@ -63,15 +65,15 @@ describe("the platform's texts approved in one act", () => {
       }
     }
     const rows = await db.select().from(legalDocuments);
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
     expect(rows.every((row) => row.isApproved && row.approvedByStaffUserId === superadmin.id && row.effectiveAt.getTime() === NOW.getTime())).toBe(true);
   });
 
   it("leaves a text already in force alone, and approves only the missing ones", async () => {
     await approvePlatformTemplates(db, superadmin, FACTS, NOW);
     const again = await approvePlatformTemplates(db, superadmin, FACTS, new Date(NOW.getTime() + 60_000));
-    expect(again).toEqual({ approved: [], alreadyApproved: ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD"] });
-    expect(await db.select().from(legalDocuments)).toHaveLength(4);
+    expect(again).toEqual({ approved: [], alreadyApproved: [...LEGAL_DOCUMENT_KEYS] });
+    expect(await db.select().from(legalDocuments)).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
   });
 
   it("approves the road declaration alone for a club whose three texts were already in force (§NNN)", async () => {
@@ -80,7 +82,7 @@ describe("the platform's texts approved in one act", () => {
     await db.delete(legalDocuments).where(eq(legalDocuments.key, "EVENT_DECLARATION_ROAD"));
     const later = new Date(NOW.getTime() + 60_000);
     const result = await approvePlatformTemplates(db, admin, FACTS, later);
-    expect(result).toEqual({ approved: ["EVENT_DECLARATION_ROAD"], alreadyApproved: ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] });
+    expect(result).toEqual({ approved: ["EVENT_DECLARATION_ROAD"], alreadyApproved: LEGAL_DOCUMENT_KEYS.filter((key) => key !== "EVENT_DECLARATION_ROAD") });
     expect((await findCurrentApprovedDocument(db, "EVENT_DECLARATION_ROAD", "ro", later))?.version).toBe(1);
   });
 

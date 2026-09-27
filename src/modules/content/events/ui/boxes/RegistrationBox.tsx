@@ -55,7 +55,6 @@ const BIB_COLOURS = [
   { key: "black", hex: "#212121" },
 ] as const;
 
-/** An approved race declaration the editor offers (§39), with the kind of course it is for (§NNN). */
 /** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§NNN). */
 export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
 

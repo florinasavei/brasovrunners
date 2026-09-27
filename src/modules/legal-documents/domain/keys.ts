@@ -23,18 +23,19 @@ export const LEGAL_DOCUMENT_KEYS = [
  * trail one, `EVENT_DECLARATION`: it is the text every race falls back to (`raceDeclarationKeysFor`),
  * so with it in force no race is without a declaration; the road one (§NNN) is wanted but not
  * required — until it is approved, a road race signs the trail text, as every race did before it
- * existed. The one press approves both (`PLATFORM_APPROVAL_KEYS`).
+ * existed. The one press approves both, with every other text of the catalogue (`PLATFORM_APPROVAL_KEYS`).
  */
 export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const satisfies readonly LegalDocumentKey[];
 
 /**
  * What «Aprobă textele platformei» on `/admin/legal` creates and approves in one press (§132,
- * §NNN): the three a registration rests on and the road race's declaration beside the trail one, so
- * a club that takes the platform's texts has both kinds of race covered from the same press. The
- * group runs' two self-declarations stay out — they are optional, and a club offers them one by
- * one. The page and its messages count this list; no sentence says a number of its own.
+ * §NNN): every text of the catalogue — the three a registration rests on, the road race's
+ * declaration beside the trail one, and the group runs' two optional self-declarations — so a club
+ * that takes the platform's texts has everything covered from the same press. Approving a group
+ * run's text only makes it available: a run offers it only once its organizer ticks the box (§393).
+ * The page and its messages count this list; no sentence says a number of its own.
  */
-export const PLATFORM_APPROVAL_KEYS = [...REGISTRATION_LEGAL_KEYS, "EVENT_DECLARATION_ROAD"] as const satisfies readonly LegalDocumentKey[];
+export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS;
 
 /**
  * The race's two declarations (§NNN; the owner's review of 2026-09-27: "Două tipuri:

@@ -789,8 +789,9 @@ async function assertDeletable<T extends Record<string, unknown>>(
 }
 
 /**
- * The platform's texts a race rests on (`PLATFORM_APPROVAL_KEYS`: the notice, the terms and both
- * race declarations since §NNN), with the club's facts written in, created and approved in one act
+ * The platform's texts (`PLATFORM_APPROVAL_KEYS`: since §NNN every text of the catalogue — the
+ * notice, the terms, both race declarations and the group runs' two optional ones), with the club's
+ * facts written in, created and approved in one act
  * (`DECISIONS.md` §132): what "New version → start from the platform's text → read → save →
  * approve", once per text, did, as one press by the person who takes responsibility for them.
  *

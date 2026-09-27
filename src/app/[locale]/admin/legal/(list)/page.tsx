@@ -358,14 +358,21 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           ) : (
             <ActionForm
               action={approvePlatformTemplatesAction}
-              confirm={{ title: t("confirm.approvePlatformTitle", { count: missingKeys.length }), body: t("confirm.approvePlatformBody"), confirmLabel: t("legal.platform.button", { count: missingKeys.length }), cancelLabel: words.cancel, destructive: true }}
+              confirm={{
+                title: t("confirm.approvePlatformTitle", { count: missingKeys.length, total: PLATFORM_APPROVAL_KEYS.length }),
+                // The dialog names each text the press approves, as the box above does.
+                body: t("confirm.approvePlatformBody", { texts: missingKeys.map((key) => t(`legal.keys.${key}`)).join(", ") }),
+                confirmLabel: t("legal.platform.button", { count: missingKeys.length, total: PLATFORM_APPROVAL_KEYS.length }),
+                cancelLabel: words.cancel,
+                destructive: true,
+              }}
               data-testid="approve-platform-form"
             >
               <input type="hidden" name="uiLocale" value={locale} />
               <Stack spacing={1}>
                 <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
                 <Box>
-                  <GlyphSubmitButton label={t("legal.platform.button", { count: missingKeys.length })} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
+                  <GlyphSubmitButton label={t("legal.platform.button", { count: missingKeys.length, total: PLATFORM_APPROVAL_KEYS.length })} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
                 </Box>
               </Stack>
             </ActionForm>
@@ -378,7 +385,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           {t("legal.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("legal.intro", { count: LEGAL_DOCUMENT_KEYS.length })}
+          {t("legal.intro", { count: PLATFORM_APPROVAL_KEYS.length })}
         </Typography>
         {/* What each text is, in one line (the owner, 2026-09-19: "it is not clear what
             these documents are — is the privacy notice GDPR? and what is the other one?"). */}

@@ -909,8 +909,8 @@
       "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra în backoffice de îndată ce își pune parola.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
-      "approvePlatformTitle": "Aprobi {count, plural, one {# text} few {# texte} other {# de texte}}?",
-      "approvePlatformBody": "Din acest moment sunt în vigoare pe site, ca texte ale clubului; o corectare este o versiune nouă.",
+      "approvePlatformTitle": "Aprobi textele platformei care lipsesc ({count} din {total})?",
+      "approvePlatformBody": "Se aprobă: {texts}. Din acest moment sunt în vigoare pe site, ca texte ale clubului; o corectare este o versiune nouă.",
       "approveVersionTitle": "Aprobi și publici versiunea {version}?",
       "approveVersionBody": "Textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
       "emailPlanTitle": "Schimbi planul Mailgun?",
@@ -1871,7 +1871,7 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Textele pe care le acceptă participantul la înscriere — nota de confidențialitate, termenii și declarația de concurs, aceasta în două variante, trail și șosea sau parc — și cele două declarații opționale ale alergărilor de grup: {count, plural, one {# text} few {# texte} other {# de texte}} în total. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
+      "intro": "Textele pe care le acceptă participantul la înscriere — nota de confidențialitate, termenii și declarația de concurs, aceasta în două variante, trail și șosea sau parc — și cele două declarații opționale ale alergărilor de grup; în total: {count}. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
@@ -1946,7 +1946,7 @@
       "deleteBlockedTermsAccepted": "Nu se poate șterge definitiv: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), iar niciuna nu reține ce versiune a termenilor a fost acceptată.",
       "legalVersionDeleted": "Ciorna a fost ștearsă.",
       "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
-      "platformApproved": "Gata: {count, plural, one {# text aprobat} few {# texte aprobate} other {# de texte aprobate}}, cu datele clubului. Înscrierile sunt deschise; un concurs nou pornește cu declarația potrivită traseului, în cardul «Declarația pe propria răspundere», iar unul salvat o păstrează pe cea aleasă.",
+      "platformApproved": "Gata: textele platformei care lipseau sunt aprobate (în total: {count}), cu datele clubului. Înscrierile sunt deschise; un concurs nou pornește cu declarația potrivită traseului, în cardul «Declarația pe propria răspundere», iar unul salvat o păstrează pe cea aleasă.",
       "platform": {
         "title": "Într-un pas: aprobă textele platformei cu datele clubului",
         "intro": "Lipsesc aprobate: {keys}. Butonul de mai jos creează și aprobă, pe numele tău, versiunea 1 a fiecăruia, din textul platformei, cu datele de mai jos scrise în el. Un text deja aprobat nu este atins.",
@@ -1960,7 +1960,7 @@
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
-        "button": "Aprobă {count, plural, one {# text} few {# texte} other {# de texte}} acum",
+        "button": "Aprobă acum textele care lipsesc ({count} din {total})",
         "pending": "Se aprobă…"
       },
       "withdraw": "Retrage versiunea",
@@ -1981,7 +1981,7 @@
       },
       "tokens": {
         "title": "Câmpurile care se completează singure",
-        "intro": "Le lași exact așa cum sunt în text. Cele ale participantului și ale evenimentului — numai în declarație — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă; cele patru termene, în oricare dintre cele trei texte, cu valorile de la „Termene”, pe pagina Emailuri. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
+        "intro": "Le lași exact așa cum sunt în text. Cele ale participantului și ale evenimentului — numai în declarație — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă; cele patru termene, în oricare dintre textele platformei, cu valorile de la „Termene”, pe pagina Emailuri. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
         "inText": "în text",
         "participant": "Numele cu care s-a înscris participantul",
         "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
@@ -2401,7 +2401,7 @@
           "how": [
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea despre lista publică descrie stadiile.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
-            "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
+            "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
         },
         "listSocialsNotice": {
