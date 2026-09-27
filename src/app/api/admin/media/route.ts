@@ -11,9 +11,12 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * A picture is up to nine WebP encodes now (§414): 3–10 seconds for a phone photograph on a
- * shared machine, measured, and a serverless function's default ceiling is not something to find
- * out about from the owner. Sixty seconds is within every Vercel plan's limit.
+ * A picture is up to ten WebP encodes since «Originală» (§437, §495): the master, the thumbnail
+ * and eight rungs (3200 only under a master wider than 4000), plus the two probe encodes that
+ * decide near-lossless at «Mare» and «Originală». The worst case this ceiling has to cover is a
+ * 6000-px near-lossless «Originală»; a phone photograph's ladder measured 3–10 seconds on a
+ * shared machine (§414). A serverless function's default ceiling is not something to find
+ * out about from the owner, and sixty seconds is within every Vercel plan's limit.
  */
 export const maxDuration = 60;
 
@@ -46,8 +49,8 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "VALIDATION_ERROR", detail: "too large" }, { status: 413 });
   }
   const originalFilename = String(form.get("originalFilename") || file.name || "picture");
-  // The choice beside the upload (§414), checked here: absent is "normal", anything but the two
-  // words is refused rather than guessed at.
+  // The choice beside the upload (§414, §437), checked here: absent is "normal", anything but the
+  // four words (`IMAGE_QUALITIES`) is refused rather than guessed at.
   const quality = parseImageQuality(form.get("quality"));
   if (!quality) return NextResponse.json({ error: "VALIDATION_ERROR", detail: "quality" }, { status: 400 });
 

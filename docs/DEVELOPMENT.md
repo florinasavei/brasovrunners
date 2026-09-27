@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.10-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.11-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -213,6 +213,49 @@ It is guarded twice. `STAFF_AUTH_MODE` defaults to `dev-switcher` in local and t
 `disabled` everywhere else, and a process that is *told* to use the switcher with
 `APP_ENV=qa` or `production` refuses to start. The backoffice is at `/ro/admin`; signed out, it
 redirects to the switcher locally and answers 404 where there is no way in.
+
+## Coding from the phone (Claude Code on the web)
+
+A Claude Code cloud session (Claude Code on the web, on this repository) starts from a fresh
+clone: no `node_modules`, no `.env.local`, PostgreSQL 16 installed but stopped. The
+`SessionStart` hook in `.claude/settings.json` runs `scripts/cloud-setup.sh` on every start and
+resume of such a session, and only there — it is guarded on `CLAUDE_CODE_REMOTE=true`, so a
+session on a developer's own machine never runs it (§501). The script, idempotent and silent
+when there is nothing to do:
+
+- enables Corepack and runs `yarn install --immutable`, then `yarn setup` for the git hooks;
+- starts the local PostgreSQL and creates the role and database `brasov_runners` with the
+  password `local_only_not_a_secret` — the same throwaway values `docker-compose.yml` publishes —
+  skipping either when it exists;
+- writes `.env.local` from `.env.example` only when there is none, setting `APP_ENV=local`,
+  `APP_BASE_URL=http://localhost:47821` and the local `DATABASE_URL`, nothing else;
+- migrates (one transaction per migration on PostgreSQL 16) and runs `yarn db:seed` only on an
+  empty events table, refusing any database that is not on localhost.
+
+Every step skips what is already done, so a resumed session costs seconds. Three things differ
+from a laptop, all worked around by the script:
+
+- The environment's network policy refuses `repo.yarnpkg.com`, so Corepack takes Yarn from the
+  npm registry (`COREPACK_NPM_REGISTRY`, also written into the session's environment through
+  `CLAUDE_ENV_FILE`).
+- The image ships PostgreSQL 16 and no Docker daemon. drizzle-kit applies every pending
+  migration in one transaction, and 16 will not let a transaction use an enum value added to a
+  type created in that same transaction, which 17 (`docker-compose.yml`, CI) allows — so on 16
+  the script applies one transaction per migration, recording the same rows, and `yarn
+  db:migrate` carries on from there. `yarn db:reset:local` migrates in one transaction, so to
+  start over drop the database (`su postgres -c "dropdb brasov_runners"`) and run the script again.
+- Playwright's own browser download is refused, so the script names the image's Chromium in
+  `PLAYWRIGHT_CHROMIUM_PATH`, which `playwright.config.ts` reads and every other machine leaves
+  unset. The container has no IPv6 either; `scripts/dev.mjs` falls back to IPv4 for its probe.
+
+A cloud session therefore runs on **local values only**: email in `capture` mode, the
+`dev-switcher` staff sign-in, this machine's database. **No QA or production credential goes
+into the cloud environment's settings or into this repository** — it is public, and
+`yarn secrets:check` blocks the commit that tries. Deploys and production migrations do not
+change: a branch, a pull request into `qa`, the `qa → main` release PR, and the gated migration
+workflow (`DECISIONS.md` §31). The weather and anything else outside the policy's allowlist
+stays silent, as it is built to. To run the same setup on a Linux machine of your own,
+`bash scripts/cloud-setup.sh --force`.
 
 ## Where things live
 

@@ -64,6 +64,37 @@ describe("§482 the whole-record button is always there for a role that writes w
     expect(render(createElement(TranslateAllButton), null)).toBe("");
   });
 
+  // §497: a key whose one-time DeepL credit is spent is offered as no key is — greyed, saying so.
+  it("is drawn disabled when the DeepL credit is spent, linking Costuri, with no per-box button", () => {
+    const spent: TranslateOffer = { action: null, setupHref: "/ro/admin/tasks#task-translation", spent: true, costsHref: "/ro/admin/tasks?panel=costs" };
+    for (const locale of ["ro", "en"] as const) {
+      const words = (locale === "ro" ? ro : en).Translate;
+      const html = render(createElement(TranslateAllButton), spent, locale);
+      expect(html).toContain(words.all);
+      expect(html).toMatch(/<button[^>]*disabled/);
+      expect(html).toContain('data-reason="spent"');
+      expect(html).toContain(words.spent);
+      expect(html).toContain(words.spentSteps);
+      expect(html).toContain('href="/ro/admin/tasks?panel=costs"');
+      expect(html).not.toContain(words.off);
+    }
+    expect(`${ro.Translate.spent} ${ro.Translate.spentSteps}`).toBe("Creditul DeepL s-a terminat — vezi Costuri");
+    // A reader who may not open Costuri is sent to an Administrator, with no link.
+    const noLink = render(createElement(TranslateAllButton), { ...spent, costsHref: null });
+    expect(noLink).toContain(ro.Translate.spentAskAdmin);
+    expect(noLink).not.toContain("href=");
+    // The per-box buttons stay away, as without a key.
+    expect(render(createElement(TranslateFieldButton, { en: "translations.en.title" }), spent)).toBe("");
+  });
+
+  it("reads the credit in the layout, and offers no action while it is spent", () => {
+    const layout = readFileSync(path.join(ROOT, "src/app/[locale]/admin/layout.tsx"), "utf8");
+    expect(layout).toContain("readTranslationCredit");
+    expect(layout).toMatch(/action: configured && !creditSpent \? translateFieldAction : null/);
+    // Spent is the meter at 100 % or a 456 on the usage read itself (`creditIsSpent`).
+    expect(layout).toMatch(/creditSpent = configured && creditIsSpent\(await readTranslationCredit\(env\)\)/);
+  });
+
   it("is mounted on every editor: the event (new and saved), the page, the album and every «Echipa» form", () => {
     const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
     for (const file of [

@@ -63,6 +63,8 @@ export type RegistrationListRow = {
    * club and not the platform.
    */
   listOptOut: boolean;
+  /** Whether the socials are printed beside the name on the public list (§500); the export's last column. */
+  listSocials: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
@@ -319,6 +321,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       termsAcceptedAt: registrations.termsAcceptedAt,
       clubName: registrations.clubName,
       listOptOut: registrations.listOptOut,
+      listSocials: registrations.listSocials,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
@@ -505,6 +508,8 @@ export type RegistrationDetail = {
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
+  /** Whether the public list prints them beside the name (§500): the runner's own tick, as kept. */
+  listSocials: boolean;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
@@ -599,6 +604,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
+      listSocials: registrations.listSocials,
       guardianName: registrations.guardianName,
       locale: registrations.locale,
       submittedAt: registrations.submittedAt,
@@ -758,6 +764,34 @@ export async function listWorkbookDetails<T extends Record<string, unknown>>(
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(inArray(registrations.id, [...registrationIds]));
   return new Map(rows.map((row) => [row.id, row]));
+}
+
+/** The declaration a registration's latest acceptance was signed against (§499): its version and when. */
+export type LatestDeclarationAcceptance = { version: number; acceptedAt: Date };
+
+/**
+ * The latest declaration acceptance of each exported registration (§499), for the export's two
+ * declaration columns: one query for the lot, newest first, the first per registration kept — the
+ * same "latest" the signed PDF is drawn from (`findSignedDeclaration`). A registration with no
+ * acceptance is absent from the map, which the file prints as two blank cells.
+ */
+export async function listLatestDeclarationAcceptances<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, LatestDeclarationAcceptance>> {
+  if (registrationIds.length === 0) return new Map();
+  const rows = await db
+    .select({
+      registrationId: declarationAcceptances.registrationId,
+      version: declarationAcceptances.declarationVersion,
+      acceptedAt: declarationAcceptances.acceptedAt,
+    })
+    .from(declarationAcceptances)
+    .where(inArray(declarationAcceptances.registrationId, [...registrationIds]))
+    .orderBy(desc(declarationAcceptances.acceptedAt));
+  const latest = new Map<string, LatestDeclarationAcceptance>();
+  for (const row of rows) if (!latest.has(row.registrationId)) latest.set(row.registrationId, { version: row.version, acceptedAt: row.acceptedAt });
+  return latest;
 }
 
 /**

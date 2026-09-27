@@ -58,6 +58,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.capacity": inBox("registration", t("editor.capacity")),
     "event.waitlistCapacity": inBox("registration", t("editor.waitlistCapacity")),
     "event.minAge": inBox("conditions", t("editor.minAge")),
+    // A group run's own age box, in «Traseul» (§440): its refusal names the box the reader can see (§495).
+    "event.groupRunMinAge": inBox("course", t("editor.minAge")),
     "event.registrationOpensAtDate": inBox("registrationWindow", t("editor.registrationOpensAt")),
     "event.registrationOpensAtTime": inBox("registrationWindow", t("editor.registrationOpensAt")),
     "event.registrationClosesAtDate": inBox("registrationWindow", t("editor.registrationClosesAt")),

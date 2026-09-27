@@ -164,7 +164,7 @@ export function planTranslateAll(form: HTMLFormElement | null): TranslateAllPlan
 
 export type TranslateBoxesResult =
   | { kind: "nothing" }
-  | { kind: "refused"; reason: TranslateRefusal; remainingToday?: number }
+  | { kind: "refused"; reason: TranslateRefusal; remainingToday?: number; remainingCredit?: number }
   | { kind: "done"; count: number; cut: string[] };
 
 /**
@@ -177,7 +177,7 @@ export async function translateBoxes(form: HTMLFormElement | null, englishNames:
   const items = collectItems(form, englishNames);
   if (items.length === 0) return { kind: "nothing" };
   const outcome = await action({ items });
-  if (!outcome.ok) return { kind: "refused", reason: outcome.reason, remainingToday: outcome.remainingToday };
+  if (!outcome.ok) return { kind: "refused", reason: outcome.reason, remainingToday: outcome.remainingToday, remainingCredit: outcome.remainingCredit };
   const cut: string[] = [];
   for (const item of outcome.items) {
     const value: BoxValue = item.kind === "text" ? { kind: "text", text: item.text } : { kind: "rich", doc: item.doc };

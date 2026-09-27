@@ -131,6 +131,9 @@
       "ics": ".ics file"
     },
     "rules": "Event rules",
+    "conditions": {
+      "heading": "Participation rules"
+    },
     "schedule": "Event programme",
     "links": {
       "heading": "Links and files",
@@ -227,8 +230,13 @@
         "pending": "Registered, awaiting confirmation",
         "waitlisted": "On the waiting list"
       },
+      "socials": {
+        "strava": "{name} on Strava",
+        "instagram": "{name} on Instagram"
+      },
       "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participant list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
       "othersLead": "Also listed by name:",
       "pendingCount": {
         "one": "{count} registered, awaiting confirmation",
@@ -374,9 +382,9 @@
       "checklist": "What to bring"
     },
     "groupRunDeclaration": {
-      "heading": "Self-declaration (optional)",
-      "button": "Sign the self-declaration",
-      "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
+      "heading": "Self-declaration",
+      "button": "Sign the declaration",
+      "line": "Sign the self-declaration for this run: you get it by email, and the club's platform deletes it {days} after the run.",
       "page": {
         "back": "Back to {event}",
         "title": "Self-declaration",
@@ -728,7 +736,8 @@
       "bulkEraseAction": "Erase for good",
       "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased.",
       "filtersNone": "no filter · every registration",
-      "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear."
+      "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear.",
+      "socialsOnList": "also on the public list, beside the name"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1699,7 +1708,7 @@
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
-        "minAgeHelp": "Reached by the day of the run. The declaration is for adults, so only an age above 18 counts: it is then stated in the declaration, and the signing page asks for the birth date and refuses anyone younger. 18 or less (and 0) changes nothing.",
+        "minAgeHelp": "The run's declaration is for adults anyway (18 or older), so any number of 18 or less — the one the box starts with, and 0 — changes nothing. Set a higher age, for example 21, only if the run requires it: it then appears in the declaration, and the signing page asks for the birth date and refuses anyone who has not reached that age by the day of the run.",
         "surface": "Surface, from “The course” card: {surface}",
         "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
@@ -1982,6 +1991,7 @@
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
         "minimumAge": "The event's minimum age, with its unit (“16 years”). On an event with no minimum age — on a group run, one of 18 or less — the sentence naming it is left out of the declaration",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
+        "participantListSocials": "Privacy notice only: the words of the form's tick with which a participant chooses to show their Strava and Instagram beside their name, in quotation marks. With it in the notice in force, the form offers the tick and the public list shows the Strava and Instagram of those who ticked it; without it, never",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
         "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept.",
         "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described"
@@ -2032,6 +2042,7 @@
         "undo": "Undo",
         "redo": "Redo"
       },
+      "listSocialsMissing": "The privacy notice in force does not yet describe Strava and Instagram beside a name on the public participant list, so the form does not offer the tick and the list does not show them. So that participants who want to can show them, approve a new version of the notice starting from the platform's text, which describes them.",
       "listStatesMissing": "The privacy notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. For the list to show each person's stage as well — “Registered, awaiting confirmation”, “On the waiting list” — approve a new version of the notice starting from the platform's text, which describes them."
     },
     "tasks": {
@@ -2385,6 +2396,16 @@
             "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
           ]
         },
+        "listSocialsNotice": {
+          "title": "Privacy notice: Strava and Instagram on the public list",
+          "todo": "The notice in force does not yet describe Strava and Instagram beside a name on the public participant list, so the form does not offer the tick and the list shows them for nobody, until the club approves a notice that describes them.",
+          "done": "The notice in force describes Strava and Instagram on the public list: the form offers the tick, and the list shows them beside the names of those who ticked it.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes Strava and Instagram beside a name.",
+            "Read the text, save the draft, then “Approve”. From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
+            "Approve the terms from the platform's text as well, if not already, so they say the same about the list."
+          ]
+        },
         "newsletterNotice": {
           "title": "Privacy notice: the newsletter",
           "todo": "The notice in force does not describe the newsletter yet, so the contact page offers no news subscription and the platform keeps no address for it, until the club approves a notice that describes it.",
@@ -2407,13 +2428,24 @@
         },
         "translation": {
           "title": "Automatic translation from Romanian (DeepL, free)",
-          "todo": "Built: at the top of every editor (event, page, album, team card) there is the \"Copy and translate everything: RO → EN\" button, and \"Translate from Romanian\" beside every English box. It starts once DeepL's free key is on the server; until then the top button is grey and points here, and the English boxes are written by hand.",
+          "todo": "Built: at the top of every editor (event, page, album, team card) there is the \"Copy and translate everything: RO → EN\" button, and \"Translate from Romanian\" beside every English box. It starts once the DeepL key is on the server; until then the top button is grey and points here, and the English boxes are written by hand.",
           "done": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press.",
           "how": [
-            "Create a DeepL API Free account (the \"DeepL API\" page on DeepL's site → the Free plan): 500,000 characters a month, free. DeepL may ask for a card for verification only; the Free plan is not charged.",
+            "Create a DeepL API account (the \"DeepL API\" page on DeepL's site): one key, with a one-time credit of 1,000,000 characters that does not renew monthly. DeepL may ask for a card for verification only; the credit is not charged, and a paid plan is chosen only with the club's explicit yes.",
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
             "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
             "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Tasks → Costs."
+          ],
+          "credit": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press. The DeepL credit: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left — given once.",
+          "creditUnread": "Automatic translation is on. The DeepL credit: — {creditReason}",
+          "watch": "Over 80% of the key's DeepL credit is used: {creditUsed} of {creditLimit} characters ({creditPercent}), {creditRemaining} left. Translation still works; the credit is given once and does not come back next month, so plan a new credit or key.",
+          "low": "The key's DeepL credit is nearly spent: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left. It is given once and does not come back next month: get a new credit or key ready before translation stops.",
+          "spent": "The key's DeepL credit is spent ({creditUsed} of {creditLimit} characters used): \"Copy and translate everything\" and \"Translate from Romanian\" refuse every translation. It does not come back next month — a new credit or key is needed.",
+          "howCredit": [
+            "Sign in to the DeepL account (the \"DeepL API\" page on DeepL's site) → Usage: see what is left of the credit — the same figure as under Tasks → Costs.",
+            "Choose: a new key, with its one-time credit of 1,000,000 characters that does not renew — or a paid plan, only with the club's explicit yes, since the club uses free plans.",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables: DEEPL_API_KEY = the new key. Redeploy.",
+            "Within an hour (or at the first translation), Tasks → Costs shows the new credit, and this row turns green."
           ]
         }
       },
@@ -2618,7 +2650,7 @@
       },
       "translationBudget": {
         "title": "Automatic translation (DeepL)",
-        "intro": "The editors' \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
+        "intro": "The editors' \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL. The club's key has a credit of characters given once, which is not renewed monthly. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the credit.",
         "inForce": {
           "off": "In force: off (0 characters a day) — the buttons refuse every translation.",
           "daily": "In force: at most {count} characters a day."
@@ -2630,9 +2662,22 @@
         "updatedAt": "Last changed: {when}.",
         "readOnly": "Only an Administrator can change the budget.",
         "field": "Characters a day",
-        "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters.",
+        "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters; each one comes off the DeepL credit.",
         "save": "Save the budget",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "credit": {
+          "line": "The DeepL credit: {used} of {limit} characters used, {remaining} left. DeepL's own figure, read at most an hour ago or at the last translation; the credit is given once.",
+          "level": {
+            "watch": "Over 80% of the credit is used.",
+            "low": "The credit is nearly spent: get a new credit or key ready (Tasks → Club).",
+            "spent": "The credit is spent: the buttons refuse every translation until a new credit or key."
+          },
+          "unread": {
+            "quota": "DeepL says there are no characters left on this key.",
+            "refused": "The DeepL credit could not be read: DeepL refuses the key.",
+            "unavailable": "The DeepL credit could not be read just now: DeepL did not answer."
+          }
+        }
       },
       "month": {
         "title": "This month",
@@ -2683,7 +2728,6 @@
           "neon": "At this pace the limit is reached before the period ends, and Neon stops the database until the next period — see «This month's budget» below.",
           "mailgun": "At this pace the monthly limit is reached before the month ends; the remaining messages wait for next month.",
           "vercel": "At this pace the build minutes run out before the month ends, and new deployments stop until next month.",
-          "deepl": "At this pace DeepL refuses translations before the month ends.",
           "r2": "The pictures are past the free allowance: the excess is billed monthly."
         },
         "domain": {
@@ -2721,8 +2765,21 @@
           "mailgun": "It would cost money only on a paid plan ({plan}, {price} USD a month) — your choice under «Emails», never the platform's.",
           "vercel": "It would cost money only on the Pro plan; Hobby sends no invoice — at the limit, new deployments stop until next month.",
           "neon": "Free sends no invoice: at {hours} CU-hours the database stops until the next period. It would cost money only on Launch.",
-          "deepl": "It would cost money only with DeepL API Pro; on Free, after {free} characters in a month translations stop until next month, with no invoice.",
+          "deepl": "No invoice: the key's DeepL credit is given once and is not renewed monthly. When it runs out, translation stops until a new credit or key; it would cost money only on a paid DeepL API Pro plan.",
           "r2": "It would cost money only above {free} GB stored: {price} USD per GB a month, for the excess."
+        },
+        "credit": {
+          "line": "The DeepL credit: {used} of {limit} characters used ({percent}), {remaining} left — read from DeepL, given once.",
+          "level": {
+            "watch": "Over 80% of the credit is used.",
+            "low": "The credit is nearly spent: get a new credit or key ready (Tasks → Club).",
+            "spent": "The credit is spent: the translation buttons refuse every translation until a new credit or key."
+          },
+          "unread": {
+            "quota": "DeepL says there are no characters left on this key.",
+            "refused": "The DeepL credit could not be read: DeepL refuses the key.",
+            "unavailable": "The DeepL credit could not be read just now: DeepL did not answer."
+          }
         }
       },
       "database": {
@@ -3199,12 +3256,12 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
+        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot, and an administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens. Or search by name or by race number.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name. If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
-        "Never registered at all: “Add somebody” — name and email; the “This person is at the desk” tick is already set. They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
+        "Never registered at all: “Add somebody” — name and email; the “This person is at the desk” tick is already set, and “Number given now” suggests the next spare number: hand them that bib and write their name on it in marker. They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
         "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in. If it says the number was printed, pull that bib out of the pile — numbers are never reused."
@@ -3824,7 +3881,8 @@
               "steps": [
                 "Sign in (see “First steps”). A Volunteer lands on the desk; everyone else presses «Race day» in the top bar.",
                 "Under «Event» pick today's race, then press «Search».",
-                "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures."
+                "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures.",
+                "Take two piles from the organizer: the numbers printed with names, and the spare numbers, with an empty name line, for people who register at the desk. Nobody who registered online gets a spare."
               ]
             },
             {
@@ -3869,8 +3927,9 @@
                 "Fill in the first name, the last name, the birth date, the phone and «Participant email address».",
                 "The «This person is at the desk…» tick is already set — leave it.",
                 "Tick «I confirm this person asked me to register them…».",
+                "«Number given now» already holds the next spare number. Take that bib from the spare pile and write their name on its empty line in marker. Handing out another number? Change it in the box. No spares left? Type the number you hand out, or leave the box empty and the platform picks one.",
                 "Press «Add the registration» and confirm in the window.",
-                "Give them the paper declaration to sign, then «Mark present» and the number.",
+                "Give them the paper declaration to sign, then «Mark present» and hand them the bib.",
                 "Event full? They join the waiting list, like anyone. «Give a place» works only once a place has freed up."
               ]
             },
@@ -3949,7 +4008,7 @@
                 "An event is not published without a title and a summary in Romanian and in English.",
                 "An optional text (the description, the rules, the programme's notes, the SEO fields) is written in both languages or neither: the save refuses one language only and points at the empty box, with everything you typed kept.",
                 "If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning only.",
-                "The English in one press: write everything in Romanian, then press «Copy and translate everything: RO → EN» at the top of the editor (event, page, album, team card). Every text goes, translated, into its English box, with the same layout. Read, correct, then «Save». If the button is grey, the DeepL key is not set yet: the link to the steps is under it. If the English already has text, you choose «Replace everything» or «Only the empty ones»."
+                "The English in one press: write everything in Romanian, then press «Copy and translate everything: RO → EN» at the top of the editor (event, page, album, team card). Every text goes, translated, into its English box, with the same layout. Read, correct, then «Save». If the button is grey, the DeepL key is not set yet or its credit is spent: the line under it says which. If the English already has text, you choose «Replace everything» or «Only the empty ones»."
               ]
             },
             {
@@ -4005,7 +4064,8 @@
                 "«See the bibs» to check them on screen.",
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
                 "Print at actual size (100%) and cut on the line.",
-                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's."
+                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
+                "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers."
               ]
             },
             {
@@ -4061,7 +4121,7 @@
               "title": "The English in one press",
               "steps": [
                 "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
-                "At the top of the editor press «Copy and translate everything: RO → EN». Every box you may edit goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
+                "At the top of the editor press «Copy and translate everything: RO → EN». Every box you may edit goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no DeepL key yet, or its credit (1,000,000 characters, given once) is spent: ask an Administrator for a new key or credit (the steps are under Tasks → Club).",
                 "Read the English and correct what reads wrong.",
                 "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
@@ -4120,7 +4180,7 @@
               "title": "The English in one press",
               "steps": [
                 "Write every box in Romanian: the title, the summary, the description, the rules, the route, the programme.",
-                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». Every text goes, translated, into its English twin, with the same layout. If the English already has text, it asks, naming how many and which: «Replace everything» or «Only the empty ones»; for a very long text it also says how many characters of today's budget will be sent. Is the button grey? The server has no free DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club.",
+                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». Every text goes, translated, into its English twin, with the same layout. If the English already has text, it asks, naming how many and which: «Replace everything» or «Only the empty ones»; for a very long text it also says how many characters of today's budget will be sent. Is the button grey? The server has no DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club. The key has a credit of 1,000,000 characters, given once and not renewed monthly: what is left is under Tasks → Costs, and once it is spent the button stays grey and says so, with a link to Costs.",
                 "Read the English and correct what reads wrong.",
                 "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
@@ -4208,6 +4268,15 @@
                 "Press «Assign numbers» and confirm: every confirmed registration without a number gets the next free one; numbers already given stay.",
                 "«Registrations» → pick the race → «Filter». On the same page you download the unprinted numbers, print them, then press the button that marks them printed.",
                 "The numbers for printing are two A5 on each A4 sheet (see “Download and print the race numbers” under Organizer)."
+              ]
+            },
+            {
+              "title": "Spare numbers for people who register at the desk",
+              "steps": [
+                "«Events» → «Edit» → «Taking part and registration» → «Allocate and print» → «Spare bibs for on-the-spot entries».",
+                "In «How many» type how many blank numbers you want, then press «Print» and confirm. The window says which number they start from: from then on nobody who registers online gets them.",
+                "Press «Download the sheet» and print it. Each number has an empty name line; at the desk the name is written on in marker, and the form suggests the next free number.",
+                "Need them again? «Reprint the free spares (PDF)» puts only the numbers not yet given on the sheet and reserves no more."
               ]
             },
             {
@@ -4635,7 +4704,7 @@
       "count": "Signed: {count}",
       "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform deletes the declarations {days} after the run.",
       "none": "No declaration signed yet.",
-      "signedAt": "signed {when}",
+      "signedAt": "signed {when} (v{version})",
       "pdf": "PDF",
       "reason": "Why it is erased",
       "reasonHelp": "It stays in the club's log, with your name. Do not write the person's name.",
@@ -4825,6 +4894,8 @@
     "privacyPrefix": "I have read the",
     "privacyLinkLabel": "privacy notice",
     "listOptIn": "I want to appear on the participant list",
+    "listSocials": "Also show my Strava and Instagram beside my name on the list",
+    "listSocialsHelp": "Only together with the tick above, that you want to appear on the list. Take them off at any time from “My registrations”, by deleting your Strava and Instagram or by leaving the list.",
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
@@ -5040,6 +5111,7 @@
       "privacy": "Privacy"
     },
     "socialsHelp": "Optional. Used only to follow you and tag you in the club's posts; a tag is public on that network. Never shown on the site. You can delete them at any time from “My registrations”.",
+    "socialsHelpList": "Optional. Used to follow you and tag you in the club's posts; a tag is public on that network. On the site they appear only if you tick, further down, to show them beside your name on the participant list. You can delete them at any time from “My registrations”.",
     "stravaUrl": "Your Strava profile (link)",
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",
@@ -6005,7 +6077,19 @@
       "teamPageIntroSaved": "The team page's introduction was saved.",
       "teamPagePublished": "The team page is on the site, in both languages.",
       "teamPageUnpublished": "The team page was taken off the site.",
-      "translationBudget": "The translation budget was saved."
+      "translationBudget": "The translation budget was saved.",
+      "translatedAll": {
+        "one": "Done: {count} box translated from Romanian into English. Check it and press Save.",
+        "few": "Done: {count} boxes translated from Romanian into English. Check them and press Save.",
+        "other": "Done: {count} boxes translated from Romanian into English. Check them and press Save."
+      },
+      "translatedAllCut": {
+        "one": "Done: {count} box translated from Romanian into English, but a text was cut at the box's limit — see the line under the button. Check it and press Save.",
+        "few": "Done: {count} boxes translated from Romanian into English, but some texts were cut at their box's limit — see the line under the button. Check them and press Save.",
+        "other": "Done: {count} boxes translated from Romanian into English, but some texts were cut at their box's limit — see the line under the button. Check them and press Save."
+      },
+      "translatedOne": "Translated. Check it and press Save.",
+      "translateRefused": "The translation was not made: see the line under the button."
     }
   },
   "Network": {
@@ -6017,10 +6101,10 @@
       "title": "The network blocked the save",
       "kept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. What you typed is still in the form. The form can also go the simple way — as an ordinary form, which office networks let through.",
       "notKept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. The form can go again the simple way — as an ordinary form, which office networks let through — with what it held when you pressed.",
-      "already": "If you already got the message that it saved, do not press — check the page.",
+      "already": "The save may have arrived even though its answer was lost. Before you press, open the page in a new tab and check: if the change is there, do not press — a cancellation, an erasure or a message sent twice happens twice.",
       "send": "Send the simple way",
       "sending": "Sending…",
-      "failed": "The simple path could not be used either; nothing was sent. Try from your phone or another network."
+      "failed": "The simple way could not leave either. Check the page before you try from your phone or another network."
     },
     "page": {
       "title": "Network check",
@@ -6164,8 +6248,11 @@
     "pending": "Translating…",
     "all": "Copy and translate everything: RO → EN",
     "allHelp": "One button: every text written in Romanian goes into its English box, translated automatically (DeepL), with the same layout — headings, lists, pictures, links. Empty boxes are filled at once; if the English already has text, you choose «Replace everything» or «Only the empty ones». Read, correct, then press Save.",
-    "off": "Automatic translation is not on yet: the server has no free DeepL key. It is set once, and then the button works in every editor.",
-    "offAskAdmin": "Automatic translation is not on yet: the server has no free DeepL key. Ask an Administrator to set it (the steps are under Tasks → Club).",
+    "off": "Automatic translation is not on yet: the server has no DeepL key. It is set once, and then the button works in every editor.",
+    "offAskAdmin": "Automatic translation is not on yet: the server has no DeepL key. Ask an Administrator to set it (the steps are under Tasks → Club).",
+    "spent": "The DeepL credit is spent —",
+    "spentSteps": "see Costs",
+    "spentAskAdmin": "The DeepL credit is spent: automatic translation is off until an Administrator sets a new credit or key (Tasks → Costs).",
     "offSteps": "See the steps",
     "done": "Translated. Read it, correct it if needed, then save.",
     "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
@@ -6196,10 +6283,11 @@
       "nothingAll": "Nothing to translate: write the Romanian texts first.",
       "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
       "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
-      "quota": "DeepL has used this month's free characters. Translation comes back next month.",
+      "quota": "DeepL has no characters left on this key: the credit is spent. Translation comes back when an Administrator sets a new credit or key (Tasks → Club).",
       "refused": "DeepL refused the key. An Administrator needs to check DEEPL_API_KEY (Tasks).",
       "unavailable": "DeepL did not answer. Try again in a minute.",
-      "failed": "The translation did not start. Check the connection and try again."
+      "failed": "The translation did not start. Check the connection and try again.",
+      "credit": "This translation asks for more than is left of the DeepL credit (characters left: {remaining}). Translate fewer boxes at once; an Administrator sees the credit under Tasks → Costs."
     }
   }
 }

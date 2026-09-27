@@ -131,6 +131,9 @@
       "ics": "Fișier .ics"
     },
     "rules": "Regulamentul evenimentului",
+    "conditions": {
+      "heading": "Condiții de participare"
+    },
     "schedule": "Programul evenimentului",
     "links": {
       "heading": "Linkuri și fișiere",
@@ -227,8 +230,13 @@
         "pending": "Înscris, în așteptarea confirmării",
         "waitlisted": "Pe lista de așteptare"
       },
+      "socials": {
+        "strava": "{name} pe Strava",
+        "instagram": "{name} pe Instagram"
+      },
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
         "one": "{count} înscris în așteptarea confirmării",
@@ -374,9 +382,9 @@
       "checklist": "Ce să aduci"
     },
     "groupRunDeclaration": {
-      "heading": "Declarație pe propria răspundere (opțional)",
-      "button": "Semnează declarația pe propria răspundere",
-      "line": "Dacă vrei, semnează declarația pe propria răspundere pentru această alergare; o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
+      "heading": "Declarație pe propria răspundere",
+      "button": "Semnează declarația",
+      "line": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
       "page": {
         "back": "Înapoi la {event}",
         "title": "Declarație pe propria răspundere",
@@ -728,7 +736,8 @@
       "bulkEraseAction": "Șterge definitiv",
       "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse.",
       "filtersNone": "niciun filtru · toate înscrierile",
-      "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare."
+      "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare.",
+      "socialsOnList": "și pe lista publică, lângă nume"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1699,7 +1708,7 @@
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
-        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic.",
+        "minAgeHelp": "Declarația alergării e oricum doar pentru adulți (18 ani împliniți), așa că orice număr de 18 sau mai mic — și cel cu care pornește căsuța, și 0 — nu schimbă nimic. Pune o vârstă mai mare, de exemplu 21, doar dacă alergarea o cere: atunci apare în declarație, iar pagina de semnare cere data nașterii și refuză pe cine nu are vârsta împlinită în ziua alergării.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
         "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
@@ -1982,6 +1991,7 @@
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
         "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”). La un eveniment fără vârstă minimă — la o alergare de grup, una de cel mult 18 ani — propoziția care o conține lipsește din declarație",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
+        "participantListSocials": "Doar în nota de confidențialitate: cuvintele bifei din formular cu care un participant alege să-i apară Strava și Instagram lângă nume, între ghilimele. Cu el în nota în vigoare, formularul oferă bifa și lista publică arată Strava și Instagram celor care au bifat-o; fără el, niciodată",
         "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
         "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă.",
         "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă"
@@ -2032,6 +2042,7 @@
         "undo": "Înapoi",
         "redo": "Înainte"
       },
+      "listSocialsMissing": "Nota de confidențialitate în vigoare nu descrie încă Strava și Instagram lângă nume pe lista publică de participanți, așa că formularul nu oferă bifa și lista nu le arată. Ca să le poată afișa participanții care vor asta, aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie.",
       "listStatesMissing": "Nota de confidențialitate în vigoare nu descrie încă stadiile de pe lista publică de participanți, așa că lista arată doar numele participanților confirmați. Ca lista să arate și stadiul fiecăruia — „Înscris, în așteptarea confirmării”, „Pe lista de așteptare” — aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie."
     },
     "tasks": {
@@ -2385,6 +2396,16 @@
             "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
           ]
         },
+        "listSocialsNotice": {
+          "title": "Nota de confidențialitate: Strava și Instagram pe lista publică",
+          "todo": "Nota în vigoare nu descrie încă Strava și Instagram lângă nume pe lista publică de participanți, așa că formularul nu oferă bifa și lista nu le arată nimănui, până când clubul aprobă o notă care le descrie.",
+          "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
+            "Aprobă și termenii din textul platformei, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
+          ]
+        },
         "newsletterNotice": {
           "title": "Nota de confidențialitate: newsletterul",
           "todo": "Nota în vigoare nu descrie încă newsletterul, așa că pagina de contact nu arată abonarea la noutăți și platforma nu păstrează nicio adresă pentru el, până când clubul aprobă o notă care îl descrie.",
@@ -2407,13 +2428,24 @@
         },
         "translation": {
           "title": "Traducerea automată din română (DeepL, gratuit)",
-          "todo": "Construit: sus în fiecare editor (eveniment, pagină, album, card din Echipa) e butonul „Copiază și tradu tot: RO → EN”, iar lângă fiecare câmp în engleză „Tradu din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci butonul de sus e gri și trimite aici, iar câmpurile în engleză se scriu de mână.",
+          "todo": "Construit: sus în fiecare editor (eveniment, pagină, album, card din Echipa) e butonul „Copiază și tradu tot: RO → EN”, iar lângă fiecare câmp în engleză „Tradu din română”. Pornește când pui cheia DeepL pe server; până atunci butonul de sus e gri și trimite aici, iar câmpurile în engleză se scriu de mână.",
           "done": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare.",
           "how": [
-            "Fă-ți un cont DeepL API Free (pagina „DeepL API” de pe site-ul DeepL → planul Free): 500.000 de caractere pe lună, gratuit. DeepL poate cere un card doar pentru verificare; planul Free nu se taxează.",
+            "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar. DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
             "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
             "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+          ],
+          "credit": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare. Creditul DeepL: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining} — se dă o singură dată.",
+          "creditUnread": "Traducerea automată e pornită. Creditul DeepL: — {creditReason}",
+          "watch": "Peste 80% din creditul DeepL al cheii e folosit: {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Traducerea merge încă; creditul se dă o singură dată și nu revine luna viitoare, așa că pregătiți un credit sau o cheie nouă.",
+          "low": "Creditul DeepL al cheii e aproape terminat: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Se dă o singură dată și nu revine luna viitoare: pregătiți un credit sau o cheie nouă înainte să se oprească traducerea.",
+          "spent": "Creditul DeepL al cheii s-a terminat (folosite {creditUsed} din {creditLimit} caractere): „Copiază și tradu tot” și „Tradu din română” refuză orice traducere. Nu revine luna viitoare — trebuie un credit sau o cheie nouă.",
+          "howCredit": [
+            "Intră în contul DeepL (pagina „DeepL API” de pe site-ul DeepL) → Usage: vezi cât a rămas din credit — aceeași cifră ca în Sarcini → Costuri.",
+            "Alege: o cheie nouă, cu creditul ei dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește — sau un plan plătit, doar cu acordul explicit al clubului, care folosește planuri gratuite.",
+            "În Vercel → proiectul de producție (și QA) → Settings → Environment Variables: DEEPL_API_KEY = cheia nouă. Redeploy.",
+            "În cel mult o oră (sau la prima traducere), Sarcini → Costuri arată noul credit, iar rândul acesta devine verde."
           ]
         }
       },
@@ -2618,7 +2650,7 @@
       },
       "translationBudget": {
         "title": "Traducerea automată (DeepL)",
-        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL. Cheia clubului are un credit de caractere dat o singură dată, care nu se reînnoiește lunar. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume creditul.",
         "inForce": {
           "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
           "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
@@ -2630,9 +2662,22 @@
         "updatedAt": "Ultima schimbare: {when}.",
         "readOnly": "Doar un Administrator poate schimba bugetul.",
         "field": "Caractere pe zi",
-        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
+        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere; fiecare se scade din creditul DeepL.",
         "save": "Salvează bugetul",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "credit": {
+          "line": "Creditul DeepL: {used} din {limit} caractere folosite, rămân {remaining}. Cifra e a DeepL, citită cel mult acum o oră sau la ultima traducere; creditul se dă o singură dată.",
+          "level": {
+            "watch": "Peste 80 % din credit e folosit.",
+            "low": "Creditul e aproape terminat: pregătiți un credit sau o cheie nouă (Sarcini → Club).",
+            "spent": "Creditul s-a terminat: butoanele refuză orice traducere până la un credit sau o cheie nouă."
+          },
+          "unread": {
+            "quota": "DeepL spune că nu mai sunt caractere pe această cheie.",
+            "refused": "Creditul DeepL nu s-a putut citi: DeepL refuză cheia.",
+            "unavailable": "Creditul DeepL nu s-a putut citi acum: DeepL nu a răspuns."
+          }
+        }
       },
       "month": {
         "title": "Luna aceasta",
@@ -2683,7 +2728,6 @@
           "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare — vezi «Bugetul lunii» mai jos.",
           "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii; mesajele rămase așteaptă luna următoare.",
           "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
-          "deepl": "La ritmul ăsta DeepL refuză traducerile înainte de sfârșitul lunii.",
           "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
         },
         "domain": {
@@ -2721,8 +2765,21 @@
           "mailgun": "Ar costa doar trecând la un plan plătit ({plan}, {price} USD pe lună) — o alegere a voastră în «E-mailuri», niciodată a platformei.",
           "vercel": "Ar costa doar trecând la planul Pro; pe Hobby nu vine factură — la limită publicările noi se opresc până luna viitoare.",
           "neon": "Pe Free nu vine factură: la {hours} ore-CU baza se oprește până la perioada următoare. Ar costa doar trecând pe Launch.",
-          "deepl": "Ar costa doar cu DeepL API Pro; pe Free, după {free} de caractere într-o lună traducerile se opresc până luna viitoare, fără factură.",
+          "deepl": "Nu vine factură: creditul DeepL al cheii se dă o singură dată și nu se reînnoiește lunar. Când se termină, traducerile se opresc până la un credit sau o cheie nouă; ar costa doar cu un plan plătit DeepL API Pro.",
           "r2": "Ar costa doar peste {free} GB stocați: {price} USD pe GB pe lună, pentru surplus."
+        },
+        "credit": {
+          "line": "Creditul DeepL: {used} din {limit} caractere folosite ({percent}), rămân {remaining} — citit de la DeepL, se dă o singură dată.",
+          "level": {
+            "watch": "Peste 80 % din credit e folosit.",
+            "low": "Creditul e aproape terminat: pregătiți un credit sau o cheie nouă (Sarcini → Club).",
+            "spent": "Creditul s-a terminat: butoanele de traducere refuză orice traducere până la un credit sau o cheie nouă."
+          },
+          "unread": {
+            "quota": "DeepL spune că nu mai sunt caractere pe această cheie.",
+            "refused": "Creditul DeepL nu s-a putut citi: DeepL refuză cheia.",
+            "unavailable": "Creditul DeepL nu s-a putut citi acum: DeepL nu a răspuns."
+          }
         }
       },
       "database": {
@@ -3199,12 +3256,12 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc.",
+        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc, iar un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
-        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
+        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
@@ -3824,7 +3881,8 @@
               "steps": [
                 "Intră în backoffice (vezi „Primii pași”). Un Voluntar ajunge direct la masă; ceilalți apasă «Ziua cursei» în bara de sus.",
                 "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
-                "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei."
+                "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei.",
+                "Ia de la organizator două teancuri: numerele tipărite cu nume și numerele de rezervă, cu linia pentru nume goală, pentru cine se înscrie la masă. Pe cele de rezervă nu le primește nimeni înscris online."
               ]
             },
             {
@@ -3869,8 +3927,9 @@
                 "Completează numele, prenumele, data nașterii, telefonul și «Adresa de e-mail a participantului».",
                 "Bifa «Persoana este la masă…» e deja pusă — las-o așa.",
                 "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
+                "În «Numărul dat acum» e deja scris următorul număr de rezervă. Ia BID-ul acela din teancul de rezervă și scrie-i numele cu markerul pe linia goală. Dai alt număr? Schimbă-l în căsuță. Nu mai sunt rezerve? Scrie numărul pe care i-l dai sau las-o goală, și platforma alege unul.",
                 "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
-                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și numărul.",
+                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și îi dai BID-ul.",
                 "Evenimentul e plin? Intră pe lista de așteptare, ca oricine. «Dă-i un loc» merge doar dacă s-a eliberat unul."
               ]
             },
@@ -3949,7 +4008,7 @@
                 "Un eveniment nu se publică fără titlu și rezumat în română și în engleză.",
                 "Un text opțional (descrierea, regulamentul, notele programului, câmpurile SEO) se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța goală, cu tot ce ai scris păstrat.",
                 "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment.",
-                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă: sub el e linkul spre pași. Dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale»."
+                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă sau creditul ei s-a terminat: sub el scrie de ce. Dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale»."
               ]
             },
             {
@@ -4005,7 +4064,8 @@
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
-                "Numerele se dau în ordinea înscrierii, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului."
+                "Numerele se dau în ordinea înscrierii, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
+                "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul."
               ]
             },
             {
@@ -4061,7 +4121,7 @@
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
-                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp pe care îl poți modifica ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp pe care îl poți modifica ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia DeepL sau creditul ei (1.000.000 de caractere, dat o singură dată) s-a terminat: cere-i unui Administrator să pună o cheie sau un credit nou (pașii sunt în Sarcini → Club).",
                 "Citește engleza și corectează ce sună greșit.",
                 "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
@@ -4120,7 +4180,7 @@
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp: titlul, rezumatul, descrierea, regulamentul, traseul, programul.",
-                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club.",
+                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club. Cheia are un credit de 1.000.000 de caractere, dat o singură dată și nereînnoit lunar: cât a rămas scrie în Sarcini → Costuri, iar când s-a terminat butonul rămâne gri și spune asta, cu un link spre Costuri.",
                 "Citește engleza și corectează ce sună greșit.",
                 "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
@@ -4208,6 +4268,15 @@
                 "Apasă «Alocă numerele» și confirmă: fiecare înscriere confirmată fără număr primește următorul număr liber; numerele date rămân.",
                 "«Înscrieri» → alege cursa → «Filtrează». Pe aceeași pagină descarci numerele netipărite, le tipărești, apoi apeși butonul care le marchează ca printate.",
                 "Numerele pentru tipar sunt câte două A5 pe o foaie A4 (vezi „Descarcă și tipărește numerele de concurs” la Organizator)."
+              ]
+            },
+            {
+              "title": "Numere de rezervă pentru cine se înscrie la masă",
+              "steps": [
+                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
+                "La «Câte» scrie câte numere goale vrei, apoi apasă «Tipărește» și confirmă. Fereastra spune de la ce număr încep: de atunci nimeni înscris online nu le mai primește.",
+                "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
+                "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele."
               ]
             },
             {
@@ -4635,7 +4704,7 @@
       "count": "Semnate: {count}",
       "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Platforma șterge declarațiile la {days} după alergare.",
       "none": "Nicio declarație semnată încă.",
-      "signedAt": "semnată {when}",
+      "signedAt": "semnată {when} (v{version})",
       "pdf": "PDF",
       "reason": "Motivul ștergerii",
       "reasonHelp": "Rămâne în jurnalul clubului, cu numele tău. Nu scrie numele persoanei.",
@@ -4825,6 +4894,8 @@
     "privacyPrefix": "Am citit",
     "privacyLinkLabel": "nota de confidențialitate",
     "listOptIn": "Vreau să apar pe lista de participanți",
+    "listSocials": "Arată și Strava și Instagram lângă numele meu pe listă",
+    "listSocialsHelp": "Doar împreună cu bifa de mai sus, că vrei să apari pe listă. Le scoți oricând din „Înscrierile mele”, ștergând Strava și Instagram sau ieșind de pe listă.",
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
@@ -5040,6 +5111,7 @@
       "privacy": "Confidențialitate"
     },
     "socialsHelp": "Opțional. Le folosim doar ca să te urmărim și să te etichetăm în postările clubului; o etichetă e publică pe acea rețea. Nu apar pe site. Le poți șterge oricând din „Înscrierile mele”.",
+    "socialsHelpList": "Opțional. Le folosim ca să te urmărim și să te etichetăm în postările clubului; o etichetă e publică pe acea rețea. Pe site apar doar dacă bifezi, mai jos, să apară lângă numele tău pe lista de participanți. Le poți șterge oricând din „Înscrierile mele”.",
     "stravaUrl": "Profilul tău de Strava (link)",
     "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
     "instagramHandle": "Instagram (numele de utilizator)",
@@ -6005,7 +6077,19 @@
       "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
       "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
       "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site.",
-      "translationBudget": "Bugetul de traduceri a fost salvat."
+      "translationBudget": "Bugetul de traduceri a fost salvat.",
+      "translatedAll": {
+        "one": "Gata: {count} câmp tradus din română în engleză. Verifică textul și apasă Salvează.",
+        "few": "Gata: {count} câmpuri traduse din română în engleză. Verifică textele și apasă Salvează.",
+        "other": "Gata: {count} de câmpuri traduse din română în engleză. Verifică textele și apasă Salvează."
+      },
+      "translatedAllCut": {
+        "one": "Gata: {count} câmp tradus din română în engleză, dar un text a fost scurtat la limita câmpului — vezi mesajul de sub buton. Verifică textul și apasă Salvează.",
+        "few": "Gata: {count} câmpuri traduse din română în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton. Verifică textele și apasă Salvează.",
+        "other": "Gata: {count} de câmpuri traduse din română în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton. Verifică textele și apasă Salvează."
+      },
+      "translatedOne": "Tradus. Verifică și apasă Salvează.",
+      "translateRefused": "Traducerea nu s-a făcut: vezi mesajul de sub buton."
     }
   },
   "Network": {
@@ -6017,10 +6101,10 @@
       "title": "Rețeaua a blocat salvarea",
       "kept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Ce ai completat a rămas în formular. Formularul poate pleca și pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă.",
       "notKept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Formularul poate pleca din nou pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă — cu ce era completat când ai apăsat.",
-      "already": "Dacă ai primit deja mesajul că s-a salvat, nu apăsa — verifică pagina.",
+      "already": "Salvarea poate să fi ajuns chiar dacă răspunsul ei s-a pierdut. Înainte să apeși, deschide pagina într-un tab nou și verifică: dacă schimbarea e acolo, nu apăsa — o anulare, o ștergere sau un mesaj trimis de două ori se face de două ori.",
       "send": "Trimite pe calea simplă",
       "sending": "Se trimite…",
-      "failed": "Nici calea simplă nu a putut fi folosită; nu s-a trimis nimic. Încearcă de pe telefon sau de pe altă rețea."
+      "failed": "Nici calea simplă nu a putut pleca. Verifică pagina înainte să încerci de pe telefon sau de pe altă rețea."
     },
     "page": {
       "title": "Verificarea rețelei",
@@ -6164,8 +6248,11 @@
     "pending": "Se traduce…",
     "all": "Copiază și tradu tot: RO → EN",
     "allHelp": "Un singur buton: fiecare text scris în română ajunge în câmpul lui din engleză, tradus automat (DeepL), cu aceeași așezare — titluri, liste, poze, linkuri. Câmpurile goale se completează direct; dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale». Citește, corectează, apoi apasă Salvează.",
-    "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
-    "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+    "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
+    "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+    "spent": "Creditul DeepL s-a terminat —",
+    "spentSteps": "vezi Costuri",
+    "spentAskAdmin": "Creditul DeepL s-a terminat: traducerea automată e oprită până când un Administrator pune un credit sau o cheie nouă (Sarcini → Costuri).",
     "offSteps": "Vezi pașii",
     "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
     "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
@@ -6196,10 +6283,11 @@
       "nothingAll": "Nu e nimic de tradus: scrie întâi textele în română.",
       "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
       "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
-      "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",
+      "quota": "DeepL nu mai are caractere pe această cheie: creditul s-a consumat. Traducerea revine când un Administrator pune un credit sau o cheie nouă (Sarcini → Club).",
       "refused": "DeepL a refuzat cheia. Un Administrator trebuie să verifice DEEPL_API_KEY (Sarcini).",
       "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",
-      "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă."
+      "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă.",
+      "credit": "Traducerea aceasta cere mai mult decât a rămas din creditul DeepL (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată; un Administrator vede creditul în Sarcini → Costuri."
     }
   }
 }

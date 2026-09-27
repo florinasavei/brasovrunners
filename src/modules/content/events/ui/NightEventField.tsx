@@ -12,6 +12,7 @@ import { type Coordinates, sunTimes, wallClockTime } from "@/modules/events/doma
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { fillIn } from "@/shared/forms/fill-in";
+import { readTypedTime } from "@/shared/forms/pickers/wall-values";
 import { useRecall } from "@/shared/forms/recall";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import { joinDuration } from "../duration";
@@ -119,13 +120,15 @@ export function nightAutoLine(
 }
 
 /** The programme rows the form posts, gathered by index — `ScheduleRowsEditor`'s own names. */
-function programmeRowsOf(data: FormData): NightProgrammeRow[] | null {
+export function programmeRowsOf(data: FormData): NightProgrammeRow[] | null {
   const rows = new Map<number, NightProgrammeRow>();
   for (const [name, value] of data.entries()) {
     const match = /^event\.schedule\[(\d+)\]\.(date|time|endTime)$/.exec(name);
     if (!match) continue;
     const row = rows.get(Number(match[1])) ?? { date: "", time: "", endTime: "" };
-    row[match[2] as keyof NightProgrammeRow] = String(value).trim();
+    const box = match[2] as keyof NightProgrammeRow;
+    // A row's times are typed boxes too (§439): read as they will post, like the start's.
+    row[box] = box === "date" ? String(value).trim() : readTypedTime(String(value));
     rows.set(Number(match[1]), row);
   }
   return rows.size > 0 ? [...rows.values()] : null;
@@ -187,7 +190,9 @@ export default function NightEventField({
       const duration = Number(joinDuration(text("event.durationHours"), text("event.durationMinutesPart")));
       const next = {
         date: text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date),
-        time: text("event.startsAtTime") || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),
+        // The typed box as it will post («1900» → 19:00), the series sentence's own reading (§439):
+        // until it is left, the raw text would say «no time» here while the sentence says 19:00.
+        time: readTypedTime(text("event.startsAtTime")) || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),
         timeZone: text("event.timezone") || zone,
         series: inSeries || (seriesToggleName ? data.get(seriesToggleName) === "on" : false),
         // "Cât durează" (§71), added to the start (§394): a run that finishes after dusk is a

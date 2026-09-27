@@ -10,7 +10,7 @@ import { type CalendarDayWords, composeCalendarDay } from "@/i18n/dates";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { useRecall } from "@/shared/forms/recall";
 import { fillIn } from "@/shared/forms/fill-in";
-import { isTimeValue, normalizeTypedTime } from "@/shared/forms/pickers/wall-values";
+import { readTypedTime } from "@/shared/forms/pickers/wall-values";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
@@ -114,10 +114,9 @@ export default function RepeatRuleFields({
       if (followDateName) setLiveDate(text(followDateName));
       // The time box is typed since §439 and moves on every keystroke: the sentence reads it as the
       // box will post it («1900» → 19:00), and a half-typed «19:» or «7pm» says no time at all.
-      const typed = normalizeTypedTime(text("event.startsAtTime"));
       const next = {
         cadence: text(`${prefix}cadence`) || "WEEKLY",
-        time: startTime ?? (isTimeValue(typed) ? typed : ""),
+        time: startTime ?? readTypedTime(text("event.startsAtTime")),
         until: text(`${prefix}until`),
       };
       // The same rule keeps the same object, so a keystroke elsewhere in the form renders nothing here.

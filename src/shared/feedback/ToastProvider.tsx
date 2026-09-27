@@ -13,7 +13,8 @@ import ToastRegion from "./ToastRegion";
  *
  * One at a time: a notice that arrives while another is showing waits its turn
  * (`toastQueueReducer`), so two quick saves are two sentences read one after the other rather
- * than one drawn over the other. Each stays `TOAST_AUTO_HIDE_MS`, or until its close button, and
+ * than one drawn over the other. Each stays `TOAST_AUTO_HIDE_MS` (a notice's own `autoHideMs`
+ * when it names one — the translate press's 8 s, §496), or until its close button, and
  * a click elsewhere on the page never dismisses it — a volunteer at the desk pressing the next
  * row's button must not lose the sentence about the last one.
  *
@@ -23,10 +24,10 @@ import ToastRegion from "./ToastRegion";
  * provider, and the toast is drawn inside it: a region inserted already holding its sentence is
  * one many screen readers never announce, while a change inside a region they already know is.
  *
- * **Where it sits.** At the bottom, above the footer's sticky bar — two 44-pixel lines on a phone
- * (`SiteFooter`) — and above the event editor's sticky save row, which stands on that bar: the
- * toast must never cover the primary button of the form that just produced it (measured at
- * 320 px by `tests/e2e/toasts-and-confirms.spec.ts`).
+ * **Where it sits.** At the top, under the sticky site header (§496, `ToastRegion`), clear of the
+ * footer's sticky bar and the event editor's sticky save row: the toast must never cover the
+ * primary button of the form that just produced it (measured at 320 px by
+ * `tests/e2e/toasts-and-confirms.spec.ts`).
  *
  * **The words** come from `Feedback.toast`, the one namespace this island reads
  * (`STAFF_CLIENT_MESSAGES`): a `saved` code is the key, and a code whose sentence counts
@@ -69,6 +70,8 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
   }, [flash]);
 
   const sentence = (notice: FormNotice): string => {
+    // Already in the reader's language (the translate press's refusal, §464).
+    if (notice.sentence) return notice.sentence;
     const values = notice.values ?? {};
     const base = `toast.${notice.key}`;
     if (t.has(`${base}.other`)) {
@@ -86,7 +89,7 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
       {children}
       {/* The live region, always here and empty between toasts; the toast is drawn inside it. */}
       <ToastRegion
-        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current) } : null}
+        toast={current ? { id: current.id, kind: current.kind, sentence: sentence(current), autoHideMs: current.autoHideMs } : null}
         closeLabel={t("close")}
         onDismiss={dismiss}
       />

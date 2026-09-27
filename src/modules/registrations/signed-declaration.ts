@@ -14,6 +14,7 @@ import { asksForMinorSignature, deadlineMergeValues, type MergeValues, minimumAg
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { listStatesMergeValues } from "./list-state-words";
+import { listSocialsMergeValues } from "./list-socials-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
@@ -71,6 +72,8 @@ export type SignedDeclaration = {
   attestedByName: string | null;
   version: number;
   contentSha256: string;
+  /** The day the signed version took effect (§499), for the PDF's version line. */
+  effectiveAt: Date;
   locale: Locale;
   title: string;
   /** The template, unmerged. */
@@ -132,6 +135,7 @@ function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<
       attestedByName: staffUsers.displayName,
       version: declarationAcceptances.declarationVersion,
       contentSha256: declarationAcceptances.contentSha256,
+      effectiveAt: legalDocuments.effectiveAt,
       locale: declarationAcceptances.locale,
       title: legalDocumentTranslations.title,
       body: legalDocumentTranslations.bodyJson,
@@ -203,7 +207,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       ...deadlineMergeValues(locale, await currentDeadlines(db)),
       // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
-      ...listStatesMergeValues(locale),
+      ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale),
       ...newsletterMergeValues(locale),
     },
     title: event.title,
@@ -260,11 +264,13 @@ function signedEntry(
     eventTitle: event.title,
     version: signed.version,
     contentSha256: signed.contentSha256,
+    effectiveAt: signed.effectiveAt,
     signature: {
       typedName: signed.typedName,
       idDocument,
       minor,
       signedAt: whenStart,
+      signedAtInline: when,
       method:
         signed.method === "PAPER"
           ? labels.signedOnPaper(signed.attestedByName ?? labels.attesterRemoved, when)
@@ -349,6 +355,7 @@ export async function renderBlankDeclarationPdf<T extends Record<string, unknown
         eventTitle: event.title,
         version: document.version,
         contentSha256: document.contentSha256,
+        effectiveAt: document.effectiveAt,
         forMinor: forMinor && asksForMinorSignature(document.body),
       },
     ],

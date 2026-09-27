@@ -64,6 +64,10 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
   await expect(page.locator("#main")).toContainText(words.adults);
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
+  // The text's version and the weekday it took effect, over it, as the PDF says it (§499).
+  await expect(page.getByTestId("declaration-version")).toHaveText(
+    locale === "ro" ? /^Versiunea \d+, în vigoare din \p{L}+, \d{1,2} .+ \d{4}$/u : /^Version \d+, in force since \p{L}+, \d{1,2} .+ \d{4}$/u,
+  );
   // No language select: the text signed is the one on the page, in the page's language (§57).
   await expect(page.locator('[name="preferredLocale"]')).toHaveCount(0);
   // The platform's texts ask for no identity document since the counsel review (§418), and a
@@ -250,12 +254,30 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   test("the run's page offers it under the route, and a runner signs it in Romanian", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
+    // Inside «Condiții de participare», closed on arrival (§498): attached, not shown, until opened.
+    const conditions = page.getByTestId("conditions-fold");
+    await expect(conditions).not.toHaveAttribute("open", "");
+    await expect(conditions.getByRole("heading", { level: 2, name: "Condiții de participare" })).toBeVisible();
+    await expect(offer).toBeHidden();
+    await openFold(conditions);
     await expect(offer).toBeVisible();
-    // A named section: its heading is its accessible name.
-    await expect(page.getByRole("region", { name: "Declarație pe propria răspundere (opțional)" })).toBeVisible();
-    await expect(offer.getByRole("heading", { level: 2, name: "Declarație pe propria răspundere (opțional)" })).toBeVisible();
-    await expect(offer).toContainText("o primești pe email, iar platforma clubului o șterge la 7 zile după alergare");
-    const button = offer.getByRole("link", { name: "Semnează declarația pe propria răspundere" });
+    // A named section: its heading is its accessible name — without «(opțional)» since §498.
+    await expect(page.getByRole("region", { name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
+    await expect(offer.getByRole("heading", { level: 3, name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
+    await expect(offer).toContainText("Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o șterge la 7 zile după alergare");
+    await expect(offer).not.toContainText("Dacă vrei");
+    // The photographs notice comes before it in the fold, the declaration last (§498).
+    expect(
+      await conditions.evaluate((fold) => {
+        const notice = fold.querySelector("p a[href$='/contact']");
+        const declaration = fold.querySelector("[data-testid='group-run-declaration-offer']");
+        return Boolean(notice && declaration && notice.compareDocumentPosition(declaration) & Node.DOCUMENT_POSITION_FOLLOWING);
+      }),
+    ).toBe(true);
+    // Small, with a pen before the words, and still a thumb's 44 pixels.
+    const button = offer.getByRole("link", { name: "Semnează declarația", exact: true });
+    await expect(button.getByTestId("declaration-offer-glyph")).toBeVisible();
+    await expect(button).toHaveClass(/MuiButton-sizeSmall/);
     expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await noSidewaysScroll(page);
     await button.click();
@@ -274,13 +296,21 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   test("and in English, from the English page", async ({ page }) => {
     await page.goto(`/en/events/${englishSlug}`);
     const offer = page.getByTestId("group-run-declaration-offer");
-    await expect(offer.getByRole("heading", { level: 2, name: "Self-declaration (optional)" })).toBeVisible();
-    await expect(offer).toContainText("and the club's platform deletes it 7 days after the run");
-    await offer.getByRole("link", { name: "Sign the self-declaration" }).click();
+    await openFold(page.getByTestId("conditions-fold"));
+    await expect(offer.getByRole("heading", { level: 3, name: "Self-declaration", exact: true })).toBeVisible();
+    await expect(offer).toContainText("Sign the self-declaration for this run: you get it by email, and the club's platform deletes it 7 days after the run");
+    await expect(offer).not.toContainText("If you wish");
+    await offer.getByRole("link", { name: "Sign the declaration", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/en/events/${englishSlug}/declaration$`));
     await sign(page, "en", "Ion Ionescu", signers.en);
     const locale = await withDatabase(async (client) => (await client.query("SELECT locale::text AS locale FROM group_run_declarations WHERE email = $1", [signers.en])).rows[0].locale);
     expect(locale).toBe("en");
+  });
+
+  test("an address naming #declaratie arrives with «Condiții de participare» open (§498)", async ({ page }) => {
+    await page.goto(`/ro/evenimente/${slug}#declaratie`);
+    await expect(page.getByTestId("conditions-fold")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("group-run-declaration-offer")).toBeVisible();
   });
 
   test("the outbox holds both messages per signature, and /admin/emails shows what each one says", async ({ page }) => {

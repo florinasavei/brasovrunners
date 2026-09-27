@@ -23,14 +23,19 @@ const BASE_PORT = Number(process.env.DEV_PORT ?? 47821);
 const ATTEMPTS = 20;
 
 /** Resolves true when nothing is listening on the port. */
-function isFree(port) {
+function isFree(port, host = "::") {
   return new Promise((resolve) => {
     const probe = createServer();
-    probe.once("error", () => resolve(false));
+    probe.once("error", (error) => {
+      // A host without IPv6 (the Claude Code on the web container) refuses "::" for every
+      // port; there Next binds IPv4 too, so probe that instead.
+      if (error.code === "EAFNOSUPPORT" && host === "::") resolve(isFree(port, "0.0.0.0"));
+      else resolve(false);
+    });
     probe.once("listening", () => probe.close(() => resolve(true)));
     // Bind the same way Next does, so a port free on IPv4 but taken on IPv6 still counts
     // as taken rather than failing later.
-    probe.listen(port, "::");
+    probe.listen(port, host);
   });
 }
 

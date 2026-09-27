@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.10-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.11-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -86,6 +86,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 10. The event editor asks for the duration as hours (0–168) and minutes (0–59). Both boxes empty means no duration. The server joins them into total minutes and refuses anything the boxes would refuse, and the error message names the hours box.
 11. The collapsed «Data și ora» card writes a saved duration as hours and minutes ("3 h 30 min", "2 h", "45 min") using the one formatter in src/i18n/dates.ts.
 12. In the event editor and on the create page, the cost card (id box-cost, heading «7 · Cost») is a named card inside the first card «Ce fel de eveniment», after the status card; the page map's cost chip opens both folds; the public page still draws the cost row after the course.
+13. The event page draws the rules (`#rules`), a group run's self-declaration offer (`#declaratie`) and the photographs notice inside one native `<details>` titled «Condiții de participare» / "Conditions of participation" (an h2 inside its summary), closed on arrival, after the programme and before the start list; an address naming `#rules` or `#declaratie` arrives with it open (§498).
 
 **Verification:** unit `i18n/alternate-path.test.ts`; integration `events/locale-switch.test.ts`; e2e `event-pages.spec.ts`
 
@@ -166,6 +167,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 8. A message with an argument (`{x}`) or a tag is always looked up with its values, or read with `t.raw` when a client component fills the template itself. It is never looked up bare as `t("key")`: a development build refuses that lookup and shows the key, while a production build returns the message unformatted. A literal angle bracket is written ICU-quoted (`'<id>'`). Every `t.raw` key names a message or a sub-tree of the catalogue. Verification: unit `i18n/messages.test.ts` (2026-09-24, `DECISIONS.md` §370).
 9. Every editor that holds the club's words in two languages (event, page, album, «Echipa»'s introduction and every card) shows one «Copiază și tradu tot: RO → EN» button at its top for a role that writes words. Without a translator configured, it is drawn disabled, with a sentence saying why and, for a reader who may open /admin/tasks, a link to the steps.
 10. One press fills every empty English box whose Romanian twin has words. It asks first only when English words would be replaced: it names how many and which, and offers «Înlocuiește tot» and «Doar cele goale». It also asks when the press would send more than 20 000 characters, naming the figure counted as the service counts it. Nothing is saved or submitted by the press.
+11. The DeepL credit is read from DeepL's own usage endpoint as a one-time credit (used, limit, remaining) with four levels — ok under 80 %, watch from 80 %, low from 95 %, spent at nothing left — and a press that asks for more than is left is refused before it reaches DeepL (2026-09-27, `DECISIONS.md` §497).
+12. While the credit is spent — DeepL's meter at 100 % or the usage read answered 456 — the editors' «Copiază și tradu tot» is drawn disabled with «Creditul DeepL s-a terminat — vezi Costuri» and no per-box «Tradu din română» is drawn; any other unread credit leaves the buttons as they were (2026-09-27, `DECISIONS.md` §497).
+13. The credit reading is cached an hour under a key made of the host kind and a short SHA-256 fingerprint of the API key, never the key, expired after every press that reached DeepL, and a failed read is remembered a minute per server instance (2026-09-27, `DECISIONS.md` §497).
 
 **Verification:** CI check `i18n-parity`; unit `i18n/messages.test.ts`
 
@@ -305,6 +309,11 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 123. No client island reached from a public route imports the server's configuration (src/shared/config/env.ts) or the zod package, except those listed with a reason in the guard; a listed exception that no longer carries the import must leave the list. (tests/unit/shared/public-islands-weight.test.ts)
 124. From `sm` up, the calendar head's month and year selects stand 8 px from ‹ Azi ›, as before §487. Only the phone's row tightens to 4 px (2026-09-27, `DECISIONS.md` §490).
 125. The picker's thumbnails and chips, and the crop box's shape buttons, are at least 44 px tall at 320 px. The calendar's longest month name, measured as drawn (capitalised), fits its select at 320 px.
+126. Every toast, backoffice and public, is anchored at the top centre, just under the sticky site header, at the same clearance the theme's scroll-padding-top uses (72 px on a phone, 76 px from sm). It never covers the footer's bar or the event editor's sticky save row.
+127. «Copiază și tradu tot» that worked shows a success toast for 8 s. The toast counts the English boxes filled (one/few/other forms) and asks the reader to check the texts and press Save. It has a second wording when some texts were cut at their limit. When the press is refused, it shows the status line's own reason as a toast: a warning for today's budget, DeepL's monthly credit, the hourly rate or nothing to translate, and an error otherwise. A single box's press that worked shows «Tradus. Verifică și apasă Salvează.»
+128. Every button on a public page shows a glyph before its words and keeps a 44-pixel tap target. The group run's sign button is small, outlined and has a pen glyph.
+129. The group run's self-declaration (§393) has neither «(opțional)» in its heading nor «Dacă vrei» / "If you wish" in its line.
+130. The socials tick sits under «Vreau să apar». It is never folded and never pre-ticked. It is hidden and disabled until the Strava or Instagram box holds a value, and while the birth date says under eighteen. It is shown in the server's markup, so the form works without JavaScript (tests/e2e/public-list-states.spec.ts).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -420,6 +429,8 @@ coffee is run on nothing.
 56. Over the interval (start hour to end hour, both rounded to the nearest hour, at most six hours after the start): the sky's word and the page glyph are the wettest likely-rain hour's when rain is likely in any, else the most frequent kind; the temperature is min–max (one figure when equal); «ploaie probabilă N %» appears only when rain is likely in any hour, N being the highest chance.
 57. The listing card's weather pill and the hero's weather row keep the start hour's reading, unchanged.
 58. Amends criterion 53: `events.video_url`, `events.video_poster_url` and `events_video_url_is_https` leave the Drizzle schema in BR-V2.10 and stay in the database; their drop is its own contract migration (naming BR-V2.08) in BR-V2.11. Migration 0093 drops only the team card's six-link CHECK, and migrations 0093 and 0094 leave both columns, their CHECK and every description and version that migration 0092 wrote unchanged (2026-09-27, `DECISIONS.md` §491). Tests: tests/integration/db/film-into-description-migration.test.ts, tests/unit/content/create-page.test.ts, tests/integration/cms/video-poster.test.ts.
+59. Amends criterion 58: migration 0093 and 0094 leave `events.video_url`, `events.video_poster_url` and `events_video_url_is_https` in place; migration 0095 (a contract naming BR-V2.10) drops all three and nothing else, and leaves every event, description and version that migration 0092 wrote unchanged (2026-09-27, `DECISIONS.md` §494). Tests: tests/integration/db/film-into-description-migration.test.ts, tests/unit/content/create-page.test.ts, tests/unit/db/migration-chain.test.ts.
+60. The event page keeps the rules, the photographs notice and, on a group run that offers it, the self-declaration in that order inside one «Condiții de participare» / "Participation rules" fold after the programme. The fold is closed on arrival and open when the address names #rules or #declaratie.
 
 **Verification:** integration `events/configuration.test.ts`, `registrations/interest.test.ts`, `cms/series-edit.test.ts`; unit `events/zoned-time.test.ts`, `events/ical.test.ts`, `events/co-hosts.test.ts`, `content/event-co-hosts-field.test.ts`; e2e `event-pages.spec.ts`; unit `events/registration-window.test.ts` (13, 18)
 
@@ -599,6 +610,10 @@ coffee is run on nothing.
 14. While the notice in force does not name the marker, the list is the confirmed names alone with no state words, and no pending or waiting row is read or counted.
 15. A pending or waiting-list runner appears on the public list only if their tick was given under a privacy notice version at or above the first approved one that names `{{participantListStates}}` in every language (2026-09-25, `DECISIONS.md` §421).
 16. The public list closes by itself the club's «Termene» `publicListDays` after the event's end, or its start where it has no end. The default is 30 days, the range 1 to 365, the setting is Administrator-only and audited, and the check is made at request time. The privacy notice's `{{publicListPeriod}}` prints the club's own setting, and the list is marked not to be snippeted (2026-09-25, `DECISIONS.md` §421).
+17. A runner's Strava and Instagram appear beside their name on the public list only while the approved privacy notice in force describes them and only when that runner ticked «Arată și Strava și Instagram»; the query returns neither otherwise (2026-09-27, `DECISIONS.md` §500).
+18. The public list prints a Strava link only for an https profile on strava.com or www.strava.com (athletes or pros), rewritten as https://www.strava.com/<athletes|pros>/<id>; a strava.app.link share link, an http address or any other host prints nothing, while the registration form still accepts the app.link shape (2026-09-27, `DECISIONS.md` §500).
+19. The public list prints an Instagram link only for a username of the form's shape, as https://www.instagram.com/<handle>/ (2026-09-27, `DECISIONS.md` §500).
+20. The retention sweep clears a minor's Strava, Instagram and public-list tick together, and expires the public "places" cache after the step commits when it cleared any row (2026-09-27, `DECISIONS.md` §500).
 
 **Verification:** integration `privacy/public-surface.test.ts`
 
@@ -716,6 +731,7 @@ coffee is run on nothing.
 22. Once the page runs its script, each country field opens one shared picker with a search box that finds a country by its name in the reader's language or in English, with accents and case ignored, by its ISO code, and for the telephone by its dialling code; a choice changes the posted select (2026-09-26, `DECISIONS.md` §463).
 23. Under the birth-date box the public form and the desk read the typed day back in words, with the weekday and the month written out in full, and the age on the event's own day. The line is empty for a partial or future date (2026-09-26, `DECISIONS.md` §467).
 24. The city is required on the public registration form, right after the birth date, and stays optional on a staff (paper) entry (2026-09-26, `DECISIONS.md` §467).
+25. Criterion 8 amended: the socials are shown to Administrators and in the export, and on the public list only as BR-REQ-039-01 allows. The export carries "Socials on the public list": the last CSV column, and beside Instagram in the spreadsheet.
 
 **Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`; unit and integration `registrations/minimum-age.test.ts` (11); e2e `registration-form.spec.ts` (11)
 
@@ -993,6 +1009,7 @@ registration — and it lists registrations and never changes an address.
 45. Each step's line gives its state in words in the reader's language: signed, on the waiting list, now, next, later, or no longer waiting for a signature. Only the current step carries «Declarația N din M», with M counting every person on the list (2026-09-26, `DECISIONS.md` §471).
 46. «Semnez mai târziu» moves on without writing to any registration. The person put off stays on the list as later, and their own emailed link still signs them until the deadline (2026-09-26, `DECISIONS.md` §471).
 47. The declaration request sent to an address with others still to sign names them: «Pe această adresă mai așteaptă semnătura declarațiile pentru: …», with the English equivalent, and says that the one link signs them all, one after the other (2026-09-26, `DECISIONS.md` §471).
+48. Every page of a declaration PDF (signed, blank, the event's bundle, a group-run copy) names the version of the text on that page and the first sixteen characters of its hash, under the entry's title and in the page's footer. In a bundle, each page names its own entry's version (§499).
 
 **Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `registrations/declaration-archive.test.ts` (11), `notifications/club-notices.test.ts` (11–13), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`, `notifications/club-notices.test.ts`, `notifications/delivery.test.ts` (12); e2e `registration-form.spec.ts`; integration `notifications/club-copy.test.ts` (14, 16); unit `notifications/club-copy.test.ts` (14), `registrations/mask-id-document.test.ts` (16)
 
@@ -1273,6 +1290,7 @@ registration — and it lists registrations and never changes an address.
 12. Only an Administrator can erase a group run's declaration, and only with a reason. The audit row is written first, in the same transaction, and names the actor, the reason and the event, never the signer. The row and its outbox messages go with it (2026-09-25, `DECISIONS.md` §393).
 13. Given a staff entry that creates or restarts a registration, when the desk's fast track confirms it, then it confirms the row the service reports it wrote, found by id and never by re-reading the address. The public form's answer carries no registration id and stays the same for everybody (2026-09-25, `DECISIONS.md` §420).
 14. Given an address with active registrations at an event, when staff enter a person whose name (by the runner's key) differs from every active one — twins with the same birth date included — then a registration of their own is created under the same participant, within the club's limit per address; the same runner again is refused with the address box and `STAFF_ALREADY_ON_ADDRESS`, an address at the limit with `STAFF_ADDRESS_AT_CAP`, and nothing is written; a desk fast track confirms only the row the entry wrote (2026-09-27, `DECISIONS.md` §493). Verification: integration `registrations/staff-crud.test.ts`, `registrations/lifecycle-audit.test.ts`; unit `registrations/family.test.ts`.
+15. §425's export criterion, extended: the CSV and the xlsx end with «Declaration version» and «Declaration signed» — the registration's latest declaration acceptance, blank while none exists — after the terms columns, and the xlsx writes every timestamp on the club's clock.
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 
@@ -1510,6 +1528,7 @@ way through every step, and none of them is a way around the allocator.
 18. The first card «Ce fel de eveniment» holds the event's status as a named card, and its closed line names the type and the status (2026-09-26, `DECISIONS.md` §448).
 19. Given an event created «Anulat» or «Încheiat» with a repeat rule, when its series' dates are made, then no date inherits «Anulat», and a date gets «Încheiat» only when its own start has passed; every other date is «Programat» (§483). Verification: integration `cms/create-cancelled.test.ts`.
 20. Given a group run with the self-declaration ticked whose surface has no approved, not withdrawn text in force, when the editor renders, then the declaration line says no text is in force and the button does not show, and the card opens for attention (§483). Verification: unit `content/box-summaries.test.ts`, `content/editor-declaration-card.test.ts`.
+21. Given a group run whose minimum age the server refuses, when the form comes back, then the refusal summary names the group run's own box in «Traseul» (`event.groupRunMinAge`), never the race's hidden box.
 
 **Verification:** integration `cms/boundary.test.ts`
 
@@ -1621,6 +1640,8 @@ way through every step, and none of them is a way around the allocator.
 95. Following §406's numbered criteria (76–81), a card may hold more than one of the page's sections. «Când și unde» holds the date and time, the place (to be announced, the meeting point per language, the map link, the coordinates) and the time-zone sub-card, in that order, and carries the meeting point's missing-fields line and map mark. «Program, regulament și declarație» holds «Programul zilei și ce să aduci», «Regulamentul» and «Declarația pe propria răspundere» as three level-3 cards in that order, and opens itself while a saved event registering on the site has no declaration. Each is one numbered card and one chip, drawn when any section it holds is drawn. The cards run 1 to 10, with no film card, on the create page and the editor alike (2026-09-27, `DECISIONS.md` §481). Tests: tests/unit/events/page-sections.test.ts, tests/unit/content/editor-page-flow.test.ts, tests/unit/content/editor-order.test.ts, tests/unit/content/editor-declaration-card.test.ts, tests/e2e/editor-page-flow.spec.ts.
 96. A refusal of a field in the grouped cards names the card that holds it: «Când și unde › Punct de întâlnire (Română)», «Program, regulament și declarație › Declarația pe propria răspundere › Declarația pe care o semnează participantul», «Program, regulament și declarație › Regulamentul › English › …». The publication summary names the meeting point's gap under «Când și unde» (2026-09-27, `DECISIONS.md` §481). Tests: tests/unit/content/place-one-name-per-language.test.ts, tests/e2e/forms-keep-values.spec.ts.
 97. The page map's chips take their names from `Admin.editor.pageFlow.short.<id>`, one word per card that cardStates returns, in both languages. A section asked inside another card (the cost, the place, the rules) has no short word of its own (2026-09-27, `DECISIONS.md` §490).
+98. Given the source under src/ outside the date helper, when any object literal gives a string `hour` option, or any `Intl.DateTimeFormat(`/`.dateTime(` call's arguments ask for an hour (by name or by shorthand), then it pins `hourCycle: "h23"` or `hour12: false`; a unit test fails otherwise, including for options held in a variable and for a first argument with parentheses of its own.
+99. Given the event editor's start-time box holding «1900» that has not been left yet, when the night line and the series sentence read it, then both read 19:00, and a programme row's typed times are read the same way.
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
 
@@ -1719,6 +1740,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 19. 14 (addition). The older-pictures press also rewrites the picture's address in the «Echipa» bios, both languages, bumping each changed row's version, and in the team page's introduction setting (§483). Verification: integration `cms/older-pictures.test.ts`.
 20. Removing a photo from an album, or deleting an album, deletes the picture itself only when nothing else uses it: a text, a card of «Echipa», another album or a cover (2026-09-27, `DECISIONS.md` §485).
 21. A picture the club already stored can be reused from «Din galerie» in a page's text, an event's summary and description, a film's poster, an «Echipa» card and an album. It is linked by the same stored file, never copied. Removing it from an album keeps it while a page still uses it.
+22. Given a multi-file album upload whose last file fails, when it ends, then the stored-facts line does not show the facts of an earlier photo under the failed file's «Fotografia aleasă».
 
 **Verification:** unit `media/images.test.ts`; integration `cms/gallery.test.ts`; e2e `gallery.spec.ts`
 
@@ -1749,6 +1771,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 13. «Copiază și tradu tot: RO → EN» is visible at the top of every editor; with the English empty it translates in one press, with English text present it asks naming how many and which boxes and offers «Înlocuiește tot» or «Doar cele goale», and nothing is saved until «Salvează» (2026-09-27, `DECISIONS.md` §482).
 14. The confirm title's count is phrased through countForm's one / few / other keys, never an ICU plural (2026-09-27, `DECISIONS.md` §482).
 15. The backoffice guide's «Engleza dintr-o apăsare» is one four-step list per role (write the Romanian, press, read and correct, «Salvează»), and the Organizer's version does not contradict the rule that the title and description are the Administrator's (2026-09-27, `DECISIONS.md` §482).
+16. Given a translation press within the day's budget, when DeepL's credit as last read is spent, then the press is refused as `quota` and nothing is sent. When the credit is smaller than the press's characters, it is refused as `credit`, naming the characters left, and nothing is sent or metered. When the credit could not be read, the press goes to DeepL as before (2026-09-27, `DECISIONS.md` §497). Verification: integration `translate/translate.test.ts`.
 
 **Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
@@ -1869,6 +1892,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 31. The registration's backoffice page shows the privacy notice version acknowledged and the terms version accepted expressly, each with its moment. A staff or desk entry says the terms are on paper, and a row with no recorded terms version says none was recorded (§425).
 32. Given a legal text that names `{{minimumAge}}`, then the token is listed in the /admin/legal token legend with an example in both languages («16 ani» / "16 years"). The seed and «start from the platform's text» keep it as a field, and the approved version's hash covers the unmerged text, so leaving the sentence out at zero changes no hash (2026-09-26, `DECISIONS.md` §440).
 33. When the club starts a legal text from the platform's text, the club-email placeholder is filled with the addresses in force: «a sau b» in the Romanian text and "a or b" in the English one. An approved text keeps the address it was approved with.
+34. Every declaration document — the signed PDF, the club's archive copy, the event's bundle, the blank desk form and the group-run PDF — names the version of the text it carries and the day that version took effect («Versiunea N, în vigoare din <weekday, date>», on the club's clock) under each entry's title and in the footer of every page, each page naming its own entry's version; a signed page's footer also says when it was signed. Both signing pages show the same line over the text.
 
 **Verification:** integration `legal/versions.test.ts`; unit `legal/inline.test.ts`; e2e `legal-pages.spec.ts`
 
@@ -2161,6 +2185,11 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 63. A save is audited as site_tint.changed under the setting's own entity id, which no other setting shares. It revalidates the public cache's settings. A refused save does not revalidate (2026-09-27, `DECISIONS.md` §488).
 64. Amends criterion 56: a team card carries at most twelve links (`MAX_TEAM_LINKS`), and the database refuses a stored list that is not an array of at most twelve https links. The six-link CHECK is dropped by contract migration 0093 and the twelve-link CHECK of the same name is added by expand migration 0094. The number in the schema, in migration 0094 and in the constant is one number (2026-09-27, `DECISIONS.md` §491). Tests: tests/unit/content/team-rich-text-and-links.test.ts, tests/integration/cms/team.test.ts.
 65. The list of stored pictures is refused (403) to a volunteer and answered (200) to a Redactor.
+66. Given a save that the network blocked, when the notice offers «Trimite pe calea simplă», then it says the save may already have arrived and to check the page in a new tab first, and neither it nor the failed-button line says that nothing was saved or sent.
+67. Given the «am încercat calea simplă» line on the page the plain post landed on, when the person navigates to another backoffice page inside the app, then the line is no longer shown.
+68. The link from the spent notice to Costuri is drawn only for a role the server lets open that panel; any other role is told to ask an Administrator, with no link (2026-09-27, `DECISIONS.md` §497).
+69. The `/admin/tasks` translation row reads the credit: done (green) under 80 %, open (amber) with its own sentence and the steps for a new credit from 80 %, broken (red) from 95 % and when spent, and red with «—» and the reason when DeepL refuses the key or answers 456 (2026-09-27, `DECISIONS.md` §497).
+70. The registrations export (CSV and spreadsheet) ends with «Declaration version» and «Declaration signed», taken from the registration's latest declaration acceptance and left blank when none exists. Every earlier column keeps its position (§499).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 
@@ -2292,6 +2321,7 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 17. The starting «De făcut» list's 19 lines: the Administrator's twelve, then the Organizer's seven, owned by the roles «Administrator» and «Organizator» (never a colleague's first name — the repository is public, §483); three carry a due date — the Administrator's Mailgun-plan-switch line (2026-11-01) and the two «după 10 octombrie» lines (2026-10-10) — everything else undated.
 18. Given every club setting that audits its writes, when the source is walked, then each declares its own fixed `audit_logs.entity_id` and no two share one (§483). Verification: unit `settings/entity-ids.test.ts`.
 19. Given the domain row on Costuri, when it renders, then it names no next plan — the `.ro` is not bought — and its ceiling says one invoice a year for the `.com` (§483). Verification: unit `diagnostics/platform-plans.test.ts`.
+20. Given `/admin/tasks`, then the «translation» row reads the DeepL credit's level. It is `broken`, with its own sentence, when the credit is spent. It is `open`, with its own sentence, at 95 % used. Both show the `howCredit` steps. It is `done` otherwise, and never blocking. Without a key the row is `open` for the key, as before (2026-09-27, `DECISIONS.md` §497). Verification: unit `diagnostics/owner-tasks.test.ts`.
 
 **Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`; e2e `tasks-cost.spec.ts`, `tasks.spec.ts`
 
@@ -2355,6 +2385,8 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 18. Given Costuri or `/devs`, then «Bugetul lunii» shows the level in words, the spend against the quota and the month's line, the pace and the date the quota would run out at that pace, what the platform is doing now (the jobs' interval, the cache ceiling, the reused health answer), and which of Neon's readings the figure came from, with the other two beside it. Without a reading it shows `unknown` and no figures. Verification: e2e `neon-budget.spec.ts` (2026-09-26, `DECISIONS.md` §447).
 19. Given Costuri's «Luna aceasta», when it renders, then each provider that bills or meters something (Neon, Mailgun, Vercel, the domain, DeepL, R2) shows its cost so far, its cost projected to the end of that provider's own period at §447's hourly pace (at least a day of pace, the same projection «Bugetul lunii» prints), and last month's cost where something kept it. The period's day and hours left are counted in the provider's clock, never the club's, so at 01:30 on 1 October in Brașov September is on day 30 of 30 with 1.5 hours left. Neon's previous period starts at the `period_start` Neon's answer gives, and at the first of the month before only when the answer gives none. A provider nothing could read is never counted as free (2026-09-27, `DECISIONS.md` §479).
 20. Given the database card's compute settings (floor, maximum size, always-on on Launch only), when the Superadministrator saves a change, then the confirmation names what that combination does to the month's bill at the plan Neon reports. On Launch it gives USD per month at 100 % utilisation and, for always-on, the floor every hour. On Free it says the change costs nothing until the month's included CU-hours are spent. A plan the page does not know is priced at Launch (2026-09-27, `DECISIONS.md` §479).
+21. Costuri's DeepL line is free with no monthly ceiling and states the credit from DeepL's meter — used, limit, left and share — with its severity watch from 80 % and act from 95 %, and «nu știm» when a configured key's credit could not be read (2026-09-27, `DECISIONS.md` §497).
+22. `/api/health` publishes the credit's level only (and a note when low or spent), never the used or left characters, and the credit never changes the endpoint's status (2026-09-27, `DECISIONS.md` §497).
 
 **Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`; unit `diagnostics/neon-plan.test.ts`, `diagnostics/platform-plans.test.ts` (1, 2, 5); integration `diagnostics/neon-plan.test.ts` (5); e2e `neon-plan.spec.ts` (5)
 
