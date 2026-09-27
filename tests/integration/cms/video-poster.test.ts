@@ -143,10 +143,10 @@ describe("§403 the club's own copy of a YouTube poster", () => {
   });
 
   describe("save → poster stored → read model, and the orphan sweep", () => {
-    // The event's own film columns were unread since §485 and are gone since contract migration
-    // 0093 (§NNN): migration 0092 carried every stored poster into the description's youtube node,
+    // The event's own film columns are unread since §485 and gone from the schema since BR-V2.10
+    // (§NNN; the database drops them in BR-V2.11): migration 0092 carried every stored poster into the description's youtube node,
     // which is what the sweep reads. A poster no description names is a picture no page draws.
-    it("a poster no description names is swept like any unreferenced picture, the event row having no film column", async () => {
+    it("a poster no description names is swept like any unreferenced picture, the event row having no film field", async () => {
       const bytes = await JPEG();
       const now = new Date("2026-09-25T10:00:00Z");
       const posterUrl = await ensureYoutubePoster(db, "dQw4w9WgXcQ", { now, fetchImpl: fetchWithHqdefault(bytes) });
@@ -226,8 +226,8 @@ describe("§403 the club's own copy of a YouTube poster", () => {
       // An unrelated event whose description's film carries a poster address that differs from the
       // one above by exactly the underscore's position — an unescaped `LIKE` reads `_` as "any one
       // character" and would count this as a reference to the asset above, over-retaining it
-      // forever. (The event's own poster column held it until migration 0093 dropped it; a film's
-      // poster lives in the description now.)
+      // forever. (The event's own poster column held it until §485; a film's poster lives in the
+      // description now.)
       const [other] = await db
         .insert(events)
         .values({ type: "GROUP_RUN", eventStatus: "SCHEDULED", timezone: "Europe/Bucharest", startsAt: t0, createdAt: t0, updatedAt: t0 })
@@ -449,7 +449,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
           expect(posterOf(row.excerptJson)).toBe(posterUrlFor("excpt-film1"));
           // A group run keeps no programme (§111); the film in it was still fetched, outside.
         }
-        // The event row holds no film of its own since §481, and no film column since migration 0093 (§NNN).
+        // The event row holds no film of its own since §481, and the schema declares no film column since BR-V2.10 (§NNN).
         const [event] = await db.select().from(events).where(eq(events.id, eventId));
         expect(event).not.toHaveProperty("videoUrl");
         expect(event).not.toHaveProperty("videoPosterUrl");

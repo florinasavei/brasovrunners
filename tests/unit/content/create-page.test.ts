@@ -161,7 +161,8 @@ describe("no film box", () => {
   });
 
   it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
-    // The columns left the schema with their contract migration, 0093 (AGENTS.md §7.6, §NNN).
+    // The columns left the Drizzle schema in BR-V2.10; the database keeps them until BR-V2.11's
+    // contract migration, because BR-V2.09 still declared them (AGENTS.md §7.6, §NNN).
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_url")');
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_poster_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
@@ -180,10 +181,11 @@ describe("no film box", () => {
     const index = journal.entries.findIndex((entry) => entry.tag === "0092_film_into_description");
     expect(index).toBeGreaterThan(0);
     expect(journal.entries[index].when).toBeGreaterThan(journal.entries[index - 1].when);
-    // And the contract that drops the columns comes after it, never in the same file.
-    const contract = journal.entries.findIndex((entry) => entry.tag === "0093_film_columns_and_six_links_retired");
-    expect(contract).toBeGreaterThan(index);
-    expect(journal.entries[contract].when).toBeGreaterThan(journal.entries[index].when);
+    // And no migration of this release drops them: that is the release after's contract.
+    for (const entry of journal.entries.slice(index + 1)) {
+      const sql = read(`src/db/migrations/${entry.tag}.sql`).replace(/--[^\n]*/g, "");
+      expect(sql, entry.tag).not.toMatch(/video_(poster_)?url/);
+    }
   });
 });
 

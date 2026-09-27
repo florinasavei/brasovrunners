@@ -1137,6 +1137,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "video_url": {
+          "name": "video_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "video_poster_url": {
+          "name": "video_poster_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "strava_event_url": {
           "name": "strava_event_url",
           "type": "text",
@@ -1671,6 +1683,10 @@
         "events_route_url_is_https": {
           "name": "events_route_url_is_https",
           "value": "\"events\".\"route_url\" IS NULL OR \"events\".\"route_url\" LIKE 'https://%'"
+        },
+        "events_video_url_is_https": {
+          "name": "events_video_url_is_https",
+          "value": "\"events\".\"video_url\" IS NULL OR \"events\".\"video_url\" LIKE 'https://%'"
         },
         "events_strava_event_url_is_https": {
           "name": "events_strava_event_url_is_https",

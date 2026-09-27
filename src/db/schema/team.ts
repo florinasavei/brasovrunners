@@ -89,7 +89,7 @@ export const teamMembers = pgTable(
      * The links (§474): an array of at most twelve (§NNN, raised from six), every address https —
      * the guarantee `events_links_is_a_short_array_of_https_links` gives an event's (§332), at the
      * layer that also refuses a seed's or a hand-written `UPDATE`. The six-link version was dropped
-     * by contract migration 0093 and this one added by expand migration 0094; the number here is
+     * by migration 0093 and this one added by migration 0094; the number here is
      * `MAX_TEAM_LINKS` (`content/team/links.ts`), and a test holds the two together.
      */
     check(
