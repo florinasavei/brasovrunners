@@ -383,7 +383,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
       feelsLikeC: null, precipitationMm: null, gustKmh: null, humidity: null, uvIndex: null,
     } as unknown as WeatherReading;
     const overrides: Partial<PublicEvent> = { surface: "TRAIL", distanceMeters: 10000, costType: "FREE" };
-    const hero = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, weather: { start: reading, hours: [reading], place: "club" } }));
+    const hero = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, weather: { start: reading, hours: [reading], span: [reading], place: "club" } }));
     const card = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", cardWeather: reading }));
     const cardRow = /data-fact="pills"[\s\S]*/.exec(withoutStyles(card))?.[0] ?? "";
     expect(text(cardRow)).toContain("12");

@@ -8,6 +8,7 @@ import {
   parseOpenMeteo,
   pickHour,
   pickHours,
+  pickSpan,
   WEATHER_FORECAST_DAYS,
   type WeatherReading,
   weatherInstant,
@@ -322,7 +323,7 @@ export async function readForecast(at: Coordinates, deps: ForecastDeps = {}): Pr
 
 /**
  * The reading for an already-read forecast, or null when it holds no such hour or is older than
- * `MAX_FORECAST_AGE_MS` — the one gate `weatherForEvent` and `readWeatherStatus` share, so a
+ * `MAX_FORECAST_AGE_MS` — the one gate `forecastForEvent` and `readWeatherStatus` share, so a
  * stale-while-revalidate cache cannot hand either one an outage's old answer as if it were
  * current.
  */
@@ -332,7 +333,7 @@ export function freshReading(forecast: HourlyForecast, at: Date, now: number): W
 }
 
 /** What an event carries that the forecast reads: its start, its status, and its place (`PlaceColumns`). */
-export type ForecastEvent = { startsAt: Date; raceStartsAt?: Date | null; eventStatus?: string | null } & PlaceColumns;
+export type ForecastEvent = { startsAt: Date; raceStartsAt?: Date | null; endsAt?: Date | null; eventStatus?: string | null } & PlaceColumns;
 
 /**
  * The forecast for an event, or null — the one call the page, the listing and the reminder make.
@@ -351,15 +352,7 @@ export async function forecastForEvent(event: ForecastEvent, now: Date, deps: Fo
   if (!read.ok) return null;
   const start = freshReading(read.forecast, at, now.getTime());
   if (!start) return null;
-  return { start, hours: pickHours(read.forecast, at), place: place.source };
-}
-
-/**
- * The start's reading alone, or null — the reminder's line (§402, unchanged) and anything else that
- * says one hour. The same place and the same cached answer as the page's block.
- */
-export async function weatherForEvent(event: ForecastEvent, now: Date, deps: ForecastDeps = {}): Promise<WeatherReading | null> {
-  return (await forecastForEvent(event, now, deps))?.start ?? null;
+  return { start, hours: pickHours(read.forecast, at), span: pickSpan(read.forecast, at, event.endsAt), place: place.source };
 }
 
 /**
@@ -389,7 +382,7 @@ export async function forecastsForEvents(
       const answer = await read;
       if (!answer.ok) return;
       const start = freshReading(answer.forecast, at, now.getTime());
-      if (start) found.set(event.id, { start, hours: pickHours(answer.forecast, at), place: place.source });
+      if (start) found.set(event.id, { start, hours: pickHours(answer.forecast, at), span: pickSpan(answer.forecast, at, event.endsAt), place: place.source });
     }),
   );
   return found;

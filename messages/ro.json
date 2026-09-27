@@ -5682,6 +5682,11 @@
     "humidity": "umiditate {percent}%",
     "uv": "indice UV {index}",
     "rainShort": "{percent}% ploaie",
+    "temperatureRange": "{from}–{to} °C",
+    "hourRange": "{from}–{to}",
+    "scope": "la {place}, {day} {hours}",
+    "heading": "Vremea {scope}",
+    "eventPlace": "locul evenimentului",
     "atStart": "Vremea la start",
     "codes": {
       "clear": "Senin",
