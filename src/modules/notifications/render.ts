@@ -52,6 +52,7 @@ import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import { emailEventFacts } from "./event-facts-row";
 import type { EmailRenderer, OutboxRow } from "./outbox";
+import type { DeadlineRebase } from "./deadline-rebase";
 
 /**
  * Turns one outbox row into the message to send (AGENTS.md §16.1, §16.3; BR-REQ-080-01).
@@ -150,11 +151,11 @@ export function createOutboxRenderer(options: { readEventRows?: EventRowsReader;
     }
     return rows;
   };
-  return (row, db, now) => renderRow(row, db, now, eventRows, replyTo);
+  return (row, db, now, rebase) => renderRow(row, db, now, eventRows, replyTo, rebase ?? null);
 }
 
 /** One message on its own — a renderer whose batch is this one row (tests, one-off callers). */
-export const renderOutboxMessage: EmailRenderer = (row, db, now) => createOutboxRenderer()(row, db, now);
+export const renderOutboxMessage: EmailRenderer = (row, db, now, rebase) => createOutboxRenderer()(row, db, now, rebase);
 
 async function renderRow(
   row: OutboxRow,
@@ -162,6 +163,7 @@ async function renderRow(
   now: Date,
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
   replyTo: string | undefined,
+  rebase: DeadlineRebase | null = null,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
 
@@ -194,9 +196,21 @@ async function renderRow(
   */
   const bulkRecipients = row.registrationId ? null : bulkCopyRecipients(row.payloadJson);
 
-  const [registration] = row.registrationId
+  const [stored] = row.registrationId
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
     : [];
+  /*
+    The deadline this send moves (§NNN, `deadline-rebase.ts`): counted from the send, so the words
+    («până la …»), the offer's length and the link's own life all say the deadline the runner has
+    once the message has left — `processOutboxBatch` writes the same value after the provider takes
+    it. Only on the registration the plan was made for; everything else reads the row as stored.
+  */
+  const registration =
+    stored && rebase && rebase.kind !== "familyLink" && rebase.registrationId === stored.id
+      ? rebase.kind === "emailLink"
+        ? { ...stored, emailLinkExpiresAt: rebase.to }
+        : { ...stored, holdExpiresAt: rebase.to }
+      : stored;
 
   // A club copy's greeting still names the runner, read through the registration it is about.
   const participantId = row.participantId ?? (clubCopy ? registration?.participantId : undefined);
@@ -384,7 +398,9 @@ async function renderRow(
       club's current setting is kept, as before.
     */
     if (row.messageType === "WAITLIST_SPOT_OFFER" && registration.offerCreatedAt && data.timings) {
-      const offerMinutes = Math.max(1, Math.floor((holdEndsAt.getTime() - registration.offerCreatedAt.getTime()) / 60_000));
+      // A re-based offer (§NNN) runs from its send: its start moved by the same wait as its end.
+      const offerStartMs = registration.offerCreatedAt.getTime() + (rebase?.kind === "offer" ? rebase.waitMs : 0);
+      const offerMinutes = Math.max(1, Math.floor((holdEndsAt.getTime() - offerStartMs) / 60_000));
       data.timings = { ...data.timings, offerMinutes };
     }
   }
@@ -613,7 +629,9 @@ async function renderRow(
     const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown; familyEntryId?: unknown };
     data.addressAtCap = payload.atCap === true;
     if (typeof payload.registrationsPerAddress === "number") data.addressCap = payload.registrationsPerAddress;
-    const kept = !data.addressAtCap && typeof payload.familyEntryId === "string" ? await findFamilyEntryById(db, payload.familyEntryId) : undefined;
+    const found = !data.addressAtCap && typeof payload.familyEntryId === "string" ? await findFamilyEntryById(db, payload.familyEntryId) : undefined;
+    // The link's window counted from this send (§NNN): the token below is minted to it.
+    const kept = found && rebase?.kind === "familyLink" && rebase.entryId === found.id ? { ...found, expiresAt: rebase.to } : found;
     if (kept && kept.expiresAt.getTime() > now.getTime()) {
       familyEntry = kept;
       const person = personOfEntry(kept);

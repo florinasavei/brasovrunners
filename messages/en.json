@@ -3619,7 +3619,7 @@
       },
       "deadlines": {
         "title": "Deadlines",
-        "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
+        "intro": "How long each deadline the platform gives a participant lasts. A deadline runs from the moment the email announcing it leaves, not from when it joined the queue: the confirmation link, the place held for signing, the waiting-list offer and the link to register another person on the same address. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
         "bounds": "Recommended: {recommended}. Between {min} and {max}.",
@@ -3725,7 +3725,7 @@
         "title": "When emails leave",
         "intro": "On the scheduled round (the default), emails wait in the queue and leave at the platform's next check — on this site within {day} by day and {night} at night: sending is paced, the daily allowance is spent predictably, and what one registration queues leaves together. «Right after the request» sends them within seconds of the press. No email is lost either way, and «Send now» empties the queue at any time.",
         "field": "Emails leave",
-        "help": "The page after the registration form, the link resend and the newsletter sign-up tell the person how long it may take.",
+        "help": "The page after the registration form, the link resend and the newsletter sign-up tell the person how long it may take. However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing to the wait.",
         "option": {
           "scheduled": "On the platform's scheduled round (within {wait}; recommended)",
           "immediate": "Right after the request"
@@ -5047,6 +5047,7 @@
         "details": "Fill in the form. We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link.",
         "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+        "declareScheduled": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -5263,6 +5264,7 @@
       "emailHelp": "The address used when registering.",
       "submit": "Send me the link",
       "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
+      "sentScheduled": "If that address has registrations, the link leaves for it on the platform's next scheduled round, within {wait} at the most. Check the spam folder too.",
       "listTitle": "Your registrations",
       "empty": "You have no active registration at the moment.",
       "code": "Access code",
