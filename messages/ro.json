@@ -1299,7 +1299,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "0 = fără limită. Sub 18 ani, înscrierea se face de un părinte.",
+      "minAgeHelp": "Implicit {default}; pune 0 pentru fără limită. Sub 18 ani, înscrierea se face de un părinte.",
       "minAgeReadOnly": "{age}. O schimbă cine poate schimba setările evenimentului.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
