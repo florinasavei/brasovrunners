@@ -47,10 +47,18 @@ export interface Translator {
 }
 
 /**
+ * What the provider says the key has used and may use (§497): DeepL's `GET /v2/usage` answer,
+ * `character_count` and `character_limit`, in the key's own terms. On the club's key that is a
+ * credit given once and never renewed (the Developer plan, 1 000 000 characters, 2026-09-27), so
+ * nothing here calls it a month: `modules/translate/domain/credit.ts` reads it as a credit.
+ */
+export type TranslateUsage = { used: number; limit: number };
+
+/**
  * The three ways a provider says no, as the screen words them:
  *
- * - `quota` — the provider's own allowance is spent (DeepL Free: 500 000 characters a month,
- *   answered as HTTP 456). Nothing to do until next month or a paid plan.
+ * - `quota` — the provider's own allowance is spent, answered as HTTP 456: a credit given once
+ *   (the club's key, §497). A new credit or a new key; no month refills it.
  * - `refused` — the key is wrong or revoked (403). The Administrator's to fix; `/admin/tasks`
  *   names the variable.
  * - `unavailable` — anything else: a timeout, a 5xx, a 429, an answer of the wrong shape. Try

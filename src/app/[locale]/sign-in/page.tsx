@@ -1,5 +1,8 @@
+import LoginIcon from "@mui/icons-material/Login";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -74,7 +77,8 @@ export default async function SignInPage({ params, searchParams }: Props) {
             await signIn("zitadel", { redirectTo: getPathname({ locale, href: "/admin" }) });
           }}
         >
-          <Button type="submit" variant="contained" fullWidth>
+          <Button type="submit" variant="contained" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+            <LoginIcon aria-hidden="true" sx={glyphSx("medium")} />
             {t("signIn.action")}
           </Button>
         </form>
@@ -86,7 +90,8 @@ export default async function SignInPage({ params, searchParams }: Props) {
             <form action={signInAsDevIdentityAction} key={identity.key}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="identity" value={identity.key} />
-              <Button type="submit" variant="outlined" fullWidth>
+              <Button type="submit" variant="outlined" fullWidth sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                <LoginIcon aria-hidden="true" sx={glyphSx("medium")} />
                 {identity.displayName} · {STAFF_ROLE_LABEL[identity.role]}
               </Button>
             </form>

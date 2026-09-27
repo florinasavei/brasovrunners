@@ -4,26 +4,27 @@ import { protectPlaceholders } from "./placeholders";
 import { richTextSegments, segmentCharacters } from "./rich-text-html";
 
 /**
- * The club's daily allowance of translated characters (`DECISIONS.md` §464).
+ * The club's daily allowance of translated characters (`DECISIONS.md` §464, §497).
  *
- * DeepL API Free gives 500 000 characters a month and then answers "quota exceeded" until the
- * month turns (HTTP 456). Fifty thousand a day by default keeps one enthusiastic afternoon —
- * a dozen long descriptions translated three times over — from spending a fortnight's allowance,
- * and still covers every ordinary week: an event's texts in full are five to fifteen thousand.
- * The Administrator changes it on `/admin/tasks` → Costuri; 0 turns the buttons' work off
- * without touching a variable. The count is the characters *sent*, tags included — stricter
- * than DeepL's own, so the club's figure runs out first.
+ * The club's DeepL key carries a credit given once — 1 000 000 characters, never renewed — and
+ * DeepL answers "quota exceeded" (HTTP 456) once it is spent (`domain/credit.ts`). Fifty thousand
+ * a day by default keeps one enthusiastic afternoon — a dozen long descriptions translated three
+ * times over — from spending a large share of it, and still covers every ordinary week: an
+ * event's texts in full are five to fifteen thousand. The Administrator changes it on
+ * `/admin/tasks` → Costuri; 0 turns the buttons' work off without touching a variable. The count
+ * is the characters *sent*, tags included — stricter than DeepL's own, so the club's figure runs
+ * out first.
  */
 /**
- * DeepL API Free's monthly allowance, from deepl.com/pro-api on 2026-09-26 (§464): the one figure
- * the daily allowance's ceiling and Costuri's «Luna aceasta» line (§479) both read.
+ * The highest daily allowance the Administrator may type (§464, §497): a ceiling on the setting,
+ * not a provider's figure — half of the club's one-time credit in a single day is already more
+ * than any week needs.
  */
-export const DEEPL_FREE_CHARACTERS_PER_MONTH = 500_000;
-export const DEEPL_FREE_CHECKED_ON = "2026-09-26";
+export const TRANSLATION_DAILY_CEILING_CHARACTERS = 500_000;
 
 export const TRANSLATION_BUDGET_RULE = {
   min: 0,
-  max: DEEPL_FREE_CHARACTERS_PER_MONTH,
+  max: TRANSLATION_DAILY_CEILING_CHARACTERS,
   default: 50_000,
 } as const;
 

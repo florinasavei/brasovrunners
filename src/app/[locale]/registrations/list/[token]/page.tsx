@@ -1,5 +1,8 @@
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -76,7 +79,8 @@ export default async function ListConsentPage({ params, searchParams }: Props) {
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />
             <input type="hidden" name="listed" value={context.listed ? "0" : "1"} />
-            <Button type="submit" variant={context.listed ? "outlined" : "contained"} sx={TAP_TARGET}>
+            <Button type="submit" variant={context.listed ? "outlined" : "contained"} sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+              {context.listed ? <VisibilityOffIcon aria-hidden="true" sx={glyphSx("medium")} /> : <VisibilityIcon aria-hidden="true" sx={glyphSx("medium")} />}
               {context.listed ? t("list.optOut") : t("list.optIn")}
             </Button>
           </form>

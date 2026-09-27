@@ -257,8 +257,8 @@ export const envSchema = z
 
     /**
      * «Tradu din română» (`DECISIONS.md` §464): which engine fills an English box from the
-     * Romanian one. `deepl` by default — DeepL API Free, 500 000 characters a month, the owner's
-     * choice for an ONG — and live only once `DEEPL_API_KEY` is set; `off` hides every button
+     * Romanian one. `deepl` by default — one DeepL key with a one-time credit of 1 000 000 characters that
+     * does not renew (§497), the owner's choice for an ONG — and live only once `DEEPL_API_KEY` is set; `off` hides every button
      * whatever keys exist. Without a key the buttons are absent and `/admin/tasks` shows the row.
      */
     TRANSLATE_PROVIDER: z.enum(TRANSLATE_PROVIDERS).default("deepl"),

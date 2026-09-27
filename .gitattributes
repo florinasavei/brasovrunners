@@ -27,5 +27,6 @@
 # Workflow scripts are read by the Workflow tool, which refuses a carriage return in a script (docs/DISPATCHER.md).
 .claude/workflows/*.js text eol=lf
 
-# The cloud session-start hook runs under bash on Linux; a carriage return breaks its shebang.
-.claude/hooks/*.sh text eol=lf
+# Shell scripts run under bash on Linux (a cloud session runs scripts/cloud-setup.sh, §501) and
+# under Git Bash on Windows; a carriage return makes bash read `then\r` and fail. LF everywhere.
+*.sh text eol=lf

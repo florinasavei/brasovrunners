@@ -1,5 +1,5 @@
 import { createTheme } from "@mui/material/styles";
-import { COLOR, COLOR_DARK, FONT } from "./brand";
+import { COLOR, COLOR_DARK, FONT, HEADER_CLEARANCE_PX } from "./brand";
 import { KEYFRAMES } from "./motion";
 
 /** Material's filled "Error" glyph (a circle with an exclamation mark), as a mask for invalid fields (§309). */
@@ -166,9 +166,9 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
          * at most 28px tall on a phone and 44px from `sm` up, plus its border and a little air.
          */
         html: {
-          scrollPaddingTop: 72,
+          scrollPaddingTop: HEADER_CLEARANCE_PX.xs,
           scrollPaddingBottom: 40,
-          "@media (min-width:600px)": { scrollPaddingTop: 76, scrollPaddingBottom: 52 },
+          "@media (min-width:600px)": { scrollPaddingTop: HEADER_CLEARANCE_PX.sm, scrollPaddingBottom: 52 },
         },
 
         /**

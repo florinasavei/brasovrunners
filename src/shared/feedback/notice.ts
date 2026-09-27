@@ -13,7 +13,9 @@
  *   clears the cookie — a refresh finds nothing.
  *
  * A refusal is never a toast: §47's summary, focusable and naming each box, is what a refusal
- * gets, and a toast that goes away by itself is the wrong place for something to act on.
+ * gets, and a toast that goes away by itself is the wrong place for something to act on. The one
+ * exception is the translate press (§464), which has no summary and saves nothing: its refusal
+ * stays in the status line under the button and is also toasted, so a long editor does not hide it.
  *
  * Pure: no React, no `next/headers`, so the queue and the encoding are unit-tested in Node and
  * both the server (`flash.ts`) and the islands import it.
@@ -21,7 +23,13 @@
 
 import { type CountForm, countForm } from "@/i18n/count-form";
 
-export type NoticeKind = "success" | "info";
+/**
+ * `warning` and `error` are for the one in-browser press with no refusal summary to land on:
+ * «Copiază și tradu tot» (§464), whose status line sits under a button a long editor scrolls out
+ * of sight. A server outcome, and therefore a flash, is only ever `success` or `info`
+ * (`decodeFlash` refuses anything else).
+ */
+export type NoticeKind = "success" | "info" | "warning" | "error";
 
 export type FormNotice = {
   kind: NoticeKind;
@@ -29,6 +37,14 @@ export type FormNotice = {
   key: string;
   /** What the sentence needs, as strings: counts, a version number, never anything typed. */
   values?: Readonly<Record<string, string>>;
+  /**
+   * The sentence already in the reader's language, for a notice built in the browser from words
+   * its own island already holds (the translate press's `Translate.refusal.*`): shown as it is,
+   * `key` unused. Never set by the server, and never carried by a flash.
+   */
+  sentence?: string;
+  /** How long this toast stays, in milliseconds, when not `TOAST_AUTO_HIDE_MS`. */
+  autoHideMs?: number;
 };
 
 /** The flash cookie: not `httpOnly`, because the island clears it once the toast is shown. */
@@ -233,6 +249,13 @@ export function toastQueueReducer(state: ToastQueue, action: ToastQueueAction): 
  * short enough that a desk volunteer is not waiting for it to go (5–6 s, the owner's brief).
  */
 export const TOAST_AUTO_HIDE_MS = 5500;
+
+/**
+ * The translate press's toasts stay longer (the owner, 2026-09-27: a confirmation that
+ * everything was translated): the sentence names a count and asks for a check before Save, and
+ * a refusal's reason (today's budget, DeepL's month) is a longer read.
+ */
+export const LONG_TOAST_AUTO_HIDE_MS = 8000;
 
 /**
  * A confirmation dialog's contract (`ConfirmDialog`), as a Server Component words it — strings

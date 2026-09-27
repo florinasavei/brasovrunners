@@ -11,6 +11,8 @@ import { checkNeonQuotaHealth, type NeonQuotaHealth, QUOTA_NOT_READ } from "@/mo
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { isQuotaRefusalError } from "@/modules/resilience/domain/database-away";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
+import { readTranslationCredit } from "@/modules/translate/credit";
+import { creditHealth } from "@/modules/translate/domain/credit";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 
@@ -44,6 +46,10 @@ import { env } from "@/shared/config/env";
  * be emailed about once it has happened. `checkNeonQuotaHealth` is cached for fifteen minutes and
  * never fails this endpoint on its own account, so a missing key or an unreachable Neon reads as
  * nothing having been asked, never as the site being down.
+ *
+ * And the DeepL credit's level (§497): the key's one-time credit, from DeepL's own meter, cached
+ * an hour, with a note once it is low (95 %) or spent — a word, never a figure, and never the
+ * status: translation stops nothing a visitor needs, `/admin/tasks` is where it turns red.
  */
 /**
  * Everything this endpoint asks the database, once the connection itself has answered.
@@ -188,13 +194,15 @@ export async function GET(): Promise<Response> {
   // it (the level `unknown`: no reuse, the ordinary floor). On a cache miss it is several of
   // Neon's requests in a row, and a monitor that times out on this endpoint must not be kept
   // waiting on a third party before `select 1` is even asked.
-  const [neonQuota, turnstile] = await Promise.all([
+  const [neonQuota, turnstile, translationCredit] = await Promise.all([
     withinWait(
       cachedBudgetThresholds().then((thresholds) => checkNeonQuotaHealth(env, fetch, now, thresholds)),
       HEALTH_BUDGET_WAIT_MS,
       QUOTA_NOT_READ,
     ),
     probeTurnstileSecret(),
+    // DeepL's credit (§497): cached an hour; never holds the probe longer than the budget does.
+    withinWait(readTranslationCredit(env), HEALTH_BUDGET_WAIT_MS, { ok: false as const, reason: "unavailable" as const }),
   ]);
   const effects = governorEffects(neonQuota.level);
 
@@ -310,6 +318,9 @@ export async function GET(): Promise<Response> {
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
       // endpoint reports; only `misconfigured` is.
       turnstile: { status: turnstile },
+      // The DeepL credit (§497): its level and, when low or spent, a note — never the characters
+      // used or left, which are the club's account figures (Costuri, §479). No effect on `status`.
+      translation: creditHealth(translationCredit),
       // The domain's expiry (§435) is public at any registrar, so the day and the days left are
       // published; the domain's name is not repeated — it is the host this answer came from.
       domain:

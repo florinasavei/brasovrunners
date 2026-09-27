@@ -1,9 +1,11 @@
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -172,7 +174,8 @@ async function CapacityUnknown({ slug }: { slug: string }) {
       action={
         // This page again, by its own address: the only thing that can change the answer is
         // asking the database a second time.
-        <ButtonLink size="small" sx={TAP_TARGET} href={{ pathname: "/events/[slug]", params: { slug } }}>
+        <ButtonLink size="small" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} href={{ pathname: "/events/[slug]", params: { slug } }}>
+          <RefreshIcon aria-hidden="true" sx={glyphSx("small")} />
           {t("capacityRetry")}
         </ButtonLink>
       }

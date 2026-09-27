@@ -82,3 +82,14 @@ export function normalizeTypedTime(typed: string): string {
   if (hour > 23 || minute > 59) return text;
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
+
+/**
+ * A time box as a live reader of the form sees it while it is still being typed (§439): what the
+ * box will post («1900» → "19:00"), or "" while the box holds no time of day yet («19:», «7pm»).
+ * Every island that follows the start box — the series sentence, the night line — asks this one,
+ * so two readers of the same box never disagree before it is left.
+ */
+export function readTypedTime(typed: string): string {
+  const time = normalizeTypedTime(typed);
+  return isTimeValue(time) ? time : "";
+}

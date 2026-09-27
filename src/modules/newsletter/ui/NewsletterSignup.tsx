@@ -1,3 +1,5 @@
+import CloseIcon from "@mui/icons-material/Close";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
@@ -171,7 +173,8 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
           </Typography>
           {/* Closed by the browser itself, script or not: a `method="dialog"` form. */}
           <form method="dialog">
-            <Button type="submit" sx={TAP_TARGET} data-testid="newsletter-close">
+            <Button type="submit" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="newsletter-close">
+              <CloseIcon aria-hidden="true" sx={glyphSx("medium")} />
               {t("close")}
             </Button>
           </form>
@@ -317,7 +320,9 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
               </Box>
             </Box>
 
-            <SubmitButton label={t("submit")} pendingLabel={t("submitting")} size="large" fullWidth />
+            <SubmitButton label={t("submit")} pendingLabel={t("submitting")} size="large" fullWidth>
+              <MarkEmailUnreadOutlinedIcon />
+            </SubmitButton>
           </Stack>
         </form>
       </Box>

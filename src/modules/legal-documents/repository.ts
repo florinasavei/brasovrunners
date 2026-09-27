@@ -12,7 +12,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { asksForMinorSignature, describesListStates, describesNewsletter, describesTeamPage } from "./domain/merge-fields";
+import { asksForMinorSignature, describesListSocials, describesListStates, describesNewsletter, describesTeamPage } from "./domain/merge-fields";
 
 /**
  * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
@@ -145,6 +145,16 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 export async function noticeDescribesListStates<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the socials beside a name on the public list
+ * (§500, `describesListSocials`) — in every language, like `noticeDescribesListStates`. For
+ * `/admin/tasks`; a public page asks through the public cache (`cachedListSocialsDisclosed`).
+ */
+export async function noticeDescribesListSocials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
 }
 
 /**

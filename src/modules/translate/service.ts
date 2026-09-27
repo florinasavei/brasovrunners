@@ -8,6 +8,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
 import { charactersTranslatedToday, readTranslationBudget } from "./budget";
 import { budgetAllows, charactersToSend } from "./domain/budget";
+import { creditAllows, type TranslationCredit } from "./domain/credit";
 import { isRichTextField, isTranslatableEnglishField } from "./domain/fields";
 import { glossaryContext } from "./domain/glossary";
 import { protectPlaceholders, restorePlaceholders } from "./domain/placeholders";
@@ -28,7 +29,9 @@ import { type RichTextSegment, richTextSegments, segmentCharacters, withTranslat
  * a form: the role (BR-REQ-060-01), a translator configured, a request naming only the club's own
  * boxes (`domain/fields.ts` — never a legal text, never a participant's data), something to
  * translate, the per-person throttle, the club's daily character budget, and then the provider's
- * own answer. One audit row per press that reached the provider: who, which boxes, how many
+ * own answer — and, before that, DeepL's credit as its own meter last said it (§497): a spent
+ * credit refuses as `quota` without asking DeepL, a press larger than what is left as `credit`
+ * with the figure. One audit row per press that reached the provider: who, which boxes, how many
  * characters, which provider — never the words.
  */
 
@@ -54,11 +57,12 @@ export type TranslateRefusal =
   | "nothing"
   | "rateLimited"
   | "budget"
+  | "credit"
   | TranslatorFailure;
 
 export type TranslateOutcome =
   | { ok: true; items: TranslatedItem[]; characters: number; remainingToday: number }
-  | { ok: false; reason: TranslateRefusal; remainingToday?: number };
+  | { ok: false; reason: TranslateRefusal; remainingToday?: number; remainingCredit?: number };
 
 type Piece = { item: number; segment: RichTextSegment };
 
@@ -86,7 +90,15 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   raw: unknown,
-  deps: { translator: Translator | null; now: Date },
+  deps: {
+    translator: Translator | null;
+    now: Date;
+    /**
+     * DeepL's credit as its meter last said it (`readTranslationCredit`, §497), or null when it
+     * could not be read — then the press goes on and DeepL's own 456 is the answer.
+     */
+    credit?: () => Promise<TranslationCredit | null>;
+  },
 ): Promise<TranslateOutcome> {
   if (!canTranslateTexts(actor.role)) return { ok: false, reason: "forbidden" };
   if (!deps.translator) return { ok: false, reason: "notConfigured" };
@@ -114,6 +126,13 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
   const [{ budget }, usedToday] = await Promise.all([readTranslationBudget(db), charactersTranslatedToday(db, deps.now)]);
   const verdict = budgetAllows(usedToday, characters, budget);
   if (!verdict.allowed) return { ok: false, reason: "budget", remainingToday: verdict.remaining };
+
+  // The credit is given once and never refilled (§497): spent, nothing is sent; too small for this
+  // press, the refusal names what is left so the person translates fewer boxes at once.
+  const credit = deps.credit ? await deps.credit() : null;
+  if (credit && !creditAllows(credit, characters)) {
+    return credit.level === "spent" ? { ok: false, reason: "quota" } : { ok: false, reason: "credit", remainingCredit: credit.remaining };
+  }
 
   // Two requests at most — the plain words, and the rich texts' lines as HTML — each in the
   // pieces' own order, so every answer goes back to the place it came from.

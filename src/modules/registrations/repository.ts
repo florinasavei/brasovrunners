@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lte, or, type SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
@@ -277,6 +277,8 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       guardianName: input.details?.guardianName ?? null,
       stravaUrl: input.details?.stravaUrl ?? null,
       instagramHandle: input.details?.instagramHandle ?? null,
+      // The socials beside the name on the public list (§500): decided by the service, false unless said.
+      listSocials: input.details?.listSocials ?? false,
       // NOT NULL with a default of false: "did not say" and "said no" are the same answer to
       // a question that grants nothing, unlike the two consents above it, where they are not.
       clubMemberDeclared: input.details?.clubMemberDeclared ?? false,
@@ -364,6 +366,36 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 }
 
 /**
+ * A row of the public list: the display name and the club — and, only when the caller asked for
+ * the socials behind the notice's gate (§500), the runner's Strava link and Instagram username,
+ * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`).
+ */
+export type PublicStartListRow = {
+  displayName: string;
+  clubName: string | null;
+  stravaUrl?: string | null;
+  instagramHandle?: string | null;
+};
+
+/**
+ * The two socials columns a public list may add (§500, widening §106), or none.
+ *
+ * Asked for only by `StartList`, only while the privacy notice in force names
+ * `{{participantListSocials}}` (`cachedListSocialsDisclosed`). Even then each value is gated in
+ * the SQL on the runner's own tick, so an unticked runner's link never leaves the database — a
+ * caller cannot print what the query did not return. `list_socials` is only ever true for an
+ * adult who ticked the list too, typed at least one of the two, and was given a notice that
+ * described it (`service.ts`); a minor has neither column at all (§323).
+ */
+function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<string | null>> {
+  if (!socials) return {};
+  return {
+    stravaUrl: sql<string | null>`case when ${registrations.listSocials} then ${registrations.stravaUrl} end`,
+    instagramHandle: sql<string | null>`case when ${registrations.listSocials} then ${registrations.instagramHandle} end`,
+  };
+}
+
+/**
  * The public start list of one event (BR-REQ-039-01).
  *
  * Four filters, and each one is a rule rather than a preference:
@@ -391,12 +423,14 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
    * the page existed asked for, and what the privacy test still reads.
    */
   page?: { offset: number; limit: number },
-): Promise<Array<{ displayName: string; clubName: string | null }>> {
+  /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
+  options: { socials?: boolean } = {},
+): Promise<PublicStartListRow[]> {
   const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
     // The select list is the guarantee — widening it is what
     // tests/privacy/public-surface.test.ts refuses.
-    .select({ displayName: registrations.displayName, clubName: registrations.clubName })
+    .select({ displayName: registrations.displayName, clubName: registrations.clubName, ...publicSocialColumns(options.socials) })
     .from(registrations)
     .where(
       and(
@@ -410,7 +444,10 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
 
   // The order is what makes a page meaningful: a runner keeps their position and their page
   // however often the list is read, because both columns of the sort are fixed at confirmation.
-  return page ? query.limit(page.limit).offset(page.offset) : query;
+  const rows = await (page ? query.limit(page.limit).offset(page.offset) : query);
+  // The socials' spread widens Drizzle's inferred row to an index signature; the select above is
+  // exactly `PublicStartListRow`'s keys, the two socials present only when asked for.
+  return rows as unknown as PublicStartListRow[];
 }
 
 /**
@@ -502,13 +539,16 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
    */
   firstStatesNoticeVersion: number,
   page?: { offset: number; limit: number },
-): Promise<Array<{ displayName: string; clubName: string | null; group: "PENDING" | "WAITLISTED" }>> {
+  /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
+  options: { socials?: boolean } = {},
+): Promise<Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>> {
   const waiting = inArray(registrations.status, [...WAITLISTED_LIST_STATUSES]);
   const query = db
     .select({
       displayName: registrations.displayName,
       clubName: registrations.clubName,
       group: sql<"PENDING" | "WAITLISTED">`case when ${waiting} then 'WAITLISTED' else 'PENDING' end`,
+      ...publicSocialColumns(options.socials),
     })
     .from(registrations)
     .where(
@@ -525,7 +565,9 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
       sql`case when ${waiting} then ${registrations.waitlistedAt} else coalesce(${registrations.emailConfirmedAt}, ${registrations.submittedAt}) end`,
       asc(registrations.id),
     );
-  return page ? query.limit(page.limit).offset(page.offset) : query;
+  const rows = await (page ? query.limit(page.limit).offset(page.offset) : query);
+  // As `listPublicStartList`: the select is exactly these keys, the socials only when asked for.
+  return rows as unknown as Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>;
 }
 
 /**

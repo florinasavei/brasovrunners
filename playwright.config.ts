@@ -63,8 +63,8 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
-    // Claude Code on the web ships its own Chromium and cannot download Playwright's; its
-    // session-start hook names it here (.claude/hooks/session-start.sh). Unset everywhere else.
+    // Claude Code on the web ships its own Chromium and cannot download Playwright's;
+    // scripts/cloud-setup.sh names it here (§501). Unset everywhere else.
     launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined },
   },
 

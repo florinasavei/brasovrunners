@@ -1,3 +1,6 @@
+import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Button from "@mui/material/Button";
@@ -60,7 +63,8 @@ export default async function ActionLinkNotice({
         </Alert>
         {/* `component="a"` with a resolved path, never `component={Link}`: a React element as
             a prop from a Server Component is what §14.1 forbids, and a string is not one. */}
-        <Button component="a" href={resendHref} variant="contained" sx={TAP_TARGET}>
+        <Button component="a" href={resendHref} variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+          <ForwardToInboxIcon aria-hidden="true" sx={glyphSx("medium")} />
           {t("spent.resendAction")}
         </Button>
       </Stack>
@@ -89,7 +93,8 @@ export default async function ActionLinkNotice({
       {status.next === "RESEND" && (
         <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
           <Typography variant="body2">{t("spent.resendHelp")}</Typography>
-          <Button component="a" href={resendHref} variant="contained" sx={TAP_TARGET}>
+          <Button component="a" href={resendHref} variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+            <ForwardToInboxIcon aria-hidden="true" sx={glyphSx("medium")} />
             {t("spent.resendAction")}
           </Button>
         </Stack>
@@ -98,7 +103,8 @@ export default async function ActionLinkNotice({
       {status.next === "REGISTER_AGAIN" && (
         <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
           <Typography variant="body2">{t("spent.registerAgainHelp")}</Typography>
-          <Button component="a" href={eventHref} variant="outlined" sx={TAP_TARGET}>
+          <Button component="a" href={eventHref} variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+            <DirectionsRunIcon aria-hidden="true" sx={glyphSx("medium")} />
             {t("spent.registerAgainAction")}
           </Button>
         </Stack>

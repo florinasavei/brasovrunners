@@ -22,8 +22,11 @@ export async function insertGroupRunDeclaration<T extends Record<string, unknown
   return row;
 }
 
-/** What the backoffice lists (§393): who and when. Never the identity document or the address. */
-export type GroupRunDeclarationListRow = { id: string; typedName: string; acceptedAt: Date; locale: Locale };
+/**
+ * What the backoffice lists (§393): who, when, and against which version of the text (§499).
+ * Never the identity document or the address.
+ */
+export type GroupRunDeclarationListRow = { id: string; typedName: string; acceptedAt: Date; locale: Locale; version: number };
 
 export async function listGroupRunDeclarations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -35,6 +38,7 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
       typedName: groupRunDeclarations.typedName,
       acceptedAt: groupRunDeclarations.acceptedAt,
       locale: groupRunDeclarations.locale,
+      version: groupRunDeclarations.declarationVersion,
     })
     .from(groupRunDeclarations)
     .where(eq(groupRunDeclarations.eventId, eventId))
@@ -53,6 +57,8 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       key: legalDocuments.key,
       version: groupRunDeclarations.declarationVersion,
       contentSha256: groupRunDeclarations.contentSha256,
+      // The day the signed version took effect, for the PDF's version line (§499).
+      effectiveAt: legalDocuments.effectiveAt,
       locale: groupRunDeclarations.locale,
       typedName: groupRunDeclarations.typedName,
       idDocument: groupRunDeclarations.idDocument,
