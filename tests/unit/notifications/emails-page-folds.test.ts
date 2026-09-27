@@ -91,6 +91,16 @@ describe("§336 the emails participants receive: one card of cards", () => {
     expect(html).toMatch(/<iframe[^>]*sandbox=""[^>]*title="Reminderul dinaintea startului"/);
   });
 
+  it("keeps what a short «când» line leaves out behind its «?», and draws none where it says it all (§NNN)", () => {
+    const withMore = { ...card("COMPLETE_DECLARATION"), whenMore: filled(ro.Admin.emails.whenMore.COMPLETE_DECLARATION) };
+    const html = render([withMore]);
+    expect(html).toContain(filled(ro.Admin.emails.when.COMPLETE_DECLARATION));
+    expect(html).toContain(`aria-label="${filled(ro.Admin.emails.whenMore.COMPLETE_DECLARATION)}"`);
+    // The hold the short line dropped is back, in the club's own number.
+    expect(html).toContain("30 de minute");
+    expect(render([card("EVENT_REMINDER")])).not.toContain("quiet-help");
+  });
+
   it("puts the language switch inside the card, first, under the line that says what it switches", () => {
     const html = render([card("VERIFY_REGISTRATION_EMAIL")]);
     const outerSummaryEnd = html.indexOf("</summary>");

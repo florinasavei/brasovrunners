@@ -127,7 +127,7 @@ export default async function RegistrationBox({
     .map((field) => t(`editor.bibDesign.footer.${field}`));
 
   // The reminder card (§377): the club's lead in words, the owner's choices plus a number a script
-  // stored, and the closed line — "Ca de obicei (cu 2 zile înainte de start)", "Cu 3 zile înainte
+  // stored, and the closed line — "Setarea clubului (cu 2 zile înainte de start)", "Cu 3 zile înainte
   // de start", "Fără reminder".
   const before = (hours: number) => t("editor.reminder.before", { lead: leadPhrase(locale, hours) });
   const clubReminder = clubDeadlines.reminderHours > 0 ? before(clubDeadlines.reminderHours) : t("editor.reminder.clubNone");

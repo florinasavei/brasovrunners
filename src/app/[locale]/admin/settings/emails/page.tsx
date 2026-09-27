@@ -201,6 +201,12 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     if (type !== "COMPLETE_DECLARATION") return line;
     return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
   };
+  /*
+    What a short «când» line leaves out (the plain-words pass): the hold, the per-address limit, the
+    cancelled event — behind the card intro's «?», for the few messages that have more to say.
+  */
+  const whenMoreOf = (type: EmailMessageType): string | undefined =>
+    t.has(`emails.whenMore.${type}`) ? t(`emails.whenMore.${type}`, whenValues) : undefined;
   const whenShortOf = (type: EmailMessageType): string =>
     type === "EVENT_REMINDER" && reminderOff ? t("emails.reminderOff.whenShort") : t(`emails.whenShort.${type}`, whenValues);
 
@@ -394,6 +400,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               ? { sampleValues: t("emails.copy.sampleMarker", { languages: sampleLanguages.map((language) => language.toUpperCase()).join(", ") }) }
               : {}),
             when: whenOf(messageType),
+            whenMore: whenMoreOf(messageType),
             subjectLine: `${t("emails.subject")}: ${content.subject}`,
             html: content.html,
             // The card whose words were just saved opens with the card around it, so the preview

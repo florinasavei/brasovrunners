@@ -31,7 +31,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // The default: Free, counted by the day.
     await expect(main.getByText(/Planul Free: \d+ din 100 mesaje trimise azi/)).toBeVisible();
     // Criterion 8: and the figure says whose allowance it is — one account, two deployments.
-    await expect(main.getByText(/unui singur cont Mailgun/)).toBeVisible();
+    await expect(main.getByText(/unui cont Mailgun folosit de QA și de producție/)).toBeVisible();
 
     await main.getByLabel("Planul pe care e contul Mailgun").selectOption("BASIC");
     await main.getByLabel("Notă (de ce, până când)").fill("Basic pentru cursa din octombrie");

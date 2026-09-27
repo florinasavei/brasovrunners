@@ -229,7 +229,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
         club's settings — «Costuri» with the Neon limits the owner came here looking for — are one tap
         away. The main bar has no «Configurație» of its own any more: «Setări» is the one way in.
         This page's three panels (§265) are entries of that same row, never a second row under it
-        (§360); the anti-bot switch is the row's «Platformă» tab, and «Aplicația» is «Sarcini»'s.
+        (§360); the anti-bot switch is the row's «Anti-robot» tab, and «Aplicația» is «Sarcini»'s.
       */}
       <SettingsSubNav
         locale={locale}

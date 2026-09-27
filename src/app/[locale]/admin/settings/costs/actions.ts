@@ -56,7 +56,7 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * "Cât de des verifică platforma" (§334), from the costs panel beside the Neon plan: the minimum
+ * "Cât de des verifică site-ul" (§334), from the costs panel beside the Neon plan: the minimum
  * minutes between two real runs of each scheduled job. The same shape as the Neon plan, and a
  * higher door since §450 — Superadministrator, a platform setting that can hold every job back —
  * with the service asserting the role again, writing the audit row and forgetting every cached

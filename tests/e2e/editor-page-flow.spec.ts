@@ -99,7 +99,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await page.goto(editorUrl);
     await hydrated(page);
 
-    // The same map, now from what is saved.
+    // The same map, now from what is saved: nine cards to open, the public list inside card 9 (§512).
     await expect(page.getByTestId("section-map").getByRole("link")).toHaveCount(9);
     await expect(chip(page, /^2 · Titlul — apare pe pagină/)).toBeVisible();
     await expect(chip(page, /^4 · Când și unde — apare pe pagină/)).toBeVisible();

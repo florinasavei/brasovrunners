@@ -34,6 +34,8 @@ export type ParticipantEmailCard = {
   sampleValues?: string;
   /** When it is sent, in full, as the first line inside the card. */
   when: string;
+  /** What the short `when` leaves out, behind its «?» (Panel's `introMore`); absent when it says it all. */
+  whenMore?: string;
   /** "Subiect: …", as the participant's inbox will show it. */
   subjectLine: string;
   /** The message as it goes out, for the sandboxed preview. */
@@ -110,6 +112,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
               )
             }
             intro={message.when}
+            introMore={message.whenMore}
             collapsible
             level={3}
             openWhen={{ saved: message.justSaved, attention: Boolean(message.sampleValues) }}
