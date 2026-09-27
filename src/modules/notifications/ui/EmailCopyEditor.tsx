@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateEmailCopyAction } from "@/app/[locale]/admin/emails/actions";
+import { updateEmailCopyAction } from "@/app/[locale]/admin/settings/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";

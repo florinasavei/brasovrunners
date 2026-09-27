@@ -134,6 +134,7 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     emergencyContactName: "Ion Vecinul",
     emergencyContactPhone: "+40722222222",
     nationality: "RO",
+    country: "RO",
     email,
     locale: "ro",
     privacyAcknowledged: true,

@@ -1,11 +1,12 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findEventForRegistrationById, findPublishedEventBySlug } from "@/modules/events/repository";
-import { clearFormDraft, stashFormDraft, stashSubmittedFacts } from "@/modules/registrations/form-draft";
+import { clearFormDraft, readSubmittedFacts, stashFormDraft, stashSubmittedFacts } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
@@ -13,11 +14,29 @@ import { publicFormEvent } from "@/modules/registrations/public-form-event";
 import { submitRegistration } from "@/modules/registrations/service";
 import { botCheckIsOn, honeypotIsOn } from "@/modules/registrations/bot-check";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
-import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { BOT_CHECK_SIGNAL_FIELD, botCheckSignalsFrom, TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { recordBotCheckSignal } from "@/modules/registrations/bot-check-signals";
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
+import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import {
+  AUTO_PRESS_FIELD,
+  FAMILY_SITTING_FIELD,
+  FAMILY_SITTING_PARAM,
+  SITTING_SENT_PARAM,
+  sittingCookieLive,
+  sittingCookieMaxAgeSeconds,
+  sittingCookieUntil,
+  sittingNames,
+  sittingSharedValues,
+  withSittingPerson,
+} from "@/modules/registrations/domain/family-sitting";
+import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
+import { continueFamilySitting, releaseFamilySitting } from "@/modules/registrations/family-sitting";
+import { familySittingHeldUntil } from "@/modules/deadlines/domain/deadlines";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
@@ -89,6 +108,22 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
   }
 
+  /*
+    The family sitting (§519): the form sent from «Încă o persoană» carries the address of the
+    sitting's first form, from the browser's sealed half — the boxes are not on that form. A form
+    whose sitting has lapsed meanwhile is the ordinary form: it arrives without an address and is
+    refused on that box, with what was typed kept, like any other refusal.
+  */
+  const now = new Date();
+  const priorSitting = await readFamilySittingCookie();
+  const liveSitting = sittingCookieLive(priorSitting, publicEvent.id, now) ? priorSitting : null;
+  const familyMode = text(form, FAMILY_SITTING_FIELD) === "1" && liveSitting !== null;
+  const typed = readRegistrationForm(form, locale);
+  const input = familyMode && liveSitting ? { ...typed, email: liveSitting.email, emailConfirm: undefined } : typed;
+  // The same address as the sitting on this browser continues it; another address starts its own.
+  const continuing = liveSitting !== null && sameMailbox(liveSitting.email, input.email);
+  let sittingId: string | null = null;
+
   try {
     /*
       The address, twice, and the same mailbox both times (§206).
@@ -96,19 +131,20 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       Before anything else in the try, so a mismatch is a field error on the form rather than
       a registration created for an address nobody can read. It is a property of this form and
       not of a registration, which is why it is asserted here and not in the service's schema.
+      Not on a family sitting's next form: the address is the one typed twice on its first.
     */
-    assertEmailTypedTwice(readRegistrationForm(form, locale));
+    assertEmailTypedTwice(input);
 
     const internalEvent = await findEventForRegistrationById(db, publicEvent.id);
     if (!internalEvent) redirect(getPathname({ locale, href: "/events" }));
 
-    await submitRegistration(
+    const result = await submitRegistration(
       db,
       // The whole row the allocator needs: the race's own day and minimum age (§321, §329), and the
       // participation window, which a verified runner's restart is held until (§104, §420).
       publicFormEvent(internalEvent, publicEvent.publishedAt),
-      readRegistrationForm(form, locale),
-      new Date(),
+      input,
+      now,
       "REAL",
       {
         source: "PUBLIC",
@@ -122,8 +158,11 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
+        // Every public form is a sitting's (§519): its messages wait for «Gata» or the club's window.
+        sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null },
       },
     );
+    sittingId = result.sittingId ?? (continuing ? (liveSitting?.sittingId ?? null) : null);
   } catch (error) {
     if (isDomainError(error)) {
       // Field names, never values: nothing a participant typed goes into a URL, which is
@@ -141,15 +180,149 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         refused twice for the same reason.
       */
       const retry = error.fields.includes("tooFast") ? "&retry=1" : "";
-      redirect(`${path}?error=${error.code}${fields}${retry}#${ERROR_SUMMARY_ID}`);
+      // A family sitting's next form comes back as that form, the address still fixed (§519).
+      const family = familyMode ? `&${FAMILY_SITTING_PARAM}=1` : "";
+      redirect(`${path}?error=${error.code}${fields}${retry}${family}#${ERROR_SUMMARY_ID}`);
     }
     throw error;
   }
 
+  /*
+    What the anti-bot check did to this person (§518), counted for `/api/health`: a press the
+    valve sent, a widget that failed — the words the form carried (`BOT_CHECK_SIGNAL_FIELD`), and
+    only once the registration went through the throttle and the other defences, so the figure
+    takes no anonymous write. A count that fails is a smaller figure, never a refused registration.
+  */
+  if (verdict !== "not_configured") {
+    try {
+      for (const signal of botCheckSignalsFrom(form.getAll(BOT_CHECK_SIGNAL_FIELD))) {
+        await recordBotCheckSignal(db, signal, new Date());
+      }
+    } catch (error) {
+      console.error("[registration] the bot-check signal could not be counted", error);
+    }
+  }
+
   await clearFormDraft(path);
+  /*
+    The sitting's browser half (§519): the address the next form is sent with, the people typed so far
+    — this one last, by the rule the server keeps for the sitting (`withSittingPerson`) — the boxes a
+    family shares, which the next form starts filled with, and the club's window from now, which the
+    server moved to the same instant. Everything from this browser's own forms (§39).
+  */
+  const prior = continuing && liveSitting ? liveSitting : null;
+  const typedPerson = withSittingPerson(prior?.people ?? [], { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
+  const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
+  const names = sittingNames(typedPerson.people);
+  const minutes = (await currentDeadlines(db)).familySittingMinutes;
+  // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
+  const atOnce = minutes <= 0;
+  /*
+    Always an id of one shape (§39): a sitting that held nothing — a re-send about somebody already
+    registered, the address at its limit — gets a random one that names no row. A sealed cookie
+    one uuid shorter would otherwise tell whoever typed a stranger's address which case it was.
+    The server finds nothing under it, so «Gata» releases nothing and the next form opens its own.
+  */
+  const heldUntil = sittingCookieUntil(now, minutes);
+  await writeFamilySittingCookie(
+    {
+      sittingId: sittingId ?? randomUUID(),
+      eventId: publicEvent.id,
+      email: input.email.trim(),
+      people: typedPerson.people,
+      heldUntil,
+      atOnce,
+      windowMinutes: minutes,
+      shared,
+      sameBirthDate: typedPerson.sameBirthDate,
+    },
+    path,
+    now,
+  );
   // The screen that follows says to go and read an inbox, so it names which one (§224) — and
   // greets the person by first name while it does. Its own short-lived sealed cookie, never
   // the URL: nothing typed goes into one (§14.5).
-  await stashSubmittedFacts({ email: text(form, "email").trim(), firstName: text(form, "firstName") }, path);
+  // At a window of 0 (§519) each person's email left on its own: the last screen must not promise one.
+  // It lives as long as the sitting's cookie (§519), so the screen keeps its facts when «Gata» fires by itself.
+  await stashSubmittedFacts(
+    { email: input.email.trim(), firstName: input.firstName, names, atOnce },
+    path,
+    sittingCookieMaxAgeSeconds(heldUntil, now),
+  );
   redirect(`${path}?submitted=1`);
+}
+
+/**
+ * «Gata — trimite emailul» (§519): the sitting's one email leaves now, and this browser's sitting
+ * ends. The screen after it is the one that says to open the inbox. Pressed with no sitting — the
+ * window had passed, or the sitting held nothing — it is the same screen: the email left, or is
+ * leaving, by itself (§39: the answer never depends on what the address holds).
+ */
+export async function releaseFamilySittingAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("locale"));
+  const slug = text(form, "slug");
+  const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
+  const sitting = await readFamilySittingCookie();
+  /*
+    The open screen's own press at the window's end (`PressWhenWindowEnds`, §519): with the browser's
+    half already gone — a phone slower than the cookie's grace — it does nothing and stays where it
+    is. The server releases the sitting at its `held_until` anyway; nothing depends on this press.
+  */
+  if (!sitting && form.get(AUTO_PRESS_FIELD) === "1") return;
+  if (sitting?.sittingId) await releaseFamilySitting(getDb(), sitting.sittingId, new Date());
+  await clearFamilySittingCookie(path);
+  redirect(`${path}?submitted=1&${SITTING_SENT_PARAM}=1`);
+}
+
+/**
+ * «Da, încă o persoană» (§519; the review of 2026-09-27: the window lapsed under the parent's hands while
+ * the next form was open): a press, never a link — it starts the club's window again from now, on the
+ * server's row and every message it holds (`continueFamilySitting`) and on this browser's half, then
+ * opens the same form with the address fixed. The form's page says how long is left. A sitting whose
+ * email has already left opens the ordinary form, as a lapsed one always did (§39: the same screens).
+ */
+export async function continueFamilySittingAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("locale"));
+  const slug = text(form, "slug");
+  const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
+  const db = getDb();
+  const now = new Date();
+  const sitting = await readFamilySittingCookie();
+  const event = await findPublishedEventBySlug(db, locale, slug);
+  if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
+    const deadlines = await currentDeadlines(db);
+    if (!sitting.atOnce && sitting.sittingId) await continueFamilySitting(db, sitting.sittingId, familySittingHeldUntil(now, deadlines), now);
+    const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
+    await writeFamilySittingCookie(
+      {
+        ...sitting,
+        heldUntil,
+        // Read afresh with the window (§519): a «Termene» change mid-sitting leaves no stale flag.
+        atOnce: deadlines.familySittingMinutes <= 0,
+        windowMinutes: deadlines.familySittingMinutes,
+        sameBirthDate: null,
+      },
+      path,
+      now,
+    );
+    // The screen's facts live as long as the sitting, refreshed with it (§519).
+    const facts = await readSubmittedFacts();
+    if (facts?.email) {
+      await stashSubmittedFacts(
+        { email: facts.email, firstName: facts.firstName ?? "", names: facts.names, atOnce: deadlines.familySittingMinutes <= 0 },
+        path,
+        sittingCookieMaxAgeSeconds(heldUntil, now),
+      );
+    }
+  }
+  redirect(`${path}?${FAMILY_SITTING_PARAM}=1`);
+}
+
+/** The same mailbox, as the address's identity compares them (§10.4); a typo is simply another address. */
+function sameMailbox(a: string, b: string): boolean {
+  try {
+    return canonicalizeEmail(a).canonicalEmail === canonicalizeEmail(b).canonicalEmail;
+  } catch {
+    return false;
+  }
 }

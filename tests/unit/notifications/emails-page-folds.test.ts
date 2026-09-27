@@ -52,8 +52,8 @@ function render(messages: ParticipantEmailCard[], openWhen?: FoldOpenWhen): stri
         aside: `${messages.length} mesaje · Română`,
         languageLabel: ro.Admin.emails.langLabel,
         languages: [
-          { href: "/ro/admin/emails?lang=ro#participant-emails", label: "Română", active: true },
-          { href: "/ro/admin/emails?lang=en#participant-emails", label: "English" },
+          { href: "/ro/admin/settings/emails?lang=ro#participant-emails", label: "Română", active: true },
+          { href: "/ro/admin/settings/emails?lang=en#participant-emails", label: "English" },
         ],
         messages,
         openWhen,
@@ -101,7 +101,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
     expect(label).toBeGreaterThan(outerSummaryEnd);
     expect(nav).toBeGreaterThan(label);
     expect(firstInner).toBeGreaterThan(nav);
-    expect(html).toContain('href="/ro/admin/emails?lang=en#participant-emails"');
+    expect(html).toContain('href="/ro/admin/settings/emails?lang=en#participant-emails"');
     expect(html).toMatch(/aria-current="page"[^>]*>Română|>Română<\/a>/);
   });
 
@@ -181,7 +181,7 @@ function escape(text: string): string {
 }
 
 describe("§336 the page hands every message to the card, and the panels fold", () => {
-  const page = read("src/app/[locale]/admin/emails/page.tsx");
+  const page = read("src/app/[locale]/admin/settings/emails/page.tsx");
 
   it("renders the card of cards from every message type, with the language switch inside it", () => {
     expect(page).toContain("<ParticipantEmailsPanel");
@@ -196,6 +196,7 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     // No preview or switch is drawn on the page outside the card any more.
     expect(page).not.toContain('component="details"');
     expect(page).not.toContain("<SubNav");
+    expect(page).toContain('<SettingsSubNav locale={locale} role={staff.role} active="emails" />');
     // And for whoever may write the words, when a saved text still holds a sample value (§359) —
     // in either language, whichever tab is open; the editor's warning stays with the one on screen.
     expect(page).toMatch(/openWhen=\{\{ saved: copySaved, inUse: lang !== undefined, attention: anySamples \}\}/);
@@ -214,11 +215,15 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(ro.Admin.emails.plan.aside.day).toBe("Planul {plan} · {sent} din {allowance} azi");
   });
 
-  it("keeps the contact recipients closed unless their own save just landed", () => {
+  it("opens the contact recipients on «Setări» → «Contact», the tab they are (§516), and no longer on the email tab", () => {
     const panel = read("src/modules/contact/ui/ContactRecipientsPanel.tsx");
     expect(panel).toMatch(/<Panel[\s\S]*?\bcollapsible\b[\s\S]*?openWhen=\{openWhen\}[\s\S]*?id="contact-recipients"/);
-    // The page's only reason is the save — no warning, no default — so it arrives closed.
-    expect(page).toMatch(/<ContactRecipientsPanel[\s\S]*?openWhen=\{\{ saved: saved === "contactRecipients" \}\}\s*\/>/);
+    // The tab is its two cards alone, so they open on arrival (§336's `primary`); the save still names itself.
+    const contact = read("src/app/[locale]/admin/settings/contact/page.tsx");
+    expect(contact).toMatch(/<ContactRecipientsPanel[\s\S]*?openWhen=\{\{ primary: true, saved: saved === "contactRecipients" \}\}\s*\/>/);
+    expect(page).not.toContain("<ContactRecipientsPanel");
+    expect(page).not.toContain("<ShownAddressPanel");
+    expect(page).not.toContain("<DeadlinesPanel");
     expect(panel).toMatch(/aside=\{t\("emails\.contacts\.aside"/);
   });
 
@@ -227,6 +232,6 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).toContain('openWhen={{ saved: saved === "outboxSent", refused: Boolean(error) }}');
     expect(page).toContain('openWhen={{ saved: saved === "clubNotices" }}');
     // The words' save names its message on the way back, so that message's card opens.
-    expect(read("src/app/[locale]/admin/emails/actions.ts")).toMatch(/&message=\$\{messageType\}#admin-alert/);
+    expect(read("src/app/[locale]/admin/settings/emails/actions.ts")).toMatch(/&message=\$\{messageType\}#admin-alert/);
   });
 });

@@ -8,7 +8,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
-import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
+import { updateClubNoticesAction } from "@/app/[locale]/admin/settings/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
@@ -200,6 +200,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             defaultValue={formatAddressList(notices.participants.bcc)}
             size="small"
             helperText={t("emails.clubNotices.participantsBccHelp")}
+            helpMore={t("emails.clubNotices.participantsBccHelpMore")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>

@@ -26,6 +26,7 @@ import {
 import { addTestRegistrations } from "@/modules/registrations/test-registrations";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * BR-REQ-035-01 (§348) — an event may cap its waiting list.
@@ -109,6 +110,7 @@ function submission(email: string, at: Date) {
     birthDate: "1990-05-17",
     sex: "UNSPECIFIED",
     nationality: "RO",
+    country: "RO",
     city: "Brașov",
     phone: "+40711111111",
     emergencyContactName: "Contact Urgență",
@@ -137,7 +139,10 @@ async function submitOnly(event: EventForRegistration, email: string, kind: Regi
 /** The form and the email link: where the allocator decides. */
 async function registerAndConfirm(event: EventForRegistration, email: string, kind: RegistrationKind = "REAL", at: Date = NOW) {
   const pending = await submitOnly(event, email, kind, at);
-  return confirmEmail(db, event, pending.id, at);
+  const confirmed = await confirmEmail(db, event, pending.id, at);
+  // The declaration email leaves at once, as under the `immediate` timing: the hold's clock runs (§513).
+  await sendHoldEmails(db, at);
+  return confirmed;
 }
 
 /** Which of the two refusals an operation met, or "no refusal". Any other error fails the test. */

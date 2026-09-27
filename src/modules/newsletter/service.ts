@@ -23,7 +23,7 @@ import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-ident
 import { DomainError } from "@/shared/errors/domain-error";
 import { alertDayOf, eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
 import { checkNewsletterWords, type NewsletterIssue, readNewsletterWords } from "./domain/message";
-import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, SENDABLE_TOPICS } from "./domain/topics";
+import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, SENDABLE_TOPICS, type SendableTopic } from "./domain/topics";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { consumeNewsletterToken, issueNewsletterToken, readNewsletterToken } from "./tokens";
 
@@ -323,7 +323,7 @@ export type NewsletterAudience = {
   /** Addresses left and not yet confirmed — written to once, never again. */
   unconfirmed: number;
   /** Per topic a message may be written for: who would receive it (the topic's own and "everything"). */
-  byTopic: Readonly<Record<Exclude<NewsletterTopic, "ALL">, number>>;
+  byTopic: Readonly<Record<SendableTopic, number>>;
 };
 
 /** The counts `/admin/newsletter` shows — numbers only, never an address. */
@@ -334,7 +334,7 @@ export async function countNewsletterAudience<T extends Record<string, unknown>>
       unconfirmed: count(sql`CASE WHEN ${newsletterSubscribers.confirmedAt} IS NULL THEN 1 END`),
     })
     .from(newsletterSubscribers);
-  const byTopic = {} as Record<Exclude<NewsletterTopic, "ALL">, number>;
+  const byTopic = {} as Record<SendableTopic, number>;
   const rows = await db
     .select({ topics: newsletterSubscribers.topics })
     .from(newsletterSubscribers)

@@ -47,8 +47,8 @@ const idOf = (tag: string): string | null => tag.match(/\sid="([^"]+)"/)?.[1] ??
 const namedFolds = (html: string): string[] => (html.match(/<details[^>]*>/g) ?? []).map(idOf).filter((id): id is string => id !== null);
 
 const DECLARATIONS = [
-  { id: "22222222-2222-2222-2222-222222222222", version: 3, title: "Declarația concursului" },
-  { id: "33333333-3333-3333-3333-333333333333", version: 2, title: "Declarația veche" },
+  { id: "22222222-2222-2222-2222-222222222222", key: "EVENT_DECLARATION" as const, version: 3, title: "Declarația concursului" },
+  { id: "33333333-3333-3333-3333-333333333333", key: "EVENT_DECLARATION" as const, version: 2, title: "Declarația veche" },
 ];
 
 const TRAIL_RUN = {
@@ -138,9 +138,32 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
   it("holds a race's declaration select, the newest approved version named, and says the chosen one on the rules line", async () => {
     const html = await rules(RACE);
     expect(html).toContain('name="event.declarationDocumentId"');
-    expect(html).toContain("Cea mai nouă versiune aprobată: v3 · Declarația concursului.");
+    expect(html).toContain("Trail: cea mai nouă versiune aprobată e v3 · Declarația concursului.");
     expect(summaryOf(html)).toContain("declarația v3");
     expect(html).not.toContain('name="event.offersGroupRunDeclaration"');
+  });
+
+  // §515 — two race declarations, trail and road or park: the choice names its kind, and while the
+  // club approved no road text the card says a road race signs the trail one.
+  it("names each option's kind, the newest of each kind, and the road race's fallback to the trail text", async () => {
+    const html = await rules(RACE);
+    expect(html).toContain("Trail · v3 · Declarația concursului");
+    expect(html).toContain('data-testid="race-declaration-road-fallback"');
+    expect(html).toContain("Șosea sau parc: nicio versiune aprobată încă");
+    currentLocale = "ro";
+    const both = markup(
+      renderToStaticMarkup(
+        (await DeclarationCard({
+          words: WORDS,
+          event: RACE,
+          mayEditSettings: true,
+          groupRunDeclarations: { ASPHALT: null, TRAIL: null },
+          declarations: [...DECLARATIONS, { id: "44444444-4444-4444-4444-444444444444", key: "EVENT_DECLARATION_ROAD", version: 1, title: "Declarația de șosea" }],
+        })) as ReactElement,
+      ),
+    );
+    expect(both).toContain("Șosea sau parc: cea mai nouă versiune aprobată e v1 · Declarația de șosea.");
+    expect(both).not.toContain('data-testid="race-declaration-road-fallback"');
   });
 
   it("opens the rules box and the card while a race registering on the site has no declaration", async () => {

@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { BOXED_DISCLOSURE_SX } from "./disclosure";
+import QuietHelp from "./QuietHelp";
 import { type FoldOpenWhen, opensByItself } from "./fold";
 
 /**
@@ -63,6 +64,12 @@ type Props = {
   title: string;
   /** One line under the heading saying what the panel is for. Optional. */
   intro?: string;
+  /**
+   * What the intro would have said beyond its one sentence (§511): drawn as the discreet «?»
+   * (`QuietHelp`) at the end of the intro's line, the words its tooltip and its accessible name.
+   * Ignored without an `intro`.
+   */
+  introMore?: string;
   /**
    * A figure or a state beside the title, which stays readable while the panel is closed: how
    * many bibs are printed, how many messages wait, which plan the account is on, where the
@@ -156,6 +163,7 @@ type Props = {
 export default function Panel({
   title,
   intro,
+  introMore,
   aside,
   collapsible = false,
   openWhen,
@@ -170,6 +178,8 @@ export default function Panel({
 }: Props) {
   const folds = collapsible && !isStatic;
   const nested = level > 2;
+  // The intro's «?», when the panel has more to say than its one sentence (§511).
+  const more = introMore ? <QuietHelp text={introMore} /> : null;
 
   if (variant === "help") {
     return (
@@ -185,6 +195,8 @@ export default function Panel({
         {intro && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, pl: 3.25 }}>
             {intro}
+
+            {more}
           </Typography>
         )}
         {children != null && children !== false && <Box sx={{ pl: 3.25, pt: 0.5 }}>{children}</Box>}
@@ -230,6 +242,8 @@ export default function Panel({
         {intro && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {intro}
+
+            {more}
           </Typography>
         )}
         {children != null && children !== false && <Box sx={{ mt: 1.5 }}>{children}</Box>}
@@ -259,6 +273,8 @@ export default function Panel({
       {intro && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           {intro}
+
+          {more}
         </Typography>
       )}
       <Box>{children}</Box>

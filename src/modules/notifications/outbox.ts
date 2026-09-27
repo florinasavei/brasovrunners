@@ -21,6 +21,7 @@ import {
   participantMessageBcc,
 } from "./domain/club-notices";
 import { readBulkLimit } from "./bulk-budget";
+import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { drainOutboxAfterResponse } from "./drain";
 import {
@@ -76,8 +77,12 @@ export type OutboxRow = typeof emailOutbox.$inferSelect;
  * time-dependent function in this codebase follows (`docs/PRACTICES.md`): a renderer that
  * called `new Date()` internally could not be tested for the boundary case that matters here,
  * a token whose borrowed deadline has already passed by the time the batch runs.
+ *
+ * `rebase` is the deadline this send will move (§513, `deadline-rebase.ts`): the renderer states it
+ * and mints the link to it, so the message says the deadline the runner will have once it has
+ * left, not the one written when it was queued. Absent, the stored deadline, as before.
  */
-export type EmailRenderer = (row: OutboxRow, db: Db, now: Date) => Promise<OutgoingEmail>;
+export type EmailRenderer = (row: OutboxRow, db: Db, now: Date, rebase?: DeadlineRebase | null) => Promise<OutgoingEmail>;
 
 export type EnqueueEmailParams = {
   participantId: string | null;
@@ -104,6 +109,12 @@ export type EnqueueEmailParams = {
    * the one drain itself once they are all written, rather than one per row.
    */
   drainAfter?: boolean;
+  /**
+   * Not before this instant (§519): a family sitting holds its messages back until «Gata» or the
+   * club's window, as `next_attempt_at` — the column the claim already waits on, so nothing else
+   * about the row changes. The club's copies of the message wait with it. Absent: due at once.
+   */
+  notBefore?: Date;
 };
 
 /**
@@ -146,6 +157,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       isManualResend: params.isManualResend ?? false,
       status: "PENDING",
       attemptCount: 0,
+      nextAttemptAt: params.notBefore ?? null,
       createdAt: params.now,
     })
     .onConflictDoNothing({ target: emailOutbox.idempotencyKey })
@@ -223,6 +235,8 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
         isManualResend: params.isManualResend ?? false,
         status: "PENDING",
         attemptCount: 0,
+        // Held with the participant's own message (§519): a copy never leaves before it.
+        nextAttemptAt: params.notBefore ?? null,
         createdAt: params.now,
       })
       .onConflictDoNothing({ target: emailOutbox.idempotencyKey });
@@ -510,6 +524,10 @@ export async function processOutboxBatch(
   const { sender, render, now, batchSize = OUTBOX_BATCH_SIZE, route, roads } = params;
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
+  // The batch's clock moved on by the real time elapsed: what the re-base checks an offer against
+  // under the event's lock (§513), never an instant older than the allocator's.
+  const startedAtMs = Date.now();
+  const clock = () => new Date(now.getTime() + (Date.now() - startedAtMs));
 
   // The newsletter's share of what Mailgun's plan has left (§445): read only when one is due on
   // Mailgun's road — Gmail's rows cost the allowance nothing.
@@ -537,8 +555,15 @@ export async function processOutboxBatch(
   try {
     for (const row of claimed) {
       let message: OutgoingEmail;
+      /*
+        The deadline this message starts, counted from its send (§513, «termenul curge de când
+        pleacă emailul»): planned before the render, so the words and the link say it, and written
+        only below, once the provider has taken the message. A plan that cannot be read is no plan:
+        the message leaves with the stored deadline, as it always did, rather than not at all.
+      */
+      const rebase = await planDeadlineRebase(db, row, now).catch(() => null);
       try {
-        message = await render(row, db, now);
+        message = await render(row, db, now, rebase);
         if (route) message = { ...message, transport: route(row) };
       } catch (error) {
         if (error instanceof OutboxMessageWithdrawn) {
@@ -578,6 +603,13 @@ export async function processOutboxBatch(
           })
           .where(eq(emailOutbox.id, row.id));
         summary.sent += 1;
+        if (rebase) {
+          // The message is out whatever happens here: a write that fails leaves the deadline it was
+          // queued with — what every message had before §513 — and never the send unrecorded.
+          await applyDeadlineRebase(db, rebase, clock).catch((error: unknown) => {
+            console.error("[email-outbox] deadline re-base failed", error);
+          });
+        }
         continue;
       }
 

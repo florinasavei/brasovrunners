@@ -7,6 +7,7 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
 export const BIB_ASSIGN_FORM = "bib-assign";
@@ -136,6 +137,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
         <Typography variant="body2" color="text.secondary">
           {total === 0 ? (onlyTest ? t("editor.bibsOnlyTest") : t("bibs.helpNone")) : t("bibs.helpSome", { total })}
           {unprinted > 0 && total > 0 ? ` ${t("editor.boxes.bibPrint.unprinted", { count: unprinted })}` : ""}
+          <QuietHelp text={t("bibs.helpMore")} />
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
           {mayAssign && (

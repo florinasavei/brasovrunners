@@ -6,7 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -31,8 +31,8 @@ const { GET: eventBundle } = await import("@/app/api/admin/events/[id]/declarati
 const { GET: oneDeclaration } = await import("@/app/api/admin/registrations/[id]/declaration/route");
 
 const DECLARATION: LegalDocumentTranslationInput[] = [
-  { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-  { locale: "en", title: "Declaration", body: declarationEn },
+  { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+  { locale: "en", title: "Declaration", body: declarationTrailEn },
 ];
 
 async function approveTexts() {
@@ -89,6 +89,7 @@ async function signedRegistration(event: EventForRegistration): Promise<string> 
       emergencyContactName: "Ion Popescu",
       emergencyContactPhone: "+40722222222",
       nationality: "RO",
+      country: "RO",
       city: "Brașov",
       email: "ana@example.ro",
       locale: "ro",

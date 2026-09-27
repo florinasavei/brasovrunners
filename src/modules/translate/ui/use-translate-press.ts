@@ -27,6 +27,21 @@ export function translatedAllNotice(count: number, cut: readonly string[]): Form
   };
 }
 
+/**
+ * «Tradu cardul: RO → EN» that worked (§514): the whole-record toast's sentence with the card's
+ * name — «Gata: 3 câmpuri traduse în „Descrierea completă”» — counted the same way
+ * (`Feedback.toast.translatedCard.one|few|other`, `countForm`, §341), with its own wording when
+ * some were cut at their box's limit.
+ */
+export function translatedCardNotice(count: number, cut: readonly string[], card: string): FormNotice {
+  return {
+    kind: "success",
+    key: cut.length === 0 ? "translatedCard" : "translatedCardCut",
+    values: { count: String(count), card },
+    autoHideMs: LONG_TOAST_AUTO_HIDE_MS,
+  };
+}
+
 /** One box's «Tradu din română» that worked: a short «Tradus. Verifică și apasă Salvează.» (§496). */
 export function translatedOneNotice(): FormNotice {
   return { kind: "success", key: "translatedOne" };
@@ -53,18 +68,25 @@ export type PressWords = (key: string, values?: Record<string, string | number>)
  * worked, the status line's own reason when it did not (today's budget, DeepL's month or the
  * credit left, nothing written yet, a failed request) — because its button sits far from the
  * boxes it filled. One box's button toasts only the short «Tradus»: its refusal is read beside
- * the box.
+ * the box. A card's press (§514) is a whole-record press over one card: `card` names it, and the
+ * toast that it worked says the card's name.
  */
 export function pressFeedback(
   result: TranslateBoxesResult | { kind: "failed" },
   all: boolean,
   t: PressWords,
   locale: string,
+  card?: string | null,
 ): { message: PressMessage; notice: FormNotice | null } {
   if (result.kind === "done") {
     const done = result.count === 1 ? t("done") : t("doneAll", { count: result.count });
     const text = result.cut.length === 0 ? done : `${done} ${t("cut", { fields: result.cut.join(", ") })}`;
-    return { message: { tone: "done", text }, notice: all ? translatedAllNotice(result.count, result.cut) : translatedOneNotice() };
+    const notice = !all
+      ? translatedOneNotice()
+      : card
+        ? translatedCardNotice(result.count, result.cut, card)
+        : translatedAllNotice(result.count, result.cut);
+    return { message: { tone: "done", text }, notice };
   }
   let text: string;
   let reason: TranslateRefusal | "failed";
@@ -103,8 +125,16 @@ export function useTranslatePress() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<PressMessage | null>(null);
 
-  async function translate(form: HTMLFormElement | null, englishNames: readonly string[], options: { all?: boolean } = {}): Promise<void> {
-    if (!action) return;
+  /**
+   * The outcome, for a caller that follows it (a card's press shows the English tab, §514); null
+   * where the page cannot translate and nothing was asked. `card` names the card for its toast.
+   */
+  async function translate(
+    form: HTMLFormElement | null,
+    englishNames: readonly string[],
+    options: { all?: boolean; card?: string | null } = {},
+  ): Promise<TranslateBoxesResult | { kind: "failed" } | null> {
+    if (!action) return null;
     setPending(true);
     setMessage(null);
     let result: TranslateBoxesResult | { kind: "failed" };
@@ -113,10 +143,11 @@ export function useTranslatePress() {
     } catch {
       result = { kind: "failed" };
     }
-    const feedback = pressFeedback(result, options.all === true, t as PressWords, locale);
+    const feedback = pressFeedback(result, options.all === true, t as PressWords, locale, options.card);
     setMessage(feedback.message);
     if (feedback.notice) toast.show(feedback.notice);
     setPending(false);
+    return result;
   }
 
   return { enabled: action !== null, pending, message, translate };

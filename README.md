@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.12-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.13-2026-09-27 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.12-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.13-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 >
@@ -115,7 +115,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |
 | [`docs/PLATFORM.md`](./docs/PLATFORM.md) | Every account the platform runs on: plan, what it holds, who can recover it, and **what its limits stop the club from doing**. Operational fact, not authority; no secret and no hostname |
-| [`docs/QUEUE.md`](./docs/QUEUE.md) | The work queue: what the owner asked for, what is being built, what waits on the owner, and what shipped in which baseline — updated with every batch. A list, not authority: the decisions are in `DECISIONS.md` |
+| [`docs/QUEUE.md`](./docs/QUEUE.md) | The work queue: what the owner asked for, what is being built, what waits on the owner, and what shipped in which baseline — updated with every batch. A list, not authority: the decisions are in `DECISIONS.md` The release plan — what V2.13, V2.14, V2.15 and V2.16 carry — is at its top; the backoffice shows the same page under Sarcini → «Aplicația». |
 | [`docs/DISPATCHER.md`](./docs/DISPATCHER.md) | How one orchestrating session runs the queue through subagents: the prompt to start it, the loop, which Claude model each kind of task gets, the usage bands, the machine's limits, and a card per kind of work. Its workflows are `.claude/workflows/br-chain.js` and `br-fix-round.js` (`DECISIONS.md` §368) |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |

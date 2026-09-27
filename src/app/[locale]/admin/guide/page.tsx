@@ -98,7 +98,7 @@ export default async function GuidePage({ params }: Props) {
         the previews, or the link lands on five closed summaries and explains nothing.
       */}
       <Typography variant="body2">
-        <Link href={{ pathname: "/admin/emails", hash: "participant-emails" }}>{t("emails.link")}</Link>
+        <Link href={{ pathname: "/admin/settings/emails", hash: "participant-emails" }}>{t("emails.link")}</Link>
       </Typography>
       {/*
         Troubleshooting (§436): a save that fails only on an office laptop is the office network,

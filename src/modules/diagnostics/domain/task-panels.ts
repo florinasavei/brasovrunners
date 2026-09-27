@@ -6,8 +6,11 @@ import { canManageRegistrations, canSeeDiagnostics, type StaffRole } from "@/mod
  * out of the page so the gate is one pure function, tested exhaustively over every role rather
  * than read off a rendered page.
  *
- * `club`, `botCheck` and `costs` are the club's own worklist read from the system and its money,
- * behind `canManageRegistrations` (Administrator and Superadministrator) as they always were.
+ * `club` is the club's own worklist read from the system, behind `canManageRegistrations`
+ * (Administrator and Superadministrator) as it always was. «Anti-robot» and «Costuri» were panels
+ * here too, until §516 moved them to «Setări» → «Platformă» and «Costuri»: they are settings and the
+ * price of settings, not things owed, and `?panel=botCheck` / `?panel=costs` answer 308 there
+ * (`src/i18n/moved-paths.ts`). The rows of `club` link to them instead (`task-targets.ts`).
  * `club` — «Club» — is the list that was called «De făcut» until §438: what the platform still
  * needs before it takes real entries, read from the system, never ticked by hand. It is still
  * where a bare `/admin/tasks` lands for those two roles (the owner, 2026-09-26: "by default I
@@ -23,7 +26,7 @@ import { canManageRegistrations, canSeeDiagnostics, type StaffRole } from "@/mod
  * (`DECISIONS.md` §368, §397), rendered read-only, behind `canSeeDiagnostics` (Tehnic and up);
  * a Tehnic still lands there.
  */
-export const TASK_PANELS = ["club", "todo", "botCheck", "costs", "app"] as const;
+export const TASK_PANELS = ["club", "todo", "app"] as const;
 export type TaskPanel = (typeof TASK_PANELS)[number];
 
 function isTaskPanel(value: string | undefined): value is TaskPanel {
@@ -42,7 +45,7 @@ export function canOpenTaskPanel(role: StaffRole, panel: TaskPanel): boolean {
       return canReadClubTodo(role);
     case "app":
       return canSeeDiagnostics(role);
-    default:
+    case "club":
       return canManageRegistrations(role);
   }
 }
@@ -74,9 +77,8 @@ export function resolveTaskPanel(role: StaffRole, requested: string | undefined)
 }
 
 /**
- * The panels a role may see, in the order the sub-navigation shows them: «Club», «De făcut»,
- * «Anti-robot», «Costuri», then «Aplicația» (the page puts the «Sistem» link to `/devs` before
- * it, §397).
+ * The panels a role may see, in the order the sub-navigation shows them: «Club», «De făcut», then
+ * «Aplicația» (the page puts the «Sistem» link to `/devs` before it, §397).
  */
 export function visibleTaskPanels(role: StaffRole): TaskPanel[] {
   return TASK_PANELS.filter((panel) => canOpenTaskPanel(role, panel));

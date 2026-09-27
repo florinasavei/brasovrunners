@@ -34,7 +34,7 @@ import {
   startFamilySigningFromMyRegistrationsAction,
   withdrawFromMyRegistrationsAction,
 } from "./actions";
-import { isSignable } from "@/modules/registrations/domain/family-signing";
+import { declarationStateKey, isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
@@ -108,6 +108,18 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
         .filter((items) => items.length > 1)
     : [];
 
+  /** The declaration's line under one person (§519), or null where there is nothing to say (cancelled). */
+  const declarationLine = (item: { status: Parameters<typeof declarationStateKey>[0]; declarationSignedAt: Date | null; eventTimezone: string }) => {
+    const key = declarationStateKey(item.status, item.declarationSignedAt);
+    if (key === null) return null;
+    if (key === "signed" && item.declarationSignedAt) {
+      return t("mine.declaration.signed", {
+        when: formatDay(item.declarationSignedAt, { locale, timeZone: item.eventTimezone, style: "long", position: "inline" }),
+      });
+    }
+    return t(`mine.declaration.${key}`);
+  };
+
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -133,10 +145,33 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
             <Link href="/registrations/mine">{t("mine.newLink")}</Link>
           </Typography>
         </>
-      ) : context.items.length === 0 ? (
+      ) : context.items.length === 0 && context.pending.length === 0 ? (
         <Typography>{t("mine.empty")}</Typography>
       ) : (
         <>
+        {/*
+          People sent on the form and not confirmed yet (§446, §519): not registrations — nobody holds
+          a place for them — so a line each, and where the button that registers them is.
+        */}
+        {context.pending.length > 0 && (
+          <Alert severity="info" sx={{ mb: 2 }} data-testid="my-pending-people">
+            <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+              {t("mine.pending.title")}
+            </Typography>
+            <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+              {context.pending.map((person) => (
+                <Typography component="li" variant="body2" key={person.id}>
+                  {person.eventTitle
+                    ? t("mine.pending.person", { name: person.name, event: person.eventTitle })
+                    : person.name}
+                </Typography>
+              ))}
+            </Box>
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("mine.pending.how")}
+            </Typography>
+          </Alert>
+        )}
         {familySigning.map((items) => (
           <Alert key={items[0].eventId} severity="info" sx={{ mb: 2 }} data-testid="my-family-signing">
             <Typography variant="body2" sx={{ mb: 1 }}>
@@ -190,9 +225,19 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               <Typography variant="body1" sx={{ fontWeight: 600 }} data-testid="my-registration-name">
                 {t("mine.runner", { name: item.registeredName })}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: declarationLine(item) ? 0.5 : 1.5 }}>
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>
+              {/*
+                Where this person's declaration stands (§519; the owner: «pagina „Toate înscrierile
+                mele” arată starea declarației fiecăruia»): signed with its day, to sign, asked after
+                the address is confirmed, or asked when the waiting list offers a place.
+              */}
+              {declarationLine(item) && (
+                <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-declaration">
+                  {declarationLine(item)}
+                </Typography>
+              )}
               {item.eventCancelled && (
                 <Alert severity="info" sx={{ mb: 1.5 }}>
                   {t("mine.eventCancelled")}

@@ -2,28 +2,31 @@ import Stack from "@mui/material/Stack";
 import { getTranslations } from "next-intl/server";
 import { hasProgramme } from "@/modules/events/domain/event-type";
 import Panel from "@/shared/ui/Panel";
-import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
-import { minAgeSummary, programmeSummary, rulesSummary } from "../box-summaries";
+import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
+import { minAgeSummary, programmeSummary, rulesSummary, startListSummary } from "../box-summaries";
 import { type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 import DeclarationCard, { declarationLine } from "./DeclarationCard";
 import ProgrammeBox from "./ProgrammeBox";
 import type { DeclarationOption } from "./RegistrationBox";
+import StartListBox from "./StartListBox";
 import { RulesBox } from "./TextBoxes";
 
 /**
  * «Program, regulament și declarație» (§481; the owner, 2026-09-27: "Programul, regulamentul și
  * declarația la fel pe același card"): one card for what a runner reads the night before and signs
- * — the page's `#schedule` and `#rules`, one under the other — holding three named cards, in the
+ * — the page's `#schedule` and `#rules`, one under the other — holding four named cards, in the
  * page's order:
  *
  * 1. «Programul zilei și ce să aduci» (`#box-schedule`, §350, §405): the timed rows, the notes and
  *    what to bring, with its «i» help fold and its Română | English tabs;
  * 2. «Regulamentul» (`#box-rules`): the rules, on their own tabs, and the minimum age — one box
  *    for every type since §505;
- * 3. «Declarația pe propria răspundere» (`#box-declaration`, §448): what the participant signs.
+ * 3. «Declarația pe propria răspundere» (`#box-declaration`, §448): what the participant signs;
+ * 4. «Lista publică a participanților» (`#box-start-list`, §32, §512): whether the page draws the
+ *    list, which it does last, under the rules — so it is the last card here, not a card of its own.
  *
  * Each keeps its fields, names, ids, closed line and refusals; this card only holds them. Its own
- * closed line says the three in a row. It opens itself while a saved event that registers on the
+ * closed line says the four in a row. It opens itself while a saved event that registers on the
  * site has no declaration chosen, or while a group run offering its self-declaration has no
  * approved, not-withdrawn text for its surface (§483) — the declaration card inside opens too —
  * and with people
@@ -49,6 +52,7 @@ export default async function ProgrammeRulesBox({
   // The rules card holds the minimum age too, for every type (§505).
   const rules = await RulesBox({ languages, event, mayEditSettings });
   const declaration = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
+  const startList = await StartListBox({ event, mayEditSettings });
 
   return (
     <Panel
@@ -60,8 +64,10 @@ export default async function ProgrammeRulesBox({
         // «regulamentul: RO: completat · EN: gol» — the rules' own line, named, among the other two.
         t("editor.boxes.programmeRules.rulesLine", { state: rulesSummary(words, translations) }),
         // «vârsta minimă 14 ani» — the age is a box of «Regulamentul» since §505.
-        minAgeSummary(words, event?.minAge ?? MIN_PARTICIPANT_AGE, locale),
+        minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
         line.text,
+        // «lista publică: Ascunsă» — the public list's own line, named, last (§512).
+        t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility) }),
       ]
         .filter(Boolean)
         .join(words.separator)}
@@ -72,6 +78,7 @@ export default async function ProgrammeRulesBox({
         {programme}
         {rules}
         {declaration}
+        {startList}
       </Stack>
     </Panel>
   );

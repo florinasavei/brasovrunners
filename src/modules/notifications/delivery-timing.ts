@@ -4,22 +4,22 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
-import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
+import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
-import {
-  DEFAULT_DELIVERY_TIMING,
-  type DeliveryTimingSetting,
-  deliveryTimingSettingSchema,
-} from "./domain/delivery-timing";
+import { type DeliveryTimingSetting, defaultDeliveryTiming, deliveryTimingSettingSchema } from "./domain/delivery-timing";
 
 /**
  * Whether the outbox drains after the request that filled it, or only on the scheduler
- * (`DECISIONS.md` §221). Read by the drain, written by a Superadministrator on `/admin/emails`.
+ * (`DECISIONS.md` §221, §513). Read by the drain, written by an Administrator in «Termene» on
+ * `/admin/emails`.
  *
- * The same shape as the Mailgun plan beside it (§100) — one `platform_settings` row, a strict
- * schema, an audit row naming who changed it and from what — and one deliberate difference:
- * the role. The plan is the Administrator's because it is a fact about the club's account;
- * this makes every message on the platform arrive later and is the Superadministrator's.
+ * The same shape as the Mailgun plan and the deadlines beside it (§100, §377) — one
+ * `platform_settings` row, a strict schema, the Administrator's club setting asserted here and not
+ * only by the hidden form, an audit row naming who changed it and from what. It was the
+ * Superadministrator's (§221, §450); since §513 it sits in «Termene», because what it changes is a
+ * wait every participant is told about, not whether the platform runs — nothing is lost either way.
  */
 
 export const DELIVERY_TIMING_SETTING_KEY = "deliveryTiming";
@@ -36,13 +36,15 @@ export async function readDeliveryTiming<T extends Record<string, unknown>>(
     .from(platformSettings)
     .where(eq(platformSettings.key, DELIVERY_TIMING_SETTING_KEY))
     .limit(1);
-  if (!row) return { ...DEFAULT_DELIVERY_TIMING, updatedAt: null };
+  // Unset: scheduled on QA and production, immediate where no pinger runs (§513).
+  const fallback = defaultDeliveryTiming(env.APP_ENV);
+  if (!row) return { ...fallback, updatedAt: null };
   // A value this code can no longer read falls back to the default rather than throwing on a
   // path that runs after every queued email — the same reasoning as the plan's fallback.
   const parsed = deliveryTimingSettingSchema.safeParse(row.value);
   return parsed.success
     ? { ...parsed.data, updatedAt: row.updatedAt }
-    : { ...DEFAULT_DELIVERY_TIMING, updatedAt: row.updatedAt };
+    : { ...fallback, updatedAt: row.updatedAt };
 }
 
 export async function updateDeliveryTiming<T extends Record<string, unknown>>(
@@ -51,9 +53,8 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<DeliveryTimingState> {
-  // A platform setting that can hold every message back (§450) — no longer tied to who manages
-  // the team, which the Administrator does since the same decision.
-  if (!canManagePlatform(actor.role)) {
+  // A club setting in «Termene» (§513): the Administrator's, as every other number in that fold.
+  if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change when email is sent`);
   }
   const parsed = deliveryTimingSettingSchema.safeParse(rawInput);
@@ -66,6 +67,8 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   }
   const next = parsed.data;
   const before = await readDeliveryTiming(db);
+  // A save that moves nothing writes nothing: no row, no audit, no cache expiry (as `updateDeadlines`).
+  if (before.timing === next.timing && before.updatedAt !== null) return before;
 
   await db.transaction(async (tx) => {
     await tx
@@ -84,6 +87,9 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
       now,
     });
   });
+  // The screen after the registration form and the newsletter's pop-up say how long the email
+  // takes, from the public cache (§333): they must say the new wait, not the old one.
+  revalidatePublicContent("settings");
   // Rows the drain was leaving to the pinger, or the pinger to the drain: the outbox job looks
   // again at its next ping rather than at the end of the quiet it last promised (§334).
   wakeJobs("email-outbox");

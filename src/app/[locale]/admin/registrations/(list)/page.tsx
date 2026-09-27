@@ -24,7 +24,7 @@ import {
   type RegistrationSortKey,
 } from "@/modules/registrations/admin-repository";
 import type { RegistrationStatus } from "@/db/schema/registrations";
-import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
+import { declarationAsksMinorToSignByEvent } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
@@ -107,8 +107,8 @@ function isRegistrationStatus(value: string | undefined): value is RegistrationS
  * cancelling several at once is the bulk form below the table, and everything about one person —
  * rename, cancel, erase — is on their own page, which is where §15.11's four verbs live in full.
  */
-/** Present for a screen reader, absent on screen (the usual clip pattern). */
-const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+/** Present for a screen reader, absent on screen (the usual clip pattern; `"1px"`, since MUI reads `1` as 100%). */
+const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
 export default async function AdminRegistrationsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -205,12 +205,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     getTranslations("Admin"),
     /*
       Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
-      declaration in effect, per language, looked up by each row's own. Only when a minor is on
-      the page — the confirmation's sentence is the only thing that reads it.
+      declaration in effect, per event (a race signs its own kind, trail or road, §515) and per
+      language, looked up by each row's own. Only for the events of the minors on the page — the
+      confirmation's sentence is the only thing that reads it.
     */
-    rows.some((row) => row.guardianName)
-      ? declarationAsksMinorToSignByLocale(db, new Date())
-      : Promise.resolve({ ro: false, en: false }),
+    declarationAsksMinorToSignByEvent(
+      db,
+      new Date(),
+      rows.filter((row) => row.guardianName).map((row) => row.eventId),
+    ),
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
@@ -1280,7 +1283,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       confirm={{
                         title: t("desk.confirmOnPaper"),
                         body:
-                          row.guardianName && minorSigns[row.locale]
+                          row.guardianName && minorSigns[row.eventId]?.[row.locale]
                             ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
                             : t("registrations.confirmOnPaperBody"),
                         ...(row.kind === "TEST" ? {} : { email: words.email(1) }),

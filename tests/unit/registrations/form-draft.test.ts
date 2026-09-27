@@ -116,3 +116,14 @@ describe("§224 the facts the check-your-email screen greets with", () => {
     expect(openFormDraft(sealed as string, "secret-two")).toBeNull();
   });
 });
+
+describe("the submitted-facts cookie's life follows a live family sitting (§519)", () => {
+  it("lives as long as the sitting's cookie while one is live, ten minutes otherwise", async () => {
+    const { submittedFactsMaxAgeSeconds } = await import("@/modules/registrations/form-draft");
+    const { sittingCookieMaxAgeSeconds, sittingCookieUntil } = await import("@/modules/registrations/domain/family-sitting");
+    const now = new Date("2026-09-27T10:00:00Z");
+    const sitting = sittingCookieMaxAgeSeconds(sittingCookieUntil(now, 10), now);
+    expect(submittedFactsMaxAgeSeconds(sitting)).toBe(10 * 60 + 2 * 60);
+    expect(submittedFactsMaxAgeSeconds(null)).toBe(600);
+  });
+});

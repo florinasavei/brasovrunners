@@ -6,10 +6,11 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { confirmEmail, type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature is the declarant's name, and a signature that
@@ -37,8 +38,8 @@ async function approve() {
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   const declaration: LegalDocumentTranslationInput[] = [
-    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-    { locale: "en", title: "Declaration", body: declarationEn },
+    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+    { locale: "en", title: "Declaration", body: declarationTrailEn },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
@@ -63,6 +64,7 @@ const submission = (overrides: Record<string, unknown>) => ({
   birthDate: "1990-05-17",
   sex: "UNSPECIFIED",
   nationality: "RO",
+  country: "RO",
   city: "Brașov",
   phone: "+40711111111",
   emergencyContactName: "Ion Popescu",
@@ -235,6 +237,7 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
     await submitRegistration(db, event, submission({ firstName: "Ana", lastName: "Pop", email: "ana@example.ro" }), NOW);
     const [waiting] = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter((r) => r.id !== row.id);
     expect((await confirmEmail(db, event, waiting.id, new Date(NOW.getTime() + 60_000))).status).toBe("WAITLISTED");
+    await sendHoldEmails(db, NOW);
 
     // Past the thirty minutes, with somebody waiting: the hold is one the signing would release.
     const lapsed = new Date(NOW.getTime() + 31 * 60_000);

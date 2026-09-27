@@ -26,10 +26,12 @@ describe("BR-REQ-031-05 criterion 4 the exports leave the emergency details out"
   });
 
   it("puts sex, the age on race day, where the runner is from and the t-shirt on the spreadsheet only", () => {
-    for (const header of ["Sex", "Age on race day", "Nationality", "City", "T-shirt size"]) {
+    // The country of residence (§510) with them, right before the city it makes sense of.
+    for (const header of ["Sex", "Age on race day", "Nationality", "Country", "City", "T-shirt size"]) {
       expect(REGISTRATION_SHEET_HEADERS, `${header} is on the spreadsheet`).toContain(header);
       expect(csvHeader, `${header} is not in the CSV`).not.toContain(header);
     }
+    expect(REGISTRATION_SHEET_HEADERS.indexOf("Country")).toBe(REGISTRATION_SHEET_HEADERS.indexOf("City") - 1);
   });
 });
 

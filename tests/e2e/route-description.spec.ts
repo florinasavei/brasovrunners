@@ -80,7 +80,7 @@ test.describe.serial("BR-REQ-050-02 the route / training description (§387)", (
     // The route link, then the route / training description under the card's own tabs.
     await openEditorBox(page, "Traseul");
     await field("event.routeUrl").fill(ROUTE_LINK);
-    await expect(languagePanel(page, "course", "ro").getByText("Punctele de oprire, pantele, ce să aștepți")).toBeVisible();
+    await expect(languagePanel(page, "course", "ro").getByText("opriri, pante, ce să aștepți")).toBeVisible();
     const map = await sharp({ create: { width: 1200, height: 900, channels: 3, background: "#228844" } }).jpeg().toBuffer();
     await writeRouteDescription(page, "ro", "Oprire cu apă la km 4, apoi urcarea pe serpentine până la creastă.", map);
     await languageTab(page, "course", "en").click();

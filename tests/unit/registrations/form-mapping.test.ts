@@ -25,10 +25,11 @@ function filledForm(overrides: Record<string, string> = {}): FormData {
     lastName: "Popescu",
     email: "ana@example.org",
     birthDate: "1990-05-17",
-    // MUI renders a select's value into an input carrying the field's name; these are its
-    // defaults, which is what a form submitted without touching them actually posts.
+    // MUI renders a select's value into an input carrying the field's name. «Sex» has no
+    // default since §510, so a runner answers it; the others are what an untouched form posts.
     sex: "UNSPECIFIED",
     nationality: "RO",
+    country: "RO",
     tshirtSize: "NONE",
     city: "Brașov",
     phone: "+40711111111",
@@ -108,6 +109,32 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
     expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ nationality: "Romania" }), "ro")).success).toBe(false);
   });
 
+  /**
+   * §510 — the country the runner lives in is required on the public form (a native select on
+   * Romania, like the citizenship), an ISO code whatever case it arrives in, optional for staff.
+   */
+  it("refuses the public form without a country of residence, and a staff entry does not need it (§510)", () => {
+    const values = readRegistrationForm(filledForm({ country: "" }), "ro");
+    expect(values.country).toBeUndefined();
+    const parsed = registrationSubmissionSchema.safeParse(values);
+    expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["country"]);
+    expect(staffRegistrationSubmissionSchema.safeParse(values).success).toBe(true);
+    expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ country: "Romania" }), "ro")).success).toBe(false);
+    const abroad = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ country: "de" }), "ro"));
+    expect(abroad.success && abroad.data.country).toBe("DE");
+  });
+
+  /**
+   * §510 — «Sex» starts empty: an untouched select posts an empty value, and the public form
+   * refuses it by name rather than recording «Prefer să nu spun» nobody chose.
+   */
+  it("refuses the public form with no answer to «Sex», naming it (§510)", () => {
+    const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "" }), "ro"));
+    expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["sex"]);
+    // «Prefer să nu spun» is still an answer.
+    expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "UNSPECIFIED" }), "ro")).success).toBe(true);
+  });
+
   it("refuses the public form with a blank city alone, naming it (§467)", () => {
     const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ city: "" }), "ro"));
     expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["city"]);
@@ -157,6 +184,7 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
       birthDate: undefined,
       sex: undefined,
       nationality: undefined,
+      country: undefined,
       city: undefined,
       phone: undefined,
       emergencyContactName: undefined,

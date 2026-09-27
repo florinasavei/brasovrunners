@@ -15,7 +15,6 @@ import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
 import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
-import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
 import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
@@ -33,7 +32,7 @@ import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
-import { groupRunDeclarationsInForce, listApprovedVersions } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationsInForce, listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
@@ -99,7 +98,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   const mayPublish = canTransition(staffUser.role, "IN_REVIEW", "PUBLISHED", false);
 
   const { error } = await searchParams;
-  const declarations = await listApprovedVersions(getDb(), "EVENT_DECLARATION", locale);
+  const declarations = await listApprovedRaceDeclarations(getDb(), locale);
   // The club's deadlines (§377): the reminder an event left "as usual" gets, and how far ahead a series is created.
   const deadlines = await deadlinesForThisRequest();
   const horizon = daysPhrase(locale, deadlines.seriesHorizonDays);
@@ -238,7 +237,6 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />
               <ProgrammeRulesBox {...box} languages={languages} heading={flow.headings.programme} declarations={declarations} />
-              <StartListBox {...box} heading={flow.headings.startList} />
 
               {/* Not a section of the page: the marks, the address. The status is in the first
                   card since §448 — "Programat", "Anulat" or "Încheiat", as on the editor. */}

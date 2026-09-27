@@ -59,6 +59,7 @@ export type TaskId =
   | "listSocialsNotice"
   | "newsletterNotice"
   | "teamPageNotice"
+  | "raceDeclarations"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -85,6 +86,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listSocialsNotice: "text",
   newsletterNotice: "text",
   teamPageNotice: "text",
+  raceDeclarations: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -167,6 +169,12 @@ export type OwnerTaskInputs = {
    * The page shows staff and volunteers' names and photographs; the notice has to say so.
    */
   teamPageDescribed: boolean;
+  /**
+   * Whether both race declarations (§515) — trail and road or park — have a version in force written
+   * from the platform's shared body: it states the event's minimum age through `{{minimumAge}}`. Until
+   * then a road race signs the trail text, and the text in force still speaks of a minor under 14.
+   */
+  raceDeclarationsCurrent: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -337,6 +345,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("teamPageNotice", {
       owner: "club",
       state: input.teamPageDescribed ? "done" : "open",
+    });
+    /*
+      The race's two declarations (§515): open, never blocking — a road race signs the trail text
+      in force until a road one is approved, as every race did before — and done by itself once both
+      kinds have a version in force from the platform's shared body.
+    */
+    push("raceDeclarations", {
+      owner: "club",
+      state: input.raceDeclarationsCurrent ? "done" : "open",
     });
   }
 

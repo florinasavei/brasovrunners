@@ -24,7 +24,7 @@ vi.mock("next-intl/server", async () => {
     getLocale: async () => "ro",
   };
 });
-vi.mock("@/app/[locale]/admin/tasks/actions", () => ({ updateJobCadenceAction: async () => null }));
+vi.mock("@/app/[locale]/admin/settings/costs/actions", () => ({ updateJobCadenceAction: async () => null }));
 
 const { default: JobCadencePanel } = await import("@/modules/jobs/ui/JobCadencePanel");
 
@@ -99,18 +99,26 @@ describe("§355 the throttle card says the safety look is on the hour", () => {
     expect(html).toContain(ro.Admin.tasks.jobCadence.onTheHour);
   });
 
+  // The line on the card and its «?» (§511): one sentence visible, the reasons in the tooltip.
+  const onTheHour = (messages: typeof ro) => `${messages.Admin.tasks.jobCadence.onTheHour} ${messages.Admin.tasks.jobCadence.onTheHourMore}`;
+
   it("names the hour, the health monitor and the one wake of an idle hour in both languages", () => {
-    expect(ro.Admin.tasks.jobCadence.onTheHour).toMatch(/ora fixă.*\/api\/health.*o oră fără nimic de făcut.*o trezire/);
-    expect(en.Admin.tasks.jobCadence.onTheHour).toMatch(/on the hour.*\/api\/health.*idle hour.*one wake/);
+    expect(onTheHour(ro)).toMatch(/ora fixă.*\/api\/health.*o oră fără nimic de făcut.*o trezire/);
+    expect(onTheHour(en)).toMatch(/on the hour.*\/api\/health.*idle hour.*one wake/);
+  });
+
+  it("puts the reasons behind the card's «?»", async () => {
+    const html = await render("immediate");
+    expect(html).toContain(`aria-label="${ro.Admin.tasks.jobCadence.onTheHourMore}"`);
   });
 
   it("promises no more lateness than the scheduler keeps: several checks, each at most the stretch late", () => {
     // `minimumIntervalEnd` moves a run off its interval's marks one stretch at a time — several
     // runs under an hour or two, not one — and the sentence says so, with the stretch's own length.
     expect(ALIGN_STRETCH_MINUTES).toBe(15);
-    expect(ro.Admin.tasks.jobCadence.onTheHour).toMatch(/unele verificări pot întârzia fiecare cu până la un sfert de oră/);
-    expect(en.Admin.tasks.jobCadence.onTheHour).toMatch(/some checks up to a quarter of an hour late each/);
-    expect(ro.Admin.tasks.jobCadence.onTheHour).not.toMatch(/o dată|jumătate/);
-    expect(en.Admin.tasks.jobCadence.onTheHour).not.toMatch(/once|half an hour/);
+    expect(onTheHour(ro)).toMatch(/unele verificări pot întârzia fiecare cu până la un sfert de oră/);
+    expect(onTheHour(en)).toMatch(/some checks up to a quarter of an hour late each/);
+    expect(onTheHour(ro)).not.toMatch(/o dată|jumătate/);
+    expect(onTheHour(en)).not.toMatch(/once|half an hour/);
   });
 });

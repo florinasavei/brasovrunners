@@ -1,13 +1,11 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-import type { ReactNode } from "react";
 import { and, count, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -24,6 +22,7 @@ import {
   noticeDescribesListStates,
   noticeDescribesNewsletter,
   noticeDescribesTeamPage,
+  raceDeclarationsCurrent,
 } from "@/modules/legal-documents/repository";
 import {
   countTasks,
@@ -45,57 +44,22 @@ import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
 import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { countOlderPictures } from "@/modules/media/older-pictures";
-import { storedMediaBytes } from "@/modules/media/references";
 import { isStorageConfigured } from "@/modules/media/storage";
 import OlderPicturesPanel from "@/modules/media/ui/OlderPicturesPanel";
 import { readBotCheck } from "@/modules/registrations/bot-check";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
-import BotCheckPanel from "@/modules/registrations/ui/BotCheckPanel";
-import {
-  annualCostToday,
-  DOMAIN_PRICE_USD_PER_YEAR,
-  freeTierVerdict,
-  moneyDecisions,
-  NEON_LAUNCH_USD_PER_CU_HOUR,
-  NEON_LAUNCH_USD_PER_GB_MONTH,
-  nextSpend,
-  oldestCheckDate,
-  platformServices,
-  priceFreshness,
-  registrationsLeftToday,
-  ROMANIAN_VAT_PERCENT,
-  type ServiceRow,
-  type ServiceSeverity,
-} from "@/modules/diagnostics/platform-plans";
-import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
-import { readNeonConsumption, readNeonLimits, readNeonPreviousPeriod } from "@/modules/diagnostics/neon";
-import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
-import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
+import { moneyDecisions } from "@/modules/diagnostics/platform-plans";
+import { TASK_TARGETS } from "@/modules/diagnostics/domain/task-targets";
+import TaskTargetLink from "@/modules/diagnostics/ui/TaskTargetLink";
+import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
-import { readMonthCosts } from "@/modules/diagnostics/month-costs-read";
-import MonthCostsPanel from "@/modules/diagnostics/ui/MonthCostsPanel";
-import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
-import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
-import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
-import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
-import Panel from "@/shared/ui/Panel";
-import { readJobCadence } from "@/modules/jobs/cadence";
-import { describeJob } from "@/modules/jobs/overview";
-import type { JobName } from "@/modules/jobs/schedule";
-import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { isTranslationConfigured } from "@/infrastructure/translate/translator";
-import { charactersTranslatedSince, charactersTranslatedToday, readTranslationBudget } from "@/modules/translate/budget";
 import { readTranslationCredit } from "@/modules/translate/credit";
-import TranslationBudgetPanel from "@/modules/translate/ui/TranslationBudgetPanel";
-import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
-import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
-import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
-import { readEmailPlan } from "@/modules/notifications/email-plan";
-import { mailgunMessagesSentBetween, readEmailVolumeToday } from "@/modules/notifications/volume";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { canManageClubSettings, canManagePlatform, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
@@ -127,22 +91,19 @@ export const maxDuration = 60;
  *
  * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
  * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
- * every service on the way. Five panels:
+ * every service on the way. Five panels, then three since §516, which moved «Anti-robot» and
+ * «Costuri» to «Setări» → «Platformă» and «Costuri» (their old `?panel=` answers 308 there):
  *
  * - `club` — «Club»: what is still owed, read from the system, with its filters, and the
  *   decisions still open. It was `todo`, «De făcut», until §438, and it is still where a bare
- *   `/admin/tasks` lands for the Administrator and the Superadministrator.
+ *   `/admin/tasks` lands for the Administrator and the Superadministrator. A row whose work is a
+ *   screen of this backoffice links to it, the card opened by the `#` (`task-targets.ts`, §516).
  * - `todo` — «De făcut»: the club's own checklist, typed and ticked by hand (§438,
  *   `modules/club-todo`), for every role from the Redactor up.
- * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
- *   club must be able to switch it off on the day it refuses real people.
- * - `costs` — the club's money page (§479): this month per provider and projected to its end,
- *   the database's configuration in one card, then what the club pays a year and what the next
- *   thing to cost anything would cost.
  * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §397).
  *
- * A query parameter, not five routes: each panel needs the same session and the same reading of
- * the system (`describeTasks`), so five routes would be five copies of this page's head.
+ * A query parameter, not three routes: each panel needs the same session and the same reading of
+ * the system (`describeTasks`), so three routes would be three copies of this page's head.
  */
 
 /** The colour is the whole message for somebody scanning: red stops a registration today. */
@@ -155,45 +116,15 @@ const STATE_COLOR: Record<TaskState, "error" | "warning" | "success"> = {
 };
 
 /**
- * `unknown` is grey rather than green, deliberately. A ceiling nothing measures must not read
- * as headroom, and "we never checked" and "we are fine" are the same tick otherwise.
- */
-const SERVICE_COLOR: Record<ServiceSeverity, "success" | "default" | "warning" | "error"> = {
-  ok: "success",
-  unknown: "default",
-  watch: "warning",
-  act: "error",
-};
-
-/** One labelled fact inside a service row. Two columns on a phone, four from `md`. */
-function Fact({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary" component="div">
-        {label}
-      </Typography>
-      <Typography variant="body2" component="div">
-        {children}
-      </Typography>
-    </Box>
-  );
-}
-
-/**
- * What is still owed, and what it costs — for the people who owe it and pay for it.
+ * What is still owed — for the people who owe it.
  *
- * `/devs` is for whoever reads a status enum; this is for the club. Two halves, in the order a
- * volunteer needs them: what is waiting on somebody, then the money.
+ * `/devs` is for whoever reads a status enum; this is for the club. What it costs was the second
+ * half of this page until §516 moved it, whole, to «Setări» → «Costuri» (§479): a setting and its
+ * price are not something owed. Here stay the rows, the open money questions beneath them, and a
+ * link from each row to the screen where it is done.
  *
- * The money half used to be four sections — a verdict, a limit list, a plan table and a bump
- * table — every fact on it defensible and none of it adding up to an answer. It is one answer
- * now, one row per service, and only the questions nobody has answered yet beneath. The
- * alternatives-not-taken and the Cloudflare box left on 2026-09-17 (`DECISIONS.md` §61): they
- * were history, and the page is today's list.
- *
- * Every line on both halves is derived from what this deployment reports, never from a
- * checklist somebody has to remember to tick, and every price is quoted from
- * `docs/PLATFORM.md` with the date it was checked (`AGENTS.md` §1.2).
+ * Every line is derived from what this deployment reports, never from a checklist somebody has to
+ * remember to tick (`AGENTS.md` §1.2).
  */
 export default async function AdminTasksPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -224,7 +155,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * means a panel this role may not see. `layout.tsx` has already refused any role that may
    * open no panel here at all — a real 404, decided before `loading.tsx`'s Suspense boundary
    * can flush a 200 (see its own comment). This page can still be asked, by a typed address,
-   * for a panel the *admitted* role may not see (Tehnic asking for `?panel=costs`), and a
+   * for a panel the *admitted* role may not see (Tehnic asking for `?panel=club`), and a
    * `notFound()` thrown from here is exactly the 200-with-not-found-body that guard exists to
    * avoid — so a mismatch here lands on that role's own default panel instead.
    */
@@ -247,8 +178,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   */
   const clubTodo = await readClubTodo(getDb());
   const openTodo = openClubTodoCount(clubTodo.items);
-  // «Club», «De făcut», «Anti-robot», «Costuri», then «Sistem» (the link to `/devs`) and
-  // «Aplicația» after it (§397). Each role sees the panels its own gates open (`task-panels.ts`).
+  // «Club», «De făcut», then «Sistem» (the link to `/devs`) and «Aplicația» after it (§397);
+  // «Anti-robot» and «Costuri» are «Setări» tabs since §516. Each role sees the panels its own
+  // gates open (`task-panels.ts`).
   const subNavItems = visibleTaskPanels(actor.role).flatMap((name) => [
     ...(name === "app" ? [{ href: devsPath, label: t("panel.system") }] : []),
     {
@@ -330,7 +262,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const db = getDb();
   const now = new Date();
 
-  // The anti-bot switch (§254): read straight through, because this page is where it is moved.
+  // The anti-bot switch (§254), for its row: switched on «Setări» → «Platformă» since §516.
   const botCheck = await readBotCheck(db);
   // Whether the configured secret works, not merely whether it is set (§420, finding (10)'s
   // health half) — cached fifteen minutes, same as `/api/health`.
@@ -384,10 +316,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
   const contactRecipients = await readContactRecipients(db);
-  // The plan the club says it is on (§100): its price is a row on the cost table below.
-  const emailPlan = await readEmailPlan(db);
-  const emailPlanCeilings = emailCeilings(emailPlan);
-  const emailNext = nextEmailPlan(emailPlan.plan);
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
   const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
@@ -438,7 +366,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   /** `t.raw` returns the catalogue's array untouched, so the values are filled in here. */
   const fill = (step: string) =>
     step.replace(/\{(\w+)\}/g, (match, key: string) => howValues[key] ?? match);
-  const jobsHealthy = jobs.every((job) => job.status === "ok");
   // Which ones, not how many: a single missing monitor and a stopped scheduler are the same
   // count and different problems.
   const staleJobNames = jobs.filter((job) => job.status === "stale" || job.status === "never_run").map((job) => job.jobName);
@@ -446,17 +373,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const failingJobNames = jobs.filter((job) => job.status === "failing").map((job) => job.jobName);
 
   // Read early, ahead of the task board: the derived `neonLimits` row (§335) needs this
-  // period's quota and spend on every panel, not only Costuri, where the full endpoint detail
-  // (`readNeonLimits`, the two extra requests) stays gated — the task board's own row only
-  // needs the same project row `readNeonConsumption` already fetches.
+  // period's quota and spend — the same project row `readNeonConsumption` fetches; the brakes'
+  // full reading (`readNeonLimits`) is «Setări» → «Costuri»'s alone (§516).
   // DeepL's credit from its own meter (§497), cached an hour and a failure remembered a minute,
-  // asked beside Neon rather than after it: the task row, «Luna aceasta» and the translation
-  // panel read this one answer. No key, no request.
-  const [neon, neonLimits, deeplCredit] = await Promise.all([
-    readNeonConsumption(env),
-    panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
-    readTranslationCredit(env),
-  ]);
+  // asked beside Neon rather than after it: the translation row reads it here, and «Costuri»
+  // reads the same cached answer. No key, no request.
+  const [neon, deeplCredit] = await Promise.all([readNeonConsumption(env), readTranslationCredit(env)]);
   // The credit's own figures for the translation row's sentence (§497), in the reader's numbers;
   // an unread credit gives the row its reason instead.
   if (deeplCredit.ok) {
@@ -482,6 +404,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
+      // §515: both race declarations, trail and road or park, from the platform's shared body.
+      raceDeclarationsCurrent: await raceDeclarationsCurrent(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.
@@ -557,153 +481,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     variant: active ? ("filled" as const) : ("outlined" as const),
   });
 
-  const databaseBytes = await readDatabaseSizeBytes(db);
-  // The Neon plan (§280's follow-up, §326): what Neon reports for the account when it answered,
-  // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
-  const neonPlan = await readNeonPlan(db);
-  const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);
-  const neonBlock = describeNeonBlock({
-    plan: neonInForce.plan,
-    databaseBytes,
-    consumption: neon.ok ? neon.consumption : null,
-    now,
-  });
-  /*
-    The owner's throttle, beside the plan it pays (§334): the minimum interval between two real
-    runs, and what each job did with it — read only for the panel that shows it, since the
-    overview asks the cache and, when the cache does not answer here, the database.
-  */
-  const [jobCadence, deliveryTiming] = await Promise.all([
-    readJobCadence(db),
-    // Whether the interval delays email too (§221): the panel's sentence about email follows it.
-    readDeliveryTiming(db),
-  ]);
-  const jobOverviews =
-    panel === "costs"
-      ? await Promise.all(
-          jobs.map((job) =>
-            describeJob(db, {
-              job: job.jobName as JobName,
-              now,
-              cadenceMinutes: jobCadence.minutes,
-              lastFinishedAt: job.lastFinishedAt,
-            }),
-          ),
-        )
-      : [];
-  // «Tradu din română»'s allowance and today's spend (§464), only for the panel that shows them.
-  const translation =
-    panel === "costs"
-      ? await Promise.all([readTranslationBudget(db), charactersTranslatedToday(db, now)]).then(([state, usedToday]) => ({ state, usedToday }))
-      : null;
-  /*
-    «Luna aceasta» (§479): each provider's month so far and projected to its end, from the readings
-    this page already holds — Neon's meter (§447), the outbox's month (§100), the domain's expiry
-    (§435) — plus the readers only this card needs: Vercel's month (§101, cached an hour here;
-    `/devs` keeps its live read), the month's translated characters (§464), last month's outbox,
-    Neon's previous period and the pictures' bytes on R2. `readMonthCosts` does the mapping, and
-    is tested with a fake for every reader. Only for the panel that shows it.
-  */
-  const month =
-    panel === "costs"
-      ? await readMonthCosts(
-          {
-            now,
-            neonPlan: neonInForce.plan,
-            neon: neon.ok ? { ok: true, meter: neon.consumption.meter } : { ok: false, reason: neon.reason },
-            databaseBytes,
-            mailgun: {
-              planName: volume.planName,
-              planId: emailPlan.plan,
-              usdPerMonth: emailPlanCeilings.usdPerMonth,
-              sentThisMonth: volume.sentThisMonth,
-              monthlyAllowance: emailPlanCeilings.monthlyAllowance,
-              dailyAllowance: emailPlanCeilings.dailyAllowance,
-            },
-            vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
-            domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: domain.status === "unknown" ? null : domain.expiresOn },
-          },
-          {
-            vercelMonth: () => readVercelMonthForCosts(env, now),
-            charactersSince: (since) => charactersTranslatedSince(db, since),
-            mailgunSentBetween: (start, end) => mailgunMessagesSentBetween(db, start, end),
-            neonPreviousPeriod: (periodStart) => readNeonPreviousPeriod(env, periodStart),
-            mediaBytes: () => storedMediaBytes(db),
-            deeplCredit: async () => deeplCredit,
-          },
-        )
-      : null;
-  const facts = {
-    databaseBytes,
-    neonPlan: neonInForce.plan,
-    neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
-    neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
-    emailAllowance: volume.allowance,
-    // Over the period that binds: today on Free, this month on a paid plan.
-    emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
-    emailPlanName: volume.planName,
-    emailPlanUsdPerMonth: emailPlanCeilings.usdPerMonth,
-    emailPeriod: volume.period,
-    emailNextPlan: emailNext ? { name: EMAIL_PLANS[emailNext].name, usdPerMonth: EMAIL_PLANS[emailNext].usdPerMonth } : null,
-    // The archive copy and the hidden copies of every participant message, priced once in
-    // `volume.ts` so this board and `/admin/emails` cannot disagree about a registration's cost.
-    messagesPerRegistration: volume.messagesPerRegistration,
-    hasPaidEvent,
-    clubDomainBound,
-    jobsHealthy,
-  };
-  const services = platformServices(facts);
-  const verdict = freeTierVerdict(facts);
-  const registrationsLeft = registrationsLeftToday(facts);
-  const paidToday = annualCostToday(services);
-  const next = nextSpend(services);
   // Only what is still undecided: a settled question rendered "answered" for ever is a line to
-  // scroll past, and the section disappears entirely when nothing is open.
-  const decisions = moneyDecisions(facts).filter((decision) => decision.state === "open");
-  const freshness = priceFreshness(oldestCheckDate(services), now);
-
-  /** How close this service is to its ceiling, in that service's own words. */
-  const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
-  const neonPerDay = neonCuHoursPerDay(facts);
-  // The rates the projection was made at, from the one catalogue, so the sentence quotes what
-  // the arithmetic used — and the catalogue is the only file that knows a price.
-  const neonRates = {
-    rate: neonBlock.rates?.usdPerCuHour ?? NEON_LAUNCH_USD_PER_CU_HOUR,
-    storageRate: neonBlock.rates?.usdPerGbMonth ?? NEON_LAUNCH_USD_PER_GB_MONTH,
-  };
-  const howClose = (row: ServiceRow) => {
-    if (row.headroom.kind === "measured") {
-      const base = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
-        used: row.headroom.used,
-        of: row.headroom.of,
-        left: registrationsLeft ?? 0,
-        plan: volume.planName,
-      });
-      // The monthly figure the owner asked for (§88): this month's pace on the next plan.
-      if (row.id === "neon") {
-        return neon.ok && neonMonthly !== null
-          ? `${base} ${t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2), ...neonRates })}`
-          : `${base} ${t("services.neon.monthlyUnknown", neonRates)}`;
-      }
-      return base;
-    }
-    if (row.headroom.kind === "derived") {
-      // Mailgun with no ceiling at all (§100): the plan's name is the whole of the answer.
-      if (row.id === "mailgun") return t("services.mailgun.closeNone", { plan: volume.planName });
-      // Neon on Launch: no ceiling, so "how close" is "what does this month cost" — the
-      // projection at the current pace and the daily rate it was made from, named an estimate.
-      if (row.id === "neon" && row.variant === "launch") {
-        return neon.ok && neonMonthly !== null && neonPerDay !== null
-          ? t("services.neon.launch.close", { cu: Math.round(neon.consumption.cuHours), perDay: neonPerDay, usd: neonMonthly.toFixed(2), ...neonRates })
-          : t("services.neon.launch.closeUnknown", neonRates);
-      }
-      return t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`);
-    }
-    return t(`services.${row.id}.closeUnknown`);
-  };
-  /** The row's fixed sentences, read under the plan's own wording where the plan changes what is true. */
-  const wording = (row: ServiceRow, key: "freeGives" | "ceiling" | "whenCrossed" | "bumpBack") =>
-    t(row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`);
+  // scroll past, and the section disappears entirely when nothing is open. It reads one fact since
+  // the cost table moved to «Setări» → «Costuri» (§516).
+  const decisions = moneyDecisions({ hasPaidEvent }).filter((decision) => decision.state === "open");
 
   return (
     <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -727,15 +508,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       </Box>
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {query.saved === "botCheckOn" && <Alert severity="success">{t("botCheck.savedOn")}</Alert>}
-        {query.saved === "botCheckOff" && <Alert severity="warning">{t("botCheck.savedOff")}</Alert>}
-        {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
-        {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
-        {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
-        {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
-        {query.saved === "budgetThresholds" && <Alert severity="success">{t("budgetThresholds.saved")}</Alert>}
-        {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
-        {query.saved === "neonLimitsSame" && <Alert severity="info">{t("neonLimits.savedSame")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
       </Box>
 
@@ -747,15 +519,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           working" and this one answers "what do we still owe", which are two halves of one
           question the club asks together. */}
       <SubNav label={t("title")} items={subNavItems} />
-
-      {panel === "botCheck" && (
-        <>
-        {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
-            which the club must be able to switch off on the day it refuses real people. The
-            Superadministrator's to switch since §450; an Administrator reads it. */}
-        <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} mayEdit={canManagePlatform(actor.role)} />
-        </>
-      )}
 
       {panel === "club" && (
         <>
@@ -866,6 +629,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                 {t(`items.${task.id}.${task.text ?? (task.state === "done" ? "done" : "todo")}`, howValues)}
                 {task.detail && ` — ${task.detail}`}
               </Typography>
+              {/* Where it is done, when that is a screen of this backoffice (§516): gone once the row is. */}
+              {task.state !== "done" && <TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />}
               {/*
                 How to do it, on the page, with this deployment's own values filled in — so the
                 answer to "what do I click" is under the task and not in a runbook ("things
@@ -890,270 +655,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             </Box>
           ))}
         </Stack>
-        </>
-      )}
-
-      {panel === "costs" && (
-        <>
-        <Divider />
-
-        {/*
-          The club's money page (§479): the month first — each provider so far and projected to the
-          month's end, the total above them — because that is what a treasurer opens Costuri for.
-        */}
-        {month && (
-          <MonthCostsPanel
-            locale={locale}
-            lines={month.lines}
-            totals={month.totals}
-            reasons={month.reasons}
-            deeplConfigured={isTranslationConfigured(env)}
-          />
-        )}
-
-        {/*
-          The database's configuration in one card (§479): the plan, the month's budget, the brakes
-          and the jobs' interval were four cards among the rest of Costuri, each explaining the
-          other three. One card now, the four inside it in the order a change is reasoned about —
-          which plan, where the month stands, what Neon will allow, how often the platform wakes
-          it — every door unchanged: each card keeps its own `mayEdit` and each action asserts it.
-          A section rather than a fold: the forms inside must never sit in a shut box.
-        */}
-        <Panel title={t("database.title")} intro={t("database.intro")} data-testid="database-config">
-          <Stack spacing={2}>
-            {/*
-              Which Neon plan the account is on (§280's follow-up, §326), above the figures that
-              follow it, so a plan set wrong shows here before it shows on the invoice. A club
-              setting (`canManageClubSettings`, the Administrator's).
-            */}
-            <NeonPlanPanel level={3} locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageClubSettings(actor.role)} />
-
-            {/* The month's budget and what the platform is doing about it (§447), above the brakes it is read against.
-                Its thresholds are a platform setting since §450, the Superadministrator's like the brakes. */}
-            <NeonBudgetPanel level={3} locale={locale} reading={budget} mayEdit={canManagePlatform(actor.role)} />
-
-            {/*
-              The database's brakes (§335): the compute's size ceiling and the period's CU-hour
-              limit, read from Neon and written to Neon. A quota reached suspends the site, so
-              writing it is the Superadministrator's (§450); `updateNeonLimits` asserts the role again.
-            */}
-            {neonLimits && (
-              <NeonLimitsPanel
-                level={3}
-                locale={locale}
-                reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
-                appEnv={env.APP_ENV}
-                mayEdit={canManagePlatform(actor.role)}
-              />
-            )}
-
-            {/* How often the platform may wake the database for its scheduled work (§334) — the
-                throttle the owner asked for, beside the plan that bills each wake. The
-                Superadministrator's since §450; an Administrator reads the figures and no form. */}
-            <JobCadencePanel
-              level={3}
-              locale={locale}
-              cadence={jobCadence}
-              jobs={jobOverviews}
-              mayEdit={canManagePlatform(actor.role)}
-              emailTiming={deliveryTiming.timing}
-            />
-          </Stack>
-        </Panel>
-
-        {/* «Tradu din română»'s daily allowance (§464): what DeepL Free may spend a day, and today's spend. */}
-        {translation && (
-          <TranslationBudgetPanel
-            locale={locale}
-            state={translation.state}
-            usedToday={translation.usedToday}
-            configured={isTranslationConfigured(env)}
-            credit={deeplCredit}
-            mayEdit={canManageClubSettings(actor.role)}
-          />
-        )}
-
-        {/*
-          The money, and the answer before the table that justifies it: what the club pays today,
-          then the next thing to cost anything. Two sentences and two numbers, because the
-          complaint this replaced was that a treasurer had to assemble them from four sections.
-        */}
-        <Box component="section">
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("costTitle")}
-          </Typography>
-
-          {/* Green while nothing is paid monthly; blue for a plan the club chose to pay by the hour; amber for a limit met. */}
-          <Alert severity={verdict === "freeExceptDomain" ? "success" : verdict === "paysForUsage" ? "info" : "warning"} sx={{ mb: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {paidToday.length === 0
-                ? t("costToday.nothing")
-                : t("costToday.total", {
-                    total: paidToday
-                      .map((total) =>
-                        total.plusVat
-                          ? t("costToday.amountPlusVat", {
-                              amount: total.amount,
-                              currency: total.currency,
-                            })
-                          : t("costToday.amount", {
-                              amount: total.amount,
-                              currency: total.currency,
-                            }),
-                      )
-                      .join(", "),
-                  })}
-              {/* A total with a projection in it is not an invoice, and the sentence says so beside the number. */}
-              {paidToday.some((total) => total.estimated) && ` ${t("costToday.estimated")}`}
-            </Typography>
-            {next && (
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {t(`nextSpend.${next.id}`, { cost: next.nextCost ?? "" })}
-              </Typography>
-            )}
-          </Alert>
-
-          {/* The verdict on the free plans, and the one figure that turns this page from reading
-              into acting: how many more people can register today before the free allowance stops
-              sending confirmations. Understated on purpose — a waitlisted entrant costs more. */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {t(`freeVerdict.${verdict}`)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {t(`registrationsLeft.${volume.period}`, {
-              count: registrationsLeft ?? "",
-              sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
-              allowance: volume.allowance ?? "",
-              plan: volume.planName,
-            })}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("currencyNote", { vat: ROMANIAN_VAT_PERCENT })}
-          </Typography>
-        </Box>
-
-        {/*
-          A researched price is a fact with an expiry, so the page says how old these are instead
-          of printing a date beside them and asserting them with equal confidence for ever.
-        */}
-        <Alert severity={freshness.state === "stale" ? "warning" : "info"}>
-          {t(`freshness.${freshness.state}`, {
-            checked: formatCalendarDay(oldestCheckDate(services), { locale, style: "long", position: "inline" }),
-            days: Number.isFinite(freshness.days) ? freshness.days : 0,
-          })}
-        </Alert>
-
-        {/*
-          One row per service, carrying everything about that service: what it costs, what the
-          free plan gives, the ceiling this club meets first, how close this deployment is to it
-          right now, what happens when it is crossed, and what the next plan costs — including the
-          way back down, which used to be a section of its own and belongs here.
-        */}
-        <Box component="section">
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("servicesTitle")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t("servicesIntro")}
-          </Typography>
-
-          <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-            {services.map((row) => (
-              <Box
-                component="li"
-                key={row.id}
-                sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}
-                >
-                  <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-                    {t(`services.${row.id}.name`)}
-                  </Typography>
-                  <Chip
-                    size="small"
-                    color={SERVICE_COLOR[row.severity]}
-                    variant={row.severity === "unknown" ? "outlined" : "filled"}
-                    label={t(`severity.${row.severity}`)}
-                  />
-                </Stack>
-
-                {/* Two columns at 320px, four from `md`. A table would scroll sideways on a
-                    phone, which §18.5 refuses. */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
-                    gap: 1.5,
-                    mb: 1.5,
-                  }}
-                >
-                  <Fact label={t("field.planToday")}>
-                    {row.planToday ?? t("planNone")}
-                  </Fact>
-                  <Fact label={t("field.costToday")}>
-                    <strong>
-                      {row.costToday.kind === "free"
-                        ? t("costToday.free")
-                        : row.costToday.kind === "notTaken"
-                          ? t("costToday.notTaken")
-                          : row.costToday.kind === "usage"
-                            ? row.costToday.estimatedPerMonth === null
-                              ? t("costToday.usageUnknown")
-                              : t("costToday.usage", {
-                                  amount: row.costToday.estimatedPerMonth.toFixed(2),
-                                  currency: row.costToday.currency,
-                                })
-                            : row.costToday.plusVat
-                              ? t("costToday.amountPlusVat", {
-                                  amount: row.costToday.amount,
-                                  currency: row.costToday.currency,
-                                })
-                              : t("costToday.amount", {
-                                  amount: row.costToday.amount,
-                                  currency: row.costToday.currency,
-                                })}
-                    </strong>
-                  </Fact>
-                  <Fact label={t("field.howClose")}>{howClose(row)}</Fact>
-                  <Fact label={t("field.nextPlan")}>
-                    {row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}
-                  </Fact>
-                </Box>
-
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  {wording(row, "freeGives")}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  <strong>{wording(row, "ceiling")}</strong> {wording(row, "whenCrossed")}
-                </Typography>
-
-                {/* The one genuinely good idea in the table this replaced: a temporary upgrade
-                    nobody reverses is the expensive failure, and no dashboard will remind the
-                    club to come back down. It belongs on the service, not in a section. */}
-                {row.bump && (
-                  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      color={row.bump === "temporary" ? "info" : "default"}
-                      label={t(`bump.${row.bump}`)}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      {wording(row, "bumpBack")}
-                    </Typography>
-                  </Stack>
-                )}
-
-                <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
-                  {t("checkedOn", { checked: formatCalendarDay(row.checkedOn, { locale, style: "short", position: "inline" }) })}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
         </>
       )}
 

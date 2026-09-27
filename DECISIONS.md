@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.12-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.13-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.12-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.13-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -19646,3 +19646,477 @@ The staff preview (`/preview/events/[id]`) says the minimum age as the public pa
 The column's default of 14 (§329) now reaches every type's page, so every existing group run and external event says «Vârsta minimă: 14 ani» until the club changes it. This is deliberate: the owner asked for the age on every type. The editor's help under the box says so: «Implicit 14; pune 0 pentru fără limită.», with the number read from `MIN_PARTICIPANT_AGE`.
 
 Baseline `BR-V2.12-2026-09-27`.
+
+## 510. The country of residence before the city; «Sex» asks for an answer
+
+**What.** Two changes to the registration form (BR-REQ-031-04).
+
+1. **The country the runner lives in, asked right before the city.** «Brașov» and «Bristol» need a country to mean anything, and a citizenship is not where somebody lives. The field is «Țara de reședință» / «Country of residence».
+   - **The control.** It is the citizenship's own control (§463, `NationalityField` under the name `country`): a native `<select>` the server draws, searchable once the island runs. It is required on the public form and set to Romania unless the runner changes it. A blank from an older draft comes back as Romania.
+   - **The staff entry** asks it too, before the city, with the same control set to Romania. The field is optional in the staff schema, and a refused press brings back the posted country (§315).
+   - **Storage.** It is kept in `registrations.country`, an ISO 3166-1 alpha-2 code. Migration **0097** (`0097_registration_country`, expand only) adds it as `text NOT NULL DEFAULT 'RO'`. Every row written before it reads România, which is most of the club's runners. So does every insert from the release still serving while the gated migration runs, since that release does not name the column. The service writes Romania when an entry carries no country, and never writes a null.
+   - **Where it shows.** It is exported as the spreadsheet's «Country» column, right before «City», but not in the CSV. The backoffice registration page shows it as «Locuiește în: city, country», with the country named in the reader's language. It is never shown publicly.
+   - **The privacy-notice template** lists it in both languages. It also stops calling the city optional, which §467 made required.
+   - **A family entry kept before this release** (§446) holds the form as it was posted, without a country. The public schema now requires one, so confirming such an entry fills in România rather than refusing a parent who did everything right.
+
+2. **«Sex» starts unanswered.** It used to be preset to «Prefer să nu spun», so a runner who never looked at it sent an answer they did not give, and the category rankings could not tell the two apart.
+   - **The control.** It is now a native `<select name="sex" required>` drawn by the server. The first option is an empty, disabled «Alege…» / «Choose…», selected while there is no draft, followed by the three answers. The client island only puts the chosen answer's glyph in front (§171).
+   - **Why native.** A MUI listbox select posts through a hidden input that only JavaScript can fill. A required one would have locked a reader without JavaScript out of the whole form.
+   - **What refuses an empty answer:** the browser, the §422 list above the send button, and the server (the enum has no blank). «Prefer să nu spun» is still one press away.
+   - **The wording.** The §47 refusal summary and the §422 list name the field by what to do: «Alege sexul — poți alege „Prefer să nu spun”» / "Choose your sex — you may pick “Prefer not to say”".
+   - **The summary's order** now follows the form: birth date, country, city, sex, citizenship.
+
+**Why the column is NOT NULL with a default.** A null country on every existing row would leave the export's «Country» column blank for the club's whole history, and the brief asked for those rows to read România. Adding the column with a constant default is expand-safe on PostgreSQL: the value is stored in the catalogue, the table is not rewritten, and the release still serving keeps inserting without naming the column.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 511. Costuri opens with the month's total, and the backoffice says one plain sentence per field
+
+**The owner, 2026-09-27 17:20**, with a screenshot of the Neon limits card: «nu înțeleg asta man… e prea mult AI slop comments, prea multe detalii!!». And at 17:25: «vreau să văd un total man!».
+
+**The total first.** Costuri now opens with ONE line, the largest on the page: «Luna aceasta: X € până acum · estimare la sfârșitul lunii: Y €» (EN «This month: X € so far · month-end estimate: Y €»).
+- It is the sum over every provider, using §479's per-provider money: Neon at its catalogue estimate, then Mailgun, Vercel, the domain's renewal, DeepL and R2.
+- It is said in euro with two decimals, converted at a named, dated rate. `USD_PER_EUR` = 1.1403 is the ECB reference rate of 2026-09-25, and the total's «?» states the rate and its date. This is the one exception to `platform-plans.ts`'s no-exchange-rate rule. The provider rows and the year's cost table keep the vendors' USD.
+- The domain's yearly fee sits beside it («Domeniul .com: 9,62 € + TVA pe an.»).
+- «Neon este singurul cost lunar; restul sunt pe planurile gratuite.» shows only while that is true.
+- Last month follows, then why a figure is an estimate or short, each behind its «?».
+- The per-provider rows fold under the total, closed (§336), as «Pe furnizori». The Neon card keeps its figures, after the total.
+
+**The Neon limit, exactly as specified.** The monthly-limit part of «Limitele bazei de date» has four things:
+- the label «Limită lunară (ore-CU)»;
+- the choice «Fără limită / Cu limită»;
+- the number box;
+- one helper: «Când se atinge, Neon oprește baza până la începutul perioadei următoare. Recomandat: {hours}.».
+
+The confirm dialog says «Limita nouă: N ore-CU.», with N filled from the box when Save is pressed (`ConfirmSpec.fillFrom`), followed by §479's money sentence. The red warning Alert, the recommendation line, «Pe producție… bifa», the floor line, the write note, the price line and the quota-active Alert are gone. The smallest limit Neon accepts is now the box's «?», and so are the compute's defaults. Production keeps its confirmation box (§327) with a one-line label.
+
+**The rule, from now on** (amending §398 and §441): a field or a card gets at most ONE plain sentence of help, in the club's words, saying what happens when you change it. It never carries:
+- a §-number;
+- a file name (SETUP.md, DECISIONS, docs/…);
+- a release number;
+- a measurement history;
+- a parenthesis of caveats.
+
+Everything else goes behind the §473 «?» or into the guide. `shared/ui/QuietHelp` is the one «?»: the weather line's WeatherHelp is folded into it, at 14 px. It is reached through Panel `introMore`, RecallField `helpMore` and BoxNote `more`, all strings, so nothing crosses §370's boundary.
+
+`tests/unit/i18n/plain-words.test.ts` enforces the rule, in both catalogues:
+- every help, intro, description or helper key, «?» texts included, under `Admin.*`, `Translate`, `Registration`, `Registrations` and `Event` is at most 200 characters, has none of «§», «SETUP.md», «DECISIONS», a `.md` file, a `docs/`/`src/` path or «BR-V…», and no parenthesis over 12 words;
+- no string anywhere under `Admin.*` names such a reference;
+- a named allowlist covers the texts that are long on purpose: the legal editor's token legend, and the gallery upload help that ends with the photographs amendment's rule word for word. Each entry carries its reason, and the test fails once an entry would pass anyway.
+
+**The pass.** Every screen the brief named was rewritten to the rule, in both languages:
+- Costuri;
+- «Termene» (§377/§456);
+- the email settings (§443/§457/§462);
+- the event editor's cards (§405/§406);
+- the legal editor;
+- the task rows (steps kept, prose cut);
+- the translate panel;
+- Aspect.
+
+Also rewritten: staff, queue, bibs, desk, gallery, team, participant messages and the public form helpers. Facts the club needs stay on screen or behind a «?»; reasoning the guide already gives is deleted. 225 texts changed, keys kept, one sibling `…More` added where a fact moved.
+
+The 20 longest texts before and after (RO, characters):
+
+| Key | Before → after | Before (start) | After |
+| --- | --- | --- | --- |
+| `editor.participantListHelp` | 775 → 109 | Publică numele și clubul participanților confirmați care au bifat „Vreau să apar pe lista… | Publică numele celor confirmați care au bifat „Vreau să apar pe lista de participanți”, fără adrese de email. |
+| `tasks.items.scheduler.how.5` | 758 → 314 | Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu… | …pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”. |
+| `queue.holdsHelp` | 683 → 150 | „Rezervate” sunt locurile ținute cât cineva semnează declarația ({hold}, sau până la terme… | „Rezervate” sunt locurile ținute cât cineva semnează declarația ({hold}) sau răspunde la o ofertă ({offer}). Libere = locuri − confirmate − rezervate. |
+| `emails.clubNotices.participantsBccHelp` | 681 → 134 | Adrese separate prin virgulă, spațiu sau rând nou. Fiecare primește, separat și fără ca pa… | Fiecare adresă primește o copie „[Copie club]” a emailurilor către participanți și consumă câte un mesaj în plus din plafonul Mailgun. |
+| `emails.forecast.intro` | 584 → 105 | Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment:… | Ce trimite platforma singură participanților în zilele următoare: când, ce mesaj și câți l-ar primi acum. |
+| `richText.imageQualityHelp` | 539 → 164 | Medie e potrivită pentru fotografii: păstrează până la {normalMax} px pe latura lungă. Min… | Medie ({normalMax} px) pentru fotografii; Minimă ({lowMax} px) pentru o imagine mică; Mare ({highMax} px) pentru afișe cu text; Originală, până la {originalMax} px. |
+| `tasks.items.inviteKey.how.1` | 535 → 197 | Organization → Managers → + New: service account-ul, rolul Org User Manager (poate crea ut… | Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „brasovrunners-invites”. Nu „Role Assignments”. |
+| `editor.linksHelp` | 525 → 153 | Opțional, cel mult {max}. Traseul GPX, harta, regulamentul extins, un formular, albumul fo… | Opțional, cel mult {max}: GPX, hartă, formular, album, rezultate. Partajează fișierul cu „Oricine are linkul”; eticheta e în ambele limbi sau în niciuna. |
+| `editor.confirmationWindowHelp` | 513 → 151 | Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul: online, d… | Prima cifră: cu câte zile înainte de start cerem semnarea declarației. A doua: termenul până la care locul e al alergătorului; 0 înseamnă că nu expiră. |
+| `tasks.items.inviteStaff.how.1` | 468 → 180 | „Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de au… | „Adaugă” îi trimite pe email invitația clubului. Cu cheia de invitații pusă (ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel, cu link pentru parolă. |
+| `tasks.items.botCheck.misconfigured` | 467 → 166 | Ambele chei sunt puse, dar Cloudflare spune că secretul (Secret key) în sine e greșit — sc… | Ambele chei sunt puse, dar Cloudflare spune că cheia secretă e greșită. Nimeni nu e refuzat din cauza asta, dar protecția anti-bot e slăbită până o corectezi mai jos. |
+| `editor.programmeHelp` | 464 → 166 | Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, fes… | Ziua pe ore, câte un rând: kituri, briefing, start, festivitate. Apare pe pagină, în emailul de reamintire și în calendar; lasă „Unde” gol pentru locul evenimentului. |
+| `tasks.jobCadence.intro` | 457 → 74 | Platforma are două lucrări programate: mentenanța înscrierilor (rezervări care expiră, ofe… | Cât de des au voie cele două lucrări programate să trezească baza de date. |
+| `gallery.qualityHelp` | 456 → 164 | Medie e potrivită pentru fotografii: păstrează până la {normalMax} px pe latura lungă. Min… | Medie ({normalMax} px) pentru fotografii; Minimă ({lowMax} px) pentru o imagine mică; Mare ({highMax} px) pentru afișe cu text; Originală, până la {originalMax} px. |
+| `editor.repeatHelp` | 448 → 162 | Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusu… | Fă din acest eveniment o serie, la interval fix. Următoarele {horizon} se creează acum, restul le creează platforma; fiecare dată se poate muta sau anula separat. |
+| `tasks.items.scheduler.how.2` | 447 → 277 | Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (cronta… | The same two schedules, without the paragraph on why frequent pings cost nothing. |
+| `bibs.helpSome` | 442 → 20 | {total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul… | {total} numere date. (the rest is the «?» `bibs.helpMore`) |
+| `bibs.helpNone` | 440 → 69 | Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul c… | Niciun număr încă: fiecare înscriere primește unul când e confirmată. |
+| `tasks.items.neonLimits.todo` | 431 → 172 | Pe acest mediu nu e setată nicio limită lunară (sau nu a putut fi citită de la Neon — card… | Pe acest mediu nu e setată nicio limită lunară (sau nu a putut fi citită de la Neon), deci nimic nu plafonează factura Neon. Pune una în Costuri → „Limitele bazei de date”. |
+| `tasks.services.vercel.whenCrossed` | 427 → 76 | Un eveniment care cere o taxă obligatorie ar fi socotit comercial; o donație, nu — asta sc… | O taxă obligatorie la un eveniment ar fi socotită comercială; o donație, nu. |
+
+**Kept as they were:** behaviour, button words and key structure. Existing keys are reworded in place, and `Admin.tasks.month.total`, `Budget.readings` and `services.neon.monthly` / `monthlyUnknown` keep their names. Texts the owner asked to drop are deleted (eight Neon-limits keys and `confirm.neonLimitsBody`), and new «?» siblings are added. There is no migration and no new dependency.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 512. The public participant list is a card inside «Program, regulament și declarație» (amends §481 and §406)
+
+**2026-09-27. Brief from the orchestrator:** the editor's public-list card moves under «Program, regulament și declarație».
+
+The public page draws the participant list last, right under `#rules` (BR-REQ-039-01, §32, §396). In §406 and §481 the editor still gave it a tenth card of its own. It now sits where the runner reads it.
+
+**What changed**
+- **Where it sits.** «Lista publică a participanților» (`StartListBox`, `#box-start-list`) is a level-3 card inside «Program, regulament și declarație» (`ProgrammeRulesBox`, `#box-programme`). It is the fourth and last card there, after «Declarația pe propria răspundere», following the page's order.
+- **What it keeps.** The same checkbox, `event.participantListVisibility`, and the same help and sentences. It still follows the type and the mode (`OnlyForType` / `OnlyForMode`). For a role that may only read the settings it is still its heading and its line, like the declaration card beside it.
+- **Numbering.** `page-sections.ts` marks `startList` as `nestedIn: "programme"`, so it has no number and no chip on the map. The numbered cards now run 1 to 9: type, title, description, when and where, course, registration, partners, links, programme-rules-declaration-list. The map shows nine chips plus the automatic share links. `pageFlow.short.startList` is removed from both catalogues.
+- **Drawn.** «Program, regulament și declarație» counts as drawn when the programme, the rules or the list is (`cardStates`).
+- **Closed line.** The card's closed line ends with the list's state: «lista publică: Ascunsă» / "public list: Hidden" (`Admin.editor.boxes.programmeRules.startListLine`).
+- **Refusal label.** It reads «Program, regulament și declarație › Lista publică a participanților › Publică lista participanților pe pagina evenimentului».
+- **Risk mark.** The card's amber mark is still the programme's alone, because the list reaches nobody (§350).
+
+The public page, its anchors, the service and the privacy-notice guard (§32, §421) are unchanged. There is no migration and no new dependency.
+
+**Rejected:** renaming the card to name the list («Program, regulament, declarație și listă»). Every refusal label, guide step and e2e spec uses the §481 name. The owner may still ask for it (see the questions).
+
+Tests:
+- **Unit:** `events/page-sections.test.ts` (nesting, 1..9, the card drawn from the list alone), `content/editor-order.test.ts` (the list drawn last inside `ProgrammeRulesBox`, level 3, the refusal label), `content/editor-page-flow.test.ts`, `content/create-page.test.ts`, `content/page-flow-short-words.test.ts`.
+- **e2e (edited, not run):** `editor-page-flow.spec.ts`, `cms-publish.spec.ts`.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 513. Emails leave on the scheduler's tick by default, a «Termene» setting — and every page says the wait
+
+**The owner, 2026-09-27:** emails should leave on the scheduler's tick, not straight after the request. This amends §68, §221, §377 and §383.
+
+**What changed.** The §221 delivery timing is now `scheduled` by default wherever a pinger runs, which means QA and production (the cron-job.org monitors of `SETUP.md` §40). It stays `immediate` on `local` and on the end-to-end suite's server (`test`). Neither of those has a pinger, so "on the tick" would mean "never" there. A stored choice wins everywhere. Under `scheduled`, `drainOutboxAfterResponse` sends nothing. It only wakes the outbox job (§334), and the row stays PENDING until `/api/internal/jobs/email-outbox` or «Trimite acum» claims it. Nothing is lost either way. What the club gains: sending is paced, the daily allowance is spent predictably, a burst cannot slow the site's own responses, and what one sitting queued leaves together.
+
+**Who sets it.** It is no longer the Superadministrator's platform setting (§221, §450) with no control on any screen. It is now «Când pleacă emailurile» in «Termene» on `/admin/emails`, and it belongs to the Administrator (`canManageClubSettings`). That role is asserted at the page, the action and the service. A save asks first through `ConfirmDialog` (§384) and is audited with from and to. A save that changes nothing writes nothing. A save expires the public `settings` tag and wakes the outbox job.
+
+**The wait is said, never typed.** Under `scheduled` the outbox job is the only sender, and three things hold it back; the longest wins:
+- the pinger's cadence at this hour (`pingerCadenceMinutes`: `PINGER_CADENCE_MINUTES` by day, at least an hour at night);
+- the Administrator's minimum interval (§334);
+- the budget governor's floor (§447: an hour at amber, two at red).
+
+One pure formula (`notifications/domain/email-wait.ts`) gives that number to three public screens: the screen after the registration form, the link resend and the newsletter pop-up. Each says «în cel mult {wait}» there, read from the data cache. A save of the timing or of the interval expires that cache. Under `immediate` the old sentences stay. «Termene» says this deployment's own numbers ({day}, {night}, {wait}) and never a typed «15 minute». The staff toasts for the update notice and the organizers' message, and the group-run declaration's done line, say «imediat sau la următoarea trecere programată». Before, they promised «câteva minute».
+
+**The queue is visible.** Under this default, a non-empty queue is normal. `/api/health`'s `email` block therefore carries a `delivery` block: the timing, the PENDING count, the wait promised now, the scheduled wait by day and night, and `nextTickAt`. `nextTickAt` is the pinger call at which the outbox job is next expected to run for real. It is the next boundary of the pinger's cadence on the club's clock and, when an interval applies, the first call after `minimumIntervalEnd` of the last real run (§355). It is an estimate for a person to read, not a status. `overdue` (§98) is still what turns a real stall into the 503. «Următoarele emailuri automate» (§383) opens with the same count and tick.
+
+**What stays immediate, and why.** The contact form sends through the club's Gmail directly (§149), not through the outbox, so it is unaffected. Everything else goes through the outbox and follows the setting. That includes the newsletter's confirmation, whose pop-up now states the wait.
+
+**The deadline runs from the email, not the queue (§513, the review's blocker).** Under the scheduled default a message waits for the outbox job's next tick: fifteen minutes by day, an hour at night, longer under the governor's floor or a spent allowance. A deadline written when its email was queued lost that wait. At night a thirty-minute declaration hold given at 23:05 was over before the midnight tick delivered the link. So when a message that carries a participant's deadline is SENT, `processOutboxBatch` moves that deadline later by exactly the time the message waited, `sent_at − created_at`. `enqueueEmail` writes `created_at` from the same `now` that computed the deadline, so the new deadline is the send plus the same length «Termene» gave. A later change of «Termene» still moves nothing already given (§377). Four messages carry one: the address link (`VERIFY_REGISTRATION_EMAIL`, `email_link_expires_at` — the column is written at submission, not at send, so it is included), the declaration hold (`COMPLETE_DECLARATION`), the waiting-list offer (`WAITLIST_SPOT_OFFER`, both `hold_expires_at`) and the family link (`REGISTER_ANOTHER_PERSON`, `pending_family_entries.expires_at`). The participation window's deadline (§104) is a date on the event that no email starts, so it never moves. Any hold longer than the club's longest hold is taken to be that window's.
+
+The rules. The move is planned before the render, so the words, the offer's stated length and the link's token all say the moved deadline. It is written only after the provider accepts the message, compare-and-set on the value read, so a failed, bounced or deferred message moves nothing until it finally leaves. A hold or an offer is written under the event's lock and capped at the close and the start, as the allocator caps it. An offer already past its deadline is never revived, because an offer occupies its place only while its deadline is ahead and the place may be somebody else's. A lapsed declaration hold is re-based, because it keeps its place by status (§160). A wait under a minute changes nothing, so the `immediate` timing reads and writes nothing more than before. If the re-base cannot be read or written, the message leaves with its stored deadline, never not at all. «Termene» says it in words: «termenul curge de când pleacă emailul».
+
+**The waits a page promises (§513, review round).** «Înscrierile mele» no longer says «tocmai am trimis linkul» under the scheduled timing: it says the real wait, «în cel mult {wait}», like the resend page and the screen after the form. The signing step's «cel târziu într-o oră» becomes the same real wait, since the governor's floor can be two hours.
+
+A deadline moves once, on the message that started it. The enqueue that writes a participant's deadline — the verification link of a new or restarted registration, the declaration hold an allocation gives, the waiting-list offer, the family entry's link — marks its own outbox row with `startsDeadline: true` in the payload, and the send re-bases only a marked row. A resend (the backoffice's «Trimite din nou», §80; the runner's «trimite-mi linkul din nou», §39; the form sent again), a reminder (§104, §160) and the club's copies (§320, from which the mark is stripped) carry no mark and move nothing: re-basing by the message type alone let every resend push a hold or an offer on again.
+
+A declaration hold is not lapsed while its first email is still queued. While the marked COMPLETE_DECLARATION is PENDING or PROCESSING, the sweep does not release the hold (under the event lock it already takes), the count of lapsed holds that a newcomer may take does not include it, and the maintenance scan does not pick the event for it. Once the email leaves, the hold runs its full length from the send, and a moved hold or offer wakes the maintenance job for its new instant (§334). A message that failed for good is final, and the hold lapses on its stored deadline as before; a started event still closes every hold. Without this, the night's hourly tick against a thirty-minute hold, or any hold under the governor's floor (§447), could have given the place away before the runner was told they held it.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 514. «Tradu cardul: RO → EN» — translate one card between its tabs
+
+The owner, 2026-09-27: «vreau să fac traducerea mai granulară (per card): practic între tab-uri să am acest translate pe lângă cel global». Between the one box's «Tradu din română» (§464) and the whole editor's «Copiază și tradu tot: RO → EN» (§482), every Română | English tab row whose words may be translated now ends with «Tradu cardul: RO → EN» / "Translate this card: RO → EN". That is every card of the event editor with language tabs, the discount note in «Cost», a standing page and an album.
+
+**What it translates.** The card is the nearest `Panel` (a `<details>` or a `<section>`) around the tab row. The press fills that card's English boxes whose Romanian twin has words, using the same allowlist as §464, and only boxes that post in the same form. The card's own boxes outside its tabs count too. On the event editor the sets are:
+- title and summary
+- the full description
+- the rules
+- the route description
+- the programme's notes, what to bring and each timed row's English words
+- the address card's two search-engine texts (the page address is not words and is never translated)
+- the discount note
+
+The meeting place's English name is in «Când și unde», which has no tab row, so it keeps its own box button (§464). «Echipa» has no tab row either: each person's card is its own form, and its «Copiază și tradu tot» already translates that card alone.
+
+**The same press as the whole editor's.** Card and whole editor share one hook (`useTranslateAll`), so they ask the same question at the same moments. The question comes when English words already written would be replaced («Înlocuiește tot» / «Doar cele goale»), or when the press would send more than the size threshold, with a title of its own («Traduci cardul din română?»). Nothing is saved: the boxes change as if typed, and the ordinary save stores them under the both-languages rule (§352).
+
+**What the person sees afterwards.** When it filled something, the English tab comes forward, so the person reads the result rather than the Romanian they were already looking at. The toast names the card: «Gata: 3 câmpuri traduse în „Descrierea completă”. Verifică textele în English și apasă Salvează.» The count goes through `countForm` (§341), with its own wording when a text was cut at its box's limit (§496). The card's name is the Panel's heading without its closed line. The status line is read out to assistive technology but not drawn, because it sits in the sticky tab row (§170) and a long sentence there would cover the text scrolling under it.
+
+**Always there for a role that writes words** (§482, §497). With no DeepL key or a spent credit, the button is greyed. It says why in the whole editor's own sentences, in a tooltip with the link to the steps or to Costuri, and to assistive technology through `aria-describedby`. A role that writes no words sees nothing. The Server Action checks the role and the key again on every press (BR-REQ-060-01).
+
+The card's button never makes the sticky tab row a second line. Below `sm` it is the translate glyph alone in a 44-px square, named by its `aria-label` and a tooltip with the full words «Tradu cardul: RO → EN». From `sm` up it shows the glyph and then the words. The row does not wrap: the tabs scroll instead. This keeps §480's density at 320 px. When the button is greyed, the link to the setup steps is in its tooltip and can be reached only with a pointer. A keyboard user reaches the same steps through the whole editor's «Copiază și tradu tot» strip right above the cards (§482), so the card's button adds no focusable duplicate.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 515. The declarations reviewed: the race declaration as trail and road from one body, a minimum age of at least fourteen, the group runs on {{minimumAge}}
+
+**The owner, 2026-09-27 (after a review with ChatGPT):** "vreau să modifici declarațiile astfel încât toate să fie consistente între ele, cu Terms & Conditions și Privacy Notice", in eleven points (the brief is the authority; `D:/tmp/handoff/owner-brief-declarations-review-2026-09-27.md` holds it verbatim).
+
+**Two race declarations, one body.** The race declaration is now two legal documents, one per kind of course.
+- The trail one keeps the key `EVENT_DECLARATION`. Every signature so far was recorded under it, so no recorded acceptance changes meaning.
+- The road or park one is a new key, `EVENT_DECLARATION_ROAD`, appended to the enum. Migration `0097_race_declaration_road` is an expand step: it only adds the value.
+- Both texts are built in `templates/declaration.ts` (`RACE_DECLARATION_PARTS`) from one shared body: the participant and identification, the minimum age, minors aged 14–17, liability, health, stopping, fair play, belongings, the kit, photographs, the data and signature paragraph, and the archive. Each text adds its own risk section.
+- The road text leaves out the mountain's risks (roots, mud, wild animals, sheepdogs, help that is hard to reach). It names the road's risks instead: kerbs, potholes, drain covers, wet surfaces, crowding, other runners, pedestrians, bicycles and scooters, traffic where the course is not closed, and the rules of the road.
+
+**Which text a race signs.** One resolver, `findEventDeclaration`, decides it for the page, the signature, the paper form, the desk and the emails.
+- The organizer's choice comes first: the version picked in the editor names its key.
+- A road race falls back to the trail text while the club has no road text approved. A trail race never falls back to the road text, because a trail runner must read the mountain's risks.
+- **The editor preselects by course.** A race with no declaration chosen (a new one, or a saved one that never had one) starts on the newest version in force of the kind its course reads (`preselectedRaceDeclaration`). On asphalt that is the road text once approved, otherwise the trail text. The select follows «Traseul» live until someone picks by hand.
+- This is what lets the surface rule reach a saved row: a race cannot be saved without a declaration (§39).
+- A saved choice is never replaced. An asphalt race saved before this change keeps its trail version, and the card says so under the select (`declarationKindMismatch`). It is a note, never a refusal: the organizer knows the course.
+- The preselection applies only while the event registers on the site. The select is hidden but still posts in any other mode, and a version posted for such an event is refused.
+
+**The minimum age is at least fourteen.**
+- The editor refuses a race's minimum under 14. A row saved under §329 with 0 or 12 binds as fourteen everywhere through `effectiveMinimumAge`: the registration door, the form, the staff form, test rows, the event page, the JSON-LD and the PDF.
+- The "no minimum" sentence and its help are gone. Tightening the database CHECK from 0 to 14 is a contract step for a later release.
+- Both race texts open, after the «Subsemnatul/a» identification, with «Declar că am cel puțin {{minimumAge}} împliniți la data evenimentului». Between 14 and 17 the minor signs and the parent or guardian approves and signs.
+- No under-14 flow is left in any text. The kit rule reads «al participantului sau, pentru 14–17, al lui ori al părintelui».
+
+**Group runs.**
+- Both self-declarations state the age only through `{{minimumAge}}`; the hardcoded 18 is gone.
+- The run's age box starts and stops at 18. The save refuses less on the server too, naming the box. A run stored with less reads as 18 (`groupRunMinimumAge`), so no group-run text covers a minor.
+- A birth date is still asked only above 18.
+
+**Wording (points 6–10).**
+- Liability is informed acceptance of risk within the law (Civil Code art. 1351, 1352, 1355, 1371), never an absolute waiver.
+- The wild-animal and substances sentences are the owner's own words, in both race texts and both group-run texts.
+- The start may be refused only for the equipment the race's own rules make mandatory; a recommendation never becomes an obligation.
+- One data and signing paragraph serves both race texts: three years in the archive, identity documents kept at most seven days, archive copies masked, the text's fingerprint, the moment, the signer's name, a simple electronic signature, and the adult signs personally.
+
+**The platform's texts in one press (§132)** now approves `PLATFORM_APPROVAL_KEYS`: the notice, the terms and both race declarations. A club that takes the platform's texts therefore has both kinds of race covered.
+- The group runs' two optional texts stay out, because a club offers them one by one.
+- /admin/legal and its messages count the list (`{count}`), so no sentence carries a number of its own.
+- The titles are «Declarație pe propria răspundere — cursă trail» and «— cursă pe asfalt / în parc».
+- /admin/tasks has a «Declarațiile de concurs» row, open until both kinds are in force from the new body.
+
+**Not rewritten:** the terms and the privacy notice (point 11). What they need is proposed separately, file by file and paragraph by paragraph, for the owner to decide.
+
+The one press «Aprobă textele platformei» on `/admin/legal` approves every text of the catalogue: `PLATFORM_APPROVAL_KEYS` is `LEGAL_DOCUMENT_KEYS`. That means the notice, the terms, the trail and road race declarations, and the group runs' two optional self-declarations. Approving a group run's text only makes it available: a run offers it only once its organizer ticks the box (§393). The intro and the button count the same list. The button, the confirm title and the success line are plain sentences with the count as a number («{count} din {total}», «în total: {count}»), never ICU plurals. The confirm dialog names each text it approves.
+
+A duplicate or a series date copies the minimum age as it binds, `effectiveMinimumAge(source.minAge)`. A race saved under §329 with 0 or 12 gives a copy fourteen, never a row under the floor that no save could have written.
+
+The road declaration's enum value is migration 0098 (renamed from 0097). It sorts after the sibling release's 0097_registration_country.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 516. One «Setări» section with tabs; «Sarcini» rows link into it; «Configurație» is the row's last tab
+
+**The owner, 2026-09-27:** «navbar-urile și URL-urile shared între Sarcini și config sunt un pic greșite, ne duce prea dintr-o parte în alta». At 18:30 he was on «Configurație» (`/devs`) looking for the Neon limits card, and it was on `/admin/tasks` → «Costuri».
+
+**Why.** Each club setting lived wherever it was first built:
+- on `/admin/emails`: the Mailgun plan, «Termene», the club's copies, who reads «Scrie-ne» and the shown address;
+- on `/admin/tasks` → «Costuri»: the money, the Neon card and its brakes;
+- on `/admin/tasks` → «Anti-robot»: the anti-robot switch;
+- on `/admin/pages` → «Aspect»: the site's tint.
+
+A person looking for a setting had to guess which section it was in.
+
+**What.**
+
+- **«Setări» / "Settings", one main-bar entry.** It is one row of secondary tabs (§360) at `/admin/settings/<tab>`: «Emailuri», «Termene», «Contact», «Aspect», «Costuri», «Platformă». A bare `/admin/settings` lands on the reader's first tab.
+  - Each tab asks the gate its panels already asked (`settings-tabs.ts`; BR-REQ-060-01). Emailuri, Termene, Contact and Aspect ask `canReadContent`; Costuri and Platformă ask `canManageRegistrations`.
+  - Every form keeps its own predicate at the page, the action and the service (`canManageClubSettings`, `canManagePlatform`, §450).
+  - Every save lands back on its own tab.
+  - The section layout 404s a role with no tab (the volunteer). It has no `loading.tsx`, so a refusal is never flushed as a 200.
+- **«Configurație» is the row's seventh and last tab** (`/devs`, for `canSeeDiagnostics`). The owner's complaint was two places with no tab between them.
+  - `/devs` keeps its route, its own layout and gate (§119, BR-REQ-090-04), and its three panels (§265). It draws «Setări»'s row above them, with «Configurație» marked, so «Costuri» is one tap away.
+  - Its Neon block always names where the limits are set: a link to `/admin/settings/costs#neon-limits` for a role that opens «Costuri», a sentence for the Tehnic. Before, the only link was «Schimbă planul», and it appeared only when the plan was not read from Neon.
+  - The main bar keeps its own «Configurație» entry, because that page is the Tehnic's whole reason to open the backoffice.
+- **The main bar follows the order the club opens things.** Events, registrations, the desk, gallery, pages, newsletter, settings, tasks, team, legal, guide, system. Each role sees the same order with its own gaps; the volunteer's bar is «Ziua cursei», «Ghid».
+- **«Sarcini» keeps «Club», «De făcut» and «Aplicația».** Every «Club» row whose work is done on a backoffice screen links to it (`task-targets.ts`, `TaskTargetLink`: a Server Component anchor, 44 px tall, offered only to a role that may open the target). Each link carries a `#` that opens its card:
+
+| Row | Where it now links |
+| --- | --- |
+| legal texts (five rows) | «Documente legale» |
+| invite staff | «Echipa» |
+| publish the race | «Evenimente» |
+| scheduler | Setări → Costuri `#job-cadence` |
+| bot check | Setări → Platformă `#bot-check` |
+| declarations archive mail | Setări → Emailuri `#club-notices` |
+| translation | Setări → Costuri `#translation-budget` |
+| contact form | Setări → Contact `#contact-recipients` |
+| domain renewal | Setări → Costuri `#month-costs` |
+| Neon limits | Setări → Costuri `#neon-limits` |
+
+- **Every old address answers a 308 from the proxy**, with the query kept, noindex and no-store. It runs after the aliases and before next-intl (`src/i18n/moved-paths.ts`):
+
+| Old address | New address |
+| --- | --- |
+| `/admin/emails` | `/admin/settings/emails` |
+| `/admin/pages/appearance` | `/admin/settings/appearance` |
+| `/admin/tasks?panel=costs` | `/admin/settings/costs` |
+| `/admin/tasks?panel=botCheck` | `/admin/settings/platform` |
+
+The `?panel=todo`, `app` and `club` panels of «Sarcini» are not redirected. A fragment rides along, so an old `#email-plan` still opens its card.
+
+- **The staff error page links to «Setări»**, which every content role opens, and its text says an Administrator finds the month's budget at Setări → Costuri. «Costuri» itself is the Administrator's, so a link straight to it would have been a 404 for a Redactor, an Organizer or a Tehnic.
+
+**Clicks to reach each setting, before → after.** Counted from anywhere in the backoffice, for the role that sets it.
+
+| Setting | Before | After |
+| --- | --- | --- |
+| Mailgun plan | 1 | 1 (Setări lands on Emailuri) |
+| Termene, Contact, Aspect | 1–2 | 2 (Setări → tab; the card opens on arrival) |
+| Costuri, Neon limits | 2 | 2 |
+| Anti-robot | 2 | 2 |
+| From «Configurație» to the Neon limits | no link while the plan was read from Neon | 1 |
+
+No journey takes more clicks than before.
+
+**Behaviour changes, deliberate.**
+- A volunteer could open `/admin/emails` by typing it, because the page only asked `requireStaff`. `/admin/settings/emails` now answers 404 for that role.
+- No setting's behaviour, gate or audit changed. No migration, no new dependency.
+
+**Tests.**
+- `tests/unit/staff/settings-map.test.ts`:
+  - the tabs per role, and that a higher role gets every tab a lower one has;
+  - `canOpenSettings` equals "has a tab";
+  - the «Configurație» entry for exactly the roles /devs opens to, and /devs drawing the row with it marked;
+  - the Neon block's limits link or sentence;
+  - the bar's order;
+  - every tab page asking its gate as a 404;
+  - saves landing on their own tab;
+  - every «Sarcini» target's route and anchor existing;
+  - nothing in `src/` linking to a moved address.
+- `tests/unit/i18n/moved-paths.test.ts` walks every redirect through the real proxy.
+- e2e: `config-panels.spec.ts` and `neon-plan.spec.ts` cover the row, the 308s, «Configurație» and back, and the Tehnic's sentence against the Administrator's link.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 517. The newsletter stops offering «Coduri de reducere»: discount codes are for the club's members
+
+**Context.** §445 gave the newsletter the topics from the owner's list of 2026-09-26, and «Coduri de reducere» / "Discount codes" (`DISCOUNTS`) was one of them. On 2026-09-27 the owner said to remove it: the club's discount codes are for its members only, not for anyone who subscribes.
+
+**Decision.** The topic is retired rather than deleted:
+
+- `RETIRED_TOPICS = ["DISCOUNTS"]` in `src/modules/newsletter/domain/topics.ts`. `NEWSLETTER_TOPICS`, `SENDABLE_TOPICS` and `isNewsletterTopic` are derived from the enum minus the retired topics. The pop-up, the subscriber's own page, the composer on `/admin/emails` and the privacy notice's `{{newsletterTopics}}` list therefore stop showing it. `normalizeTopics` drops a posted `DISCOUNTS` the same way it drops any word that is not a topic.
+- The `newsletter_topic` enum value stays. A value is never removed, and an old `newsletter_sends` row may still name it. Its name stays in both message catalogues so the send history can still show it. Its hint and the pop-up intro's mention of discounts are gone in both languages.
+- The email preview's sample newsletter is now a shoe test rather than a discount.
+
+**Migration `0100_newsletter_discounts_retired`** is data only (an expand). It strips `DISCOUNTS` from every stored subscription and keeps every other topic the subscriber chose. **An empty topic list never exists:** `newsletter_subscribers_topics_not_empty` (0082) refuses one. So a subscriber whose *only* topic was `DISCOUNTS` is **deleted**, and their manage/unsubscribe links go with it by cascade. This is the same outcome as §445's "unsubscribing from everything deletes the row". It happens silently: nothing else was asked for, so the person receives no email about it. Proven on PGlite in `tests/integration/db/newsletter-discounts-retired-migration.test.ts`.
+
+The migration is numbered 0100 so that it comes after the same release's 0097–0099. Its journal `when` is later than every one of theirs.
+
+**Accepted window.** Between the migration running and the new build going live, the code still serving can save a new `DISCOUNTS` subscription. Such a row does no harm. The new code never sends to `DISCOUNTS`, the manage page does not show it, and the subscriber's next save drops it. A `DISCOUNTS`-only row saved in that window receives nothing until the subscriber changes it. No sweep was added for this.
+
+**Not changed.** How the club hands discount codes to its members is outside the newsletter and outside this change.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 518. The anti-bot check says every state, on the widget and on the send button, and never strands a press
+
+**Why.** Cloudflare's frame says «Success!» or draws a box, and says nothing when:
+- its script is blocked;
+- it fails;
+- its token lapses;
+- the box waited too long.
+
+The send button had to guess from an empty field. It held presses for eight seconds for a check that had already given up, and it could send a lapsed token that the server then refused.
+
+**What.** `TurnstileWidget` wires every documented callback into one named state. It also treats a script that is refused, or has not arrived after `BOT_CHECK_BLOCKED_AFTER_MS` (10 s), as `blocked`. The state is:
+- said under the widget in both languages (`BotCheck` namespace, placed by the `BotCheck` Server Component on the registration form, the contact form, the newsletter box and the group-run declaration);
+- written on the widget's element as `data-bot-check`;
+- marked with `data-bot-check-gave-up` once the check has given up.
+
+`SubmitButton` (`awaitsBotCheck`) reads both attributes from the form, as it reads the token (§285).
+
+| State | Callback | Line under the widget (RO) | Button's held sentence | Retry offered | Gave up |
+| --- | --- | --- | --- | --- | --- |
+| loading | none yet (script on its way) | «Se încarcă verificarea anti-bot…» | «Se verifică…» | only after 12 s (slow) | no |
+| checking | render / after-interactive-callback | «Se verifică…» | «Se verifică…» | only after 12 s (slow) | no |
+| interactive | before-interactive-callback | «Bifează căsuța de mai sus…» | «Bifează căsuța de mai sus…» | no | no |
+| passed | callback | «Verificare reușită — poți trimite.» | none: the press is sent | no | no |
+| expired | expired-callback | «Verificarea a expirat — se reface…» | «Verificarea a expirat — se reface…» | yes | no |
+| timeout | timeout-callback | «Căsuța a așteptat prea mult și s-a redesenat…» | «Bifează căsuța de mai sus…» | yes | no |
+| error, first | error-callback (returns false: Cloudflare retries) or render threw | «…nu a mers; se reface singură…» | «Se verifică…» | yes | no |
+| error, second | error-callback again | «Nu am putut verifica automat; trimitem oricum, iar clubul confirmă.» | none: the press is sent | yes | yes |
+| unsupported | unsupported-callback | «…nu poate rula… Nu am putut verifica automat; trimitem oricum, iar clubul confirmă.» | none: the press is sent | no | yes |
+| blocked | script `error` event, or nothing after 10 s | «…nu s-a încărcat… Nu am putut verifica automat; trimitem oricum, iar clubul confirmă.» | none: the press is sent | yes (injects the script again) | yes |
+
+**Rules.**
+- **Fail-open at the second failure.** The first `error` is Cloudflare's to retry: `retry` stays `auto`, and the error callback returns `false`, which Cloudflare's documentation calls letting Turnstile handle the retry. The second error gives up. `blocked` and `unsupported` give up at once, because nothing retries them by themselves. A check that has given up holds no press and sends a held one at once, without a token. The server takes a missing token for the check not running (§216), and people register at all costs (§205).
+- **No stale token.** A press is held in `interactive`, `expired`, `timeout` and a first `error`, whatever the token field still holds, because Cloudflare does not promise to empty it on expiry. In `passed`, a press counts as answered only with a token in the field. In `loading` and `checking` it goes by the field, because a written field is the button's second, callback-independent signal (the held-press fix). A reset, ours on every attempt or Cloudflare's on a refresh, empties the field before the state reads `checking`.
+- **The button carries the state.** The held sentence follows `data-bot-check`, and `aria-busy` is set while a press is held as well as while it is pending. While a press is held, the widget's line is `aria-live="off"`, so a screen reader hears one sentence, not two.
+- **The valve speaks.** A held press is still sent 8 s after the press, token or not (§285, §304). At 6.5 s the button says «Trimitem fără verificare automată…», and the sentence stays through the request it sends. A token that arrives in between still sends the press at once and takes the sentence back.
+- **«Reîncearcă verificarea»** (a 44-px, `type="button"`, BR-REQ-041-01 criterion 6) calls `turnstile.reset()` on the widget. When the script never came, it removes the failed tag and injects a fresh one. A new mount that finds a tag already marked failed replaces it at once instead of waiting 10 s.
+- **Health.** `/api/health` reports `turnstile.lastDay: {heldPressValve, widgetFailed}`, counted over 24 h:
+  - `heldPressValve`: held presses the valve sent;
+  - `widgetFailed`: widgets that reached `error` or `blocked`, counted once per widget.
+
+The browser reports each one with a fire-and-forget beacon to `POST /api/bot-check-signal`. That endpoint:
+  - accepts only the two words, same-origin only, and always answers 204;
+  - counts them in the existing `rate_limit_buckets` table (scope `bot-check-signal`, key = the word, never a person), so there is no migration and no personal data;
+  - never enforces a limit; the bucket's count is the figure.
+
+The existing retention sweep deletes those buckets after a day. The counts never change the status (a blocked check blocks nobody) and are `null` when they cannot be read. A report can wake the database, but it happens only when the check failed for somebody, usually alongside a registration POST that wakes it anyway (§447).
+
+The widget's callbacks outlive the effect run that drew it. Cloudflare keeps the callbacks it was given at the first `render` for the rest of the page's life, and the widget is reset rather than redrawn on every attempt (§185). So the callbacks do not hold a `become` of their own: they read the current effect run's `become` from a ref at the moment Cloudflare calls them (`botCheckCallbacks`, `drawBotCheck`). Before this round the first run's `become` was cancelled by the form's first server re-render, and from then on the widget said nothing: the state line stuck on «Se verifică…» and `data-bot-check` went stale for the send button. The review caught it.
+
+The health counts take no anonymous write. `/api/bot-check-signal` is gone. The two words travel with the registration form in `bot-check-signal`: the widget's hidden field after a failure in the current attempt, and the send button's own name and value as the submitter of a press the valve sent, set only around that one `requestSubmit`. The register action counts them in the throttle's hourly buckets only after the registration has passed the throttle and the other defences. It accepts only the enumerated words, each at most once per submission. A count that fails never fails a registration. The other forms carry the field too, but nothing counts it there.
+
+A press held for the check shows the running glyph, like a pending one: the press was taken, and the sentence says what it waits for. Only the registration form holds a press, so only it says the valve and «clubul confirmă» sentences (`BotCheck`'s `heldPress`). The contact form, the newsletter box and the group-run declaration say plainly that the form can be sent anyway, which each of their actions accepts (§216).
+
+`/api/health` is readable by anyone, and a raw daily count of held presses is a lower bound on how many people registered that day. So `turnstile.lastDay` publishes a level per signal, never the count: `none` (0), `some` (1–4) or `many` (5 or more), for `heldPressValve` and for `widgetFailed`. `botCheckSignalLevels` converts the counts inside the handler, so no count reaches the body. The hourly buckets keep the counts, and no backoffice screen shows them. The level still has no effect on `status`, and it is `null` when it cannot be read.
+
+§502 handed Cloudflare only the success callback, because an `error-callback` can change how the widget retries. The failure callbacks here return `false`, which Cloudflare's documentation reads as "leave the retry to Turnstile". Its own automatic retry is therefore unchanged; the callbacks only name the state.
+
+Baseline `BR-V2.13-2026-09-27`.
+
+## 519. A family in one sitting: one email, one press, one wizard
+
+**Amends §389, §446, §468, §471, §377 and §77.** The owner, 2026-09-27: "niciun email instant: unul singur, după ce apeși «Gata» sau după fereastra din Termene", and «asta cu wizzardul de confirmare si claritate e top prio!».
+
+**What was wrong.** A parent registering three people on one address got up to three emails, each with its own button: the verification link for the first person, then one «înscrii altă persoană» message per extra person (§446). After that came three declaration requests. Each person was one more click in one more message, and nothing told the parent this would happen.
+
+**What the public form does now.** The screen after every public form asks «Mai înscrii pe cineva cu aceeași adresă?» before anything is mailed:
+
+- «Da, încă o persoană» opens the same form again with the address fixed. The address is said back rather than asked, because it comes from the browser's sealed sitting cookie.
+- «Nu, gata — trimite-mi emailul» sends.
+
+The next form starts with the boxes a family shares, as this browser posted them on the sitting's earlier forms: the city, the citizenship, the guardian's name, the emergency contact's name and phone, and the emails' language. If a form leaves one of them blank (an adult's form has no guardian), the earlier value is kept. The person's own boxes start empty: the name, the birth date, the sex, the phone, the health note, the socials and every consent. A refusal's draft (§142) still takes precedence, and a cookie that would pass 4 KB with them drops them rather than losing the sitting.
+
+**Held messages.** Every message the sitting's forms queue waits in the outbox (`email_outbox.next_attempt_at`, which the claim already reads) until «Gata» or the end of the club's window. The window is counted from the last form. From the second person on, the held messages become one REGISTER_ANOTHER_PERSON message in a family shape (idempotency key `family-sitting:<id>`). The individual held rows are deleted, but only while they are PENDING and never tried. The family message:
+
+- has the subject «Înscriere de familie: N persoane la …»;
+- names every person with their birth date;
+- says who the address held before, as "Ana P.";
+- links «Toate înscrierile mele» (§77, its own MANAGE_PROFILE token minted beside it);
+- has one button, «Confirm și semnez declarațiile (N)».
+
+One person in a sitting keeps the message that person always had: the verification link, or the confirmation of another person (§446). Held VERIFY_REGISTRATION_EMAIL and REGISTER_ANOTHER_PERSON rows get no club copies.
+
+**The window: «Termene» → familySittingMinutes, 15 by default, 5 to 60 (§377).** Five minutes is less than a second form takes on a phone. An hour is the most a verification email should wait, and the outbox health check reads a row held longer as stalled. The brief asked for 10 by default and 0 for "at once". This is left for the owner to confirm; a 0 would also have to skip `notBefore`.
+
+The window depends on the external pinger. A held row leaves only at the outbox job's next run: every quarter of an hour by day, hourly at night, and hourly on QA. So, after the review:
+
+- while the screen is open, a small island (`PressWhenWindowEnds`) presses «Gata» when the window ends. The delay is computed on the server, so a wrong browser clock does not move it, and the drain after that response sends the email at once;
+- with the page closed, the pinger's next run sends it, and the sentence says so honestly: «Dacă lași pagina deschisă, emailul pleacă singur peste {minutes}. Dacă o închizi, pleacă la prima verificare de după aceea — de obicei într-un sfert de oră, noaptea în cel mult o oră.»
+
+**Why one email.** The owner asked for it, and one button can do what the three did. The press spends the single-use token (hashed at rest and minted at send time, §12.8). It then confirms the address, and gives each ticked person a place through the ordinary allocator, under the event's lock and within the club's limit per address. Each person runs in a savepoint of their own, so one refusal (the limit, a full waiting list, terms changed since) is that person's alone and the others still join. Unticked kept forms are deleted, with an audit row that names nobody.
+
+The press then opens the §471 wizard, «Declarația 1 din N», on the declaration page under the same spent link, through a pass bound to it (binding "family"). The emailed declaration requests wait the wizard's half hour and are withdrawn for whoever signed meanwhile.
+
+A press that registers nobody — every kept form unticked, or everybody refused — lands on «Nu am înscris pe nimeni». It never says «the registrations are made», because the address was not confirmed.
+
+**How long the link lives.** The family message's link lives the club's email-link window from the send, as the message says («linkul e valabil …»), not from the first form. When the message renders, the sitting's live registrations, its live kept forms and the sitting itself are extended to send time plus that window, before the token is minted. Nothing is shortened, and nothing already lapsed is revived. A one-person sitting's held verification email still counts its link's life from the form. The drift is at most the window plus a pinger's wait, out of 48 hours, and is accepted.
+
+**Who a second form in the sitting is.**
+
+- The same name (`sameRunner`) as a kept form replaces it: a corrected birth date, or the same person again. It never adds a person.
+- Another name on a kept form's birth date (twins, §493, or a corrected name) neither replaces nor adds. Overwriting would drop the first person without a word.
+- The same as a registration the sitting created queues nothing: its held message already says it.
+- The club's limit counts the sitting's kept forms. At the limit, the address hears so at once, as without a sitting (§389).
+
+The screen's list uses the same rule on this browser's own typed people, which the cookie now holds as name and birth date. So the screen lists who the email will name, and for the birth-date clash it says why the form was not kept and what to do: reply to correct a name, or for a twin use another address or ask the club.
+
+**Kept rules.**
+
+- §39 (AGENTS.md §19.4): the screen and every cookie read the same whatever the address holds. The sitting cookie always carries an id of one shape, a random one when nothing was held, and everything it lists or prefills was typed on this browser.
+- A test registration goes nowhere new.
+- The adult's own consents are never kept, and the address holder acknowledges them at the press (§421).
+- «Nu înscriu această persoană» (§468) stays on the single-person message.
+
+**Departures from the brief.**
+
+- The per-person decline in the email became unticking a person on the page the button opens.
+- «Declarațiile (N)» is merged into the one button «Confirm și semnez declarațiile (N)».
+
+«Toate înscrierile mele» says each person's declaration state and lists the kept people waiting for the address.
+
+Migration `0098_family_sittings` only adds: the `family_sittings` table and `pending_family_entries.sitting_id`. It was renumbered from 0096 after `0096_list_socials` and the two 0097 chains, with its `when` after theirs.
+
+The second review of the family sitting (2026-09-27). A declaration request the wizard holds never outlives its place. When the press confirms someone, the hold is set as the allocator would set it at the moment the request can leave (the wizard's half hour). That is the club's minutes, or the participation window's deadline, capped by the close and the start. It is written to the allocator's own column and is never shorter than the hold already given. When the close or the start ends the hold before that moment, the request is not held; it leaves at once.
+
+The sitting's window in «Termene» is 0–60 minutes, 10 by default. Every form sent and every «Da, încă o persoană» starts the window again, on the server's row, on the messages it holds and on the browser's cookie. «Da» is a form press, not a link, because a GET never mutates. At 0 the platform holds nothing: every form's email leaves at once, as before the sitting, and the screen still offers the next person, saying the email has already left. The screen says when the email leaves in one sentence, with the minutes left, and puts the two buttons right after it. A held verification email counts its link's life from the send, as the family message already did.
+
+The order of a family is the order its forms were sent, everywhere. The one press writes `family_sittings.registration_ids` in that order and keeps the row, which holds ids only, until the day after the start. One comparator orders the wizard, «Declarațiile de pe această adresă» and the family's confirmation.
+
+A family confirmed by the one button gets one confirmation (the owner, 2026-09-27: «statusul CONFIRMAT trebuie să fie pentru toată familia, și în mail trebuie să vină toate QR-urile pentru toată familia»). Its subject is «Confirmat: N persoane la …». Each block is headed by a name and carries the race number (`raceNumberOf`, provisional and labelled so, or «încă fără număr»), the desk code and the QR code. Its button is «Toate înscrierile mele», and every signed PDF is attached. The first signature queues it, keyed by the sitting. Each later signature moves it: it leaves once nobody is left to sign here, or the wizard's half hour after the last signature. It is read at send time. A person who signs after it has left gets their own confirmation, as before. The club's copy is one message with names and numbers and never a code. «Declarațiles de pe această adresă» and the wizard's closing step show each confirmed person's race number beside the desk code (the owner, 19:14: «aici vreau să văd și BIB-urile»). The migration is 0099.
+
+The third review (2026-09-27). The same person sent again inside a live sitting queues nothing new, and the club's record now says so: the audit row carries `resent: "VERIFY_REGISTRATION_EMAIL", held: true`, and the registration's timeline reads «„Confirmă adresa de email” așteaptă deja să plece și pleacă o singură dată» rather than "re-sent" or "nothing to re-send". At a window of 0 the screen after «Nu, am terminat» never promises one email: it says «Fiecare persoană primește emailul ei.», decided by the `atOnce` flag the submitted-facts cookie now carries (`doneFamilySentence`).
+
+The browser's half of a sitting now lives until the window ends plus two minutes (`SITTING_COOKIE_GRACE_MINUTES`), so the open screen's own «Gata» at the window's end still carries it on a slow phone. The screen, the next form and `sittingCookieLive` still read the window's end, and the server's `held_until` is still the truth. The automatic press posts `autoPress=1`; without the cookie it does nothing, because the server releases the sitting at its window anyway. The cookie also carries the window the action read (`windowMinutes`), and the screen names that one, not the public cache's, which can lag a «Termene» save. A kept form that a one-person sitting held gets the send-time rule the held verification email already had: when its message leaves, the form and its token live the club's email-link window from that send (`extendHeldFamilyEntry`), only while still live and only lengthened.
+
+The owner's answers. A family's one confirmation greets everybody by first name in the order of the forms, «Salut, Ana, Ion și Maria,» / "Hi Ana, Ion and Maria," joined by one helper (`joinNames`: commas, then «și» / "and", no serial comma), with no parent's greeting line under it. The public-list switch stays on «Toate înscrierile mele» only; the family confirmation's button leads there.
+
+While a sitting is live, the confirmation screen's facts cookie (the inbox, the first name, the names) lives exactly as long as the sitting's own cookie: the club's window plus the two-minute grace. It is refreshed with every «Da, încă o persoană». Without this, at the default ten-minute window the screen lost its facts at the instant the automatic «Gata» fired. Outside a sitting it keeps its ten minutes. On every write, the browser's half takes its at-once flag from the window just read, so a «Termene» change mid-sitting leaves no stale flag.
+
+Baseline `BR-V2.13-2026-09-27`.

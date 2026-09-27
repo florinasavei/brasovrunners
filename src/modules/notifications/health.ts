@@ -6,6 +6,7 @@ import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { plannedCadenceMinutes } from "@/modules/jobs/schedule-cache";
 import { checkGmailHealth, type GmailHealth } from "./email-transport";
+import { type OutboxDelivery, readOutboxDelivery } from "./outbox-delivery";
 
 /**
  * "Can the club still send email?" — the answer `/api/health` and `/admin/tasks` give
@@ -68,6 +69,13 @@ export type EmailHealth = {
    * newsletter's reserve, not the plan's limit the monitor exists to report.
    */
   gmail: GmailHealth & { deferred: number; resumesAt: string | null };
+  /**
+   * When the queue next leaves (§513): the delivery timing, the rows waiting to be claimed, the
+   * most a message queued now may wait and the outbox job's next expected real run. Reported
+   * beside the counts, never a status of its own — under the scheduled default a queue that waits
+   * for the tick is the setting working, and `overdue` above already says when it is not.
+   */
+  delivery: OutboxDelivery;
 };
 
 /**
@@ -158,6 +166,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
 
   const resumesAt = row.resumesAt ? new Date(row.resumesAt) : null;
   const gmailResumesAt = row.gmailResumesAt ? new Date(row.gmailResumesAt) : null;
+  const delivery = await readOutboxDelivery(db, now, governorFloorMinutes);
   return {
     status: stalled ? "stalled" : "ok",
     waiting: row.waiting,
@@ -171,6 +180,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
       deferred: row.gmailDeferred,
       resumesAt: gmailResumesAt ? gmailResumesAt.toISOString() : null,
     },
+    delivery,
   };
 }
 

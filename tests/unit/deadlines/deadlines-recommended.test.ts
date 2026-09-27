@@ -20,7 +20,7 @@ vi.mock("next-intl/server", async () => {
     getLocale: async () => lang.current,
   };
 });
-vi.mock("@/app/[locale]/admin/emails/actions", () => ({ updateDeadlinesAction: save, updateAddressCapAction: async () => null }));
+vi.mock("@/app/[locale]/admin/settings/deadlines/actions", () => ({ updateDeadlinesAction: save, updateAddressCapAction: async () => null }));
 
 const { default: DeadlinesPanel } = await import("@/modules/deadlines/ui/DeadlinesPanel");
 const { fillRecommended } = await import("@/modules/deadlines/ui/FillRecommendedButton");

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { capitalizeFirst } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
-import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { effectiveMinimumAge, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
@@ -97,6 +97,9 @@ export async function LanguageTabs({
       // Only the languages the reader may write are re-read as they type; a read-only one has no box.
       watch={mayType ? watch : undefined}
       live={mayType}
+      // «Tradu cardul: RO → EN» at the end of the card's tab row (§514). Every card here has words:
+      // the address card's are the two search-engine texts beside the `slug`, which is not one.
+      translateCard
       requiredCount={requiredCount}
       identical={
         identical
@@ -210,7 +213,8 @@ export async function RulesBox({
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = await getLocale();
-  const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
+  // Never under fourteen (§NNN): an event saved with less under §329 opens at fourteen, which the box accepts.
+  const minAge = effectiveMinimumAge(event?.minAge);
   const aside = [rulesSummary(words, languages.map(summaryOf)), minAgeSummary(words, minAge, locale)].join(words.separator);
   return (
     <Panel collapsible level={3} id="box-rules" title={t("editor.boxes.rules.title")} aside={aside}>

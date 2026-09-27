@@ -6,15 +6,10 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
-import { updateContactRecipients } from "@/modules/contact/recipients";
-import { updateShownContactAddress } from "@/modules/contact/shown-address";
+import { addressListRefusal, parseAddressList } from "@/modules/contact/domain/recipients";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { CLUB_NOTICE_RECIPIENTS_MAX, clubNoticeBoxesOf } from "@/modules/notifications/domain/club-notices";
-import { updateDeadlines } from "@/modules/deadlines/deadlines";
-import { updateAddressCap } from "@/modules/registrations/address-cap";
-import { DEADLINE_KEYS } from "@/modules/deadlines/domain/deadlines";
 import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
@@ -36,12 +31,12 @@ function localeOf(form: FormData): Locale {
 /**
  * "The plan we are on" (`DECISIONS.md` §100). Administrator only — the same gate as "send
  * now", because both spend the club's allowance — and the service asserts the role again.
- * Lands back on `/admin/emails` with the outcome in the query, like every backoffice action;
+ * Lands back on «Setări» → «Emailuri» (§516) with the outcome in the query, like every backoffice action;
  * a refusal comes back as the form's state with every box still filled (§315).
  */
 export async function updateEmailPlanAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
 
   const number = (name: string): number | null => {
     const value = form.get(name);
@@ -81,7 +76,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
  */
 export async function updateEmailTransportAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
   const choice = (name: string): unknown => form.get(name);
   const whole = (name: string): number => {
     const value = form.get(name);
@@ -119,62 +114,14 @@ export async function updateEmailTransportAction(_previous: FormOutcome | null, 
 }
 
 /**
- * "Who receives the contact form's messages" (`DECISIONS.md` §164). The same gate and the same
- * shape as the plan above: Administrator at the door, the service asserting the role again,
- * each address validated there, and the outcome in the query. Two typed lines come in; the
- * service is what decides whether they are addresses.
- */
-export async function updateContactRecipientsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
-  const list = (name: string): string[] => parseAddressList(typeof form.get(name) === "string" ? String(form.get(name)) : "");
-
-  try {
-    const actor = await requireStaffCapability(canManageClubSettings);
-    await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc") }, new Date());
-  } catch (error) {
-    // Which entry is not an address, or which list is too long, in the sentence (§457).
-    const outcome = refused(error, form);
-    if (outcome.error !== "VALIDATION_ERROR") return outcome;
-    return { ...outcome, ...addressListRefusal([list("to"), list("cc"), list("bcc")], CONTACT_RECIPIENTS_MAX) };
-  }
-  // The action and the render that follows are one request, and the router keeps the payload
-  // it already has for this path: without this the page comes back saying what it said before
-  // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
-  revalidatePath(path);
-  await flashOutcome({ saved: "contactRecipients" });
-  redirect(`${path}?saved=contactRecipients#admin-alert`);
-}
-
-/**
- * «Adresa de contact afișată» (§442): the mailbox, the club's Gmail, or both — shown on the site
- * and set as every email's Reply-To. Administrator at the door, the service asserting it again.
- */
-export async function updateShownContactAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
-
-  try {
-    const actor = await requireStaffCapability(canManageClubSettings);
-    // The mode alone: the Gmail is the configuration's, never typed (§442 as amended).
-    await updateShownContactAddress(getDb(), actor, { mode: form.get("mode") }, new Date());
-  } catch (error) {
-    return refused(error, form);
-  }
-  revalidatePath(path);
-  await flashOutcome({ saved: "shownContactAddress" });
-  redirect(`${path}?saved=shownContactAddress#admin-alert`);
-}
-
-/**
  * "Send now", from the queue panel (`DECISIONS.md` §243), and the same verb the registrations
  * list has had since §80: one service, `sendOutboxNow`, which is where the Administrator gate,
  * the throttle, the day's allowance and the audit row live. This is the thin half — where to
- * land, and in which language — exactly like the two actions above it.
+ * land, and in which language — exactly like the actions above it.
  */
 export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
 
   let outcome: string;
   try {
@@ -200,7 +147,7 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
  */
 export async function updateClubNoticesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
   // `posted`, not `text`: the catalogue check reads any `t…("key")` in a file that translates.
   const posted = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)).trim() : "");
   const list = (name: string): string[] => parseAddressList(posted(name));
@@ -244,56 +191,6 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
   revalidatePath(path);
   await flashOutcome({ saved: "clubNotices" });
   redirect(`${path}?saved=clubNotices#admin-alert`);
-}
-
-/**
- * "Termene" — the club's deadlines (§377). Administrator at the door and in the service, like
- * every other setting on this page; every box is a whole number the service checks against its
- * bounds, and a refusal comes back as the form's state with every box as typed (§315). The seven
- * boxes post under their own names (`DEADLINE_KEYS`), read here as strings: the service's schema
- * is what decides whether they are numbers.
- */
-export async function updateDeadlinesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
-
-  try {
-    const actor = await requireStaffCapability(canManageClubSettings);
-    await updateDeadlines(
-      getDb(),
-      actor,
-      Object.fromEntries(DEADLINE_KEYS.map((key) => [key, typeof form.get(key) === "string" ? String(form.get(key)).trim() : ""])),
-      new Date(),
-    );
-  } catch (error) {
-    return refused(error, form);
-  }
-  // The when-lines and the previews under the panel say these numbers; without this the page
-  // comes back saying the old ones (the trap §164 and §100 documented above).
-  revalidatePath(path);
-  await flashOutcome({ saved: "deadlines" });
-  redirect(`${path}?saved=deadlines#admin-alert`);
-}
-
-/**
- * "Maxim de înscrieri pe o adresă (pe eveniment)" (§389), in the "Termene" fold: the same gates and
- * the same shape as the deadlines' save above — the Administrator at the door and in the service,
- * one whole number the service bounds, a refusal back as the form's state with the box as typed.
- */
-export async function updateAddressCapAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/emails" });
-
-  try {
-    const actor = await requireStaffCapability(canManageClubSettings);
-    const raw = form.get("registrationsPerAddress");
-    await updateAddressCap(getDb(), actor, { registrationsPerAddress: typeof raw === "string" ? raw.trim() : "" }, new Date());
-  } catch (error) {
-    return refused(error, form);
-  }
-  // The preview of the message that states the limit is on the same page.
-  revalidatePath(path);
-  redirect(`${path}?saved=addressCap#admin-alert`);
 }
 
 /**
@@ -358,7 +255,7 @@ async function sampleValueRefusal(error: EmailCopySampleValueError, outcome: For
 export async function updateEmailCopyAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const lang = form.get("lang") === "en" ? "en" : "ro";
-  const path = getPathname({ locale, href: "/admin/emails" });
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
   const back = `${path}?lang=${lang}`;
   const posted = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
   const reset = form.get("reset") === "1";

@@ -4,7 +4,7 @@ import { signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-090-07 criterion 7 (§334) — "Cât de des verifică platforma": the owner's throttle, on
- * `/admin/tasks` → Costuri beside the Neon plan.
+ * «Setări» → «Costuri» beside the Neon plan (it was `/admin/tasks` → Costuri until §516).
  *
  * One round trip, on the page a unit test cannot see: the card says what a longer interval costs
  * and what it does not, it shows each job's last real run and next check, the select posts, the
@@ -20,7 +20,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     test.slow();
     // The throttle is a platform setting, the Superadministrator's since §450.
     await signIn(page, "Dev Superadministrator");
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     const main = page.locator("#main");
     const card = main.getByTestId("job-cadence");
 
@@ -39,7 +39,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await card.getByRole("button", { name: "Salvează intervalul" }).click();
     await confirmDialog(page);
 
-    await expect(page).toHaveURL(/panel=costs/);
+    await expect(page).toHaveURL(/\/admin\/settings\/costs/);
     await expect(main.getByText("Intervalul a fost salvat", { exact: false })).toBeVisible();
     await expect(card.getByTestId("job-cadence-in-force")).toContainText("cel mult o dată la 30 min");
 
@@ -47,7 +47,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     await page.goto("/ro/devs");
     await expect(page.locator("#main").getByText(/Interval minim: 30 min între două rulări reale/)).toBeVisible();
 
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     await main.getByTestId("job-cadence").getByLabel("Cel mult o dată la").selectOption("0");
     await main.getByTestId("job-cadence").getByRole("button", { name: "Salvează intervalul" }).click();
     await confirmDialog(page);
@@ -56,7 +56,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
 
   test("an Administrator reads the card and is offered no form (§450)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     const card = page.locator("#main").getByTestId("job-cadence");
     await expect(card.getByTestId("job-cadence-in-force")).toBeVisible();
     await expect(card.getByText(/Intervalul îl schimbă Superadministratorul/)).toBeVisible();

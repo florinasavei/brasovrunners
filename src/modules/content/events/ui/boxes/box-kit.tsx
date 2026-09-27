@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
 import { routing } from "@/i18n/routing";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import type { EditableEvent } from "../../repository";
 import type { SummaryWords } from "../box-summaries";
 import { CardRequiredLine } from "../PublishCheck";
@@ -119,11 +120,15 @@ export async function SettingsReadOnly() {
   );
 }
 
-/** A plain sentence under a field or in place of a group of fields. */
-export function BoxNote({ children, testId }: { children: string; testId?: string }) {
+/**
+ * A plain sentence under a field or in place of a group of fields — one sentence, and what it
+ * would add beyond that as `more`, the discreet «?» (§511).
+ */
+export function BoxNote({ children, testId, more }: { children: string; testId?: string; more?: string }) {
   return (
     <Typography variant="body2" color="text.secondary" data-testid={testId}>
       {children}
+      {more ? <QuietHelp text={more} /> : null}
     </Typography>
   );
 }

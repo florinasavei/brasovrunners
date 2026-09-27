@@ -204,10 +204,10 @@ describe("§406 the cards' headings and the map", () => {
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
     // The cost is asked inside card 1 since §466, the place and the rules inside their cards since
     // §481: no heading of their own, the cards after them renumber. No film card at all.
-    for (const nested of ["cost", "place", "rules", "video"]) expect(nested in flow.headings, nested).toBe(false);
+    // The public list inside «Program, regulament și declarație» since §512.
+    for (const nested of ["cost", "place", "rules", "startList", "video"]) expect(nested in flow.headings, nested).toBe(false);
     expect(flow.headings.registration).toBe("6 · Participare și înscrieri — gol, nu apare pe pagină");
     expect(flow.headings.programme).toBe("9 · Program, regulament și declarație — gol, nu apare pe pagină");
-    expect(flow.headings.startList).toBe("10 · Lista publică a participanților — gol, nu apare pe pagină");
     expect("share" in flow.headings).toBe(false);
     // 1..n with no gap.
     const numbers = Object.values(flow.headings).map((heading) => Number(heading.split(" · ")[0])).sort((a, b) => a - b);
@@ -243,10 +243,9 @@ describe("§406 the cards' headings and the map", () => {
       "box-cohosts",
       "box-links",
       "box-programme",
-      "box-start-list",
     ]);
     // No Cost chip (§466), no place or rules chip (§481): each is asked inside another card.
-    for (const nested of ["cost", "place", "rules"]) expect(flow.entries.some((entry) => entry.id === nested), nested).toBe(false);
+    for (const nested of ["cost", "place", "rules", "startList"]) expect(flow.entries.some((entry) => entry.id === nested), nested).toBe(false);
     expect(links[3][1]).toBe("4 · Când și unde — apare pe pagină");
     // «Când și unde» wears the meeting point's gap, as the place card's chip did (§406).
     expect(flow.entries.find((entry) => entry.id === "when")?.gapBox).toBe("place");

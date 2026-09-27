@@ -250,6 +250,7 @@ describe("§471 the stepper's words, in both languages (found in review)", () =>
     state,
     holdExpiresAt: null,
     checkinCode: null,
+    raceNumber: null,
   });
   const expected = {
     ro: { signed: "semnată", waitlisted: "pe lista de așteptare", current: "acum", next: "urmează", later: "mai târziu", closed: "nu mai așteaptă semnătura" },
