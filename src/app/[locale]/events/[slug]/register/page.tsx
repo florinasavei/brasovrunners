@@ -19,7 +19,12 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
-import { cachedCurrentApprovedDocument, cachedListStatesDisclosed, cachedPublicAvailability } from "@/modules/public-cache/reads";
+import {
+  cachedCurrentApprovedDocument,
+  cachedListSocialsDisclosed,
+  cachedListStatesDisclosed,
+  cachedPublicAvailability,
+} from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
@@ -56,6 +61,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
+import ShownWithSocial from "@/modules/registrations/ui/ShownWithSocial";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Hint from "@/shared/ui/Hint";
@@ -281,9 +287,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     page's list makes; optional, so a failure leaves the box as it always read.
   */
   let listStatesOn = false;
+  /*
+    §NNN: the same reading for the socials — while the notice in force describes them, the form
+    offers «Arată și Strava și Instagram» under «Vreau să apar» and says in the socials fold that
+    they reach the site only through that tick. Off (or unread), the form is as it was.
+  */
+  let listSocialsOn = false;
   if (event.participantListVisibility === "NAMES" && !resting) {
     try {
-      listStatesOn = await cachedListStatesDisclosed(now);
+      [listStatesOn, listSocialsOn] = await Promise.all([cachedListStatesDisclosed(now), cachedListSocialsDisclosed(now)]);
     } catch (failure) {
       unstable_rethrow(failure);
     }
@@ -1130,8 +1142,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   {t("disclosure.socials")}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
+                  {/* "Nu apar pe site" stops being the whole truth once the list can print them (§NNN). */}
                   <Typography variant="body2" color="text.secondary">
-                    {t("socialsHelp")}
+                    {listSocialsOn ? t("socialsHelpList") : t("socialsHelp")}
                   </Typography>
                   <TextField
                     {...field("stravaUrl", t("stravaUrlHelp"))}
@@ -1318,6 +1331,31 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                             confirmed: tEvent("startList.states.confirmed"),
                           })}
                         </Typography>
+                      )}
+                      {/*
+                        The socials beside the name (§NNN), behind the notice in force and asked as a
+                        consent of its own: never folded (§59), never pre-ticked, and meaningless
+                        without the list tick above and a social typed in the fold — the service
+                        keeps it only with both. Adults only, like the socials themselves (§323):
+                        hidden and disabled once the birth date says under eighteen. And asked only
+                        once there is something to show (`ShownWithSocial`): hidden and disabled
+                        until the Strava or the Instagram box holds a value — shown without
+                        JavaScript, where nothing typed is known.
+                      */}
+                      {listSocialsOn && (
+                        <HiddenForMinor birthDateId={fieldId("birthDate")}>
+                          <ShownWithSocial
+                            inputIds={[fieldId("stravaUrl"), fieldId("instagramHandle")]}
+                            forceOpen={prefill("listSocials") === "on"}
+                          >
+                            <CheckboxField name="listSocials" defaultChecked={prefill("listSocials") === "on"}>
+                              {`${t("listSocials")} — ${t("optionalSuffix")}`}
+                            </CheckboxField>
+                            <Typography variant="body2" color="text.secondary" data-testid="list-socials-help" sx={{ mt: -0.5 }}>
+                              {t("listSocialsHelp")}
+                            </Typography>
+                          </ShownWithSocial>
+                        </HiddenForMinor>
                       )}
                     </>
                   );

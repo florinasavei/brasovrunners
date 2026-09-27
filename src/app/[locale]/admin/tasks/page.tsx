@@ -18,7 +18,13 @@ import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
-import { findCurrentApprovedDocument, noticeDescribesListStates, noticeDescribesNewsletter, noticeDescribesTeamPage } from "@/modules/legal-documents/repository";
+import {
+  findCurrentApprovedDocument,
+  noticeDescribesListSocials,
+  noticeDescribesListStates,
+  noticeDescribesNewsletter,
+  noticeDescribesTeamPage,
+} from "@/modules/legal-documents/repository";
 import {
   countTasks,
   filterTasks,
@@ -470,6 +476,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
       // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
+      // §NNN: the same switch for Strava and Instagram beside a name on the public list.
+      listSocialsDescribed: await noticeDescribesListSocials(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // §459: the team page's names and photographs, described by the notice in force.

@@ -32,6 +32,12 @@ export type RegistrationEntryDetails = {
   stravaUrl?: string | null;
   instagramHandle?: string | null;
   /**
+   * Whether those socials are printed beside the name on the public list (§NNN) — the runner's
+   * own tick, kept only where `service.ts` allows it. Like `clubMemberDeclared`, a NOT NULL column
+   * with a default of false, so "not supplied" is `undefined`, never `null`.
+   */
+  listSocials?: boolean;
+  /**
    * "I am a Brașov Runners team member", as claimed. Never verified — see the schema.
    *
    * `boolean | undefined` and not `| null` like its neighbours: the column is NOT NULL with a

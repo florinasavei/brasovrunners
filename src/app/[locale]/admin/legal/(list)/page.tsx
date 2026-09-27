@@ -10,7 +10,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { findCurrentApprovedDocument, noticeDescribesListStates } from "@/modules/legal-documents/repository";
+import {
+  findCurrentApprovedDocument,
+  noticeDescribesListSocials,
+  noticeDescribesListStates,
+} from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -155,6 +159,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     all, the "one step" box above is the thing to do, and registration is closed anyway.
   */
   const listStatesMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListStates(getDb(), now));
+  // The same for the socials beside a name (§NNN): the form offers the tick only while the notice
+  // in force names `{{participantListSocials}}`, and this is where that notice is approved.
+  const listSocialsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListSocials(getDb(), now));
   /*
     What the service would answer about each row, asked of the service before anything is drawn
     (§290, §316): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
@@ -392,6 +399,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       {listStatesMissing && (
         <Alert severity="info" data-testid="legal-list-states-missing">
           {t("legal.listStatesMissing")}
+        </Alert>
+      )}
+      {listSocialsMissing && (
+        <Alert severity="info" data-testid="legal-list-socials-missing">
+          {t("legal.listSocialsMissing")}
         </Alert>
       )}
 

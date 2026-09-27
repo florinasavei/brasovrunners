@@ -29,6 +29,7 @@ import { cachedDeadlines, cachedShownContactAddresses } from "@/modules/public-c
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
+import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
@@ -596,7 +597,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
-              ...listStatesMergeValues(locale),
+              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale),
               ...newsletterMergeValues(locale),
             }}
           />

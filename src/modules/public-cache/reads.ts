@@ -37,7 +37,7 @@ import {
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
-import { describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
+import { describesListSocials, describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -271,10 +271,14 @@ export async function cachedStartListCounts(eventId: string): Promise<{ named: n
   });
 }
 
-/** One page of `listPublicStartList` — names and clubs, which is all it has ever selected. */
-export async function cachedStartListPage(eventId: string, offset: number, limit: number) {
-  return publicRead(["places.start-list", eventId, offset, limit], ["places", "events"], () =>
-    listPublicStartList(getDb(), eventId, { offset, limit }),
+/**
+ * One page of `listPublicStartList` — names and clubs, and, only with `socials` (the notice in force
+ * describes them, §NNN), each ticked runner's Strava and Instagram. The flag is in the key, so a
+ * page read without the gate is never served to a reader with it, or the other way round.
+ */
+export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false) {
+  return publicRead(["places.start-list", eventId, offset, limit, socials ? "socials" : "names"], ["places", "events"], () =>
+    listPublicStartList(getDb(), eventId, { offset, limit }, { socials }),
   );
 }
 
@@ -291,10 +295,12 @@ export async function cachedStartListOthersCounts(eventId: string, firstStatesNo
   );
 }
 
-/** One page of `listPublicStartListOthers` — a name, a club and a group, nothing else. */
-export async function cachedStartListOthersPage(eventId: string, firstStatesNoticeVersion: number, offset: number, limit: number) {
-  return publicRead(["places.start-list-others", eventId, firstStatesNoticeVersion, offset, limit], ["places", "events"], () =>
-    listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, { offset, limit }),
+/** One page of `listPublicStartListOthers` — a name, a club and a group, and the socials as above. */
+export async function cachedStartListOthersPage(eventId: string, firstStatesNoticeVersion: number, offset: number, limit: number, socials = false) {
+  return publicRead(
+    ["places.start-list-others", eventId, firstStatesNoticeVersion, offset, limit, socials ? "socials" : "names"],
+    ["places", "events"],
+    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, { offset, limit }, { socials }),
   );
 }
 
@@ -317,6 +323,17 @@ export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
 export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
+}
+
+/**
+ * Whether the public list may print a runner's Strava and Instagram, and the form offer the tick
+ * that asks for it (§NNN): the privacy notice in force describes them (`describesListSocials`), in
+ * every language — the same reading as the states above. `noticeDescribesListSocials` is the
+ * backoffice's uncached twin; the service asks the notice each runner is given at submission.
+ */
+export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
 }
 
 /**

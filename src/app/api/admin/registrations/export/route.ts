@@ -164,6 +164,7 @@ export async function GET(request: Request): Promise<Response> {
         guardianName: row.guardianName ?? "",
         guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
         instagramHandle: row.instagramHandle ?? "",
+        listSocials: row.listSocials,
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
@@ -205,6 +206,8 @@ export async function GET(request: Request): Promise<Response> {
       guardianName: row.guardianName ?? "",
       guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
       instagramHandle: row.instagramHandle ?? "",
+      // Whether the public list prints the socials (§NNN): beside Instagram, as on the spreadsheet.
+      listSocials: row.listSocials,
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,

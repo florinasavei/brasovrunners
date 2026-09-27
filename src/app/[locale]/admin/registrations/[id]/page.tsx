@@ -28,6 +28,7 @@ import {
 } from "@/modules/registrations/admin-repository";
 import { readEmergencyDetails } from "@/modules/registrations/admin-service";
 import { sealPersonLookup } from "@/modules/registrations/person-data";
+import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
@@ -250,7 +251,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("desk.guardian", { name: registration.guardianName })}
         </Typography>
       )}
-      {/* The socials the person offered (§106): links to follow back, never published here. */}
+      {/* The socials the person offered (§106): links to follow back — and whether the public
+          list prints them beside the name, the runner's own tick (§NNN). */}
       {(registration.stravaUrl || registration.instagramHandle) && (
         <Typography variant="body2" color="text.secondary">
           {registration.stravaUrl && (
@@ -260,9 +262,14 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           )}
           {registration.stravaUrl && registration.instagramHandle ? " · " : ""}
           {registration.instagramHandle && (
-            <MuiLink href={`https://www.instagram.com/${encodeURIComponent(registration.instagramHandle)}/`} target="_blank" rel="noopener noreferrer nofollow">
+            <MuiLink href={instagramProfileUrl(registration.instagramHandle)} target="_blank" rel="noopener noreferrer nofollow">
               @{registration.instagramHandle}
             </MuiLink>
+          )}
+          {registration.listSocials && (
+            <Box component="span" data-testid="registration-socials-on-list">
+              {` — ${tr("registrations.socialsOnList")}`}
+            </Box>
           )}
         </Typography>
       )}

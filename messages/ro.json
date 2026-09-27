@@ -230,8 +230,13 @@
         "pending": "Înscris, în așteptarea confirmării",
         "waitlisted": "Pe lista de așteptare"
       },
+      "socials": {
+        "strava": "{name} pe Strava",
+        "instagram": "{name} pe Instagram"
+      },
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
         "one": "{count} înscris în așteptarea confirmării",
@@ -731,7 +736,8 @@
       "bulkEraseAction": "Șterge definitiv",
       "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse.",
       "filtersNone": "niciun filtru · toate înscrierile",
-      "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare."
+      "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare.",
+      "socialsOnList": "și pe lista publică, lângă nume"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1985,6 +1991,7 @@
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
         "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”). La un eveniment fără vârstă minimă — la o alergare de grup, una de cel mult 18 ani — propoziția care o conține lipsește din declarație",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
+        "participantListSocials": "Doar în nota de confidențialitate: cuvintele bifei din formular cu care un participant alege să-i apară Strava și Instagram lângă nume, între ghilimele. Cu el în nota în vigoare, formularul oferă bifa și lista publică arată Strava și Instagram celor care au bifat-o; fără el, niciodată",
         "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
         "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă.",
         "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă"
@@ -2035,6 +2042,7 @@
         "undo": "Înapoi",
         "redo": "Înainte"
       },
+      "listSocialsMissing": "Nota de confidențialitate în vigoare nu descrie încă Strava și Instagram lângă nume pe lista publică de participanți, așa că formularul nu oferă bifa și lista nu le arată. Ca să le poată afișa participanții care vor asta, aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie.",
       "listStatesMissing": "Nota de confidențialitate în vigoare nu descrie încă stadiile de pe lista publică de participanți, așa că lista arată doar numele participanților confirmați. Ca lista să arate și stadiul fiecăruia — „Înscris, în așteptarea confirmării”, „Pe lista de așteptare” — aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie."
     },
     "tasks": {
@@ -2386,6 +2394,16 @@
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea despre lista publică descrie stadiile.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din textele platformei, dacă nu le-ai aprobat deja, ca toate trei să spună același lucru."
+          ]
+        },
+        "listSocialsNotice": {
+          "title": "Nota de confidențialitate: Strava și Instagram pe lista publică",
+          "todo": "Nota în vigoare nu descrie încă Strava și Instagram lângă nume pe lista publică de participanți, așa că formularul nu oferă bifa și lista nu le arată nimănui, până când clubul aprobă o notă care le descrie.",
+          "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
+            "Aprobă și termenii din textul platformei, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },
         "newsletterNotice": {
@@ -4876,6 +4894,8 @@
     "privacyPrefix": "Am citit",
     "privacyLinkLabel": "nota de confidențialitate",
     "listOptIn": "Vreau să apar pe lista de participanți",
+    "listSocials": "Arată și Strava și Instagram lângă numele meu pe listă",
+    "listSocialsHelp": "Doar împreună cu bifa de mai sus, că vrei să apari pe listă. Le scoți oricând din „Înscrierile mele”, ștergând Strava și Instagram sau ieșind de pe listă.",
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
@@ -5091,6 +5111,7 @@
       "privacy": "Confidențialitate"
     },
     "socialsHelp": "Opțional. Le folosim doar ca să te urmărim și să te etichetăm în postările clubului; o etichetă e publică pe acea rețea. Nu apar pe site. Le poți șterge oricând din „Înscrierile mele”.",
+    "socialsHelpList": "Opțional. Le folosim ca să te urmărim și să te etichetăm în postările clubului; o etichetă e publică pe acea rețea. Pe site apar doar dacă bifezi, mai jos, să apară lângă numele tău pe lista de participanți. Le poți șterge oricând din „Înscrierile mele”.",
     "stravaUrl": "Profilul tău de Strava (link)",
     "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
     "instagramHandle": "Instagram (numele de utilizator)",

@@ -2,10 +2,12 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
+import { listSocialsClause } from "@/modules/registrations/list-socials-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
+  LIST_SOCIALS_MERGE_FIELD,
   LIST_STATES_MERGE_FIELD,
   MINIMUM_AGE_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
@@ -107,6 +109,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_STATES_MERGE_FIELD}}}`,
     messageKey: LIST_STATES_MERGE_FIELD,
     example: inBoth((locale) => listStatesClause(locale)),
+  },
+  // The privacy notice's marker for the socials beside a name (§NNN): filled with the form's own
+  // tick, and the switch that lets the form offer it and the list print them (`describesListSocials`).
+  {
+    token: `{{${LIST_SOCIALS_MERGE_FIELD}}}`,
+    messageKey: LIST_SOCIALS_MERGE_FIELD,
+    example: inBoth((locale) => listSocialsClause(locale)),
   },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).

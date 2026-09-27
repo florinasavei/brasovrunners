@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "list_socials" boolean DEFAULT false NOT NULL;
