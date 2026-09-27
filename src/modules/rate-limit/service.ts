@@ -28,7 +28,8 @@ export type RateLimitScope =
   | "contact-message"
   | "group-run-declaration"
   | "newsletter-subscribe"
-  | "content-translate";
+  | "content-translate"
+  | "bot-check-signal";
 
 /**
  * What each guarded action allows, as data.
@@ -138,6 +139,14 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * a session.
    */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
+  /**
+   * Not a throttle: a counter (§NNN). The anti-bot check's two failure signals — a held press the
+   * valve sent, a widget that failed or never loaded — per hour, keyed on the signal's own word
+   * (never a person), summed over the last day by `/api/health`
+   * (`registrations/bot-check-signals.ts`). The verdict is never read; the limit is only what
+   * `/devs` shows beside the scope.
+   */
+  "bot-check-signal": { limit: 10_000, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {

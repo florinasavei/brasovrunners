@@ -722,6 +722,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   runner
                   awaitsBotCheck={Boolean(siteKey)}
                   botCheckHint={t("botCheckWait")}
+                  botCheckTickHint={t("botCheckTick")}
+                  botCheckExpiredHint={t("botCheckExpired")}
+                  botCheckValveHint={t("botCheckValve")}
                   slowHint={t("submitSlow")}
                   size="medium"
                 />
@@ -1449,6 +1452,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 */
                 awaitsBotCheck={Boolean(siteKey)}
                 botCheckHint={t("botCheckWait")}
+                botCheckTickHint={t("botCheckTick")}
+                botCheckExpiredHint={t("botCheckExpired")}
+                botCheckValveHint={t("botCheckValve")}
                 slowHint={t("submitSlow")}
                 size="large"
                 fullWidth

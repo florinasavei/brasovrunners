@@ -6,10 +6,13 @@ import ro from "../../../messages/ro.json";
 import {
   BOT_CHECK_BLOCKED_AFTER_MS,
   BOT_CHECK_SLOW_AFTER_MS,
+  BOT_CHECK_FAILURES_BEFORE_GIVING_UP,
   BOT_CHECK_STATES,
   botCheckAsksAttention,
   botCheckGaveUp,
+  botCheckHeldHint,
   botCheckOffersRetry,
+  botCheckUnansweredFrom,
 } from "@/modules/registrations/domain/turnstile-widget";
 
 /**
@@ -30,12 +33,64 @@ const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 
 describe("§NNN the widget's states", () => {
-  it("a check that gave up holds no press: failed, blocked, unsupported — and nothing else", () => {
-    const gaveUp = BOT_CHECK_STATES.filter((state) => botCheckGaveUp(state));
-    expect(gaveUp).toEqual(["error", "unsupported", "blocked"]);
+  it("gives up at a blocked script and an unsupported browser at once, and at the second failure — not the first", () => {
+    expect(BOT_CHECK_FAILURES_BEFORE_GIVING_UP).toBe(2);
+    expect(BOT_CHECK_STATES.filter((state) => botCheckGaveUp(state, 1))).toEqual(["unsupported", "blocked"]);
+    expect(BOT_CHECK_STATES.filter((state) => botCheckGaveUp(state, 2))).toEqual(["error", "unsupported", "blocked"]);
     // A widget that has not said anything yet (no attribute) is not taken for one that gave up.
-    expect(botCheckGaveUp(null)).toBe(false);
-    expect(botCheckGaveUp(undefined)).toBe(false);
+    expect(botCheckGaveUp(null, 5)).toBe(false);
+    expect(botCheckGaveUp(undefined, 5)).toBe(false);
+  });
+
+  it("the state table: a lapsed or unticked check holds a press whatever its field still holds", () => {
+    const STALE = "stale-token";
+    // Gave up: never waited for, token or not.
+    expect(botCheckUnansweredFrom("error", true, "")).toBe(false);
+    expect(botCheckUnansweredFrom("blocked", true, null)).toBe(false);
+    // A token that may have lapsed is never sent.
+    for (const state of ["interactive", "expired", "timeout", "error"]) {
+      expect(botCheckUnansweredFrom(state, false, STALE), state).toBe(true);
+      expect(botCheckUnansweredFrom(state, false, ""), state).toBe(true);
+      expect(botCheckUnansweredFrom(state, false, null), state).toBe(true);
+    }
+    // Passed: answered only with a token in the field.
+    expect(botCheckUnansweredFrom("passed", false, "token")).toBe(false);
+    expect(botCheckUnansweredFrom("passed", false, "")).toBe(true);
+    // Thinking: the field is the second signal (a token there is the answer before the callback).
+    for (const state of ["loading", "checking", null]) {
+      expect(botCheckUnansweredFrom(state, false, "token"), String(state)).toBe(false);
+      expect(botCheckUnansweredFrom(state, false, ""), String(state)).toBe(true);
+      expect(botCheckUnansweredFrom(state, false, null), String(state)).toBe(true);
+    }
+  });
+
+  it("the held press says the check's state: thinking, a box to tick, a lapsed token", () => {
+    expect(botCheckHeldHint("loading")).toBe("checking");
+    expect(botCheckHeldHint("checking")).toBe("checking");
+    expect(botCheckHeldHint("error")).toBe("checking");
+    expect(botCheckHeldHint(null)).toBe("checking");
+    expect(botCheckHeldHint("interactive")).toBe("tick");
+    expect(botCheckHeldHint("timeout")).toBe("tick");
+    expect(botCheckHeldHint("expired")).toBe("expired");
+  });
+
+  it("the button's sentences are the owner's words, in both languages", () => {
+    expect(ro.Registration.botCheckWait).toMatch(/^Se verifică…/);
+    expect(ro.Registration.botCheckTick).toMatch(/^Bifează căsuța de mai sus/);
+    expect(ro.Registration.botCheckExpired).toMatch(/^Verificarea a expirat — se reface/);
+    expect(ro.Registration.botCheckValve).toBe("Trimitem fără verificare automată…");
+    expect(en.Registration.botCheckValve).toBe("Sending without the automatic check…");
+    // The three held sentences keep the promise the e2e suite tells a held press by; the valve's does not.
+    for (const key of ["botCheckWait", "botCheckTick", "botCheckExpired"] as const) {
+      expect(ro.Registration[key], key).toContain("trimitem noi înscrierea imediat ce răspunde");
+      expect(en.Registration[key], key).toContain("we send the form ourselves");
+    }
+    // The owner's fail-open sentence, wherever the check gave up.
+    for (const key of ["failed", "blocked", "unsupported"] as const) {
+      expect(ro.BotCheck[key], key).toContain("Nu am putut verifica automat; trimitem oricum, iar clubul confirmă");
+      expect(en.BotCheck[key], key).toContain("We could not check automatically; we send it anyway, and the club confirms");
+    }
+    expect(ro.BotCheck.retry).toBe("Reîncearcă verificarea");
   });
 
   it("offers «Încearcă din nou» wherever a person can be stuck, never while it works or cannot work", () => {
@@ -66,7 +121,7 @@ describe("§NNN the widget's states", () => {
   });
 
   it("says every state, the slow line and the retry in both languages, and promises nothing a missing token would break", () => {
-    const keys = [...BOT_CHECK_STATES, "slow", "retry"];
+    const keys = [...BOT_CHECK_STATES, "slow", "retry", "failed"];
     for (const [name, catalogue] of [
       ["ro", ro],
       ["en", en],
@@ -79,7 +134,7 @@ describe("§NNN the widget's states", () => {
       for (const key of keys) expect(words[key], `${name}.BotCheck.${key}`).not.toMatch(/trimitem noi înscrierea|we send the form ourselves/);
     }
     // The failure sentences name the retry by its own label, so the words and the button agree.
-    for (const key of ["error", "blocked", "slow"]) {
+    for (const key of ["error", "blocked", "slow", "failed"]) {
       expect(ro.BotCheck[key as keyof typeof ro.BotCheck]).toContain(`«${ro.BotCheck.retry}»`);
       expect(en.BotCheck[key as keyof typeof en.BotCheck]).toContain(`“${en.BotCheck.retry}”`);
     }
@@ -106,13 +161,27 @@ describe("§NNN the wiring", () => {
     expect(widget).not.toMatch(/\bretry: "never"|"refresh-expired": "(manual|never)"|"refresh-timeout": "(manual|never)"/);
   });
 
-  it("says a script that refused or never came, and draws it again on «Încearcă din nou»", () => {
+  it("says a script that refused or never came, and draws it again on «Reîncearcă verificarea»", () => {
     expect(widget).toMatch(/script\.addEventListener\("error", refused\);/);
     expect(widget).toMatch(/if \(!window\.turnstile\) become\("blocked"\);/);
     // Only a tag that failed goes: one still on its way would run anyway, and twice is an error.
     expect(widget).toMatch(/script\.dataset\.turnstileFailed = "true";/);
     expect(widget).toMatch(/if \(!api\) document\.querySelector\(`\$\{SCRIPT_SELECTOR\}\[data-turnstile-failed\]`\)\?\.remove\(\);/);
     expect(widget).toMatch(/api\.reset\(widgetId\.current\);/);
+    // A tag that already failed is replaced at once on a new mount, not waited for (nit 7).
+    expect(widget).toMatch(/if \(found\?\.dataset\.turnstileFailed\) found\.remove\(\);/);
+  });
+
+  it("counts a failure, gives up at the second, and marks it for the button", () => {
+    expect(widget).toMatch(/if \(next === "error"\) setFailures\(\(count\) => count \+ 1\);/);
+    expect(widget).toMatch(/const gaveUp = botCheckGaveUp\(state, failures\);/);
+    expect(widget).toMatch(/\[BOT_CHECK_GAVE_UP_ATTRIBUTE\]: "true"/);
+    expect(widget).toMatch(/reportBotCheckSignal\("widget-failed"\)/);
+  });
+
+  it("one live region while a press is held: the widget's line goes quiet, the button speaks", () => {
+    expect(widget).toMatch(/aria-live=\{quiet \? "off" : "polite"\}/);
+    expect(widget).toMatch(/setQuiet\(form \? isPressHeld\(form\) : false\);/);
   });
 
   it("writes its state on its own element, speaks only once running, and the retry is a thumb's target", () => {
@@ -124,8 +193,26 @@ describe("§NNN the wiring", () => {
   });
 
   it("the send button holds no press for a check that gave up, and lets a held one go when it does", () => {
-    expect(button).toMatch(/if \(widget && botCheckGaveUp\(widget\.getAttribute\(BOT_CHECK_STATE_ATTRIBUTE\)\)\) return false;/);
-    expect(button).toMatch(/attributeFilter: \["value", BOT_CHECK_STATE_ATTRIBUTE\]/);
+    expect(button).toMatch(/botCheckUnansweredFrom\(widget\.getAttribute\(BOT_CHECK_STATE_ATTRIBUTE\), widget\.hasAttribute\(BOT_CHECK_GAVE_UP_ATTRIBUTE\), value\)/);
+    expect(button).toMatch(/attributeFilter: \["value", BOT_CHECK_STATE_ATTRIBUTE, BOT_CHECK_GAVE_UP_ATTRIBUTE\]/);
+  });
+
+  it("the send button says the check's state, is busy while held, and announces the valve before it sends", () => {
+    expect(button).toMatch(/aria-busy=\{pending \|\| holding\}/);
+    expect(button).toMatch(/heldHints\[botCheckHeldHint\(checkState\)\]/);
+    expect(button).toMatch(/const notice = setTimeout\(\(\) => setValved\(true\), RELEASE_AFTER_MS - VALVE_NOTICE_MS\);/);
+    expect(button).toMatch(/const valve = setTimeout\(\(\) => send\(true\), RELEASE_AFTER_MS\);/);
+    expect(button).toMatch(/&& byValve\) reportBotCheckSignal\("held-press-valve"\)/);
+    const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    for (const [prop, key] of [
+      ["botCheckHint", "botCheckWait"],
+      ["botCheckTickHint", "botCheckTick"],
+      ["botCheckExpiredHint", "botCheckExpired"],
+      ["botCheckValveHint", "botCheckValve"],
+    ]) {
+      // Both awaiting buttons of the form: the main one and «Retrimite».
+      expect(page.split(`${prop}={t("${key}")}`).length - 1, prop).toBe(2);
+    }
   });
 
   it("every form that runs the check places it with its words", () => {
@@ -140,6 +227,6 @@ describe("§NNN the wiring", () => {
       expect(source, page).not.toContain("<TurnstileWidget ");
     }
     const place = read("src/modules/registrations/ui/BotCheck.tsx");
-    for (const key of [...BOT_CHECK_STATES, "slow", "retry"]) expect(place, key).toContain(`${key}: t("${key}")`);
+    for (const key of [...BOT_CHECK_STATES, "slow", "retry", "failed"]) expect(place, key).toContain(`${key}: t("${key}")`);
   });
 });

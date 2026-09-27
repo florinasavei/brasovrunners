@@ -5152,7 +5152,10 @@
     "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție.",
     "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
     "phoneValid": "Arată bine. Îl salvăm ca",
-    "botCheckWait": "Verificăm o secundă că nu ești robot — dacă apare o căsuță de bifat, bifeaz-o; trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
+    "botCheckWait": "Se verifică… trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
+    "botCheckTick": "Bifează căsuța de mai sus — trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
+    "botCheckExpired": "Verificarea a expirat — se reface; trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
+    "botCheckValve": "Trimitem fără verificare automată…",
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
@@ -6292,15 +6295,16 @@
   },
   "BotCheck": {
     "loading": "Se încarcă verificarea anti-bot…",
-    "checking": "Verificăm că nu ești robot…",
+    "checking": "Se verifică…",
     "interactive": "Bifează căsuța de mai sus: așa știm că nu ești robot.",
     "passed": "Verificare reușită — poți trimite.",
-    "expired": "Verificarea a expirat și se reface singură. Dacă nu, apasă «Încearcă din nou».",
+    "expired": "Verificarea a expirat — se reface. Dacă nu, apasă «Reîncearcă verificarea».",
     "timeout": "Căsuța a așteptat prea mult și s-a redesenat — bifeaz-o din nou.",
-    "error": "Verificarea anti-bot nu a mers. Apasă «Încearcă din nou» — sau trimite formularul oricum: îl primim și fără ea.",
-    "unsupported": "Browserul tău nu poate rula verificarea anti-bot. Trimite formularul oricum: îl primim și fără ea.",
-    "blocked": "Verificarea anti-bot nu s-a încărcat — o rețea sau o extensie a browserului o poate bloca. Apasă «Încearcă din nou» — sau trimite formularul oricum: îl primim și fără ea.",
-    "slow": "Verificarea durează mai mult decât de obicei. Apasă «Încearcă din nou» — sau trimite formularul: pleacă și fără ea în câteva secunde.",
-    "retry": "Încearcă din nou"
+    "error": "Verificarea anti-bot nu a mers; se reface singură. Poți apăsa «Reîncearcă verificarea».",
+    "unsupported": "Browserul tău nu poate rula verificarea anti-bot. Nu am putut verifica automat; trimitem oricum, iar clubul confirmă.",
+    "blocked": "Verificarea anti-bot nu s-a încărcat — o rețea sau o extensie a browserului o poate bloca. Nu am putut verifica automat; trimitem oricum, iar clubul confirmă. Poți apăsa și «Reîncearcă verificarea».",
+    "slow": "Verificarea durează mai mult decât de obicei. Apasă «Reîncearcă verificarea» — sau trimite formularul: pleacă și fără ea în câteva secunde.",
+    "retry": "Reîncearcă verificarea",
+    "failed": "Nu am putut verifica automat; trimitem oricum, iar clubul confirmă. Poți apăsa și «Reîncearcă verificarea»."
   }
 }

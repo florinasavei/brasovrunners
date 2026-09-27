@@ -5152,7 +5152,10 @@
     "emailHelp": "This is where the confirmation link goes. Type it carefully.",
     "phoneTooShort": "Keep going — a number has at least 4 digits.",
     "phoneValid": "Looks right. We will store it as",
-    "botCheckWait": "One second while we check you are not a robot — if a box to tick appears, tick it; we send the form ourselves as soon as it answers; no need to press again.",
+    "botCheckWait": "Checking… we send the form ourselves as soon as it answers; no need to press again.",
+    "botCheckTick": "Tick the box above — we send the form ourselves as soon as it answers; no need to press again.",
+    "botCheckExpired": "The check expired — it is being redone; we send the form ourselves as soon as it answers; no need to press again.",
+    "botCheckValve": "Sending without the automatic check…",
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
     "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {
@@ -6292,15 +6295,16 @@
   },
   "BotCheck": {
     "loading": "Loading the anti-bot check…",
-    "checking": "Checking that you are not a robot…",
+    "checking": "Checking…",
     "interactive": "Tick the box above: that is how we know you are not a robot.",
     "passed": "Check passed — you can send.",
-    "expired": "The check expired and is renewing itself. If it does not, press “Try again”.",
+    "expired": "The check expired — it is being redone. If it is not, press “Retry the check”.",
     "timeout": "The box waited too long and was drawn again — tick it once more.",
-    "error": "The anti-bot check did not work. Press “Try again” — or send the form anyway: we accept it without the check.",
-    "unsupported": "Your browser cannot run the anti-bot check. Send the form anyway: we accept it without the check.",
-    "blocked": "The anti-bot check did not load — a network or a browser extension may be blocking it. Press “Try again” — or send the form anyway: we accept it without the check.",
-    "slow": "The check is taking longer than usual. Press “Try again” — or send the form: it goes without the check in a few seconds.",
-    "retry": "Try again"
+    "error": "The anti-bot check did not work; it is retrying by itself. You can press “Retry the check”.",
+    "unsupported": "Your browser cannot run the anti-bot check. We could not check automatically; we send it anyway, and the club confirms.",
+    "blocked": "The anti-bot check did not load — a network or a browser extension may be blocking it. We could not check automatically; we send it anyway, and the club confirms. You can also press “Retry the check”.",
+    "slow": "The check is taking longer than usual. Press “Retry the check” — or send the form: it goes without the check in a few seconds.",
+    "retry": "Retry the check",
+    "failed": "We could not check automatically; we send it anyway, and the club confirms. You can also press “Retry the check”."
   }
 }

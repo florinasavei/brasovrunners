@@ -24,6 +24,7 @@ export default async function BotCheck({ siteKey, locale, attempt }: { siteKey: 
     blocked: t("blocked"),
     slow: t("slow"),
     retry: t("retry"),
+    failed: t("failed"),
   };
   return <TurnstileWidget siteKey={siteKey} locale={locale} attempt={attempt} words={words} />;
 }

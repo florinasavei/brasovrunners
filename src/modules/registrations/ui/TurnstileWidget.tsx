@@ -8,14 +8,18 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   BOT_CHECK_BLOCKED_AFTER_MS,
+  BOT_CHECK_GAVE_UP_ATTRIBUTE,
   BOT_CHECK_SLOW_AFTER_MS,
   BOT_CHECK_STATE_ATTRIBUTE,
   botCheckAsksAttention,
+  botCheckGaveUp,
   botCheckOffersRetry,
   type BotCheckState,
+  reportBotCheckSignal,
   TURNSTILE_SCRIPT_URL,
   TURNSTILE_TOKEN_EVENT,
 } from "../domain/turnstile-widget";
+import { isPressHeld } from "@/shared/ui/held-press";
 
 /**
  * Cloudflare Turnstile, rendered explicitly and reset on every attempt (`DECISIONS.md` §185), with
@@ -44,15 +48,20 @@ import {
  * (`BOT_CHECK_STATES`), the line under the widget says it in the reader's language, and:
  *
  * - a failure, a lapse, a script that never came and a check that takes too long offer
- *   «Încearcă din nou» — `turnstile.reset()` on the widget, or the script injected again;
+ *   «Reîncearcă verificarea» — `turnstile.reset()` on the widget, or the script injected again;
  * - the state is written on this element (`data-bot-check`), where the send button reads it from
- *   the form as it reads the token: a check that gave up (`botCheckGaveUp`) holds no press, and a
- *   press already held is sent at once. The server takes the missing token for the check not
- *   running (§216), and people register at all costs (§205).
+ *   the form as it reads the token, and says it again in its own held sentence; a check that gave
+ *   up (`botCheckGaveUp`: the second failure, a script that never came, a browser that cannot run
+ *   it) is marked `data-bot-check-gave-up`, holds no press, lets a held one go at once, and says
+ *   the owner's sentence — «Nu am putut verifica automat; trimitem oricum, iar clubul confirmă».
+ *   The server takes the missing token for the check not running (§216), and people register at
+ *   all costs (§205);
+ * - a widget that fails or never loads is counted once, level-only, for `/api/health`
+ *   (`reportBotCheckSignal`).
  *
  * Cloudflare's own retries are kept: `retry` and `refresh-expired` / `refresh-timeout` stay at
  * their `auto` defaults, and the error callback returns `false`, which the documentation names as
- * "let Turnstile handle the retry" — «Încearcă din nou» is a faster way out, not the only one.
+ * "let Turnstile handle the retry" — «Reîncearcă verificarea» is a faster way out, not the only one.
  *
  * With JavaScript off none of it runs and nothing is said: the line is drawn only once the island
  * runs, so a page without scripts never promises a check that cannot start.
@@ -82,8 +91,11 @@ declare global {
   }
 }
 
-/** The line under the widget, per state, and the retry button's label — translated on the server (`BotCheck`). */
-export type BotCheckWords = Record<BotCheckState, string> & { slow: string; retry: string };
+/**
+ * The line under the widget, per state, the slow line, the retry button's label and the line of a
+ * failure that gave up — translated on the server (`BotCheck`).
+ */
+export type BotCheckWords = Record<BotCheckState, string> & { slow: string; retry: string; failed: string };
 
 const SCRIPT_SELECTOR = "script[data-turnstile]";
 const NOTHING_TO_WATCH = () => () => {};
@@ -103,6 +115,14 @@ export default function TurnstileWidget({
   const holder = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<string | null>(null);
   const [state, setState] = useState<BotCheckState>("loading");
+  // Failures so far (§NNN): the first is Cloudflare's to retry, the second gives up. Kept across
+  // «Reîncearcă verificarea» and new attempts; a pass starts the count again.
+  const [failures, setFailures] = useState(0);
+  // A press held on the form when the state changed: the button's own sentence is then the live
+  // region, and this line changes without being read out on top of it (§NNN).
+  const [quiet, setQuiet] = useState(false);
+  // One count per widget for `/api/health` (§NNN), however many times it fails.
+  const reported = useRef(false);
   // Bumped by «Încearcă din nou» when the script never came: the effect below injects it again.
   const [reload, setReload] = useState(0);
   // Bumped by every «Încearcă din nou», so the slow line's clock starts again even when the state
@@ -118,7 +138,16 @@ export default function TurnstileWidget({
   useEffect(() => {
     let cancelled = false;
     const become = (next: BotCheckState) => {
-      if (!cancelled) setState(next);
+      if (cancelled) return;
+      const form = holder.current?.closest("form");
+      setQuiet(form ? isPressHeld(form) : false);
+      setState(next);
+      if (next === "passed") setFailures(0);
+      if (next === "error") setFailures((count) => count + 1);
+      if ((next === "error" || next === "blocked") && !reported.current) {
+        reported.current = true;
+        reportBotCheckSignal("widget-failed");
+      }
     };
 
     const draw = () => {
@@ -176,7 +205,12 @@ export default function TurnstileWidget({
       };
     }
 
-    const existing = document.querySelector<HTMLScriptElement>(SCRIPT_SELECTOR);
+    // A tag that already failed — a client navigation back to a form whose script was blocked —
+    // will never fire `load` or `error` again: it goes, and a fresh one is injected at once rather
+    // than waited for ten seconds.
+    const found = document.querySelector<HTMLScriptElement>(SCRIPT_SELECTOR);
+    if (found?.dataset.turnstileFailed) found.remove();
+    const existing = found?.dataset.turnstileFailed ? null : found;
     const script = existing ?? document.createElement("script");
     if (!existing) {
       script.src = `${TURNSTILE_SCRIPT_URL}?render=explicit`;
@@ -221,7 +255,7 @@ export default function TurnstileWidget({
   }, [state, attempt, tries]);
 
   /*
-    «Încearcă din nou»: a fresh challenge on the widget that is there, or — when there is none
+    «Reîncearcă verificarea»: a fresh challenge on the widget that is there, or — when there is none
     because the script never came — the script again. A tag that failed to load stays in the
     document and never fires `load` again, so it goes before the new one is added; a tag still on
     its way stays, and is waited for again — removing it would not stop it running, and two copies
@@ -230,12 +264,14 @@ export default function TurnstileWidget({
   const retry = () => {
     const api = window.turnstile;
     setTries((count) => count + 1);
+    setQuiet(false);
     if (api && widgetId.current !== null) {
       setState("checking");
       try {
         api.reset(widgetId.current);
       } catch {
         setState("error");
+        setFailures((count) => count + 1);
       }
       return;
     }
@@ -272,24 +308,36 @@ export default function TurnstileWidget({
     [],
   );
 
+  const gaveUp = botCheckGaveUp(state, failures);
   const offersRetry = botCheckOffersRetry(state, slow);
   const attention = botCheckAsksAttention(state, slow);
+  const line =
+    slow && (state === "loading" || state === "checking") ? words.slow : state === "error" && gaveUp ? words.failed : words[state];
 
   return (
     <Box>
       {/* `min-height` so the form does not jump when the challenge draws itself a moment later. */}
-      <Box ref={holder} {...{ [BOT_CHECK_STATE_ATTRIBUTE]: state }} sx={{ minHeight: 65 }} />
+      <Box
+        ref={holder}
+        {...{ [BOT_CHECK_STATE_ATTRIBUTE]: state, ...(gaveUp ? { [BOT_CHECK_GAVE_UP_ATTRIBUTE]: "true" } : {}) }}
+        sx={{ minHeight: 65 }}
+      />
       {running && (
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5, rowGap: 0.5, mt: 0.5 }}>
-          {/* A live region the state is read from as it changes: polite, it waits for the typing. */}
+          {/*
+            A live region the state is read from as it changes: polite, it waits for the typing —
+            and silent while a press is held, when the send button's own sentence says the same
+            state (§NNN): one voice, not two sentences on top of each other.
+          */}
           <Typography
             variant="body2"
             role="status"
+            aria-live={quiet ? "off" : "polite"}
             data-testid="bot-check-status"
             color={attention ? "text.primary" : "text.secondary"}
             sx={{ fontWeight: attention ? 600 : undefined, flex: "1 1 16rem" }}
           >
-            {slow && (state === "loading" || state === "checking") ? words.slow : words[state]}
+            {line}
           </Typography>
           {offersRetry && (
             <Button
