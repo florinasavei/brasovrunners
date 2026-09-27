@@ -2008,7 +2008,7 @@
         "eventDate": "Data evenimentului, în fusul lui",
         "eventLocation": "Locul de întâlnire",
         "signedAt": "Momentul semnării",
-        "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu {{event}} și {{eventDate}}",
+        "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu '{{event}}' și '{{eventDate}}'",
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "confirmationHours": "Cât e valabil linkul de confirmare a adresei, din „Termene”",

@@ -260,6 +260,16 @@ describe("§393 the two templates", () => {
     for (const text of [roText, enText]) expect(text).not.toMatch(/o înlocuiește pe cea veche|replaces the old one/);
   });
 
+  // A signature covers every date of a repeating run only once the text names {{series}} (§NNN).
+  it("the privacy notice hedges the whole-series signature to the declaration's text (§NNN)", () => {
+    expect(paragraphs(privacyNoticeRo).join(" ")).toContain(
+      "O semnezi o singură dată pentru o alergare care se repetă, când textul declarației prevede asta: acoperă atunci fiecare dată a ei, fără termen.",
+    );
+    expect(paragraphs(privacyNoticeEn).join(" ")).toContain(
+      "You sign it once for a run that repeats, where the declaration's text says so: it then covers every date of it, with no end date.",
+    );
+  });
+
   /*
     §418 — evidence the signer could withdraw at will would be no evidence: the basis is the club's
     legitimate interest (art. 6(1)(f)), art. 9(2)(f) for the health statement, and the rights list

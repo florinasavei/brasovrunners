@@ -2008,7 +2008,7 @@
         "eventDate": "The event's date, in its own zone",
         "eventLocation": "The meeting point",
         "signedAt": "When it was signed",
-        "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with {{event}} and {{eventDate}}",
+        "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
         "confirmationHours": "How long the address confirmation link is valid, from “Deadlines”",

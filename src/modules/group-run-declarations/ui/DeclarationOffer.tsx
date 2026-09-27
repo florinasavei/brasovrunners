@@ -15,7 +15,7 @@ import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { signedStateFor, signingOpen } from "../domain";
-import { findSignatureByViewToken } from "../repository";
+import { findRunSeries, findSignatureByViewToken } from "../repository";
 import { signatureCoversSeries } from "../series";
 
 /**
@@ -90,6 +90,12 @@ export default async function DeclarationOffer({
   const mine = token ? await readOrWhileAway(() => findSignatureByViewToken(getDb(), hashTokenSecret(token), event.id, key), undefined) : undefined;
   const signed = signedStateFor(mine, declaration.id);
   if (!open && signed?.kind !== "current") return null;
+  // «For the whole series» only when both hold: the text names {{series}} AND the run has another
+  // date; a one-off run's signature covers its one date whatever the text (§NNN).
+  const coversSeries =
+    signed === null &&
+    signatureCoversSeries(declaration.body) &&
+    (await readOrWhileAway(async () => (await findRunSeries(getDb(), event.id)).key !== null, false));
   const t = await getTranslations("Event");
   const href = getPathname({ locale, href: { pathname: "/events/[slug]/declaration", params: { slug } } });
   const when = signed ? formatDay(signed.acceptedAt, { locale, timeZone: event.timezone, style: "long", position: "inline" }) : "";
@@ -116,10 +122,10 @@ export default async function DeclarationOffer({
         </Typography>
       ) : (
         // Once for the whole run (§NNN): a returning runner reads here that they need not sign again —
-        // only while the text in force says so (`signatureCoversSeries`); under an older one, a
-        // signature covers its own date, and the line says this run.
+        // only while the text in force says so (`signatureCoversSeries`) and the run has another date;
+        // otherwise a signature covers its own date, and the line says this run.
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="group-run-declaration-line">
-          {t(signatureCoversSeries(declaration.body) ? "groupRunDeclaration.line" : "groupRunDeclaration.lineOneDate", { event: event.title })}
+          {t(coversSeries ? "groupRunDeclaration.line" : "groupRunDeclaration.lineOneDate", { event: event.title })}
         </Typography>
       )}
       {signed?.kind !== "current" && (
