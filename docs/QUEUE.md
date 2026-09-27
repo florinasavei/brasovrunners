@@ -27,6 +27,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | Item | Waits for |
 | --- | --- |
 | The review leftovers of 2026-09-26 (the handoff's queue): the governor's red-mode edge cases, the proxy notice wording, the older-pictures test, the Costuri «.ro» label, the guide criterion numbering | BR-V2.04 |
+| «Echipa»: up to twelve links per person (the V2.07 cleanup's item 5) — `MAX_TEAM_LINKS` 6 → 12 and the CHECK `team_members_links_is_a_short_array_of_https_links` dropped and re-added with `<= 12`, a generated expand-only migration; the save already reads twelve rows (§NNN). The cap stays six in `BR-V2.08` | a rebuilt drizzle snapshot chain, so `drizzle-kit generate` runs again |
 
 ## Waiting on the owner
 

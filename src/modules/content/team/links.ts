@@ -25,12 +25,15 @@ export type TeamLinkKind = (typeof TEAM_LINK_KINDS)[number];
 /** Six: a person's networks and a site of their own, few enough to read on a card two to a row. */
 export const MAX_TEAM_LINKS = 6;
 /**
- * The highest row index a save reads from `links[i].<box>` (§NNN; the V2.06 review): the editor
- * never draws more than `MAX_TEAM_LINKS` rows and a spare line, so a posted `links[99999999]` is
- * not a row of it — and gathered by index it would have become an array of a hundred million holes.
- * Twelve, an event's own ceiling (§332), leaves room for the cap to grow without a second change.
+ * How many rows a save reads from `links[i].<box>` — indexes 0 to 11 (§NNN; the V2.06 review): the
+ * editor never draws more than `MAX_TEAM_LINKS` rows and a spare line, so a posted
+ * `links[99999999]` is not a row of it — and gathered by index it would have become an array of a
+ * hundred million holes. Twelve, an event's own ceiling (§332), leaves room for the cap to grow
+ * without a second change here. The cap itself stays six for now: raising it also moves the CHECK
+ * `team_members_links_is_a_short_array_of_https_links`, a migration queued in `docs/QUEUE.md`
+ * until `drizzle-kit generate` runs over a rebuilt snapshot chain.
  */
-export const MAX_TEAM_LINK_ROW_INDEX = 12;
+export const MAX_TEAM_LINK_ROWS = 12;
 
 /**
  * The links' rows (§474), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,
@@ -46,7 +49,7 @@ export function teamLinkRowsOf(form: FormData): Array<Record<string, string>> | 
     if (!match || typeof entry !== "string") continue;
     const index = Number(match[1]);
     // Past the editor's own rows: not a row, and never an index to grow the array to (§NNN).
-    if (index > MAX_TEAM_LINK_ROW_INDEX) continue;
+    if (index >= MAX_TEAM_LINK_ROWS) continue;
     rows[index] = { ...(rows[index] ?? {}), [match[2]]: entry };
   }
   // A hole (a row index nobody posted) is the spare line, not a row to refuse.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_TEAM_LINK_ROW_INDEX, teamLinkRowsOf } from "@/modules/content/team/links";
+import { MAX_TEAM_LINK_ROWS, teamLinkRowsOf } from "@/modules/content/team/links";
 import { TEAM_META_DESCRIPTION_MAX, teamMetaDescription } from "@/modules/content/team/meta-description";
 
 /**
@@ -31,12 +31,12 @@ describe("§NNN «Echipa»'s links: the row index a save reads is bounded", () =
       form([
         ["links.present", "1"],
         ["links[0].url", "https://example.org"],
-        [`links[${MAX_TEAM_LINK_ROW_INDEX}].url`, "https://example.net"],
-        [`links[${MAX_TEAM_LINK_ROW_INDEX + 1}].url`, "https://example.com"],
+        [`links[${MAX_TEAM_LINK_ROWS - 1}].url`, "https://example.net"],
+        [`links[${MAX_TEAM_LINK_ROWS}].url`, "https://example.com"],
         ["links[99999999].url", "https://example.com"],
       ]),
     );
-    expect(rows).toHaveLength(MAX_TEAM_LINK_ROW_INDEX + 1);
+    expect(rows).toHaveLength(MAX_TEAM_LINK_ROWS);
     expect(rows?.at(-1)).toEqual({ url: "https://example.net" });
     expect(JSON.stringify(rows)).not.toContain("example.com");
   });
@@ -51,9 +51,20 @@ describe("§NNN «Echipa»'s meta description is a search result's length", () =
     expect(teamMetaDescription("  Suntem clubul\n de alergare  din Brașov. ")).toBe("Suntem clubul de alergare din Brașov.");
   });
 
-  it("takes the first sentence of a long introduction when it fits", () => {
-    const intro = `Alergăm împreună în fiecare săptămână. ${"Pe munte, pe asfalt, pe orice vreme. ".repeat(10)}`;
-    expect(teamMetaDescription(intro)).toBe("Alergăm împreună în fiecare săptămână.");
+  it("takes the first sentence of a long introduction when it fits and fills half the room", () => {
+    const first = "Alergăm împreună în fiecare săptămână, pe munte și pe asfalt, dimineața devreme sau seara după lucru.";
+    const intro = `${first} ${"Pe munte, pe asfalt, pe orice vreme. ".repeat(10)}`;
+    expect(first.length).toBeGreaterThanOrEqual(TEAM_META_DESCRIPTION_MAX / 2);
+    expect(teamMetaDescription(intro)).toBe(first);
+  });
+
+  it("cuts at a whole word rather than stand on a short first sentence", () => {
+    const intro = `Bun venit! Suntem clubul de alergare din Brașov și ${"alergăm pe munte și pe asfalt ".repeat(8)}.`;
+    const description = teamMetaDescription(intro);
+    expect(description.startsWith("Bun venit! Suntem clubul")).toBe(true);
+    expect(description.length).toBeLessThanOrEqual(TEAM_META_DESCRIPTION_MAX);
+    expect(description.length).toBeGreaterThan(TEAM_META_DESCRIPTION_MAX / 2);
+    expect(description.endsWith("…")).toBe(true);
   });
 
   it("cuts a long first sentence at a whole word, with an ellipsis, within the limit", () => {
