@@ -41,7 +41,6 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canManageClubSettings, canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
-import SubNav from "@/shared/ui/SubNav";
 import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -215,7 +214,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
   // Built here, because `getPathname` is a server function and the sub-nav takes strings (§265).
   const devsPath = getPathname({ locale, href: "/devs" });
-  const tasksPath = getPathname({ locale, href: "/admin/tasks" });
+  // «Configurație» in «Setări»'s row, and each of this page's panels after it in the same row (§NNN).
+  const configurationLabel = (await getTranslations("Admin"))("settingsTabs.configuration");
 
   const severity = (status: string) =>
     status === "blocked" ? "error" : status === "limited" ? "warning" : "success";
@@ -225,9 +225,20 @@ export default async function DevsPage({ params, searchParams }: Props) {
       {/*
         «Setări»'s row first, «Configurație» marked (§NNN): this page is the row's last tab, so the
         club's settings — «Costuri» with the Neon limits the owner came here looking for — are one tap
-        away, and the main bar's «Configurație» and «Setări» lead into one row rather than two places.
+        away. The main bar has no «Configurație» of its own any more: «Setări» is the one way in.
+        This page's three panels (§265) are entries of that same row, never a second row under it
+        (§360); the anti-bot switch is the row's «Platformă» tab, and «Aplicația» is «Sarcini»'s.
       */}
-      <SettingsSubNav locale={locale} role={actor.role} active="configuration" />
+      <SettingsSubNav
+        locale={locale}
+        role={actor.role}
+        active="configuration"
+        configurationPanels={DEVS_PANELS.map((name) => ({
+          href: name === "status" ? devsPath : `${devsPath}?panel=${name}`,
+          label: name === "status" ? configurationLabel : `${configurationLabel} · ${t(`panel.${name}`)}`,
+          active: panel === name,
+        }))}
+      />
       <Box>
         {/* Under the backoffice's own title and tabs (§119): a section heading, like the others. */}
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
@@ -310,29 +321,6 @@ export default async function DevsPage({ params, searchParams }: Props) {
 
         </>
       )}
-      {/*
-        The panels (§265), and the anti-bot switch beside them: that switch lives on «Setări» →
-        «Platformă» since §NNN (it was a panel of `/admin/tasks`, §254), and "where do I turn the
-        captcha off" is a configuration question wherever the answer is kept. The link is offered only
-        to a role that may open that tab (`canOpenSettingsTab`, the page's own gate), so it can reach
-        it (§397) — a Tehnic who followed it used to land on «Aplicația» instead, under a label that
-        named the wrong panel.
-        The «Aplicația» link is that role's own way back to the tab it opened `/admin/tasks` on.
-      */}
-      <SubNav
-        label={t("title")}
-        items={[
-          ...DEVS_PANELS.map((name) => ({
-            href: name === "status" ? devsPath : `${devsPath}?panel=${name}`,
-            label: t(`panel.${name}`),
-            active: panel === name,
-          })),
-          ...(canOpenSettingsTab(actor.role, "platform")
-            ? [{ href: getPathname({ locale, href: "/admin/settings/platform" }), label: t("panel.botCheck") }]
-            : []),
-          { href: `${tasksPath}?panel=app`, label: t("panel.app") },
-        ]}
-      />
 
       {/* Which deployment, and which build. The commonest confusion is not "what is wrong" but
           "which of these two identical-looking systems am I even looking at". */}

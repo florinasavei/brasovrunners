@@ -160,7 +160,7 @@ export type FamilySittingCookie = {
   windowMinutes?: number;
   /**
    * The facts the next form of the sitting starts with (`sittingSharedValues`): the city, the
-   * citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a
+   * country, the citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a
    * cookie written before they were kept.
    */
   shared?: Readonly<Record<string, string>>;
@@ -178,13 +178,15 @@ export function sittingNames(people: readonly SittingPerson[]): string[] {
 
 /**
  * The boxes a family shares, which the next form of a sitting starts filled with (the owner,
- * 2026-09-27: «claritate»; a parent does not retype the town, the citizenship, the guardian and the
- * emergency contact for every child). Everything else — the name, the birth date, the sex, the
+ * 2026-09-27: «claritate»; a parent does not retype the town, the country, the citizenship, the
+ * guardian and the emergency contact for every child). The country beside the town since §NNN: the
+ * country box became required, and a family's second form started it back at the default. Everything else — the name, the birth date, the sex, the
  * phone, the health note, the socials, every consent — belongs to the one person and starts empty.
  * The phone's country and digits are the posted pair `PhoneField` reads back.
  */
 export const SITTING_SHARED_FIELDS = [
   "city",
+  "country",
   "nationality",
   "guardianName",
   "emergencyContactName",

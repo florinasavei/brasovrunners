@@ -63,8 +63,8 @@ describe("§NNN rebasedDeadline", () => {
     ).toBeNull();
   });
 
-  it("never revives an offer already past its deadline at the send, and re-bases a lapsed declaration hold", () => {
-    expect(rebasedDeadline({ kind: "offer", stored: at(24 * HOUR), queuedAt: QUEUED, sentAt: at(25 * HOUR), event: EVENT })).toBeNull();
+  it("re-bases an offer and a declaration hold past their stored deadline at the send — the queue kept both (§NNN)", () => {
+    expect(rebasedDeadline({ kind: "offer", stored: at(24 * HOUR), queuedAt: QUEUED, sentAt: at(25 * HOUR), event: EVENT })).toEqual(at(49 * HOUR));
     expect(rebasedDeadline({ kind: "declarationHold", stored: at(30 * MINUTE), queuedAt: QUEUED, sentAt: at(HOUR), event: EVENT })).toEqual(at(90 * MINUTE));
   });
 

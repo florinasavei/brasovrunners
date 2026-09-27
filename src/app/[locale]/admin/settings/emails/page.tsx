@@ -14,6 +14,7 @@ import { EMAIL_SAMPLE_FAMILY } from "@/modules/notifications/domain/email-sample
 import {
   emailCopyPrefill,
   emailSampleActionUrl,
+  emailSampleFamilyConfirmed,
   emailSampleFor,
   sampleLanguagesOf,
   sampleValuesIn,
@@ -49,6 +50,7 @@ import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { countForm } from "@/i18n/count-form";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { requireStaff } from "@/modules/staff-identity/session";
+import MovedFragmentHop from "@/modules/staff-identity/ui/MovedFragmentHop";
 import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import { env } from "@/shared/config/env";
 
@@ -265,9 +267,23 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   });
   const anySamples = cards.some((card) => card.sampleLanguages.length > 0);
 
+  /*
+    The family's one confirmation (§NNN, «Confirmat: 2 persoane»): the same message type as one
+    person's, in the shape a sitting confirms — a block per person with the number, the desk code and
+    the QR. Previewed like every other message (§81), right after one person's; its words are the
+    platform's (the club's words for «Înscriere confirmată» are one person's), so it has no editor.
+  */
+  const familySample = emailSampleFor("REGISTRATION_CONFIRMED", emailLocale);
+  familySample.timings = timings;
+  familySample.replyTo = replyTo;
+  familySample.familyConfirmed = emailSampleFamilyConfirmed();
+  const familyConfirmed = renderBilingual("REGISTRATION_CONFIRMED", emailLocale, familySample, actionUrl, written.copy);
+
   return (
     <Stack spacing={3}>
       <SettingsSubNav locale={locale} role={staff.role} active="emails" />
+      {/* An old `/admin/emails#contact-recipients` or `#deadlines` goes on to the card's own tab (§NNN). */}
+      <MovedFragmentHop />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
@@ -367,8 +383,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         }))}
         // A saved text holding sample values, in either language, opens the card to whoever may fix it (§359).
         openWhen={{ saved: copySaved, inUse: lang !== undefined, attention: anySamples }}
-        messages={cards.map(({ messageType, content, own, samples, sampleLanguages }) => {
-          return {
+        messages={cards.flatMap(({ messageType, content, own, samples, sampleLanguages }) => {
+          const card = {
             type: messageType,
             name: t(`emails.types.${messageType}`),
             whenShort: whenShortOf(messageType),
@@ -404,6 +420,25 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               />
             ) : undefined,
           };
+          if (messageType !== "REGISTRATION_CONFIRMED") return [card];
+          return [
+            card,
+            {
+              type: messageType,
+              id: "REGISTRATION_CONFIRMED-family",
+              name: t("emails.familyConfirmed.name"),
+              whenShort: t("emails.familyConfirmed.whenShort"),
+              when: t("emails.familyConfirmed.when"),
+              subjectLine: `${t("emails.subject")}: ${familyConfirmed.subject}`,
+              html: familyConfirmed.html,
+              justSaved: false,
+              editor: (
+                <Alert severity="info" sx={{ mb: 2 }} data-testid="email-family-confirmed">
+                  {t("emails.familyConfirmed.platformWords")}
+                </Alert>
+              ),
+            },
+          ];
         })}
       />
     </Stack>

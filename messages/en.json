@@ -478,7 +478,6 @@
       "registrations": "Registrations",
       "staff": "Staff",
       "legal": "Legal documents",
-      "devs": "Configuration",
       "tasks": "Tasks",
       "pages": "Pages",
       "gallery": "Gallery",
@@ -1714,7 +1713,7 @@
       },
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
-        "help": "The run's page shows “Sign the self-declaration”, optional; the signer and the club each get a copy. It needs an approved privacy notice.",
+        "help": "Optional; the signer and the club each get a copy. It needs an approved privacy notice. The run declaration is signed from 18, whatever the run's minimum age.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
         "minAgeHelp": "Reached by the day of the run, at least 18: the declaration covers no minor, even if this box says less. Above 18, for example 21, the signing page asks for the birth date.",
@@ -3492,7 +3491,7 @@
         "GROUP_RUN_DECLARATION_SIGNED": "after a group run declaration is signed",
         "GROUP_RUN_DECLARATION_ARCHIVE": "with a group run declaration, to the archive",
         "REGISTER_ANOTHER_PERSON": "when the form is sent again for another person",
-        "NEWSLETTER_CONFIRM": "as soon as someone subscribes",
+        "NEWSLETTER_CONFIRM": "when someone subscribes",
         "NEWSLETTER": "only when an organizer sends a newsletter",
         "NEW_EVENT_ALERT": "automatically, when a new event is published"
       },
@@ -3834,6 +3833,12 @@
           "immediate": "Emails leave right after the request that queued them; what is left (a retry, a deferral) leaves on the scheduled round, the next one expected around {at}."
         }
       },
+      "familyConfirmed": {
+        "name": "Registration confirmed — family (several people)",
+        "whenShort": "after a family's last declaration",
+        "when": "When one address registered several people at once and all of them are confirmed: one email, with each person's QR code, desk code and race number.",
+        "platformWords": "The platform's words. The club's own words for «Registration confirmed (with QR and number)» are for one person and do not apply here."
+      },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
@@ -3921,10 +3926,10 @@
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
                 "«Race day»: the number pickup desk, on a phone.",
                 "«Gallery» and «Pages».",
-                "«Settings»: «Emails» (what participants receive, the Mailgun plan), «Deadlines», «Contact», «Appearance», «Costs» and «Platform».",
+                "«Settings»: «Emails» (what participants receive, the Mailgun plan), «Deadlines», «Contact», «Appearance», «Costs», «Platform» and, at the end of the row, «Configuration» (for the Technical role and the Administrators).",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
                 "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
-                "«Staff», «Guide» (this page) and «Configuration»."
+                "«Staff» and «Guide» (this page)."
               ]
             },
             {
@@ -3944,7 +3949,7 @@
                 "The Organizer: reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants. Does not write the texts, publish, cancel or erase a registration, resend emails or assign numbers.",
                 "The Tehnic role: the platform's configuration page, for troubleshooting; may correct an event's settings. Does not see the registrations.",
                 "The Administrator runs the club: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
-                "The Superadministrator: everything the Administrator does, plus the platform settings that can stop the service — «How often the platform checks», «The database's limits», the thresholds in «This month's budget» and «Anti-bot» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
+                "The Superadministrator: everything the Administrator does, plus the platform settings that can stop the service — «How often the platform checks», «The database's limits», the thresholds in «This month's budget» and the anti-bot check on «Platform» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
               ]
             },
             {
@@ -4526,7 +4531,7 @@
               "title": "Minors and the minimum age",
               "steps": [
                 "A participant under 18 is registered by a parent or guardian, who writes their name in the form's section for minors; the desk and the export show “Minor — parent/guardian”.",
-                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Programme, rules and declaration» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff."
+                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Programme, rules and declaration» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The run declaration is signed from 18, whatever the run's minimum age."
               ]
             },
             {
@@ -5622,9 +5627,7 @@
     "panel": {
       "status": "Status",
       "general": "General",
-      "email": "Email",
-      "botCheck": "Anti-bot",
-      "app": "The app"
+      "email": "Email"
     },
     "configuration": "Configuration",
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",

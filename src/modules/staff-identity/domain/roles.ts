@@ -608,11 +608,16 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     legal          canReadContent           `admin/legal/page.tsx` — writing asks
  *                                             `canWriteLegalTexts` (§450)
  *     guide          every staff session      `admin/guide/page.tsx`
- *     devs           canSeeDiagnostics        `devs/page.tsx`
+ *
+ * **`/devs` («Configurație») is not a section of this bar (§NNN).** It is the last tab of «Setări»'s
+ * row (`settings-tabs.ts`'s `offersConfigurationTab`, gate `canSeeDiagnostics`), and it had its own
+ * entry here as well — one page, two ways in, and the main bar lit neither on arrival. The Tehnic,
+ * whose reason to open the backoffice is that page, reaches it through «Setări», which every role
+ * from the Redactor up is offered; the bar lights «Setări» on `/devs` (`BackofficeShell`).
  *
  * **In the order the club opens them (§NNN)**, which is the array's order and the bar's: the
  * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, then the
- * settings, what is owed, the team, the legal texts, the guide, and the system last. A role is
+ * settings, what is owed, the team, the legal texts and the guide. A role is
  * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid».
  *
  * The hierarchy makes one property testable and worth stating: a higher role is offered every
@@ -631,7 +636,6 @@ export const ADMIN_SECTIONS = [
   "staff",
   "legal",
   "guide",
-  "devs",
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
@@ -719,7 +723,6 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // the Administrator writes one (§46, §181, §203).
     legal: canReadContent(role),
     guide: canWorkTheDesk(role),
-    devs: canSeeDiagnostics(role),
   };
   return ADMIN_SECTIONS.filter((section) => offered[section]);
 }

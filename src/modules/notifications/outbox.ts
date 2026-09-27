@@ -586,22 +586,40 @@ export async function processOutboxBatch(
       }
 
       if (result.outcome === "sent") {
-        await db
-          .update(emailOutbox)
-          .set({
-            status: "SENT",
-            // The moment Gmail took it when it did (§443 review): the pace runs from here in every sender.
-            sentAt: result.acceptedAt ?? now,
-            providerMessageId: result.providerMessageId,
-            // Which road carried it (§443): Gmail's cap and Mailgun's allowance are counted from this.
-            transport: result.transport ?? "mailgun",
-            // What Google counts against the day (§443): the address and every copy that left; 0 when captured.
-            recipientCount: result.recipients ?? null,
-            lockedAt: null,
-            nextAttemptAt: null,
-            lastError: null,
-          })
-          .where(eq(emailOutbox.id, row.id));
+        const sentValues = {
+          status: "SENT",
+          // The moment Gmail took it when it did (§443 review): the pace runs from here in every sender.
+          sentAt: result.acceptedAt ?? now,
+          providerMessageId: result.providerMessageId,
+          // Which road carried it (§443): Gmail's cap and Mailgun's allowance are counted from this.
+          transport: result.transport ?? "mailgun",
+          // What Google counts against the day (§443): the address and every copy that left; 0 when captured.
+          recipientCount: result.recipients ?? null,
+          lockedAt: null,
+          nextAttemptAt: null,
+          lastError: null,
+        } as const;
+        const markSent = (handle: Pick<typeof db, "update">) => handle.update(emailOutbox).set(sentValues).where(eq(emailOutbox.id, row.id));
+        /*
+          An offer's move and its SENT mark commit together, under the event's lock (§NNN): while the
+          message was queued the offer was kept past its stored deadline (`awaitingItsFirstEmail`),
+          and the mark is what ends that — alone, it would let a count under the lock see a late offer
+          as free a moment before the move revives it. Should that transaction fail, the mark is
+          written alone: the message is out, and the offer keeps the deadline it was queued with.
+        */
+        if (rebase?.kind === "offer") {
+          const together = await applyDeadlineRebase(db, rebase, clock, (tx) => markSent(tx)).then(
+            () => true,
+            (error: unknown) => {
+              console.error("[email-outbox] deadline re-base failed", error);
+              return false;
+            },
+          );
+          if (!together) await markSent(db);
+          summary.sent += 1;
+          continue;
+        }
+        await markSent(db);
         summary.sent += 1;
         if (rebase) {
           // The message is out whatever happens here: a write that fails leaves the deadline it was
