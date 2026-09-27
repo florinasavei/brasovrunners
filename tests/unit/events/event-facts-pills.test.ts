@@ -138,7 +138,9 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
 
   it("says «no registration needed» on an event that takes none, before the partners", async () => {
     const html = await page({ registrationMode: "NONE", coHosts: [{ name: "Salvamont", links: [] }] });
-    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Înscriere"]);
+    // «Vârstă» on every type since §NNN: the minimum alone, no parent's clause without a registration here.
+    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vârstă", "Înscriere"]);
+    expect(text(row(html, "Vârstă").dd)).toBe("Vârsta minimă: 14 ani.");
     expect(text(row(html, "Înscriere").dd)).toBe("Nu este necesară înscrierea");
     // "Before the partners": the `<dl>` closes and only then does the partners' own section open.
     const clean = withoutStyles(html);

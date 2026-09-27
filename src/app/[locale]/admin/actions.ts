@@ -120,20 +120,11 @@ function editorPath(locale: Locale, eventId: string): string {
 }
 
 /**
- * The boxes a refusal of the event form names, as the form posts them (`form-names.ts`). A group
- * run's minimum age is read from its own box in «Traseul» (§440) — the race's box is hidden for
- * that type but still posts — so its refusal names that box, never the hidden one (§495).
+ * The boxes a refusal of the event form names, as the form posts them (`form-names.ts`). The
+ * minimum age is one box, `event.minAge` in «Regulamentul», for every type since §NNN — a group
+ * run's own box in «Traseul» (§440, §495) is gone, so no type needs its own name any more.
  */
-const eventFormFieldNames = (error: DomainError, form: FormData) =>
-  error.fields.map((field) => {
-    const name = eventFormFieldName(field);
-    return name === "event.minAge" && groupRunAgeBoxAnswers(form) ? "event.groupRunMinAge" : name;
-  });
-
-/** The group run's own age box is the one the save read (`eventFieldsFromForm`'s `minAge`). */
-function groupRunAgeBoxAnswers(form: FormData): boolean {
-  return text(form, "event.type") === "GROUP_RUN" && form.has("event.groupRunMinAge");
-}
+const eventFormFieldNames = (error: DomainError) => error.fields.map((field) => eventFormFieldName(field));
 
 /**
  * The whole event row as the form sends it — one reader, so the create form and the edit form
@@ -289,10 +280,9 @@ function eventFieldsFrom(form: FormData) {
         : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
-    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). A group
-    // run's is its own box in "Traseul", beside the declaration that states it (§440): the race box
-    // is hidden for a group run but still posts, so the type decides which one answers.
-    minAge: groupRunAgeBoxAnswers(form) ? value("groupRunMinAge") : value("minAge"),
+    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). One
+    // box in «Regulamentul» for every type since §NNN, a group run's included (§440's own box gone).
+    minAge: value("minAge"),
     // The event's own reminder lead (§377), only when the form carried its select: the empty
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,
@@ -610,7 +600,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
     };
   } catch (error) {
-    return refused(error, form, { fieldNames: (refusal) => eventFormFieldNames(refusal, form) });
+    return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
   return backTo(path, outcome);
@@ -690,7 +680,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
   } catch (error) {
     // Nothing was written — the create, the publication and the series are one transaction —
     // so the form comes back with everything typed.
-    return refused(error, form, { fieldNames: (refusal) => eventFormFieldNames(refusal, form) });
+    return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
   return backTo(editorPath(locale, createdId), outcome);

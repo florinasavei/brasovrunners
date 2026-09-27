@@ -315,13 +315,19 @@ describe("BR-REQ-052-02 who may enter (§329)", () => {
     expect(parsed(sportsEventJsonLd(race({ minAge: 16 } as Partial<PublicEvent>), URL, "Brașov Runners")).typicalAgeRange).toBe("16-");
   });
 
-  it("states nothing for no minimum, and nothing where the club counts no age", () => {
+  it("states nothing for no minimum, on any type", () => {
     // Zero is no minimum: "0-" would be a rule nobody set.
     expect("typicalAgeRange" in parsed(sportsEventJsonLd(race({ minAge: 0 } as Partial<PublicEvent>), URL, "Brașov Runners"))).toBe(false);
-    // Registered elsewhere, or not at all, or turned up to (§111): the platform refuses nobody there.
-    for (const overrides of [{ registrationMode: "EXTERNAL" }, { registrationMode: "NONE" }, { type: "GROUP_RUN" }] as const) {
-      const block = parsed(sportsEventJsonLd(race(overrides as Partial<PublicEvent>), URL, "Brașov Runners"));
-      expect("typicalAgeRange" in block, JSON.stringify(overrides)).toBe(false);
+    const run = { type: "GROUP_RUN", registrationMode: "NONE", minAge: 0 } as Partial<PublicEvent>;
+    expect("typicalAgeRange" in parsed(sportsEventJsonLd(race(run), URL, "Brașov Runners"))).toBe(false);
+  });
+
+  // §NNN: the minimum age is one box for every type, and the page says it for every type — so
+  // does the structured data, registered elsewhere, not at all, or turned up to.
+  it("states the minimum on every type and mode, as the page does", () => {
+    for (const overrides of [{ registrationMode: "EXTERNAL" }, { registrationMode: "NONE" }, { type: "GROUP_RUN", registrationMode: "NONE" }] as const) {
+      const block = parsed(sportsEventJsonLd(race({ ...overrides, minAge: 16 } as Partial<PublicEvent>), URL, "Brașov Runners"));
+      expect(block.typicalAgeRange, JSON.stringify(overrides)).toBe("16-");
     }
   });
 });

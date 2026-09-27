@@ -1,3 +1,5 @@
+import { type AgeRuleVariant, ageRuleVariant } from "@/modules/registrations/domain/age";
+
 /**
  * The event types and surfaces, as AGENTS.md §10.1 defines them.
  *
@@ -95,6 +97,27 @@ export function takesRegistrations(type: EventType): boolean {
  */
 export function hasAgeRule(event: { type: EventType; registrationMode: "NONE" | "INTERNAL" | "EXTERNAL" }): boolean {
   return takesRegistrations(event.type) && event.registrationMode === "INTERNAL";
+}
+
+/**
+ * The age sentence the event's page says, for every type (§NNN, amending §329's "only where the
+ * club counts it"): the minimum age is one box in the editor's «Regulamentul» for every event, so
+ * the page states it for every event that has one.
+ *
+ * - Where the club takes the registrations (`hasAgeRule`): the form's own sentence, with the
+ *   parent's clause (`ageRuleVariant`) — the page and the form cannot disagree.
+ * - Anywhere else — a group run, an event registered elsewhere or not at all — the minimum alone,
+ *   «Vârsta minimă: 16 ani.»: there is no registration there for a parent to make, so the parent's
+ *   sentence would describe a door that does not exist.
+ * - No minimum (zero) and no registration here: nothing — never "from 0 years".
+ */
+export function publicAgeRule(event: {
+  type: EventType;
+  registrationMode: "NONE" | "INTERNAL" | "EXTERNAL";
+  minAge: number;
+}): AgeRuleVariant | null {
+  if (hasAgeRule(event)) return ageRuleVariant(event.minAge);
+  return event.minAge > 0 ? "minimumOnly" : null;
 }
 
 /** Whether the editor offers a programme — the timed rows and the text under `#schedule`. */
