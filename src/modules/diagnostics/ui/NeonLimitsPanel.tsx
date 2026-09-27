@@ -132,7 +132,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   if (!reading.ok) {
     const { failure } = reading;
     return (
-      <Panel
+      <Panel glyph="limits"
         level={level}
         id="neon-limits"
         title={t("tasks.neonLimits.title")}
@@ -216,7 +216,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   ];
 
   return (
-    <Panel
+    <Panel glyph="limits"
       level={level}
       id="neon-limits"
       title={t("tasks.neonLimits.title")}

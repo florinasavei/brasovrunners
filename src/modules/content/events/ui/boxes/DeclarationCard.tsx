@@ -91,6 +91,7 @@ export default async function DeclarationCard({
   const line = await declarationLine(event, declarations, words, groupRunDeclarations);
   const card = {
     id: "box-declaration",
+    glyph: "declaration",
     level: 3,
     title: t("editor.boxes.declaration.title"),
     aside: line.text ?? words.declaration.notAsked,

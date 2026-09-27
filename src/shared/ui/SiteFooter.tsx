@@ -1,3 +1,4 @@
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
@@ -9,7 +10,7 @@ import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
-import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
+import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "./disclosure";
 import { foldLineSx, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
@@ -269,6 +270,8 @@ export default async function SiteFooter() {
             {/* One flex item for the words: the summary is a flex row (§325), and the tail as an
                 item of its own took the row's gap — "Despre club , contact și termeni" on every
                 desktop. The ellipsis is here, where the text is. */}
+            {/* What the fold holds, as every fold header says it (§NNN): the club's own facts. */}
+            <InfoOutlinedIcon aria-hidden sx={FOLD_GLYPH_SX} />
             <Box component="span" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
               {footer("about.summaryShort")}
               {/* The tail — ", contact and legal" — from `sm` up; a phone's line has no room for it. */}

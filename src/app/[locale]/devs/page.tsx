@@ -1,3 +1,5 @@
+import NotesIcon from "@mui/icons-material/Subject";
+import { FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -275,6 +277,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                     {/* The words themselves, folded (§446): what a journey walked by hand, or an end-to-end spec, reads. */}
                     <Box component="details" sx={{ mt: 0.5 }}>
                       <Typography component="summary" variant="caption" sx={{ cursor: "pointer", minHeight: 32, display: "flex", alignItems: "center" }}>
+                        <NotesIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
                         {t("captured.text")}
                       </Typography>
                       <Typography component="pre" variant="caption" data-testid="captured-text" sx={{ whiteSpace: "pre-wrap", m: 0 }}>

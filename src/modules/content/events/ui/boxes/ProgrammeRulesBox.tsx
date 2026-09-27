@@ -55,7 +55,7 @@ export default async function ProgrammeRulesBox({
   const startList = await StartListBox({ event, mayEditSettings });
 
   return (
-    <Panel
+    <Panel glyph="rules"
       collapsible
       id="box-programme"
       title={heading ?? t("editor.boxes.programmeRules.title")}

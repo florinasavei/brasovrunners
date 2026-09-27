@@ -1,5 +1,7 @@
 "use client";
 
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -249,7 +251,7 @@ export default function NetworkProbes({
         </Paper>
       ))}
       <Box>
-        <Button variant="outlined" onClick={again} sx={TAP_TARGET}>
+        <Button variant="outlined" onClick={again} startIcon={<RefreshIcon fontSize="small" />} sx={TAP_TARGET}>
           {words.again}
         </Button>
       </Box>
@@ -261,7 +263,7 @@ export default function NetworkProbes({
           {words.reportIntro}
         </Typography>
         <Box>
-          <Button variant="contained" onClick={() => void copy()} sx={TAP_TARGET} data-testid="network-copy">
+          <Button variant="contained" onClick={() => void copy()} startIcon={<ContentCopyIcon fontSize="small" />} sx={TAP_TARGET} data-testid="network-copy">
             {words.copy}
           </Button>
         </Box>

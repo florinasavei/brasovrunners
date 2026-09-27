@@ -1,6 +1,7 @@
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import DrawIcon from "@mui/icons-material/Draw";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -13,7 +14,7 @@ import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedFamilyRegistrationOpen } from "@/modules/public-cache/reads";
 import { confirmationDueAtStart, confirmationDueWords } from "@/modules/registrations/domain/hold-deadlines";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
 const STEPS = [
   { key: "form", Icon: PersonAddIcon },
@@ -170,6 +171,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
       }}
     >
       <Typography component="summary" variant="body1">
+        <FormatListNumberedIcon aria-hidden sx={FOLD_GLYPH_SX} />
         {t("steps.title")}
       </Typography>
       <Box sx={{ pb: 2 }}>{list}</Box>

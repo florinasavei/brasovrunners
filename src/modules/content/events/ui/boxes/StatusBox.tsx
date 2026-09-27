@@ -49,6 +49,7 @@ export default async function StatusCard({ event, risk, notice }: StatusCardProp
   const t = await getTranslations("Admin");
   const card = {
     id: "box-status",
+    glyph: "status",
     level: 3,
     title: t("editor.boxes.status.title"),
     aside: EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"],

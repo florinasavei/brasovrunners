@@ -1,6 +1,7 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import DownloadIcon from "@mui/icons-material/Download";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import RssFeedIcon from "@mui/icons-material/RssFeed";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -13,7 +14,7 @@ import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSwipe from "@/modules/events/ui/CalendarSwipe";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import InfoTip from "@/shared/ui/InfoTip";
-import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 
@@ -107,7 +108,10 @@ export default async function CalendarSection({
             hover and on focus. It had been a flex box, which removes the triangle in
             Chrome and Safari — the owner: "it's not clear that this is expandable". */}
         <Box component="details" sx={{ mt: 0.5, ...DISCLOSURE_SX, "& > summary": { ...DISCLOSURE_SUMMARY_SX, fontSize: "0.8125rem", color: "text.secondary" } }}>
-          <summary>{t("calendar.feedAddress")}</summary>
+          <summary>
+            <RssFeedIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            {t("calendar.feedAddress")}
+          </summary>
           {/*
             A link, not only a string to copy (§195; the owner, of the address: "ăsta trebuia
             să fie link"). It is still selected whole by one click — `userSelect: all` — for

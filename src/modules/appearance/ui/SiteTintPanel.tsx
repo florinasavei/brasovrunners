@@ -47,7 +47,7 @@ export default async function SiteTintPanel({ locale, state, mayEdit, openWhen }
   const preview = { header: CLUB_NAME, card: t("appearance.preview.card"), text: t("appearance.preview.text") };
 
   return (
-    <Panel title={t("appearance.title")} intro={t("appearance.intro")} id="site-tint" data-testid="site-tint" openWhen={openWhen}>
+    <Panel glyph="appearance" title={t("appearance.title")} intro={t("appearance.intro")} id="site-tint" data-testid="site-tint" openWhen={openWhen}>
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="site-tint-current">
         {t("appearance.current", { tint: current })}
       </Typography>

@@ -1,5 +1,6 @@
 "use client";
 
+import UploadIcon from "@mui/icons-material/Upload";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -117,6 +118,7 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           component="label"
           htmlFor={inputId}
           variant="outlined"
+          startIcon={<UploadIcon fontSize="small" />}
           disabled={state === "uploading"}
           sx={{ minHeight: 44 }}
         >
@@ -135,9 +137,9 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           {labels.fromGallery}
         </GlyphButton>
         {photo.id && (
-          <Button variant="text" color="error" sx={{ minHeight: 44 }} onClick={() => setPhoto({ id: "", preview: "" })}>
+          <GlyphButton icon="delete" variant="text" color="error" sx={{ minHeight: 44 }} onClick={() => setPhoto({ id: "", preview: "" })}>
             {labels.remove}
-          </Button>
+          </GlyphButton>
         )}
       </Stack>
       {galleryOpen && (

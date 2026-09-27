@@ -420,7 +420,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         alerts rather than above them (only this page has a use for it; §336 review).
       */}
       <Box sx={{ mb: 1 }}>
-        <Panel id="legal-versions" title={t("legalNotice.title")} collapsible>
+        <Panel glyph="legal" id="legal-versions" title={t("legalNotice.title")} collapsible>
           <Typography variant="body2" color="text.secondary">
             {t("legalNotice.body")}
           </Typography>

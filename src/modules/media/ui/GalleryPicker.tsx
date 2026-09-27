@@ -1,6 +1,7 @@
 "use client";
 
 import Box from "@mui/material/Box";
+import CloseIcon from "@mui/icons-material/Close";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -255,7 +256,7 @@ export default function GalleryPicker({
           )}
         </>
       )}
-      <Button color="inherit" size="small" onClick={onClose} sx={{ mt: 1, minHeight: 44 }}>
+      <Button color="inherit" size="small" onClick={onClose} startIcon={<CloseIcon fontSize="small" />} sx={{ mt: 1, minHeight: 44 }}>
         {labels.close}
       </Button>
     </Box>

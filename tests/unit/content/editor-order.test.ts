@@ -83,7 +83,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     }
     // The status: a level-3 card inside the first box, with the id it always had (§448).
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
-    expect(status).toMatch(/const card = \{\s+id: "box-status",\s+level: 3/);
+    expect(status).toMatch(/const card = \{\s+id: "box-status",\s+glyph: "status",\s+level: 3/);
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain("await StatusCard({ event, risk, notice })");
     // Boxes of their own, with the ids they always had, so a deep link or a refusal still lands on
     // them — a fold for whoever may change it, the same heading and id without the fold for a reader.
@@ -159,7 +159,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
     expect(programmeRules).toContain("await StartListBox({ event, mayEditSettings })");
     expect(programmeRules.indexOf("{declaration}")).toBeLessThan(programmeRules.indexOf("{startList}"));
     expect(programmeRules.indexOf("{startList}")).toBeLessThan(programmeRules.indexOf("</Stack>"));
-    expect(read("src/modules/content/events/ui/boxes/StartListBox.tsx")).toMatch(/const card = \{\s+id: "box-start-list",\s+level: 3/);
+    expect(read("src/modules/content/events/ui/boxes/StartListBox.tsx")).toMatch(/const card = \{\s+id: "box-start-list",\s+glyph: "startList",\s+level: 3/);
     expect(read("src/modules/content/events/ui/field-labels.ts")).toContain('"event.participantListVisibility": inProgrammeRules("startList",');
     // Real registrations only: a test row is counted nowhere the club looks (§12.6).
     expect(EDIT).toContain("const realCount = registered.total - registered.test;");

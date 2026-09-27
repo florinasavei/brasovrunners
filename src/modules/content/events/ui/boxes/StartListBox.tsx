@@ -32,6 +32,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
   const initialMode = event?.registrationMode ?? "NONE";
   const card = {
     id: "box-start-list",
+    glyph: "startList",
     level: 3,
     title: t("editor.boxes.startList.title"),
     aside: startListSummary(words, event?.participantListVisibility),

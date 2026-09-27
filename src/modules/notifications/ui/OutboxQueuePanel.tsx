@@ -44,7 +44,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
 
   return (
-    <Panel
+    <Panel glyph="outbox"
       title={t("emails.queue.title")}
       intro={t("emails.queue.intro")}
       aside={t("outbox.waitingShort", { count: queue.total })}

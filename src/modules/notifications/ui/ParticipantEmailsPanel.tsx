@@ -72,7 +72,7 @@ type Props = {
  */
 export default function ParticipantEmailsPanel({ title, intro, aside, languageLabel, languages, messages, openWhen }: Props) {
   return (
-    <Panel title={title} intro={intro} aside={aside} collapsible openWhen={openWhen} id="participant-emails" data-testid="participant-emails">
+    <Panel glyph="email" title={title} intro={intro} aside={aside} collapsible openWhen={openWhen} id="participant-emails" data-testid="participant-emails">
       <Box sx={{ mb: 2 }} data-testid="participant-emails-language">
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
@@ -81,7 +81,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (
-          <Panel
+          <Panel glyph="email"
             key={message.type}
             title={message.name}
             aside={

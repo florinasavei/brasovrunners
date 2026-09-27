@@ -185,7 +185,7 @@ describe("§NNN the card's name is its Panel's heading, without the closed line"
 
   it("matches what Panel draws: the title as the heading's own text, the aside a span inside it", () => {
     const panel = source("src/shared/ui/Panel.tsx");
-    expect(panel).toMatch(/const heading = \(\s*<>\s*\{title\}\s*\{aside \? \(\s*<Typography component="span"/);
+    expect(panel).toMatch(/const heading = \(\s*<>\s*\{Glyph && <Glyph aria-hidden sx=\{FOLD_GLYPH_INLINE_SX\} \/>\}\s*\{title\}\s*\{aside \? \(\s*<Typography component="span"/);
     expect(panel).toContain('<Box component="summary">');
     expect(panel).toContain('<Box component="section"');
   });

@@ -247,7 +247,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
     <>
       {total}
       {/* Each provider, folded closed under the total (§336): the figures that justify it, opened on demand. */}
-      <Panel
+      <Panel glyph="costs"
         collapsible
         id="month-costs"
         title={t("tasks.month.title")}

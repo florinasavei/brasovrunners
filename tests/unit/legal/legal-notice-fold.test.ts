@@ -23,7 +23,7 @@ describe("§336 the legal-text notice folds shut on /admin/legal and nowhere els
   const backofficeShell = read("src/modules/staff-identity/ui/BackofficeShell.tsx");
 
   it("renders the notice as a closed, addressable fold on the legal list page, after its own heading", () => {
-    expect(page).toContain('<Panel id="legal-versions" title={t("legalNotice.title")} collapsible>');
+    expect(page).toContain('<Panel glyph="legal" id="legal-versions" title={t("legalNotice.title")} collapsible>');
     expect(page).toContain('{t("legalNotice.body")}');
     // After the legal.title / legal.intro / whatIs block, not before it.
     const whatIsIndex = page.indexOf('{t(`legal.whatIs.${key}`)}');

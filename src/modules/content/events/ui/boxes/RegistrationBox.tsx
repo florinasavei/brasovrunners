@@ -171,7 +171,7 @@ export default async function RegistrationBox({
   });
 
   return (
-    <Panel
+    <Panel glyph="registration"
       collapsible
       id="box-registration"
       title={heading ?? t("editor.boxes.registration.title")}
@@ -256,7 +256,7 @@ export default async function RegistrationBox({
                   </Stack>
 
                   {/* 8.1 — from when until when. */}
-                  <Panel collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
+                  <Panel glyph="window" collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
                       {/* «Se deschid în curând» (§451): announced, with no date. The marker says the
                           form carried the box, so an unticked one reads as "off", not "not edited". */}
@@ -281,7 +281,7 @@ export default async function RegistrationBox({
                   <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>
 
                   {/* 8.3 — the participation window (§104). */}
-                  <Panel
+                  <Panel glyph="confirmation"
                     collapsible
                     level={3}
                     id="box-confirmation"
@@ -320,7 +320,7 @@ export default async function RegistrationBox({
                     24, 48, 72 hours, none — and the stored number too when a script set another,
                     so a save never quietly changes it.
                   */}
-                  <Panel collapsible level={3} id="box-reminder" title={t("editor.boxes.reminder.title")} aside={reminderSummary}>
+                  <Panel glyph="reminder" collapsible level={3} id="box-reminder" title={t("editor.boxes.reminder.title")} aside={reminderSummary}>
                     <Stack spacing={1}>
                       <RecallField
                         select
@@ -344,7 +344,7 @@ export default async function RegistrationBox({
 
                   {/* 8.4 — the one card for race numbers: the band (§173), what one bib looks like
                       (§249, now on create too) and, on the editor, whether they exist and print. */}
-                  <Panel
+                  <Panel glyph="bibs"
                     collapsible
                     level={3}
                     id="box-bibs"
