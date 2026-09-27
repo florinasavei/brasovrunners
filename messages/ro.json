@@ -6289,5 +6289,18 @@
       "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă.",
       "credit": "Traducerea aceasta cere mai mult decât a rămas din creditul DeepL (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată; un Administrator vede creditul în Sarcini → Costuri."
     }
+  },
+  "BotCheck": {
+    "loading": "Se încarcă verificarea anti-bot…",
+    "checking": "Verificăm că nu ești robot…",
+    "interactive": "Bifează căsuța de mai sus: așa știm că nu ești robot.",
+    "passed": "Verificare reușită — poți trimite.",
+    "expired": "Verificarea a expirat și se reface singură. Dacă nu, apasă «Încearcă din nou».",
+    "timeout": "Căsuța a așteptat prea mult și s-a redesenat — bifeaz-o din nou.",
+    "error": "Verificarea anti-bot nu a mers. Apasă «Încearcă din nou» — sau trimite formularul oricum: îl primim și fără ea.",
+    "unsupported": "Browserul tău nu poate rula verificarea anti-bot. Trimite formularul oricum: îl primim și fără ea.",
+    "blocked": "Verificarea anti-bot nu s-a încărcat — o rețea sau o extensie a browserului o poate bloca. Apasă «Încearcă din nou» — sau trimite formularul oricum: îl primim și fără ea.",
+    "slow": "Verificarea durează mai mult decât de obicei. Apasă «Încearcă din nou» — sau trimite formularul: pleacă și fără ea în câteva secunde.",
+    "retry": "Încearcă din nou"
   }
 }

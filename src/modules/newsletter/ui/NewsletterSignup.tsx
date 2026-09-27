@@ -12,7 +12,7 @@ import { getTranslations } from "next-intl/server";
 import { submitNewsletterAction } from "@/app/[locale]/contact/actions";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -271,7 +271,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
 
             {siteKey && (
               <Box id="newsletter-captcha">
-                <TurnstileWidget siteKey={siteKey} locale={locale} attempt={attempt} />
+                <BotCheck siteKey={siteKey} locale={locale} attempt={attempt} />
               </Box>
             )}
 

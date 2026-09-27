@@ -8,7 +8,12 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import { type ComponentType, type MouseEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { TURNSTILE_FIELD, TURNSTILE_TOKEN_EVENT } from "@/modules/registrations/domain/turnstile-widget";
+import {
+  BOT_CHECK_STATE_ATTRIBUTE,
+  botCheckGaveUp,
+  TURNSTILE_FIELD,
+  TURNSTILE_TOKEN_EVENT,
+} from "@/modules/registrations/domain/turnstile-widget";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from "./held-press";
 import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
@@ -41,9 +46,13 @@ function reach(event: MouseEvent<HTMLAnchorElement>, id: string) {
  * Whether Cloudflare's check has yet to answer on this form, read from the form as it stands
  * (§285, §NNN): a widget drawn with an empty token field has not; a widget not drawn at all is
  * still expected only while the page is younger than `graceMs` — after that its script is taken
- * for blocked, and waiting for it would be waiting for nothing.
+ * for blocked, and waiting for it would be waiting for nothing. And a widget that says it gave up
+ * (§NNN: its script refused, a failure, a browser it cannot run in — `botCheckGaveUp`) is not
+ * waited for at all: the press goes now, without a token, as the valve would send it later.
  */
 function botCheckUnanswered(form: HTMLFormElement, drawnAt: number, graceMs: number): boolean {
+  const widget = form.querySelector(`[${BOT_CHECK_STATE_ATTRIBUTE}]`);
+  if (widget && botCheckGaveUp(widget.getAttribute(BOT_CHECK_STATE_ATTRIBUTE))) return false;
   const field = form.querySelector(`[name="${TURNSTILE_FIELD}"]`);
   if (field instanceof HTMLInputElement) return field.value === "";
   return performance.now() - drawnAt < graceMs;
@@ -138,7 +147,9 @@ export type SubmitButtonProps = {
    * "butonul de trimitere nu ar trebui sa fie vizibil daca Cloudflare Turnstile nu a terminat".
    * A press while the token is missing is held — the button dimmed, saying why — and sent the
    * moment the token lands, or `RELEASE_AFTER_MS` after that press (§304, §NNN); a widget never
-   * drawn at all holds nothing once the page is that old. §205 is not negotiable: people register
+   * drawn at all holds nothing once the page is that old, and a widget that says it gave up — its
+   * script blocked, a failure, an unsupported browser (`TurnstileWidget`'s `data-bot-check`) —
+   * holds nothing at all, and lets a held press go at once. §205 is not negotiable: people register
    * at all costs, and a check that never answers must not be the thing that stops them.
    */
   awaitsBotCheck?: boolean;
@@ -347,8 +358,9 @@ export default function SubmitButton({
     };
     // The field drawn or replaced, or its `value` attribute written — which, on Cloudflare's hidden
     // field, is its `.value =` (see above). A field of another type would be seen only by `onToken`.
+    // And the widget's own state (§NNN): a check that gives up while a press is held sends it now.
     const observer = new MutationObserver(check);
-    observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
+    observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value", BOT_CHECK_STATE_ATTRIBUTE] });
     form.addEventListener("input", check);
     // The widget's success callback. Read on the next task, not inside Cloudflare's callback: a
     // script that called back before writing the field would otherwise be read as still empty,

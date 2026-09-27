@@ -70,7 +70,7 @@ import NationalityField from "@/modules/registrations/ui/NationalityField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { submitRegistrationAction } from "./actions";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -1392,7 +1392,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}

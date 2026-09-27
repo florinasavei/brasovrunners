@@ -35,6 +35,9 @@ export const BLIND_FIELD_FLAG = "__e2eTurnstileBlindField";
  *   callback would find it empty.
  * - `"write-only"`: the field and no callback.
  *
+ * `window.__failTurnstile()` calls every widget's `error-callback`, and `window.__askTurnstile()` its
+ * `before-interactive-callback` — the states the widget says under itself (§NNN).
+ *
  * On a `type="hidden"` field, as Cloudflare draws it, `.value =` sets the `value` attribute (the
  * HTML standard's "default" value mode), which the held button's MutationObserver sees — so the
  * default field shows the two signals together. With `window.__e2eTurnstileBlindField = true`
@@ -86,6 +89,16 @@ export const FAKE_TURNSTILE_SCRIPT = `
       if (order === "call-then-write") call();
       widget.field.value = token;
       if (order !== "call-then-write") call();
+    }
+  };
+  window.__failTurnstile = () => {
+    for (const widget of widgets.values()) {
+      if (typeof widget.options["error-callback"] === "function") widget.options["error-callback"]("300010");
+    }
+  };
+  window.__askTurnstile = () => {
+    for (const widget of widgets.values()) {
+      if (typeof widget.options["before-interactive-callback"] === "function") widget.options["before-interactive-callback"]();
     }
   };
 })();

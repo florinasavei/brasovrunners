@@ -6289,5 +6289,18 @@
       "failed": "The translation did not start. Check the connection and try again.",
       "credit": "This translation asks for more than is left of the DeepL credit (characters left: {remaining}). Translate fewer boxes at once; an Administrator sees the credit under Tasks → Costs."
     }
+  },
+  "BotCheck": {
+    "loading": "Loading the anti-bot check…",
+    "checking": "Checking that you are not a robot…",
+    "interactive": "Tick the box above: that is how we know you are not a robot.",
+    "passed": "Check passed — you can send.",
+    "expired": "The check expired and is renewing itself. If it does not, press “Try again”.",
+    "timeout": "The box waited too long and was drawn again — tick it once more.",
+    "error": "The anti-bot check did not work. Press “Try again” — or send the form anyway: we accept it without the check.",
+    "unsupported": "Your browser cannot run the anti-bot check. Send the form anyway: we accept it without the check.",
+    "blocked": "The anti-bot check did not load — a network or a browser extension may be blocking it. Press “Try again” — or send the form anyway: we accept it without the check.",
+    "slow": "The check is taking longer than usual. Press “Try again” — or send the form: it goes without the check in a few seconds.",
+    "retry": "Try again"
   }
 }

@@ -1,11 +1,26 @@
 "use client";
 
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Box from "@mui/material/Box";
-import { useEffect, useRef } from "react";
-import { TURNSTILE_SCRIPT_URL, TURNSTILE_TOKEN_EVENT } from "../domain/turnstile-widget";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
+import {
+  BOT_CHECK_BLOCKED_AFTER_MS,
+  BOT_CHECK_SLOW_AFTER_MS,
+  BOT_CHECK_STATE_ATTRIBUTE,
+  botCheckAsksAttention,
+  botCheckOffersRetry,
+  type BotCheckState,
+  TURNSTILE_SCRIPT_URL,
+  TURNSTILE_TOKEN_EVENT,
+} from "../domain/turnstile-widget";
 
 /**
- * Cloudflare Turnstile, rendered explicitly and reset on every attempt (`DECISIONS.md` §185).
+ * Cloudflare Turnstile, rendered explicitly and reset on every attempt (`DECISIONS.md` §185), with
+ * every state it can be in said in words under it and a way out of each one a person can be stuck
+ * in (§NNN).
  *
  * The form used Cloudflare's implicit mode: `<div class="cf-turnstile">` in the server's markup
  * and `api.js` loaded beside it. That works exactly once. `api.js` scans the document when it
@@ -22,13 +37,41 @@ import { TURNSTILE_SCRIPT_URL, TURNSTILE_TOKEN_EVENT } from "../domain/turnstile
  * changes. The server passes its own render time as `attempt`, which is a new value on every
  * response and therefore on every failed submission.
  *
- * A client island of about thirty lines, which is what §1.5 asks a client island to justify:
- * nothing here can be done on the server, because the thing being fixed is what happens to the
- * DOM after the server has answered.
+ * **Every state, visible and recoverable (§NNN).** Cloudflare's own frame says «Success!» or shows
+ * a box, and says nothing at all when its script is blocked, when it fails, when its token lapses
+ * or when the box waited too long — and the send button (`SubmitButton`'s `awaitsBotCheck`) was
+ * left to guess from an empty field. Now each of Cloudflare's documented callbacks names a state
+ * (`BOT_CHECK_STATES`), the line under the widget says it in the reader's language, and:
+ *
+ * - a failure, a lapse, a script that never came and a check that takes too long offer
+ *   «Încearcă din nou» — `turnstile.reset()` on the widget, or the script injected again;
+ * - the state is written on this element (`data-bot-check`), where the send button reads it from
+ *   the form as it reads the token: a check that gave up (`botCheckGaveUp`) holds no press, and a
+ *   press already held is sent at once. The server takes the missing token for the check not
+ *   running (§216), and people register at all costs (§205).
+ *
+ * Cloudflare's own retries are kept: `retry` and `refresh-expired` / `refresh-timeout` stay at
+ * their `auto` defaults, and the error callback returns `false`, which the documentation names as
+ * "let Turnstile handle the retry" — «Încearcă din nou» is a faster way out, not the only one.
+ *
+ * With JavaScript off none of it runs and nothing is said: the line is drawn only once the island
+ * runs, so a page without scripts never promises a check that cannot start.
  */
 
+type TurnstileOptions = {
+  sitekey: string;
+  language?: string;
+  callback?: (token: string) => void;
+  "error-callback"?: (code: string) => boolean | void;
+  "expired-callback"?: () => void;
+  "timeout-callback"?: () => void;
+  "before-interactive-callback"?: () => void;
+  "after-interactive-callback"?: () => void;
+  "unsupported-callback"?: () => void;
+};
+
 type TurnstileApi = {
-  render: (element: HTMLElement, options: { sitekey: string; language?: string; callback?: (token: string) => void }) => string;
+  render: (element: HTMLElement, options: TurnstileOptions) => string;
   reset: (widgetId?: string) => void;
   remove: (widgetId: string) => void;
 };
@@ -39,27 +82,51 @@ declare global {
   }
 }
 
+/** The line under the widget, per state, and the retry button's label — translated on the server (`BotCheck`). */
+export type BotCheckWords = Record<BotCheckState, string> & { slow: string; retry: string };
+
+const SCRIPT_SELECTOR = "script[data-turnstile]";
+const NOTHING_TO_WATCH = () => () => {};
+
 export default function TurnstileWidget({
   siteKey,
   locale,
   attempt,
+  words,
 }: {
   siteKey: string;
   locale: string;
   /** Any value that changes on every server render; the widget is reset when it does. */
   attempt: string;
+  words: BotCheckWords;
 }) {
   const holder = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<string | null>(null);
+  const [state, setState] = useState<BotCheckState>("loading");
+  // Bumped by «Încearcă din nou» when the script never came: the effect below injects it again.
+  const [reload, setReload] = useState(0);
+  // Bumped by every «Încearcă din nou», so the slow line's clock starts again even when the state
+  // it restarts from is the one it was already in.
+  const [tries, setTries] = useState(0);
+  // Only a running island speaks: the server's render and a page without scripts say nothing.
+  const running = useSyncExternalStore(
+    NOTHING_TO_WATCH,
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     let cancelled = false;
+    const become = (next: BotCheckState) => {
+      if (!cancelled) setState(next);
+    };
 
     const draw = () => {
       if (cancelled || !holder.current || !window.turnstile) return;
       // Already drawn: the token has been spent, so ask for a fresh challenge rather than a
       // second widget — `render` into an occupied element is a Cloudflare error.
       if (widgetId.current !== null) {
+        become("checking");
         window.turnstile.reset(widgetId.current);
         return;
       }
@@ -69,16 +136,37 @@ export default function TurnstileWidget({
         `type="hidden"`; the success callback is its documented answer. It bubbles to the form from
         here, and the button reads the field on the next task — so a held press is sent the moment
         the check says yes, whatever the field is and whichever order the script calls back and
-        writes it in. Only the success callback: handing Cloudflare an
-        `error-callback` changes how its widget retries, and nothing here needs to know of a failure
-        — a held press has its own eight-second valve.
+        writes it in.
+
+        Every other documented callback names a state (§NNN). The error callback returns `false`:
+        Cloudflare's documentation says a falsy answer leaves the retry to Turnstile, and a truthy
+        one takes it over — its automatic retry stays, and «Încearcă din nou» is the faster way.
       */
       const element = holder.current;
-      widgetId.current = window.turnstile.render(element, {
-        sitekey: siteKey,
-        language: locale,
-        callback: () => element.dispatchEvent(new Event(TURNSTILE_TOKEN_EVENT, { bubbles: true })),
-      });
+      become("checking");
+      try {
+        widgetId.current = window.turnstile.render(element, {
+          sitekey: siteKey,
+          language: locale,
+          callback: () => {
+            become("passed");
+            element.dispatchEvent(new Event(TURNSTILE_TOKEN_EVENT, { bubbles: true }));
+          },
+          "error-callback": () => {
+            become("error");
+            return false;
+          },
+          "expired-callback": () => become("expired"),
+          "timeout-callback": () => become("timeout"),
+          "before-interactive-callback": () => become("interactive"),
+          "after-interactive-callback": () => become("checking"),
+          "unsupported-callback": () => become("unsupported"),
+        });
+      } catch {
+        // A widget Cloudflare refused to draw (a malformed option, a script half-loaded) is a
+        // failure like any other: said, retryable, and never a reason to hold a press.
+        become("error");
+      }
     };
 
     if (window.turnstile) {
@@ -88,8 +176,7 @@ export default function TurnstileWidget({
       };
     }
 
-    const selector = "script[data-turnstile]";
-    const existing = document.querySelector<HTMLScriptElement>(selector);
+    const existing = document.querySelector<HTMLScriptElement>(SCRIPT_SELECTOR);
     const script = existing ?? document.createElement("script");
     if (!existing) {
       script.src = `${TURNSTILE_SCRIPT_URL}?render=explicit`;
@@ -98,12 +185,64 @@ export default function TurnstileWidget({
       script.dataset.turnstile = "true";
       document.head.append(script);
     }
+    // The script refused (a blocker, a proxy, offline) or simply not there yet after ten seconds:
+    // said, and «Încearcă din nou» injects it again. A script that arrives later still draws.
+    const refused = () => {
+      script.dataset.turnstileFailed = "true";
+      become("blocked");
+    };
+    const late = setTimeout(() => {
+      if (!window.turnstile) become("blocked");
+    }, BOT_CHECK_BLOCKED_AFTER_MS);
     script.addEventListener("load", draw);
+    script.addEventListener("error", refused);
     return () => {
       cancelled = true;
+      clearTimeout(late);
       script.removeEventListener("load", draw);
+      script.removeEventListener("error", refused);
     };
-  }, [siteKey, locale, attempt]);
+  }, [siteKey, locale, attempt, reload]);
+
+  /*
+    A check that takes longer than it should says so and offers to start again (§NNN): the usual
+    answer is under a second, and a spinner that never ends reads as a page that broke. The reset
+    lives in the cleanup — it runs when the state moves on — rather than in the effect body, where
+    a synchronous setState is a render scheduled from a render (`SubmitButton`'s own slow line).
+  */
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (state !== "loading" && state !== "checking") return;
+    const timer = setTimeout(() => setSlow(true), BOT_CHECK_SLOW_AFTER_MS);
+    return () => {
+      clearTimeout(timer);
+      setSlow(false);
+    };
+  }, [state, attempt, tries]);
+
+  /*
+    «Încearcă din nou»: a fresh challenge on the widget that is there, or — when there is none
+    because the script never came — the script again. A tag that failed to load stays in the
+    document and never fires `load` again, so it goes before the new one is added; a tag still on
+    its way stays, and is waited for again — removing it would not stop it running, and two copies
+    of `api.js` is a Cloudflare error.
+  */
+  const retry = () => {
+    const api = window.turnstile;
+    setTries((count) => count + 1);
+    if (api && widgetId.current !== null) {
+      setState("checking");
+      try {
+        api.reset(widgetId.current);
+      } catch {
+        setState("error");
+      }
+      return;
+    }
+    if (!api) document.querySelector(`${SCRIPT_SELECTOR}[data-turnstile-failed]`)?.remove();
+    setState("loading");
+    setReload((count) => count + 1);
+  };
 
   /*
     Hand the widget back when this island goes away (§284).
@@ -133,6 +272,40 @@ export default function TurnstileWidget({
     [],
   );
 
-  // `min-height` so the form does not jump when the challenge draws itself a moment later.
-  return <Box ref={holder} sx={{ minHeight: 65 }} />;
+  const offersRetry = botCheckOffersRetry(state, slow);
+  const attention = botCheckAsksAttention(state, slow);
+
+  return (
+    <Box>
+      {/* `min-height` so the form does not jump when the challenge draws itself a moment later. */}
+      <Box ref={holder} {...{ [BOT_CHECK_STATE_ATTRIBUTE]: state }} sx={{ minHeight: 65 }} />
+      {running && (
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5, rowGap: 0.5, mt: 0.5 }}>
+          {/* A live region the state is read from as it changes: polite, it waits for the typing. */}
+          <Typography
+            variant="body2"
+            role="status"
+            data-testid="bot-check-status"
+            color={attention ? "text.primary" : "text.secondary"}
+            sx={{ fontWeight: attention ? 600 : undefined, flex: "1 1 16rem" }}
+          >
+            {slow && (state === "loading" || state === "checking") ? words.slow : words[state]}
+          </Typography>
+          {offersRetry && (
+            <Button
+              type="button"
+              variant="outlined"
+              size="small"
+              startIcon={<RefreshIcon fontSize="small" />}
+              onClick={retry}
+              // A thumb's target (BR-REQ-041-01 criterion 6): it is the way out of a stuck check.
+              sx={TAP_TARGET}
+            >
+              {words.retry}
+            </Button>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
 }
