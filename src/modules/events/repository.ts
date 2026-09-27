@@ -128,8 +128,8 @@ const PUBLIC_COLUMNS = {
   locationName: publicLocationName,
   locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
   locationToBeAnnounced: events.locationToBeAnnounced,
-  // The band and the level on the club's scale of fifteen (§NNN), read together by `difficultyLevelOf`.
-  difficulty: events.difficulty,
+  // The level on the club's scale of fifteen (§NNN) — the difficulty's one column; the retired
+  // `difficulty` is never read.
   difficultyLevel: events.difficultyLevel,
   costType: events.costType,
   // What a paid event costs, or what a donation suggests, and where either is paid (§343) —
@@ -521,7 +521,6 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // The route's facts and the cost, as the page's pills say them (§392, `eventFactsBlock`):
       // the same public columns `PUBLIC_COLUMNS` reads, nothing a public page does not show.
       surface: events.surface,
-      difficulty: events.difficulty,
       difficultyLevel: events.difficultyLevel,
       distanceMeters: events.distanceMeters,
       elevationGainMeters: events.elevationGainMeters,

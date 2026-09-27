@@ -181,7 +181,8 @@
       "ics": "{label}: {times} — bring a headlamp"
     },
     "difficulty": "Difficulty",
-    "difficultyStepSr": "Difficulty, step {step} of {steps}",
+    "difficultyLevelShort": "{band} {step}",
+    "difficultyLevelSr": "Difficulty: {band}, step {step} of {steps}",
     "difficultyWithStep": "{band}, step {step} of {steps}",
     "cost": "Cost",
     "registration": "Registration",
@@ -303,11 +304,18 @@
       "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
-      "VERY_EASY": "Very easy",
       "EASY": "Easy",
-      "MODERATE": "Moderate",
+      "MEDIUM": "Medium",
+      "FAIRLY_HARD": "Fairly hard",
       "HARD": "Hard",
       "VERY_HARD": "Very hard"
+    },
+    "difficultyBandWords": {
+      "EASY": "easy",
+      "MEDIUM": "medium",
+      "FAIRLY_HARD": "fairly hard",
+      "HARD": "hard",
+      "VERY_HARD": "very hard"
     },
     "costValues": {
       "FREE": "Free",
@@ -1138,19 +1146,19 @@
       "delete": "Delete",
       "deleteHelp": "A duplicate is created as a draft, with its own addresses. Delete only an event nobody registered for; archive the ones that happened.",
       "difficultyValues": {
-        "VERY_EASY": "Very easy",
         "EASY": "Easy",
-        "MODERATE": "Moderate",
+        "MEDIUM": "Medium",
+        "FAIRLY_HARD": "Fairly hard",
         "HARD": "Hard",
         "VERY_HARD": "Very hard"
       },
       "difficultySteps": {
-        "step1": "Easier end",
-        "step2": "Middle",
-        "step3": "Harder end"
+        "step1": "Step 1, the easiest in the band",
+        "step2": "Step 2, the middle of the band",
+        "step3": "Step 3, the hardest in the band"
       },
-      "difficultySummary": "{band}, step {step}",
-      "difficultyStepHelp": "Three steps in every level, 15 on the whole scale: from «Very easy», step 1, to «Very hard», step 3. What each level means is in «Guide».",
+      "difficultySummary": "{band} {step}",
+      "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
       "costValues": {
         "FREE": "Free",
         "PAID": "Paid",
@@ -4225,15 +4233,15 @@
             {
               "title": "The club's difficulty scale",
               "steps": [
-                "«Events» → «Edit» → the «The course» card: pick «Difficulty» (the level) and, under it, «Step» — «Easier end», «Middle» or «Harder end».",
-                "The scale has 15 steps: 5 levels × 3 steps. On the event's page the dial shows the level, and the three dots under it the step.",
-                "«Very easy» (steps 1–3): up to 5 km, flat, at a conversational pace — for anyone, a beginner too.",
-                "«Easy» (4–6): 5–10 km on tarmac or a wide path, under 150 m of climb.",
-                "«Moderate» (7–9): 10–15 km or 150–500 m of climb, a path with stones and roots — for people who run regularly.",
-                "«Hard» (10–12): 15–25 km or 500–1,000 m of climb, a technical trail — for trained runners.",
-                "«Very hard» (13–15): over 25 km or over 1,000 m of climb, technical ground, mountain weather — experienced runners only.",
-                "The step: «Easier end» when the route sits at the bottom of its level, «Harder end» when it is close to the next level (longer, steeper, at night, mud). Not sure? «Middle».",
-                "The site's filter ticks a whole level: «Hard» shows all three of its steps."
+                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
+                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
+                "«Easy»: short and flat — for anyone.",
+                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
+                "«Fairly hard»: from a half marathon up.",
+                "«Hard»: marathons.",
+                "«Very hard»: ultramarathons and beyond.",
+                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
               ]
             },
             {
@@ -4298,15 +4306,15 @@
             {
               "title": "The club's difficulty scale",
               "steps": [
-                "«Events» → «Edit» → the «The course» card: pick «Difficulty» (the level) and, under it, «Step» — «Easier end», «Middle» or «Harder end».",
-                "The scale has 15 steps: 5 levels × 3 steps. On the event's page the dial shows the level, and the three dots under it the step.",
-                "«Very easy» (steps 1–3): up to 5 km, flat, at a conversational pace — for anyone, a beginner too.",
-                "«Easy» (4–6): 5–10 km on tarmac or a wide path, under 150 m of climb.",
-                "«Moderate» (7–9): 10–15 km or 150–500 m of climb, a path with stones and roots — for people who run regularly.",
-                "«Hard» (10–12): 15–25 km or 500–1,000 m of climb, a technical trail — for trained runners.",
-                "«Very hard» (13–15): over 25 km or over 1,000 m of climb, technical ground, mountain weather — experienced runners only.",
-                "The step: «Easier end» when the route sits at the bottom of its level, «Harder end» when it is close to the next level (longer, steeper, at night, mud). Not sure? «Middle».",
-                "The site's filter ticks a whole level: «Hard» shows all three of its steps."
+                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
+                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
+                "«Easy»: short and flat — for anyone.",
+                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
+                "«Fairly hard»: from a half marathon up.",
+                "«Hard»: marathons.",
+                "«Very hard»: ultramarathons and beyond.",
+                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
               ]
             },
             {

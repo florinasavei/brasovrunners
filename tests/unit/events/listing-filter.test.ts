@@ -34,7 +34,7 @@ const row = (id: string, fields: Partial<Row> = {}): Row => ({
   id,
   type: "GROUP_RUN",
   surface: null,
-  difficulty: null,
+  difficultyLevel: null,
   distanceMeters: null,
   costType: null,
   coHosts: null,
@@ -165,10 +165,10 @@ describe("the filter goes back into the address in the form's own shape", () => 
 
 describe("matchesListingFilter: OR within a group, AND across groups", () => {
   const rows = [
-    row("race-trail", { type: "RACE", surface: "TRAIL", difficulty: "HARD", distanceMeters: 21_097, costType: "PAID" }),
-    row("race-road", { type: "RACE", surface: "ASPHALT", difficulty: "MODERATE", distanceMeters: 10_000, costType: "FREE" }),
+    row("race-trail", { type: "RACE", surface: "TRAIL", difficultyLevel: 11, distanceMeters: 21_097, costType: "PAID" }),
+    row("race-road", { type: "RACE", surface: "ASPHALT", difficultyLevel: 5, distanceMeters: 10_000, costType: "FREE" }),
     row("hike", { type: "HIKE", surface: "TRAIL", distanceMeters: 25_000, coHosts: [{ name: "Salvamont" }] }),
-    row("run-night", { type: "GROUP_RUN", surface: "ASPHALT", difficulty: "EASY", distanceMeters: 8_000, costType: "FREE", night: true }),
+    row("run-night", { type: "GROUP_RUN", surface: "ASPHALT", difficultyLevel: 2, distanceMeters: 8_000, costType: "FREE", night: true }),
   ];
 
   it("shows either kind when two kinds are ticked", () => {

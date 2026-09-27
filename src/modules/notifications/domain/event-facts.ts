@@ -39,7 +39,6 @@ import { COLOR } from "@/theme/brand";
 export type EmailEventFacts = Pick<
   typeof events.$inferSelect,
   | "surface"
-  | "difficulty"
   | "distanceMeters"
   | "elevationGainMeters"
   | "type"
@@ -58,7 +57,7 @@ export type EmailEventFacts = Pick<
   | "latitude"
   | "longitude"
 > & {
-  /** The level on the club's scale of fifteen (§NNN), read with the band by `difficultyLevelOf`. */
+  /** The level on the club's scale of fifteen (§NNN), the difficulty's one column. */
   difficultyLevel?: number | null;
   startsAt: Date;
   timezone: string;

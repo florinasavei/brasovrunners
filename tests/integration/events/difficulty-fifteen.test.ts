@@ -13,16 +13,17 @@ import { difficultyLevelOf } from "@/modules/events/domain/difficulty";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-041-01 (`DECISIONS.md` §NNN) — the difficulty as five bands of three steps, one level
- * column on the club's scale of fifteen, end to end on PGlite: migration `0101_difficulty_level`
- * over rows the previous release wrote, and the editor's services writing the level with its band.
+ * BR-REQ-041-01 (`DECISIONS.md` §NNN) — the difficulty as the owner's five bands of three steps
+ * (ușor, mediu, greuț, greu, foarte greu), one level column on the club's scale of fifteen, end to
+ * end on PGlite: migration `0104_difficulty_level` over rows the previous release wrote, and the
+ * editor's services writing the level (and the retired column's best-effort word beside it).
  */
 
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0101_difficulty_level";
+const TAG = "0104_difficulty_level";
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
-describe("§NNN migration 0101 — every stated band at its middle step", () => {
+describe("§NNN migration 0104 — the old five words onto the owner's scale", () => {
   let client: PGlite;
   let folder: string;
   const ids: Record<string, string> = {};
@@ -53,18 +54,28 @@ describe("§NNN migration 0101 — every stated band at its middle step", () => 
     rmSync(folder, { recursive: true, force: true });
   });
 
-  it("gives VERY_EASY … VERY_HARD the levels 2, 5, 8, 11, 14, and a row with no band none", async () => {
-    const level = async (key: string) =>
-      (await client.query<{ difficulty_level: number | null }>("SELECT difficulty_level FROM events WHERE id = $1", [ids[key]])).rows[0].difficulty_level;
-    expect(await level("VERY_EASY")).toBe(2);
-    expect(await level("EASY")).toBe(5);
-    expect(await level("MODERATE")).toBe(8);
+  const level = async (key: string) =>
+    (await client.query<{ difficulty_level: number | null }>("SELECT difficulty_level FROM events WHERE id = $1", [ids[key]])).rows[0].difficulty_level;
+
+  it("gives VERY_EASY … VERY_HARD «ușor 1», «ușor 2», «mediu 2», «greu 2», «foarte greu 2» (1, 2, 5, 11, 14), and a row with no word none", async () => {
+    expect(await level("VERY_EASY")).toBe(1);
+    expect(await level("EASY")).toBe(2);
+    expect(await level("MODERATE")).toBe(5);
     expect(await level("HARD")).toBe(11);
     expect(await level("VERY_HARD")).toBe(14);
     expect(await level("none")).toBeNull();
   });
 
-  it("leaves the band column as it was, for the release still serving", async () => {
+  it("is idempotent: run again, it keeps a level already there", async () => {
+    await client.query("UPDATE events SET difficulty_level = 12 WHERE id = $1", [ids.HARD]);
+    const sql = readFileSync(`${MIGRATIONS}/${TAG}.sql`, "utf8").split("--> statement-breakpoint").at(-1)!;
+    await client.query(sql);
+    expect(await level("HARD")).toBe(12);
+    expect(await level("VERY_EASY")).toBe(1);
+    await client.query("UPDATE events SET difficulty_level = 11 WHERE id = $1", [ids.HARD]);
+  });
+
+  it("leaves the old column as it was, for the release still serving", async () => {
     const { rows } = await client.query<{ difficulty: string }>("SELECT difficulty FROM events WHERE id = $1", [ids.HARD]);
     expect(rows[0].difficulty).toBe("HARD");
   });
@@ -81,7 +92,7 @@ describe("§NNN migration 0101 — every stated band at its middle step", () => 
   });
 });
 
-describe("§NNN migration 0101 in the same run as 0078 — a database migrated from further back", () => {
+describe("§NNN migration 0104 in the same run as 0078 — a database migrated from further back", () => {
   it("backfills without naming an enum value 0078 added in the same transaction (55P04)", async () => {
     const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
     const position = journal.entries.findIndex((entry) => entry.tag === "0078_difficulty_five");
@@ -95,7 +106,7 @@ describe("§NNN migration 0101 in the same run as 0078 — a database migrated f
       const { rows } = await client.query<{ id: string }>(
         "INSERT INTO events (type, starts_at, difficulty) VALUES ('GROUP_RUN', '2026-11-21T08:00:00Z', 'HARD') RETURNING id",
       );
-      // 0078 … 0101 in one transaction, as a fresh local or cloud database migrates them.
+      // 0078 … 0104 in one transaction, as a fresh local or cloud database migrates them.
       await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
       const after = await client.query<{ difficulty_level: number }>("SELECT difficulty_level FROM events WHERE id = $1", [rows[0].id]);
       expect(after.rows[0].difficulty_level).toBe(11);
@@ -133,7 +144,7 @@ const FIELDS = {
   costUrl: "",
 } as const;
 
-describe("§NNN the editor writes the level and its band together", () => {
+describe("§NNN the editor writes the level, and the retired column's best-effort word beside it", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -165,19 +176,28 @@ describe("§NNN the editor writes the level and its band together", () => {
     });
   }
 
-  it("«Greu» at «Spre greu» is level 12, band HARD", async () => {
+  it("«Greu» step 3 is level 12", async () => {
     const event = await created("greu-sus", "HARD", "3");
     expect(await stored(event.id)).toEqual({ difficulty: "HARD", difficultyLevel: 12 });
   });
 
-  it("the ends of the scale: «Foarte ușor» step 1 is 1, «Foarte greu» step 3 is 15", async () => {
-    expect(await stored((await created("capat-jos", "VERY_EASY", 1)).id)).toEqual({ difficulty: "VERY_EASY", difficultyLevel: 1 });
+  it("«Greuț», which the old scale lacked, is 7 … 9", async () => {
+    expect((await stored((await created("greut", "FAIRLY_HARD", "2")).id)).difficultyLevel).toBe(8);
+  });
+
+  it("the ends of the scale: «Ușor» step 1 is 1, «Foarte greu» step 3 is 15", async () => {
+    expect(await stored((await created("capat-jos", "EASY", 1)).id)).toEqual({ difficulty: "VERY_EASY", difficultyLevel: 1 });
     expect(await stored((await created("capat-sus", "VERY_HARD", 3)).id)).toEqual({ difficulty: "VERY_HARD", difficultyLevel: 15 });
   });
 
   it("a band with no step, or an empty one, stands at its middle", async () => {
-    expect(await stored((await created("fara-treapta", "MODERATE")).id)).toEqual({ difficulty: "MODERATE", difficultyLevel: 8 });
-    expect(await stored((await created("treapta-goala", "EASY", "")).id)).toEqual({ difficulty: "EASY", difficultyLevel: 5 });
+    expect(await stored((await created("fara-treapta", "MEDIUM")).id)).toEqual({ difficulty: "MODERATE", difficultyLevel: 5 });
+    expect(await stored((await created("treapta-goala", "EASY", "")).id)).toEqual({ difficulty: "EASY", difficultyLevel: 2 });
+  });
+
+  it("refuses a band of the old scale that the new one does not have", async () => {
+    await expect(created("foarte-usor", "VERY_EASY", "1")).rejects.toThrow();
+    await expect(created("moderat", "MODERATE", "1")).rejects.toThrow();
   });
 
   it("no band is no difficulty, whatever the step says", async () => {
@@ -190,11 +210,11 @@ describe("§NNN the editor writes the level and its band together", () => {
   });
 
   it("a save moves the step inside the band, and to another band", async () => {
-    const event = await created("mutat", "MODERATE", "1");
-    const once = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: event.version, fields: { ...FIELDS, difficulty: "MODERATE", difficultyStep: "3" } });
-    expect(await stored(event.id)).toEqual({ difficulty: "MODERATE", difficultyLevel: 9 });
-    await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: once.version, fields: { ...FIELDS, difficulty: "VERY_EASY", difficultyStep: "2" } });
-    expect(await stored(event.id)).toEqual({ difficulty: "VERY_EASY", difficultyLevel: 2 });
+    const event = await created("mutat", "MEDIUM", "1");
+    const once = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: event.version, fields: { ...FIELDS, difficulty: "MEDIUM", difficultyStep: "3" } });
+    expect((await stored(event.id)).difficultyLevel).toBe(6);
+    await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: once.version, fields: { ...FIELDS, difficulty: "EASY", difficultyStep: "2" } });
+    expect(await stored(event.id)).toEqual({ difficulty: "EASY", difficultyLevel: 2 });
   });
 
   it("a copy keeps the level", async () => {
@@ -203,14 +223,14 @@ describe("§NNN the editor writes the level and its band together", () => {
     expect(await stored(copy.id)).toEqual({ difficulty: "HARD", difficultyLevel: 10 });
   });
 
-  it("a band the previous release changed alone reads at its middle step; one it left alone keeps the level", async () => {
+  it("the old column is never read back: only the level says the difficulty", async () => {
     const event = await created("rollback", "HARD", "3");
-    // What the release before this one does on a save: it writes the band and knows no level.
+    // What the release before this one does on a save: it writes the old column and knows no level.
     await db.update(events).set({ difficulty: "EASY" }).where(eq(events.id, event.id));
-    expect(difficultyLevelOf(await stored(event.id))).toBe(5);
-    await db.update(events).set({ difficulty: "HARD", difficultyLevel: 12 }).where(eq(events.id, event.id));
     expect(difficultyLevelOf(await stored(event.id))).toBe(12);
     await db.update(events).set({ difficulty: null }).where(eq(events.id, event.id));
+    expect(difficultyLevelOf(await stored(event.id))).toBe(12);
+    await db.update(events).set({ difficultyLevel: null }).where(eq(events.id, event.id));
     expect(difficultyLevelOf(await stored(event.id))).toBeNull();
   });
 });

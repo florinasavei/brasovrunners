@@ -38,10 +38,7 @@ const NEXT_ROUTE_EXPORTS = new Set([
 ]);
 
 /** Exports kept on purpose although nothing names them. Each says why. */
-const ALLOWLIST = new Map([
-  // A compile-time proof: the typecheck fails when the difficulty enum gains a band the scale lacks (§412, §NNN).
-  ["DIFFICULTY_BANDS_COVER_THE_ENUM", "type-level guard"],
-]);
+const ALLOWLIST = new Map([]);
 const ALLOWLIST_PATTERNS = [
   // The day a provider's price or limit was last read off its site, kept beside the figure for the
   // person who updates it (Costuri, §479): a record for a reader, not a value for the code.

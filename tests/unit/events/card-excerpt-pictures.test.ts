@@ -134,7 +134,7 @@ function row(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Parcul Titulescu",
     locationAddress: null,
     locationToBeAnnounced: false,
-    difficulty: "EASY",
+    difficultyLevel: 2,
     costType: "FREE",
     costAmount: null,
     costUrl: null,

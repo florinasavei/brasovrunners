@@ -1,7 +1,7 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
-import { DIFFICULTY_STEPS, type DifficultyBand, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "./domain/difficulty";
+import { DIFFICULTY_STEPS, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "./domain/difficulty";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -107,8 +107,7 @@ export type CalendarEvent = {
    */
   nightOverride?: boolean | null;
   surface?: EventSurface | null;
-  difficulty?: DifficultyBand | null;
-  /** The level on the club's scale of fifteen (§NNN), read with the band by `difficultyLevelOf`. */
+  /** The level on the club's scale of fifteen (§NNN), the difficulty's one column. */
   difficultyLevel?: number | null;
   costType?: EventCostType | null;
   /** What a paid event costs, or what a donation suggests (§343); free text, the club's own. */
@@ -362,7 +361,7 @@ function htmlLine(line: Line): string {
  * entry has no gauge to read the step off, so the words say it, as the emails' facts do.
  */
 function difficultyWords(event: CalendarEvent, t: CalendarLabels["t"]): string {
-  const level = difficultyLevelOf({ difficulty: event.difficulty ?? null, difficultyLevel: event.difficultyLevel ?? null });
+  const level = difficultyLevelOf(event);
   if (level === null) return "";
   const step = difficultyStepOf(level);
   return t("difficultyWithStep", { band: t(`difficultyValues.${difficultyBandOf(level)}`), step, steps: DIFFICULTY_STEPS.length });

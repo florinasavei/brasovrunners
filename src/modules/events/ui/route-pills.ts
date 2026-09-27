@@ -12,8 +12,9 @@ import type { GlyphName } from "./glyphs";
  * adds extra words a screen reader reads right after `label`, never shown, while the visible
  * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
- * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394); the difficulty pill's
- * «Mediu» is followed, for a screen reader, by the field's own name, «Dificultate». Content, not an
+ * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394). `srLabel` replaces
+ * the words a screen reader hears altogether: the difficulty pill shows «Mediu 2» and is heard as
+ * «Dificultate: mediu, treapta 2 din 3» (§NNN). Content, not an
  * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
  * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
  * own text (visually hidden) rather than on the attribute.
@@ -23,6 +24,8 @@ export type Pill = {
   label: string;
   tooltip?: string;
   srSuffix?: string;
+  /** What a screen reader hears in place of `label` (the visible words are then hidden from it) — §NNN. */
+  srLabel?: string;
   /**
    * The pill's words where no glyph is drawn beside them (an email's facts, §392) and the glyph
    * said something the word does not — the difficulty's step (§NNN): «Mediu, treapta 2 din 3».
@@ -40,7 +43,6 @@ export type RouteFactsSource = Pick<
   typeof events.$inferSelect,
   | "type"
   | "surface"
-  | "difficulty"
   | "distanceMeters"
   | "elevationGainMeters"
   | "nightOverride"
@@ -57,8 +59,8 @@ export type RouteFactsSource = Pick<
   | "longitude"
   | "locationToBeAnnounced"
 > &
-  // The level on the club's scale of fifteen (§NNN), read with the band through `difficultyLevelOf`;
-  // optional like `StoredDifficulty`'s, for a cached row from before it.
+  // The level on the club's scale of fifteen (§NNN), the difficulty's one column; optional like
+  // `StoredDifficulty`'s, for a cached row from before it.
   Pick<StoredDifficulty, "difficultyLevel">;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -117,23 +119,29 @@ export function routePillParts(
     ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
     : null;
   const level = difficultyLevelOf(event);
-  const difficultyPill: Pill | null =
-    level !== null
-      ? {
-          // The gauge of the level (§NNN): the band's segments lit, the needle at the step, its dots.
-          glyph: difficultyLevelGlyph(level),
-          label: t(`difficultyValues.${difficultyBandOf(level)}`),
-          // The visible word alone — «Mediu» — says a band without saying of what or where in it; a
-          // screen reader hears «Mediu — Dificultate, treapta 2 din 3» through the same `srSuffix`
-          // the external cost pill uses — the catalogue's words (`Event.difficultyStepSr`), never a
-          // string written here. The eye reads the step off the gauge's dots.
-          srSuffix: t("difficultyStepSr", { step: difficultyStepOf(level), steps: DIFFICULTY_STEPS.length }),
-          // Where there is no gauge to read the step from — the emails' facts block (§392).
-          plain: t("difficultyWithStep", { band: t(`difficultyValues.${difficultyBandOf(level)}`), step: difficultyStepOf(level), steps: DIFFICULTY_STEPS.length }),
-        }
-      : null;
+  const difficultyPill: Pill | null = level !== null ? difficultyPillOf(level, t) : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };
+}
+
+/**
+ * The difficulty's pill for a level on the club's scale of fifteen (§NNN): the gauge of the level
+ * (the band's segments lit, the needle at the step, its dots), the band and the step in words —
+ * «Mediu 2» — and, for a screen reader, «Dificultate: mediu, treapta 2 din 3». Every word from the
+ * catalogue (`Event.difficultyValues`, `difficultyBandWords`, `difficultyLevelShort`,
+ * `difficultyLevelSr`), never a string written here.
+ */
+function difficultyPillOf(level: number, t: Translate): Pill {
+  const band = difficultyBandOf(level);
+  const step = difficultyStepOf(level);
+  const steps = DIFFICULTY_STEPS.length;
+  return {
+    glyph: difficultyLevelGlyph(level),
+    label: t("difficultyLevelShort", { band: t(`difficultyValues.${band}`), step }),
+    srLabel: t("difficultyLevelSr", { band: t(`difficultyBandWords.${band}`), step, steps }),
+    // Where no chip is drawn — the emails' facts block (§392): «Mediu, treapta 2 din 3».
+    plain: t("difficultyWithStep", { band: t(`difficultyValues.${band}`), step, steps }),
+  };
 }
 
 /**

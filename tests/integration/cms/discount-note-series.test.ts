@@ -50,7 +50,7 @@ const FIELDS = {
   locationNameEn: "Council Square",
   locationAddress: "",
   surface: "ASPHALT",
-  difficulty: "MODERATE",
+  difficulty: "MEDIUM",
   costType: "PAID",
   costAmount: "75 lei",
   mapUrl: "",

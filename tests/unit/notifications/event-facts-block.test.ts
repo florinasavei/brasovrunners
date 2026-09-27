@@ -72,7 +72,7 @@ describe("§392 the previews draw the block with the sample event", () => {
     expect(ro).toContain("Traseu: Trail · Mediu, treapta 2 din 3 · 12 km · 450 m D+");
     const en = eventFactsBlock(emailSampleEventFacts("en"), "en").text;
     expect(en).toContain("When: Sunday, 4 Oct 2026 · gather at 09:00 · start at 09:30");
-    expect(en).toContain("Route: Trail · Moderate, step 2 of 3 · 12 km · 450 m climb");
+    expect(en).toContain("Route: Trail · Medium, step 2 of 3 · 12 km · 450 m climb");
   });
 
   it("escapes what the club typed in the HTML part", () => {

@@ -68,7 +68,7 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
         mapUrl: MAP,
         scheduleItems: [{ startsAt: "2026-11-21T06:00:00.000Z", endsAt: null, label: { ro: "Ridicarea numerelor", en: "Number pickup" }, place: "Cort" }],
         surface: "TRAIL",
-        difficulty: "HARD",
+        difficultyLevel: 11,
         distanceMeters: 21_100,
         elevationGainMeters: 900,
         nightOverride: true,

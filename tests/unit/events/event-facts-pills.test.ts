@@ -71,7 +71,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic",
     locationAddress: "Strada Nicolae Labiș, Brașov",
     locationToBeAnnounced: false,
-    difficulty: "EASY",
+    difficultyLevel: 2,
     costType: "FREE",
     costAmount: null,
     costUrl: null,
@@ -110,7 +110,7 @@ function chips(fragment: string) {
   return [...fragment.matchAll(/<div class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),
     small: classes.includes("MuiChip-sizeSmall"),
-    label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
+    label: /class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</.exec(inner)?.[1],
     glyph: /<svg\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
   }));
 }
@@ -158,7 +158,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     const html = await page();
     const route = row(html, "Traseu");
     const pills = chips(route.dd);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -170,18 +170,19 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     expect(new Set(glyphClasses).size).toBe(1);
     expect(route.dd).toContain('data-testid="StraightenIcon"');
     expect(route.dd).toContain('data-testid="TrendingUpIcon"');
-    // "Ușor" (EASY) is the gauge at the second of five positions: two segments lit, three faint (§412);
-    // with no step stored it stands at the band's middle, level 5 of the club's fifteen (§NNN).
-    expect(route.dd).toContain("data-band=\"2\"");
-    expect(route.dd).toContain("data-level=\"5\"");
-    expect((route.dd.match(/data-testid="difficulty-gauge-on"/g) ?? []).length).toBe(2);
-    expect((route.dd.match(/data-testid="difficulty-gauge-off"/g) ?? []).length).toBe(3);
+    // «Ușor 2» is level 2 of the club's fifteen (§NNN): the first of five bands lit, four faint, and
+    // two of the three step dots.
+    expect(route.dd).toContain("data-band=\"1\"");
+    expect(route.dd).toContain("data-level=\"2\"");
+    expect((route.dd.match(/data-testid="difficulty-gauge-on"/g) ?? []).length).toBe(1);
+    expect((route.dd.match(/data-testid="difficulty-gauge-off"/g) ?? []).length).toBe(4);
+    expect((route.dd.match(/data-testid="difficulty-step-on"/g) ?? []).length).toBe(2);
   });
 
   it("says the climb short in English too", async () => {
     currentLocale = "en";
     const html = await page();
-    expect(chips(row(html, "Route").dd).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb"]);
+    expect(chips(row(html, "Route").dd).map((pill) => pill.label)).toEqual(["Asphalt", "Easy 2", "10 km", "300 m climb"]);
   });
 
   it("lets a pill's words wrap rather than cut them with an ellipsis", async () => {
@@ -191,18 +192,18 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
   });
 
   it("gives a pill only to what the club stated: no climb and no difficulty when there are none", async () => {
-    const html = await page({ elevationGainMeters: null, difficulty: null });
+    const html = await page({ elevationGainMeters: null, difficultyLevel: null });
     expect(chips(row(html, "Traseu").dd).map((pill) => pill.label)).toEqual(["Asfalt", "10 km"]);
     expect(html).not.toContain("D+");
   });
 
   it("never makes a route row out of the surface alone — the overline already says it", async () => {
-    const html = await page({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: "TRAIL" });
+    const html = await page({ distanceMeters: null, elevationGainMeters: null, difficultyLevel: null, surface: "TRAIL" });
     expect(rows(html).map((r) => r.label)).not.toContain("Traseu");
   });
 
   it("puts the surface beside the route's link when the link is all the route has", async () => {
-    const html = await page({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: "TRAIL", routeUrl: "https://routes.example.test/tampa" });
+    const html = await page({ distanceMeters: null, elevationGainMeters: null, difficultyLevel: null, surface: "TRAIL", routeUrl: "https://routes.example.test/tampa" });
     const route = row(html, "Traseu");
     expect(chips(route.dd).map((pill) => pill.label)).toEqual(["Trail"]);
     expect(route.dd).toContain('href="https://routes.example.test/tampa"');
@@ -354,7 +355,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
     const route = row(html, "Traseu");
     expect(route.dd).toContain('data-fact="pills"');
     const pills = chips(route.dd);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Cu taxă"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Cu taxă"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -371,7 +372,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
   it("draws exactly the listing card's pills — the same set, order and words (§366, amended §375)", async () => {
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
     // terrain type, difficulty, distance, elevation" — one function (`buildRoutePills`) for both.
-    for (const overrides of [{}, { costType: "DONATION" as const }, { surface: null, difficulty: null, costType: null }]) {
+    for (const overrides of [{}, { costType: "DONATION" as const }, { surface: null, difficultyLevel: null, costType: null }]) {
       const hero = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW }));
       const card = renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact" }));
       const heroLabels = chips(row(hero, "Traseu").dd).map((pill) => pill.label);
@@ -404,7 +405,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
 
   it("makes no «Traseu» row at all for an event that states no route and no cost", async () => {
     const html = renderToStaticMarkup(
-      await EventFacts({ event: event({ surface: null, difficulty: null, distanceMeters: null, elevationGainMeters: null, costType: null }), now: NOW }),
+      await EventFacts({ event: event({ surface: null, difficultyLevel: null, distanceMeters: null, elevationGainMeters: null, costType: null }), now: NOW }),
     );
     expect(rows(html).map((r) => r.label)).not.toContain("Traseu");
   });
@@ -521,7 +522,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
   it("keeps the map link's ten pixels below inside the facts when no pills follow it — nothing nearer may sit on them (§366)", async () => {
     // No distance, climb, difficulty, surface or cost: the state of registration is a line's gap
     // (eight pixels) under the place, nearer than the link's ten, and would take its bottom.
-    const html = await card({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: null, costType: null });
+    const html = await card({ distanceMeters: null, elevationGainMeters: null, difficultyLevel: null, surface: null, costType: null });
     expect(lines(html).map((l) => l.key)).toEqual(["when", "where", "registration"]);
     const anchors = [...withoutStyles(line(html, "where").inner).matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
     expect(anchors).toHaveLength(1);
@@ -646,7 +647,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
 
   it("draws the route and the cost as the page's small outlined pills — surface, difficulty, distance, climb, cost", async () => {
     const pills = chips(line(await card(), "pills").inner);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Gratuit"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -661,13 +662,13 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
   it("in English too", async () => {
     currentLocale = "en";
     const pills = chips(line(await card(), "pills").inner);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Free"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asphalt", "Easy 2", "10 km", "300 m climb", "Free"]);
   });
 
   it("draws no pill for what the club has not stated, and none at all when it stated nothing", async () => {
-    const some = chips(line(await card({ elevationGainMeters: null, difficulty: null, costType: null }), "pills").inner);
+    const some = chips(line(await card({ elevationGainMeters: null, difficultyLevel: null, costType: null }), "pills").inner);
     expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km"]);
-    const none = await card({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: null, costType: null });
+    const none = await card({ distanceMeters: null, elevationGainMeters: null, difficultyLevel: null, surface: null, costType: null });
     expect(lines(none).map((l) => l.key)).not.toContain("pills");
     expect(none).not.toContain("MuiChip-root");
   });

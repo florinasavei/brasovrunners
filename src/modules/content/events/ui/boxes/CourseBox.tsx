@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
-import { DEFAULT_DIFFICULTY_STEP, DIFFICULTY_BANDS, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
@@ -15,7 +14,6 @@ import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { savedDurationMinutes } from "../../duration";
 import { BLANK, courseSummary } from "../box-summaries";
-import DifficultyStepField from "../DifficultyStepField";
 import GlyphSelect from "../GlyphSelect";
 import NightEventField from "../NightEventField";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
@@ -30,7 +28,8 @@ import { LanguageTabs } from "./TextBoxes";
  * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
- * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
+ * seen — a separate question from the meeting point (§49). How hard is asked in «Ce fel de eveniment» since §NNN,
+ * with the band and its step side by side. All optional, so folded on both pages. "Nespecificat" is a real answer on the surface select:
  * the page omits the row rather than guessing (migration `0018`).
  *
  * Under the settings, in its own Română | English tabs, the route / training description (§387):
@@ -62,10 +61,6 @@ export default async function CourseBox({
     const from = toWallTimeInput(new Date(row.startsAt), zone);
     return { date: from.slice(0, 10), time: from.slice(11, 16), endTime: row.endsAt ? toWallTimeInput(new Date(row.endsAt), zone).slice(11, 16) : "" };
   });
-  // The level on the club's scale of fifteen (§NNN), as the two controls show it: its band and its step.
-  const level = event ? difficultyLevelOf(event) : null;
-  const band = level === null ? null : difficultyBandOf(level);
-  const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const card = {
     id: "box-course",
     title: heading ?? t("editor.boxes.course.title"),
@@ -74,7 +69,6 @@ export default async function CourseBox({
       event,
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
-        difficulty: band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null,
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
         night: event ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
@@ -104,41 +98,15 @@ export default async function CourseBox({
   return (
     <Panel collapsible {...card}>
       <Stack spacing={2}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <GlyphSelect
-            name="event.surface"
-            label={t("editor.surface")}
-            defaultValue={event?.surface ?? ""}
-            options={[
-              { value: "", label: t("editor.notStated") },
-              ...EVENT_SURFACES.map((surface) => ({ value: surface, label: tEvent(`surface.${surface}`), glyph: `surface:${surface}` as const })),
-            ]}
-            sx={{ flex: 1 }}
-          />
-          <GlyphSelect
-            name="event.difficulty"
-            label={t("editor.fields.difficulty")}
-            defaultValue={band ?? ""}
-            options={[
-              { value: "", label: t("editor.notStated") },
-              ...DIFFICULTY_BANDS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
-            ]}
-            sx={{ flex: 1 }}
-          />
-        </Stack>
-        {/* The difficulty's second control (§NNN): where inside the band the event stands — the
-            band and the step are the level on the club's scale of fifteen, which «Ghid» explains. */}
-        <Box>
-          <DifficultyStepField
-            name="event.difficultyStep"
-            defaultStep={step}
-            words={{
-              label: t("editor.fields.difficultyStep"),
-              choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
-            }}
-          />
-          <BoxNote>{t("editor.difficultyStepHelp")}</BoxNote>
-        </Box>
+        <GlyphSelect
+          name="event.surface"
+          label={t("editor.surface")}
+          defaultValue={event?.surface ?? ""}
+          options={[
+            { value: "", label: t("editor.notStated") },
+            ...EVENT_SURFACES.map((surface) => ({ value: surface, label: tEvent(`surface.${surface}`), glyph: `surface:${surface}` as const })),
+          ]}
+        />
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <RecallField
             name="event.distanceMeters"

@@ -37,7 +37,7 @@ afterEach(() => {
 const FULL_ROUTE = {
   type: "RACE" as const,
   surface: "ASPHALT" as const,
-  difficulty: "EASY" as const,
+  difficultyLevel: 2,
   distanceMeters: 10000,
   elevationGainMeters: 300,
   // A Wednesday 19:00 in November: after dusk in Brașov, so the automatic answer is a night event (§394).
@@ -61,7 +61,7 @@ function chips(fragment: string) {
   return [...fragment.matchAll(/<div [^>]*?class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),
     small: classes.includes("MuiChip-sizeSmall"),
-    label: /class="MuiChip-label[^"]*"[^>]*>([^<]*)</.exec(inner)?.[1],
+    label: /class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</.exec(inner)?.[1],
     glyph: /<(?:svg|span)\b[^>]*class="[^"]*MuiChip-icon[^"]*"[^>]*>/.exec(inner)?.[0] ?? null,
   }));
 }
@@ -71,7 +71,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Noapte", "Gratuit"]);
     // A row with a band and no level — one the data cache kept from before §NNN — is at the band's middle.
     expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY-2", "distance", "elevation", "night", "cost:FREE"]);
   });
@@ -80,19 +80,19 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     currentLocale = "en";
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Night", "Free"]);
+    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy 2", "10 km", "300 m climb", "Night", "Free"]);
   });
 
   it("gives a pill only to what the club stated, and none at all when it stated nothing", async () => {
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficulty: null, nightOverride: false }, t, format);
+    const some = buildRoutePills({ ...FULL_ROUTE, elevationGainMeters: null, difficultyLevel: null, nightOverride: false }, t, format);
     expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km", "Gratuit"]);
     const none = buildRoutePills(
       {
         type: "RACE",
         surface: null,
-        difficulty: null,
+        difficultyLevel: null,
         distanceMeters: null,
         elevationGainMeters: null,
         startsAt: FULL_ROUTE.startsAt,
@@ -133,42 +133,37 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     expect(externalPaid.at(-1)?.srSuffix).toBe("plătit la organizator, nu la club");
   });
 
-  // Through `buildRoutePills` and `RoutePills` for every level in both locales, asserting what a
-  // screen reader is given — the chip's visible word, then the visually-hidden span — so a wrong
-  // key or a missing locale in `routePillParts`'s `srSuffix` line fails here.
+  // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
+  // what the eye and a screen reader are given — the visible «Mediu 2», hidden from the reader, and
+  // the visually-hidden «Dificultate: mediu, treapta 2 din 3» in its place (§NNN).
   it.each([
-    // Five bands since §412 (the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu"),
-    // three steps in each since §NNN — the step is heard after the field's name, and seen as dots.
-    ["ro", "VERY_EASY", 1, "Foarte ușor", "Dificultate, treapta 1 din 3"],
-    ["ro", "EASY", 5, "Ușor", "Dificultate, treapta 2 din 3"],
-    ["ro", "MODERATE", 9, "Mediu", "Dificultate, treapta 3 din 3"],
-    ["ro", "HARD", 10, "Greu", "Dificultate, treapta 1 din 3"],
-    ["ro", "VERY_HARD", 15, "Foarte greu", "Dificultate, treapta 3 din 3"],
-    ["en", "VERY_EASY", 2, "Very easy", "Difficulty, step 2 of 3"],
-    ["en", "EASY", 4, "Easy", "Difficulty, step 1 of 3"],
-    ["en", "MODERATE", 8, "Moderate", "Difficulty, step 2 of 3"],
-    ["en", "HARD", 12, "Hard", "Difficulty, step 3 of 3"],
-    ["en", "VERY_HARD", 13, "Very hard", "Difficulty, step 1 of 3"],
-  ] as const)("in %s, %s at level %i reads «%s» and, hidden, «— %s»", async (locale, difficulty, level, word, field) => {
+    // The owner's five bands (§NNN): ușor, mediu, greuț, greu, foarte greu — three steps each.
+    ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor, treapta 1 din 3", "Ușor, treapta 1 din 3"],
+    ["ro", "MEDIUM", 5, "Mediu 2", "Dificultate: mediu, treapta 2 din 3", "Mediu, treapta 2 din 3"],
+    ["ro", "FAIRLY_HARD", 9, "Greuț 3", "Dificultate: greuț, treapta 3 din 3", "Greuț, treapta 3 din 3"],
+    ["ro", "HARD", 10, "Greu 1", "Dificultate: greu, treapta 1 din 3", "Greu, treapta 1 din 3"],
+    ["ro", "VERY_HARD", 15, "Foarte greu 3", "Dificultate: foarte greu, treapta 3 din 3", "Foarte greu, treapta 3 din 3"],
+    ["en", "EASY", 2, "Easy 2", "Difficulty: easy, step 2 of 3", "Easy, step 2 of 3"],
+    ["en", "MEDIUM", 4, "Medium 1", "Difficulty: medium, step 1 of 3", "Medium, step 1 of 3"],
+    ["en", "FAIRLY_HARD", 8, "Fairly hard 2", "Difficulty: fairly hard, step 2 of 3", "Fairly hard, step 2 of 3"],
+    ["en", "HARD", 12, "Hard 3", "Difficulty: hard, step 3 of 3", "Hard, step 3 of 3"],
+    ["en", "VERY_HARD", 13, "Very hard 1", "Difficulty: very hard, step 1 of 3", "Very hard, step 1 of 3"],
+  ] as const)("in %s, %s at level %i shows «%s» and is heard as «%s»", async (locale, band, level, shown, heard, plain) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const step = ((level - 1) % 3) + 1;
-    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty, difficultyLevel: level }, t, format).filter(
-      (pill) => pill.glyph === `difficulty:${difficulty}-${step}`,
-    );
+    const pills = buildRoutePills({ ...FULL_ROUTE, difficultyLevel: level }, t, format).filter((pill) => pill.glyph === `difficulty:${band}-${step}`);
     expect(pills).toHaveLength(1);
+    expect(pills[0]!.label).toBe(shown);
     // Where no gauge is drawn (an email's facts, §392), the words say the step.
-    expect(pills[0]!.plain).toBe(locale === "ro" ? `${word}, treapta ${step} din 3` : `${word}, step ${step} of 3`);
+    expect(pills[0]!.plain).toBe(plain);
     const html = renderToStaticMarkup(RoutePills({ pills }));
     const label = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[1] ?? "";
-    // The word is the label's own text, shown; the field's name follows it in a span clipped to
-    // one pixel (`GlyphChip`'s `srOnlySx`) — the only other text in the label.
-    expect(/^([^<]*)</.exec(label)?.[1]).toBe(word);
-    const hidden = /<span class="MuiBox-root [^"]*">([^<]*)$/.exec(label)?.[1];
-    expect(hidden).toBe(` — ${field}`);
+    // The visible words, hidden from a screen reader; the heard words in a span clipped to one pixel.
+    expect(label).toContain(`<span aria-hidden="true">${shown}</span>`);
+    expect(/<span class="MuiBox-root [^"]*">([^<]*)$/.exec(label)?.[1]).toBe(heard);
     expect(html).not.toMatch(/aria-label=/);
-    expect(html).not.toMatch(/aria-hidden="true">[^<]*(Foarte|Ușor|Mediu|Greu|Very|Easy|Moderate|Hard)/);
   });
 });
 
@@ -178,7 +173,7 @@ describe("§388 RoutePills — one small outlined chip per pill, its glyph, noth
     const format = await getFormatter();
     const html = renderToStaticMarkup(RoutePills({ pills: buildRoutePills(FULL_ROUTE, t, format) }));
     const drawn = chips(html);
-    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
+    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Noapte", "Gratuit"]);
     for (const pill of drawn) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);

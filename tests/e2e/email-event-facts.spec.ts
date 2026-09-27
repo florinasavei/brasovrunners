@@ -39,7 +39,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
     for (const label of ["When", "Where", "Programme", "Route", "Cost", "Links"]) await expect(en).toContainText(label);
     await expect(en).toContainText("Tâmpa cable-car station");
     await expect(en).toContainText("Number pickup");
-    await expect(en).toContainText("Trail · Moderate, step 2 of 3 · 12 km · 450 m climb");
+    await expect(en).toContainText("Trail · Medium, step 2 of 3 · 12 km · 450 m climb");
     await expect(en.getByRole("link", { name: "The route" })).toHaveAttribute("href", /\/en\/EXAMPLE-event#route$/);
     await expect(en.getByRole("link", { name: "The event's page" })).toHaveAttribute("href", /\/en\/EXAMPLE-event$/);
 

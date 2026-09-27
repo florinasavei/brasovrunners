@@ -180,7 +180,7 @@ describe("the calendar file", () => {
     distanceMeters: 10_000,
     elevationGainMeters: 300,
     surface: "TRAIL",
-    difficulty: "MODERATE",
+    difficultyLevel: 5,
     costType: "FREE",
     rulesJson: rules,
     routeUrl: "https://www.strava.com/routes/1",
@@ -223,7 +223,7 @@ describe("the calendar file", () => {
     );
     // The same words in English, with the English separator for 14,5 km.
     const english = calendarDescription({ ...full, distanceMeters: 14_500 }, labelsEn);
-    expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Moderate, step 2 of 3 · Free");
+    expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Medium, step 2 of 3 · Free");
     expect(english).toContain("Registration is open — ");
     expect(english).toContain("Event page: ");
     // No film line (§481): a film is a figure in the description, reached through the page.
@@ -233,11 +233,11 @@ describe("the calendar file", () => {
     const bare = calendarDescription({ ...event, excerpt: null, scheduleJson: null, locationName: null }, labelsRo);
     expect(bare).toBe("Pagina evenimentului: https://example.test/ro/evenimente/crosul-aniversar");
     // A difficulty alone is a facts line of one word; a cost left unstated is not "free"; no gun time, no times line.
-    expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).toContain("\n\nGreu, treapta 2 din 3\n\n");
+    expect(calendarDescription({ ...event, difficultyLevel: 11 }, labelsRo)).toContain("\n\nGreu, treapta 2 din 3\n\n");
     // The step the club chose (§NNN), in words: a calendar entry has no gauge to read it off.
-    expect(calendarDescription({ ...event, difficulty: "HARD", difficultyLevel: 12 }, labelsRo)).toContain("\n\nGreu, treapta 3 din 3\n\n");
-    expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("Gratuit");
-    expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("întâlnire");
+    expect(calendarDescription({ ...event, difficultyLevel: 12 }, labelsRo)).toContain("\n\nGreu, treapta 3 din 3\n\n");
+    expect(calendarDescription({ ...event, difficultyLevel: 11 }, labelsRo)).not.toContain("Gratuit");
+    expect(calendarDescription({ ...event, difficultyLevel: 11 }, labelsRo)).not.toContain("întâlnire");
   });
 
   it("carries a paid event's amount and where it is paid, and a donation's host and suggested amount (§343)", () => {

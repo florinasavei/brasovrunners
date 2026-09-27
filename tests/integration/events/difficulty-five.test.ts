@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createEvent, saveEventFields } from "@/modules/content/events/service";
-import { DIFFICULTY_BANDS as DIFFICULTY_LEVELS, type DifficultyBand as DifficultyLevel } from "@/modules/events/domain/difficulty";
+import { DIFFICULTY_BANDS, type DifficultyBand, difficultyBandOf } from "@/modules/events/domain/difficulty";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -61,12 +61,13 @@ beforeEach(async () => {
   [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
 });
 
-async function created(difficulty: DifficultyLevel | null, slug: string) {
+async function created(difficulty: DifficultyBand | null, slug: string, difficultyStep?: string) {
   return createEvent(db, {
     actor: admin,
     fields: {
       ...FIELDS,
       difficulty,
+      ...(difficultyStep === undefined ? {} : { difficultyStep }),
       translations: {
         ro: { slug: `${slug}-ro`, title: `Tura ${slug}`, excerpt: "Kilometri împreună." },
         en: { slug: `${slug}-en`, title: `Run ${slug}`, excerpt: "Kilometres together." },
@@ -75,47 +76,41 @@ async function created(difficulty: DifficultyLevel | null, slug: string) {
   });
 }
 
-const difficultyOf = async (id: string) => (await db.select({ difficulty: events.difficulty }).from(events).where(eq(events.id, id)))[0]?.difficulty;
+const stored = async (id: string) =>
+  (await db.select({ difficulty: events.difficulty, difficultyLevel: events.difficultyLevel }).from(events).where(eq(events.id, id)))[0];
 
-describe("BR-REQ-041-01 §412 five difficulty levels, migration 0078", () => {
-  it("the migrated enum is the scale, in the scale's order — the domain list's own", async () => {
+describe("BR-REQ-041-01 §412 the five-word enum, migration 0078 — retired by §NNN, still written", () => {
+  it("the migrated enum keeps §412's order — the column the release before §NNN reads", async () => {
     const result = await db.execute<{ level: string }>(sql`select unnest(enum_range(null::event_difficulty))::text as level`);
-    expect(result.rows.map((row) => row.level)).toEqual([...DIFFICULTY_LEVELS]);
+    expect(result.rows.map((row) => row.level)).toEqual(["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
   });
 
-  it("the editor's create stores «Foarte greu» and reads it back", async () => {
+  it("the editor's create stores «Foarte greu» as a level and the old word beside it", async () => {
     const event = await created("VERY_HARD", "foarte-greu");
-    expect(await difficultyOf(event.id)).toBe("VERY_HARD");
+    expect(await stored(event.id)).toEqual({ difficulty: "VERY_HARD", difficultyLevel: 14 });
   });
 
-  it("the editor's save moves an event to «Foarte ușor»", async () => {
-    const event = await created("MODERATE", "mutat");
+  it("the editor's save moves an event to «Ușor 1», the old «Foarte ușor»", async () => {
+    const event = await created("MEDIUM", "mutat");
     const saved = await saveEventFields(db, {
       actor: admin,
       eventId: event.id,
       expectedVersion: event.version,
-      fields: { ...FIELDS, difficulty: "VERY_EASY" },
+      fields: { ...FIELDS, difficulty: "EASY", difficultyStep: "1" },
     });
-    expect(await difficultyOf(saved.id)).toBe("VERY_EASY");
+    expect(await stored(saved.id)).toEqual({ difficulty: "VERY_EASY", difficultyLevel: 1 });
   });
 
-  it("an event saved with one of the three old values reads as before — nothing is rewritten", async () => {
-    for (const level of ["EASY", "MODERATE", "HARD"] as const) {
-      const event = await created(level, `vechi-${level.toLowerCase()}`);
-      expect(await difficultyOf(event.id)).toBe(level);
-    }
-  });
-
-  it("the database ranks by the enum's order, so a sort by difficulty is the scale, never the alphabet", async () => {
+  it("a sort by the level is the scale, never the alphabet", async () => {
     const ids: string[] = [];
-    for (const level of ["VERY_HARD", "EASY", "VERY_EASY", "HARD", "MODERATE"] as const) ids.push((await created(level, `rang-${level.toLowerCase().replace("_", "-")}`)).id);
-    const ranked = await db.select({ difficulty: events.difficulty }).from(events).where(inArray(events.id, ids)).orderBy(asc(events.difficulty));
-    expect(ranked.map((row) => row.difficulty)).toEqual([...DIFFICULTY_LEVELS]);
+    for (const band of ["VERY_HARD", "EASY", "FAIRLY_HARD", "HARD", "MEDIUM"] as const) ids.push((await created(band, `rang-${band.toLowerCase().replace("_", "-")}`)).id);
+    const ranked = await db.select({ level: events.difficultyLevel }).from(events).where(inArray(events.id, ids)).orderBy(asc(events.difficultyLevel));
+    expect(ranked.map((row) => difficultyBandOf(row.level!))).toEqual([...DIFFICULTY_BANDS]);
   });
 
-  it("the sample seed shows both ends of the scale (§412), so local and QA draw the gauge at one and at five", () => {
+  it("the sample seed shows both ends of the scale (§NNN), so local and QA draw the gauge at one and at fifteen", () => {
     const seed = readFileSync(path.join(process.cwd(), "src", "db", "seeds", "pilot.ts"), "utf8");
-    expect(seed).toContain('difficulty: "VERY_EASY" as const');
-    expect(seed).toContain('difficulty: "VERY_HARD" as const');
+    expect(seed).toContain("difficultyLevel: 1,");
+    expect(seed).toContain("difficultyLevel: 15,");
   });
 });

@@ -390,19 +390,19 @@ export const events = pgTable(
      * an event with no stated cost is not thereby free, and one with no stated difficulty is
      * not thereby easy. That is why neither column has a default.
      *
-     * Since §NNN `difficulty` is the *band* of `difficulty_level` below, written beside it by every
-     * save so the release before it (which reads only the band) still reads the right word; the
-     * level is the fact. Read both through `difficultyLevelOf` (`events/domain/difficulty.ts`),
-     * never one alone. The band leaves the schema in the release after the code stops reading it.
+     * Since §NNN `difficulty` is retired: no code reads it. Every save still writes a best-effort
+     * word into it (`legacyDifficultyOf`, `events/domain/difficulty.ts`) so the release before it,
+     * which reads only this column, shows something near the truth during a rollback; the level
+     * below is the fact. The column leaves the schema in a later contract migration.
      */
     difficulty: eventDifficulty("difficulty"),
     /**
-     * How hard the event is, on the club's scale of fifteen (§NNN): five bands — foarte ușor …
-     * foarte greu, the enum above — of three steps each, 1 the easiest step of «Foarte ușor» and 15
-     * the hardest of «Foarte greu». One column for the one fact, so a filter, an order or a
-     * comparison is one number. Null, like the band, means the club has not said. Migration `0101`
-     * set every stated band to its middle step (2, 5, 8, 11, 14), the one reading that neither
-     * rounds an event up nor down.
+     * How hard the event is, on the club's scale of fifteen (§NNN): five bands — ușor, mediu,
+     * greuț, greu, foarte greu (`DIFFICULTY_BANDS`) — of three steps each, 1 «Ușor 1» and 15
+     * «Foarte greu 3»; the band is ceil(level / 3). One column for the one fact, so a filter, an
+     * order or a comparison is one number. Nullable on purpose: "the club has not said" is a real
+     * state, and the page then omits the pill rather than guessing. Migration `0104` mapped the old
+     * words onto it: foarte ușor → 1, ușor → 2, mediu → 5, greu → 11, foarte greu → 14.
      */
     difficultyLevel: smallint("difficulty_level"),
     costType: eventCostType("cost_type"),

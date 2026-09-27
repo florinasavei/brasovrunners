@@ -3,9 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §412 — five bands and a gauge (the owner, 2026-09-25: "vreau să fie foarte
- * ușor, ușor, mediu, greu și foarte greu — sau un gauge icon custom mai degrabă"), replacing §399's
- * scale of weights; and §NNN — three steps inside each band, fifteen levels, the step as dots.
+ * `DECISIONS.md` §412 — five bands and a gauge ("un gauge icon custom mai degrabă"), replacing
+ * §399's scale of weights; and §NNN — the owner's five bands (ușor, mediu, greuț, greu, foarte greu),
+ * three steps inside each, fifteen levels, the step as dots.
  *
  * `DifficultyGaugeIcon.tsx` draws one half-dial in one `<svg>`: five arc segments, the first
  * `band` lit (`currentColor`, no opacity override) and the rest faint
@@ -15,7 +15,6 @@ import { describe, expect, it } from "vitest";
  */
 const { DIFFICULTY_ICONS, DIFFICULTY_LEVEL_ICONS, difficultyLevelGlyph } = await import("@/modules/events/ui/difficulty-glyphs");
 const { DIFFICULTY_BANDS, DIFFICULTY_STEPS, DIFFICULTY_LEVEL_COUNT } = await import("@/modules/events/domain/difficulty");
-const { eventDifficulty } = await import("@/db/schema/events");
 const { GLYPHS } = await import("@/modules/events/ui/glyphs");
 const { default: DifficultyGaugeIcon, needleAngle } = await import("@/modules/events/ui/DifficultyGaugeIcon");
 const { default: GlyphChip } = await import("@/modules/events/ui/GlyphChip");
@@ -39,10 +38,9 @@ function needleTip(html: string) {
 const LEVELS = Array.from({ length: DIFFICULTY_LEVEL_COUNT }, (_, index) => index + 1);
 const levelHtml = (level: number) => renderToStaticMarkup(createElement(GLYPHS[difficultyLevelGlyph(level)]));
 
-describe("§412 the difficulty's five bands, one ordered list", () => {
-  it("is the database enum's own values, in the enum's own order — very easy to very hard", () => {
-    expect([...DIFFICULTY_BANDS]).toEqual(["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
-    expect([...eventDifficulty.enumValues]).toEqual([...DIFFICULTY_BANDS]);
+describe("§NNN the difficulty's five bands, one ordered list", () => {
+  it("is the owner's scale — easy to very hard, «greuț» between «mediu» and «greu»", () => {
+    expect([...DIFFICULTY_BANDS]).toEqual(["EASY", "MEDIUM", "FAIRLY_HARD", "HARD", "VERY_HARD"]);
   });
 });
 
@@ -68,8 +66,9 @@ describe("§412 DifficultyGaugeIcon for a band — a half-dial, the needle at th
 describe("§NNN DifficultyGaugeIcon for a level — the band's segments, the needle at the step, the step's dots", () => {
   it("registers one glyph per level of the fifteen, named by band and step", () => {
     expect(Object.keys(DIFFICULTY_LEVEL_ICONS)).toHaveLength(15);
-    expect(difficultyLevelGlyph(1)).toBe("difficulty:VERY_EASY-1");
-    expect(difficultyLevelGlyph(8)).toBe("difficulty:MODERATE-2");
+    expect(difficultyLevelGlyph(1)).toBe("difficulty:EASY-1");
+    expect(difficultyLevelGlyph(5)).toBe("difficulty:MEDIUM-2");
+    expect(difficultyLevelGlyph(8)).toBe("difficulty:FAIRLY_HARD-2");
     expect(difficultyLevelGlyph(15)).toBe("difficulty:VERY_HARD-3");
     for (const level of LEVELS) expect(GLYPHS[difficultyLevelGlyph(level)], String(level)).toBeDefined();
   });
@@ -150,12 +149,15 @@ describe("§412/§NNN one glyph, drawn in the chip's ink", () => {
     for (const [tag] of html.matchAll(/<svg\b[^>]*>/g)) expect(tag).toContain('aria-hidden="true"');
   });
 
-  it("draws the level's gauge inside a difficulty pill, beside the word", () => {
-    const html = renderToStaticMarkup(GlyphChip({ glyph: "difficulty:VERY_HARD-3", label: "Foarte greu", srSuffix: "Dificultate, treapta 3 din 3" }));
+  it("draws the level's gauge inside a difficulty pill, beside the words, and gives a screen reader its own words (§NNN)", () => {
+    const html = renderToStaticMarkup(
+      GlyphChip({ glyph: "difficulty:VERY_HARD-3", label: "Foarte greu 3", srLabel: "Dificultate: foarte greu, treapta 3 din 3" }),
+    );
     expect(html).toContain('data-testid="difficulty-gauge"');
     expect(html).toContain('data-level="15"');
     expect(html).toMatch(/<svg\b[^>]*MuiChip-icon/);
-    expect(html).toContain(">Foarte greu<");
+    expect(html).toContain('<span aria-hidden="true">Foarte greu 3</span>');
+    expect(html).toContain(">Dificultate: foarte greu, treapta 3 din 3<");
   });
 
   it("registers one band glyph per band, mapped over DIFFICULTY_BANDS", () => {

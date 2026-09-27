@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
-import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
+import { storedDifficulty } from "@/modules/events/domain/difficulty";
 import { atBrasov, nextWeekday, todayInBrasov } from "./sample-dates";
 import { seedSampleLegalDocuments } from "./sample-legal-documents";
 import { seedSampleTeam } from "./sample-team";
@@ -95,7 +95,7 @@ async function seed() {
        */
       locationName: "Parcul Tractorul, zona de start",
       locationAddress: "Strada Nicolae Labiș, Brașov",
-      difficulty: "MODERATE" as const,
+      difficultyLevel: 5,
       costType: "FREE" as const,
       ro: {
         slug: "crosul-aniversar-brasov-runners",
@@ -116,10 +116,9 @@ async function seed() {
       startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
-      // The two ends of the scale (§412), so a seeded listing shows the gauge at both — and since
-      // §NNN the very ends: level 1 of fifteen here, level 15 on the interval session.
-      difficulty: "VERY_EASY" as const,
-      difficultyStep: 1 as const,
+      // The two ends of the club's scale of fifteen (§NNN), so a seeded listing shows the gauge at
+      // both: «Ușor 1» here, «Foarte greu 3» on the interval session.
+      difficultyLevel: 1,
       costType: "FREE" as const,
       ro: {
         slug: "alergare-de-duminica-parcul-tractorul",
@@ -144,7 +143,8 @@ async function seed() {
       // pin here: a map link is a hostname, which no file under `src/` may hold (AGENTS.md §8).
       latitude: 45.6384,
       longitude: 25.5921,
-      difficulty: "MODERATE" as const,
+      // «Mediu 1» — the owner's own example of it: the run up Tâmpa (§NNN).
+      difficultyLevel: 4,
       costType: "FREE" as const,
       ro: {
         slug: "tura-pe-tampa",
@@ -164,8 +164,7 @@ async function seed() {
       surface: "ASPHALT" as const,
       startsAt: atBrasov(nextWeekday(3, 1), 18, 30),
       locationName: "Stadionul Olimpia",
-      difficulty: "VERY_HARD" as const,
-      difficultyStep: 3 as const,
+      difficultyLevel: 15,
       costType: "FREE" as const,
       ro: {
         slug: "antrenament-de-intervale-olimpia",
@@ -201,8 +200,8 @@ async function seed() {
         locationAddress: "locationAddress" in row ? row.locationAddress : undefined,
         latitude: "latitude" in row ? row.latitude : undefined,
         longitude: "longitude" in row ? row.longitude : undefined,
-        // The level on the club's scale of fifteen and its band (§NNN); a row with no step is at its band's middle.
-        ...storedDifficulty(difficultyLevel(row.difficulty, "difficultyStep" in row ? row.difficultyStep : undefined)),
+        // The level on the club's scale of fifteen (§NNN), and the old column's best-effort word beside it.
+        ...storedDifficulty(row.difficultyLevel),
         costType: row.costType,
         /**
          * NONE, deliberately, for every seeded event.
