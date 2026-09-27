@@ -165,7 +165,7 @@ describe("§393 signing a group run's self-declaration", () => {
     expect(rows).toHaveLength(1);
     // The platform's text names no identity document (§418): whatever was posted, none is kept.
     expect(rows[0]).toMatchObject({ eventId: event.id, typedName: "Ana Popescu", idDocument: null, email: "ana@example.ro", locale: "ro", declarationVersion: 1 });
-    // The backoffice's list says which version each one signed (§NNN).
+    // The backoffice's list says which version each one signed (§499).
     expect(await listGroupRunDeclarations(db, event.id)).toMatchObject([{ typedName: "Ana Popescu", version: 1 }]);
 
     const outbox = await db.select().from(emailOutbox);
@@ -214,7 +214,7 @@ describe("§393 signing a group run's self-declaration", () => {
   });
 
   /**
-   * §NNN — the group-run PDF names the version signed and the day it took effect, under the title
+   * §499 — the group-run PDF names the version signed and the day it took effect, under the title
    * and in every page's footer, with when it was signed: what is drawn, caught at pdfkit's `text()`.
    */
   it("draws the version in force under the title and in every page's footer, with when it was signed", async () => {

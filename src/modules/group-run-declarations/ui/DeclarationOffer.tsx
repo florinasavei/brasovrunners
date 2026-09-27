@@ -20,7 +20,7 @@ import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
  * button that just opens the signing flow").
  *
  * At `#declaratie`, the last part of the page's closed «Condiții de participare» fold, after the
- * rules and the photographs notice (§NNN; the owner, 2026-09-27, moving it from under the route's
+ * rules and the photographs notice (§498; the owner, 2026-09-27, moving it from under the route's
  * pills): one line saying what happens — the copy by email, and how long the club keeps it — and
  * one small button to the signing page, «Semnează declarația» with a pen before it, under a
  * level-3 heading that names the section. Neither the heading nor the line calls it optional any

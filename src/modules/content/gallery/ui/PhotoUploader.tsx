@@ -111,7 +111,7 @@ export default function PhotoUploader({
     setProgress({ done: 0, total: list.length, failed });
     setLastChosen(null);
     for (const [index, file] of list.entries()) {
-      // «Fotografia aleasă» and the stored line describe one photo (§NNN): cleared per file, so a
+      // «Fotografia aleasă» and the stored line describe one photo (§495): cleared per file, so a
       // last file that fails never sits under the facts of the one before it.
       setLastStored(null);
       try {

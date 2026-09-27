@@ -259,7 +259,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventFacts event={event} now={now} stacked weather={weather} />
 
       {/* The photographs notice and the group run's self-declaration were here, under the facts;
-          since §NNN they sit in «Condiții de participare», with the rules, after the programme. */}
+          since §498 they sit in «Condiții de participare», with the rules, after the programme. */}
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />
@@ -342,7 +342,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
       {/*
-        «Condiții de participare» / "Participation rules" (§NNN; the owner, 2026-09-27): the
+        «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
         rules, the photographs notice and a group run's self-declaration, in that order, under one
         fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
         is on all of them (§421), so the fold is never empty.

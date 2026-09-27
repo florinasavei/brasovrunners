@@ -1,5 +1,5 @@
 {
-  "id": "bb7d8f25-5b3b-4dad-b391-e399cfd31aec",
+  "id": "c99ee351-ecfa-411f-9d23-549efbe2d78a",
   "prevId": "a972d543-1646-4f55-8d7e-ff98890c413c",
   "version": "7",
   "dialect": "postgresql",
@@ -3856,12 +3856,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "country": {
-          "name": "country",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "city": {
           "name": "city",
           "type": "text",
@@ -4002,6 +3996,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "list_socials": {
+          "name": "list_socials",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "bib_number": {
           "name": "bib_number",

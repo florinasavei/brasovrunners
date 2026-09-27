@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import pg from "pg";
 import { computeContentHash } from "../../src/modules/legal-documents/domain/content-hash";
 import { confirmDialog } from "./support/confirm";
@@ -30,10 +30,23 @@ import { hydrated, signIn } from "./support/featured-event";
  *
  * The notice is one row for the whole database, so the two projects must not flip it at once: a
  * PostgreSQL advisory lock, held for the test, makes the second wait for the first.
+ *
+ * The same notice carries `{{participantListSocials}}` (§500), so the same two faces prove the
+ * socials beside a name: with both markers, a runner who ticked «Arată și Strava și Instagram»
+ * carries the networks' marks — 44-pixel links, `nofollow ugc`, a new tab, on the name's line and
+ * nothing wider than 320 pixels — and the form offers the tick under «Vreau să apar» once a social
+ * is typed, never to a minor; without them, no link to Strava or Instagram anywhere on the list and
+ * no tick on the form. Asserted here rather than in `registration-form.spec.ts` because the tick
+ * exists only on an event with a list and under a notice that names the marker — this spec seeds
+ * the one and holds the lock on the other; a form spec reading the notice while this one flips it
+ * would flake.
  */
 
 const LOCK_KEY = 390_039_001;
 const MARKER = "{{participantListStates}}";
+/** The socials beside a name (§500): the platform's template carries it beside the states' marker. */
+const SOCIALS_MARKER = "{{participantListSocials}}";
+const LINK_REL = "noopener noreferrer nofollow ugc";
 
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -130,11 +143,42 @@ async function seedEvent(tag: string): Promise<Seeded> {
         `Stări ${tag}`,
       ]);
     }
-    const people: Array<{ name: string; status: string; ticked: boolean; minutes: number }> = [
-      { name: "Ana Confirmata", status: "CONFIRMED", ticked: true, minutes: 1 },
-      { name: "Bogdan Confirmat", status: "CONFIRMED", ticked: true, minutes: 2 },
-      { name: "Ascuns Confirmat", status: "CONFIRMED", ticked: false, minutes: 3 },
-      { name: "Carmen Semneaza", status: "PENDING_DECLARATION", ticked: true, minutes: 4 },
+    /*
+      The socials (§500): Ana ticked «Arată și Strava și Instagram» and gave both; Carmen, pending,
+      ticked it with Instagram alone; Bogdan gave both and did not tick it, and the hidden runner
+      gave both and ticked it — neither may ever print a link.
+    */
+    type Socials = { strava: string | null; instagram: string | null; shown: boolean };
+    const noSocials: Socials = { strava: null, instagram: null, shown: false };
+    const people: Array<{ name: string; status: string; ticked: boolean; minutes: number; socials?: Socials }> = [
+      {
+        name: "Ana Confirmata",
+        status: "CONFIRMED",
+        ticked: true,
+        minutes: 1,
+        socials: { strava: "https://www.strava.com/athletes/39001", instagram: "ana.confirmata", shown: true },
+      },
+      {
+        name: "Bogdan Confirmat",
+        status: "CONFIRMED",
+        ticked: true,
+        minutes: 2,
+        socials: { strava: "https://www.strava.com/athletes/39002", instagram: "bogdan.confirmat", shown: false },
+      },
+      {
+        name: "Ascuns Confirmat",
+        status: "CONFIRMED",
+        ticked: false,
+        minutes: 3,
+        socials: { strava: "https://www.strava.com/athletes/39003", instagram: "ascuns.confirmat", shown: true },
+      },
+      {
+        name: "Carmen Semneaza",
+        status: "PENDING_DECLARATION",
+        ticked: true,
+        minutes: 4,
+        socials: { strava: null, instagram: "carmen.semneaza", shown: true },
+      },
       { name: "Elena Asteapta", status: "WAITLISTED", ticked: true, minutes: 6 },
       { name: "Florin Asteapta", status: "WAITLISTED", ticked: true, minutes: 5 },
       { name: "Ascuns Asteapta", status: "WAITLISTED", ticked: false, minutes: 7 },
@@ -152,7 +196,7 @@ async function seedEvent(tag: string): Promise<Seeded> {
       await client.query(
         `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name,
            privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out,
-           email_confirmed_at, confirmed_at, waitlisted_at)
+           email_confirmed_at, confirmed_at, waitlisted_at, strava_url, instagram_handle, list_socials)
          VALUES ($1, $2, $3::registration_status, 'ro', $4, $4,
            -- The newest approved notice, as a registration made now records (§421: the pending and
            -- waiting rows list only ticks given under a notice that described the states).
@@ -160,8 +204,18 @@ async function seedEvent(tag: string): Promise<Seeded> {
            now(), false, 1, $5,
            CASE WHEN $3::text <> 'PENDING_EMAIL_CONFIRMATION' THEN ${moment} END,
            CASE WHEN $3::text = 'CONFIRMED' THEN ${moment} END,
-           CASE WHEN $3::text = 'WAITLISTED' THEN ${moment} END)`,
-        [eventId, participant[0].id, person.status, `${person.name} ${tag}`, !person.ticked],
+           CASE WHEN $3::text = 'WAITLISTED' THEN ${moment} END,
+           $6, $7, $8)`,
+        [
+          eventId,
+          participant[0].id,
+          person.status,
+          `${person.name} ${tag}`,
+          !person.ticked,
+          (person.socials ?? noSocials).strava,
+          (person.socials ?? noSocials).instagram,
+          (person.socials ?? noSocials).shown,
+        ],
       );
     }
     return { eventId, slug };
@@ -200,6 +254,20 @@ async function readList(page: Page, address: string, tag: string) {
 }
 
 
+/**
+ * The list's links to Strava and Instagram, wherever they are drawn — the socials' own marks and
+ * anything else that would point there.
+ */
+function socialLinks(list: Locator): Locator {
+  return list.locator('a[href*="strava.com"], a[href*="strava.app.link"], a[href*="instagram.com"]');
+}
+
+/** A notice's text carries both markers, the states' and the socials'. */
+function carriesBothMarkers(translations: Translation[]): boolean {
+  const text = JSON.stringify(translations);
+  return text.includes(MARKER) && text.includes(SOCIALS_MARKER);
+}
+
 /** Signed in as the Superadministrator, whether or not this page already was. */
 async function asSuperadmin(page: Page): Promise<void> {
   await page.goto("/ro/admin/legal");
@@ -207,21 +275,22 @@ async function asSuperadmin(page: Page): Promise<void> {
 }
 
 /**
- * The notice in force carries the marker again: the newest approved text that carried it,
+ * The notice in force carries both markers again: the newest approved text that carried them,
  * approved once more as the next version. Nothing to do when it already does.
  */
 async function restoreMarker(page: Page): Promise<void> {
   const current = await withDatabase(noticeInForce);
-  if (JSON.stringify(current.translations).includes(MARKER)) return;
+  if (carriesBothMarkers(current.translations)) return;
   const draft = await withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
       `SELECT d.id FROM legal_documents d
         WHERE d.key = 'PRIVACY_NOTICE' AND d.is_approved
           AND EXISTS (SELECT 1 FROM legal_document_translations t WHERE t.legal_document_id = d.id AND t.body_json::text LIKE $1)
+          AND EXISTS (SELECT 1 FROM legal_document_translations t WHERE t.legal_document_id = d.id AND t.body_json::text LIKE $2)
         ORDER BY d.version DESC LIMIT 1`,
-      [`%${MARKER}%`],
+      [`%${MARKER}%`, `%${SOCIALS_MARKER}%`],
     );
-    if (!rows[0]) throw new Error("no approved notice ever carried the marker: reset the database from the current templates");
+    if (!rows[0]) throw new Error("no approved notice ever carried both markers: reset the database from the current templates");
     const { rows: translations } = await client.query<Translation>(
       "SELECT locale, title, body_json AS body FROM legal_document_translations WHERE legal_document_id = $1 ORDER BY locale",
       [rows[0].id],
@@ -230,7 +299,7 @@ async function restoreMarker(page: Page): Promise<void> {
   });
   await asSuperadmin(page);
   await approve(page, draft);
-  await expect.poll(async () => JSON.stringify((await withDatabase(noticeInForce)).translations).includes(MARKER)).toBe(true);
+  await expect.poll(async () => carriesBothMarkers((await withDatabase(noticeInForce)).translations)).toBe(true);
 }
 
 test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice (§396)", () => {
@@ -246,7 +315,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
     await lock.query("SELECT pg_advisory_lock($1)", [LOCK_KEY]);
     const event = await seedEvent(tag);
     try {
-      await test.step("the notice in force carries the marker", async () => {
+      await test.step("the notice in force carries both markers", async () => {
         await restoreMarker(page);
       });
 
@@ -270,6 +339,52 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         for (const never of ["Ascuns", "Retras Anulat", "Adresa Nedovedita"]) await expect(ro.list).not.toContainText(never);
       });
 
+      await test.step("with the marker: the socials of the runners who ticked them, beside the name, and nobody else's (§500)", async () => {
+        // `readList` holds the page to the phone's width with the marks drawn (no sideways scroll).
+        const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
+        // Ana's two and Carmen's one: never Bogdan's (not ticked), never the hidden runner's.
+        await expect(ro.list.getByTestId("start-list-socials")).toHaveCount(2);
+        await expect(socialLinks(ro.list)).toHaveCount(3);
+        for (const never of ["39002", "39003", "bogdan.confirmat", "ascuns.confirmat"]) {
+          await expect(ro.list.locator(`a[href*="${never}"]`)).toHaveCount(0);
+        }
+        const anaRow = ro.list.locator("tbody tr").filter({ hasText: "Ana Confirmata" });
+        const ana = anaRow.locator('[data-testid="start-list-socials"] a');
+        await expect(ana).toHaveCount(2);
+        await expect(ana.nth(0)).toHaveAttribute("href", "https://www.strava.com/athletes/39001");
+        await expect(ana.nth(1)).toHaveAttribute("href", "https://www.instagram.com/ana.confirmata/");
+        await expect(ana.nth(0)).toHaveAccessibleName(`Ana Confirmata ${tag} pe Strava`);
+        for (const link of await ana.all()) {
+          await expect(link).toHaveAttribute("rel", LINK_REL);
+          await expect(link).toHaveAttribute("target", "_blank");
+          // A thumb's target (BR-REQ-041-01 criterion 6), rounded to a tenth of a pixel (§388's CI flake).
+          const box = await link.boundingBox();
+          expect(box, "a drawn link").not.toBeNull();
+          expect(Math.round(box!.width * 10) / 10).toBeGreaterThanOrEqual(44);
+          expect(Math.round(box!.height * 10) / 10).toBeGreaterThanOrEqual(44);
+        }
+        // On the name's own line: the marks' middle falls inside the line the name's words end on
+        // (a long name may wrap on a phone; the marks follow its last line, never a line of their own).
+        const onNameLine = await anaRow.locator("td").nth(1).evaluate((cell) => {
+          const text = [...cell.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim());
+          const marks = cell.querySelector('[data-testid="start-list-socials"]');
+          if (!text || !marks) return false;
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          const lines = range.getClientRects();
+          const line = lines[lines.length - 1];
+          if (!line) return false;
+          const box = marks.getBoundingClientRect();
+          const middle = box.top + box.height / 2;
+          return middle >= line.top && middle <= line.bottom;
+        });
+        expect(onNameLine).toBe(true);
+        // A pending runner's, behind §396's gate: Instagram alone, as typed.
+        const carmen = ro.list.locator("tbody tr").filter({ hasText: "Carmen Semneaza" }).locator('[data-testid="start-list-socials"] a');
+        await expect(carmen).toHaveCount(1);
+        await expect(carmen).toHaveAttribute("href", "https://www.instagram.com/carmen.semneaza/");
+      });
+
       await test.step("with the marker: the same in English", async () => {
         const en = await readList(page, `/en/events/${event.slug}-en`, tag);
         expect(en.states).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING", "WAITLISTED", "WAITLISTED"]);
@@ -279,11 +394,46 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
           "Also listed by name: 1 registered, awaiting confirmation · 2 on the waiting list",
         );
         for (const never of ["Ascuns", "Retras Anulat", "Adresa Nedovedita"]) await expect(en.list).not.toContainText(never);
+        await expect(socialLinks(en.list)).toHaveCount(3);
+        await expect(
+          en.list.locator("tbody tr").filter({ hasText: "Ana Confirmata" }).locator('[data-testid="start-list-socials"] a').first(),
+        ).toHaveAccessibleName(`Ana Confirmata ${tag} on Strava`);
       });
 
       await test.step("the form's «Vreau să apar» says what the list will show beside the name", async () => {
         await page.goto(`/ro/evenimente/${event.slug}-ro/inscriere`);
         await expect(page.getByTestId("list-opt-in-states")).toContainText("„Pe lista de așteptare”");
+      });
+
+      await test.step("the form offers the socials tick under «Vreau să apar» once a social is typed, never to a minor (§500)", async () => {
+        await page.goto(`/ro/evenimente/${event.slug}-ro/inscriere`);
+        await hydrated(page);
+        const listSocials = page.locator('[name="listSocials"]');
+        // In the markup, after the list's own box — asked under it, never folded.
+        await expect(listSocials).toHaveCount(1);
+        expect(
+          await page
+            .locator('[name="listOptIn"]')
+            .evaluate((optIn) => !!(optIn.compareDocumentPosition(document.querySelector('[name="listSocials"]')!) & Node.DOCUMENT_POSITION_FOLLOWING)),
+        ).toBe(true);
+        // Nothing typed in the socials fold: nothing to show, so nothing asked.
+        await expect(listSocials).toBeHidden();
+        await expect(listSocials).toBeDisabled();
+        await page.getByText("Rețele sociale — opțional").click();
+        await page.locator('[name="instagramHandle"]').fill("ana.confirmata");
+        await expect(listSocials).toBeVisible();
+        await expect(listSocials).toBeEnabled();
+        await expect(listSocials).not.toBeChecked();
+        // A birth date of somebody sixteen today: a minor, whose socials are never kept (§323).
+        const sixteen = new Date();
+        sixteen.setUTCFullYear(sixteen.getUTCFullYear() - 16);
+        await page.locator('[name="birthDate"]').fill(sixteen.toISOString().slice(0, 10));
+        await expect(listSocials).toBeHidden();
+        await expect(listSocials).toBeDisabled();
+        // An adult again: offered again.
+        await page.locator('[name="birthDate"]').fill("1990-05-17");
+        await expect(listSocials).toBeVisible();
+        await expect(listSocials).toBeEnabled();
       });
 
       await test.step("the notice reads the three words where the marker stands", async () => {
@@ -292,16 +442,17 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         await expect(page.locator("#main")).not.toContainText(MARKER);
       });
 
-      await test.step("a notice approved without the marker switches the states off", async () => {
+      await test.step("a notice approved without the markers switches the states and the socials off", async () => {
         const current = await withDatabase(noticeInForce);
         const withoutMarker = current.translations.map((translation) => ({
           ...translation,
-          body: JSON.parse(JSON.stringify(translation.body).split(MARKER).join("")),
+          body: JSON.parse(JSON.stringify(translation.body).split(MARKER).join("").split(SOCIALS_MARKER).join("")),
         }));
         await asSuperadmin(page);
         await approve(page, await withDatabase((client) => insertDraft(client, withoutMarker)));
         await page.goto("/ro/admin/legal");
         await expect(page.locator("#main").getByTestId("legal-list-states-missing")).toBeVisible();
+        await expect(page.locator("#main").getByTestId("legal-list-socials-missing")).toBeVisible();
       });
 
       await test.step("without the marker: confirmed names alone, no words, in both languages", async () => {
@@ -314,16 +465,21 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         ]);
         await expect(off.list).not.toContainText("Pe lista de așteptare");
         for (const never of ["Carmen", "Florin", "Elena", "Retras", "Adresa"]) await expect(off.list).not.toContainText(never);
+        // Ana's tick stands, but no notice in force describes it: no link to Strava or Instagram at all.
+        await expect(off.list.getByTestId("start-list-socials")).toHaveCount(0);
+        await expect(socialLinks(off.list)).toHaveCount(0);
         const offEn = await readList(page, `/en/events/${event.slug}-en`, tag);
         expect(offEn.states).toEqual([]);
         expect(offEn.names).toHaveLength(3);
+        await expect(socialLinks(offEn.list)).toHaveCount(0);
         // …and the form's box reads as it always did.
         await page.goto(`/ro/evenimente/${event.slug}-ro/inscriere`);
         await expect(page.locator('input[name="listOptIn"]')).toHaveCount(1);
         await expect(page.getByTestId("list-opt-in-states")).toHaveCount(0);
+        await expect(page.locator('[name="listSocials"]')).toHaveCount(0);
       });
     } finally {
-      // Leave the database as it was found: a notice in force that describes the states.
+      // Leave the database as it was found: a notice in force that describes the states and the socials.
       try {
         await restoreMarker(page);
       } finally {

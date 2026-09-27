@@ -23,7 +23,7 @@ export async function insertGroupRunDeclaration<T extends Record<string, unknown
 }
 
 /**
- * What the backoffice lists (§393): who, when, and against which version of the text (§NNN).
+ * What the backoffice lists (§393): who, when, and against which version of the text (§499).
  * Never the identity document or the address.
  */
 export type GroupRunDeclarationListRow = { id: string; typedName: string; acceptedAt: Date; locale: Locale; version: number };
@@ -57,7 +57,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       key: legalDocuments.key,
       version: groupRunDeclarations.declarationVersion,
       contentSha256: groupRunDeclarations.contentSha256,
-      // The day the signed version took effect, for the PDF's version line (§NNN).
+      // The day the signed version took effect, for the PDF's version line (§499).
       effectiveAt: legalDocuments.effectiveAt,
       locale: groupRunDeclarations.locale,
       typedName: groupRunDeclarations.typedName,

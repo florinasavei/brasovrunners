@@ -230,8 +230,13 @@
         "pending": "Registered, awaiting confirmation",
         "waitlisted": "On the waiting list"
       },
+      "socials": {
+        "strava": "{name} on Strava",
+        "instagram": "{name} on Instagram"
+      },
       "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participant list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
       "othersLead": "Also listed by name:",
       "pendingCount": {
         "one": "{count} registered, awaiting confirmation",
@@ -732,7 +737,8 @@
       "bulkEraseAction": "Erase for good",
       "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased.",
       "filtersNone": "no filter · every registration",
-      "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear."
+      "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear.",
+      "socialsOnList": "also on the public list, beside the name"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1986,6 +1992,7 @@
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
         "minimumAge": "The event's minimum age, with its unit (“16 years”). On an event with no minimum age — on a group run, one of 18 or less — the sentence naming it is left out of the declaration",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
+        "participantListSocials": "Privacy notice only: the words of the form's tick with which a participant chooses to show their Strava and Instagram beside their name, in quotation marks. With it in the notice in force, the form offers the tick and the public list shows the Strava and Instagram of those who ticked it; without it, never",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
         "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept.",
         "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described"
@@ -2036,6 +2043,7 @@
         "undo": "Undo",
         "redo": "Redo"
       },
+      "listSocialsMissing": "The privacy notice in force does not yet describe Strava and Instagram beside a name on the public participant list, so the form does not offer the tick and the list does not show them. So that participants who want to can show them, approve a new version of the notice starting from the platform's text, which describes them.",
       "listStatesMissing": "The privacy notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. For the list to show each person's stage as well — “Registered, awaiting confirmation”, “On the waiting list” — approve a new version of the notice starting from the platform's text, which describes them."
     },
     "tasks": {
@@ -2387,6 +2395,16 @@
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes the stages.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
             "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
+          ]
+        },
+        "listSocialsNotice": {
+          "title": "Privacy notice: Strava and Instagram on the public list",
+          "todo": "The notice in force does not yet describe Strava and Instagram beside a name on the public participant list, so the form does not offer the tick and the list shows them for nobody, until the club approves a notice that describes them.",
+          "done": "The notice in force describes Strava and Instagram on the public list: the form offers the tick, and the list shows them beside the names of those who ticked it.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes Strava and Instagram beside a name.",
+            "Read the text, save the draft, then “Approve”. From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
+            "Approve the terms from the platform's text as well, if not already, so they say the same about the list."
           ]
         },
         "newsletterNotice": {
@@ -4877,6 +4895,8 @@
     "privacyPrefix": "I have read the",
     "privacyLinkLabel": "privacy notice",
     "listOptIn": "I want to appear on the participant list",
+    "listSocials": "Also show my Strava and Instagram beside my name on the list",
+    "listSocialsHelp": "Only together with the tick above, that you want to appear on the list. Take them off at any time from “My registrations”, by deleting your Strava and Instagram or by leaving the list.",
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
@@ -5094,6 +5114,7 @@
       "privacy": "Privacy"
     },
     "socialsHelp": "Optional. Used only to follow you and tag you in the club's posts; a tag is public on that network. Never shown on the site. You can delete them at any time from “My registrations”.",
+    "socialsHelpList": "Optional. Used to follow you and tag you in the club's posts; a tag is public on that network. On the site they appear only if you tick, further down, to show them beside your name on the participant list. You can delete them at any time from “My registrations”.",
     "stravaUrl": "Your Strava profile (link)",
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",

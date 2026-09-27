@@ -19,7 +19,7 @@ vi.mock("next/cache", () => ({
 const { FAILURE_MEMO_MS, creditCacheKey, forgetTranslationCredit, readTranslationCredit } = await import("@/modules/translate/credit");
 
 /**
- * §NNN — the DeepL credit read from DeepL's own meter (`GET /v2/usage`) as the one-time credit it
+ * §497 — the DeepL credit read from DeepL's own meter (`GET /v2/usage`) as the one-time credit it
  * is: used, left, and four levels (ok, watch at 80 %, low at 95 %, spent), against a fake `fetch`
  * so no request leaves a test.
  */
@@ -37,7 +37,7 @@ function fakeFetch(answer: () => Response) {
 
 const usage = (body: unknown, status = 200) => () => new Response(JSON.stringify(body), { status });
 
-describe("§NNN the credit's levels", () => {
+describe("§497 the credit's levels", () => {
   it("is ok under 80 %, watch from 80 %, low from 95 %, spent at nothing left", () => {
     expect(CREDIT_WATCH_SHARE).toBe(0.8);
     expect(CREDIT_LOW_SHARE).toBe(0.95);
@@ -68,7 +68,7 @@ describe("§NNN the credit's levels", () => {
   });
 });
 
-describe("§NNN DeepL's usage endpoint", () => {
+describe("§497 DeepL's usage endpoint", () => {
   it("asks GET /v2/usage on the key's own host, with the key in the header, and reads the two counts", async () => {
     const { calls, fetchImpl } = fakeFetch(usage({ character_count: 1234, character_limit: 1_000_000 }));
     expect(await readDeeplUsage({ apiKey: "abc:fx", fetchImpl })).toEqual({ used: 1234, limit: 1_000_000 });
@@ -109,7 +109,7 @@ describe("§NNN DeepL's usage endpoint", () => {
   });
 });
 
-describe("§NNN the credit reading the pages share", () => {
+describe("§497 the credit reading the pages share", () => {
   const configured = { TRANSLATE_PROVIDER: "deepl" as const, DEEPL_API_KEY: "abc" };
 
   it("reads the credit through the reader, and says `unconfigured` without asking when there is no key", async () => {

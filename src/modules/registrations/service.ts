@@ -16,7 +16,7 @@ import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/module
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, ensureProvisionalBibNumber, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
-import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -1189,6 +1189,18 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const legalName = composeLegalName(input.firstName, input.lastName);
   const healthNotes = input.healthConsent && input.healthNotes ? input.healthNotes : null;
   const minor = Boolean(input.birthDate && isMinorOn(input.birthDate, now));
+  const stravaUrl = minor ? null : (input.stravaUrl ?? null);
+  const instagramHandle = minor ? null : (input.instagramHandle ?? null);
+  /*
+    The socials beside the name on the public list (§500), kept only when every condition holds:
+    the runner ticked it; ticked the list too (a tick about a list they are not on is about
+    nothing); has a Strava link or an Instagram username to print (so never a minor, §323); and the
+    privacy notice this registration records — the one they were just given, in their language —
+    names `{{participantListSocials}}`, so the consent is always to a text that described it. The
+    public list asks again, of the notice in force, before it prints anything.
+  */
+  const listSocials =
+    input.listSocials && !input.listOptOut && (stravaUrl !== null || instagramHandle !== null) && describesListSocials(privacyNotice.body);
   const details: RegistrationEntryDetails = {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -1225,8 +1237,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       Minor on the day of registering, as the guardian rule above: that is when the consent
       would be given, and a runner under eighteen at the race is under eighteen today too.
     */
-    stravaUrl: minor ? null : (input.stravaUrl ?? null),
-    instagramHandle: minor ? null : (input.instagramHandle ?? null),
+    stravaUrl,
+    instagramHandle,
+    // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
+    listSocials,
     clubMemberDeclared: input.clubMemberDeclared,
     tshirtSize: input.tshirtSize,
     healthNotes,

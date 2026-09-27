@@ -75,7 +75,7 @@ describe("§384 ToastProvider", () => {
     expect(region).toMatch(/<IconButton aria-label=\{closeLabel\}[\s\S]*?sx=\{\{ minWidth: 44, minHeight: 44 \}\}>/);
     expect(source).toContain('closeLabel={t("close")}');
     expect(region).toMatch(/if \(reason === "clickaway"\) return;/);
-    // A notice may name its own duration (the translate press's 8 s, §NNN); every other one is the default.
+    // A notice may name its own duration (the translate press's 8 s, §496); every other one is the default.
     expect(region).toContain("autoHideDuration={toast.autoHideMs ?? TOAST_AUTO_HIDE_MS}");
     // And the clock runs even while another window has the focus.
     expect(region).toContain("disableWindowBlurListener");
@@ -84,7 +84,7 @@ describe("§384 ToastProvider", () => {
     expect(source).toMatch(/<ToastRegion\s+toast=\{current \?/);
   });
 
-  it("sits at the top, under the sticky header, clear of the footer's bar and the editor's sticky save row (§NNN)", () => {
+  it("sits at the top, under the sticky header, clear of the footer's bar and the editor's sticky save row (§496)", () => {
     expect(region).toContain("anchorOrigin={TOAST_ANCHOR}");
     expect(region).not.toMatch(/bottom: \{/);
   });

@@ -46,7 +46,7 @@ const LABELS = {
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
-  // The version line under each title and in every footer (§NNN): the day as an ISO date, so a test reads it plainly.
+  // The version line under each title and in every footer (§499): the day as an ISO date, so a test reads it plainly.
   versionInForce: (version: number, effectiveAt: Date) => `Versiunea ${version}, în vigoare din ${effectiveAt.toISOString().slice(0, 10)}`,
   signedWhen: (when: string) => `semnată ${when}`,
   generatedOn: "Generat",

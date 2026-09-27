@@ -23,7 +23,7 @@ export const TOAST_TOP_PX = HEADER_CLEARANCE_PX;
  * a region inserted already holding its sentence is one many screen readers never announce,
  * while a change inside a region they already know is. Nothing steals the focus.
  *
- * **Where it sits.** At the top, centred, just under the sticky site header (§NNN; the owner,
+ * **Where it sits.** At the top, centred, just under the sticky site header (§496; the owner,
  * 2026-09-27: «toast-urile trebuie să apară în partea de sus») — where the eye is after a press
  * at the top of an editor, and away from the footer's sticky bar and the event editor's sticky
  * save row at the bottom: the toast never covers the primary button of the form that produced it
@@ -58,7 +58,7 @@ export default function ToastRegion({
             onDismiss();
           }}
           anchorOrigin={TOAST_ANCHOR}
-          // At the top (§NNN), just under the sticky site header — the one pair the theme's
+          // At the top (§496), just under the sticky site header — the one pair the theme's
           // `scroll-padding-top` also reads (`HEADER_CLEARANCE_PX`) — so it never covers the
           // header's way out, nor the footer's bar or the editor's sticky save row at the bottom.
           sx={{ top: { xs: TOAST_TOP_PX.xs, sm: TOAST_TOP_PX.sm } }}

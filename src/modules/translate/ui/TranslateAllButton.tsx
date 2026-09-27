@@ -35,7 +35,7 @@ import { useTranslatePress } from "./use-translate-press";
  * **Always there** (§482) for a role that writes the club's words: a deployment with no DeepL key
  * draws it greyed, with the sentence saying why and, for a reader who may open the tasks page,
  * the link to the row with the steps — a missing button is one nobody can find. A key whose DeepL
- * credit is spent (§NNN) draws it greyed the same way, saying so and linking Costuri. A role that
+ * credit is spent (§497) draws it greyed the same way, saying so and linking Costuri. A role that
  * writes no words sees nothing.
  *
  * Inside the form it reads, so it finds the boxes by the form they post in.

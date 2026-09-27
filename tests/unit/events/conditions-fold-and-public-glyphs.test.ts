@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 import { BUTTON_GLYPH_PX } from "@/shared/ui/button-glyph";
 
 /**
- * §NNN — the owner, 2026-09-27, of the group run's sign button on the event page: "that button
+ * §498 — the owner, 2026-09-27, of the group run's sign button on the event page: "that button
  * needs to be smaller an have an icon (as do all the butons from this website)", and the brief
  * around it: the rules, the photographs notice and the self-declaration under one closed
  * «Condiții de participare» fold, the declaration's heading without «(opțional)».
@@ -22,7 +22,7 @@ const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 const PAGE = read("src/app/[locale]/events/[slug]/page.tsx");
 const OFFER = read("src/modules/group-run-declarations/ui/DeclarationOffer.tsx");
 
-describe("§NNN «Condiții de participare»", () => {
+describe("§498 «Condiții de participare»", () => {
   const fold = PAGE.slice(PAGE.indexOf('data-testid="conditions-fold"'), PAGE.indexOf("<OpenFoldFromHash />"));
 
   it("is one closed native fold after the programme and before the start list, titled by a real h2 in its summary", () => {
@@ -90,7 +90,7 @@ describe("§NNN «Condiții de participare»", () => {
  *
  * `PUBLIC_FILES` is kept by hand, and it is the thing to extend: a public component added outside
  * `events/ui` — the contact form, the gallery, the team page, the newsletter — joins the walk only
- * when its file is named here (a grep of the other modules on §NNN's day found backoffice buttons
+ * when its file is named here (a grep of the other modules on §498's day found backoffice buttons
  * alone).
  */
 const PUBLIC_ROOTS = ["src/app/[locale]", "src/modules/events/ui"];
@@ -166,7 +166,7 @@ function buttonsWithoutGlyph(file: string): string[] {
   return found;
 }
 
-describe("§NNN every public button wears a glyph", () => {
+describe("§498 every public button wears a glyph", () => {
   const files = [...PUBLIC_ROOTS.flatMap(tsxUnder).filter((file) => !BACKOFFICE.test(file)), ...PUBLIC_FILES];
 
   it("walks the public pages' buttons", () => {

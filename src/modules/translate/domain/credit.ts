@@ -1,5 +1,5 @@
 /**
- * The DeepL credit, read as the one-time credit it is (§NNN).
+ * The DeepL credit, read as the one-time credit it is (§497).
  *
  * §464 and §479 assumed DeepL API Free: 500 000 characters a month, spent and renewed on the
  * first. The key the club put on both deployments on 2026-09-27 is DeepL's Developer plan, whose
@@ -55,7 +55,7 @@ export function creditAllows(credit: TranslationCredit, asked: number): boolean 
 }
 
 /**
- * Whether a credit reading says the key can translate nothing (§NNN): DeepL's meter at 100 %
+ * Whether a credit reading says the key can translate nothing (§497): DeepL's meter at 100 %
  * (`spent`), or the usage read itself answered 456 (`quota`) — DeepL's own word that the credit
  * is gone, even without figures. The editors grey the whole-record button and hide the per-box
  * ones on either. Any other unread answer is not a spent credit: the buttons stay and the
@@ -65,11 +65,11 @@ export function creditIsSpent(reading: { ok: true; credit: TranslationCredit } |
   return reading.ok ? reading.credit.level === "spent" : reading.reason === "quota";
 }
 
-/** What `/api/health` publishes about the credit (§NNN): a word and a note, never a figure. */
+/** What `/api/health` publishes about the credit (§497): a word and a note, never a figure. */
 export type CreditHealth = { level: CreditLevel | "unknown" | "unconfigured"; note: string | null };
 
 /**
- * The credit as `/api/health` says it (§NNN, after §335 and §447): the level only — the used and
+ * The credit as `/api/health` says it (§497, after §335 and §447): the level only — the used and
  * left characters are the club's own account figures and belong on Costuri, not on a public,
  * unauthenticated answer — and a note once the credit is low or spent, so a monitor's log shows
  * why translation stopped. It never changes the endpoint's status: translation stops nothing a

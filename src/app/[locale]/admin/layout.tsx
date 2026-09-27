@@ -81,7 +81,7 @@ export default async function AdminLayout({ children, params }: Props) {
   const messages = await getMessages({ locale });
   // Who translates, and whether this deployment can (§464, §482). Without a key the steps are
   // on «Sarcini» → «Club», linked only for a role that may open that panel. A key whose one-time
-  // DeepL credit is spent (§NNN, DeepL's own meter, cached an hour) offers nothing either: the
+  // DeepL credit is spent (§497, DeepL's own meter, cached an hour) offers nothing either: the
   // whole-record button greyed with «Creditul DeepL s-a terminat — vezi Costuri», no per-box one.
   // Spent is the meter at 100 % or the usage read answered 456 (`creditIsSpent`); any other
   // unread credit is not a spent one: the buttons stay and DeepL's own answer decides.

@@ -64,7 +64,7 @@ describe("§482 the whole-record button is always there for a role that writes w
     expect(render(createElement(TranslateAllButton), null)).toBe("");
   });
 
-  // §NNN: a key whose one-time DeepL credit is spent is offered as no key is — greyed, saying so.
+  // §497: a key whose one-time DeepL credit is spent is offered as no key is — greyed, saying so.
   it("is drawn disabled when the DeepL credit is spent, linking Costuri, with no per-box button", () => {
     const spent: TranslateOffer = { action: null, setupHref: "/ro/admin/tasks#task-translation", spent: true, costsHref: "/ro/admin/tasks?panel=costs" };
     for (const locale of ["ro", "en"] as const) {

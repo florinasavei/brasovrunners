@@ -164,7 +164,7 @@ describe("§440 the age gate: one rule, the race's", () => {
   });
 
   /*
-    §NNN: the box starts at the club's minimum for a race, which binds nobody on an adults-only
+    §495: the box starts at the club's minimum for a race, which binds nobody on an adults-only
     declaration. The help leads with that — the number shown does nothing at 18 or below — and
     names neither the starting number (a constant that may change) nor anything but 18, the
     declaration's own age, and an example above it.

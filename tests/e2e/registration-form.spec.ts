@@ -1160,7 +1160,7 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
     }
   });
 
-  // §NNN: the rules sit in «Condiții de participare», closed on arrival — and `#rules`, the anchor
+  // §498: the rules sit in «Condiții de participare», closed on arrival — and `#rules`, the anchor
   // every email, the calendar entry and this form link to (§81, §392), lands on the fold open.
   test("an address naming #rules arrives with «Condiții de participare» open and the rules shown", async ({ page }) => {
     test.setTimeout(test.info().timeout + 120_000);

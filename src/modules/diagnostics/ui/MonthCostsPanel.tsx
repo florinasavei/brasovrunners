@@ -108,7 +108,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
     if (u.state === "over") parts.push(t(`tasks.month.over.${line.id}`));
     if (line.detail?.kind === "deployments") parts.push(t("tasks.month.detail.deployments", { count: format.number(line.detail.count) }));
     if (line.detail?.kind === "storageGb") parts.push(t("tasks.month.detail.storageGb", { gb: format.number(line.detail.gb, { maximumFractionDigits: 2 }) }));
-    // DeepL's credit, from DeepL's own meter (§NNN): given once, so used and left, never "a month".
+    // DeepL's credit, from DeepL's own meter (§497): given once, so used and left, never "a month".
     if (line.detail?.kind === "credit") {
       const credit = line.detail;
       parts.push(

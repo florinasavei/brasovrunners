@@ -184,7 +184,7 @@ describe("one line per provider that bills or meters something", () => {
     expect(line(facts({ domain: { ...due, expiresOn: null } }), "domain")).toMatchObject({ renewsOn: null, projectedUsd: 0 });
   });
 
-  it("DeepL (§NNN): free, the month's characters with no monthly ceiling — the key's allowance is a one-time credit", () => {
+  it("DeepL (§497): free, the month's characters with no monthly ceiling — the key's allowance is a one-time credit", () => {
     const deepl = line(facts(), "deepl");
     expect(deepl).toMatchObject({ billing: "free", soFarUsd: 0, projectedUsd: 0, detail: null, severity: "ok" });
     expect(deepl.usage).toMatchObject({ unit: "characters", ceiling: null, ceilingKind: null, state: "ok" });
@@ -192,7 +192,7 @@ describe("one line per provider that bills or meters something", () => {
     expect(line(facts({ deepl: { charactersThisMonth: 900_000 } }), "deepl").usage?.state).toBe("ok");
   });
 
-  it("DeepL's credit (§NNN): used and left from DeepL's meter, the level is the line's severity", () => {
+  it("DeepL's credit (§497): used and left from DeepL's meter, the level is the line's severity", () => {
     const at = (used: number) => line(facts({ deeplCredit: { expected: true, credit: translationCredit({ used, limit: 1_000_000 }) } }), "deepl");
     expect(at(0)).toMatchObject({ severity: "ok", detail: { kind: "credit", used: 0, limit: 1_000_000, remaining: 1_000_000, level: "ok" } });
     expect(at(799_999).severity).toBe("ok");

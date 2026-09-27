@@ -656,8 +656,8 @@
     {
       "idx": 93,
       "version": "7",
-      "when": 1790520267786,
-      "tag": "0096_registration_country",
+      "when": 1790513812655,
+      "tag": "0096_list_socials",
       "breakpoints": true
     }
   ]

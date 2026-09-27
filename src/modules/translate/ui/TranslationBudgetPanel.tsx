@@ -22,7 +22,7 @@ type Props = {
   usedToday: number;
   /** Is a translator configured here (`TRANSLATE_PROVIDER` and `DEEPL_API_KEY`)? */
   configured: boolean;
-  /** DeepL's credit from its own meter (§NNN): given once, so used and left, with its level. */
+  /** DeepL's credit from its own meter (§497): given once, so used and left, with its level. */
   credit: CreditReading;
   mayEdit: boolean;
 };
@@ -33,7 +33,7 @@ const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.
  * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §464), beside the
  * other brakes on Costuri and built like them (`JobCadencePanel`): one form, the service asserting
  * the role and writing the audit row, a refusal handed back as the form's state (§315), one
- * question first (§384). It says what is spent today, what is used and left of the key's one-time DeepL credit (§NNN, DeepL's own figure), and that
+ * question first (§384). It says what is spent today, what is used and left of the key's one-time DeepL credit (§497, DeepL's own figure), and that
  * only the club's own texts are ever sent.
  */
 export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, credit, mayEdit }: Props) {
@@ -52,7 +52,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="translation-budget-today">
         {t("tasks.translationBudget.today", { used: number(usedToday), budget: number(state.budget.dailyCharacters) })}
       </Typography>
-      {/* The credit, as DeepL's own meter states it (§NNN): the daily figure above is the club's brake, this is what is left at all. */}
+      {/* The credit, as DeepL's own meter states it (§497): the daily figure above is the club's brake, this is what is left at all. */}
       {credit.ok ? (
         <Typography variant="body2" color={CREDIT_COLOR[credit.credit.level]} sx={{ mt: 0.5 }} data-testid="translation-credit" data-level={credit.credit.level}>
           {t("tasks.translationBudget.credit.line", {

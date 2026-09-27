@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.10-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.11-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -19124,3 +19124,241 @@ The V2.03 landing let several behaviour nits into the queue. This change fixes t
 Not done: a two-connection proof of the alert lock in tests/concurrency. The PGlite test proves the re-check under serialisation. It does not prove that the row lock blocks a second connection.
 
 Baseline `BR-V2.10-2026-09-27`.
+
+## 494. The film's old columns leave the database: contract migration 0095 (completes §491)
+
+**What.** Migration `0095_film_columns_dropped` is the contract §491 promised for the release after BR-V2.10. It does three things and nothing else: `ALTER TABLE "events" DROP CONSTRAINT "events_video_url_is_https"`, then `DROP COLUMN "video_url"` and `DROP COLUMN "video_poster_url"`. It carries a `-- contract:` note naming the release that stopped declaring them (AGENTS.md §7.6, the §390 pattern).
+
+**Why now and not before.** BR-V2.08 stopped reading and writing the columns once migration 0092 moved every film into its description (§481). BR-V2.10 stopped *declaring* them in the Drizzle schema, so its bare `select().from(events)`, `.returning()` and `insert(events)` no longer name them. On a deployed environment the old release serves while the gated migration runs. From BR-V2.11 on, that old release is BR-V2.10, which names neither column, so the drop breaks nothing that can still be serving.
+
+**What it means for a rollback.** Once 0095 has run, a rollback can go back only to BR-V2.10, not to BR-V2.09 or earlier. Those releases declared the columns, and every insert and bare select of `events` they make would fail.
+
+**How it was made.** It follows the `docs/DEVELOPMENT.md` recipe:
+1. `yarn db:generate` wrote the file as `0092_*`, because it numbers by entry count.
+2. The file, its snapshot and its journal tag were renamed to 0095, and `git restore` brought back the 0092 snapshot it had overwritten.
+3. A second generate answers "No schema changes, nothing to migrate". The schema and the snapshot agree again, so §491's one-release exception in the recipe is over.
+
+The journal `when` sorts after 0094's, and the snapshot's `prevId` is 0094's id, so `tests/unit/db/migration-chain.test.ts` holds.
+
+**Proof (PGlite, `tests/integration/db/film-into-description-migration.test.ts`).** The same rows are written before 0092 and then migrated in release steps:
+- **Through 0094:** both columns and their CHECK are still there, and an insert naming them is still accepted.
+- **Then 0095:**
+  - both columns and the CHECK are gone;
+  - the event count is the same;
+  - every description and version is as 0092 left it;
+  - an insert of this schema's shape is accepted, and one naming `video_url` is refused.
+- **The file itself:** a `-- contract:` line and exactly the three drops, right after 0094 in the journal.
+
+`tests/unit/content/create-page.test.ts` still refuses any other migration after 0092 that names the columns.
+
+**What stays.** No application code changed, no new dependency, no new message key.
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 495. The rest of the V2.03 queue — five small leftovers
+
+The review nits the V2.03 landing accepted into its queue, fixed together. None of them changes a rule. Each one corrects a sentence, a latch or a test against the decision it belongs to.
+
+**Save fallback (§436).** The «already saved» sentence spoke of a confirmation that a blocked save never shows. It now says the save may have arrived, and to check the page in a new tab before trying again. The failed-button sentence no longer claims nothing was sent: a request the network cut may still have reached the server. The admin layout draws the «tried the simple way» line, and Next never re-renders a layout on a client navigation, so its `shown` stayed true on every page clicked to afterwards. The line now remembers the path it first rendered on. The first time the path differs it latches itself gone, so a later return to that path (Back, or a link to the same page) does not draw it again. The latch is set while rendering, React's own "adjust state when a prop changes" pattern, not in an effect.
+
+**Uploads (§437).** The album uploader clears the stored facts per file, so a failed last photo never sits under the previous photo's facts. Both upload routes' `maxDuration` notes count «Originală»'s encodes.
+
+**24-hour walk (§439).** The source walk reads a call's arguments up to that call's own closing parenthesis, and it checks every object literal that carries a string `hour`. That catches options held in a variable and a shorthand `{ hour }`. The editor's night line and its programme rows now read a typed time as the box will post it, through `readTypedTime` in `shared/forms/pickers/wall-values.ts`. The series sentence already reads it that way, so the two live readers agree before the box is left. `readTypedTime` lives beside `normalizeTypedTime`, not in `src/i18n/dates.ts`: `dates.ts` formats times, and this function parses one.
+
+**Race-day guide (§441, §444).** The desk steps name «Numărul dat acum» and the spare pile. The Administrator gets a task for printing spares and the Organizer a reprint step. The desk page's how-to says the same, and the guide tests cite BR-REQ-060-01 criterion 38.
+
+**Group-run minimum age (§440).** The editor help starts by saying that an age of 18 or less changes nothing. A refusal of the age names the group run's own box in «Traseul», not the race's hidden one.
+
+No migration, no new dependency.
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 496. Toasts at the top, and a toast for every outcome of the translate press
+
+The owner, 2026-09-27: «Am nevoie de un toast de confirmare că s-a tradus tot, și toast-urile trebuie să apară în partea de sus».
+
+**Where a toast sits.** The one `ToastRegion` is used for backoffice toasts (§384) and public flashes (§427). It is now anchored at the top centre, just under the sticky site header, instead of above the footer's bar at the bottom. There it covers neither the footer's bar nor the event editor's sticky save row. The offset is `HEADER_CLEARANCE_PX` in `theme/brand.ts`: 72 px on a phone, 76 px from `sm`. The theme's `scroll-padding-top` reads the same constant, so the two cannot drift apart. The environment notice sits above the header and does not stick. So on QA, at the very top of a page, a toast may overlap the header's lower edge by that notice's height. We accept this: the notice scrolls away, and production does not show it.
+
+**The translate press says what happened in a toast.** Before this change, «Copiază și tradu tot» (§464) wrote its outcome only in the line under its button, which a long editor scrolls out of sight. Now the press also shows a toast for every outcome:
+- **It worked.** The toast gives the number of English boxes filled, counted through `countForm` with three plain keys (never an ICU plural, §341): «Gata: N câmpuri traduse din română în engleză. Verifică textele și apasă Salvează.» A second wording applies when some texts were cut at their box's limit. The cut names stay in the line under the button.
+- **It was refused.** The toast repeats the line's own `Translate.refusal.*` sentence, already translated. Today's budget, DeepL's monthly credit, the hourly rate and "nothing written in Romanian yet" are limits that will lift, so they show as a warning. A refused key or a failed request shows as an error.
+
+A single box's «Tradu din română» that worked shows a short «Tradus. Verifică și apasă Salvează.». Its refusal stays in the line beside the box, where the reader is already looking.
+
+**Duration.** The translate press's toasts stay 8 s, because they name a count and ask for a check before Save. Every other toast still stays 5.5 s. A notice may carry its own `autoHideMs`.
+
+**The exception to "a refusal is never a toast".** The translate press is the only place a refusal becomes a toast. It has no §47 summary to land on, and it saves nothing. The notice's pre-translated `sentence` is set only in the browser. A flash never carries it: `decodeFlash` still accepts only `success` and `info`.
+
+The outcome of a press is one pure function, `pressFeedback`, which is unit-tested for each reason.
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 497. The DeepL key is a one-time credit, read from DeepL's own meter
+
+**What changed.** §464 and §479 assumed DeepL API Free: 500,000 characters a month, renewed on the first. On 2026-09-27 the owner sent a screenshot of deepl.com's pricing page («One-time credit of 1 million characters»). The key the club put on both deployments answers `GET /v2/usage` with `{character_count: 0, character_limit: 1000000}`: a credit given once, which no month refills. The club uses free tiers only, so a paid plan such as Growth is out of the question without the owner's explicit yes. Our old figures said two wrong things: that the allowance comes back, and that half a million is the ceiling.
+
+**The figure is DeepL's own.** `readDeeplUsage` asks `GET /v2/usage` on the key's own host, with a 5 s timeout and `no-store`. A 456 maps to `quota`, and an answer of the wrong shape is refused. `readTranslationCredit` caches the answer an hour in Next's data cache, like the other provider reads (§402, §479). The cache key names the kind of host, never the key itself. The cache is expired after every press that actually reached DeepL; a press refused before any request leaves it alone. A failed read is not stored in the data cache, but it is remembered for a minute per server instance, so an unreachable DeepL does not add its timeout to every backoffice page.
+
+**Four levels, pinned by tests** (`domain/credit.ts`, pure):
+- `ok` under 80 % used;
+- `watch` from 80 %;
+- `low` from 95 %;
+- `spent` when nothing is left (a limit of 0 or an overrun counts as spent).
+
+**Where the credit shows:**
+- **Costuri → «Luna aceasta»:** the DeepL line has no monthly ceiling any more. It shows used, limit, remaining and percent. `low` and `spent` are «act», `watch` is «watch», and a key whose credit could not be read is «nu știm», never green.
+- **The translation panel:** the same figures. `watch` is amber, and `low` and `spent` are red.
+- **`/admin/tasks` → the translation row:**
+  - it shows «Folosite N din M caractere», what is left and the percent;
+  - `low` reopens the row with the steps for a new credit or key;
+  - `spent` turns it red;
+  - an unread credit shows «—» with the reason: a refused key or a 456 is red, and a DeepL that did not answer leaves the row as it was.
+- **`/api/health`** (after §335 and §447): the level, plus a note once the credit is low or spent. It shows no figure, because used and left are the club's account figures and belong on Costuri. It does not change the status either: translation stops nothing a visitor or runner needs.
+- **The editors** (after §482): when the credit is spent, «Copiază și tradu tot: RO → EN» stays visible but disabled, with «Creditul DeepL s-a terminat — vezi Costuri». The link is there only for a role that may open Costuri. The per-box buttons are hidden, exactly as when no key is set. An unread credit is not treated as spent: the buttons stay, and DeepL's own answer decides.
+
+**The press.** The service asks for the credit before it sends anything. A spent credit is refused as `quota` with no request to DeepL. A press larger than what is left is refused as `credit`, and the refusal says how many characters remain.
+
+**The daily budget stays.** It is the club's own brake. Its ceiling is now named for what it is, `TRANSLATION_DAILY_CEILING_CHARACTERS`, and stays at 500,000; it is a limit on the setting, not a provider's figure.
+
+**Amends** §464 (the allowance and its wording), §479 (Costuri's DeepL line) and §482 (the greyed button gains a spent state).
+
+The /admin/tasks translation row follows the same two thresholds as Costuri. At 80 % of the credit (`watch`) it is amber, with its own sentence and the steps for a new credit or key; at 95 % (`low`) and when spent it is red. Costuri's line reads `watch` from 80 % and `act` from 95 %.
+
+A credit counts as spent for the editors' buttons in two cases: DeepL's meter reads 100 %, or the usage read itself answered HTTP 456 (`creditIsSpent`). In either case the whole-record button is greyed with the spent reason and the per-box buttons are hidden. Any other unread answer is not spent: the buttons stay, and DeepL's answer to the press decides.
+
+The cached credit is keyed by the host kind and the first eight hex characters of the key's SHA-256, never by the key itself. The reason is that Vercel's data cache outlives a redeploy, so a replaced key of the same kind would otherwise keep the old key's «spent» reading for up to an hour.
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 498. «Condiții de participare»: the rules, the photographs notice and a group run's self-declaration in one closed fold; every public button wears a glyph
+
+**The owner, 2026-09-27, 15:35–15:50**, in three messages about the group run's sign button on the event page. The declaration is recommended, and for a trail run the mountain rescue asks for it. The button is too big. «that button needs to be smaller an have an icon (as do all the butons from this website)».
+
+**What changed on the event page.**
+- **One fold.** Everything that sets out the terms of taking part now sits in one native `<details>` right after the programme and before the start list: «Condiții de participare» in Romanian, "Participation rules" in English.
+- **What is inside, in this order:** the rules (`#rules`), the photographs notice (§421) and a group run's self-declaration (`#declaratie`, §393).
+- **Closed on arrival.** The fold opens when the address names `#rules` or `#declaratie`. The browser's own reveal of an ancestor `<details>` does it on a full navigation. `OpenFoldFromHash` (§336) is mounted with the fold for browsers that do not, and for the registration form's client-side link to `#rules`.
+- **Headings.** The fold's title is a real `h2` inside the `<summary>`, so it stays in a screen reader's list of headings while the fold is shut. The parts are `h3`s.
+- **Never empty.** Every event page has the fold, because the photographs notice is on all of them.
+- **Links.** The emails, the calendar entry and the form keep linking `#rules` (§81, §392), and the editor's page map is unchanged.
+
+**The self-declaration asks plainly.**
+- The heading drops «(opțional)».
+- The line drops «Dacă vrei» / "If you wish". It now reads «Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o șterge la {days} după alergare.» and "Sign the self-declaration for this run: you get it by email, and the club's platform deletes it {days} after the run."
+- The button is outlined and MUI `size="small"`, which is how «mai mic» is read here: the old button was already MUI's default medium and read big because of its long label. It says «Semnează declarația» / "Sign the declaration" with a pen glyph (`Draw`), and it is still a thumb's 44 px tall (BR-REQ-041-01 criterion 6).
+- The race's declaration and its read gate (§422) are unchanged.
+
+**Every public button wears a glyph.** Each glyph is its own `@mui/icons-material` file, never the backoffice registry of §318, which stays admin-only.
+- **Server Components:** the icon is drawn as the button's first child, sized by `button-glyph.ts` like MUI's start-icon slot. `children` is the one slot an element may cross into a client component through (§370).
+- **SubmitButton:** takes the glyph as `children` in MUI's start-icon slot, where the running figure replaces it while a send is in flight. Send buttons that had the runner keep it.
+- **Client files:** use `startIcon`.
+- **Buttons covered:** the registration door (runner, hourglass, open-in-new), the capacity retry, «Aplică», the error, not-found and sign-in pages, and the registration flow's pages (register, family, declare, list, manage, mine, resend). Also the newsletter's confirm and manage pages and its pop-up, ActionLinkNotice, CheckYourEmail, ConfirmOnArrival, EmailTwice, ReadAndAgree's dialog and NewBuildNotice.
+- **Two named exceptions:** the race's conditions row (§422), whose required checkbox is its picture, and the header's «Meniu ▾» / ☰, which draws its glyph in text.
+- **The check:** a unit test reads the source of every public page and component and finds every Button, ButtonLink and SubmitButton without a glyph. Its hand-kept list of public component files is the thing to extend when a public component is added outside `events/ui`.
+
+**Amends** §71 and §96 (where the rules sit on the page), §393 (the self-declaration's place, heading, line and button), §401 (the page's folds) and §318 (glyphs on public buttons).
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 499. Every declaration document says which version it is
+
+The owner, 2026-09-27 15:55: «I need to show the version of the declaration in the documents».
+
+**What "the version" is.** The number and the day it took effect, as `/admin/legal` shows them. The PDFs and the two signing pages use the same words, the `Legal.inForce` line the terms page already carries (§323): «Versiunea N, în vigoare din sâmbătă, 12 sept. 2026» / "Version N, in force since Saturday, 12 Sept 2026". The day is read on the club's clock (§349) and carries its weekday.
+
+**Where it is said.**
+- **Every declaration PDF** (the runner's signed copy, the club's archive copy, the event's bundle, the blank form the desk prints, the group-run PDF, §393):
+  - Under each entry's title: the version line, followed by the first sixteen characters of the text's hash (§53).
+  - In every page's footer: the club, the version in force of the text on that page, and «semnată <when>», when that entry was signed. The blank form, which has no signature, says when it was drawn instead.
+  - A bundle holds entries of different versions, since a declaration signed before the club approved a new text keeps its own. Each page's footer therefore names its own entry's version, never the file's first.
+  - A page that travels alone still says which approved text it is: the second sheet of a printed form, one page of the bundle, a file a runner forwarded.
+  - The full hash stays under each signature block and in the file's metadata.
+- **Both signing pages** (the race's, from the email link, and the group run's) show the line over the text.
+- **The group-run declarations panel** says (vN) beside each signature.
+- **The registration's page** already said the declaration's date and (vN) beside §425's terms line.
+- **The export**, CSV and xlsx, gains «Declaration version» and «Declaration signed» after the terms columns (§425). They hold each registration's latest acceptance, fetched in one query. The xlsx writes both stamps on the club's clock (§439), the terms stamp beside them included, so two adjacent columns never read three hours apart.
+
+**What it is read from.** The acceptance row's `declarationVersion` (and `group_run_declarations.declarationVersion`) with the `legal_documents` row's `effectiveAt`. No migration.
+
+**What does not change.** PDFs already signed and sent are not regenerated. The line appears on every file drawn from now on, including a signed declaration re-downloaded from the backoffice.
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 500. Strava and Instagram beside a name on the public list, behind the notice and the runner's own tick
+
+**2026-09-27. Widens §106 and §396; follows §421's rule on consent.** The owner: "On the who's coming I want to show people's social as well, if they put that, like their Strava and Instagram."
+
+§106 kept the Strava link and the Instagram username off the site: the club uses them to follow runners back and tag them. The public list is a disclosure (§32). So this widens it the way §396 widened it for the states, and only in that way.
+
+**The gate.**
+- A new merge field, `{{participantListSocials}}`, is both the switch and the words (`describesListSocials`). It is filled with the form's own tick, quoted, from `Registration.listSocials` (`registrations/list-socials-words.ts`). The approved sentence therefore names exactly the box a runner ticks.
+- The list prints socials only while the privacy notice in force names the field in every language (`cachedListSocialsDisclosed`; `noticeDescribesListSocials` for the backoffice). With the gate off, no social is even selected.
+- The platform's privacy notice names the field in §4. Its §2 changes from "pe site nu le publicăm" to "le publicăm doar dacă alegi asta (secțiunea 4)". The terms name the field in their list sentence. The legal editor's legend lists it.
+- `/admin/tasks` carries `listSocialsNotice`: open, never blocking, and done once a notice naming the field takes effect.
+- `/admin/legal` says the same beside §396's `listStatesMissing`: an info line, `listSocialsMissing`, while a notice is in force that does not name the field.
+
+**The runner's own tick.**
+- «Arată și Strava și Instagram lângă numele meu pe listă — opțional» sits under «Vreau să apar». It is offered only while the gate is on. It is never folded (§59) and never pre-ticked.
+- It is hidden and disabled for a minor (`HiddenForMinor`).
+- It is also hidden and disabled until the Strava box or the Instagram box holds a value (`ShownWithSocial`, reading the two boxes the way `HiddenForMinor` reads the birth date). A tick with nothing to show is not asked.
+- Without JavaScript it is shown, because nothing typed is known there. The service drops it without a social anyway.
+- The help under it says only that it goes with the list tick, and how to take the socials off.
+- The label keeps the words «Arată și Strava și Instagram lângă numele meu pe listă» rather than «…și cu profilurile mele (Strava, Instagram)». It names both networks, and the notice quotes whatever the catalogue says.
+- `registrations.list_socials` is a boolean, NOT NULL, default false (expand-only migration `0096_list_socials`).
+- `submitRegistration` keeps the tick only when every condition holds:
+  - the runner ticked it;
+  - the runner ticked the list too;
+  - the runner is an adult with a Strava link or an Instagram username typed (§323 stores none for a minor);
+  - the privacy notice this registration records, in the runner's language, names the field.
+- So a `true` is always consent to a text that described it. §421's problem, a consent given under an older notice, cannot arise.
+- `withoutAnotherAdultsConsents` drops the tick on the family path, like the other consents another adult cannot give (§421).
+
+**What the list shows.**
+- `listPublicStartList` and `listPublicStartListOthers` take `{ socials }`. Without it, the select list is unchanged: `tests/privacy/public-surface.test.ts` still pins the keys. With it, `stravaUrl` and `instagramHandle` are added, each as `case when list_socials then … end`. A runner who did not tick never has either value leave the database.
+- A hidden ("Participant (nume ascuns)") row is never read, so it never has either value.
+- Named confirmed rows, and behind §396's gate the pending and waiting rows, carry the networks' marks (`SocialIcon`, as the footer and «Echipa» use).
+- The marks come right after the name and before the state word. On a phone the state word is a block of its own under the name (§396), so marks placed after it would sit alone on a third line. After the name, they stay on the name's line at every width.
+- Each mark is a 44-px link: `nofollow ugc`, a new tab, no referrer. Its accessible name is "{name} pe Strava" or "{name} pe Instagram".
+- A value is printed only if it is still one of the network's own addresses (`social-links.ts` re-checks `STRAVA_URL` and `INSTAGRAM_HANDLE`).
+- The note under the table gains one sentence.
+- The cache keys carry the flag.
+
+**Withdrawal.**
+- Leaving the list (`setListConsent(false)`) clears the tick for good. Coming back through that door puts the name back, but not the socials.
+- Deleting the socials from «Înscrierile mele» or the manage link (`clearOptionalData`) clears the tick with them, and expires the public cache («places»).
+- The cache is expired after the transaction commits, never inside it. A public read landing between an early expiry and the commit would cache the old row, socials and all, for the cache's life.
+
+**The backoffice.** The registration's page says «și pe lista publică, lângă nume». The export gains "Socials on the public list" ("Yes" or empty): last in the CSV, so no column moves, and beside Instagram in the spreadsheet, which is matched by header.
+
+**Tests.** The end-to-end proof lives in `tests/e2e/public-list-states.spec.ts`, not in `registration-form.spec.ts`. The tick exists only on an event with a list and under a notice that names the field; that spec seeds the one and holds the advisory lock on the other. It proves, with the markers:
+- the marks on ticked rows only, 44-px links with the right `rel` and target, on the name's line, nothing wider than 320 px;
+- the tick under «Vreau să apar», shown with a social and gone for a minor.
+
+And without the markers:
+- no link to either network anywhere on the list;
+- no tick on the form;
+- both warnings on `/admin/legal`.
+
+*Rejected:*
+- **Showing socials for everyone who typed them once the notice allows it.** Typing a handle for the club to tag you is not consent to publish it next to your name; the two purposes need two answers.
+- **A version gate like §421's `findFirstStatesNoticeVersion`.** It would be redundant: the tick is kept only under a notice that names the field.
+- **Socials for a minor.** None are kept (§323).
+- **The marks after the state word.** On a phone they would sit on a line of their own (see above).
+
+Migration: `0096_list_socials.sql` (expand).
+
+The public list prints a Strava link only when it is a profile on strava.com itself — `https://strava.com/…` or `https://www.strava.com/…`, athletes or pros — rewritten as `https://www.strava.com/<athletes|pros>/<id>`. The form still accepts the app's share links on `strava.app.link` for the club's own use (§106), and the backoffice and the export show them as typed. That host is a third party's deep-link and attribution redirector, though, so it is never printed beside a runner's name, and neither is an http address or any other host.
+
+The retention sweep that clears a minor's Strava and Instagram (§323, §324) also clears the public-list tick `list_socials` in the same statement. After the step commits it expires the public "places" tag whenever it cleared a row, so a cached start list cannot keep showing socials that are gone from the database.
+
+Baseline `BR-V2.11-2026-09-27`.
+
+## 501. Claude Code cloud sessions set themselves up, with local values only
+
+**Context.** The owner codes from a phone through Claude Code on the web while his PC is off. A cloud session starts from a fresh clone of this public repository. It has no `node_modules` and no `.env.local`, and PostgreSQL 16 is installed but stopped.
+
+**Decision.** `.claude/settings.json` has a `SessionStart` hook (matcher `startup|resume`) that runs `scripts/cloud-setup.sh`. The hook is guarded on `CLAUDE_CODE_REMOTE=true`, and the script checks the same guard again, so a session on the owner's Windows machine never runs it. The script is idempotent. It enables Corepack and runs `yarn install --immutable` and `yarn setup`. It starts the local PostgreSQL through the service, or Docker if there is no service. It creates the role and database `brasov_runners` with the password `local_only_not_a_secret`, the throwaway values `docker-compose.yml` already publishes, and skips either one if it exists. It writes `.env.local` from `.env.example` only when none exists, and sets only `APP_ENV=local`, `APP_BASE_URL=http://localhost:47821` and the local `DATABASE_URL`. It migrates, then runs `yarn db:seed` only while the events table is empty. The migrate and seed steps refuse any database that is not on localhost and any `APP_ENV` other than local or test. On PostgreSQL 16 it applies one transaction per migration: drizzle-kit's single transaction trips "unsafe use of new value" on an enum added and used in the same run, which PostgreSQL 17 accepts. `--force` runs the script on any Linux machine. It deliberately runs without `-e`, because its probes are meant to fail quietly and every required step ends in `|| fail`, which names the step and prints the log. `.gitattributes` pins `*.sh` to LF, and the file is executable.
+
+**What does not change.** A cloud session runs on local values only: email capture, the development staff switcher and the session's own database. No QA or production credential goes into the cloud environment or into the repository, and `yarn secrets:check` still guards the latter. Deploys and production migrations still go through a pull request into `qa`, the `qa → main` release and the gated migration workflow (§31). `docs/DEVELOPMENT.md` § Coding from the phone (Claude Code on the web) says the same to a reader.
+
+Baseline `BR-V2.11-2026-09-27`.

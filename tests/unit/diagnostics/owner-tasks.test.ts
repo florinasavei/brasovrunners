@@ -25,6 +25,7 @@ import {
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
+  listSocialsDescribed: true,
   newsletterDescribed: true,
   teamPageDescribed: true,
   legalTextIsSample: false,
@@ -81,6 +82,18 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §500 — Strava and Instagram beside a name wait on the club's notice, like the states; open, never blocking. */
+  it("keeps the list-socials row open while the notice in force does not describe them, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, listSocialsDescribed: false }, "listSocialsNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "listSocialsNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listSocialsNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.listSocialsNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -241,6 +254,7 @@ describe("owner tasks", () => {
     expect(clubOwned.map((task) => task.id)).toEqual([
       "approveLegalText",
       "listStatesNotice",
+      "listSocialsNotice",
       "newsletterNotice",
       "teamPageNotice",
       "liveEmail",
@@ -273,7 +287,7 @@ describe("owner tasks", () => {
     }
   });
 
-  // §NNN: the credit behind the key is given once — amber at 80 %, red at 95 % and when spent.
+  // §497: the credit behind the key is given once — amber at 80 %, red at 95 % and when spent.
   it("reads the DeepL credit: watch is amber, low and spent are red, each with its own sentence and steps", () => {
     const at = (used: number): OwnerTaskInputs["translationCredit"] => ({ ok: true, credit: translationCredit({ used, limit: 1_000_000 }) });
     const row = (reading: OwnerTaskInputs["translationCredit"]) =>

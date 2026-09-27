@@ -5,7 +5,7 @@ import { readTranslationUsageForEnvironment, type TranslateEnvironment } from "@
 import { type TranslationCredit, translationCredit } from "./domain/credit";
 
 /**
- * The DeepL credit as DeepL's own meter states it (§NNN), cached an hour in Next's data cache like
+ * The DeepL credit as DeepL's own meter states it (§497), cached an hour in Next's data cache like
  * the other provider reads (§402, §479) and expired after every press that reached DeepL — so
  * Costuri, the `/admin/tasks` row, `/api/health`, the editors' button and the press's own check
  * read one figure without asking DeepL on every page.

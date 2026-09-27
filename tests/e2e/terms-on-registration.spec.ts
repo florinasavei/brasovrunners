@@ -111,7 +111,7 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const response = await page.request.get(`/api/admin/registrations/export?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
       expect(response.status()).toBe(200);
       const [header, ...lines] = (await response.text()).split("\r\n");
-      // The terms' two columns, now followed by the declaration's two (§NNN).
+      // The terms' two columns, now followed by the declaration's two (§499).
       expect(header.split(",").slice(-4)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));

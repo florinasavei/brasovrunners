@@ -44,7 +44,7 @@ const LABELS = {
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
-  // The version line under each title and in every footer (§NNN): the day as an ISO date, so a test reads it plainly.
+  // The version line under each title and in every footer (§499): the day as an ISO date, so a test reads it plainly.
   versionInForce: (version: number, effectiveAt: Date) => `Versiunea ${version}, în vigoare din ${effectiveAt.toISOString().slice(0, 10)}`,
   signedWhen: (when: string) => `semnată ${when}`,
   // What declarationWords writes for NOW (§349): "pe" before a date that starts with its weekday.
@@ -283,7 +283,7 @@ describe("the club's declaration (§95)", () => {
 
     const all = await listSignedDeclarations(db, event.id);
     expect(all.map((s) => s.typedName)).toEqual(["Ana Popescu", "Ion Ionescu"]);
-    // The export's declaration columns (§NNN): each registration's latest acceptance, its version
+    // The export's declaration columns (§499): each registration's latest acceptance, its version
     // and moment; a registration with none is absent, which the file prints as two blanks.
     const latest = await listLatestDeclarationAcceptances(db, [first.id, second.id, "00000000-0000-4000-8000-000000000000"]);
     expect(latest.get(first.id)).toEqual({ version: 1, acceptedAt: NOW });
@@ -443,7 +443,7 @@ describe("the club's declaration (§95)", () => {
   });
 
   /**
-   * §NNN — every declaration document names its version in force: under each entry's title (with
+   * §499 — every declaration document names its version in force: under each entry's title (with
    * the start of its hash) and in the footer of every page, each page its own entry's version, a
    * signed page saying when it was signed and the blank form when it was drawn. What is drawn, not
    * only what is handed to the renderer: the runs are caught at pdfkit's `text()`.
@@ -526,7 +526,7 @@ function textLinesByPage(pdf: Buffer): Array<Array<[number, number]>> {
 }
 
 /**
- * A rendered declaration's runs as pages (§NNN): the version line under an entry's title, when the
+ * A rendered declaration's runs as pages (§499): the version line under an entry's title, when the
  * page opens one; the version of the entry the page belongs to (the last title at or before it);
  * and the footer's left line — the run on the footer's `y` that starts with the club's name.
  */
