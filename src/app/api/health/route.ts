@@ -285,6 +285,8 @@ export async function GET(): Promise<Response> {
       schema,
       jobs,
       // With its `gmail` block since §443: recipients against the cap and the last failure, no status of its own.
+      // With its `delivery` block since §NNN: the timing, the pending count, the promised wait and the
+      // outbox job's next expected tick — a queue waiting for the cron reads as that, not as a stall.
       email,
       // The monthly compute quota's early warning (§335): `percent: null` means nothing was
       // asked (no key, or Neon did not answer within the timeout) rather than "there is no

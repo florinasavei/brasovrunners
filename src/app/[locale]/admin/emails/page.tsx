@@ -50,6 +50,8 @@ import { canEditTexts, canManageClubSettings, canManageRegistrations, canReadReg
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
+import { readOutboxDelivery } from "@/modules/notifications/outbox-delivery";
+import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { countForm } from "@/i18n/count-form";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -138,7 +140,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress, deliveryTiming] = await Promise.all([
+  const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress, deliveryTiming, outboxDelivery] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
@@ -168,6 +170,12 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     readShownContactAddress(db),
     // «Când pleacă emailurile» (§NNN), in «Termene»: on the scheduler's tick or right after the request.
     readDeliveryTiming(db),
+    /*
+      What waits in the queue and when it next leaves (§NNN), for the forecast's first line and the
+      setting's own words: the pinger's cadence, the Administrator's interval and the governor's floor
+      (§447) — the budget's reading is this instance's memo, the same one /admin/tasks reads.
+    */
+    readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
   ]);
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
@@ -359,6 +367,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "deadlines" || saved === "addressCap" || saved === "deliveryTiming" }}
         addressCap={addressCap}
         deliveryTiming={deliveryTiming}
+        scheduledWait={outboxDelivery.scheduledWait}
       />
 
       {/*
@@ -371,6 +380,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         horizonDays={FORECAST_HORIZON_DAYS}
         clubCopies={notices ? notices.participants.bcc : null}
         roads={roadsByMessageType(transport, volume.gmailConfigured)}
+        delivery={outboxDelivery}
       />
 
       <ParticipantEmailsPanel

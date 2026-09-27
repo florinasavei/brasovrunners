@@ -382,7 +382,7 @@
         "title": "Declarație pe propria răspundere",
         "intro": "Pentru alergarea de grup {event}. Este opțională și nu te înscrie nicăieri: citește textul, completează mai jos și semnează.",
         "doneTitle": "Declarația a fost semnată",
-        "done": "Ți-am trimis-o pe email, în PDF. La alergare vii ca de obicei.",
+        "done": "Ți-o trimitem pe email, în PDF — pleacă prin coada de emailuri, de obicei în câteva minute, cel târziu la următoarea trecere programată. La alergare vii ca de obicei.",
         "closed": "Declarația nu se mai poate semna pentru această alergare.",
         "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
         "away": "Nu am putut ajunge la evidențele noastre chiar acum, așa că nu s-a semnat și nu s-a înregistrat nimic. Ce ai completat e mai jos — mai încearcă peste câteva minute.",
@@ -1372,7 +1372,7 @@
         "allowanceMonth": "planul {plan}: încă {remaining} luna aceasta",
         "allowanceNone": "planul {plan}, fără limită",
         "outcome": {
-          "update": "Emailuri „Detalii actualizate” puse la coadă: {queued}. Pleacă în câteva minute, fiecare în limba participantului.",
+          "update": "Emailuri „Detalii actualizate” puse la coadă: {queued}. Pleacă prin coada de emailuri — imediat sau la următoarea trecere programată, după «Când pleacă emailurile» din «Termene» — fiecare în limba participantului.",
           "none": "Nu a plecat niciun email: nu s-a schimbat locul, data și ora sau programul, iar mesajul pentru participanți era gol.",
           "cancelled": "Evenimentul a fost anulat. Emailuri „Eveniment anulat” puse la coadă: {queued}.",
           "cancelledQuiet": "Evenimentul a fost anulat. Participanții nu au fost anunțați, pentru că bifa era debifată.",
@@ -3654,7 +3654,7 @@
       },
       "forecast": {
         "title": "Următoarele emailuri automate",
-        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă pe loc. La sfârșit, newsletterele și anunțurile de eveniment nou deja puse în coadă pentru abonați, cu momentul în care pleacă.",
+        "intro": "Ce trimite platforma singură participanților în următoarele zile, eveniment cu eveniment: când, ce mesaj și câți îl primesc dacă ar pleca acum. Un mesaj pleacă la prima rulare a jobului după momentul arătat. Nu apar mesajele trimise de cineva din echipă (detaliile actualizate, anularea, mulțumirea de după cursă, mesajul organizatorilor) și nici răspunsurile la un clic al alergătorului (linkul de confirmare, confirmarea, lista de așteptare), care pleacă la următoarea trecere a cozii — sau pe loc, dacă «Când pleacă emailurile» din «Termene» e pe «Imediat după cerere». La sfârșit, newsletterele și anunțurile de eveniment nou deja puse în coadă pentru abonați, cu momentul în care pleacă.",
         "aside": {
           "one": "1 trimitere în următoarele {days} zile",
           "few": "{count} trimiteri în următoarele {days} zile",
@@ -3662,6 +3662,15 @@
         },
         "empty": "Nimic în următoarele {days} zile: nicio înscriere nu așteaptă un email automat.",
         "nextRun": "la următoarea rulare a jobului",
+        "queue": {
+          "one": "În coadă acum: 1 email.",
+          "few": "În coadă acum: {count} emailuri.",
+          "other": "În coadă acum: {count} de emailuri."
+        },
+        "tick": {
+          "scheduled": "Emailurile pleacă la trecerea programată (în cel mult {wait}); următoarea e așteptată pe la {at}.",
+          "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă; ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată, următoarea așteptată pe la {at}."
+        },
         "recipients": {
           "one": "1 destinatar acum",
           "few": "{count} destinatari acum",
@@ -3714,11 +3723,11 @@
       },
       "deliveryTiming": {
         "title": "Când pleacă emailurile",
-        "intro": "La trecerea programată (implicit), emailurile se adună în coadă și pleacă la următoarea verificare a platformei — pe producție la cel mult 15 minute ziua și o oră noaptea: trimiterea e eșalonată, limita zilnică se consumă previzibil, iar ce pune în coadă o singură înscriere pleacă împreună. «Imediat după cerere» le trimite în câteva secunde de la apăsare. Niciun email nu se pierde în niciun caz, iar «Trimite acum» golește coada oricând.",
+        "intro": "La trecerea programată (implicit), emailurile se adună în coadă și pleacă la următoarea verificare a platformei — pe acest site în cel mult {day} ziua și {night} noaptea: trimiterea e eșalonată, limita zilnică se consumă previzibil, iar ce pune în coadă o singură înscriere pleacă împreună. «Imediat după cerere» le trimite în câteva secunde de la apăsare. Niciun email nu se pierde în niciun caz, iar «Trimite acum» golește coada oricând.",
         "field": "Emailurile pleacă",
         "help": "Pagina de după formularul de înscriere, retrimiterea linkului și abonarea la noutăți îi spun persoanei cât poate dura.",
         "option": {
-          "scheduled": "La trecerea programată a platformei (recomandat)",
+          "scheduled": "La trecerea programată a platformei (în cel mult {wait}; recomandat)",
           "immediate": "Imediat după cerere"
         },
         "save": "Salvează trimiterea",
@@ -4630,9 +4639,9 @@
       "confirmBody": "Emailul pleacă acum prin coada de emailuri, fiecăruia în limba lui, și nu mai poate fi retras.",
       "confirmSend": "Trimite",
       "sent": {
-        "one": "Mesaj pus la coadă pentru {count} participant. Pleacă în câteva minute.",
-        "few": "Mesaj pus la coadă pentru {count} participanți. Pleacă în câteva minute.",
-        "other": "Mesaj pus la coadă pentru {count} de participanți. Pleacă în câteva minute."
+        "one": "Mesaj pus la coadă pentru {count} participant. Pleacă imediat sau la următoarea trecere programată, după «Când pleacă emailurile» din «Termene».",
+        "few": "Mesaj pus la coadă pentru {count} participanți. Pleacă imediat sau la următoarea trecere programată, după «Când pleacă emailurile» din «Termene».",
+        "other": "Mesaj pus la coadă pentru {count} de participanți. Pleacă imediat sau la următoarea trecere programată, după «Când pleacă emailurile» din «Termene»."
       },
       "sentTest": "Plus înscrieri de test: {test}.",
       "duplicate": "Mesajul acesta fusese deja trimis, așa că nu s-a mai pus nimic la coadă a doua oară.",

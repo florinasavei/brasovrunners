@@ -37,9 +37,13 @@ import {
 } from "@/modules/events/repository";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
+import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
+import { emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
 import { describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -512,20 +516,32 @@ export async function cachedDeadlines(): Promise<Deadlines> {
 
 /**
  * How long a message the visitor just asked for may take (§NNN): null when the club sends right
- * after the request (§221 `immediate`), else the pinger's cadence at this hour on this deployment
- * (`pingerCadenceMinutes`: fifteen minutes by day, an hour at night) — the outbox job is then the
- * only sender. The screen after the registration form and the newsletter's pop-up say it, so the
- * setting is read from the data cache, which a save of it expires (`updateDeliveryTiming`). When
- * the database cannot answer, the default's wait: the longer promise is the one that stays true.
+ * after the request (§221 `immediate`), else the longest of what holds the outbox job back — the
+ * pinger's cadence at this hour on this deployment (`pingerCadenceMinutes`: fifteen minutes by day
+ * on production, an hour at night), the Administrator's minimum interval between real runs (§334)
+ * and the budget governor's floor (§447) — one formula with `/api/health` (`domain/email-wait.ts`).
+ * The screen after the registration form, the link resend and the newsletter's pop-up say it, so
+ * the two settings are read from the data cache, which a save of either expires (the `settings`
+ * tag, `updateDeliveryTiming` and `updateJobCadence`); the governor's level from this instance's
+ * memory, never waiting on Neon (`peekNeonBudgetLevel`). When the database cannot answer, the
+ * environment's default timing and no interval: the page still renders, and says the pinger's wait.
  */
 export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> {
-  let timing: DeliveryTiming;
+  let settings: { timing: DeliveryTiming; intervalMinutes: number };
   try {
-    timing = (await publicRead(["settings.delivery-timing"], ["settings"], () => readDeliveryTiming(getDb()))).timing;
+    settings = await publicRead(["settings.email-wait"], ["settings"], async () => {
+      const [{ timing }, { minutes }] = await Promise.all([readDeliveryTiming(getDb()), readJobCadence(getDb())]);
+      return { timing, intervalMinutes: minutes };
+    });
   } catch {
-    timing = defaultDeliveryTiming(env.APP_ENV).timing;
+    settings = { timing: defaultDeliveryTiming(env.APP_ENV).timing, intervalMinutes: 0 };
   }
-  return timing === "scheduled" ? pingerCadenceMinutes(now) : null;
+  return emailWaitMinutes({
+    timing: settings.timing,
+    pingerMinutes: pingerCadenceMinutes(now),
+    intervalMinutes: settings.intervalMinutes,
+    governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
+  });
 }
 
 /**

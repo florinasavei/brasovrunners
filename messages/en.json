@@ -382,7 +382,7 @@
         "title": "Self-declaration",
         "intro": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
         "doneTitle": "The declaration is signed",
-        "done": "We have emailed it to you as a PDF. Come to the run as usual.",
+        "done": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. Come to the run as usual.",
         "closed": "The declaration can no longer be signed for this run.",
         "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
         "away": "We could not reach our records just now, so nothing was signed or recorded. What you filled in is still below — please try again in a few minutes.",
@@ -1372,7 +1372,7 @@
         "allowanceMonth": "the {plan} plan: {remaining} left this month",
         "allowanceNone": "the {plan} plan, no limit",
         "outcome": {
-          "update": "“Updated details” emails queued: {queued}. They go within minutes, each in the participant's language.",
+          "update": "“Updated details” emails queued: {queued}. They leave through the email queue — at once or on the next scheduled round, by «When emails leave» in «Deadlines» — each in the participant's language.",
           "none": "No email went out: the place, the date and time and the programme did not change, and the note for the participants was empty.",
           "cancelled": "The event is cancelled. “Event cancelled” emails queued: {queued}.",
           "cancelledQuiet": "The event is cancelled. The participants were not told, because the box was unticked.",
@@ -3654,7 +3654,7 @@
       },
       "forecast": {
         "title": "Upcoming automatic emails",
-        "intro": "What the platform sends participants on its own in the coming days, event by event: when, which message, and how many people it reaches if it went now. A message goes at the job's first run after the moment shown. Not listed: what a staff member sends (the update notice, the cancellation, the thank-you after the race, the organizers' message), nor the answers to a runner's own click (the confirmation link, the confirmation, the waiting list), which go at once. Last, the newsletters and new-event announcements already queued for subscribers, with the moment they go.",
+        "intro": "What the platform sends participants on its own in the coming days, event by event: when, which message, and how many people it reaches if it went now. A message goes at the job's first run after the moment shown. Not listed: what a staff member sends (the update notice, the cancellation, the thank-you after the race, the organizers' message), nor the answers to a runner's own click (the confirmation link, the confirmation, the waiting list), which go on the queue's next round — or at once, when «When emails leave» in «Deadlines» is on «Right after the request». Last, the newsletters and new-event announcements already queued for subscribers, with the moment they go.",
         "aside": {
           "one": "1 send in the next {days} days",
           "few": "{count} sends in the next {days} days",
@@ -3662,6 +3662,15 @@
         },
         "empty": "Nothing in the next {days} days: no registration is waiting for an automatic email.",
         "nextRun": "at the job's next run",
+        "queue": {
+          "one": "In the queue now: 1 email.",
+          "few": "In the queue now: {count} emails.",
+          "other": "In the queue now: {count} emails."
+        },
+        "tick": {
+          "scheduled": "Emails leave on the scheduled round (within {wait}); the next one is expected around {at}.",
+          "immediate": "Emails leave right after the request that queued them; what is left (a retry, a deferral) leaves on the scheduled round, the next one expected around {at}."
+        },
         "recipients": {
           "one": "1 recipient now",
           "few": "{count} recipients now",
@@ -3714,11 +3723,11 @@
       },
       "deliveryTiming": {
         "title": "When emails leave",
-        "intro": "On the scheduled round (the default), emails wait in the queue and leave at the platform's next check — on production within 15 minutes by day and an hour at night: sending is paced, the daily allowance is spent predictably, and what one registration queues leaves together. «Right after the request» sends them within seconds of the press. No email is lost either way, and «Send now» empties the queue at any time.",
+        "intro": "On the scheduled round (the default), emails wait in the queue and leave at the platform's next check — on this site within {day} by day and {night} at night: sending is paced, the daily allowance is spent predictably, and what one registration queues leaves together. «Right after the request» sends them within seconds of the press. No email is lost either way, and «Send now» empties the queue at any time.",
         "field": "Emails leave",
         "help": "The page after the registration form, the link resend and the newsletter sign-up tell the person how long it may take.",
         "option": {
-          "scheduled": "On the platform's scheduled round (recommended)",
+          "scheduled": "On the platform's scheduled round (within {wait}; recommended)",
           "immediate": "Right after the request"
         },
         "save": "Save the sending",
@@ -4630,9 +4639,9 @@
       "confirmBody": "The email goes now, through the email queue, to each in their own language, and cannot be withdrawn.",
       "confirmSend": "Send",
       "sent": {
-        "one": "Message queued for {count} participant. It goes out in a few minutes.",
-        "few": "Message queued for {count} participants. It goes out in a few minutes.",
-        "other": "Message queued for {count} participants. It goes out in a few minutes."
+        "one": "Message queued for {count} participant. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines».",
+        "few": "Message queued for {count} participants. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines».",
+        "other": "Message queued for {count} participants. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines»."
       },
       "sentTest": "Plus test registrations: {test}.",
       "duplicate": "This message had already been sent, so nothing was queued a second time.",

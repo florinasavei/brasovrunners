@@ -140,3 +140,38 @@ describe("§383 the upcoming automatic emails card", () => {
     }
   });
 });
+
+describe("§NNN the card opens with the queue and the outbox job's next tick", () => {
+  const delivery = {
+    timing: "scheduled" as const,
+    pending: 3,
+    waitMinutes: 15,
+    scheduledWait: { day: 15, night: 60 },
+    nextTickAt: "2026-10-01T07:15:00.000Z",
+  };
+
+  async function withDelivery(locale: "ro" | "en", given: typeof delivery | (Omit<typeof delivery, "timing" | "waitMinutes"> & { timing: "immediate"; waitMinutes: null })) {
+    state.locale = locale;
+    const html = renderToStaticMarkup((await UpcomingEmailsPanel({ locale, rows: [], horizonDays: 14, clubCopies: [], delivery: given })) as ReactElement);
+    return html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+  }
+
+  it("says how many wait, the scheduled round's wait and when it next runs, in both languages", async () => {
+    const ro = await withDelivery("ro", delivery);
+    expect(ro).toContain("În coadă acum: 3 emailuri.");
+    expect(ro).toContain("Emailurile pleacă la trecerea programată (în cel mult 15 minute); următoarea e așteptată pe la Joi, 1 oct. 2026, 10:15.");
+    const en = await withDelivery("en", delivery);
+    expect(en).toContain("In the queue now: 3 emails.");
+    expect(en).toContain("the next one is expected around");
+  });
+
+  it("says the request sends under the immediate timing, and still names the round for what is left", async () => {
+    const html = await withDelivery("ro", { ...delivery, timing: "immediate", waitMinutes: null, pending: 1 });
+    expect(html).toContain("În coadă acum: 1 email.");
+    expect(html).toContain("Emailurile pleacă imediat după cererea care le-a pus în coadă");
+  });
+
+  it("leaves the line out when nobody read the queue", async () => {
+    expect(await render("ro", [])).not.toContain("upcoming-emails-queue");
+  });
+});

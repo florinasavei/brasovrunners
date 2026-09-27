@@ -4,6 +4,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManagePlatform } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { JOB_CADENCE_CHOICES, type JobCadenceMinutes } from "./schedule";
@@ -107,5 +108,8 @@ export async function updateJobCadence<T extends Record<string, unknown>>(
   // Every cached quiet and every floor was planned under the old interval: the next ping of each
   // job runs, reads this row, and plans under the new one.
   forgetJobSchedules();
+  // Under the scheduled delivery (§NNN) the interval is part of the wait the public pages promise
+  // after a form (`cachedEmailWaitMinutes`): they must say the new one, not the old.
+  revalidatePublicContent("settings");
   return { ...next, updatedAt: now };
 }
