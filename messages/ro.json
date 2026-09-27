@@ -3875,7 +3875,7 @@
                 "Un eveniment nu se publică fără titlu și rezumat în română și în engleză.",
                 "Un text opțional (descrierea, regulamentul, notele programului, câmpurile SEO) se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța goală, cu tot ce ai scris păstrat.",
                 "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment.",
-                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă: sub el e linkul spre pași."
+                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă: sub el e linkul spre pași. Dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale»."
               ]
             },
             {
@@ -3984,6 +3984,17 @@
               ]
             },
             {
+              "title": "Engleza dintr-o apăsare",
+              "steps": [
+                "Scrie toate textele în română: titlul, rezumatul, descrierea, regulamentul, traseul, programul.",
+                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Câmpurile în engleză goale se completează imediat cu traducerea, cu aceeași așezare.",
+                "Dacă unele câmpuri în engleză au deja text, te întreabă câte și care: «Înlocuiește tot» le traduce din nou pe toate, «Doar cele goale» le lasă neatinse și completează restul.",
+                "La un text foarte lung, întrebarea spune și câte caractere se trimit din bugetul de azi.",
+                "Citește, corectează ce vrei, apoi «Salvează» — nimic nu se salvează singur.",
+                "Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club)."
+              ]
+            },
+            {
               "title": "Declarațiile semnate",
               "steps": [
                 "Toate ale unui eveniment: «Evenimente» → «Editează» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
@@ -4031,6 +4042,17 @@
                 "O dată dintr-o serie: la «Salvează pentru:» alege «Doar această dată», «Această dată și următoarele» sau «Toate datele seriei».",
                 "Apasă «Salvează». Apare imediat pe site, în ambele limbi.",
                 "Greșeala obișnuită: alegi «Doar această dată» când vrei să schimbi toată seria (sau invers) — verifică mesajul de sub «Salvează pentru:» înainte de a apăsa «Salvează»."
+              ]
+            },
+            {
+              "title": "Engleza dintr-o apăsare",
+              "steps": [
+                "Scrie toate textele în română: titlul, rezumatul, descrierea, regulamentul, traseul, programul.",
+                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Câmpurile în engleză goale se completează imediat cu traducerea, cu aceeași așezare.",
+                "Dacă unele câmpuri în engleză au deja text, te întreabă câte și care: «Înlocuiește tot» le traduce din nou pe toate, «Doar cele goale» le lasă neatinse și completează restul.",
+                "La un text foarte lung, întrebarea spune și câte caractere se trimit din bugetul de azi.",
+                "Citește, corectează ce vrei, apoi «Salvează» — nimic nu se salvează singur.",
+                "Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club cu tot ce e de făcut."
               ]
             },
             {
@@ -6063,7 +6085,7 @@
     "button": "Tradu din română",
     "pending": "Se traduce…",
     "all": "Copiază și tradu tot: RO → EN",
-    "allHelp": "Un singur buton: fiecare text scris în română ajunge în câmpul lui din engleză, tradus automat (DeepL), cu aceeași așezare — titluri, liste, poze, linkuri. Câmpurile goale se completează direct; dacă engleza are deja text, te întreabă întâi. Citește, corectează, apoi apasă Salvează.",
+    "allHelp": "Un singur buton: fiecare text scris în română ajunge în câmpul lui din engleză, tradus automat (DeepL), cu aceeași așezare — titluri, liste, poze, linkuri. Câmpurile goale se completează direct; dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale». Citește, corectează, apoi apasă Salvează.",
     "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
     "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
     "offSteps": "Vezi pașii",
@@ -6073,8 +6095,14 @@
     "confirm": {
       "title": "Înlocuiești textul în engleză?",
       "body": "Câmpul în engleză are deja text. Traducerea din română îl înlocuiește; nimic nu se salvează până nu apeși Salvează.",
-      "allTitle": "Înlocuiești textul deja scris în engleză?",
-      "allBody": "Aceste câmpuri în engleză au deja text și vor fi înlocuite cu traducerea din română: {fields}. Celelalte se completează. Nimic nu se salvează până nu apeși Salvează.",
+      "allTitle": "{count, plural, one {# câmp în engleză are deja text. Îl înlocuiesc?} few {# câmpuri în engleză au deja text. Le înlocuiesc?} other {# de câmpuri în engleză au deja text. Le înlocuiesc?}}",
+      "allBody": "Cu text deja scris: {fields}. «Înlocuiește tot» le traduce din nou din română; «Doar cele goale», când apare, le lasă neatinse și completează restul. Nimic nu se salvează până nu apeși Salvează.",
+      "bigTitle": "Traduci totul din română?",
+      "bigBody": "Câmpurile în engleză se completează cu traducerea, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
+      "budget": "Se trimit ~{count} caractere din bugetul de azi.",
+      "budgetEmpty": "Doar cele goale: ~{count} caractere.",
+      "replaceAll": "Înlocuiește tot",
+      "onlyEmpty": "Doar cele goale",
       "go": "Tradu",
       "cancel": "Renunță"
     },

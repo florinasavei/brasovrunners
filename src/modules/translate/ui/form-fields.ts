@@ -1,6 +1,9 @@
 import { isRichTextEmpty, type RichTextDoc, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { fillRichText } from "@/modules/content/rich-text/ui/fill-event";
+import { charactersToSend } from "../domain/budget";
 import { isRichTextField, isTranslatableEnglishField, romanianTwinCandidates } from "../domain/fields";
+import type { TranslateRefusal } from "../service";
+import type { TranslateAction } from "./TranslateProvider";
 
 /**
  * The boxes of a form, as «Tradu din română» reads and fills them (`DECISIONS.md` §464).
@@ -118,6 +121,69 @@ export function englishBoxesWithWords(form: HTMLFormElement | null, names: reado
     const box = boxNamed(form, name);
     return box !== null && !isEmptyValue(readBox(name, box));
   });
+}
+
+/**
+ * What the press sends: each named English box's Romanian twin as it is now, the empty ones
+ * skipped — the request `service.ts` reads, in the form's order.
+ */
+export type ClubTextItem = { field: string; kind: "text"; text: string } | { field: string; kind: "rich"; doc: RichTextDoc };
+
+export function collectItems(form: HTMLFormElement | null, englishNames: readonly string[]): ClubTextItem[] {
+  const items: ClubTextItem[] = [];
+  for (const name of englishNames) {
+    const romanian = romanianBoxOf(form, name);
+    if (!romanian) continue;
+    const value = readBox(name, romanian);
+    if (isEmptyValue(value)) continue;
+    items.push(value.kind === "text" ? { field: name, kind: "text", text: value.text } : { field: name, kind: "rich", doc: value.doc });
+  }
+  return items;
+}
+
+/**
+ * «Copiază și tradu tot», read before it runs (§NNN): every English box it may fill, the ones among
+ * them that already hold words, and the characters the whole press and the empty boxes alone
+ * would send (`charactersToSend`, the service's own count). The button asks when `replaced` is not
+ * empty or `characters` passes `ASK_ABOVE_CHARACTERS`; otherwise one press does it.
+ */
+export type TranslateAllPlan = { names: string[]; replaced: string[]; empty: string[]; characters: number; emptyCharacters: number };
+
+export function planTranslateAll(form: HTMLFormElement | null): TranslateAllPlan {
+  const names = form ? englishBoxesToTranslate(form) : [];
+  const replaced = englishBoxesWithWords(form, names);
+  const empty = names.filter((name) => !replaced.includes(name));
+  return {
+    names,
+    replaced,
+    empty,
+    characters: charactersToSend(collectItems(form, names)),
+    emptyCharacters: charactersToSend(collectItems(form, empty)),
+  };
+}
+
+export type TranslateBoxesResult =
+  | { kind: "nothing" }
+  | { kind: "refused"; reason: TranslateRefusal; remainingToday?: number }
+  | { kind: "done"; count: number; cut: string[] };
+
+/**
+ * One press, without React: read the Romanian twins, ask the action once, put every answer in its
+ * English box. Nothing is submitted — the boxes change as if typed, and the ordinary save stores
+ * them (§352). The provider refuses a request whole (the budget, the month's quota, the key, a
+ * timeout), so an answer either fills every box it names or none; there is no half-translated form.
+ */
+export async function translateBoxes(form: HTMLFormElement | null, englishNames: readonly string[], action: TranslateAction): Promise<TranslateBoxesResult> {
+  const items = collectItems(form, englishNames);
+  if (items.length === 0) return { kind: "nothing" };
+  const outcome = await action({ items });
+  if (!outcome.ok) return { kind: "refused", reason: outcome.reason, remainingToday: outcome.remainingToday };
+  const cut: string[] = [];
+  for (const item of outcome.items) {
+    const value: BoxValue = item.kind === "text" ? { kind: "text", text: item.text } : { kind: "rich", doc: item.doc };
+    if (fillBox(form, item.field, value)) cut.push(labelOfBox(form, item.field));
+  }
+  return { kind: "done", count: items.length, cut };
 }
 
 /** The words a person reads for a box: its label, or a rich text's fold title, or its name. */

@@ -3,11 +3,12 @@
 import MuiLink from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import { englishBoxesToTranslate, englishBoxesWithWords, labelOfBox } from "./form-fields";
+import { ASK_ABOVE_CHARACTERS } from "../domain/budget";
+import { labelOfBox, planTranslateAll, type TranslateAllPlan } from "./form-fields";
 import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslatePress } from "./use-translate-press";
 
@@ -25,8 +26,10 @@ import { useTranslatePress } from "./use-translate-press";
  * `domain/rich-text-html.ts`). One request; nothing saved until the ordinary save.
  *
  * **One press** (§NNN). Where every English box it fills is empty, the press translates at once.
- * It asks first (§384) only when English words already written would be replaced, and the
- * question names those boxes alone.
+ * It asks first (§384) only when English words already written would be replaced — naming how
+ * many and which, and offering «Înlocuiește tot» or «Doar cele goale», so the remaining empty boxes
+ * are still one press — or when the press would send more than `ASK_ABOVE_CHARACTERS` of the
+ * day's budget, naming the figure (`charactersToSend`, the service's own count).
  *
  * **Always there** (§NNN) for a role that writes the club's words: a deployment with no DeepL key
  * draws it greyed, with the sentence saying why and, for a reader who may open the tasks page,
@@ -76,22 +79,51 @@ function TranslateAllButtonOff({ offer }: { offer: TranslateOffer }) {
 
 function TranslateAllButtonIsland() {
   const t = useTranslations("Translate");
+  const locale = useLocale();
   const anchor = useRef<HTMLSpanElement>(null);
-  const [asking, setAsking] = useState<{ names: string[]; labels: string[] } | null>(null);
+  const [asking, setAsking] = useState<{ plan: TranslateAllPlan; labels: string[] } | null>(null);
   const { pending, message, translate } = useTranslatePress();
 
   const form = () => anchor.current?.closest("form") ?? null;
   const press = () => {
     const current = form();
-    const names = current ? englishBoxesToTranslate(current) : [];
-    // Only English words already written make it ask; empty boxes are filled at once.
-    const replaced = englishBoxesWithWords(current, names);
-    if (replaced.length === 0) {
-      void translate(current, names, { all: true });
+    const plan = planTranslateAll(current);
+    // Empty English boxes and an ordinary amount of words: one press, no question.
+    if (plan.replaced.length === 0 && plan.characters <= ASK_ABOVE_CHARACTERS) {
+      void translate(current, plan.names, { all: true });
       return;
     }
-    setAsking({ names, labels: replaced.map((name) => labelOfBox(current, name)) });
+    setAsking({ plan, labels: plan.replaced.map((name) => labelOfBox(current, name)) });
   };
+  const run = (names: readonly string[]) => {
+    setAsking(null);
+    void translate(form(), names, { all: true });
+  };
+  const figure = (count: number) => new Intl.NumberFormat(locale).format(count);
+
+  const spec = (() => {
+    if (!asking) return null;
+    const { plan, labels } = asking;
+    const big = plan.characters > ASK_ABOVE_CHARACTERS;
+    const budget = big
+      ? [
+          t("confirm.budget", { count: figure(plan.characters) }),
+          plan.replaced.length > 0 && plan.empty.length > 0 ? t("confirm.budgetEmpty", { count: figure(plan.emptyCharacters) }) : "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+      : "";
+    if (plan.replaced.length === 0) {
+      return { title: t("confirm.bigTitle"), body: `${budget} ${t("confirm.bigBody")}`, confirmLabel: t("confirm.go"), cancelLabel: t("confirm.cancel") };
+    }
+    const body = t("confirm.allBody", { count: plan.replaced.length, fields: labels.join(" · ") });
+    return {
+      title: t("confirm.allTitle", { count: plan.replaced.length }),
+      body: budget ? `${body} ${budget}` : body,
+      confirmLabel: t("confirm.replaceAll"),
+      cancelLabel: t("confirm.cancel"),
+    };
+  })();
 
   return (
     <Frame>
@@ -113,22 +145,14 @@ function TranslateAllButtonIsland() {
       </Typography>
       <ConfirmDialog
         open={asking !== null}
-        spec={
-          asking
-            ? {
-                title: t("confirm.allTitle"),
-                body: t("confirm.allBody", { fields: asking.labels.join(" · ") }),
-                confirmLabel: t("confirm.go"),
-                cancelLabel: t("confirm.cancel"),
-              }
+        spec={spec}
+        onCancel={() => setAsking(null)}
+        onConfirm={() => run(asking?.plan.names ?? [])}
+        alternative={
+          asking && asking.plan.replaced.length > 0 && asking.plan.empty.length > 0
+            ? { label: t("confirm.onlyEmpty"), onClick: () => run(asking.plan.empty) }
             : null
         }
-        onCancel={() => setAsking(null)}
-        onConfirm={() => {
-          const names = asking?.names ?? [];
-          setAsking(null);
-          void translate(form(), names, { all: true });
-        }}
       />
     </Frame>
   );

@@ -7,7 +7,7 @@ import { type RichTextDoc, richTextSchema } from "@/modules/content/rich-text/do
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
 import { charactersTranslatedToday, readTranslationBudget } from "./budget";
-import { budgetAllows } from "./domain/budget";
+import { budgetAllows, charactersToSend } from "./domain/budget";
 import { isRichTextField, isTranslatableEnglishField } from "./domain/fields";
 import { glossaryContext } from "./domain/glossary";
 import { protectPlaceholders, restorePlaceholders } from "./domain/placeholders";
@@ -105,7 +105,8 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
     return [{ item: index, segment: { format: "text" as const, text: guarded.text } }];
   });
   if (pieces.length === 0) return { ok: false, reason: "nothing" };
-  const characters = pieces.reduce((sum, piece) => sum + segmentCharacters(piece.segment), 0);
+  // The one count (`domain/budget.ts`), which «Copiază și tradu tot» names before the press (§NNN).
+  const characters = charactersToSend(items);
 
   const throttle = await consumeRateLimit(db, "content-translate", actor.id, deps.now);
   if (!throttle.allowed) return { ok: false, reason: "rateLimited" };
