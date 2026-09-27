@@ -478,7 +478,6 @@
       "registrations": "Înscrieri",
       "staff": "Echipa",
       "legal": "Documente legale",
-      "devs": "Configurație",
       "tasks": "Sarcini",
       "pages": "Pagini",
       "gallery": "Galerie",
@@ -1714,7 +1713,7 @@
       },
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
-        "help": "Pe pagina alergării apare „Semnează declarația pe propria răspundere”, opțională; semnatarul și clubul primesc câte o copie. Cere o notă de confidențialitate aprobată.",
+        "help": "Opțională; semnatarul și clubul primesc câte o copie. Cere o notă de confidențialitate aprobată. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
         "minAgeHelp": "Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii, chiar dacă aici e mai puțin. Peste 18, de exemplu 21, pagina de semnare cere data nașterii.",
@@ -3492,7 +3491,7 @@
         "GROUP_RUN_DECLARATION_SIGNED": "după semnarea declarației la o alergare de grup",
         "GROUP_RUN_DECLARATION_ARCHIVE": "odată cu declarația de la o alergare de grup, către arhivă",
         "REGISTER_ANOTHER_PERSON": "când formularul e trimis din nou cu altă persoană",
-        "NEWSLETTER_CONFIRM": "imediat ce cineva se abonează",
+        "NEWSLETTER_CONFIRM": "când cineva se abonează",
         "NEWSLETTER": "doar când un organizator trimite un newsletter",
         "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou"
       },
@@ -3834,6 +3833,12 @@
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă; ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată, următoarea așteptată pe la {at}."
         }
       },
+      "familyConfirmed": {
+        "name": "Înscriere confirmată — familie (mai multe persoane)",
+        "whenShort": "după ultima declarație a unei familii",
+        "when": "Când o adresă a înscris mai multe persoane deodată și le-a confirmat pe toate: un singur email, cu codul QR, codul de la masă și numărul de concurs al fiecăreia.",
+        "platformWords": "Textul este al platformei. Cuvintele scrise de club pentru «Înscriere confirmată (cu QR și număr)» sunt pentru o singură persoană și nu intră aici."
+      },
       "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici.",
       "addressCap": {
         "title": "Maxim de înscrieri pe o adresă (pe eveniment)",
@@ -3921,10 +3926,10 @@
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini».",
-                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Contact», «Aspect», «Costuri» și «Platformă».",
+                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Contact», «Aspect», «Costuri», «Platformă» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
-                "«Echipa», «Ghid» (pagina aceasta) și «Configurație»."
+                "«Echipa» și «Ghid» (pagina aceasta)."
               ]
             },
             {
@@ -3944,7 +3949,7 @@
                 "Organizatorul: vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților. Nu scrie textele, nu publică, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
                 "Rolul Tehnic: pagina de configurație a platformei, ca să depaneze; poate corecta setările unui eveniment. Nu vede înscrierile.",
                 "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
-                "Superadministratorul: tot ce face Administratorul, plus setările platformei care pot opri serviciul — «Cât de des verifică platforma», «Limitele bazei de date», pragurile din «Bugetul lunii» și «Anti-robot» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
+                "Superadministratorul: tot ce face Administratorul, plus setările platformei care pot opri serviciul — «Cât de des verifică platforma», «Limitele bazei de date», pragurile din «Bugetul lunii» și verificarea anti-robot din «Platformă» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
               ]
             },
             {
@@ -4526,7 +4531,7 @@
               "title": "Minori și vârsta minimă",
               "steps": [
                 "Un participant sub 18 ani e înscris de părinte sau tutore, care își scrie numele în secțiunea pentru minori a formularului; la masă și în export apare „Minor — părinte/tutore”.",
-                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Program, regulament și declarație» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă."
+                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Program, regulament și declarație» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării."
               ]
             },
             {
@@ -5622,9 +5627,7 @@
     "panel": {
       "status": "Stare",
       "general": "General",
-      "email": "Emailuri",
-      "botCheck": "Anti-robot",
-      "app": "Aplicația"
+      "email": "Emailuri"
     },
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",

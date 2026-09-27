@@ -183,3 +183,25 @@ describe("§440 the age gate: one rule, the race's", () => {
     }
   });
 });
+
+/**
+ * §NNN — V2.12 folded the group run's own 18+ box into the one «Vârsta minimă» box of every type
+ * (§505). The rule did not change — the run declaration is for adults (`groupRunMinimumAge`) — so the
+ * editor's help under «Declarație opțională pe propria răspundere» and the guide say it in words.
+ */
+describe("§NNN the run declaration's 18 is said where the box used to be", () => {
+  const RO = "Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.";
+  const EN = "The run declaration is signed from 18, whatever the run's minimum age.";
+
+  it("in the editor's help under the declaration's box and in the guide, both languages", () => {
+    expect(ro.Admin.editor.groupRunDeclaration.help).toContain(RO);
+    expect(en.Admin.editor.groupRunDeclaration.help).toContain(EN);
+    expect(JSON.stringify(ro.Admin.guide)).toContain(RO);
+    expect(JSON.stringify(en.Admin.guide)).toContain(EN);
+  });
+
+  it("which is what the signing page applies, whatever the run's own minimum", () => {
+    for (const minAge of [MIN_PARTICIPANT_AGE, 16, 18]) expect(groupRunMinimumAge(minAge)).toBe(18);
+    expect(groupRunMinimumAge(21)).toBe(21);
+  });
+});

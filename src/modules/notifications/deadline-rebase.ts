@@ -1,8 +1,8 @@
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
-import type { Database } from "@/db/types";
+import type { Database, Transaction } from "@/db/types";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { findFamilyEntryById } from "@/modules/registrations/family-entries";
@@ -103,9 +103,12 @@ export async function planDeadlineRebase<T extends Record<string, unknown>>(
  *
  * A hold or an offer is written under the event's lock (`lockEventForCapacity`), the allocator's
  * own serialization point (AGENTS.md §10.6), so no allocation decides between the read and the
- * write; an offer is moved only while its deadline is still ahead at `clock()` read under that lock
- * — after the allocator that counted it free, never before. The public count is told (§333): an
- * offer's deadline is one of the instants its cache is keyed by.
+ * write. An offer past its stored deadline is moved too (§NNN): while its message was queued it was
+ * never lapsed (`awaitingItsFirstEmail`). The moment the message is marked SENT that guard is gone,
+ * so the caller hands the SENT write in as `inTheLock`: it runs inside the same locked transaction
+ * as the move, and no count taken under the lock — a capacity lowered, a place given — can see the
+ * offer as free between the two. The public count is told (§333): an offer's deadline is one of the
+ * instants its cache is keyed by.
  *
  * Returns whether a deadline moved.
  */
@@ -113,6 +116,8 @@ export async function applyDeadlineRebase<T extends Record<string, unknown>>(
   db: Database<T>,
   plan: DeadlineRebase,
   clock: () => Date,
+  /** A hold's or an offer's: a write that must commit with the move, under the same lock (the SENT mark). */
+  inTheLock?: (tx: Transaction<T>) => Promise<unknown>,
 ): Promise<boolean> {
   if (plan.kind === "familyLink") {
     const moved = await db
@@ -140,7 +145,7 @@ export async function applyDeadlineRebase<T extends Record<string, unknown>>(
 
   const moved = await db.transaction(async (tx) => {
     await lockEventForCapacity(tx, plan.eventId);
-    const now = clock();
+    if (inTheLock) await inTheLock(tx);
     return tx
       .update(registrations)
       .set({ holdExpiresAt: plan.to })
@@ -149,7 +154,6 @@ export async function applyDeadlineRebase<T extends Record<string, unknown>>(
           eq(registrations.id, plan.registrationId),
           eq(registrations.status, REGISTRATION_KINDS[plan.kind]),
           eq(registrations.holdExpiresAt, plan.from),
-          plan.kind === "offer" ? gt(registrations.holdExpiresAt, now) : undefined,
         ),
       )
       .returning({ id: registrations.id });

@@ -59,9 +59,6 @@ export default async function BackofficeShell({
     settings: getPathname({ locale, href: "/admin/settings" }),
     newsletter: getPathname({ locale, href: "/admin/newsletter" }),
     staff: getPathname({ locale, href: "/admin/staff" }),
-    // Its own route rather than a backoffice page: it is read by whoever is holding the
-    // hosting dashboard (BR-REQ-090-04) — and it wears the same chrome since §119.
-    devs: getPathname({ locale, href: "/devs" }),
   };
 
   /*
@@ -95,6 +92,8 @@ export default async function BackofficeShell({
     label: t(`nav.${section}`),
     section,
     ...(section === "registrations" ? { count: registered, countHint: registeredHint } : {}),
+    // `/devs` is «Setări»'s last tab and no section of its own (§NNN): the bar lights «Setări» there.
+    ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" })] } : {}),
   }));
 
   return (

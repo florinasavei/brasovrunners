@@ -10,6 +10,11 @@ import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 /** One message, already rendered and translated: this component decides only the shape. */
 export type ParticipantEmailCard = {
   type: EmailMessageType;
+  /**
+   * The card's own id, for a second shape of one message type (§NNN: the family's confirmation beside
+   * one person's, both `REGISTRATION_CONFIRMED`); the type is the id when absent.
+   */
+  id?: string;
   /** The message's name — "Confirmă adresa de email". */
   name: string;
   /** When it is sent, in a few words, for the closed card's summary. */
@@ -82,7 +87,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
       <Stack spacing={1}>
         {messages.map((message) => (
           <Panel
-            key={message.type}
+            key={message.id ?? message.type}
             title={message.name}
             aside={
               message.neverSent || message.sampleValues ? (
@@ -108,7 +113,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
             collapsible
             level={3}
             openWhen={{ saved: message.justSaved, attention: Boolean(message.sampleValues) }}
-            id={`email-${message.type}`}
+            id={`email-${message.id ?? message.type}`}
             data-testid="participant-email"
           >
             <Typography variant="body2" sx={{ mb: 1, wordBreak: "break-word" }}>

@@ -95,23 +95,27 @@ test.describe("§265 the configuration panels", () => {
     await expect(main.getByRole("heading", { name: /Baza de date/i })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Configurație" })).toHaveCount(0);
 
-    // «Setări»'s row sits above the page's own panels, «Configurație» its last tab and marked (§516).
-    const settingsRow = main.getByRole("navigation", { name: "Setări" });
-    await expect(settingsRow.getByRole("link", { name: "Configurație", exact: true })).toHaveAttribute("aria-current", "page");
-    const panels = main.getByRole("navigation", { name: "Configurația acestui mediu" });
+    // «Setări»'s row is the page's one row (§360, §NNN): «Configurație» marked, its panels after it
+    // in the same row, no second row under it — and the main bar lights «Setări», having no
+    // «Configurație» entry of its own.
+    const panels = main.getByRole("navigation", { name: "Setări" });
+    await expect(panels.getByRole("link", { name: "Configurație", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(main.getByRole("navigation", { name: "Configurația acestui mediu" })).toHaveCount(0);
+    await expect(page.getByRole("tab", { name: "Setări" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "Configurație" })).toHaveCount(0);
 
-    await panels.getByRole("link", { name: "General" }).click();
+    await panels.getByRole("link", { name: "Configurație · General" }).click();
     await expect(page).toHaveURL(/panel=general/);
     await expect(main.getByRole("heading", { name: "Configurație" })).toBeVisible();
     await expect(main.getByRole("heading", { name: /Roluri/i })).toBeVisible();
 
-    await panels.getByRole("link", { name: "Emailuri" }).click();
+    await panels.getByRole("link", { name: "Configurație · Emailuri" }).click();
     await expect(page).toHaveURL(/panel=email/);
     await expect(main.getByRole("heading", { name: /e-?mail/i }).first()).toBeVisible();
     await expect(main.getByRole("heading", { name: "Configurație" })).toHaveCount(0);
 
-    // The anti-bot switch is the club's, on «Setări» → «Platformă» (§516), and the sub-nav says so.
-    await panels.getByRole("link", { name: "Anti-robot" }).click();
+    // The anti-bot switch is the club's, on «Setări» → «Platformă» (§516): the same row's tab.
+    await panels.getByRole("link", { name: "Platformă", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/platform/);
 
     // And back: «Configurație» is a tab of the same row, one tap from «Platformă» or «Costuri».
@@ -139,7 +143,7 @@ test.describe("§360 the sub-tabs on a phone", () => {
 
     const rows = [
       { url: "/ro/admin/tasks", nav: "Ce mai este de făcut", current: "Club" },
-      { url: "/ro/devs?panel=general", nav: "Configurația acestui mediu", current: "General" },
+      { url: "/ro/devs?panel=general", nav: "Setări", current: "Configurație · General" },
       { url: "/ro/admin/gallery/pictures", nav: "Galerie foto", current: "Imagini" },
       // «Setări»'s six tabs (§516): the row that must scroll on a phone rather than wrap.
       { url: "/ro/admin/settings/costs", nav: "Setări", current: "Costuri" },

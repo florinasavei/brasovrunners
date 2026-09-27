@@ -44,11 +44,13 @@ import { capHoldExpiry } from "@/modules/registrations/domain/hold-deadlines";
  * - **A wait under a minute changes nothing**: the deadlines are stated to the minute, and under the
  *   `immediate` timing a message leaves within seconds — no write, no lock, as before.
  * - **Nothing is revived that the queue had already let go**: a deadline already behind the moment
- *   the message was queued (a resend asked after the lapse) is not moved, and an offer already
- *   past its deadline at the send is not either — an offer occupies its place only while its
- *   deadline is ahead (`countOccupied`), so reviving one could hand out a place twice. A
- *   declaration hold occupies by its status whatever its deadline (§160), so a lapsed one is
- *   re-based like a live one: that is the night case this exists for.
+ *   the message was queued (a resend asked after the lapse) is not moved. A hold or an offer past
+ *   its stored deadline at the send is re-based like a live one: while the message that starts it
+ *   was queued it was never lapsed (`registrations/repository.ts#awaitingItsFirstEmail`, the offer's
+ *   since §NNN) — it kept occupying its place and no sweep released it — so nobody else can have
+ *   been given that place. That is the night case this exists for. The write asks, under the event's
+ *   lock, that the row is still in the state the message was about (`deadline-rebase.ts`), so an
+ *   offer the race's start did release stays released.
  *
  * Pure: the reads and the guarded write are `notifications/deadline-rebase.ts`'s.
  */
@@ -113,8 +115,6 @@ export function rebasedDeadline(input: {
   if (stored.getTime() <= queuedAt.getTime()) return null;
   // The participation window's date (§104), not the club's minutes: no email starts it.
   if (kind === "declarationHold" && stored.getTime() - queuedAt.getTime() > LONGEST_CLUB_HOLD_MS) return null;
-  // A lapsed offer occupies nothing (`countOccupied`): the place may be somebody else's by now.
-  if (kind === "offer" && stored.getTime() <= sentAt.getTime()) return null;
 
   let next = new Date(stored.getTime() + wait);
   if (kind === "declarationHold" || kind === "offer") {

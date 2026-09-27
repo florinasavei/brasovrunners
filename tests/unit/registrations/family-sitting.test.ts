@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({
@@ -22,6 +24,7 @@ const {
   sittingSharedValues,
   withSittingPerson,
   SITTING_NAMES_MAX,
+  SITTING_SHARED_FIELDS,
 } = await import("@/modules/registrations/domain/family-sitting");
 const { openFamilySittingCookie, sealFamilySittingCookie } = await import("@/modules/registrations/family-sitting-cookie");
 const { openFormDraft } = await import("@/modules/registrations/form-draft");
@@ -100,14 +103,26 @@ describe("§519 the browser's half of a sitting", () => {
 
   it("starts the next form with the boxes a family shares, a blank one keeping the earlier form's", () => {
     const posted = (values: Record<string, string>) => (name: string) => values[name] ?? "";
-    const first = sittingSharedValues(undefined, posted({ city: "Brașov", nationality: "RO", firstName: "Ana", phone: "722000000", emergencyContactName: "Dan Pop" }));
-    expect(first).toEqual({ city: "Brașov", nationality: "RO", emergencyContactName: "Dan Pop" });
+    const first = sittingSharedValues(undefined, posted({ city: "Brașov", country: "RO", nationality: "RO", firstName: "Ana", phone: "722000000", emergencyContactName: "Dan Pop" }));
+    expect(first).toEqual({ city: "Brașov", country: "RO", nationality: "RO", emergencyContactName: "Dan Pop" });
     // The person's own boxes are never carried.
     expect(first).not.toHaveProperty("firstName");
     expect(first).not.toHaveProperty("phone");
     // A child's form adds the guardian; an adult's blank guardian keeps it.
     const second = sittingSharedValues(first, posted({ city: "Brașov", nationality: "RO", guardianName: "Ana Pop" }));
-    expect(sittingSharedValues(second, posted({ city: "Codlea" }))).toEqual({ city: "Codlea", nationality: "RO", guardianName: "Ana Pop", emergencyContactName: "Dan Pop" });
+    expect(sittingSharedValues(second, posted({ city: "Codlea" }))).toEqual({ city: "Codlea", country: "RO", nationality: "RO", guardianName: "Ana Pop", emergencyContactName: "Dan Pop" });
+  });
+
+  it("carries the country like the city — a required box the next form must not start at the default (§NNN)", () => {
+    const posted = (values: Record<string, string>) => (name: string) => values[name] ?? "";
+    expect(SITTING_SHARED_FIELDS).toContain("country");
+    const first = sittingSharedValues(undefined, posted({ city: "Wien", country: "AT" }));
+    expect(first).toEqual({ city: "Wien", country: "AT" });
+    // The next form posted nothing for it: the earlier form's country is kept.
+    expect(sittingSharedValues(first, posted({ city: "Wien" }))).toEqual({ city: "Wien", country: "AT" });
+    // And the form reads it back through the same prefill as the city.
+    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/register/page.tsx"), "utf8");
+    expect(page).toContain('defaultValue={prefill("country") || "RO"}');
   });
 });
 

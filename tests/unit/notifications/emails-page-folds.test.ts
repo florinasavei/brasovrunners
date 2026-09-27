@@ -191,7 +191,8 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
     // Through `cards`, which is `types` with each message's preview and saved words (§359).
     expect(page).toMatch(/const cards = types\.map\(/);
-    expect(page).toMatch(/messages=\{cards\.map\(/);
+    // `flatMap` since §NNN: «Înscriere confirmată» is followed by the family's confirmation, a second card of its type.
+    expect(page).toMatch(/messages=\{cards\.flatMap\(/);
     expect(page).toMatch(/languages=\{routing\.locales\.map\(/);
     // No preview or switch is drawn on the page outside the card any more.
     expect(page).not.toContain('component="details"');

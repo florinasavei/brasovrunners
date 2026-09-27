@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { bucketOf, judgeChecks, waitForSettledChecks } from "../../../scripts/ship-checks.mjs";
+import { bucketOf, judgeChecks, mergePullRequest, waitForSettledChecks } from "../../../scripts/ship-checks.mjs";
 
 /**
  * §426 — `yarn ship` judges a pull request's checks only once none is pending and the same set
@@ -84,5 +86,66 @@ describe("§426 ship: waiting until the checks settle", () => {
     const s = script([[pending("e2e")], [pass("e2e")], [pass("e2e")]]);
     await waitForSettledChecks(s.read, { sleep: s.sleep, onPending: (names: string[]) => seen.push(names) });
     expect(seen).toEqual([["e2e"]]);
+  });
+});
+
+/**
+ * §NNN — `gh pr merge` answered «Merge already in progress» on the V2.12 release while the merge
+ * went through, and `ship` stopped on a merged PR. The exit is not the verdict: the PR's state is.
+ */
+describe("§NNN ship: a merge judged by the PR's state", () => {
+  function states(readings: string[]) {
+    let i = 0;
+    const slept: number[] = [];
+    return {
+      state: () => readings[Math.min(i++, readings.length - 1)],
+      sleep: async (seconds: number) => {
+        slept.push(seconds);
+      },
+      reads: () => i,
+      slept,
+    };
+  }
+
+  it("is merged on a clean exit, without reading the state", async () => {
+    const s = states(["OPEN"]);
+    expect(await mergePullRequest(() => ({ status: 0, stderr: "" }), s.state, { sleep: s.sleep })).toEqual({ status: "merged", waited: 0 });
+    expect(s.reads()).toBe(0);
+  });
+
+  it("waits through «Merge already in progress» until the PR says MERGED, and continues", async () => {
+    const s = states(["OPEN", "OPEN", "MERGED"]);
+    const outcome = await mergePullRequest(
+      () => ({ status: 1, stderr: "GraphQL: Merge already in progress (mergePullRequest)" }),
+      s.state,
+      { sleep: s.sleep, every: 5, capSeconds: 60 },
+    );
+    expect(outcome).toEqual({ status: "merged", waited: 10 });
+    expect(s.slept).toEqual([5, 5]);
+  });
+
+  it("stops after the minute's cap when the PR never says MERGED", async () => {
+    const s = states(["OPEN"]);
+    const outcome = await mergePullRequest(() => ({ status: 1, stderr: "Merge already in progress" }), s.state, { sleep: s.sleep, every: 5, capSeconds: 60 });
+    expect(outcome.status).toBe("failed");
+    expect(s.slept.reduce((sum, seconds) => sum + seconds, 0)).toBe(60);
+  });
+
+  it("takes any other failure at its word, unless the PR is merged all the same", async () => {
+    const refused = states(["OPEN"]);
+    expect(await mergePullRequest(() => ({ status: 1, stderr: "Pull request is not mergeable" }), refused.state, { sleep: refused.sleep })).toEqual({
+      status: "failed",
+      error: "Pull request is not mergeable",
+    });
+    expect(refused.slept).toEqual([]);
+    const mergedAnyway = states(["MERGED"]);
+    expect(await mergePullRequest(() => ({ status: 1, stderr: "exit status 1" }), mergedAnyway.state, { sleep: mergedAnyway.sleep })).toEqual({ status: "merged", waited: 0 });
+  });
+
+  it("is what ship calls for both merges", () => {
+    const ship = readFileSync(path.join(process.cwd(), "scripts/ship.mjs"), "utf8");
+    expect(ship).toContain("await merge(PR);");
+    expect(ship).toContain("await merge(release);");
+    expect(ship).not.toMatch(/gh\("pr", "merge"/);
   });
 });
