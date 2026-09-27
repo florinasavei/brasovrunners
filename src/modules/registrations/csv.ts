@@ -75,11 +75,16 @@ export type RegistrationCsvRow = {
   termsVersion?: number | null;
   termsAcceptedAt?: string;
   /**
-   * The declaration the registration's latest acceptance was signed against (§NNN): its version
+   * The declaration the registration's latest acceptance was signed against (§499): its version
    * and the moment, online or recorded from paper at the desk (§67). Empty while nothing is signed.
    */
   declarationVersion?: number | null;
   declarationSignedAt?: string;
+  /**
+   * Whether the public list prints the socials beside the name (§500): "Yes" or empty, like the
+   * member claim — an empty cell is "not ticked", or ticked where it could not be kept.
+   */
+  listSocials?: boolean;
 };
 
 const HEADER = [
@@ -94,6 +99,8 @@ const HEADER = [
   "Medically fit (declared)",
   "Strava",
   "Instagram",
+  // Beside the two (§500), as on the spreadsheet: whether the public list prints them.
+  "Socials on the public list",
   "Guardian",
   // Beside the guardian's name (§330): the kit goes to that person (§108), against this document.
   "Guardian identity document",
@@ -110,7 +117,7 @@ const HEADER = [
   // Last (§425), so a script that reads the columns by position still finds every earlier one.
   "Terms version",
   "Terms accepted",
-  // After the terms (§NNN), last for the same reason: every earlier column keeps its position.
+  // After the terms (§499), last for the same reason.
   "Declaration version",
   "Declaration signed",
 ];
@@ -133,6 +140,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
         row.instagramHandle,
+        row.listSocials ? "Yes" : "",
         row.guardianName,
         row.guardianIdDocument,
         row.submittedAt,

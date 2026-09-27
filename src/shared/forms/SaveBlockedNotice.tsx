@@ -14,7 +14,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
  * What a blocked save says (§436), in the order the person acts on it: what happened and what is
  * still here; when NOT to press (the server may have run the save before its answer was lost, and
  * the version check does not protect a cancel, an erase or a message sent twice — so the page is
- * checked in a new tab first; a confirmation never arrives here, §NNN); the one button that sends the form the
+ * checked in a new tab first; a confirmation never arrives here, §495); the one button that sends the form the
  * simple way; and the page that names what to ask the office's IT to let through.
  *
  * The button is the only thing that sends anything. `onSend` is the replay (`replayNatively`) with

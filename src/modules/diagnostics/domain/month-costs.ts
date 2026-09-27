@@ -30,7 +30,7 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * `diagnostics/vercel.ts` already count, so each line names its period.
  *
  * **Every price comes from its catalogue** (`neon-plan.ts`, `email-plan.ts`, the domain and R2
- * constants in `platform-plans.ts`; DeepL's credit is DeepL's own answer, §NNN), never from
+ * constants in `platform-plans.ts`; DeepL's credit is DeepL's own answer, §497), never from
  * here: this file multiplies and adds, and says "estimate" wherever it projects — `AGENTS.md`
  * §1.2's rule that a vendor's price is quoted, never invented. Every amount is in USD, the
  * currency every one of those vendors bills in and the cost table below already prints.
@@ -124,7 +124,7 @@ export type MonthCostFacts = {
   /** The month's translated characters (§464), or null when the audit trail could not be read. */
   deepl: { charactersThisMonth: number } | null;
   /**
-   * DeepL's credit from its own meter (§NNN), or null — not configured here (`expected: false`),
+   * DeepL's credit from its own meter (§497), or null — not configured here (`expected: false`),
    * or configured and not read just now (`expected: true`, the line is then «nu știm», §1.2).
    */
   deeplCredit: { expected: boolean; credit: TranslationCredit | null };
@@ -378,7 +378,7 @@ function domainLine(facts: MonthCostFacts): MonthCostLine {
 
 /**
  * DeepL: nothing billed; the month's characters as the club counted them (§464), with no monthly
- * ceiling — the key's allowance is a credit given once (§NNN), so it is the credit, from DeepL's
+ * ceiling — the key's allowance is a credit given once (§497), so it is the credit, from DeepL's
  * own meter, that the line measures against: used, left, and its level. The level is the line's
  * severity — `low` and `spent` are `act`, `watch` is `watch` — and a configured key whose
  * credit could not be read is «nu știm», never green.

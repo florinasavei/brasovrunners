@@ -17,7 +17,7 @@ export type TranslateAction = (input: unknown) => Promise<TranslateOutcome>;
  *   `/admin/tasks` — linking the row with the steps (`setupHref`). The owner, 2026-09-27: «I
  *   can't find or don't know how to use the AI translate»: a button that is not there cannot be
  *   found, so the one that matters is always there.
- * - `spent` (§NNN) — a key is set, and DeepL's own meter says its one-time credit is spent: the
+ * - `spent` (§497) — a key is set, and DeepL's own meter says its one-time credit is spent: the
  *   same as no key — no per-box button, the whole-record one greyed — with the sentence «Creditul
  *   DeepL s-a terminat — vezi Costuri», linked (`costsHref`) for a reader who may open Costuri.
  */

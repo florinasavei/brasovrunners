@@ -26,7 +26,7 @@ export type MonthCostReaders = {
   neonPreviousPeriod: (periodStart: Date) => Promise<{ ok: true; cuHours: number } | { ok: false; reason: string }>;
   /** The pictures' recorded bytes (`storedMediaBytes`). */
   mediaBytes: () => Promise<number>;
-  /** DeepL's credit from its own meter, cached an hour and expired by every press (`readTranslationCredit`, §NNN). */
+  /** DeepL's credit from its own meter, cached an hour and expired by every press (`readTranslationCredit`, §497). */
   deeplCredit: () => Promise<CreditReading>;
 };
 
@@ -55,7 +55,7 @@ export type MonthCostInputs = {
 export type MonthCostReasons = {
   current: Record<MonthCostId, string | null>;
   lastMonth: Record<MonthCostId, string | null>;
-  /** Why DeepL's credit has no reading (§NNN): `unconfigured`, or the provider's refusal; null when read. */
+  /** Why DeepL's credit has no reading (§497): `unconfigured`, or the provider's refusal; null when read. */
   deeplCredit: string | null;
 };
 

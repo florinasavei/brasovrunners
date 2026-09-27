@@ -122,7 +122,7 @@ function editorPath(locale: Locale, eventId: string): string {
 /**
  * The boxes a refusal of the event form names, as the form posts them (`form-names.ts`). A group
  * run's minimum age is read from its own box in «Traseul» (§440) — the race's box is hidden for
- * that type but still posts — so its refusal names that box, never the hidden one (§NNN).
+ * that type but still posts — so its refusal names that box, never the hidden one (§495).
  */
 const eventFormFieldNames = (error: DomainError, form: FormData) =>
   error.fields.map((field) => {

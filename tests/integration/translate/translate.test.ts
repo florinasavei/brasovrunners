@@ -178,7 +178,7 @@ describe("§464 «Tradu din română»", () => {
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "content.translated"))).toHaveLength(0);
   });
 
-  it("§NNN: a spent DeepL credit refuses as `quota`, a too-small one as `credit` with what is left — nothing sent, nothing metered", async () => {
+  it("§497: a spent DeepL credit refuses as `quota`, a too-small one as `credit` with what is left — nothing sent, nothing metered", async () => {
     const admin = await staff("ADMIN");
     const input = { items: [{ field: "translations.en.title", kind: "text", text: "Alergare" }] };
     const withCredit = (used: number, limit: number) => async () => translationCredit({ used, limit });

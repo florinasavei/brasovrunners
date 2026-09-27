@@ -1,5 +1,5 @@
 /**
- * A public button's glyph (§NNN; the owner, 2026-09-27, of the event page's sign button: "that
+ * A public button's glyph (§498; the owner, 2026-09-27, of the event page's sign button: "that
  * button needs to be smaller and have an icon (as do all the buttons from this website)").
  *
  * Every button a visitor presses wears a picture before its words, as the backoffice's verbs do

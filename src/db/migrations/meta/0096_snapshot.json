@@ -1,5 +1,5 @@
 {
-  "id": "3e692449-a709-4458-9ee0-d5b3e23fd0f5",
+  "id": "c99ee351-ecfa-411f-9d23-549efbe2d78a",
   "prevId": "a972d543-1646-4f55-8d7e-ff98890c413c",
   "version": "7",
   "dialect": "postgresql",
@@ -1731,186 +1731,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.family_sittings": {
-      "name": "family_sittings",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "event_id": {
-          "name": "event_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "participant_id": {
-          "name": "participant_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "registration_id": {
-          "name": "registration_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "registration_ids": {
-          "name": "registration_ids",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "held_outbox_ids": {
-          "name": "held_outbox_ids",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "action_token_id": {
-          "name": "action_token_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "locale": {
-          "name": "locale",
-          "type": "locale",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "held_until": {
-          "name": "held_until",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "released_at": {
-          "name": "released_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "confirmed_at": {
-          "name": "confirmed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "family_sittings_action_token_unique": {
-          "name": "family_sittings_action_token_unique",
-          "columns": [
-            {
-              "expression": "action_token_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "family_sittings_expires_at_idx": {
-          "name": "family_sittings_expires_at_idx",
-          "columns": [
-            {
-              "expression": "expires_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "family_sittings_event_id_events_id_fk": {
-          "name": "family_sittings_event_id_events_id_fk",
-          "tableFrom": "family_sittings",
-          "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "family_sittings_participant_id_participants_id_fk": {
-          "name": "family_sittings_participant_id_participants_id_fk",
-          "tableFrom": "family_sittings",
-          "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "family_sittings_registration_id_registrations_id_fk": {
-          "name": "family_sittings_registration_id_registrations_id_fk",
-          "tableFrom": "family_sittings",
-          "tableTo": "registrations",
-          "columnsFrom": [
-            "registration_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "family_sittings_action_token_id_email_action_tokens_id_fk": {
-          "name": "family_sittings_action_token_id_email_action_tokens_id_fk",
-          "tableFrom": "family_sittings",
-          "tableTo": "email_action_tokens",
-          "columnsFrom": [
-            "action_token_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.pending_family_entries": {
       "name": "pending_family_entries",
       "schema": "",
@@ -1942,12 +1762,6 @@
         },
         "action_token_id": {
           "name": "action_token_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sitting_id": {
-          "name": "sitting_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
@@ -2009,21 +1823,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "pending_family_entries_sitting_idx": {
-          "name": "pending_family_entries_sitting_idx",
-          "columns": [
-            {
-              "expression": "sitting_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -2072,19 +1871,6 @@
           "tableTo": "email_action_tokens",
           "columnsFrom": [
             "action_token_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "pending_family_entries_sitting_id_family_sittings_id_fk": {
-          "name": "pending_family_entries_sitting_id_family_sittings_id_fk",
-          "tableFrom": "pending_family_entries",
-          "tableTo": "family_sittings",
-          "columnsFrom": [
-            "sitting_id"
           ],
           "columnsTo": [
             "id"
@@ -4210,6 +3996,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "list_socials": {
+          "name": "list_socials",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "bib_number": {
           "name": "bib_number",

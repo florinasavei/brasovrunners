@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { creditHealth, translationCredit } from "@/modules/translate/domain/credit";
 
 /**
- * §NNN — `/api/health` warns when the DeepL credit is low (95 %) or spent, after §335 and §447:
+ * §497 — `/api/health` warns when the DeepL credit is low (95 %) or spent, after §335 and §447:
  * a level and a note, never the characters used or left (the club's account figures belong on
  * Costuri, §479), and never the status — translation stops nothing a visitor needs.
  */
@@ -31,7 +31,7 @@ beforeEach(() => {
   execute.mockResolvedValue(undefined);
 });
 
-describe("§NNN /api/health and the DeepL credit", () => {
+describe("§497 /api/health and the DeepL credit", () => {
   it("says a spent credit with a note and no figure, and leaves the status alone", async () => {
     readTranslationCredit.mockResolvedValue({ ok: true, credit: translationCredit({ used: 1_000_000, limit: 1_000_000 }) });
     const response = await GET();

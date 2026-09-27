@@ -16,7 +16,7 @@ import { type TranslateLanguage, type TranslateRequest, type TranslateUsage, typ
  * - `tag_handling: "html"` keeps the tags around the words they belong to — how a rich text keeps
  *   its bold, italic and links (`modules/translate/domain/rich-text-html.ts`).
  * - `context` is read and never translated or billed — the club's glossary goes there.
- * - `456` is "quota exceeded" (the key's one-time credit spent, §NNN), `403` a wrong key, `429` too
+ * - `456` is "quota exceeded" (the key's one-time credit spent, §497), `403` a wrong key, `429` too
  *   many requests.
  *
  * English is `EN-GB`: the site's English is British (`en-GB` dates and numbers everywhere).
@@ -78,7 +78,7 @@ function failureOf(status: number): TranslatorError {
 const USAGE_TIMEOUT_MS = 5_000;
 
 /**
- * What the key has used and may use, from DeepL's own meter (§NNN): `GET /v2/usage` on the key's
+ * What the key has used and may use, from DeepL's own meter (§497): `GET /v2/usage` on the key's
  * host, the same header as a translation. DeepL's reference (developers.deepl.com, read
  * 2026-09-27): `character_count` is the characters translated so far in the key's current
  * allowance and `character_limit` the allowance — on the club's key a one-time credit

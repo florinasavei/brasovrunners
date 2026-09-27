@@ -21,7 +21,7 @@ import { parseRichText } from "@/modules/content/rich-text/domain/schema";
  * - a link no video id can be read from, and an event with no film, are untouched;
  * - every touched translation's version moves on (a stale editor tab is refused, not obeyed);
  * - the columns stay, and the file only writes rows — no drop, no rename (AGENTS.md §7.6);
- * - 0093 and 0094 leave them too; 0095, BR-V2.11's own contract migration, drops them (§491, §NNN).
+ * - 0093 and 0094 leave them too; 0095, BR-V2.11's own contract migration, drops them (§491, §494).
  */
 const MIGRATIONS = "src/db/migrations";
 const TAG = "0092_film_into_description";
@@ -214,13 +214,13 @@ describe("§491 migrations 0093 and 0094 — the film columns stay until the rel
 });
 
 /**
- * The release after (§491, §NNN): BR-V2.10 stopped declaring `video_url` and `video_poster_url`,
+ * The release after (§491, §494): BR-V2.10 stopped declaring `video_url` and `video_poster_url`,
  * so no release that can still be serving while BR-V2.11 migrates names them, and
  * `0095_film_columns_dropped` is the contract that takes them and their CHECK out of the database
  * (AGENTS.md §7.6, the §390 pattern). Runs after the describe above, over the same rows, with every
  * remaining migration — as `yarn db:migrate:env` runs them over production.
  */
-describe("§NNN migration 0095_film_columns_dropped — the film's old columns leave the database", () => {
+describe("§494 migration 0095_film_columns_dropped — the film's old columns leave the database", () => {
   const TAG_0095 = "0095_film_columns_dropped";
 
   it("drops both columns and their CHECK, and leaves every event, description and version as 0092 left them", async () => {

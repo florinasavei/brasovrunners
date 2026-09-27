@@ -147,7 +147,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
 
   /** §425 — the terms accepted on the form (§421), the CSV's two columns, last and in the same order. */
   it("ends with the accepted terms version as a number and its moment as a date", async () => {
-    // Followed by the declaration's two since §NNN.
+    // Followed by the declaration's two since §499.
     expect(REGISTRATION_SHEET_HEADERS.slice(-4, -2)).toEqual(["Terms version", "Terms accepted"]);
     const parts = unzip(
       await buildRegistrationsWorkbook([row({ bibNumber: null, termsVersion: 42, termsAcceptedAt: new Date("2026-09-25T10:00:00.000Z") })], "Test"),
@@ -159,7 +159,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(blank.get("xl/worksheets/sheet1.xml")).toBeTruthy();
   });
 
-  /** §NNN — the signed declaration's version as a number and its moment, the CSV's last two columns. */
+  /** §499 — the signed declaration's version as a number and its moment, the CSV's last two columns. */
   it("ends with the signed declaration's version as a number and its moment as a date", async () => {
     expect(REGISTRATION_SHEET_HEADERS.slice(-2)).toEqual(["Declaration version", "Declaration signed"]);
     const parts = unzip(

@@ -71,7 +71,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Number settled,Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Number settled,Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -130,13 +130,13 @@ describe("CSV formula neutralization", () => {
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty.
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,2026-09-04T10:00:00.000Z,,17,Yes,2026-10-11T06:40:00.000Z,Yes,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,,2026-09-04T10:00:00.000Z,,17,Yes,2026-10-11T06:40:00.000Z,Yes,,,,",
     );
 
     // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
     expect(other.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,",
     );
     expect(other).not.toContain("No");
   });
@@ -207,7 +207,7 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    // §425's two, now followed by the declaration's two (§NNN).
+    // §425's two, now followed by the declaration's two (§499).
     expect(columns.slice(-4, -2)).toEqual(["Terms version", "Terms accepted"]);
     expect(accepted.split(",").slice(-4, -2)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
     expect(staff.split(",").slice(-4, -2)).toEqual(["", ""]);
@@ -215,7 +215,7 @@ describe("CSV formula neutralization", () => {
   });
 
   /**
-   * §NNN — which declaration version the registration signed, and when, as the last two columns,
+   * §499 — which declaration version the registration signed, and when, as the last two columns,
    * after the terms: blank while nothing is signed, never 0. A paper acceptance recorded at the
    * desk has a version too, so a staff entry's cells are filled like anybody's.
    */
@@ -249,5 +249,36 @@ describe("CSV formula neutralization", () => {
     expect(signed.split(",").slice(-4)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
     expect(unsigned.split(",").slice(-2)).toEqual(["", ""]);
     expect(older.split(",").slice(-2)).toEqual(["", ""]);
+  });
+
+  // §500 — whether the public list prints the socials: right after Instagram, as on the spreadsheet, "Yes" or empty.
+  it("says beside Instagram whether the public list prints the socials, Yes or empty", () => {
+    const base = {
+      eventTitle: "Test",
+      registeredName: "Ana Pop",
+      firstName: "Ana",
+      lastName: "Pop",
+      idDocument: "",
+      email: "ana@example.ro",
+      status: "CONFIRMED",
+      clubMemberDeclared: false,
+      fitnessDeclaredAt: null,
+      stravaUrl: "https://www.strava.com/athletes/12345",
+      instagramHandle: "ana.pop",
+      guardianName: "",
+      guardianIdDocument: "",
+      submittedAt: "2026-09-25T10:00:00.000Z",
+      confirmedAt: "",
+      checkedInAt: "",
+      emailBounced: false,
+    };
+    const [header, shown, kept, older] = buildRegistrationsCsv([{ ...base, listSocials: true }, { ...base, listSocials: false }, base]).split("\r\n");
+    const at = header.split(",").indexOf("Instagram") + 1;
+    expect(header.split(",")[at]).toBe("Socials on the public list");
+    expect(shown.split(",").slice(at - 1, at + 1)).toEqual(["ana.pop", "Yes"]);
+    expect(kept.split(",")[at]).toBe("");
+    expect(older.split(",")[at]).toBe("");
+    // The declaration's pair stays last (§499).
+    expect(header.split(",").slice(-2)).toEqual(["Declaration version", "Declaration signed"]);
   });
 });

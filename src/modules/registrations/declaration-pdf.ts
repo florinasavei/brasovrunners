@@ -36,7 +36,7 @@ export type DeclarationEntry = {
   version: number;
   contentSha256: string;
   /**
-   * The day that version took effect, as `/admin/legal` shows it (§NNN): the version line under the
+   * The day that version took effect, as `/admin/legal` shows it (§499): the version line under the
    * title and in every page's footer says «Versiunea N, în vigoare din …», the signing pages' words.
    */
   effectiveAt: Date;
@@ -52,7 +52,7 @@ export type DeclarationEntry = {
      */
     minor: { typedName: string; idDocument: string | null } | null;
     signedAt: string;
-    /** The same instant inside a sentence — "joi, 24 sept. 2026, la 18:05" — for the footer's «semnată …» (§NNN). */
+    /** The same instant inside a sentence — "joi, 24 sept. 2026, la 18:05" — for the footer's «semnată …» (§499). */
     signedAtInline: string;
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
@@ -87,9 +87,9 @@ export type DeclarationPdfInput = {
     date: string;
     idDocument: string;
     version: string;
-    /** «Versiunea 3, în vigoare din sâmbătă, 12 sept. 2026» — the signing pages' `Legal.inForce` (§NNN). */
+    /** «Versiunea 3, în vigoare din sâmbătă, 12 sept. 2026» — the signing pages' `Legal.inForce` (§499). */
     versionInForce: (version: number, effectiveAt: Date) => string;
-    /** «semnată joi, 24 sept. 2026, la 18:05» — the footer of a signed entry's pages (§NNN). */
+    /** «semnată joi, 24 sept. 2026, la 18:05» — the footer of a signed entry's pages (§499). */
     signedWhen: (when: string) => string;
     generatedOn: string;
     page: (n: number, total: number) => string;
@@ -143,7 +143,7 @@ const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
 /**
- * Which version of which text an entry carries, under its title (§NNN): «Versiunea 3, în vigoare
+ * Which version of which text an entry carries, under its title (§499): «Versiunea 3, în vigoare
  * din sâmbătă, 12 sept. 2026 · sha256 0123456789abcdef…» — the number and the day it took effect as
  * `/admin/legal` and the signing pages say them, and the first sixteen characters of its hash, as the
  * legal documents' own PDF prints them (§53). The full hash stays under the signature and in the
@@ -157,7 +157,7 @@ export function declarationVersionLine(
 }
 
 /**
- * The footer's line, left of the page count (§NNN), so a page that travels alone — the second sheet
+ * The footer's line, left of the page count (§499), so a page that travels alone — the second sheet
  * of a printed form, one page of the event's bundle, the file a runner forwarded — still says which
  * approved text it is: the club, the version in force of the text on that page, and when that entry
  * was signed — or, for the blank form, when the file was drawn. A bundle holds many entries, possibly
@@ -175,7 +175,7 @@ export function declarationFooterLine(
 }
 
 /**
- * Which entry each page of the file belongs to (§NNN), from the number of pages the file had after
+ * Which entry each page of the file belongs to (§499), from the number of pages the file had after
  * each entry was drawn: `[2, 3]` is two pages of the first entry and one of the second. Pure, for its test.
  */
 export function pageOwners<E>(entries: readonly E[], pagesAfterEach: readonly number[]): E[] {
@@ -234,7 +234,7 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
 
   // `openImage` is real and undeclared in `@types/pdfkit`; the object it returns is what `image()` reuses.
   const lockup = (doc as unknown as { openImage(src: Buffer): unknown }).openImage(LOGO);
-  // How many pages the file has after each entry, so each page's footer names its own entry's version (§NNN).
+  // How many pages the file has after each entry, so each page's footer names its own entry's version (§499).
   const pagesAfterEach: number[] = [];
   for (const entry of input.entries) {
     drawEntry(doc, entry, input.labels, lockup);
@@ -249,7 +249,7 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
   }
 
   // Footers: the page count is what makes a missing page noticeable; the version in force of the
-  // text on that page and when it was signed (§NNN) are what make a loose page say what it is. The
+  // text on that page and when it was signed (§499) are what make a loose page say what it is. The
   // full hash is under each text's own signature block, where a printed copy is checked against it.
   const range = doc.bufferedPageRange();
   const idDocumentsNotice = idDocumentsNoticeFor(input);
@@ -289,7 +289,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   doc.font("bold").fontSize(14).fillColor(COLOR.ink).text(entry.title.toUpperCase(), MARGIN.left, doc.y, { width: TEXT_WIDTH, align: "center" });
   doc.moveDown(0.2);
   doc.font("body").fontSize(11).fillColor(COLOR.ink).text(entry.eventTitle, { width: TEXT_WIDTH, align: "center" });
-  // Which approved text this is, before a word of it is read (§NNN) — on the blank form the desk
+  // Which approved text this is, before a word of it is read (§499) — on the blank form the desk
   // prints too, so a stack of paper says which version each sheet was printed from.
   doc.moveDown(0.2);
   doc.font("body").fontSize(8.5).fillColor(COLOR.inkMuted).text(declarationVersionLine(entry, labels), { width: TEXT_WIDTH, align: "center" });

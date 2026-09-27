@@ -327,10 +327,12 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   await step("minor-socials", async (tx) => {
     const cleared = await tx
       .update(registrations)
-      .set({ stravaUrl: null, instagramHandle: null, updatedAt: now })
+      // The public list's tick goes with the socials (§500): with nothing left to show, a true
+      // `list_socials` would only be a stale flag the list's `case` has to outvote.
+      .set({ stravaUrl: null, instagramHandle: null, listSocials: false, updatedAt: now })
       .where(
         and(
-          or(isNotNull(registrations.stravaUrl), isNotNull(registrations.instagramHandle)),
+          or(isNotNull(registrations.stravaUrl), isNotNull(registrations.instagramHandle), eq(registrations.listSocials, true)),
           isNotNull(registrations.birthDate),
           sql`${registrations.createdAt} < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
         ),
@@ -338,6 +340,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: registrations.id });
     counts.minorSocials = cleared.length;
   });
+  // After the step commits, as for the sweeps below: the public start list may have printed
+  // these socials beside a name (§500), and its pages are filed under "places".
+  if (counts.minorSocials > 0) revalidatePublicContent("places");
 
   await step("job-runs", async (tx) => {
     const deleted = await tx
