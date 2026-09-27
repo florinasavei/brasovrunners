@@ -19505,3 +19505,144 @@ The staff preview (`/preview/events/[id]`) says the minimum age as the public pa
 The column's default of 14 (§329) now reaches every type's page, so every existing group run and external event says «Vârsta minimă: 14 ani» until the club changes it. This is deliberate: the owner asked for the age on every type. The editor's help under the box says so: «Implicit 14; pune 0 pentru fără limită.», with the number read from `MIN_PARTICIPANT_AGE`.
 
 Baseline `BR-V2.12-2026-09-27`.
+
+## 506. A held send button is sent the moment Turnstile answers, every time
+
+**2026-09-27. Amends §285 and §304; follows §185, §205 and §216.** The owner, on QA and production (`BR-V2.10`), with the registration form showing «Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde» under a widget that already said «Success!»: «Am rămas în acest state! ce se întâmplă???» The press had been held for Cloudflare's token (§285). The token arrived, and nothing sent the form.
+
+**Where it came from.** Two releases, not the latest:
+- **`BR-V1.45-2026-09-22` (§285).** It added `tokenMissing`, a state fed by a MutationObserver and a listener on the form's `input`, and an eight-second valve counted from when the button was drawn. The valve disconnected the observer for good, but the `input` listener kept measuring. Anybody who typed after the page's eighth second while the widget had no token set `tokenMissing` back to true, and nothing was left to set it false. That covers a widget still thinking, a challenge to tick, a reset after a refusal (§185) and a token being refreshed. The next press was held, the widget said «Success!», and the valve had already been spent.
+- **`BR-V1.55-2026-09-23` (§304).** Its replay of a held press was latched once per mount. The button survives the redirect that shows a refusal, so a second held press after a refused attempt was never replayed.
+- **§489 (`BR-V2.09`) was ruled out.** It moved the widget's two constants into `domain/turnstile-widget.ts` and changed no held-press logic. §491 and §493 did not touch it either.
+
+**Decision.**
+- **The press asks the form, at the moment of the press,** whether Cloudflare's field holds a token (`botCheckUnanswered`). No state is kept that could go stale. A widget never drawn at all (a blocked script) is waited for only in the page's first eight seconds, as §285 had it. After that a press goes straight through, and the server takes a missing token for the check not running (§216).
+- **A held press waits for the token, or for eight seconds counted from that press,** whichever comes first. Then it calls `requestSubmit(button)`, exactly as if the finger had landed now, and never while a request is already in flight. Every held press gets its own valve and its own replay: nothing is used up by the first one.
+- **Two signals say the token is there, and each is enough on its own:**
+  - Cloudflare's success callback. `TurnstileWidget` passes a `callback` to `render` that dispatches a bubbling `TURNSTILE_TOKEN_EVENT` from its own element. The button reads the field on the **next task** after that event, not inside Cloudflare's callback, so a script that calls back before it writes the field is not left to the valve.
+  - A MutationObserver on the `value` attribute. Cloudflare's field is `<input type="hidden">`, whose value mode in the HTML standard is "default": its `.value =` write *is* an attribute change, which the observer sees. On a text box it would not be, and there the callback alone carries the token.
+
+The form's own `input` is watched as well, for somebody typing while held. Only the success callback is handed to Cloudflare: an `error-callback` would change how its widget retries, and a held press has its own valve.
+- **Nothing changes for somebody whose check answered before the press:** the press goes straight through, once, with no held sentence.
+
+**Proof.** The suite gains a second server over the same build, with the anti-bot check on and Cloudflare's published test keys (a site key that always passes, and the secret that accepts only its dummy token; never the club's keys). Only `tests/e2e/registration-turnstile.spec.ts` uses it. A stand-in for `api.js` lets the spec decide when the check answers and in what order.
+
+A held press is also sent by its valve, with the token by then. So every "sent when it answers" case times the request: within three seconds of the answer, and before the valve could have fired. The cases:
+- the owner's case, a press after the page's eighth second;
+- a check answered before the press: never held, exactly one request;
+- the observer alone: a hidden field written with no callback;
+- the callback alone: a field the observer cannot see, called back before it is written. With the old synchronous read this case fails at 4.5 s, for the valve;
+- that field's control: written with no callback, so only the valve sends it, at 7.5 s or later;
+- a refused attempt, then a second held press;
+- a check that never answers: sent by the valve and accepted (§205);
+- with `E2E_REAL_TURNSTILE=1`, Cloudflare's real test widget arriving four seconds after the press, timed against the press. It is never run in CI, since it depends on a third party.
+
+`held-press-is-sent.test.ts` holds the source-level lines: the read at the press, the per-press valve with no once-per-mount latch, the three watchers, and the next-task read after the callback.
+
+One held press per form. The registration form carries two send buttons that wait for Cloudflare's token: the main one and, after a too-fast refusal, «Retrimite» (§324). Each held its own press, and each replayed it when the token landed. That meant two `requestSubmit` calls on one form and two POSTs of one registration: the person saw a success and then the second request's refusal. The hold now belongs to the form (`src/shared/ui/held-press.ts`, a WeakMap keyed by the form that names the pressed button). The first press claims it. Any other press on that form while it is held is swallowed and shows the same sentence under its own button. The release (the token, the valve, or the pressed button unmounting) submits at most once, and only from the button that owns the hold.
+
+A widget that is drawn but has no token, such as an interactive challenge nobody has ticked, now holds every press for the full eight seconds however old the page is. Before, a press after the page's eighth second went straight through without a token. That is why the waiting sentence now asks the person to tick the box when one appears.
+
+Baseline `BR-V2.12-2026-09-27`.
+
+## 507. A group run's self-declaration is kept while the signer comes to the runs, and deleted when they ask
+
+**Decided 2026-09-27, the owner's words:** «clubul o păstrează cât timp vii la alergări și o șterge când îi ceri». This amends §393's seven days and §418's retention paragraph.
+
+**Why.** The optional group-run self-declaration is the club's evidence that a runner was told the run's risks and took them on. Deleting it seven days after the run threw that evidence away while the runner was still coming to the runs. The retention is bound to a purpose, not a number of days: the declaration is kept while the signer takes part in the club's runs (art. 5(1)(e) GDPR storage limitation). It is deleted at the signer's request, sent to the club's contact address. The legal basis is still legitimate interest (art. 6(1)(f)), and art. 9(2)(f) for the health statement. The signer may object at any time (notice section 8).
+
+**What the code does.**
+- `jobs/retention.ts` no longer deletes `group_run_declarations` rows or their outbox messages. `GROUP_RUN_DECLARATION_RETENTION_DAYS` and the step "group-run-declarations" are gone.
+- A declaration leaves by the Administrator's erase, on the signer's request. The erase is deliberate, per row, and audited: the audit row names who and why, never who was erased (BR-REQ-037-06's rule). A declaration also leaves with its event.
+- A new step, "group-run-identity-documents", clears only an identity document typed under a text approved before §418 took `{{idDocument}}` off. It runs seven days after the run, as the race's does. The number lives in `group-run-declarations/domain.ts` (`GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS`), and the signing page's help reads it from there.
+- The outbox rows follow the ordinary 90-day windows, because they carry no registration.
+- A signed legal version stays undeletable while its signature is kept, and becomes deletable after the erase. This closes §393's "Open".
+
+**What unchanged.** The club's archive-mailbox copy is still kept three years from the run (art. 2517 Codul civil), and sooner on an objection. The race's seven-day identity document, health note and emergency contact are untouched.
+
+**Every sentence follows, in both languages, in one voice («clubul … când îi ceri»):**
+- the run page's offer line
+- the backoffice fold's help
+- the signer's email and the club's archive email
+- both group-run declaration templates: «Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului»
+- the privacy notice's sections 3 and 7: «cât timp participi la alergările clubului, sau până ne ceri s-o ștergem»
+
+No text states a number of days for the platform copy.
+
+**For the club.** The texts in force on production say seven days until the club approves new versions of the two group-run declarations and the privacy notice from the platform's templates.
+
+Baseline `BR-V2.12-2026-09-27`.
+
+## 508. A release tests one tree once, and ship times itself
+
+**Context.** The owner measured a release at 50–60 minutes. Most of it was the same files tested again and again. The landing commit's pre-commit hook ran `yarn check` for about ten minutes. Then CI tested the tree four times: on the batch pull request's merge ref, on the push to `qa` from merging it, on the `qa → main` release pull request, and on the push to `main`. Each run took about twelve minutes, and `yarn ship` waited on three of them in a row.
+
+**Decision.**
+
+- **One tree, tested once.** `docs-check.yml` gets a first job, `tested-tree`. It computes `HEAD^{tree}` and asks whether a run of this workflow, on a branch of this repository, already uploaded an unexpired artifact named `tested-tree-<tree>`. A run uploads that artifact only when `docs-check` and every e2e shard passed.
+  - If the tree has a record, `docs-check` and `e2e-shard` are skipped by their own `if:`. A job skipped by a condition reports Success to a required check, while a skipped workflow would stay Pending ([GitHub: handling skipped but required checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks)). So the workflow has no path or branch filter, and only its jobs skip.
+  - Any different tree finds no record and runs everything: `qa` moved, a conflict was resolved, one byte changed anywhere, including this workflow file.
+  - Any failure of the lookup counts as "not tested". The job carries `continue-on-error`, so a lookup that fails for checkout or runner reasons cannot turn a green run red and stop a ship.
+  - `workflow_dispatch` with `full` (true by default) tests a tree again.
+  - This covers the qa push, the release pull request and the main push in one mechanism, rather than a condition written only for `qa → main`.
+- **Who the record trusts.** A fork's record is refused, because a fork runs its own copy of the file and could upload any name. A branch of this repository also runs its own copy and could record a tree it never tested. That is trusted, because pushing a branch here needs write access, which could change the workflow on `qa` anyway. The check keeps strangers out; it does not police collaborators.
+- **Pull requests** run eight shards of both projects, with `fail-fast: false` kept. The `docs-check` job's build stays, because "Verify the app serves on PORT" (BR-REQ-101-01) serves it. The two required check names, `docs-check` and `e2e`, are unchanged, and a test holds that neither job has a `name:` override.
+- **`yarn ship`:**
+  - It finds the `qa` push's run with `gh run list --commit <sha> --event push` and polls its status until the run completes. An empty conclusion counts as not green.
+  - It opens the release pull request only after that run is green, so the release PR's own run finds the tree tested and skips. `judgeChecks` already treats SKIPPED and NEUTRAL as green.
+  - It skips the migration step only when `git diff origin/main origin/qa -- src/db/migrations` is empty, which is the same test as `migrate.yml`'s `paths` filter. It still approves a waiting migration run and still refuses a failed one.
+  - It prints each step's m:ss and a total, at the end and at any stop, and appends one JSON line to `SHIP_TIMES_FILE` (default in the temp directory), so the next measurement is a file rather than a stopwatch.
+  - The one Google-Fonts rerun is gone. Since §460 the fonts are the repository's own files through `next/font/local`, so the build no longer fetches from Google and that flake cannot happen.
+- **Landing a batch** (`docs/DISPATCHER.md`): after `yarn docs:land --apply` and the hand edits, the landing commit is `yarn docs:check` followed by `git commit --no-verify`. CI runs the full `yarn check` on the batch pull request minutes later, and every merged branch already passed the hook. The risk is a red batch PR instead of a red hook, fixed by a fix round. The hook still runs for every other commit.
+
+**Consequences.**
+
+- The first release after this lands gains nothing from the skip, because its batch PR ran the old workflow and recorded no tree. From the next one, a release whose `qa` did not move between the batch merge and the release tests its tree once.
+- The skip itself is proven only on GitHub. The unit tests hold the workflow's shape and ship's judgement.
+
+A tested-tree record is trusted for twenty-four hours at most. `tested-tree` accepts an artifact only if its `created_at` is within the last 86 400 seconds, and the record uploads with `retention-days: 1`, the shortest GitHub keeps one. The end-to-end seed builds its events relative to today, so a tree tested days ago has not been tested against today's dates. A release ships a tree tested the same day; an older tree is tested again in full. Why the workflow always runs and only its jobs skip is GitHub's own documented behaviour: a job skipped by its `if:` reports success to a required check, while a workflow skipped by a path or branch filter leaves the check pending (https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks).
+
+The landing commit's `--no-verify` is written into the rules and not left as a dispatcher habit. AGENTS.md §6.3 and SETUP.md § Contributing name it as the one documented exception: every branch in the batch already passed the hook, `yarn docs:check` runs first, and CI runs the full `yarn check` on the batch pull request minutes later. Every other commit keeps the hook.
+
+`yarn ship` prints each step's duration the moment it ends and the total at the end or at a stop, so a release in progress shows where its time goes.
+
+Baseline `BR-V2.12-2026-09-27`.
+
+## 509. The minimum age is one box in «Regulamentul» for every type, and the page says it in «Condiții de participare»
+
+The owner, 2026-09-27 19:30: «tot în 2.12 trebuie să pot seta vârsta minimă de participare la regulament pentru orice tip de eveniment».
+
+**What it was.** The minimum age was two boxes, and the save picked one by the type:
+
+- the race's, under «Participare și înscrieri» › «Condiții de participare» (§329);
+- a group run's own `event.groupRunMinAge`, in «Traseul» (§440, §495).
+
+A type that registers elsewhere or not at all had no box on screen. The event page said the age only where the club takes the registrations, as a «Vârstă» row of the facts (§410).
+
+**The editor.** There is now one `event.minAge`, labelled «Vârsta minimă de participare» / «Minimum age to take part». It sits after the rules' language tabs, in «Program, regulament și declarație» › «Regulamentul» (§448, §481), for every type.
+
+- Its help is the owner's sentence: «0 = fără limită. Sub 18 ani, înscrierea se face de un părinte.»
+- A group run keeps §440's note under it: its self-declaration is for adults.
+- A role without settings rights reads the number instead of the box. The server refuses its change regardless (BR-REQ-060-01).
+- The rules card's closed line says «vârsta minimă 14 ani» / «fără vârstă minimă».
+- The registration card keeps one line saying where the age and the declaration went.
+- The reader (`eventFieldsFrom`) reads `minAge` for every type. The group-run special case and its refusal name are gone.
+- No migration: the service already stored `min_age` for every type, and a series carries it by scope as before.
+
+**The page.** The age is no longer a row of the facts. It is said inside «Condiții de participare» (§498), under an `h3` «Vârstă», after the rules and before the photographs notice. The age is a condition of taking part, so it is read with the rules, where the editor now asks for it. The sentence is `publicAgeRule`'s:
+
+- where the club takes the registrations, the registration form's own sentence (§410), so the page and the form cannot disagree;
+- anywhere else — a group run, an event registered at another organizer's or taking none — «Vârsta minimă: N ani. Sub 18 ani, participarea se face cu acordul unui părinte.», with the minimum alone from eighteen. There is no registration there for a parent to make, so the sentence names the parent's consent, not a door that does not exist;
+- for 0 where nobody registers here, nothing.
+
+The structured data states `typicalAgeRange` wherever minAge > 0.
+
+**Visible on shipping.** Every existing event carries the column default of 14. Production's weekly group run, which never set an age, will therefore say «Vârsta minimă: 14 ani. Sub 18 ani, participarea se face cu acordul unui părinte.» in its «Condiții de participare», and its JSON-LD will say `typicalAgeRange` "14-", unless the club sets 0. The doors are unchanged: the form, the desk, a staff entry and the group-run declaration still count the same number (`effectiveMinimumAge`).
+
+Amends §329, §410, §440, §448, §481, §498.
+
+The staff preview (`/preview/events/[id]`) says the minimum age as the public page does: `EventAgeRule`, after the rules, the same `publicAgeRule`, since the facts no longer carry a «Vârstă» row.
+
+The column's default of 14 (§329) now reaches every type's page, so every existing group run and external event says «Vârsta minimă: 14 ani» until the club changes it. This is deliberate: the owner asked for the age on every type. The editor's help under the box says so: «Implicit 14; pune 0 pentru fără limită.», with the number read from `MIN_PARTICIPANT_AGE`.
+
+Baseline `BR-V2.12-2026-09-27`.

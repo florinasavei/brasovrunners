@@ -122,6 +122,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 11. Amends criterion 10. The offer checkbox is in the editor's «Regulamentul» › «Declarația pe propria răspundere» card, no longer in «Traseul». It follows the surface chosen in «Traseul», says that surface, and names the approved text in force for it with its version (2026-09-26, `DECISIONS.md` §448).
 12. Every event type has one minimum-age box in the editor's «Regulamentul», and its help says the default and that 0 means no limit, in both languages (2026-09-27, `DECISIONS.md` §505).
 13. The event page and the staff preview say the age sentence chosen by `publicAgeRule` after the rules, and say nothing when there is no minimum and no registration here (2026-09-27, `DECISIONS.md` §505).
+14. Every event type has one minimum-age box in the editor's «Regulamentul», and its help says the default and that 0 means no limit, in both languages (2026-09-27, `DECISIONS.md` §509).
+15. The event page and the staff preview say the age sentence chosen by `publicAgeRule` after the rules, and say nothing when there is no minimum and no registration here (2026-09-27, `DECISIONS.md` §509).
 
 **Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
@@ -173,6 +175,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 12. While the credit is spent — DeepL's meter at 100 % or the usage read answered 456 — the editors' «Copiază și tradu tot» is drawn disabled with «Creditul DeepL s-a terminat — vezi Costuri» and no per-box «Tradu din română» is drawn; any other unread credit leaves the buttons as they were (2026-09-27, `DECISIONS.md` §497).
 13. The credit reading is cached an hour under a key made of the host kind and a short SHA-256 fingerprint of the API key, never the key, expired after every press that reached DeepL, and a failed read is remembered a minute per server instance (2026-09-27, `DECISIONS.md` §497).
 14. The event page states the minimum age inside «Condiții de participare» on every type that has one: the registration form's sentence where the club registers, otherwise the minimum with the parent's consent under eighteen; nothing for 0 where nobody registers on the site.
+15. The event page states the minimum age inside «Condiții de participare» on every type that has one: the registration form's sentence where the club registers, otherwise the minimum with the parent's consent under eighteen; nothing for 0 where nobody registers on the site.
 
 **Verification:** CI check `i18n-parity`; unit `i18n/messages.test.ts`
 
@@ -320,6 +323,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 131. A press made while Cloudflare's token is missing is held, and it is sent with the pressed button as the submitter as soon as the widget's success callback fires or its hidden field receives the token, however long after page load that is. If neither happens, it is sent eight seconds after that press. A later held press, such as one after a refused attempt, is sent the same way (2026-09-27, `DECISIONS.md` §502).
 132. A form holds at most one press at a time. A press on any send button of that form while one is held is not sent and shows the same waiting sentence. When the check answers, exactly one request leaves, from the button that was pressed first (2026-09-27, `DECISIONS.md` §502).
 133. While a press is held, the waiting sentence says the form will be sent without another press, and it asks the person to tick the check's box when one appears, in both languages (2026-09-27, `DECISIONS.md` §502).
+134. A press made while Cloudflare's token is missing is held, and it is sent with the pressed button as the submitter as soon as the widget's success callback fires or its hidden field receives the token, however long after page load that is. If neither happens, it is sent eight seconds after that press. A later held press, such as one after a refused attempt, is sent the same way (2026-09-27, `DECISIONS.md` §506).
+135. A form holds at most one press at a time. A press on any send button of that form while one is held is not sent and shows the same waiting sentence. When the check answers, exactly one request leaves, from the button that was pressed first (2026-09-27, `DECISIONS.md` §506).
+136. While a press is held, the waiting sentence says the form will be sent without another press, and it asks the person to tick the check's box when one appears, in both languages (2026-09-27, `DECISIONS.md` §506).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -648,6 +654,7 @@ coffee is run on nothing.
 11. The public registration form requires the city, asked right after the birth date. The staff entry keeps it optional.
 12. Under the birth-date box, on the public form and at the desk, a line reads the typed date back in words, with its weekday, plus the age on the event's day. Nothing is shown before a full date is typed.
 13. The end-to-end suite runs the registration form against a server with the anti-bot check on, using Cloudflare's published test keys (never the club's). It proves that a held press is sent by the check's answer rather than by the eight-second valve (§502).
+14. The end-to-end suite runs the registration form against a server with the anti-bot check on, using Cloudflare's published test keys (never the club's). It proves that a held press is sent by the check's answer rather than by the eight-second valve (§506).
 
 **Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
@@ -740,6 +747,7 @@ coffee is run on nothing.
 24. The city is required on the public registration form, right after the birth date, and stays optional on a staff (paper) entry (2026-09-26, `DECISIONS.md` §467).
 25. Criterion 8 amended: the socials are shown to Administrators and in the export, and on the public list only as BR-REQ-039-01 allows. The export carries "Socials on the public list": the last CSV column, and beside Instagram in the spreadsheet.
 26. The minimum age is one box, «Vârsta minimă de participare», in the editor's «Regulamentul», for every event type, and it is saved for every type.
+27. The minimum age is one box, «Vârsta minimă de participare», in the editor's «Regulamentul», for every event type, and it is saved for every type.
 
 **Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`; unit and integration `registrations/minimum-age.test.ts` (11); e2e `registration-form.spec.ts` (11)
 
@@ -1837,6 +1845,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 11. criterion (new): the SportsOrganization and SportsEvent organiser name, the page title, the header link's and wordmark's accessible names, the share pictures, the calendar's PRODID and feed file name, the legal PDF's Author and the EMAIL_FROM_NAME default are all `CLUB_NAME`. No string under `src/` outside `theme/brand.ts` and the seeds names the club, and a test fails otherwise (§369).
 12. Given an event whose map link carries coordinates in its address, or which has typed «Coordonate», when its JSON-LD is built, then its `Place` carries `geo` as `GeoCoordinates` with that point. Given only the club's fallback place, or a place to be announced, then no `geo` is published (2026-09-25, `DECISIONS.md` §416).
 13. The event page's «Vârstă» fact row and the JSON-LD `typicalAgeRange` state the event's minimum age for every event type and registration mode whenever it is above zero. The parent's clause is added only where the club takes the registrations (INTERNAL). With no minimum and no registration here, the page has no age row and the JSON-LD has no `typicalAgeRange`. Covered by `tests/unit/events/age-every-type.test.ts` and `tests/unit/events/structured-data.test.ts`.
+14. The event page's «Vârstă» fact row and the JSON-LD `typicalAgeRange` state the event's minimum age for every event type and registration mode whenever it is above zero. The parent's clause is added only where the club takes the registrations (INTERNAL). With no minimum and no registration here, the page has no age row and the JSON-LD has no `typicalAgeRange`. Covered by `tests/unit/events/age-every-type.test.ts` and `tests/unit/events/structured-data.test.ts`.
 
 **Verification:** integration `seo/structured-data.test.ts`; e2e `event-page.spec.ts`
 
@@ -1904,6 +1913,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 34. Every declaration document — the signed PDF, the club's archive copy, the event's bundle, the blank desk form and the group-run PDF — names the version of the text it carries and the day that version took effect («Versiunea N, în vigoare din <weekday, date>», on the club's clock) under each entry's title and in the footer of every page, each page naming its own entry's version; a signed page's footer also says when it was signed. Both signing pages show the same line over the text.
 35. A group run's optional self-declaration (§393) is never deleted by the retention sweep. It leaves only through the Administrator's audited erase, on the signer's request, or with its event. The sweep clears only its identity document, seven days after the run.
 36. The run's page, the backoffice fold, the signer's email, the club's archive email, both group-run declaration templates and the privacy-notice template say, in Romanian and English, that the platform keeps the declaration until the signer asks for it to be deleted. None of them states a number of days for it.
+37. A group run's optional self-declaration (§393) is never deleted by the retention sweep. It leaves only through the Administrator's audited erase, on the signer's request, or with its event. The sweep clears only its identity document, seven days after the run.
+38. The run's page, the backoffice fold, the signer's email, the club's archive email, both group-run declaration templates and the privacy-notice template say, in Romanian and English, that the platform keeps the declaration until the signer asks for it to be deleted. None of them states a number of days for it.
 
 **Verification:** integration `legal/versions.test.ts`; unit `legal/inline.test.ts`; e2e `legal-pages.spec.ts`
 
@@ -2202,6 +2213,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 69. The `/admin/tasks` translation row reads the credit: done (green) under 80 %, open (amber) with its own sentence and the steps for a new credit from 80 %, broken (red) from 95 % and when spent, and red with «—» and the reason when DeepL refuses the key or answers 456 (2026-09-27, `DECISIONS.md` §497).
 70. The registrations export (CSV and spreadsheet) ends with «Declaration version» and «Declaration signed», taken from the registration's latest declaration acceptance and left blank when none exists. Every earlier column keeps its position (§499).
 71. The event editor posts the minimum age from exactly one box, `event.minAge`, in «Program, regulament și declarație» › «Regulamentul», for every event type. A role without settings rights sees the number as text and gets no input; the server still refuses the change. Covered by `tests/unit/content/event-form-together.test.ts`.
+72. The event editor posts the minimum age from exactly one box, `event.minAge`, in «Program, regulament și declarație» › «Regulamentul», for every event type. A role without settings rights sees the number as text and gets no input; the server still refuses the change. Covered by `tests/unit/content/event-form-together.test.ts`.
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 
@@ -2459,6 +2471,8 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 12. The migrations' snapshot chain is linear. Every journal entry has its SQL file and its snapshot, each snapshot's prevId is the previous snapshot's id with no repeated id, idx counts up from 0, and the tags' numbers and the `when` values only grow, so `drizzle-kit generate` runs against the newest snapshot (2026-09-27, `DECISIONS.md` §491). Tests: tests/unit/db/migration-chain.test.ts.
 13. The docs-check workflow always runs, skips `yarn check` and the e2e shards only by a job condition when the exact tree was recorded as passing by this workflow on this repository within the last 24 hours, and runs everything when the record is missing, older, or the lookup fails (2026-09-27, `DECISIONS.md` §504).
 14. A batch's landing commit is the one documented commit made without the pre-commit hook; it runs `yarn docs:check` first and CI runs the full `yarn check` on its pull request (2026-09-27, `DECISIONS.md` §504).
+15. The docs-check workflow always runs, skips `yarn check` and the e2e shards only by a job condition when the exact tree was recorded as passing by this workflow on this repository within the last 24 hours, and runs everything when the record is missing, older, or the lookup fails (2026-09-27, `DECISIONS.md` §508).
+16. A batch's landing commit is the one documented commit made without the pre-commit hook; it runs `yarn docs:check` first and CI runs the full `yarn check` on its pull request (2026-09-27, `DECISIONS.md` §508).
 
 **Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 
