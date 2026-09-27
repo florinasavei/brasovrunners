@@ -191,8 +191,54 @@ describe("the accounts the key can see", () => {
       "mihai@club.zitadel.cloud",
       "mihai@example.ro",
     ]);
-    expect(calls[0].body).toEqual({ query: { limit: 200 }, queries: [{ typeQuery: { type: "TYPE_HUMAN" } }] });
+    expect(calls[0].body).toEqual({ query: { offset: 0, limit: 200, asc: true }, sortingColumn: "USER_FIELD_NAME_CREATION_DATE", queries: [{ typeQuery: { type: "TYPE_HUMAN" } }] });
     expect((calls[0] as { url: string }).url).toBe("https://id.example.test/v2/users");
+    // A short first page is the whole listing: one call, not capped.
+    expect(calls).toHaveLength(1);
+    expect(listed.capped).toBe(false);
+  });
+
+  /*
+    §NNN: every club member is a human account too, so the organization outgrows one page. The
+    listing pages with offset/limit until a short page, and says `capped` at its ceiling rather
+    than handing back a set that is silently short.
+  */
+  it("pages through Zitadel's search until a short page", async () => {
+    const pages: Record<number, Array<Record<string, unknown>>> = {
+      0: [{ human: { email: { email: "a@x.ro" } } }, { human: { email: { email: "b@x.ro" } } }],
+      2: [{ human: { email: { email: "c@x.ro" } } }],
+    };
+    const { call, calls } = fakeFetch({
+      "/v2/users": (init) => {
+        const { query } = JSON.parse(String(init.body)) as { query: { offset: number } };
+        return new Response(JSON.stringify({ result: pages[query.offset] ?? [] }), { status: 200 });
+      },
+    });
+    const listed = await listZitadelHumanAccounts({ ...deps, fetch: call, pageSize: 2 });
+    expect(calls.map((c) => (c.body as { query: unknown }).query)).toEqual([
+      { offset: 0, limit: 2, asc: true },
+      { offset: 2, limit: 2, asc: true },
+    ]);
+    expect(listed).toMatchObject({ kind: "listed", count: 3, capped: false });
+    if (listed.kind === "listed") expect([...listed.accounts].sort()).toEqual(["a@x.ro", "b@x.ro", "c@x.ro"]);
+  });
+
+  it("stops at its ceiling and says so, and a failed page is the listing's failure", async () => {
+    const full = fakeFetch({
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ username: "p" }, { username: "q" }] }), { status: 200 }),
+    });
+    const capped = await listZitadelHumanAccounts({ ...deps, fetch: full.call, pageSize: 2, max: 4 });
+    expect(full.calls).toHaveLength(2);
+    expect(capped).toMatchObject({ kind: "listed", count: 4, capped: true });
+
+    let page = 0;
+    const second = fakeFetch({
+      "/v2/users": () =>
+        page++ === 0
+          ? new Response(JSON.stringify({ result: [{ username: "p" }, { username: "q" }] }), { status: 200 })
+          : new Response(JSON.stringify({ message: "boom" }), { status: 500 }),
+    });
+    expect(await listZitadelHumanAccounts({ ...deps, fetch: second.call, pageSize: 2 })).toEqual({ kind: "refused", reason: "500 boom" });
   });
 
   it("needs the key, and says so without calling anything", async () => {

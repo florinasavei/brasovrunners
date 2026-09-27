@@ -208,6 +208,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
+      // The members' pages (§NNN): one screen for both texts, by hand.
+      "/admin/pages/members",
       "/admin/pages/new",
       // «Echipa»'s cards (§459): one screen, written here by hand.
       "/admin/pages/team",
@@ -242,6 +244,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/gallery/[slug]",
       "/legal/privacy",
       "/legal/terms",
+      // «Beneficiile membrilor» and the members' zone behind the sign-in (§NNN), by hand.
+      "/members",
+      "/members-area",
       // The newsletter's two link pages (§445): the confirmation and the subscriber's own page.
       "/newsletter/confirm/[token]",
       "/newsletter/manage/[token]",

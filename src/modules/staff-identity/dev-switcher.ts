@@ -26,7 +26,7 @@ import type { StaffRole } from "./domain/roles";
 const DEV_SUBJECT_PREFIX = "dev:";
 
 /** One key per role. `role-boundaries.test.ts` asserts the set matches `STAFF_ROLES`. */
-export type DevIdentityKey = "contributor" | "copywriter" | "moderator" | "dev" | "admin" | "superadmin";
+export type DevIdentityKey = "member" | "contributor" | "copywriter" | "moderator" | "dev" | "admin" | "superadmin";
 
 type DevIdentity = {
   key: DevIdentityKey;
@@ -42,6 +42,14 @@ export const DEV_IDENTITIES: readonly DevIdentity[] = [
    * identity here is a role nobody can exercise locally, which is how a permission boundary
    * goes untested until it is wrong in production.
    */
+  // A club member (§NNN): the members' zone, and nothing of the backoffice.
+  {
+    key: "member",
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}member`,
+    email: "dev-member@dev.test",
+    displayName: "Dev Member",
+    role: "MEMBER",
+  },
   {
     key: "contributor",
     zitadelSubject: `${DEV_SUBJECT_PREFIX}contributor`,

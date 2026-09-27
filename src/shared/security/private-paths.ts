@@ -27,6 +27,9 @@ const PRIVATE_SEGMENTS: readonly string[] = [
   "previzualizare",
   "sign-in",
   "autentificare",
+  // The members' zone (§NNN): behind the sign-in, the club's words for its members alone.
+  "zona-membri",
+  "members-area",
   // The aliases people type, so the redirect itself carries the same headers as its
   // destination (`src/i18n/aliases.ts`).
   ...ALIAS_SEGMENTS,

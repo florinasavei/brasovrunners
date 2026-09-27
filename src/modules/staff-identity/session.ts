@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
-import type { StaffRole } from "./domain/roles";
+import { isBackofficeRole, type StaffRole } from "./domain/roles";
 import { findStaffUserById } from "./repository";
 
 /**
@@ -23,6 +23,14 @@ import { findStaffUserById } from "./repository";
  * `provider` for that environment (DECISIONS.md §26) — `getCurrentStaffUser` returns null for
  * every request, so the backoffice answers nobody. That is the correct answer while the door
  * has no lock, and it is enforced here rather than by omitting the routes.
+ *
+ * **Two answers since §NNN: the account, and the staff member.** A club member signs in through
+ * the same door and holds a `staff_users` row with the role `MEMBER` — and is not staff.
+ * `getCurrentAccount` answers for anybody signed in (the members' zone and the sign-in page ask
+ * it); `getCurrentStaffUser`, and `requireStaff` and `requireStaffCapability` on top of it, answer
+ * null for a member, exactly as for a stranger. That one line keeps every backoffice page, action
+ * and route handler — a hundred callers that ask "is there a staff session" before anything else —
+ * closed to a member without any of them naming the role.
  */
 
 /**
@@ -36,7 +44,11 @@ import { findStaffUserById } from "./repository";
  */
 export const DEV_STAFF_COOKIE = "br_dev_staff";
 
-export async function getCurrentStaffUser(): Promise<StaffUser | null> {
+/**
+ * Whoever is signed in — a member or a colleague — or null (§NNN). For the members' zone and the
+ * sign-in page; never a door to anything staff may do, which is `getCurrentStaffUser`'s.
+ */
+export async function getCurrentAccount(): Promise<StaffUser | null> {
   if (isDevStaffSwitcherEnabled()) {
     const id = (await cookies()).get(DEV_STAFF_COOKIE)?.value;
     if (!id) return null;
@@ -56,6 +68,12 @@ export async function getCurrentStaffUser(): Promise<StaffUser | null> {
   }
 
   return null;
+}
+
+/** The staff member signing this request, or null — and null for a member, who is no staff (§NNN). */
+export async function getCurrentStaffUser(): Promise<StaffUser | null> {
+  const account = await getCurrentAccount();
+  return account && isBackofficeRole(account.role) ? account : null;
 }
 
 export async function requireStaff(): Promise<StaffUser> {
