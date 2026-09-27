@@ -84,7 +84,7 @@ const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
 /**
- * Whether the members' pages carry the asset (§NNN): «Beneficiile membrilor» and the members' zone,
+ * Whether the members' pages carry the asset (§524): «Beneficiile membrilor» and the members' zone,
  * both languages of both in their one `platform_settings` row — read as its text, like the team's.
  */
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
@@ -104,7 +104,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
   -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
-  -- A picture in the members' pages (§NNN), kept in their platform setting.
+  -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
 )`;
 
@@ -298,7 +298,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
-  // A picture in the members' pages (§NNN).
+  // A picture in the members' pages (§524).
   const inMembersPages = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)

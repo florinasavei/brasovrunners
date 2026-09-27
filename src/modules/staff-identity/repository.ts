@@ -107,7 +107,7 @@ export async function countSuperadministrators<T extends Record<string, unknown>
 }
 
 /**
- * How many club members have an account (§NNN) — the members' pages say it, as a number: the list
+ * How many club members have an account (§524) — the members' pages say it, as a number: the list
  * is the team page's, and personal data.
  */
 export async function countMembers<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
@@ -119,7 +119,7 @@ export async function countMembers<T extends Record<string, unknown>>(db: Databa
 }
 
 /**
- * How many people run the club's site (§NNN): every account but a club member's, who signs in and
+ * How many people run the club's site (§524): every account but a club member's, who signs in and
  * is no staff. `/admin/tasks` asks it for "the team is invited"; the role line is the repository's,
  * so no page compares a role by hand.
  */
@@ -131,7 +131,7 @@ export async function countBackofficeStaff<T extends Record<string, unknown>>(db
   return row?.count ?? 0;
 }
 
-/** The rows behind these addresses (§NNN): a bulk press takes an address already a member again. */
+/** The rows behind these addresses (§524): a bulk press takes an address already a member again. */
 export async function findStaffUsersAmong<T extends Record<string, unknown>>(db: Database<T>, emails: readonly string[]): Promise<StaffUser[]> {
   if (emails.length === 0) return [];
   return db

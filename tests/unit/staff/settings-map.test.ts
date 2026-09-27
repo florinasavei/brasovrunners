@@ -35,7 +35,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
   it("offers the four content tabs from the Redactor up, «Costuri» and «Anti-robot» to the Administrators, nothing to the volunteer", () => {
     const content = ["emails", "deadlines", "contact", "appearance"];
     const expected: Record<StaffRole, string[]> = {
-      // A club member (§NNN) has no backoffice at all.
+      // A club member (§524) has no backoffice at all.
       MEMBER: [],
       CONTRIBUTOR: [],
       COPYWRITER: content,

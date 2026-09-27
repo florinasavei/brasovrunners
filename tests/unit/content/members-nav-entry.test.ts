@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 
 /**
- * §NNN — «Membri» in the menu: offered only while «Beneficiile membrilor» is published **and** its
+ * §524 — «Membri» in the menu: offered only while «Beneficiile membrilor» is published **and** its
  * benefits are written (`offersMembersEntry`, which `SiteHeader` and the sitemap both ask), so a
  * published page with no words never puts the platform's placeholder sentence in every visitor's
  * menu. `SiteNav` draws the entry exactly when the header says so (`showMembers`).
@@ -35,7 +35,7 @@ async function html(element: ReactElement): Promise<string> {
 
 const benefits: RichTextDoc = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Reducere la magazin." }] }] };
 
-describe("§NNN «Membri» in the menu", () => {
+describe("§524 «Membri» in the menu", () => {
   it("is offered only for a published page whose benefits are written", () => {
     expect(offersMembersEntry({ published: false, benefits: null })).toBe(false);
     expect(offersMembersEntry({ published: false, benefits })).toBe(false);

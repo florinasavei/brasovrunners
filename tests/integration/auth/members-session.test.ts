@@ -6,7 +6,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — a club member signs in through the staff door and is no staff.
+ * BR-REQ-060-01, §524 — a club member signs in through the staff door and is no staff.
  *
  * The session is read the one way it is everywhere (`session.ts`, the development switcher's
  * cookie in tests), from a real database: a member is an account (`getCurrentAccount`) and not a
@@ -47,7 +47,7 @@ async function redirectedTo(promise: Promise<unknown>): Promise<string> {
   throw new Error("expected a redirect");
 }
 
-describe("§NNN a member signs in and is no staff", () => {
+describe("§524 a member signs in and is no staff", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let member: StaffUser;

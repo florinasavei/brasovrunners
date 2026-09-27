@@ -24,7 +24,7 @@ import { findStaffUserById } from "./repository";
  * every request, so the backoffice answers nobody. That is the correct answer while the door
  * has no lock, and it is enforced here rather than by omitting the routes.
  *
- * **Two answers since §NNN: the account, and the staff member.** A club member signs in through
+ * **Two answers since §524: the account, and the staff member.** A club member signs in through
  * the same door and holds a `staff_users` row with the role `MEMBER` — and is not staff.
  * `getCurrentAccount` answers for anybody signed in (the members' zone and the sign-in page ask
  * it); `getCurrentStaffUser`, and `requireStaff` and `requireStaffCapability` on top of it, answer
@@ -45,7 +45,7 @@ import { findStaffUserById } from "./repository";
 export const DEV_STAFF_COOKIE = "br_dev_staff";
 
 /**
- * Whoever is signed in — a member or a colleague — or null (§NNN). For the members' zone and the
+ * Whoever is signed in — a member or a colleague — or null (§524). For the members' zone and the
  * sign-in page; never a door to anything staff may do, which is `getCurrentStaffUser`'s.
  */
 export async function getCurrentAccount(): Promise<StaffUser | null> {
@@ -70,7 +70,7 @@ export async function getCurrentAccount(): Promise<StaffUser | null> {
   return null;
 }
 
-/** The staff member signing this request, or null — and null for a member, who is no staff (§NNN). */
+/** The staff member signing this request, or null — and null for a member, who is no staff (§524). */
 export async function getCurrentStaffUser(): Promise<StaffUser | null> {
   const account = await getCurrentAccount();
   return account && isBackofficeRole(account.role) ? account : null;

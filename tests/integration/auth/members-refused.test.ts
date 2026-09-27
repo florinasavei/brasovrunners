@@ -8,7 +8,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — a club member is refused by the backoffice at every kind of door, and an
+ * BR-REQ-060-01, §524 — a club member is refused by the backoffice at every kind of door, and an
  * Administrator adds members in bulk, the whole list or nobody.
  *
  * The session is the real one (`session.ts`, the development switcher's cookie), over a real
@@ -68,7 +68,7 @@ function form(fields: Record<string, string>): FormData {
   return data;
 }
 
-describe("§NNN the backoffice refuses a member at every door", () => {
+describe("§524 the backoffice refuses a member at every door", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let member: StaffUser;
@@ -110,7 +110,7 @@ describe("§NNN the backoffice refuses a member at every door", () => {
   });
 });
 
-describe("§NNN «Adaugă mai mulți membri» — the whole list or nobody", () => {
+describe("§524 «Adaugă mai mulți membri» — the whole list or nobody", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

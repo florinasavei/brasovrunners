@@ -201,7 +201,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
   it("lets only a Superadministrator make, change or remove a Superadministrator (§450)", () => {
     // An Administrator gives every role up to their own, and never the top one — so no
     // Administrator can promote a colleague (or a second account of their own) past themselves.
-    // A club member (§NNN) is added on the same page, with the same invitation.
+    // A club member (§524) is added on the same page, with the same invitation.
     expect(assignableRoles("ADMIN")).toEqual(["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN"]);
     expect(assignableRoles("SUPERADMIN")).toEqual([...STAFF_ROLES]);
     expect(canAssignRole("ADMIN", "SUPERADMIN")).toBe(false);
@@ -329,7 +329,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
     // volunteer's whole backoffice: a person handing out numbers is not offered the events.
     expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
-    // A club member (§NNN) has no backoffice at all: not one section, not even the guide — the
+    // A club member (§524) has no backoffice at all: not one section, not even the guide — the
     // session answers "no staff" for them before any section is asked (`session.ts`).
     expect(visibleAdminSections("MEMBER")).toEqual([]);
     /*
@@ -513,7 +513,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canReadContent: /*        */ [false, false, true, true, true, true, true],
     // «Setări» (§516): every role that reads the club's content — the volunteer has the desk alone.
     canOpenSettings: /*       */ [false, false, true, true, true, true, true],
-    // §NNN: the members' zone is every account's; the backoffice line and the members' pages as for «Echipa».
+    // §524: the members' zone is every account's; the backoffice line and the members' pages as for «Echipa».
     isBackofficeRole: /*      */ [false, true, true, true, true, true, true],
     canOpenMembersZone: /*    */ [true, true, true, true, true, true, true],
     canEditMembersPage: /*    */ [false, false, true, false, false, true, true],

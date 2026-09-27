@@ -3,11 +3,11 @@ import { landingFor, signInTargetOf } from "@/modules/staff-identity/domain/land
 import { isBackofficeRole, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01, §NNN — where a sign-in lands. One sign-in page serves the team and the club's
+ * BR-REQ-060-01, §524 — where a sign-in lands. One sign-in page serves the team and the club's
  * members: a member always lands in the members' zone, whatever the page asked; a colleague where
  * they came from. `?to=` is typed by anybody, so it is a closed set and never a path.
  */
-describe("§NNN where a sign-in lands", () => {
+describe("§524 where a sign-in lands", () => {
   it("reads `to` as a closed set: only «members» is anything but the backoffice", () => {
     expect(signInTargetOf("members")).toBe("members");
     for (const value of [undefined, null, "", "admin", "MEMBERS", "/ro/admin", "https://example.test", ["members"]]) {

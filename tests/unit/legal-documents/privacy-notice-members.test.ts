@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
- * §NNN — the privacy-notice template describes the club members' accounts before an Administrator
+ * §524 — the privacy-notice template describes the club members' accounts before an Administrator
  * invites one: section 12 names what is kept for a member, that Zitadel holds the account, what the
  * members' zone shows and how the account is deleted; the processors' line says Zitadel holds the
  * team's **and** the members' accounts. `MEMBER_INVITATION` points the member at this notice.
  */
-describe("§NNN the privacy notice covers the members' accounts", () => {
+describe("§524 the privacy notice covers the members' accounts", () => {
   const cases = [
     { lang: "ro", body: privacyNoticeRo, heading: "12. Echipa și membrii clubului", zone: "zona membrilor", processor: "conturile de autentificare ale echipei și ale membrilor clubului" },
     { lang: "en", body: privacyNoticeEn, heading: "12. The club's team and members", zone: "members' area", processor: "sign-in accounts of the club's team and members" },

@@ -102,7 +102,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
    */
   const accounts = await checkInviteKey({ authMode: env.STAFF_AUTH_MODE, readerEmail: actor.email });
   /**
-   * «Adaugă mai mulți membri» (§NNN): the press's report, read back from its own audit row — one
+   * «Adaugă mai mulți membri» (§524): the press's report, read back from its own audit row — one
    * line per member, by row id, named here from the list above. A row withdrawn since is left out.
    */
   const reportRow = saved === "membersInvited" && report && UUID.test(report) ? await findAuditEvent(getDb(), report, "staff.members_invited") : undefined;
@@ -197,7 +197,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {accountVerb && account === "failed" && (
           <Alert severity="warning">{t("staff.accountFailed", { reason: reason ?? "" })}</Alert>
         )}
-        {/* «Adaugă mai mulți membri» (§NNN): how many, and how many accounts the provider refused. */}
+        {/* «Adaugă mai mulți membri» (§524): how many, and how many accounts the provider refused. */}
         {saved === "membersInvited" && (
           <Alert severity={failed ? "warning" : "success"} data-testid="staff-members-report">
             {failed ? t("staff.membersInviteFailed", { count: count ?? "0", failed }) : t("staff.membersInvited", { count: count ?? "0" })}
@@ -316,7 +316,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
       </Panel>
 
       {/*
-        «Adaugă mai mulți membri» (§NNN): the club's members, one per row, all as «Membru» — a list
+        «Adaugă mai mulți membri» (§524): the club's members, one per row, all as «Membru» — a list
         pasted from the club's own records rather than nine fields per person. The whole list or
         nobody (§457): a row that is not an address, or an address already on the team, adds no one
         and names the rows. A fold of its own, closed like every fold (§336).

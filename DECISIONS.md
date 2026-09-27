@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.14-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.15-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.14-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.15-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20251,3 +20251,61 @@ The owner's release plan for BR-V2.14: "one self-declaration per series of group
 The group-run offer line says the signature covers the whole series only when both hold: the text in force names `{{series}}` and the run has another date (`findRunSeries` gives a series key). A one-off run shows the one-date line even under a series text, because its signature covers its one date. The privacy notice says a signature covers every date of a repeating run only where the declaration's text says so, because a text approved before this § binds each signature to its own date.
 
 Baseline `BR-V2.14-2026-09-27`.
+
+## 524. Club members sign in to a members' zone: a MEMBER role that is no staff, «Beneficiile membrilor», and bulk invitations
+
+**The ask.** The club wants its members to sign in and read what is for members only — discount codes, club news — without handing them any part of the backoffice. The owner: log in "to the club admin area with very limited access".
+
+**A seventh role, `MEMBER`, below the volunteer.** A member is a `staff_users` row like a colleague: added on Echipa, invited by email and by Zitadel with the same key (§123), on the same allowlist, through the same sign-in. Migration `0102_members_zone` only adds things: `staff_role` gains `MEMBER` BEFORE `CONTRIBUTOR` (rank 0), and `email_message_type` gains `MEMBER_INVITATION`. A member's invitation names the members' area, never "the team that runs the site", and is sent through the same club channel.
+
+**The line is drawn once, at the door.** `getCurrentAccount` answers for anybody signed in. `getCurrentStaffUser`, and therefore `requireStaff` and `requireStaffCapability`, answer null for a member (`isBackofficeRole`), exactly as for a stranger. About a hundred backoffice pages, Server Actions and route handlers ask "is there a staff session" first, and none of them has to name the role: a member is refused at every one. This is tested on the layout, a page (`/admin/pages/members`), two actions and `/api/admin/registrations/export` (401). The members' zone is open to every role (`canOpenMembersZone`), so a colleague is a member too.
+
+**The zone lives at `/ro/zona-membri` (`/en/members-area`), not under `/admin`. This departs from the brief and needs the owner's approval.** Everything under `/admin` sits behind `requireStaff` in its layout, loads the backoffice's client islands and words, and is exactly the area a member must never enter. Putting the member's page there would need a hole in the one line above. Outside it, the zone:
+- is opened by the account;
+- is `force-dynamic` and `noindex`;
+- is listed in `private-paths.ts` (a `no-store`, `noindex` header) and in `robots.txt`;
+- wears the public site's header and footer.
+
+Its words are read per request and never pass through the public cache. `readPublicMembersPage` returns only the status and the benefits.
+
+The zone shows:
+- the club's zone text, both languages or neither (§352);
+- «Următoarele alergări»: the next five published events, from the listing's own cached read (§333), with no query of its own and nothing a stranger could not see;
+- for a colleague, the way to the backoffice;
+- the sign-out, which lands on «Beneficiile membrilor».
+
+**A member who types `/admin` is redirected to the zone, not answered 404.** The 404 remains the answer where `STAFF_AUTH_MODE=disabled`, when there is no lock at all. A member is signed in and knows the backoffice exists, because the sign-in page is shared. A dead end would read as a broken account, and the sign-in page would only send them back. The redirect grants nothing: every page, action and route underneath still refuses them on its own.
+
+**«Beneficiile membrilor» (`/ro/membri`, `/en/members`).** A public page with the club's words, both languages or neither, and the button «Intră în zona membrilor» / "Enter the members' area". It is a DRAFT (404) until an Administrator publishes it, after asking (§384). «Membri» appears in the menu and the sitemap only while the page is published and its benefits are written (`offersMembersEntry`), «Echipa»'s rule (§459). A published page with no words would put the platform's placeholder sentence in every visitor's menu, but its address still answers for a link the club has already shared. The sign-in page takes `?to=members`, a closed set that cannot become an open redirect, for the members' words and landing.
+
+**The backoffice.** «Pagini» is one row of secondary tabs in two captioned groups, each entry with its glyph:
+- «Pagini standard»: Contact (its settings stay under «Setări», §516), Echipa, Beneficii, Zona membrilor;
+- «Pagini personalizate»: the club's own pages.
+
+`SubNav` (§360) gains an optional `glyph` and `group`; the elements stay on the server, so the defect `action-icons.ts` documents cannot occur. `/admin/pages/members` edits both texts (Redactor and Administrator, `canEditMembersPage`) and publishes the public page (Administrator, `canPublishMembersPage`). Pictures in either text are counted by the orphan-picture sweep and by the older-pictures button.
+
+**«Adaugă mai mulți membri» on Echipa.** A textarea with one person per row: an address, or a name and an address («Ana Pop, ana@…», a spreadsheet's two columns). The whole list or nobody, §457's rule for a list of addresses:
+- if any row is not an address, nothing is added and the refusal names the rows (`INVALID_ADDRESSES`);
+- if any address is already on the team, nothing is added and the refusal names it (`MEMBERS_ON_TEAM`);
+- more than 200 rows is refused (`TOO_MANY_ADDRESSES`).
+
+Otherwise every row becomes a `MEMBER` in one transaction, each with its own `MEMBER_INVITATION`, and then its Zitadel account where the key is set. A refused account leaves its row marked «Fără cont de autentificare» (§288), and the banner counts how many. An address typed twice is kept once. A row with no name is named by the address's local part. The single «Adaugă» confirm now says that a Membru enters only the members' area.
+
+**Privacy.** The privacy-notice template's section 12 becomes «Echipa și membrii clubului» / "The club's team and members":
+- what is kept for a member: name, address, role, language, first sign-in;
+- that Zitadel holds the account;
+- what the zone shows, and what it does not;
+- the basis, art. 6(1)(f);
+- how the account is deleted.
+
+The processors' line says Zitadel holds the team's and the members' accounts. The notice in force says none of this until the club approves a new version from the platform's text. The members' invitation points at the notice.
+
+**Cost.** Zitadel Cloud's free tier, checked on zitadel.com/pricing on 2026-09-27: 100 daily active users, unlimited stored users, unlimited organisations, 3 identity providers, custom workflows included, no monthly actions number published. A club's members fit at no cost. Costuri's Zitadel row says so. "The team is invited" on `/admin/tasks` counts the backoffice staff alone (`countBackofficeStaff`), never the members.
+
+Review round 2. The accounts listing behind Echipa and /admin/tasks (`listZitadelHumanAccounts`) pages through Zitadel's `/v2/users` search: 200 accounts a page, offset and limit, sorted by creation date, until a page comes back short. It stops at `ACCOUNTS_LISTING_MAX` = 2000. A listing that reached the ceiling says so (`capped`). Echipa then marks no row as having no account, a reader not found within the ceiling is reported as `capped` rather than `blind`, and the invitation-key row on /admin/tasks is open with its own sentence. A failure on any page fails the whole listing and is never a short set.
+
+«Adaugă mai mulți membri» takes at most 50 rows in one press. Every call to Zitadel is bounded at 10 s (`ZITADEL_CALL_TIMEOUT_MS`) by the module's one fetch wrapper. The sign-in accounts are created three at a time after the transaction, and each member gets one line: created, invited (the account existed), failed with the reason, or unconfigured. One audit row per press, `staff.members_invited` (entity `staff_user`), holds the counts and those lines by staff row id, never an address. The result page reads its report back from that row. An address that is already a member is taken again rather than refused, so pressing again retries a failed account, with no second row and no second platform invitation. An address with a backoffice role is still refused by name.
+
+The «Pagini» sub-navigation has one «Membri» entry for the one page that holds both members' texts as two cards. The guide names the path «Pagini» → «Pagini standard» → «Membri».
+
+Baseline `BR-V2.15-2026-09-27`.

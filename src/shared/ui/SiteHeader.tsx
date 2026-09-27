@@ -84,7 +84,7 @@ async function hasVisibleTeam(locale: Locale) {
   }
 }
 
-/** Whether «Membri» is offered (§NNN): «Beneficiile membrilor» published with its words (`offersMembersEntry`), or nothing. */
+/** Whether «Membri» is offered (§524): «Beneficiile membrilor» published with its words (`offersMembersEntry`), or nothing. */
 async function hasMembersPage(locale: Locale) {
   try {
     return (await readWithLastGood(`nav:members:${locale}`, async () => offersMembersEntry(await cachedMembersPage(locale)))).value;

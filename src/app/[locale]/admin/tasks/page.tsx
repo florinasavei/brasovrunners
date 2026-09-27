@@ -320,7 +320,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const contactRecipients = await readContactRecipients(db);
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here — the team,
-  // so a club member's account (§NNN) is not a colleague and is not counted.
+  // so a club member's account (§524) is not a colleague and is not counted.
   const staffCount = await countBackofficeStaff(db);
   /**
    * Whether the invitation key can create an account, asked of Zitadel with a real search

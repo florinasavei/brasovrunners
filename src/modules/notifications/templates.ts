@@ -1135,7 +1135,7 @@ const T = {
       action: "Intră în backoffice",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
-    // A club member added on Echipa (§NNN): the members' zone, never the backoffice.
+    // A club member added on Echipa (§524): the members' zone, never the backoffice.
     memberInvitation: {
       subject: `Ai cont de membru ${CLUB_NAME}`,
       body: (d: TemplateData) => [
@@ -2444,7 +2444,7 @@ export function buildTemplateContent(
         messageType === "DECLARATION_ARCHIVE" ||
         messageType === "GROUP_RUN_DECLARATION_ARCHIVE" ||
         messageType === "STAFF_INVITATION" ||
-        // …nor a member's invitation (§NNN): no event, no registration, nothing of a participant's to link.
+        // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
         messageType === "MEMBER_INVITATION"
       ) {
         return own.length > 0 ? own : undefined;
@@ -2537,7 +2537,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
-  // A member's invitation (§NNN) says what the account keeps in its own body, as the colleague's does.
+  // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
   "MEMBER_INVITATION",
 ]);
 

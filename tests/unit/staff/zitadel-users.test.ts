@@ -199,7 +199,7 @@ describe("the accounts the key can see", () => {
   });
 
   /*
-    §NNN: every club member is a human account too, so the organization outgrows one page. The
+    §524: every club member is a human account too, so the organization outgrows one page. The
     listing pages with offset/limit until a short page, and says `capped` at its ceiling rather
     than handing back a set that is silently short.
   */

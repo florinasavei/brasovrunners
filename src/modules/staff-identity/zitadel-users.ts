@@ -41,7 +41,7 @@ export type ZitadelDeps = {
 type Deps = ZitadelDeps;
 
 /**
- * How long one call to Zitadel may take (§NNN). A bulk invitation makes two calls per member after
+ * How long one call to Zitadel may take (§524). A bulk invitation makes two calls per member after
  * the transaction committed, inside a request; a provider that hangs must end one member's attempt
  * as `failed`, never the whole press.
  */
@@ -74,7 +74,7 @@ export async function inviteZitadelUser(
   person: { email: string; displayName: string; locale: Locale },
   deps: Deps = {},
 ): Promise<InviteOutcome> {
-  // A network failure or the timeout is this person's `failed`, in the platform's words (§NNN):
+  // A network failure or the timeout is this person's `failed`, in the platform's words (§524):
   // the bulk invitation reports it per address and moves on to the next.
   try {
     return await createAndInvite(person, deps);
@@ -266,7 +266,7 @@ export async function setZitadelUserActive(
  */
 export type AccountsListing =
   | { kind: "unconfigured" }
-  /** `capped`: the listing stopped at `ACCOUNTS_LISTING_MAX` and may not hold every account (§NNN). */
+  /** `capped`: the listing stopped at `ACCOUNTS_LISTING_MAX` and may not hold every account (§524). */
   | { kind: "listed"; accounts: ReadonlySet<string>; count: number; capped: boolean }
   | { kind: "refused"; reason: string }
   | { kind: "unreachable"; reason: string };
@@ -278,14 +278,14 @@ export type AccountsListing =
 export const ACCOUNTS_LISTING_TIMEOUT_MS = 4_000;
 
 /**
- * One page of Zitadel's user search. Since the members' zone (§NNN) every club member is a human
+ * One page of Zitadel's user search. Since the members' zone (§524) every club member is a human
  * account too, so the organization outgrows one page: the listing pages through with `offset`
  * until a short page, and stops at `ACCOUNTS_LISTING_MAX` — ten pages, each bounded by the timeout.
  */
 export const ACCOUNTS_LISTING_PAGE = 200;
 
 /**
- * The most accounts one listing reads (§NNN). Past it the listing says `capped`: Echipa claims
+ * The most accounts one listing reads (§524). Past it the listing says `capped`: Echipa claims
  * "no account" for nobody, and `/admin/tasks` shows the row that says the ceiling was reached.
  */
 export const ACCOUNTS_LISTING_MAX = 2_000;
@@ -323,7 +323,7 @@ export async function listZitadelHumanAccounts(
   // service account or a person created by hand may answer to nothing else.
   const accounts = new Set<string>();
   let count = 0;
-  // Page by page, in a stable order, until a page comes back short (§NNN). Every page is its own
+  // Page by page, in a stable order, until a page comes back short (§524). Every page is its own
   // bounded call; a failure on any page is the listing's failure, never a silently short set.
   for (let offset = 0; offset < max; offset += pageSize) {
     const limit = Math.min(pageSize, max - offset);

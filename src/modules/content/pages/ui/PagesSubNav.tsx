@@ -8,13 +8,13 @@ import type { Locale } from "@/i18n/routing";
 import SubNav from "@/shared/ui/SubNav";
 
 /**
- * The parts of the Pagini tab (§459, §NNN), in two groups on one row:
+ * The parts of the Pagini tab (§459, §524), in two groups on one row:
  *
  * - **«Pagini standard»** — the pages the platform draws and the club fills: «Contact» (its
  *   settings live under «Setări», §516, and are one press from here), «Echipa» (the owner: "pagina
  *   de echipa nu e o pagina custom"), «Membri» — the two members' texts, «Beneficiile membrilor» and
  *   «Zona membrilor», as two cards of one page, `/admin/pages/members`. One entry for one page: two
- *   entries for two hashes of it could never both say which one is shown (review, §NNN).
+ *   entries for two hashes of it could never both say which one is shown (review, §524).
  * - **«Pagini personalizate»** — the pages the club writes from nothing.
  *
  * A glyph per entry and a caption per group (`SubNavItem.glyph`, `.group`). «Aspect» (§488) was a

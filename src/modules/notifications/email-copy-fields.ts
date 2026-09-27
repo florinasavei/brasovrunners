@@ -316,7 +316,7 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
  * (§141), the newsletter's confirmation and a newsletter about the club (§445) — the new-event
  * alert, the newsletter's third, is about its event.
  */
-// A member's invitation (§NNN) is about the club's members' zone, like the colleague's about the team.
+// A member's invitation (§524) is about the club's members' zone, like the colleague's about the team.
 const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION", "MEMBER_INVITATION", "NEWSLETTER_CONFIRM", "NEWSLETTER"]);
 /** Messages about no one registration: the two above, and "registration is open". */
 // A group run's self-declaration (§393) is about a signature, never a registration: no status to state.

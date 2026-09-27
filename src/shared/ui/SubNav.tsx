@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 /**
  * One entry: where it goes, what it says, and whether it is the panel being shown. `glyph` and
- * `group` are optional (§NNN): a row that names kinds of things — «Pagini standard» and «Pagini
+ * `group` are optional (§524): a row that names kinds of things — «Pagini standard» and «Pagini
  * personalizate» — gives each entry its picture and each run of entries its caption. The glyph is
  * an element, which is safe here because `SubNav` is a Server Component end to end: nothing it
  * renders crosses into a client island.
@@ -110,7 +110,7 @@ const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } }
  * in the same document that these do not have.
  *
  * No glyphs by default: the main tab bar carries the pictures, and a row of one-word labels under
- * it is lighter without them. A row whose entries are kinds of things — «Pagini» (§NNN) — gives
+ * it is lighter without them. A row whose entries are kinds of things — «Pagini» (§524) — gives
  * each its glyph and each run its caption (`SubNavItem.glyph`, `.group`); the elements stay on
  * the server, so the defect `shared/ui/action-icons.ts` documents cannot happen here.
  *

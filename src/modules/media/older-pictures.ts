@@ -280,7 +280,7 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
       .where(and(eq(platformSettings.key, TEAM_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
-    // The members' pages (§NNN), in their platform setting like the team's introduction.
+    // The members' pages (§524), in their platform setting like the team's introduction.
     await tx
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })

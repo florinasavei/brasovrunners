@@ -618,7 +618,7 @@ async function renderRow(
   }
   // The staff invitation (§141): everything it says is in the payload — there is no
   // participant and no token; the action is the sign-in page, which asserts who they are.
-  // A member's invitation (§NNN) the same, its button the sign-in page in the members' words, which
+  // A member's invitation (§524) the same, its button the sign-in page in the members' words, which
   // lands in the members' zone.
   if (row.messageType === "STAFF_INVITATION" || row.messageType === "MEMBER_INVITATION") {
     const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown };

@@ -12,7 +12,7 @@ import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-ident
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * The members' pages (§NNN): «Beneficiile membrilor», the public page that says what a member of
+ * The members' pages (§524): «Beneficiile membrilor», the public page that says what a member of
  * the club gets and carries the sign-in button, and the members' zone behind that sign-in — one
  * page of the club's words for its members alone.
  *
@@ -150,7 +150,7 @@ export function membersTextFor(locale: string, settings: MembersPageSettings, te
 export type PublicMembersPage = { published: boolean; benefits: RichTextDoc | null; benefitsText: string | null };
 
 /**
- * Whether «Membri» is in the menu and the sitemap (§NNN): the page published **and** its benefits
+ * Whether «Membri» is in the menu and the sitemap (§524): the page published **and** its benefits
  * written — both languages, since `benefits` is null for a text written in one (§352). A published
  * page with no words would put the platform's placeholder sentence in every visitor's menu; the
  * address itself still answers, for the link the club has already shared. «Echipa»'s rule (§459):

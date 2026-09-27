@@ -120,7 +120,7 @@ describe("§288 the invitation key, tested rather than merely present", () => {
     expect((check as { reason: string }).reason).toContain("TimeoutError");
   });
 
-  it("claims no missing account from a listing that stopped at its ceiling (§NNN)", async () => {
+  it("claims no missing account from a listing that stopped at its ceiling (§524)", async () => {
     const full = (users: Array<Record<string, unknown>>) => answering(() => listing(users));
     // The reader found, the listing full to the ceiling: the key works, and no row is said to lack an account.
     const found = full([{ human: { email: { email: "florin@example.ro" } } }, { human: { email: { email: "x@y.ro" } } }]);

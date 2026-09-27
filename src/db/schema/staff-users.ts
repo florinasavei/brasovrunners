@@ -7,7 +7,7 @@ import { locale } from "./locale";
  * cannot exist even if application code is bypassed (BR-REQ-060-01).
  */
 // `COPYWRITER` since §103; `CONTRIBUTOR` is the volunteer since the same decision. `MEMBER`
-// since §NNN: a club member with a sign-in and no backoffice, placed first (below the volunteer).
+// since §524: a club member with a sign-in and no backoffice, placed first (below the volunteer).
 export const staffRole = pgEnum("staff_role", ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
 
 /**

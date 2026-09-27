@@ -39,12 +39,12 @@
  */
 
 /**
- * Seven roles, in rank order (`DECISIONS.md` §103, §NNN). The names the club sees are in
+ * Seven roles, in rank order (`DECISIONS.md` §103, §524). The names the club sees are in
  * `staff-labels.ts`: the member, the volunteer, the copywriter, the organizer, the developer, the
  * administrator, the superadministrator. The enum keeps `CONTRIBUTOR` for the volunteer
  * because a Postgres enum value is not renamed; what the role *does* changed in §103.
  *
- * **`MEMBER` is below the ladder's first rung, and outside the backoffice (§NNN).** A club member
+ * **`MEMBER` is below the ladder's first rung, and outside the backoffice (§524).** A club member
  * with a sign-in account: the same Zitadel sign-in and the same `staff_users` allowlist row as a
  * colleague — added on the team page, invited the same way — and nothing of the backoffice. What a
  * member opens is the members' zone, one page of the club's member-only words. `isBackofficeRole`
@@ -62,7 +62,7 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
  * rule in two places and exactly what §1.5 forbids. It imports this now.
  */
 const RANK: Record<StaffRole, number> = {
-  // A member (§NNN): below the volunteer, so no threshold from the desk up ever includes one.
+  // A member (§524): below the volunteer, so no threshold from the desk up ever includes one.
   MEMBER: 0,
   CONTRIBUTOR: 1,
   COPYWRITER: 2,
@@ -78,7 +78,7 @@ export function atLeast(role: StaffRole, minimum: StaffRole): boolean {
 }
 
 /**
- * **Whether a role is staff at all — the backoffice's line (§NNN).** Every role from the volunteer
+ * **Whether a role is staff at all — the backoffice's line (§524).** Every role from the volunteer
  * up. A member is not: `session.ts` answers "no staff session" for one, so the backoffice, `/devs`,
  * the staff preview and every staff route handler treat a member as signed out.
  */
@@ -87,7 +87,7 @@ export function isBackofficeRole(role: StaffRole): boolean {
 }
 
 /**
- * **The members' zone (§NNN)** — the club's member-only page, behind the sign-in. Every account the
+ * **The members' zone (§524)** — the club's member-only page, behind the sign-in. Every account the
  * club has made: a member, and every colleague, who is a member of the club first.
  */
 export function canOpenMembersZone(role: StaffRole): boolean {
@@ -95,7 +95,7 @@ export function canOpenMembersZone(role: StaffRole): boolean {
 }
 
 /**
- * Writing the members' pages — the public benefits and the member-only words (§NNN): words, so the
+ * Writing the members' pages — the public benefits and the member-only words (§524): words, so the
  * Redactor's and the Administrator's, like «Echipa»'s introduction (§459).
  */
 export function canEditMembersPage(role: StaffRole): boolean {
@@ -103,7 +103,7 @@ export function canEditMembersPage(role: StaffRole): boolean {
 }
 
 /**
- * Putting «Beneficiile membrilor» on the site, or taking it off (§NNN): crossing public view, the
+ * Putting «Beneficiile membrilor» on the site, or taking it off (§524): crossing public view, the
  * Administrator's since §201 — the threshold of publishing «Echipa».
  */
 export function canPublishMembersPage(role: StaffRole): boolean {
@@ -473,7 +473,7 @@ export function canManageRegistrations(role: StaffRole): boolean {
  * The race-day desk (BR-REQ-037-07, BR-REQ-037-08; `DECISIONS.md` §67): every staff session.
  *
  * A volunteer handing out numbers is the lowest staff role — CONTRIBUTOR; a member is no staff
- * at all (§NNN) and has no desk — and the desk is
+ * at all (§524) and has no desk — and the desk is
  * open to them because a desk sees one runner at a time: the person standing in front of it,
  * by name, with a number and a check-in state. It never sees an address, the export, or the
  * cancel and erase verbs, which stay behind `canManageRegistrations`. What the desk *can* do

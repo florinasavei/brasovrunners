@@ -42,7 +42,7 @@ export const DEV_IDENTITIES: readonly DevIdentity[] = [
    * identity here is a role nobody can exercise locally, which is how a permission boundary
    * goes untested until it is wrong in production.
    */
-  // A club member (§NNN): the members' zone, and nothing of the backoffice.
+  // A club member (§524): the members' zone, and nothing of the backoffice.
   {
     key: "member",
     zitadelSubject: `${DEV_SUBJECT_PREFIX}member`,

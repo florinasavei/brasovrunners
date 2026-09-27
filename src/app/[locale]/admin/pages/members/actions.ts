@@ -12,7 +12,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The writes of the members' pages (§NNN), «Echipa»'s shape (§459): a saved text or a switched page
+ * The writes of the members' pages (§524), «Echipa»'s shape (§459): a saved text or a switched page
  * is a redirect to the screen with a language-neutral code; a refused text returns, so every box
  * comes back as typed (§315). Each asks its capability at the door and again in the service
  * (BR-REQ-060-01).

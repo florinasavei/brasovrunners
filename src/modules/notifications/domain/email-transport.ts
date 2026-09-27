@@ -68,7 +68,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   GROUP_RUN_DECLARATION_ARCHIVE: "club",
   CLUB_CONFIRMATION_NOTICE: "club",
   STAFF_INVITATION: "club",
-  // A member's invitation (§NNN) takes the colleague's road: one message, from the club, to a person it knows.
+  // A member's invitation (§524) takes the colleague's road: one message, from the club, to a person it knows.
   MEMBER_INVITATION: "club",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",

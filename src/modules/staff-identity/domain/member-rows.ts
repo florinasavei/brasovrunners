@@ -1,5 +1,5 @@
 /**
- * «Adaugă mai mulți membri» (§NNN): the rows an Administrator pastes, one person per row.
+ * «Adaugă mai mulți membri» (§524): the rows an Administrator pastes, one person per row.
  *
  * A row is an address, or a name and an address — "Ana Pop, ana@…", "Ana Pop <ana@…>", a tab from a
  * spreadsheet's two columns, or a semicolon. The address is the row's entry that holds an "@"; the
@@ -16,7 +16,7 @@
 export type MemberRow = { email: string; displayName: string };
 
 /**
- * How many rows one press may add (§NNN): each is a sign-in account at the provider, made after the
+ * How many rows one press may add (§524): each is a sign-in account at the provider, made after the
  * transaction inside the same request, so a longer list is pasted in several presses.
  */
 export const MEMBER_ROWS_MAX = 50;

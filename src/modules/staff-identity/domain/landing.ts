@@ -1,7 +1,7 @@
 import { isBackofficeRole, type StaffRole } from "./roles";
 
 /**
- * Where a sign-in lands (§NNN) — a pure function, so the rule is tested without a browser.
+ * Where a sign-in lands (§524) — a pure function, so the rule is tested without a browser.
  *
  * One sign-in page serves the team and the club's members. It is opened from two places: the
  * backoffice's own door (`/admin` sends an anonymous visitor there) and «Beneficiile membrilor»'s

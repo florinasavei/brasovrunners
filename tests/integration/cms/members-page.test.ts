@@ -21,11 +21,11 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — the members' pages: who writes them and who puts the public one on the site,
+ * BR-REQ-060-01, §524 — the members' pages: who writes them and who puts the public one on the site,
  * both languages or neither, the members' zone never in the public read, the pictures in them kept
  * from the sweep, and a member invited from the team page with a member's invitation.
  */
-describe("§NNN the members' pages", () => {
+describe("§524 the members' pages", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Partial<Record<StaffRole, StaffUser>> = {};

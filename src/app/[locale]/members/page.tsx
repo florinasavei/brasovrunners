@@ -77,7 +77,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * «Beneficiile membrilor» / "Members' benefits" (§NNN): what a member of the club gets, in the
+ * «Beneficiile membrilor» / "Members' benefits" (§524): what a member of the club gets, in the
  * club's words, and the door to the members' zone.
  *
  * A platform page, like «Echipa» (§459): its address and title are the platform's; the club writes

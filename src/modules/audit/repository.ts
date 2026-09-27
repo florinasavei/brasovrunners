@@ -254,14 +254,14 @@ export type AuditAction =
   | "team_page.unpublished"
   | "team_page.intro_saved"
   /**
-   * The members' pages (§NNN): «Beneficiile membrilor» on or off the site, and either of its two
+   * The members' pages (§524): «Beneficiile membrilor» on or off the site, and either of its two
    * texts saved — which text, and whether it is written; never the words.
    */
   | "members_page.published"
   | "members_page.unpublished"
   | "members_page.text_saved"
   /**
-   * «Adaugă mai mulți membri» (§NNN): one row per press — how many were added, how many were
+   * «Adaugă mai mulți membri» (§524): one row per press — how many were added, how many were
    * already members, and each member's sign-in account by row id (created, invited, failed with
    * the provider's words, unconfigured). Never an address or a name: the ids are the staff rows.
    * The result page reads its report back from this row.
@@ -286,7 +286,7 @@ export type RecordAuditInput = {
   // `newsletter` for a send (its id) or a subscription removed by hand (no id: the row is gone).
   // `team_member` for a card of «Echipa» (§459).
   // `content` for a translation press, about boxes in a form rather than a stored row (§472).
-  // `staff_user` for the team's rows — a bulk invitation of members names no single one (§NNN).
+  // `staff_user` for the team's rows — a bulk invitation of members names no single one (§524).
   entityType:
     | "registration"
     | "event"
@@ -310,7 +310,7 @@ export type RecordAuditInput = {
   now: Date;
 };
 
-/** Returns the new row's id, for the one caller that shows a row back (§NNN); the rest ignore it. */
+/** Returns the new row's id, for the one caller that shows a row back (§524); the rest ignore it. */
 export async function recordAuditEvent<T extends Record<string, unknown>>(
   db: Database<T>,
   input: RecordAuditInput,
@@ -330,7 +330,7 @@ export async function recordAuditEvent<T extends Record<string, unknown>>(
   return row.id;
 }
 
-/** One audit row of one action, by id, or nothing (§NNN): a result page reading its own report. */
+/** One audit row of one action, by id, or nothing (§524): a result page reading its own report. */
 export async function findAuditEvent<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,

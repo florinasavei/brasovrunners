@@ -71,7 +71,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   DECLARATION_ARCHIVE: ["participantName", "eventTitle", "signedAtFormatted"],
   BIB_ASSIGNED: ["eventTitle", "bibNumber", "checkinCode"],
   STAFF_INVITATION: ["staffRole", "inviterName"],
-  // A member's account (§NNN): who made it; never a role, which a member does not read as one.
+  // A member's account (§524): who made it; never a role, which a member does not read as one.
   MEMBER_INVITATION: ["inviterName"],
   REGISTRATION_OPENED: ["eventTitle"],
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],

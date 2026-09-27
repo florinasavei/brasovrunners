@@ -8,12 +8,12 @@ import { MEMBER_ROWS_MAX, parseMemberRows } from "@/modules/staff-identity/domai
 import { inviteZitadelUser, type InviteOutcome } from "@/modules/staff-identity/zitadel-users";
 
 /**
- * §NNN «Adaugă mai mulți membri» — the accounts after the transaction: a few at a time, every
+ * §524 «Adaugă mai mulți membri» — the accounts after the transaction: a few at a time, every
  * member one line of the report, a failure never the whole press's.
  */
 const members = (n: number) => Array.from({ length: n }, (_, index) => ({ id: `id-${index}` }));
 
-describe("§NNN the members' sign-in accounts, batched and reported", () => {
+describe("§524 the members' sign-in accounts, batched and reported", () => {
   it("never runs more than three at once, and answers every member in the order given", async () => {
     let inFlight = 0;
     let peak = 0;

@@ -45,7 +45,7 @@ export const dynamic = "force-dynamic";
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * The members' pages in the backoffice (§NNN), «Membri» in the «Pagini standard» group of «Pagini»: «Beneficiile
+ * The members' pages in the backoffice (§524), «Membri» in the «Pagini standard» group of «Pagini»: «Beneficiile
  * membrilor» — whether it is on the site, and its words — and the members' zone's words.
  *
  * Read by whoever reads the club's content (§208); writing either text is the Redactor's and the
@@ -54,7 +54,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
  * the action asserts it again (BR-REQ-060-01).
  *
  * Who is a member is not decided here: a member is an account, added on the team page as «Membru»
- * with the same invitation a colleague gets (§NNN). The screen says how many there are, and links
+ * with the same invitation a colleague gets (§524). The screen says how many there are, and links
  * there for a reader who may add one.
  */
 export default async function AdminMembersPage({ params, searchParams }: Props) {
@@ -219,7 +219,7 @@ function TextCard({
         {mayEdit && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <summary>
-              {/* The glyph the «Pagini» row gives this text (§NNN): the benefits' card, the zone's lock. */}
+              {/* The glyph the «Pagini» row gives this text (§524): the benefits' card, the zone's lock. */}
               {text === "benefits" ? (
                 <CardMembershipIcon aria-hidden="true" sx={FOLD_GLYPH_SX} />
               ) : (

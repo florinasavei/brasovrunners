@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.15-2026-09-27
+
+- **The members' zone**: a «Membru» role added on Echipa with the usual invitation, which opens only a members-only page behind the sign-in and nothing of the backoffice; the public «Beneficiile membrilor» page with the sign-in button; both texts in Romanian and English under «Pagini» → «Membri», the public page published by an Administrator; migration `0101`. §524.
 ## BR-V2.14-2026-09-27
 
 - **The V2.13 review's leftovers**: «Configurație» only under «Setări», its panels in the same row; old `#card` links reach the card's new tab; a waiting-list offer is kept while its email waits for the scheduler; a family's next form keeps the country; `ship` survives «Merge already in progress»; the run declaration's 18 said in the editor and the guide; the greyed translate button named once; the family confirmation previewed on «Emailuri». §520.

@@ -136,7 +136,7 @@ export type InviteKeyState = {
   kind: "inapplicable" | "unconfigured" | "ok" | "blind" | "capped" | "refused" | "unreachable";
   reason?: string;
   /**
-   * The accounts listing stopped at its ceiling (§NNN): the key may work, and Echipa cannot say
+   * The accounts listing stopped at its ceiling (§524): the key may work, and Echipa cannot say
    * of any row that its account is missing. Set with `ok` (the reader was found) and implied by
    * `capped` (they were not, within the ceiling).
    */
@@ -436,7 +436,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   if (input.inviteKey.kind !== "inapplicable") {
     const key = input.inviteKey;
     const broken = key.kind === "blind" || key.kind === "refused";
-    // The listing's ceiling (§NNN): a warning, never a verdict on the key — open, with its own words.
+    // The listing's ceiling (§524): a warning, never a verdict on the key — open, with its own words.
     const capped = key.kind === "capped" || (key.kind === "ok" && key.capped === true);
     push("inviteKey", {
       owner: "club",

@@ -130,7 +130,7 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
 }
 
 /**
- * «Adaugă mai mulți membri» (§NNN): several club members in one press, each a `MEMBER` row with its
+ * «Adaugă mai mulți membri» (§524): several club members in one press, each a `MEMBER` row with its
  * own invitation — the whole list or nobody.
  *
  * Every row is validated before any is inserted (§457's rule for a list of addresses): one row that
@@ -139,7 +139,7 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
  * action names the rows. The inserts and the invitations are one transaction, so a failure half-way
  * leaves no half of the list.
  *
- * An address that is already a **member** is not a refusal but `existing` (§NNN): pressing again
+ * An address that is already a **member** is not a refusal but `existing` (§524): pressing again
  * with the addresses whose sign-in account the provider refused is how they are retried. Such a row
  * gets no second row and no second platform invitation — only the account step the action runs
  * after the transaction.
@@ -215,7 +215,7 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
     participantId: null,
     registrationId: null,
     // A club member is invited to the members' zone, never to "the team that runs the site"
-    // (§NNN): the same row, the same sign-in, its own words.
+    // (§524): the same row, the same sign-in, its own words.
     messageType: isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION",
     locale: member.preferredLocale,
     recipientEmail: member.email,

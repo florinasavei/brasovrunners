@@ -1060,7 +1060,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
 }
 
 /**
- * «Adaugă mai mulți membri» (§NNN): one row per person, the role `MEMBER`, the whole list or nobody.
+ * «Adaugă mai mulți membri» (§524): one row per person, the role `MEMBER`, the whole list or nobody.
  *
  * A refusal names the rows (§457): the ones that are not addresses (`INVALID_ADDRESSES`), the ones
  * already on the team with a backoffice role (`MEMBERS_ON_TEAM`), or the ceiling of
@@ -1258,7 +1258,7 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
       sameSite: "lax",
       path: "/",
     });
-    // Where the provider's sign-in would land (§NNN): the page the person came from, and a member
+    // Where the provider's sign-in would land (§524): the page the person came from, and a member
     // always the members' zone.
     landing = landingFor(staffUser.role, signInTargetOf(text(form, "to")));
   } catch (error) {
@@ -1279,7 +1279,7 @@ export async function signInAsDevIdentityAction(form: FormData): Promise<void> {
  */
 export async function signOutAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  // Signing out of the members' zone lands on the members' page, not the team's door (§NNN).
+  // Signing out of the members' zone lands on the members' page, not the team's door (§524).
   const after = signInTargetOf(text(form, "from")) === "members" ? "/members" : "/sign-in";
   (await cookies()).delete(DEV_STAFF_COOKIE);
 

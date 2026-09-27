@@ -399,7 +399,7 @@ export async function cachedTeamPage(locale: Locale) {
 }
 
 /**
- * `readPublicMembersPage`: «Beneficiile membrilor» (§NNN) — whether it is on the site and its
+ * `readPublicMembersPage`: «Beneficiile membrilor» (§524) — whether it is on the site and its
  * benefits, for the page, the navigation's entry and the sitemap. Never the members' zone, which is
  * read per request for a signed-in account alone. Filed under `pages`, like «Echipa».
  */

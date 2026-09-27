@@ -21,7 +21,7 @@ import type { StaffAuthMode } from "@/shared/config/env-enums";
  * - `ok` — the key found the reader; the listing comes along so Echipa can mark each row.
  * - `blind` — the key authenticates and cannot see the reader's own account: the membership is
  *   missing, exactly §288. `seen` says how many accounts it saw instead, usually none.
- * - `capped` — the listing read its ceiling of accounts (§NNN) without meeting the reader: no
+ * - `capped` — the listing read its ceiling of accounts (§524) without meeting the reader: no
  *   verdict on the key; `/admin/tasks` says the ceiling was reached.
  * - `refused` — Zitadel refused the search, in its own words (a revoked token: 401; a token
  *   with no permission on this instance's configuration: 403).
@@ -35,12 +35,12 @@ export type InviteKeyCheck =
   | { kind: "inapplicable" }
   | { kind: "unconfigured" }
   /**
-   * `complete` is false when the listing stopped at its ceiling (`ACCOUNTS_LISTING_MAX`, §NNN):
+   * `complete` is false when the listing stopped at its ceiling (`ACCOUNTS_LISTING_MAX`, §524):
    * the key works, and an address missing from the set may be one the listing never read.
    */
   | { kind: "ok"; accounts: ReadonlySet<string>; complete: boolean }
   | { kind: "blind"; seen: number }
-  /** The listing reached its ceiling without the reader in it: no verdict on the key (§NNN). */
+  /** The listing reached its ceiling without the reader in it: no verdict on the key (§524). */
   | { kind: "capped"; seen: number }
   | { kind: "refused"; reason: string }
   | { kind: "unreachable"; reason: string };
@@ -65,7 +65,7 @@ export async function checkInviteKey(
 /**
  * Whether Echipa can say of a row that its account does not exist: only after a check that
  * found the reader, never from a listing that may be the key's blindness rather than the truth —
- * and never from one that stopped at its ceiling (§NNN), which may simply not have reached them.
+ * and never from one that stopped at its ceiling (§524), which may simply not have reached them.
  */
 export function hasNoAccount(check: InviteKeyCheck, email: string): boolean {
   return check.kind === "ok" && check.complete && !check.accounts.has(email.toLowerCase());

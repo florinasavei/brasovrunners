@@ -2,12 +2,12 @@ import { expect, test } from "@playwright/test";
 import { hydrated } from "./support/featured-event";
 
 /**
- * §NNN — a club member signs in through the development switcher's «Dev Member», lands on the
+ * §524 — a club member signs in through the development switcher's «Dev Member», lands on the
  * members' zone with the club's words and the next runs, and is sent back there from `/admin`: the
  * backoffice is not theirs. (`signIn` in the support file waits for `/admin`, which a member never
  * reaches, so the member signs in here.)
  */
-test.describe("§NNN the members' zone", () => {
+test.describe("§524 the members' zone", () => {
   test("a member lands on the zone and /admin sends them back to it", async ({ page }) => {
     await page.goto("/ro/autentificare?to=members");
     await page.getByRole("button", { name: /Dev Member/ }).click();

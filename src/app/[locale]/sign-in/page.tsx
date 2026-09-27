@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Sign-in — for the team, and since §NNN for the club's members.
+ * Sign-in — for the team, and since §524 for the club's members.
  *
  * `STAFF_AUTH_MODE=provider` renders the real thing: a single button that hands off to
  * Zitadel through Auth.js (AGENTS.md §13.1, DECISIONS.md §26). `dev-switcher` keeps the
@@ -58,7 +58,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
 
   // Already signed in: there is nothing to do here, and a sign-in button shown to somebody who
   // is signed in is how a redirect loop starts. A member asks the account, not the staff session
-  // (§NNN): the backoffice would send them back here, and here back to it.
+  // (§524): the backoffice would send them back here, and here back to it.
   const account = await getCurrentAccount();
   if (account) redirect(getPathname({ locale, href: landingFor(account.role, target) }));
 
@@ -89,7 +89,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
             // Back where the person came from, in the language the sign-in page was opened in.
             // Without `redirectTo`, Auth.js returns the visitor to this page, which then sends them
             // to Zitadel again — a signed-in visitor looking at a sign-in button. A member sent to
-            // `/admin` is passed on to the members' zone by its layout (§NNN).
+            // `/admin` is passed on to the members' zone by its layout (§524).
             await signIn("zitadel", { redirectTo: getPathname({ locale, href: target === "members" ? "/members-area" : "/admin" }) });
           }}
         >

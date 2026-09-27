@@ -57,7 +57,7 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
 const UPCOMING_SHOWN = 5;
 
 /**
- * «Următoarele alergări» (§NNN): the next published events, soonest first — the public listing's own
+ * «Următoarele alergări» (§524): the next published events, soonest first — the public listing's own
  * cached read (§333), so the zone costs the database nothing the listing has not already paid, and
  * shows nothing a stranger could not see. Empty while the database is away.
  */
@@ -73,7 +73,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
 }
 
 /**
- * The members' zone (§NNN): one page of the club's words for its members alone, behind the sign-in.
+ * The members' zone (§524): one page of the club's words for its members alone, behind the sign-in.
  *
  * The door is the account, never the staff session: a member (`MEMBER`) and every colleague open it
  * (`canOpenMembersZone`). Signed out, the visitor is sent to the sign-in in the members' words
@@ -87,7 +87,7 @@ async function upcomingOrNone(locale: Locale, now: Date) {
  * A colleague sees the way to the backoffice as well; a member sees only the zone and the sign-out,
  * which lands on «Beneficiile membrilor».
  *
- * **Why here and not under `/admin` (§NNN).** The zone is a public-tree route with the site's own
+ * **Why here and not under `/admin` (§524).** The zone is a public-tree route with the site's own
  * header and footer, not a page inside the backoffice's shell: everything under `/admin` sits
  * behind `requireStaff` in its layout, loads the backoffice's client islands and words, and is the
  * area a member must never be let into — putting the member's page there would mean a hole in the
@@ -174,7 +174,7 @@ export default async function MembersAreaPage({ params }: Props) {
       </Box>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
-        {/* A colleague is a member too, and their backoffice is one press away (§NNN). */}
+        {/* A colleague is a member too, and their backoffice is one press away (§524). */}
         {isBackofficeRole(account.role) && (
           <ButtonLink href="/admin" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="members-backoffice">
             <AdminPanelSettingsIcon aria-hidden="true" sx={glyphSx("medium")} />
@@ -187,7 +187,7 @@ export default async function MembersAreaPage({ params }: Props) {
   );
 }
 
-/** The sign-out, landing on «Beneficiile membrilor» rather than the team's door (§NNN). */
+/** The sign-out, landing on «Beneficiile membrilor» rather than the team's door (§524). */
 function SignOut({ locale, label }: { locale: Locale; label: string }) {
   return (
     <form action={signOutAction}>

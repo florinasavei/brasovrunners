@@ -412,7 +412,7 @@ describe("the invitation key row (§288)", () => {
     }
   });
 
-  it("warns, open and with its own words, when the accounts listing reached its ceiling (§NNN)", () => {
+  it("warns, open and with its own words, when the accounts listing reached its ceiling (§524)", () => {
     for (const key of [{ kind: "ok", capped: true }, { kind: "capped" }] as const) {
       expect(keyRow(key)).toMatchObject({ state: "open", text: "capped", steps: "howCapped" });
     }

@@ -1,7 +1,7 @@
 import type { InviteOutcome } from "./zitadel-users";
 
 /**
- * «Adaugă mai mulți membri» (§NNN): the sign-in accounts, one per member, after the transaction.
+ * «Adaugă mai mulți membri» (§524): the sign-in accounts, one per member, after the transaction.
  *
  * A press may carry up to `MEMBER_ROWS_MAX` people and each account is two calls to Zitadel, each
  * bounded by `ZITADEL_CALL_TIMEOUT_MS`. So the calls run a few at a time — never fifty at once

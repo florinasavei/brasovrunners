@@ -130,7 +130,7 @@ export const routing = defineRouting({
      */
     "/team": { ro: "/echipa", en: "/team" },
     /**
-     * The members' pages (§NNN): «Beneficiile membrilor», public, with the sign-in button; and the
+     * The members' pages (§524): «Beneficiile membrilor», public, with the sign-in button; and the
      * members' zone behind the sign-in, at an address of its own rather than under `/membri/`, so
      * its first segment can be private (`shared/security/private-paths.ts`: never indexed, never
      * publicly cached) while the benefits stay a page a search engine may read.
@@ -229,7 +229,7 @@ export const routing = defineRouting({
     "/admin/pages/new": "/admin/pages/new",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
-    /** The members' pages (§NNN): the public benefits and the member-only words, beside «Echipa». */
+    /** The members' pages (§524): the public benefits and the member-only words, beside «Echipa». */
     "/admin/pages/members": "/admin/pages/members",
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
