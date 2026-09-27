@@ -82,7 +82,7 @@ import {
 } from "../domain/schema";
 import { CROP_PRESETS, type CropPreset, presetCrop } from "../domain/picture-frame";
 import { editorLook, sameEditorLook } from "./editor-look";
-import { RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
+import { fillIsFor, RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
 import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
@@ -586,7 +586,7 @@ function RichTextEditorIsland({
     if (!editor) return;
     const onFill = (event: Event) => {
       const detail = (event as CustomEvent<RichTextFillDetail>).detail;
-      if (detail?.name !== name) return;
+      if (!fillIsFor(detail, name, hiddenValue.current)) return;
       editor.commands.setContent(detail.doc);
     };
     window.addEventListener(RICH_TEXT_FILL_EVENT, onFill);

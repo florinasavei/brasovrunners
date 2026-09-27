@@ -79,7 +79,8 @@ export function writePlainBox(box: Box, text: string): void {
  */
 export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): boolean {
   if (value.kind === "rich") {
-    fillRichText(name, value.doc);
+    // In this form only: «Echipa» has a `bioEnBody` in every card's form (§NNN).
+    fillRichText(name, value.doc, form);
     return false;
   }
   const box = boxNamed(form, name);
@@ -90,7 +91,7 @@ export function fillBox(form: HTMLFormElement | null, name: string, value: BoxVa
 }
 
 /**
- * Every English box of the form «Tradu tot din română» may fill: on the allowlist, not switched
+ * Every English box of the form «Copiază și tradu tot» may fill: on the allowlist, not switched
  * off, not a visible box a hidden block made read-only (§350: what is hidden is not asked), and
  * with a Romanian twin that has words in it. In the form's own order, each once.
  */
@@ -107,10 +108,23 @@ export function englishBoxesToTranslate(form: HTMLFormElement): string[] {
   return names;
 }
 
+/**
+ * The English boxes among `names` that already hold words — the ones «Copiază și tradu tot» would
+ * replace, and so the only reason it asks before it runs (§464, §NNN). Empty boxes are simply
+ * filled: one press, no question.
+ */
+export function englishBoxesWithWords(form: HTMLFormElement | null, names: readonly string[]): string[] {
+  return names.filter((name) => {
+    const box = boxNamed(form, name);
+    return box !== null && !isEmptyValue(readBox(name, box));
+  });
+}
+
 /** The words a person reads for a box: its label, or a rich text's fold title, or its name. */
 export function labelOfBox(form: HTMLFormElement | null, name: string): string {
   if (isRichTextField(name)) {
-    const summary = document.querySelector(`[data-rich-text-fold="${CSS.escape(name)}"] > summary`);
+    const scope: ParentNode = form ?? document;
+    const summary = scope.querySelector(`[data-rich-text-fold="${CSS.escape(name)}"] > summary`);
     const own = summary
       ? Array.from(summary.childNodes)
           .filter((node) => node.nodeType === Node.TEXT_NODE)
@@ -119,7 +133,7 @@ export function labelOfBox(form: HTMLFormElement | null, name: string): string {
           .trim()
       : "";
     if (own) return own;
-    const label = document.querySelector(`[data-rich-text="${CSS.escape(name)}"] > span`)?.textContent?.trim();
+    const label = scope.querySelector(`[data-rich-text="${CSS.escape(name)}"] > span`)?.textContent?.trim();
     if (label) return label;
   }
   const box = boxNamed(form, name);

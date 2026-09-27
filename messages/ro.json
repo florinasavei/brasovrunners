@@ -2403,13 +2403,13 @@
         },
         "translation": {
           "title": "Traducerea automată din română (DeepL, gratuit)",
-          "todo": "Construit: lângă fiecare câmp în engleză din editoare apare „Tradu din română”, iar sus „Tradu tot din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci câmpurile în engleză se scriu de mână, ca acum.",
-          "done": "Traducerea automată e pornită: editoarele au butoanele „Tradu din română”.",
+          "todo": "Construit: sus în fiecare editor (eveniment, pagină, album, card din Echipa) e butonul „Copiază și tradu tot: RO → EN”, iar lângă fiecare câmp în engleză „Tradu din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci butonul de sus e gri și trimite aici, iar câmpurile în engleză se scriu de mână.",
+          "done": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare.",
           "how": [
             "Fă-ți un cont DeepL API Free (pagina „DeepL API” de pe site-ul DeepL → planul Free): 500.000 de caractere pe lună, gratuit. DeepL poate cere un card doar pentru verificare; planul Free nu se taxează.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
             "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
-            "Deschide un eveniment: sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
           ]
         }
       },
@@ -2614,14 +2614,14 @@
       },
       "translationBudget": {
         "title": "Traducerea automată (DeepL)",
-        "intro": "Butoanele „Tradu din română” și „Tradu tot din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
         "inForce": {
           "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
           "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
         },
         "today": "Azi s-au trimis {used} din {budget} caractere.",
         "configured": "Cheia DeepL e pusă pe acest server: butoanele apar pentru Redactor, Organizator și Administrator.",
-        "notConfigured": "Cheia DeepL nu e pusă pe acest server: butoanele nu apar (vezi rândul din Sarcini).",
+        "notConfigured": "Cheia DeepL nu e pusă pe acest server: în editoare, „Copiază și tradu tot” e gri, cu un link spre pașii din Sarcini → Club.",
         "privacy": "Pleacă la DeepL (UE) doar textele clubului din câmpurile de conținut — niciodată datele unui participant și niciodată textele legale. Nota de confidențialitate nu se schimbă.",
         "updatedAt": "Ultima schimbare: {when}.",
         "readOnly": "Doar un Administrator poate schimba bugetul.",
@@ -2692,7 +2692,7 @@
           "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
         },
         "unread": "Furnizorul nu a răspuns acum ({reason}).",
-        "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butoanele de traducere nu apar.",
+        "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butonul de traducere din editoare e gri.",
         "period": "Luna calendaristică: {span}.",
         "periodNeon": "Perioada de facturare Neon: {span}.",
         "others": "Fără cost și fără consum urmărit aici: Zitadel (contul echipei), cron-job.org și GitHub (sarcinile automate) și Open-Meteo (vremea).",
@@ -3874,7 +3874,8 @@
               "steps": [
                 "Un eveniment nu se publică fără titlu și rezumat în română și în engleză.",
                 "Un text opțional (descrierea, regulamentul, notele programului, câmpurile SEO) se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța goală, cu tot ce ai scris păstrat.",
-                "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment."
+                "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment.",
+                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă: sub el e linkul spre pași."
               ]
             },
             {
@@ -6061,16 +6062,19 @@
   "Translate": {
     "button": "Tradu din română",
     "pending": "Se traduce…",
-    "all": "Tradu tot din română",
-    "allHelp": "Înlocuiește fiecare câmp în engleză care are text în română cu traducerea lui, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
+    "all": "Copiază și tradu tot: RO → EN",
+    "allHelp": "Un singur buton: fiecare text scris în română ajunge în câmpul lui din engleză, tradus automat (DeepL), cu aceeași așezare — titluri, liste, poze, linkuri. Câmpurile goale se completează direct; dacă engleza are deja text, te întreabă întâi. Citește, corectează, apoi apasă Salvează.",
+    "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
+    "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+    "offSteps": "Vezi pașii",
     "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
     "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
     "cut": "Scurtat la limita câmpului, verifică finalul: {fields}.",
     "confirm": {
       "title": "Înlocuiești textul în engleză?",
       "body": "Câmpul în engleză are deja text. Traducerea din română îl înlocuiește; nimic nu se salvează până nu apeși Salvează.",
-      "allTitle": "Traduci totul din română?",
-      "allBody": "Se înlocuiesc {count} câmpuri în engleză cu traducerea celor în română, cu aceeași așezare (titluri, liste, tabele, poze, linkuri). Nimic nu se salvează până nu apeși Salvează. Câmpurile: {fields}",
+      "allTitle": "Înlocuiești textul deja scris în engleză?",
+      "allBody": "Aceste câmpuri în engleză au deja text și vor fi înlocuite cu traducerea din română: {fields}. Celelalte se completează. Nimic nu se salvează până nu apeși Salvează.",
       "go": "Tradu",
       "cancel": "Renunță"
     },
@@ -6079,6 +6083,7 @@
       "notConfigured": "Traducerea automată nu e configurată pe acest server (lipsește cheia DeepL).",
       "invalid": "Câmpul acesta nu se poate traduce automat.",
       "nothing": "Câmpul în română e gol: nu e nimic de tradus.",
+      "nothingAll": "Nu e nimic de tradus: scrie întâi textele în română.",
       "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
       "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
       "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",

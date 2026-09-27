@@ -22,7 +22,7 @@ export function useTranslatePress() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<PressMessage | null>(null);
 
-  async function translate(form: HTMLFormElement | null, englishNames: readonly string[]): Promise<void> {
+  async function translate(form: HTMLFormElement | null, englishNames: readonly string[], options: { all?: boolean } = {}): Promise<void> {
     if (!action) return;
     const items: TranslateItemInput[] = [];
     for (const name of englishNames) {
@@ -33,7 +33,8 @@ export function useTranslatePress() {
       items.push(value.kind === "text" ? { field: name, kind: "text", text: value.text } : { field: name, kind: "rich", doc: value.doc });
     }
     if (items.length === 0) {
-      setMessage({ tone: "refused", text: t("refusal.nothing") });
+      // «Copiază și tradu tot» on a form with no Romanian words yet says so for the whole form.
+      setMessage({ tone: "refused", text: options.all ? t("refusal.nothingAll") : t("refusal.nothing") });
       return;
     }
 

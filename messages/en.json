@@ -2403,13 +2403,13 @@
         },
         "translation": {
           "title": "Automatic translation from Romanian (DeepL, free)",
-          "todo": "Built: beside every English box in the editors there is \"Translate from Romanian\", and \"Translate everything from Romanian\" at the top. It starts once DeepL's free key is on the server; until then the English boxes are written by hand, as now.",
-          "done": "Automatic translation is on: the editors have the \"Translate from Romanian\" buttons.",
+          "todo": "Built: at the top of every editor (event, page, album, team card) there is the \"Copy and translate everything: RO → EN\" button, and \"Translate from Romanian\" beside every English box. It starts once DeepL's free key is on the server; until then the top button is grey and points here, and the English boxes are written by hand.",
+          "done": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press.",
           "how": [
             "Create a DeepL API Free account (the \"DeepL API\" page on DeepL's site → the Free plan): 500,000 characters a month, free. DeepL may ask for a card for verification only; the Free plan is not charged.",
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
             "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
-            "Open an event: under the English boxes there is \"Translate from Romanian\". This row turns green. The daily budget is chosen under Tasks → Costs."
+            "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Tasks → Costs."
           ]
         }
       },
@@ -2614,14 +2614,14 @@
       },
       "translationBudget": {
         "title": "Automatic translation (DeepL)",
-        "intro": "The editors' \"Translate from Romanian\" and \"Translate everything from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
+        "intro": "The editors' \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
         "inForce": {
           "off": "In force: off (0 characters a day) — the buttons refuse every translation.",
           "daily": "In force: at most {count} characters a day."
         },
         "today": "Today {used} of {budget} characters were sent.",
         "configured": "The DeepL key is set on this server: the buttons show for the Copywriter, the Organizer and the Administrator.",
-        "notConfigured": "The DeepL key is not set on this server: the buttons do not show (see the row in Tasks).",
+        "notConfigured": "The DeepL key is not set on this server: in the editors, \"Copy and translate everything\" is grey, with a link to the steps under Tasks → Club.",
         "privacy": "Only the club's own texts from the content boxes go to DeepL (EU) — never a participant's data and never the legal texts. The privacy notice does not change.",
         "updatedAt": "Last changed: {when}.",
         "readOnly": "Only an Administrator can change the budget.",
@@ -2692,7 +2692,7 @@
           "vercel": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
         },
         "unread": "The provider did not answer just now ({reason}).",
-        "deeplOff": "The DeepL key is not set on this server, so the translation buttons do not appear.",
+        "deeplOff": "The DeepL key is not set on this server, so the editors' translation button is grey.",
         "period": "Calendar month: {span}.",
         "periodNeon": "Neon's billing period: {span}.",
         "others": "No cost and no usage tracked here: Zitadel (the team's sign-in), cron-job.org and GitHub (the automatic jobs) and Open-Meteo (the weather).",
@@ -3874,7 +3874,8 @@
               "steps": [
                 "An event is not published without a title and a summary in Romanian and in English.",
                 "An optional text (the description, the rules, the programme's notes, the SEO fields) is written in both languages or neither: the save refuses one language only and points at the empty box, with everything you typed kept.",
-                "If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning only."
+                "If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning only.",
+                "The English in one press: write everything in Romanian, then press «Copy and translate everything: RO → EN» at the top of the editor (event, page, album, team card). Every text goes, translated, into its English box, with the same layout. Read, correct, then «Save». If the button is grey, the DeepL key is not set yet: the link to the steps is under it."
               ]
             },
             {
@@ -6061,16 +6062,19 @@
   "Translate": {
     "button": "Translate from Romanian",
     "pending": "Translating…",
-    "all": "Translate everything from Romanian",
-    "allHelp": "Replaces every English box that has Romanian text with its translation, with the same layout. Nothing is saved until you press Save.",
+    "all": "Copy and translate everything: RO → EN",
+    "allHelp": "One button: every text written in Romanian goes into its English box, translated automatically (DeepL), with the same layout — headings, lists, pictures, links. Empty boxes are filled at once; if the English already has text, it asks first. Read, correct, then press Save.",
+    "off": "Automatic translation is not on yet: the server has no free DeepL key. It is set once, and then the button works in every editor.",
+    "offAskAdmin": "Automatic translation is not on yet: the server has no free DeepL key. Ask an Administrator to set it (the steps are under Tasks → Club).",
+    "offSteps": "See the steps",
     "done": "Translated. Read it, correct it if needed, then save.",
     "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
     "cut": "Cut to the box's limit, check the ending: {fields}.",
     "confirm": {
       "title": "Replace the English text?",
       "body": "The English box already has text. The translation from Romanian replaces it; nothing is saved until you press Save.",
-      "allTitle": "Translate everything from Romanian?",
-      "allBody": "{count} English boxes are replaced with the translation of the Romanian ones, with the same layout (headings, lists, tables, pictures, links). Nothing is saved until you press Save. The boxes: {fields}",
+      "allTitle": "Replace the English already written?",
+      "allBody": "These English boxes already have text and will be replaced with the translation from Romanian: {fields}. The others are filled. Nothing is saved until you press Save.",
       "go": "Translate",
       "cancel": "Cancel"
     },
@@ -6079,6 +6083,7 @@
       "notConfigured": "Automatic translation is not set up on this server (the DeepL key is missing).",
       "invalid": "This box cannot be translated automatically.",
       "nothing": "The Romanian box is empty: there is nothing to translate.",
+      "nothingAll": "Nothing to translate: write the Romanian texts first.",
       "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
       "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
       "quota": "DeepL has used this month's free characters. Translation comes back next month.",
