@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { planSeriesSignature, type SeriesSignature, signerIdentity } from "@/modules/group-run-declarations/domain";
+import { keptSignature, type SeriesSignature, signedStateFor, signerIdentity } from "@/modules/group-run-declarations/domain";
+import { factsToKeep, readSignedFacts, seriesMergeValues, seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
+import { dropsParagraph, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
+import { groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 
 /**
  * §NNN — one self-declaration per person per series of group runs. The owner, 2026-09-27: "a
  * returning runner signs once; it has no end date and is deleted only at their request".
  *
- * The pure half: who a signature is (the canonical address and the name, read loosely), and what a
- * press does to the signatures already kept for the run — keep the one signed for the version in
- * force and send it again, or write a new one; the person's other rows go either way.
+ * The pure half: who a signature is (the canonical address and the name, read loosely); which
+ * signature a press keeps rather than writing a second — and that it never takes one away; what the
+ * run's page says to the person who opened it from their own link; and the text's series sentence
+ * and one-off sentence, one of which the renderer keeps.
  */
 
 const V1 = "11111111-1111-4111-8111-111111111111";
@@ -40,37 +44,123 @@ describe("§NNN who a signature is", () => {
   });
 });
 
-describe("§NNN what a press does to the run's signatures", () => {
+describe("§NNN which signature a press keeps", () => {
   const ana = { email: "ANA@example.ro", typedName: "ana popescu" };
 
-  it("writes the first signature of a person", () => {
-    expect(planSeriesSignature([], ana, V1)).toEqual({ kind: "new", superseded: [] });
-    // Another person's signature is theirs: untouched.
-    expect(planSeriesSignature([row("ion", { typedName: "Ion Popescu" })], ana, V1)).toEqual({ kind: "new", superseded: [] });
+  it("keeps none for a person's first signature, and never another person's", () => {
+    expect(keptSignature([], ana, V1)).toBeNull();
+    expect(keptSignature([row("ion", { typedName: "Ion Popescu" })], ana, V1)).toBeNull();
   });
 
-  it("keeps the signature of the version in force and sends it again, to the address it was signed with", () => {
-    expect(planSeriesSignature([row("a1", { email: "Ana@Example.ro" })], ana, V1)).toEqual({ kind: "kept", id: "a1", email: "Ana@Example.ro", superseded: [] });
+  it("keeps the signature of the version in force, to be sent again to the address it was signed with", () => {
+    expect(keptSignature([row("a1", { email: "Ana@Example.ro" })], ana, V1)).toMatchObject({ id: "a1", email: "Ana@Example.ro" });
   });
 
-  it("replaces an older version's signature with the new one", () => {
-    expect(planSeriesSignature([row("old")], ana, V2)).toEqual({ kind: "new", superseded: ["old"] });
+  it("keeps no older version's: the person signs the new one, and the older stays as it is", () => {
+    expect(keptSignature([row("old")], ana, V2)).toBeNull();
   });
 
-  it("keeps the earliest of the version in force and lets the person's other rows go — one per person per series", () => {
+  it("keeps the earliest of the version in force; it names nothing to delete", () => {
     const rows = [
       row("later", { acceptedAt: new Date("2026-10-08T08:00:00Z") }),
       row("first", { acceptedAt: new Date("2026-10-01T08:00:00Z") }),
       row("older-version", { legalDocumentId: V2, acceptedAt: new Date("2026-09-01T08:00:00Z") }),
-      row("ion", { typedName: "Ion Popescu" }),
     ];
-    const plan = planSeriesSignature(rows, ana, V1);
-    expect(plan.kind).toBe("kept");
-    expect(plan).toMatchObject({ id: "first" });
-    expect([...plan.superseded].sort()).toEqual(["later", "older-version"]);
+    const kept = keptSignature(rows, ana, V1);
+    expect(kept?.id).toBe("first");
+    expect(Object.keys(kept ?? {})).not.toContain("superseded");
   });
 
-  it("touches nothing for a signer whose address is not one: the service refuses the address first", () => {
-    expect(planSeriesSignature([row("a1")], { email: "nope", typedName: "Ana Popescu" }, V1)).toEqual({ kind: "new", superseded: [] });
+  it("keeps nothing for a signer whose address is not one: the service refuses the address first", () => {
+    expect(keptSignature([row("a1")], { email: "nope", typedName: "Ana Popescu" }, V1)).toBeNull();
+  });
+});
+
+describe("§NNN what the run's page says from the signer's own link", () => {
+  const signed = { legalDocumentId: V1, version: 1, acceptedAt: new Date("2026-10-01T08:00:00Z") };
+
+  it("says «already signed» for the version in force, and asks again once a newer one is", () => {
+    expect(signedStateFor(signed, V1)).toEqual({ kind: "current", version: 1, acceptedAt: signed.acceptedAt });
+    expect(signedStateFor(signed, V2)).toEqual({ kind: "renew", version: 1, acceptedAt: signed.acceptedAt });
+  });
+
+  it("says nothing without a declaration the link names", () => {
+    expect(signedStateFor(undefined, V1)).toBeNull();
+  });
+});
+
+describe("§NNN the series' rhythm, in the declaration's language", () => {
+  const TZ = "Europe/Bucharest";
+  // Tuesdays at 18:30 in Brașov (15:30 UTC in October).
+  const tuesdays = [6, 13, 20].map((day) => ({ startsAt: new Date(`2026-10-${String(day).padStart(2, "0")}T15:30:00.000Z`) }));
+
+  it("says a weekly run's day and hour", () => {
+    expect(seriesRhythmPhrase(tuesdays, TZ, "ro")).toBe("în fiecare marți, la 18:30");
+    expect(seriesRhythmPhrase(tuesdays, TZ, "en")).toBe("every Tuesday at 18:30");
+  });
+
+  it("says a fortnightly one's, and points dates with no weekly shape to the site", () => {
+    // Thursdays two weeks apart at 08:00 in Brașov, all before the clocks change on 25 October.
+    const fortnight = ["2026-09-03", "2026-09-17", "2026-10-01"].map((day) => ({ startsAt: new Date(`${day}T05:00:00.000Z`) }));
+    expect(seriesRhythmPhrase(fortnight, TZ, "ro")).toBe("o dată la două săptămâni, joi, la 08:00");
+    expect(seriesRhythmPhrase(fortnight, TZ, "en")).toBe("every other Thursday at 08:00");
+    const odd = [{ startsAt: new Date("2026-10-01T05:00:00Z") }, { startsAt: new Date("2026-10-04T05:00:00Z") }, { startsAt: new Date("2026-10-19T05:00:00Z") }];
+    expect(seriesRhythmPhrase(odd, TZ, "ro")).toBe("la datele anunțate pe site-ul clubului");
+    expect(seriesRhythmPhrase(odd, TZ, "en")).toBe("on the dates announced on the club's website");
+  });
+});
+
+describe("§NNN the series sentence and the one-off sentence", () => {
+  const base = { participant: "Ana Popescu", event: "Tura de marți", eventDate: "marți, 6 oct. 2026", eventLocation: "Parcul Titulescu", minimumAge: "18 ani" };
+  const series = { key: "GROUP_RUN\ntura de marți", title: "Tura de marți", rhythm: "în fiecare marți, la 18:30", place: "Parcul Titulescu" };
+  const merged = (values: Record<string, string>) => JSON.stringify(mergeLegalBody(groupRunTrailRo, values));
+
+  it("keeps the series sentence for a run that is one of a series, with its name, rhythm and place, and drops the one-off sentence", () => {
+    const text = merged({ ...base, ...(seriesMergeValues(groupRunTrailRo, series) as Record<string, string>) });
+    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura de marți — în fiecare marți, la 18:30, cu plecare de obicei din Parcul Titulescu —");
+    expect(text).not.toContain("Declarația este pentru alergarea de grup");
+    expect(text).not.toContain("marți, 6 oct. 2026");
+  });
+
+  it("keeps the one-off sentence for a run of one date, with its date and place, and drops the series sentence", () => {
+    const text = merged({ ...base, ...(seriesMergeValues(groupRunTrailRo, null) as Record<string, string>) });
+    expect(text).toContain("Declarația este pentru alergarea de grup Tura de marți, marți, 6 oct. 2026, cu plecare din Parcul Titulescu.");
+    expect(text).not.toContain("toate alergările seriei");
+  });
+
+  it("reads the same in English", () => {
+    const seriesText = JSON.stringify(mergeLegalBody(groupRunTrailEn, { ...base, ...(seriesMergeValues(groupRunTrailEn, { ...series, rhythm: "every Tuesday at 18:30" }) as Record<string, string>) }));
+    expect(seriesText).toContain("valid for every run of the series Tura de marți — every Tuesday at 18:30, usually starting from Parcul Titulescu —");
+    expect(seriesText).not.toContain("This declaration is for the group run");
+    const oneText = JSON.stringify(mergeLegalBody(groupRunTrailEn, { ...base, ...(seriesMergeValues(groupRunTrailEn, null) as Record<string, string>) }));
+    expect(oneText).toContain("This declaration is for the group run Tura de marți on marți, 6 oct. 2026");
+    expect(oneText).not.toContain("every run of the series");
+  });
+
+  it("gives a text that names no series field no series value, so an older version loses no sentence", () => {
+    const older = { sections: [{ paragraphs: ["Subsemnatul/a {{participant}}, particip la alergarea {{event}} din {{eventDate}}."] }] };
+    expect(seriesMergeValues(older, series)).toEqual({});
+    expect(dropsParagraph(older.sections[0].paragraphs[0], { ...base })).toBe(false);
+  });
+
+  it("drops a paragraph naming the date and no series field only while the series has a value", () => {
+    expect(dropsParagraph("la {{event}}, {{eventDate}}", { series: "Tura" })).toBe(true);
+    expect(dropsParagraph("la {{event}}, {{eventDate}}", { series: "" })).toBe(false);
+    expect(dropsParagraph("seria {{series}}, {{eventDate}}", { series: "Tura" })).toBe(false);
+    expect(dropsParagraph("seria {{series}}", { series: "" })).toBe(true);
+  });
+});
+
+describe("§NNN what a signature keeps of the blanks", () => {
+  it("keeps the run's and the series' facts, never a name or a document", () => {
+    const kept = factsToKeep({ participant: "Ana", idDocument: "CI BV 1", event: "Tura", eventDate: "marți", series: "", seriesRhythm: "", minimumAge: "18 ani" });
+    expect(kept).toEqual({ event: "Tura", eventDate: "marți", series: "", seriesRhythm: "", minimumAge: "18 ani" });
+  });
+
+  it("reads them back, and nothing from a value nobody wrote this way", () => {
+    expect(readSignedFacts({ event: "Tura", series: "Tura", participant: "Ana", eventDate: 7 })).toEqual({ event: "Tura", series: "Tura" });
+    expect(readSignedFacts(null)).toBeNull();
+    expect(readSignedFacts([])).toBeNull();
+    expect(readSignedFacts({ participant: "Ana" })).toBeNull();
   });
 });

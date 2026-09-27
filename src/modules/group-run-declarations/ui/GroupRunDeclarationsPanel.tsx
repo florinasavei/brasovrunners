@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -64,6 +65,8 @@ export default async function GroupRunDeclarationsPanel({
             <Box key={row.id} data-testid="group-run-declaration-row" sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
                 <Typography sx={{ fontWeight: 600, flex: 1 }}>{row.typedName}</Typography>
+                {/* Signed for the whole series (§NNN): the one signature every date of the run lists. */}
+                {row.series && <Chip size="small" variant="outlined" label={t("groupRunDeclarations.series")} sx={{ alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="group-run-declaration-series" />}
                 <Typography variant="body2" color="text.secondary">
                   {t("groupRunDeclarations.signedAt", {
                     when: formatDay(row.acceptedAt, { locale, timeZone, style: "short", withTime: true, position: "inline" }),

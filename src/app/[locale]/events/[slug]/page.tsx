@@ -60,7 +60,7 @@ import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
-type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string }> };
+type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string; declaratie?: string }> };
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -129,7 +129,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { interest, since, lista } = await searchParams;
+  const { interest, since, lista, declaratie } = await searchParams;
 
   const now = new Date();
   /*
@@ -399,7 +399,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
           {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
               organizer offered it and the club has approved the text of its surface. */}
-          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
+          {/* `?declaratie=` is the signer's own link from their copy (§NNN): «Ai semnat deja…», read only from it. */}
+          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} viewToken={declaratie} />
         </Box>
         <OpenFoldFromHash />
       </Box>

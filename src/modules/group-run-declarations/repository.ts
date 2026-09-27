@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
@@ -11,28 +11,34 @@ import type { SeriesSignature } from "./domain";
 /**
  * The rows of a group run's optional self-declarations (§393). No update: a signature is what it
  * was when it was made (§57), apart from the identity document the retention sweep clears at seven
- * days, and the date it hangs on when that date is deleted (`rehomeGroupRunDeclarationsOfEvent`).
- * Rows are kept until the signer asks for their deletion (§503): they leave by the Administrator's
- * erase, when the same person signs a newer version for the same run (§NNN), or with the run's last
- * date.
+ * days, the date a series' declaration hangs on when that date is deleted
+ * (`rehomeGroupRunDeclarationsOfEvent`), and the signer's own link, minted when their copy is sent
+ * (`setGroupRunDeclarationViewToken`). Rows are kept until the signer asks for their deletion
+ * (§503): they leave by the Administrator's erase, audited, or with the run's last date — never
+ * by a public press (§NNN).
  *
- * **A declaration belongs to the run, not to one date (§NNN).** A weekly run is many rows of
- * `events` (§113), and a returning runner signs once. The row still points at the date it was signed
- * on — `{{eventDate}}` in its text is "from the run on …", and the seven-day identity-document sweep
- * counts from it — but everything that reads the declarations reads the whole series: the dates
- * §113 groups, the same type and the same title (trimmed, case-folded), in the default language.
- * Recognised, not recorded, like the listing's one line: no migration, and a date renamed on purpose
- * ("… — ediție de Crăciun") leaves the series and asks its own declaration, as it leaves the line.
+ * **A series' declaration belongs to the run, not to one date (§NNN).** A weekly run is many rows of
+ * `events` (§113), and a returning runner signs once. The row points at the date it was signed on
+ * and records the series it covers (`series_key`, as `seriesKey` wrote it then); everything that
+ * reads the declarations reads the whole series: the dates §113 groups, the same type and the same
+ * title (trimmed, case-folded), in the default language — the listing's own rule. A date renamed on
+ * purpose ("… — ediție de Crăciun") leaves the series and asks its own declaration, as it leaves the
+ * line. A one-off run's declaration (`series_key` null), and every row from before §NNN, covers its
+ * own date only, as its text said.
  */
 
 export type NewGroupRunDeclaration = typeof groupRunDeclarations.$inferInsert;
 
+/**
+ * Writes one signature, or nothing when the same person's signature of the same version already
+ * covers the same series (or date): the unique index `group_run_declarations_one_per_series_signer_version`
+ * decides, so two presses at once write one row and the second gets undefined — and reads the first.
+ */
 export async function insertGroupRunDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
   values: NewGroupRunDeclaration,
-): Promise<typeof groupRunDeclarations.$inferSelect> {
-  const [row] = await db.insert(groupRunDeclarations).values(values).returning();
-  if (!row) throw new Error("the declaration was not written");
+): Promise<typeof groupRunDeclarations.$inferSelect | undefined> {
+  const [row] = await db.insert(groupRunDeclarations).values(values).onConflictDoNothing().returning();
   return row;
 }
 
@@ -48,14 +54,25 @@ export async function listSeriesDatesOf<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
 ): Promise<{ id: string; startsAt: Date }[]> {
+  return (await findRunSeries(db, eventId)).dates;
+}
+
+/**
+ * The run an event belongs to (§NNN): its dates, soonest first, and the series' key — null for a
+ * one-off run, a date the grouping gives no other.
+ */
+export async function findRunSeries<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ key: string | null; dates: { id: string; startsAt: Date }[] }> {
   const [self] = await db
     .select({ type: events.type, title: eventTranslations.title, startsAt: events.startsAt })
     .from(events)
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, routing.defaultLocale)))
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!self) return [];
-  if (self.title === null) return [{ id: eventId, startsAt: self.startsAt }];
+  if (!self) return { key: null, dates: [] };
+  if (self.title === null) return { key: null, dates: [{ id: eventId, startsAt: self.startsAt }] };
   const key = seriesKey({ type: self.type, title: self.title });
   const candidates = await db
     .select({ id: events.id, type: events.type, title: eventTranslations.title, startsAt: events.startsAt })
@@ -64,15 +81,35 @@ export async function listSeriesDatesOf<T extends Record<string, unknown>>(
     .where(eq(events.type, self.type))
     .orderBy(asc(events.startsAt));
   const members = candidates.filter((row) => row.id === eventId || seriesKey(row) === key).map(({ id, startsAt }) => ({ id, startsAt }));
-  return members.some((row) => row.id === eventId) ? members : [...members, { id: eventId, startsAt: self.startsAt }];
+  const dates = members.some((row) => row.id === eventId) ? members : [...members, { id: eventId, startsAt: self.startsAt }];
+  return { key: dates.length > 1 ? key : null, dates };
+}
+
+/**
+ * The condition "this row covers that date" (§NNN): signed on it, or signed for the series on any of
+ * the series' dates. A one-off's, or a row from before §NNN, covers only its own date.
+ */
+function coversDate(eventId: string, seriesDates: readonly string[]) {
+  return or(
+    eq(groupRunDeclarations.eventId, eventId),
+    and(isNotNull(groupRunDeclarations.seriesKey), inArray(groupRunDeclarations.eventId, [...seriesDates, eventId])),
+  );
 }
 
 /**
  * What the backoffice lists (§393): who, when, and against which version of the text (§499) —
- * and, since §NNN, on which date of the run it was signed, for the PDF's address. Never the
- * identity document or the address.
+ * and, since §NNN, on which date of the run it was signed, for the PDF's address, and whether it
+ * covers the series (`series`, the row's «serie» mark). Never the identity document or the address.
  */
-export type GroupRunDeclarationListRow = { id: string; eventId: string; typedName: string; acceptedAt: Date; locale: Locale; version: number };
+export type GroupRunDeclarationListRow = {
+  id: string;
+  eventId: string;
+  typedName: string;
+  acceptedAt: Date;
+  locale: Locale;
+  version: number;
+  series: boolean;
+};
 
 /**
  * The declarations of the run an event belongs to (§NNN): every date's, since one signature covers
@@ -84,7 +121,7 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
 ): Promise<GroupRunDeclarationListRow[]> {
   const dates = (await listSeriesDatesOf(db, eventId)).map((date) => date.id);
   if (dates.length === 0) return [];
-  return db
+  const rows = await db
     .select({
       id: groupRunDeclarations.id,
       eventId: groupRunDeclarations.eventId,
@@ -92,23 +129,24 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
       acceptedAt: groupRunDeclarations.acceptedAt,
       locale: groupRunDeclarations.locale,
       version: groupRunDeclarations.declarationVersion,
+      seriesKey: groupRunDeclarations.seriesKey,
     })
     .from(groupRunDeclarations)
     .where(inArray(groupRunDeclarations.eventId, dates))
     .orderBy(asc(groupRunDeclarations.acceptedAt));
+  return rows.map(({ seriesKey: key, ...row }) => ({ ...row, series: key !== null }));
 }
 
 /**
- * The signatures of one kind of text kept for a run's dates (§NNN): what the signing press reads to
- * keep one declaration per person per series (`planSeriesSignature`). The kind is the legal key —
- * asphalt and trail are different declarations — so a run that changed surface asks for the other.
+ * The signatures of the version in force that cover a date (§NNN): what the signing press reads to
+ * keep one declaration per person, series and version (`keptSignature`).
  */
-export async function listSeriesSignatures<T extends Record<string, unknown>>(
+export async function listCoveringSignatures<T extends Record<string, unknown>>(
   db: Database<T>,
-  eventIds: readonly string[],
-  key: LegalDocumentKey,
+  eventId: string,
+  seriesDates: readonly string[],
+  documentId: string,
 ): Promise<SeriesSignature[]> {
-  if (eventIds.length === 0) return [];
   return db
     .select({
       id: groupRunDeclarations.id,
@@ -118,37 +156,35 @@ export async function listSeriesSignatures<T extends Record<string, unknown>>(
       acceptedAt: groupRunDeclarations.acceptedAt,
     })
     .from(groupRunDeclarations)
-    .innerJoin(legalDocuments, eq(legalDocuments.id, groupRunDeclarations.legalDocumentId))
-    .where(and(inArray(groupRunDeclarations.eventId, [...eventIds]), eq(legalDocuments.key, key)))
+    .where(and(eq(groupRunDeclarations.legalDocumentId, documentId), coversDate(eventId, seriesDates)))
     .orderBy(asc(groupRunDeclarations.acceptedAt));
 }
 
 /**
- * Deletes declarations by id, and first the outbox rows about them (§393's order: a message about a
- * row that is gone carries the signer's address and can never render). The signing press uses it
- * for the rows a new signature supersedes (§NNN); the erase keeps its own, audited, path.
- */
-export async function deleteGroupRunDeclarations<T extends Record<string, unknown>>(db: Database<T>, ids: readonly string[]): Promise<void> {
-  if (ids.length === 0) return;
-  await db.delete(emailOutbox).where(inArray(sql`${emailOutbox.payloadJson}->>'groupRunDeclarationId'`, [...ids]));
-  await db.delete(groupRunDeclarations).where(inArray(groupRunDeclarations.id, [...ids]));
-}
-
-/**
- * Before a date of a run is deleted (§NNN): its declarations cover the run's other dates too, so
- * they move to the run's earliest remaining date rather than cascading away with this one. Returns
- * how many moved; none when the date was the run's only one — then they go with it, as before
- * (§393), their outbox rows first (`deleteGroupRunDeclarationMessagesOfEvent`).
+ * Before a date of a run is deleted (§NNN): a series' declarations cover the run's other dates too,
+ * so they move to another date rather than cascading away with this one — the next date after it,
+ * or, when it was the last, the latest before it, so the evidence is never lost while the run has a
+ * date. What a moved declaration says does not move with it: its PDF is drawn from what the blanks
+ * said at the signing (`signed_facts`). A one-off's, and a row from before §NNN, covered this date
+ * only, and go with it as before (§393), their outbox rows first (`deleteGroupRunDeclarationMessagesOfEvent`).
+ * Returns how many moved.
  */
 export async function rehomeGroupRunDeclarationsOfEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
-  const [any] = await db.select({ id: groupRunDeclarations.id }).from(groupRunDeclarations).where(eq(groupRunDeclarations.eventId, eventId)).limit(1);
+  const [any] = await db
+    .select({ id: groupRunDeclarations.id })
+    .from(groupRunDeclarations)
+    .where(and(eq(groupRunDeclarations.eventId, eventId), isNotNull(groupRunDeclarations.seriesKey)))
+    .limit(1);
   if (!any) return 0;
-  const [target] = (await listSeriesDatesOf(db, eventId)).filter((date) => date.id !== eventId);
-  if (!target) return 0;
+  const dates = await listSeriesDatesOf(db, eventId);
+  const self = dates.find((date) => date.id === eventId);
+  const others = dates.filter((date) => date.id !== eventId);
+  if (!self || others.length === 0) return 0;
+  const target = others.find((date) => date.startsAt.getTime() > self.startsAt.getTime()) ?? others[others.length - 1];
   const moved = await db
     .update(groupRunDeclarations)
     .set({ eventId: target.id })
-    .where(eq(groupRunDeclarations.eventId, eventId))
+    .where(and(eq(groupRunDeclarations.eventId, eventId), isNotNull(groupRunDeclarations.seriesKey)))
     .returning({ id: groupRunDeclarations.id });
   return moved.length;
 }
@@ -172,6 +208,9 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       idDocument: groupRunDeclarations.idDocument,
       email: groupRunDeclarations.email,
       acceptedAt: groupRunDeclarations.acceptedAt,
+      // What the blanks said at the signing, and whether it covers the series (§NNN).
+      signedFacts: groupRunDeclarations.signedFacts,
+      seriesKey: groupRunDeclarations.seriesKey,
       title: legalDocumentTranslations.title,
       body: legalDocumentTranslations.bodyJson,
     })
@@ -190,6 +229,56 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
 }
 
 export type SignedGroupRunDeclaration = NonNullable<Awaited<ReturnType<typeof findSignedGroupRunDeclaration>>>;
+
+/**
+ * The signer's own link (§NNN): the hash of the secret their copy carries, set when that copy is sent
+ * — a newer copy's replaces it, so the newest email's link is the one that reads.
+ */
+export async function setGroupRunDeclarationViewToken<T extends Record<string, unknown>>(db: Database<T>, id: string, tokenHash: string): Promise<void> {
+  await db.update(groupRunDeclarations).set({ viewTokenHash: tokenHash }).where(eq(groupRunDeclarations.id, id));
+}
+
+/**
+ * The declaration a link names, if it covers this date (§NNN): signed on it, or for the series on one
+ * of the series' dates — and of the kind of text the date offers. A read, bound to the hash (never the
+ * secret, §12.8), that tells the page nothing about anybody else; undefined for any other link.
+ */
+export async function findSignatureByViewToken<T extends Record<string, unknown>>(
+  db: Database<T>,
+  tokenHash: string,
+  eventId: string,
+  key: LegalDocumentKey,
+): Promise<{ legalDocumentId: string; version: number; acceptedAt: Date; series: boolean } | undefined> {
+  const dates = (await listSeriesDatesOf(db, eventId)).map((date) => date.id);
+  const [row] = await db
+    .select({
+      legalDocumentId: groupRunDeclarations.legalDocumentId,
+      version: groupRunDeclarations.declarationVersion,
+      acceptedAt: groupRunDeclarations.acceptedAt,
+      series: sql<boolean>`${groupRunDeclarations.seriesKey} IS NOT NULL`,
+    })
+    .from(groupRunDeclarations)
+    .innerJoin(legalDocuments, eq(legalDocuments.id, groupRunDeclarations.legalDocumentId))
+    .where(and(eq(groupRunDeclarations.viewTokenHash, tokenHash), eq(legalDocuments.key, key), coversDate(eventId, dates)))
+    .limit(1);
+  return row;
+}
+
+/**
+ * The date a signer's link should open (§NNN): the run's next date still to come, or the date signed
+ * on when the run has none — so the email's button leads to a page that still offers the run.
+ */
+export async function nextDateOfRun<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<string> {
+  const { key, dates } = await findRunSeries(db, eventId);
+  if (key === null) return eventId;
+  const [next] = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(and(inArray(events.id, dates.map((date) => date.id)), gt(events.startsAt, now), eq(events.editorialStatus, "PUBLISHED")))
+    .orderBy(asc(events.startsAt))
+    .limit(1);
+  return next?.id ?? eventId;
+}
 
 /**
  * The outbox rows about an event's declarations (§393), deleted before the event goes: the

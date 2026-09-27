@@ -26,6 +26,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   listSocialsNotice: { kind: "section", section: "legal" },
   newsletterNotice: { kind: "section", section: "legal" },
   teamPageNotice: { kind: "section", section: "legal" },
+  groupRunSeriesTexts: { kind: "section", section: "legal" },
   // The people are invited on «Echipa» (§450).
   inviteStaff: { kind: "section", section: "staff" },
   // The race is one save and a publish on «Evenimente» (`SETUP.md` §39).

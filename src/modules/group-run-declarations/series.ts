@@ -1,0 +1,72 @@
+/**
+ * A group run's series in a declaration (§NNN): the values of the series sentence, what a signature
+ * keeps of the text's blanks, and how a run that is one of a series is told from a one-off. Pure.
+ *
+ * The series is §113's — the same type and title, as the listing groups it (`seriesKey`) — and a run
+ * is one of a series when that grouping gives it another date. Its rhythm is read off the dates as
+ * the listing reads it (`recurrenceOf`), in the declaration's own language, with no catalogue behind
+ * it: the words are part of a legal text's fill-ins, as the deadlines' are (`duration-words.ts`).
+ */
+import { recurrenceOf } from "@/modules/events/domain/series";
+import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { MERGE_FIELDS, mergeFieldsIn, type MergeField, type MergeValues, SERIES_MERGE_FIELDS } from "@/modules/legal-documents/domain/merge-fields";
+
+/**
+ * How a series recurs, as the series sentence says it: «în fiecare marți, la 18:30» / «every Tuesday
+ * at 18:30», «o dată la două săptămâni, joi, la 07:00» / «every other Thursday at 07:00», and for dates
+ * with no weekly shape «la datele anunțate pe site-ul clubului» / «on the dates announced on the
+ * club's website» — never a list of dates that the next week's would outdate.
+ */
+export function seriesRhythmPhrase(dates: readonly { startsAt: Date }[], timeZone: string, locale: string): string {
+  const en = locale === "en";
+  const recurrence = recurrenceOf(dates, timeZone);
+  if (recurrence.kind === "dates") return en ? "on the dates announced on the club's website" : "la datele anunțate pe site-ul clubului";
+  const weekdayName = new Intl.DateTimeFormat(en ? "en" : "ro", { weekday: "long", timeZone });
+  const names = recurrence.weekdays.map((weekday) => {
+    const sample = dates.find((date) => wallClockWeekday(date.startsAt, timeZone) === weekday) ?? dates[0];
+    return weekdayName.format(sample.startsAt);
+  });
+  const days = new Intl.ListFormat(en ? "en" : "ro", { type: "conjunction" }).format(names);
+  if (en) {
+    const head = recurrence.kind === "weekly" ? `every ${days}` : `every other ${days}`;
+    return recurrence.time ? `${head} at ${recurrence.time}` : head;
+  }
+  const head = recurrence.kind === "weekly" ? `în fiecare ${days}` : `o dată la două săptămâni, ${days}`;
+  return recurrence.time ? `${head}, la ${recurrence.time}` : head;
+}
+
+/** The series as a signature is bound to it: null for a one-off run. */
+export type RunSeries = { key: string; title: string; rhythm: string; place: string } | null;
+
+/**
+ * The series sentence's values for a text (§NNN): none at all for a text that names no series field —
+ * every version approved before §NNN, whose sentences are left exactly as they were — else the
+ * series' name, rhythm and usual place, or "" for each on a one-off run, which drops the series
+ * sentence and keeps the one-off one (`dropsParagraph`).
+ */
+export function seriesMergeValues(body: unknown, series: RunSeries): MergeValues {
+  const fields = mergeFieldsIn(body);
+  if (!SERIES_MERGE_FIELDS.some((field) => fields.has(field))) return {};
+  return series ? { series: series.title, seriesRhythm: series.rhythm, seriesPlace: series.place } : { series: "", seriesRhythm: "", seriesPlace: "" };
+}
+
+/** The fields a signature keeps as they were filled (§NNN): the run's facts and the series'. */
+const KEPT: ReadonlySet<MergeField> = new Set<MergeField>(["event", "eventDate", "eventLocation", "minimumAge", ...SERIES_MERGE_FIELDS]);
+
+/** What `signed_facts` keeps of the values the signer read: the run's and the series' facts, nothing personal. */
+export function factsToKeep(values: MergeValues): Record<string, string> {
+  return Object.fromEntries(Object.entries(values).filter((entry): entry is [MergeField, string] => KEPT.has(entry[0] as MergeField) && typeof entry[1] === "string"));
+}
+
+/**
+ * `signed_facts` read back (§NNN): the kept fields that are strings, anything else dropped — a row
+ * from before §NNN, or a value nobody wrote this way, is null, and the PDF reads the event as it is.
+ */
+export function readSignedFacts(value: unknown): MergeValues | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const known = new Set<string>(MERGE_FIELDS);
+  const facts = Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).filter(([name, text]) => known.has(name) && KEPT.has(name as MergeField) && typeof text === "string"),
+  ) as MergeValues;
+  return Object.keys(facts).length > 0 ? facts : null;
+}

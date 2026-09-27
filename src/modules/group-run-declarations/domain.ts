@@ -89,7 +89,8 @@ export const ERASE_REASON_MAX = 500;
 export const GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS = 7;
 
 /**
- * Who a signature is, for "one declaration per person per series" (§NNN): the canonical address
+ * Who a signature is, for "one declaration per person per series" (§NNN; `signer_key`, whose unique
+ * index holds two presses at once to one row): the canonical address
  * (§10.4 — never a raw compare, so `Ana@Example.ro` is `ana@example.ro`) and the name as typed, read
  * loosely — case, accents and spacing make no other person («Ana  Popescu», «ana popescu», «Ană
  * Popescu»). The name is part of it because an address may be a family's (§389): a parent and a
@@ -112,38 +113,48 @@ export function signerIdentity(email: string, typedName: string): string | null 
   return `${canonical}\n${name}`;
 }
 
-/** A signature already kept for the run's series, as the signing press reads it (§NNN). */
+/** A signature that covers a run's date, as the signing press reads it (§NNN). */
 export type SeriesSignature = { id: string; legalDocumentId: string; email: string; typedName: string; acceptedAt: Date };
 
 /**
- * What a press on «Semnează declarația» does to the series' signatures (§NNN; the owner, 2026-09-27:
- * "a returning runner signs once; it has no end date and is deleted only at their request").
+ * The signature a press on «Semnează declarația» keeps rather than writing a second (§NNN; the owner,
+ * 2026-09-27: "a returning runner signs once; it has no end date and is deleted only at their
+ * request"): the same person's earliest signature of the **version in force** among those that cover
+ * this date — or null, and a row is written. The service then sends that copy again, and the page
+ * answers exactly as a signature does, so it tells nobody whether the address had signed.
  *
- * - **kept** — the same person already signed the version in force for some date of this run: no
- *   second row. Their earliest such signature is the one kept, and a copy of it is sent again (the
- *   page answers exactly as a signature does, so it tells nobody whether the address had signed).
- * - **new** — they have not signed this version: a row is written.
- *
- * Either way the person's other rows in the series — an older version's signature, which the new
- * one replaces, or a duplicate from before this rule, when every date took its own — are listed in
- * `superseded`, and the service deletes them in the same transaction: one declaration per person
- * per series, whatever was there before. Another person, or another kind of text (asphalt and
- * trail are different declarations), is never touched: `existing` holds one kind only.
+ * **Nothing is ever taken away here.** An older version's signature is not this version's, so the
+ * person signs again and gets a new row beside it; the older one stays — it is the evidence for the
+ * runs attended under that text, and a version somebody signed is relied upon (§53, §151). A row
+ * leaves only by the Administrator's erase, audited (§393), never by a public press, which nobody
+ * verified: an address and a name typed by anyone must not delete a real signature. Another person
+ * on the same address (§389), or another kind of text (asphalt and trail), is another signature.
  */
-export type SeriesSigningPlan = { kind: "kept"; id: string; email: string; superseded: string[] } | { kind: "new"; superseded: string[] };
-
-export function planSeriesSignature(
+export function keptSignature(
   existing: readonly SeriesSignature[],
   signer: { email: string; typedName: string },
   documentId: string,
-): SeriesSigningPlan {
+): SeriesSignature | null {
   const who = signerIdentity(signer.email, signer.typedName);
-  const same = who === null ? [] : existing.filter((row) => signerIdentity(row.email, row.typedName) === who);
-  const [keep] = same
-    .filter((row) => row.legalDocumentId === documentId)
+  if (who === null) return null;
+  const [keep] = existing
+    .filter((row) => row.legalDocumentId === documentId && signerIdentity(row.email, row.typedName) === who)
     .sort((a, b) => a.acceptedAt.getTime() - b.acceptedAt.getTime());
-  if (keep) return { kind: "kept", id: keep.id, email: keep.email, superseded: same.filter((row) => row.id !== keep.id).map((row) => row.id) };
-  return { kind: "new", superseded: same.map((row) => row.id) };
+  return keep ?? null;
+}
+
+/**
+ * What the run's page says to the person who opened it from their own link (§NNN): `current` — they
+ * signed the version in force, «Ai semnat deja declarația pentru aceste alergări (v. N, semnată la …)»,
+ * and no button —; `renew` — they signed an older version, which the club has since replaced, so the
+ * page says so and offers the button again. Null — no link, a link that is not theirs or not for this
+ * run, or another kind of text — and the page is the one every visitor sees.
+ */
+export type SignedState = { kind: "current" | "renew"; version: number; acceptedAt: Date } | null;
+
+export function signedStateFor(row: { legalDocumentId: string; version: number; acceptedAt: Date } | undefined, inForceId: string): SignedState {
+  if (!row) return null;
+  return { kind: row.legalDocumentId === inForceId ? "current" : "renew", version: row.version, acceptedAt: row.acceptedAt };
 }
 
 /**

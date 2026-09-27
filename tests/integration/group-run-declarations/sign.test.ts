@@ -9,13 +9,16 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { deleteEvent, hardDeleteEvent } from "@/modules/content/events/service";
 import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { findCurrentApprovedDocument, insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, groupRunDeclarationsSeriesCurrent, insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { deleteApprovedVersion, updateDraftVersion } from "@/modules/legal-documents/service";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
-import { findSignedGroupRunDeclaration, listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
+import { findSignatureByViewToken, findSignedGroupRunDeclaration, insertGroupRunDeclaration, listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
+import { signedStateFor } from "@/modules/group-run-declarations/domain";
+import { hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
+import { mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 import { eraseGroupRunDeclaration, type GroupRunSigningInput, signGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pdf";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
@@ -516,36 +519,121 @@ describe("§NNN one declaration per person per series", () => {
     expect((await listGroupRunDeclarations(db, otherRun.id)).map((row) => row.typedName)).toEqual(["Ana Popescu"]);
   });
 
-  it("a newer version signed replaces the older signature and its messages: one row per person, and the old version free again", async () => {
-    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
-    const first = await trailRun({ startsAt: OCT(7) });
-    const second = await trailRun({ startsAt: OCT(14) });
-    const old = await signGroupRunDeclaration(db, await input(first.id), NOW);
-    if (old.outcome !== "signed") throw new Error("not signed");
-
+  const approveV2 = async () => {
     const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
       locale,
       title: LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].title,
       body: { sections: [...LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].body.sections, { paragraphs: ["v2"] }] },
     }));
     await insertLegalDocumentVersion(db, { key: "GROUP_RUN_DECLARATION_TRAIL", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+  };
+
+  it("a newer version is signed beside the older signature, which stays — nothing is deleted by a public press, and v1 stays relied upon", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+    const old = await signGroupRunDeclaration(db, await input(first.id), NOW);
+    if (old.outcome !== "signed") throw new Error("not signed");
+    await approveV2();
 
     const renewed = await signGroupRunDeclaration(db, await input(second.id), NOW);
     expect(renewed).toMatchObject({ outcome: "signed", kept: false });
     if (renewed.outcome !== "signed") throw new Error("not signed");
     expect(renewed.id).not.toBe(old.id);
 
-    const rows = await db.select().from(groupRunDeclarations);
-    expect(rows.map((row) => [row.id, row.declarationVersion, row.eventId])).toEqual([[renewed.id, 2, second.id]]);
-    // The old one's messages carried the address and could never render: gone with it.
+    const rows = await db.select().from(groupRunDeclarations).orderBy(groupRunDeclarations.declarationVersion);
+    expect(rows.map((row) => [row.id, row.declarationVersion, row.eventId])).toEqual([
+      [old.id, 1, first.id],
+      [renewed.id, 2, second.id],
+    ]);
+    // The old one's messages are still there, and so is the reliance on version 1 (§53, §151).
     const outbox = await db.select().from(emailOutbox);
-    expect(outbox.every((row) => (row.payloadJson as { groupRunDeclarationId?: string }).groupRunDeclarationId === renewed.id)).toBe(true);
-    // Nobody relies on version 1 any more.
+    expect(outbox.some((row) => (row.payloadJson as { groupRunDeclarationId?: string }).groupRunDeclarationId === old.id)).toBe(true);
     const [v1] = (await listVersionsForBackoffice(db)).filter((version) => version.key === "GROUP_RUN_DECLARATION_TRAIL" && version.version === 1);
-    expect(v1.acceptanceCount).toBe(0);
+    expect(v1.acceptanceCount).toBe(1);
+    // Pressed again under v2: the v2 signature is kept, no third row.
+    expect(await signGroupRunDeclaration(db, await input(first.id), NOW)).toEqual({ outcome: "signed", id: renewed.id, kept: true });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(2);
   });
 
-  it("deleting a date moves its declarations to the run's earliest other date, messages kept; the run's last date takes them with it", async () => {
+  it("records the series, the signer and the blanks on the row, and holds one row per version, series and signer in the index", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7) });
+    await trailRun({ startsAt: OCT(14) });
+    const signed = await signGroupRunDeclaration(db, await input(first.id), NOW);
+    if (signed.outcome !== "signed") throw new Error("not signed");
+    const [row] = await db.select().from(groupRunDeclarations);
+    expect(row.seriesKey).toBe("GROUP_RUN\ntura pe munte");
+    expect(row.signerKey).toBe("ana@example.ro\nana popescu");
+    expect(row.signedFacts).toMatchObject({ series: "Tura pe munte", seriesRhythm: "în fiecare miercuri, la 19:00", seriesPlace: "Stația de telecabină", event: "Tura pe munte" });
+    // Nothing personal among the kept blanks.
+    expect(JSON.stringify(row.signedFacts)).not.toMatch(/Ana|Popescu|ana@example/);
+
+    // A second press that read nothing (the race the index is for): the insert writes nothing.
+    const later = await trailRun({ startsAt: OCT(21) });
+    const again = {
+      eventId: later.id,
+      legalDocumentId: row.legalDocumentId,
+      declarationVersion: row.declarationVersion,
+      contentSha256: row.contentSha256,
+      locale: row.locale,
+      typedName: row.typedName,
+      email: row.email,
+      acceptedAt: NOW,
+      seriesKey: row.seriesKey,
+      signerKey: row.signerKey,
+    };
+    expect(await insertGroupRunDeclaration(db, again)).toBeUndefined();
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(1);
+  });
+
+  it("a one-off run's declaration covers its own date: no series on the row, and the PDF keeps the one-off sentence", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const once = await trailRun({ startsAt: OCT(10) }, { ro: "Tura de toamnă", en: "The autumn loop" });
+    const signed = await signGroupRunDeclaration(db, await input(once.id), NOW);
+    if (signed.outcome !== "signed") throw new Error("not signed");
+    const [row] = await db.select().from(groupRunDeclarations);
+    expect(row.seriesKey).toBeNull();
+    expect(row.signedFacts).toMatchObject({ series: "", seriesRhythm: "", seriesPlace: "", event: "Tura de toamnă" });
+
+    const [message] = await db.select().from(emailOutbox);
+    const email = await renderOutboxMessage(claimed(message), db, NOW);
+    // The subject names the run, not a series.
+    expect(email.subject).toContain("— Tura de toamnă");
+    expect(email.subject).not.toContain("seria");
+    const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
+    const merged = JSON.stringify(mergeLegalBody(drawn.entries[0].body, drawn.entries[0].values ?? {}));
+    expect(merged).toContain("Declarația este pentru alergarea de grup Tura de toamnă, sâmbătă, 10 oct. 2026, cu plecare din Stația de telecabină.");
+    expect(merged).not.toContain("toate alergările seriei");
+  });
+
+  it("a series' PDF and both emails name the series and its rhythm, and keep the series sentence", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    await archiveOn();
+    const first = await trailRun({ startsAt: OCT(7) });
+    await trailRun({ startsAt: OCT(14) });
+    await signGroupRunDeclaration(db, await input(first.id), NOW);
+
+    const [signerMessage] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
+    const toSigner = await renderOutboxMessage(claimed(signerMessage), db, NOW);
+    expect(toSigner.subject).toContain("seria Tura pe munte");
+    expect(toSigner.subject).toContain("The mountain loop (series)");
+    expect(toSigner.text).toContain("pentru seria de alergări de grup Tura pe munte (în fiecare miercuri, la 19:00)");
+    expect(toSigner.text).toContain("Declarația este valabilă pentru toate alergările seriei");
+    expect(toSigner.text).toContain("for the group run series The mountain loop (every Wednesday at 19:00)");
+    const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
+    const merged = JSON.stringify(mergeLegalBody(drawn.entries[0].body, drawn.entries[0].values ?? {}));
+    expect(merged).toContain("Declarația este valabilă pentru toate alergările seriei Tura pe munte — în fiecare miercuri, la 19:00, cu plecare de obicei din Stația de telecabină —");
+    expect(merged).not.toContain("Declarația este pentru alergarea de grup");
+
+    const [archiveMessage] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_ARCHIVE"));
+    const toClub = await renderOutboxMessage(claimed(archiveMessage), db, NOW);
+    expect(toClub.subject).toContain("seria Tura pe munte");
+    expect(toClub.text).toContain("Este valabilă pentru toate alergările seriei.");
+    expect(toClub.text).toContain("It is valid for every run of the series.");
+  });
+
+  it("deleting a date moves a series' declarations to the next date, or the latest before the last; its PDF says the same after the move", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const actor = await admin();
     const first = await trailRun({ startsAt: OCT(7) });
@@ -553,18 +641,132 @@ describe("§NNN one declaration per person per series", () => {
     const third = await trailRun({ startsAt: OCT(21) });
     const signed = await signGroupRunDeclaration(db, await input(second.id), NOW);
     if (signed.outcome !== "signed") throw new Error("not signed");
+    const drawnValues = async () => {
+      const found = (await findSignedGroupRunDeclaration(db, signed.id))!;
+      await renderGroupRunDeclarationPdf(db, found, "participant", NOW);
+      return (watched.pdfInputs.at(-1) as DeclarationPdfInput).entries[0].values;
+    };
+    const before = await drawnValues();
 
     await deleteEvent(db, { actor, eventId: second.id });
-    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([first.id]);
+    // The next date after the one deleted, never an earlier one while a later exists.
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([third.id]);
     expect(await db.select().from(emailOutbox)).toHaveLength(1);
+    // What the text says is what it said at the signing (§57): the move changes nothing in the PDF.
+    expect(await drawnValues()).toEqual(before);
 
     const titleOf = async (id: string) => (await db.select({ title: eventTranslations.title }).from(eventTranslations).where(eq(eventTranslations.eventId, id)))[0]?.title ?? id;
-    await hardDeleteEvent(db, { actor, eventId: first.id, typedTitle: await titleOf(first.id), reason: "dată greșită", now: NOW });
-    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([third.id]);
+    // The run's last date deleted: to the latest before it, so the evidence stays while the run has a date.
+    await hardDeleteEvent(db, { actor, eventId: third.id, typedTitle: await titleOf(third.id), reason: "dată greșită", now: NOW });
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.eventId)).toEqual([first.id]);
+    expect(await drawnValues()).toEqual(before);
 
-    await hardDeleteEvent(db, { actor, eventId: third.id, typedTitle: await titleOf(third.id), reason: "sezon încheiat", now: NOW });
+    await hardDeleteEvent(db, { actor, eventId: first.id, typedTitle: await titleOf(first.id), reason: "sezon încheiat", now: NOW });
     expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+});
+
+/*
+  §NNN — the «already signed» state, read from the signer's own link alone. The signer's copy carries
+  a link to the run's next date with `?declaratie=<secret>`; the row keeps its SHA-256. The run's page
+  reads it (`findSignatureByViewToken`) and says «Ai semnat deja…» for the version in force, and asks
+  again once a newer one is.
+*/
+describe("§NNN the signer's own link", () => {
+  const OCT = (day: number) => new Date(`2026-10-${String(day).padStart(2, "0")}T16:00:00.000Z`);
+  const secretIn = (html: string) => /[?&]declaratie=([A-Za-z0-9_-]{43})/.exec(html)?.[1];
+
+  it("is minted when the signer's copy is sent, hashed on the row, and reads the declaration on every date of the series", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    await updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+    const otherRun = await trailRun({ startsAt: OCT(8) }, { ro: "Tura de joi", en: "The Thursday loop" });
+    await signGroupRunDeclaration(db, await input(first.id), NOW);
+
+    const [signerMessage] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_SIGNED"));
+    const email = await renderOutboxMessage(claimed(signerMessage), db, NOW);
+    const secret = secretIn(email.html);
+    expect(secret).toBeDefined();
+    // To the run's next date, at the section.
+    const [slugOfFirst] = await db.select({ slug: eventTranslations.slug }).from(eventTranslations).where(eq(eventTranslations.eventId, first.id));
+    expect(email.html).toContain(`${slugOfFirst.slug}?declaratie=${secret}#declaratie`);
+    const [row] = await db.select().from(groupRunDeclarations);
+    // Only the hash is kept (§12.8).
+    expect(row.viewTokenHash).toBe(hashTokenSecret(secret!));
+    expect(JSON.stringify(row)).not.toContain(secret!);
+
+    const inForce = (await findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", NOW))!;
+    for (const date of [first, second]) {
+      const mine = await findSignatureByViewToken(db, hashTokenSecret(secret!), date.id, "GROUP_RUN_DECLARATION_TRAIL");
+      expect(mine).toMatchObject({ version: 1, series: true });
+      expect(signedStateFor(mine, inForce.id)).toMatchObject({ kind: "current", version: 1 });
+    }
+    // Another run, or another kind of text, is not what the link names.
+    expect(await findSignatureByViewToken(db, hashTokenSecret(secret!), otherRun.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
+    expect(await findSignatureByViewToken(db, hashTokenSecret(secret!), second.id, "GROUP_RUN_DECLARATION_ASPHALT")).toBeUndefined();
+
+    // The archive copy carries no link: it is the signer's.
+    const [archiveMessage] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "GROUP_RUN_DECLARATION_ARCHIVE"));
+    expect(secretIn((await renderOutboxMessage(claimed(archiveMessage), db, NOW)).html)).toBeUndefined();
+  });
+
+  it("asks again once a newer version is in force, and reads the new signature from its own link after", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+    await signGroupRunDeclaration(db, await input(first.id), NOW);
+    const [message] = await db.select().from(emailOutbox);
+    const secret = secretIn((await renderOutboxMessage(claimed(message), db, NOW)).html)!;
+
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
+      locale,
+      title: LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].title,
+      body: { sections: [...LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale].body.sections, { paragraphs: ["v2"] }] },
+    }));
+    await insertLegalDocumentVersion(db, { key: "GROUP_RUN_DECLARATION_TRAIL", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+    const v2 = (await findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", NOW))!;
+    const old = await findSignatureByViewToken(db, hashTokenSecret(secret), second.id, "GROUP_RUN_DECLARATION_TRAIL");
+    expect(signedStateFor(old, v2.id)).toMatchObject({ kind: "renew", version: 1 });
+
+    const renewed = await signGroupRunDeclaration(db, await input(second.id), NOW);
+    if (renewed.outcome !== "signed") throw new Error("not signed");
+    const [newMessage] = (await db.select().from(emailOutbox)).filter((row) => (row.payloadJson as { groupRunDeclarationId?: string }).groupRunDeclarationId === renewed.id);
+    const newSecret = secretIn((await renderOutboxMessage(claimed(newMessage), db, NOW)).html)!;
+    expect(signedStateFor(await findSignatureByViewToken(db, hashTokenSecret(newSecret), first.id, "GROUP_RUN_DECLARATION_TRAIL"), v2.id)).toMatchObject({ kind: "current", version: 2 });
+  });
+
+  it("a one-off run's link reads on its own date only, and a link that names nothing reads nothing", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const once = await trailRun({ startsAt: OCT(10) }, { ro: "Tura de toamnă", en: "The autumn loop" });
+    const other = await trailRun({ startsAt: OCT(11) }, { ro: "Tura de iarnă", en: "The winter loop" });
+    await signGroupRunDeclaration(db, await input(once.id), NOW);
+    const [message] = await db.select().from(emailOutbox);
+    const secret = secretIn((await renderOutboxMessage(claimed(message), db, NOW)).html)!;
+    expect(await findSignatureByViewToken(db, hashTokenSecret(secret), once.id, "GROUP_RUN_DECLARATION_TRAIL")).toMatchObject({ version: 1, series: false });
+    expect(await findSignatureByViewToken(db, hashTokenSecret(secret), other.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
+    expect(await findSignatureByViewToken(db, hashTokenSecret("A".repeat(43)), once.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
+  });
+});
+
+/*
+  §NNN — `/admin/tasks` asks for the group-run declarations again until every one in force names
+  `{{series}}`: the platform's text written for one signature per series.
+*/
+describe("§NNN the group-run texts' row on /admin/tasks", () => {
+  it("is null with none in force, true for the platform's texts, false while one in force is older", async () => {
+    expect(await groupRunDeclarationsSeriesCurrent(db, NOW)).toBeNull();
+    await approveOne("GROUP_RUN_DECLARATION_TRAIL");
+    expect(await groupRunDeclarationsSeriesCurrent(db, NOW)).toBe(true);
+    // An asphalt text approved before §NNN: one date, no series sentence.
+    const older: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
+      locale,
+      title: LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_ASPHALT[locale].title,
+      body: { sections: [{ paragraphs: ["Subsemnatul/a {{participant}}, particip la alergarea {{event}}, {{eventDate}}."] }] },
+    }));
+    await insertLegalDocumentVersion(db, { key: "GROUP_RUN_DECLARATION_ASPHALT", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(older), translations: older, now: NOW });
+    expect(await groupRunDeclarationsSeriesCurrent(db, NOW)).toBe(false);
   });
 });
 

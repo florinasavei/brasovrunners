@@ -60,30 +60,39 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * What both surfaces open with: who, which run — every date of it, from the one signed on (§NNN) —
  * that it is optional and not a race.
  *
- * **Written for the recurring run (§NNN).** A group run is mostly a weekly one (§113: one line, many
- * dates), and the owner's rule of 2026-09-27 is that a returning runner signs once. So the text is
- * about the run as a series: `{{event}}` is its name, `{{eventDate}}` the date it was signed on —
- * "începând cu alergarea de …" — and a paragraph of its own says it covers every date that follows,
- * with no end date, until the signer asks for its deletion, and that a date which differs (the place,
- * the hour, the route) is read on that date's page. A one-off run reads the same text truthfully: it
- * simply has no date after the first. The service keeps one signature per person per series
- * (`signGroupRunDeclaration`), which is what these sentences promise.
+ * **A series sentence and a one-off sentence (§NNN).** A group run is mostly a weekly one (§113: one
+ * line, many dates), and the owner's rule of 2026-09-27 is that a returning runner signs once. But one
+ * approved text serves a one-off run too, and «every date of the run» is untrue of a run that has one.
+ * So the text says what it covers in one of two paragraphs, and the renderer keeps the one that fits
+ * (`dropsParagraph`, `SERIES_MERGE_FIELDS`): the **series sentence** names `{{series}}`,
+ * `{{seriesRhythm}}` and `{{seriesPlace}}` — every run of the series from the signing on, with no end
+ * date, a date that differs read on its own page, valid until the signer asks for its deletion, and a
+ * new version asked for again —; the **one-off sentence** names `{{event}}`, `{{eventDate}}` and
+ * `{{eventLocation}}` — that one run. The opening names neither, so it reads right under both. The
+ * service keeps one signature per person, series and version (`signGroupRunDeclaration`), which is
+ * what the series sentence promises.
  */
 const openingRo = [
-  "Subsemnatul/a {{participant}}, declar pe propria răspundere că particip la alergarea de grup {{event}}, începând cu alergarea de {{eventDate}}, cu plecare din {{eventLocation}}, și că înainte de fiecare alergare îi citesc detaliile pe pagina ei de pe site-ul clubului.",
+  "Subsemnatul/a {{participant}}, declar pe propria răspundere că particip la alergarea de grup descrisă mai jos și că înainte de fiecare alergare îi citesc detaliile pe pagina ei de pe site-ul clubului.",
   // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §NNN): the
-  // one age the text states — on the day of each run, since the text covers every date (§NNN).
+  // one age the text states — on the day of each run, true of one run and of a series alike.
   "Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.",
-  "Această declarație acoperă fiecare dată a alergării {{event}} la care particip de la semnare, fără termen de încetare: nu o semnez din nou la fiecare alergare. Dacă o dată diferă de celelalte — locul, ora sau traseul —, aflu acest lucru de pe pagina acelei date, iar declarația se aplică și ei. Rămâne valabilă până când cer ștergerea ei sau până când semnez o versiune nouă a ei.",
+  // The series sentence (§NNN): kept for a run that is one of a series, dropped for a one-off.
+  "Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}}, cu plecare de obicei din {{seriesPlace}} — la care particip de la semnare, fără termen de încetare: nu o semnez din nou la fiecare alergare. Dacă o dată diferă de celelalte — locul, ora sau traseul —, aflu acest lucru de pe pagina acelei date, iar declarația se aplică și ei. Rămâne valabilă până când cer ștergerea ei; dacă organizatorul aprobă o versiune nouă a textului, mi se cere să o semnez din nou.",
+  // The one-off sentence (§NNN): kept for a run of one date, dropped for a series.
+  "Declarația este pentru alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",
 ];
 
 const openingEn = [
-  "I, {{participant}}, declare on my own responsibility that I take part in the group run {{event}}, from the run on {{eventDate}} onwards, starting from {{eventLocation}}, and that before each run I read its details on its page on the club's website.",
+  "I, {{participant}}, declare on my own responsibility that I take part in the group run described below, and that before each run I read its details on its page on the club's website.",
   // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §NNN): the
-  // one age the text states — on the day of each run, since the text covers every date (§NNN).
+  // one age the text states — on the day of each run, true of one run and of a series alike.
   "I declare that I am at least {{minimumAge}} old on the day of each run I take part in.",
-  "This declaration covers every date of the run {{event}} that I take part in from the moment I sign it, with no end date: I do not sign it again for each run. If a date differs from the others — the place, the time or the route — I learn it from that date's page, and the declaration applies to that date too. It stays valid until I ask for its deletion or until I sign a new version of it.",
+  // The series sentence (§NNN): kept for a run that is one of a series, dropped for a one-off.
+  "This declaration is valid for every run of the series {{series}} — {{seriesRhythm}}, usually starting from {{seriesPlace}} — that I take part in from the moment I sign it, with no end date: I do not sign it again for each run. If a date differs from the others — the place, the time or the route — I learn it from that date's page, and the declaration applies to that date too. It stays valid until I ask for its deletion; if the organiser approves a new version of the text, I am asked to sign it again.",
+  // The one-off sentence (§NNN): kept for a run of one date, dropped for a series.
+  "This declaration is for the group run {{event}} on {{eventDate}}, starting from {{eventLocation}}.",
   "I know that a group run is neither a competition nor a guided tour: it has no registration, no timing and no safety crew on the course, and the organiser* announces the time, the place and the route and runs together with the participants. Signing this declaration is optional and is not a condition of running with the group.",
 ];
 

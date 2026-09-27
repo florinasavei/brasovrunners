@@ -29,7 +29,15 @@ import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
 import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
-import { findSignedGroupRunDeclaration, groupRunDeclarationIdOf } from "@/modules/group-run-declarations/repository";
+import {
+  findRunSeries,
+  findSignedGroupRunDeclaration,
+  groupRunDeclarationIdOf,
+  nextDateOfRun,
+  setGroupRunDeclarationViewToken,
+} from "@/modules/group-run-declarations/repository";
+import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
+import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
@@ -1090,6 +1098,36 @@ async function renderGroupRunDeclarationRow(
   }
 
   /*
+    A series' declaration (§NNN) says so in both emails: the series by its name — the run's title,
+    in each half's language — and its rhythm, read off the run's dates now, «valabilă pentru toate
+    alergările seriei». A one-off's says it is for that run, as before.
+  */
+  if (signed.seriesKey !== null) {
+    const run = await findRunSeries(db, signed.eventId);
+    data.groupRunSeries = true;
+    data.seriesRhythm = seriesRhythmPhrase(run.dates, zone, locale);
+    data.seriesRhythmOther = seriesRhythmPhrase(run.dates, zone, otherLocale(locale));
+  }
+
+  /*
+    The signer's own link (§NNN): a secret minted here, at send time, its SHA-256 on the row (§12.8,
+    §14.5) — the newest copy's replaces an older one's. It opens the run's next date with
+    `?declaratie=…`, where the page reads «Ai semnat deja…» from it (`findSignatureByViewToken`); a
+    read, never an action. The archive copy, and any club copy, carries none: it is the signer's.
+  */
+  let actionUrl: string | undefined;
+  if (!archive && !isClubCopy(row.payloadJson)) {
+    const secret = generateTokenSecret();
+    await setGroupRunDeclarationViewToken(db, signed.id, hashTokenSecret(secret));
+    const target = await nextDateOfRun(db, signed.eventId, now);
+    const targetDetails = target === signed.eventId ? eventDetails : eventNotificationDetailsIn(await eventRows(db, target), locale);
+    if (targetDetails?.slug) {
+      const path = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: targetDetails.slug } } });
+      actionUrl = `${env.APP_BASE_URL}${path}?declaratie=${secret}#declaratie`;
+    }
+  }
+
+  /*
     Both emailed copies with the identity document masked (§419; GDPR art. 5(1)(f), 25, 32): the
     signer's address was never confirmed — the declaration is signed on a page, no link is sent
     first — so one typo hands a stranger a national identification number. The backoffice keeps the
@@ -1110,7 +1148,7 @@ async function renderGroupRunDeclarationRow(
     idempotencyKey: row.idempotencyKey,
     messageType: row.messageType,
     data,
-    actionUrl: undefined,
+    actionUrl,
     attachments: pdf ? [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }] : undefined,
     overrides: await readEmailCopyForSending(db, now),
     cc: addresses(payload.cc),

@@ -384,13 +384,16 @@
     "groupRunDeclaration": {
       "heading": "Declarație pe propria răspundere",
       "button": "Semnează declarația",
-      "line": "Semnează declarația pe propria răspundere o singură dată, pentru toate datele alergării {event}: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
+      "line": "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
+      "signedSeries": "Ai semnat deja declarația pentru aceste alergări (v. {version}, semnată {when}). Este valabilă pentru toate alergările seriei: nu o mai semnezi.",
+      "signedOne": "Ai semnat deja declarația pentru această alergare (v. {version}, semnată {when}).",
+      "signedOlder": "Ai semnat versiunea {version} a declarației ({when}). Între timp, organizatorul a aprobat o versiune nouă: citește-o și semneaz-o din nou.",
       "page": {
         "back": "Înapoi la {event}",
         "title": "Declarație pe propria răspundere",
-        "intro": "Pentru alergarea de grup {event}, o singură dată: acoperă fiecare dată a ei, până ceri ștergerea. Este opțională și nu te înscrie nicăieri: citește textul, completează mai jos și semnează.",
+        "intro": "Pentru alergarea de grup {event}. La o alergare care se repetă o semnezi o singură dată, pentru toată seria. Este opțională și nu te înscrie nicăieri: citește, completează și semnează.",
         "doneTitle": "Declarația a fost semnată",
-        "done": "Ți-o trimitem pe email, în PDF — pleacă prin coada de emailuri, de obicei în câteva minute, cel târziu la următoarea trecere programată. Acoperă fiecare dată a alergării {event}: nu o mai semnezi la următoarele. La alergare vii ca de obicei.",
+        "done": "Ți-o trimitem pe email, în PDF — pleacă prin coada de emailuri, de obicei în câteva minute, cel târziu la următoarea trecere programată. La o alergare care se repetă, acoperă toată seria {event}: nu o mai semnezi la următoarele. În email ai și un link spre pagina alergării, care îți spune că ai semnat. La alergare vii ca de obicei.",
         "closed": "Declarația nu se mai poate semna pentru această alergare.",
         "limited": "Ai trimis prea multe declarații în ultima oră de pe această adresă. Încearcă din nou mai târziu.",
         "away": "Nu am putut ajunge la evidențele noastre chiar acum, așa că nu s-a semnat și nu s-a înregistrat nimic. Ce ai completat e mai jos — mai încearcă peste câteva minute.",
@@ -2002,6 +2005,9 @@
         "eventDate": "Data evenimentului, în fusul lui",
         "eventLocation": "Locul de întâlnire",
         "signedAt": "Momentul semnării",
+        "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu {{event}} și {{eventDate}}",
+        "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
+        "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "confirmationHours": "Cât e valabil linkul de confirmare a adresei, din „Termene”",
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
@@ -2466,6 +2472,17 @@
             "Alege: o cheie nouă, cu creditul ei dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește — sau un plan plătit, doar cu acordul explicit al clubului, care folosește planuri gratuite.",
             "În Vercel → proiectul de producție (și QA) → Settings → Environment Variables: DEEPL_API_KEY = cheia nouă. Redeploy.",
             "În cel mult o oră (sau la prima traducere), Setări → Costuri arată noul credit, iar rândul acesta devine verde."
+          ]
+        },
+        "groupRunSeriesTexts": {
+          "title": "Declarațiile alergărilor de grup: o semnătură pe serie",
+          "todo": "O declarație de alergare de grup în vigoare e scrisă încă pentru o singură dată. Textul platformei spune acum ce acoperă: la o alergare care se repetă, toată seria — numele, ritmul și locul de plecare —, iar la una de o zi, acea alergare. Până aprobi versiunea nouă, fiecare semnătură acoperă doar data ei, cum spune textul în vigoare.",
+          "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (alergare de grup, asfalt)” → „pornește de la textul platformei”. Citește textul, completează datele clubului, salvează ciorna, apoi „Aprobă”.",
+            "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
+            "Aprobă și o versiune nouă a notei de confidențialitate din textul platformei: ea spune că declarația unei serii se păstrează cât timp alergătorul vine la alergări.",
+            "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
           ]
         },
         "raceDeclarations": {
@@ -4798,9 +4815,10 @@
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
       "help": "Cine a semnat declarația opțională și când. Clubul păstrează o declarație cât timp semnatarul vine la alergări și o șterge când îi cere: atunci o ștergi aici, cu motivul.",
-      "helpMore": "O semnătură acoperă toate datele alergării, așa că lista e aceeași pe fiecare dată. Nu se cere act de identitate; adresa de email a semnatarului este în PDF.",
+      "helpMore": "O semnătură marcată «serie» acoperă toate datele alergării; o versiune nouă se semnează din nou, iar cea veche rămâne. Nu se cere act de identitate; adresa semnatarului e în PDF.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when} (v{version})",
+      "series": "serie",
       "pdf": "PDF",
       "reason": "Motivul ștergerii",
       "reasonHelp": "Rămâne în jurnalul clubului, cu numele tău. Nu scrie numele persoanei.",

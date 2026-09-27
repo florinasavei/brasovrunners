@@ -30,9 +30,10 @@ describe("§393 the group run's declaration messages", () => {
       expect(email.text).toContain("registers you for nothing");
       expect(email.text).toContain("pentru că ai semnat o declarație pe site-ul clubului");
       expect(email.text).toContain("because you signed a declaration on the club's website");
-      // Once for every date of the run (§NNN).
-      expect(email.text).toContain("Declarația acoperă fiecare dată a acestei alergări, așa că nu o mai semnezi la următoarele.");
-      expect(email.text).toContain("The declaration covers every date of this run, so you do not sign it again for the next ones.");
+      // A one-off run's copy names that run and claims no series (§NNN).
+      expect(email.subject).toContain("— Tura pe munte");
+      expect(email.text).not.toContain("toate alergările seriei");
+      expect(email.text).not.toContain("every run of the series");
       // No button and no registration's link: there is nothing to manage.
       expect(email.text).not.toMatch(/\/(inregistrari|registrations)\//);
     }
@@ -46,17 +47,48 @@ describe("§393 the group run's declaration messages", () => {
       // The legitimate-interest, three-year choice, from the sweep's own constant, and the objection.
       const ro = durationPhrase("ro", RETENTION.registrationsYearsAfterEvent, "years");
       const en = durationPhrase("en", RETENTION.registrationsYearsAfterEvent, "years");
-      // From the signing (§NNN): the declaration covers every date of the run, so no one run counts.
+      // From the signing (§NNN): a series' declaration covers every run of it, so no one run counts.
       expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la semnare`);
       expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the signing`);
-      expect(email.text).toContain("Declarația acoperă fiecare dată a acestei alergări.");
-      expect(email.text).toContain("The declaration covers every date of this run.");
       expect(email.text).toContain("dacă alergătorul se opune");
       // Kept while the runner comes to the runs, deleted when they ask (§503), never a number of days.
       expect(email.text).toContain("cât timp alergătorul vine la alergări; când cere ștergerea ei");
       expect(email.text).toContain("while the runner keeps coming to the runs; when they ask for it to be deleted");
       expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);
     }
+  });
+
+  /*
+    §NNN — a series' declaration: both emails name the series and its rhythm, in each half's language,
+    from the template data (never a literal), and say it is valid for every run of it; the signer's
+    carries their own link to the run's page as its button.
+  */
+  it("names the series and its rhythm in the subject and body of both messages, in both halves", () => {
+    const series: TemplateData = { ...DATA, groupRunSeries: true, seriesRhythm: "în fiecare miercuri, la 19:00", seriesRhythmOther: "every Wednesday at 19:00" };
+    const signer = buildOutgoingEmail({
+      to: "x@example.test",
+      locale: "ro",
+      idempotencyKey: "t:series",
+      messageType: "GROUP_RUN_DECLARATION_SIGNED",
+      data: series,
+      actionUrl: "https://example.test/ro/evenimente/tura?declaratie=abc#declaratie",
+    });
+    expect(signer.subject).toBe("Declarația ta pe propria răspundere — seria Tura pe munte / Your self-declaration — The mountain loop (series)");
+    expect(signer.text).toContain("pentru seria de alergări de grup Tura pe munte (în fiecare miercuri, la 19:00), joi, 1 oct. 2026, 11:00.");
+    expect(signer.text).toContain("Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele");
+    expect(signer.text).toContain("for the group run series The mountain loop (every Wednesday at 19:00), on Thursday, 1 Oct 2026, 11:00.");
+    expect(signer.text).toContain("The declaration is valid for every run of the series, so you do not sign it again for the next ones");
+    // The signer's own link, as the button, in both halves.
+    expect(signer.html).toContain("Vezi pe pagina alergării");
+    expect(signer.html).toContain("?declaratie=abc#declaratie");
+
+    const club = buildOutgoingEmail({ to: "x@example.test", locale: "ro", idempotencyKey: "t:series-archive", messageType: "GROUP_RUN_DECLARATION_ARCHIVE", data: series });
+    expect(club.subject).toContain("Ana Popescu — seria Tura pe munte");
+    expect(club.subject).toContain("Ana Popescu — The mountain loop (series)");
+    expect(club.text).toContain("pentru seria de alergări de grup Tura pe munte (în fiecare miercuri, la 19:00)");
+    expect(club.text).toContain("Este valabilă pentru toate alergările seriei.");
+    expect(club.text).toContain("for the group run series The mountain loop (every Wednesday at 19:00)");
+    expect(club.text).toContain("It is valid for every run of the series.");
   });
 
   it("tells the signer the document is masked only when the text asked for one, and always how to have it deleted (§419)", () => {
