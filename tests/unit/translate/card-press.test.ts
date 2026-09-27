@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { TranslateOutcome } from "@/modules/translate/service";
 import { cardOf, englishBoxesToTranslate, planTranslateAll, translateBoxes } from "@/modules/translate/ui/form-fields";
+import { cardOffReason } from "@/modules/translate/ui/TranslateCardButton";
 import TranslateProvider, { type TranslateAction, type TranslateOffer } from "@/modules/translate/ui/TranslateProvider";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import en from "../../../messages/en.json";
@@ -17,7 +18,10 @@ import ro from "../../../messages/ro.json";
  *   their Romanian twins read from the form, the rest of the form untouched and nothing submitted;
  * - the card is the nearest `Panel` (`<details>` / `<section>`) around the strip, else the strip;
  * - the tab row draws the button only on a strip that asks for it, can be typed into and has both
- *   languages, and only where the page offers translation — no key, no role: no button.
+ *   languages, and only for a role that writes words — greyed with the reason where this
+ *   deployment cannot translate (no key, a spent credit), absent with no offer at all.
+ *
+ * The toast, the English tab after the press and the real cards' field sets: `card-press-cards.test.ts`.
  *
  * In Node with stand-ins for the few DOM shapes `form-fields.ts` touches, as `one-press.test.ts`.
  */
@@ -188,10 +192,41 @@ describe("§NNN the button in the card's tab row", () => {
     expect(strip(WORKING, {}, en as unknown as typeof ro)).toContain(en.Translate.card);
   });
 
-  it("is absent with no key, a spent credit, a role that writes no words, or no provider", () => {
-    expect(strip({ action: null, setupHref: "/ro/admin/tasks#task-translation" })).not.toContain("translate-card");
-    expect(strip({ action: null, setupHref: null, spent: true })).not.toContain("translate-card");
+  it("is greyed with the reason and the steps' link with no DeepL key (§482)", () => {
+    const html = strip({ action: null, setupHref: "/ro/admin/tasks#task-translation" });
+    expect(html).toContain('data-testid="translate-card-off"');
+    expect(html).toContain('data-reason="off"');
+    expect(html).not.toContain('data-testid="translate-card"');
+    expect(html).toMatch(/<button[^>]*disabled/);
+    expect(html).toContain(ro.Translate.card);
+    // The reason, read by assistive technology through `aria-describedby`; the tooltip adds the link.
+    expect(html).toContain(ro.Translate.off);
+    expect(html).toMatch(/aria-describedby="[^"]+"/);
+    // A reader who may not open the tasks page is told to ask an Administrator.
+    expect(strip({ action: null, setupHref: null })).toContain(ro.Translate.offAskAdmin);
+  });
+
+  it("is greyed with the spent-credit reason when DeepL's credit is spent (§497)", () => {
+    const html = strip({ action: null, setupHref: null, spent: true, costsHref: "/ro/admin/tasks/costs" });
+    expect(html).toContain('data-reason="spent"');
+    expect(html).toContain(ro.Translate.spent);
+    expect(html).toMatch(/<button[^>]*disabled/);
+    expect(strip({ action: null, setupHref: null, spent: true }, {}, en as unknown as typeof ro)).toContain(en.Translate.spentAskAdmin);
+  });
+
+  it("names where to go to fix it: the steps, or Costuri for a spent credit", () => {
+    expect(cardOffReason({ action: null, setupHref: "/ro/admin/tasks#task-translation" })).toEqual({ reason: "off", href: "/ro/admin/tasks#task-translation" });
+    expect(cardOffReason({ action: null, setupHref: "/x", spent: true, costsHref: "/ro/admin/tasks/costs" })).toEqual({ reason: "spent", href: "/ro/admin/tasks/costs" });
+    expect(cardOffReason({ action: null, setupHref: null, spent: true })).toEqual({ reason: "spent", href: null });
+  });
+
+  it("is absent for a role that writes no words (no offer at all)", () => {
     expect(strip(null)).not.toContain("translate-card");
+  });
+
+  it("keeps the status line out of sight in the sticky row: read out, not drawn (the toast says it)", () => {
+    const html = strip(WORKING);
+    expect(html).toMatch(/role="status"[^>]*data-testid="translate-card-status"|data-testid="translate-card-status"[^>]*role="status"/);
   });
 
   it("is absent on a strip that does not ask for it, cannot be typed into, or lacks a language", () => {

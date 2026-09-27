@@ -79,6 +79,8 @@ export default async function AlbumFieldsForm({
       {/* One tab per language, as every other editor has (§259). */}
       <LocaleTabPanels
         idPrefix="locale"
+        // «Tradu cardul: RO → EN» in the tab row too (§NNN), where the person is looking.
+        translateCard
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;

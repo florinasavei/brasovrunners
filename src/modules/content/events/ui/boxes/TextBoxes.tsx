@@ -1,8 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { getPathname } from "@/i18n/navigation";
-import { type Locale, routing } from "@/i18n/routing";
-import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
+import { type Locale, routing } from "@/i18n/routing";import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import {
   addressSummary,
@@ -31,7 +30,6 @@ import { type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
  */
 
 const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translation;
-
 /**
  * One strip of tabs, its marks computed from what is stored and then from what is typed.
  *
@@ -88,7 +86,8 @@ export async function LanguageTabs({
       // Only the languages the reader may write are re-read as they type; a read-only one has no box.
       watch={mayType ? watch : undefined}
       live={mayType}
-      // «Tradu cardul: RO → EN» at the end of the card's tab row (§NNN).
+      // «Tradu cardul: RO → EN» at the end of the card's tab row (§NNN). Every card here has words:
+      // the address card's are the two search-engine texts beside the `slug`, which is not one.
       translateCard
       requiredCount={requiredCount}
       identical={

@@ -1,45 +1,115 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import MuiLink from "@mui/material/Link";
+import Tooltip from "@mui/material/Tooltip";
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import { cardOf } from "./form-fields";
-import { useTranslateAction } from "./TranslateProvider";
+import { cardOf, cardTitleOf } from "./form-fields";
+import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslateAll } from "./use-translate-all";
+
+/** Read by assistive technology, out of sight: the sticky tab row keeps its one line (§NNN). */
+const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+
+/** The button's place at the end of the tab row: pushed right, never squeezed, 44 px tall. */
+const BUTTON_SX = { minHeight: 44, flex: "none", textTransform: "none" } as const;
 
 /**
  * «Tradu cardul: RO → EN» / "Translate this card: RO → EN" in a card's Română | English tab row
  * (§NNN), between the one box's «Tradu din română» (§464) and the whole editor's «Copiază și tradu
  * tot» (§482): every English box of this card whose Romanian twin has words, in one press — the
- * card's boxes outside its tabs too (a programme's rows, the meeting place's English name), since
- * the card is the nearest `Panel` around the strip (`cardOf`). The rest of the form is untouched.
+ * card's boxes outside its tabs too (the programme's timed rows), since the card is the nearest
+ * `Panel` around the strip (`cardOf`). The rest of the form is untouched.
  *
  * The same press as the whole editor's (`useTranslateAll`): it asks first only when English words
  * already written would be replaced («Înlocuiește tot» / «Doar cele goale») or the text is large,
- * says what happened in the line under the tabs and in a toast (§496), and saves nothing — the
- * boxes change as if typed and the ordinary save stores them under the both-languages rule (§352).
+ * says what happened in a toast naming the card (§496, «Gata: 3 câmpuri traduse în „Descrierea
+ * completă”»), and saves nothing — the boxes change as if typed and the ordinary save stores them
+ * under the both-languages rule (§352). When it filled something, `onTranslated` brings the
+ * English tab forward, so the person reads the result.
  *
- * Absent — like the per-box buttons, not greyed — where the page cannot translate (no DeepL key,
- * a spent credit, a role that writes no words): the whole editor's button is the one that says
- * why. The Server Action asks the role and the key again on every press (BR-REQ-060-01).
+ * **Always drawn for a role that writes the club's words** (§482, §497): with no DeepL key, or a
+ * spent credit, it is greyed and says why — in a tooltip with the link to the steps or to Costuri,
+ * and to assistive technology through `aria-describedby`. A role that writes no words, or a page
+ * with no translation at all, sees nothing. The Server Action asks the role and the key again on
+ * every press (BR-REQ-060-01).
+ *
+ * The status line is read out (`role="status"`) and not drawn: it sits in the sticky tab row, and a
+ * long sentence there would grow the row over the text scrolling under it; the toast says it.
  */
-export default function TranslateCardButton() {
-  // Nothing at all — not even a catalogue lookup — where the page offers no translation.
-  return useTranslateAction() ? <TranslateCardButtonIsland /> : null;
+export default function TranslateCardButton({ onTranslated }: { onTranslated?: () => void }) {
+  const offer = useTranslateOffer();
+  if (!offer) return null;
+  return offer.action ? <TranslateCardButtonIsland onTranslated={onTranslated} /> : <TranslateCardButtonOff offer={offer} />;
 }
 
-function TranslateCardButtonIsland() {
+/** Why the button is greyed, in the whole editor's own sentences (§482, §497), and where to fix it. */
+export function cardOffReason(offer: TranslateOffer): { reason: "spent" | "off"; href: string | null } {
+  return offer.spent ? { reason: "spent", href: offer.costsHref ?? null } : { reason: "off", href: offer.setupHref };
+}
+
+function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
+  const t = useTranslations("Translate");
+  const reasonId = useId();
+  const { reason, href } = cardOffReason(offer);
+  const sentence = reason === "spent" ? (href ? t("spent") : t("spentAskAdmin")) : href ? t("off") : t("offAskAdmin");
+  const steps = reason === "spent" ? t("spentSteps") : t("offSteps");
+  return (
+    <Tooltip
+      describeChild
+      enterTouchDelay={0}
+      leaveTouchDelay={8000}
+      title={
+        <>
+          {sentence}
+          {href && (
+            <>
+              {" "}
+              <MuiLink href={href} color="inherit" underline="always">
+                {steps}
+              </MuiLink>
+            </>
+          )}
+        </>
+      }
+    >
+      {/* A disabled button fires no pointer events: the wrapper holds the tooltip and the focus. */}
+      <Box
+        component="span"
+        tabIndex={0}
+        aria-describedby={reasonId}
+        sx={{ ml: "auto", flex: "none", display: "inline-flex" }}
+        data-testid="translate-card-off"
+        data-reason={reason}
+      >
+        <GlyphButton icon="translate" size="small" disabled sx={BUTTON_SX}>
+          {t("card")}
+        </GlyphButton>
+        <Box component="span" id={reasonId} sx={VISUALLY_HIDDEN}>
+          {sentence}
+        </Box>
+      </Box>
+    </Tooltip>
+  );
+}
+
+function TranslateCardButtonIsland({ onTranslated }: { onTranslated?: () => void }) {
   const t = useTranslations("Translate");
   const anchor = useRef<HTMLDivElement>(null);
-  const { pending, message, press, dialog } = useTranslateAll(() => {
-    const here = anchor.current;
-    const strip = here?.closest("[data-locale-tabs]") ?? null;
-    // Never `within: null` while the button is mounted: that would be the whole form.
-    return { form: here?.closest("form") ?? null, within: strip ? cardOf(strip) : (here ?? null) };
-  }, t("confirm.cardBigTitle"));
+  const { pending, message, press, dialog } = useTranslateAll(
+    () => {
+      const here = anchor.current;
+      const strip = here?.closest("[data-locale-tabs]") ?? null;
+      const card = strip ? cardOf(strip) : null;
+      // Never `within: null` while the button is mounted: that would be the whole form.
+      return { form: here?.closest("form") ?? null, within: card ?? here ?? null, card: card ? cardTitleOf(card) : null };
+    },
+    t("confirm.cardBigTitle"),
+    onTranslated,
+  );
 
   return (
     <Box ref={anchor} sx={{ display: "contents" }} data-translate-card="">
@@ -49,20 +119,14 @@ function TranslateCardButtonIsland() {
         onClick={press}
         disabled={pending}
         aria-busy={pending || undefined}
-        sx={{ minHeight: 44, ml: "auto", flex: "none", textTransform: "none" }}
+        sx={{ ...BUTTON_SX, ml: "auto" }}
         data-testid="translate-card"
       >
         {pending ? t("pending") : t("card")}
       </GlyphButton>
-      <Typography
-        variant="caption"
-        role="status"
-        color={message?.tone === "refused" ? "error" : "text.secondary"}
-        sx={{ flexBasis: "100%" }}
-        data-testid="translate-card-status"
-      >
+      <Box component="span" role="status" sx={VISUALLY_HIDDEN} data-testid="translate-card-status" data-tone={message?.tone}>
         {message?.text ?? ""}
-      </Typography>
+      </Box>
       <ConfirmDialog {...dialog} />
     </Box>
   );

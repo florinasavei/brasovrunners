@@ -6088,6 +6088,16 @@
         "few": "Gata: {count} câmpuri traduse din română în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton. Verifică textele și apasă Salvează.",
         "other": "Gata: {count} de câmpuri traduse din română în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton. Verifică textele și apasă Salvează."
       },
+      "translatedCard": {
+        "one": "Gata: {count} câmp tradus în „{card}”. Verifică textul în English și apasă Salvează.",
+        "few": "Gata: {count} câmpuri traduse în „{card}”. Verifică textele în English și apasă Salvează.",
+        "other": "Gata: {count} de câmpuri traduse în „{card}”. Verifică textele în English și apasă Salvează."
+      },
+      "translatedCardCut": {
+        "one": "Gata: {count} câmp tradus în „{card}”, dar textul a fost scurtat la limita câmpului. Verifică-l în English și apasă Salvează.",
+        "few": "Gata: {count} câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează.",
+        "other": "Gata: {count} de câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează."
+      },
       "translatedOne": "Tradus. Verifică și apasă Salvează.",
       "translateRefused": "Traducerea nu s-a făcut: vezi mesajul de sub buton."
     }

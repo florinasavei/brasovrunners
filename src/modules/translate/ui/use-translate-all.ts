@@ -8,8 +8,19 @@ import { ASK_ABOVE_CHARACTERS } from "../domain/budget";
 import { labelOfBox, planTranslateAll, type TranslateAllPlan } from "./form-fields";
 import { useTranslatePress } from "./use-translate-press";
 
-/** Where a press reads and writes: the form the boxes post in, and — for one card — the card. */
-export type TranslateScope = { form: HTMLFormElement | null; within?: ParentNode | null };
+/**
+ * Where a press reads and writes: the form the boxes post in, and — for one card — the card and
+ * its name (`card`, for the toast «… traduse în „Descrierea completă”», §NNN).
+ */
+export type TranslateScope = { form: HTMLFormElement | null; within?: ParentNode | null; card?: string | null };
+
+/**
+ * What follows a press (§NNN): `onDone` only when boxes were filled — a refusal, a failure or a
+ * form with no Romanian words leaves the reader where they are, reading the line and the toast.
+ */
+export function afterPress(result: { kind: string } | null, onDone?: () => void): void {
+  if (result?.kind === "done") onDone?.();
+}
 
 /**
  * One press over many English boxes, with the one question it may ask first (§482): shared by
@@ -21,26 +32,32 @@ export type TranslateScope = { form: HTMLFormElement | null; within?: ParentNode
  *
  * `scope` is read at the press, never at render: the boxes are the browser's, as typed now.
  * `bigTitle` is the question's title when only the size asks, in the press's own words.
+ * `onDone` runs once the boxes were filled — a card's press brings its English tab forward (§NNN),
+ * so the person reads the result rather than the unchanged Romanian.
  */
-export function useTranslateAll(scope: () => TranslateScope, bigTitle: string) {
+export function useTranslateAll(scope: () => TranslateScope, bigTitle: string, onDone?: () => void) {
   const t = useTranslations("Translate");
   const locale = useLocale();
   const [asking, setAsking] = useState<{ plan: TranslateAllPlan; labels: string[] } | null>(null);
   const { pending, message, translate } = useTranslatePress();
 
+  const go = (form: HTMLFormElement | null, names: readonly string[], card: string | null | undefined) => {
+    void translate(form, names, { all: true, card }).then((result) => afterPress(result, onDone));
+  };
   const press = () => {
-    const { form, within } = scope();
+    const { form, within, card } = scope();
     const plan = planTranslateAll(form, within);
     // Empty English boxes and an ordinary amount of words: one press, no question.
     if (plan.replaced.length === 0 && plan.characters <= ASK_ABOVE_CHARACTERS) {
-      void translate(form, plan.names, { all: true });
+      go(form, plan.names, card);
       return;
     }
     setAsking({ plan, labels: plan.replaced.map((name) => labelOfBox(form, name)) });
   };
   const run = (names: readonly string[]) => {
     setAsking(null);
-    void translate(scope().form, names, { all: true });
+    const { form, card } = scope();
+    go(form, names, card);
   };
   const figure = (count: number) => new Intl.NumberFormat(locale).format(count);
 

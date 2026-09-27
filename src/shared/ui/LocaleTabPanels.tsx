@@ -103,6 +103,11 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  */
 export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
 
+/** The English panel's place in the strip, which a card's translate press brings forward (§NNN); -1 when none. */
+export function englishPanelIndex(panels: readonly { locale: string }[]): number {
+  return panels.findIndex((panel) => panel.locale === "en");
+}
+
 /** Panel `index` shown and every other one hidden, on the DOM itself (§371; see `bringForward`). */
 function showOnly(panels: readonly (HTMLElement | null)[], index: number) {
   panels.forEach((panel, other) => {
@@ -158,9 +163,10 @@ export default function LocaleTabPanels({
   live?: boolean;
   /**
    * «Tradu cardul: RO → EN» at the end of the tab row (§NNN): the card's English boxes from their
-   * Romanian twins, in one press. For a strip that is one card among many (the event editor); an
-   * editor with one strip has the whole editor's button right above it. Drawn only on a strip that
-   * can be typed into and has both languages, and only where the page offers translation.
+   * Romanian twins, in one press, then the English tab on top. On every strip whose words may be
+   * translated — the event editor's cards, a standing page's and an album's tabs. Drawn only on a
+   * strip that can be typed into and has both languages, and only for a role that writes the club's
+   * words: greyed, saying why, where this deployment cannot translate (§482, §497).
    */
   translateCard?: boolean;
 }) {
@@ -331,12 +337,20 @@ export default function LocaleTabPanels({
   };
 
   const withCardButton = translateCard && live && panels.some((panel) => panel.locale === "ro") && panels.some((panel) => panel.locale === "en");
+  // After the card's press filled its English boxes (§NNN): the English tab on top, so the person
+  // reads what was written rather than the Romanian they were already looking at.
+  const showEnglish = () => {
+    const index = englishPanelIndex(panels);
+    if (index < 0) return;
+    showOnly(panelRefs.current, index);
+    setActive(index);
+  };
 
   return (
     <Box ref={root} data-locale-tabs="">
       {/*
-        The tab row: the tabs, and — on a card of the event editor — «Tradu cardul: RO → EN» at its
-        end (§NNN). It wraps, so on a phone the button takes a line of its own under the tabs
+        The tab row: the tabs, and — on a strip whose words may be translated — «Tradu cardul:
+        RO → EN» at its end (§NNN). It wraps, so on a phone the button takes a line of its own under the tabs
         rather than squeezing them into a scroll.
       */}
       <Box
@@ -396,7 +410,7 @@ export default function LocaleTabPanels({
             />
           ))}
         </Tabs>
-        {withCardButton && <TranslateCardButton />}
+        {withCardButton && <TranslateCardButton onTranslated={() => showEnglish()} />}
       </Box>
 
       {/* The same words in both languages (§354): above the panels, so it reads whichever tab is on top. */}

@@ -173,11 +173,33 @@ export function planTranslateAll(form: HTMLFormElement | null, within?: ParentNo
 /**
  * The card a «Tradu cardul: RO → EN» belongs to (§NNN): the nearest card of the editor around its
  * tab row — a `Panel` is a `<details>` or a `<section>` — so the card's boxes outside its language
- * tabs (a programme's rows, the meeting place's English name) are translated with it. Nothing
- * around it: the tab strip alone.
+ * tabs (the programme's timed rows) are translated with it. Nothing around it: the tab strip alone.
  */
-export function cardOf(element: Element): ParentNode {
+export function cardOf(element: Element): Element {
   return element.closest("details, section") ?? element;
+}
+
+/**
+ * The card's own name, for the toast «Gata: 3 câmpuri traduse în „Descrierea completă”» (§NNN): the
+ * text of the `Panel`'s heading — inside the `<summary>` of a fold, first in a `<section>` — without
+ * its closed line (`aside`, a `<span>` inside the heading). Null where the strip sits in no card (a
+ * standing page's or an album's one strip): the press then says the whole editor's sentence.
+ */
+export function cardTitleOf(card: Element): string | null {
+  const heading =
+    card.tagName === "DETAILS"
+      ? card.querySelector(":scope > summary h2, :scope > summary h3, :scope > summary h4")
+      : card.tagName === "SECTION"
+        ? card.querySelector(":scope > h2, :scope > h3, :scope > h4")
+        : null;
+  if (!heading) return null;
+  // The title is the heading's own text; the aside is an element inside it and is left out.
+  const own = Array.from(heading.childNodes)
+    .filter((node) => node.nodeType === 3)
+    .map((node) => node.textContent ?? "")
+    .join("")
+    .trim();
+  return own.length > 0 ? own : null;
 }
 
 export type TranslateBoxesResult =

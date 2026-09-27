@@ -6088,6 +6088,16 @@
         "few": "Done: {count} boxes translated from Romanian into English, but some texts were cut at their box's limit — see the line under the button. Check them and press Save.",
         "other": "Done: {count} boxes translated from Romanian into English, but some texts were cut at their box's limit — see the line under the button. Check them and press Save."
       },
+      "translatedCard": {
+        "one": "Done: {count} box translated in “{card}”. Check it under English and press Save.",
+        "few": "Done: {count} boxes translated in “{card}”. Check them under English and press Save.",
+        "other": "Done: {count} boxes translated in “{card}”. Check them under English and press Save."
+      },
+      "translatedCardCut": {
+        "one": "Done: {count} box translated in “{card}”, but the text was cut at the box's limit. Check it under English and press Save.",
+        "few": "Done: {count} boxes translated in “{card}”, but some texts were cut at their box's limit. Check them under English and press Save.",
+        "other": "Done: {count} boxes translated in “{card}”, but some texts were cut at their box's limit. Check them under English and press Save."
+      },
       "translatedOne": "Translated. Check it and press Save.",
       "translateRefused": "The translation was not made: see the line under the button."
     }
