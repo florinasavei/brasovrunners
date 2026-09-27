@@ -110,8 +110,11 @@ describe("§NNN the race's two declarations, one shared body", () => {
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.body).toBe(declarationTrailEn);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.body).toBe(declarationRoadRo);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.body).toBe(declarationRoadEn);
-    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toMatch(/trail/);
-    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toMatch(/șosea sau parc/);
+    // The titles the review asked for (§NNN): «— cursă trail», «— cursă pe asfalt / în parc».
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toBe("Declarație pe propria răspundere — cursă trail");
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toBe("Declarație pe propria răspundere — cursă pe asfalt / în parc");
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.title).toMatch(/— trail race$/);
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.title).toMatch(/— road \/ park race$/);
   });
 
   it("share every section but the risks, written once: opening + course risks + shared duties + closing", () => {

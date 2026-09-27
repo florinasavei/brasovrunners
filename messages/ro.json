@@ -909,7 +909,7 @@
       "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra în backoffice de îndată ce își pune parola.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
-      "approvePlatformTitle": "Aprobi cele trei texte?",
+      "approvePlatformTitle": "Aprobi {count, plural, one {# text} few {# texte} other {# de texte}}?",
       "approvePlatformBody": "Din acest moment sunt în vigoare pe site, ca texte ale clubului; o corectare este o versiune nouă.",
       "approveVersionTitle": "Aprobi și publici versiunea {version}?",
       "approveVersionBody": "Textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
@@ -1120,7 +1120,7 @@
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
-      "declarationDocumentHelp": "Trail pentru trasee montane sau de pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. Participantul semnează cea mai nouă versiune aprobată de tipul ales; fără o alegere, decide suprafața din «Traseul». Textul nu se editează aici: o versiune nouă se aprobă în Documente legale.",
+      "declarationDocumentHelp": "Trail pentru trasee montane sau de pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. La un concurs fără declarație aleasă, căsuța pornește de la varianta potrivită suprafeței din «Traseul» — pe asfalt cea de șosea sau parc, dacă e aprobată; altfel cea de trail — și o poți schimba. Participantul semnează cea mai nouă versiune aprobată de tipul ales. Textul nu se editează aici: o versiune nouă se aprobă în Documente legale.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
@@ -1695,7 +1695,8 @@
           "title": "Declarația pe propria răspundere",
           "newest": "{kind}: cea mai nouă versiune aprobată e v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
           "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația.",
-          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația de trail. Aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei)."
+          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația de trail. Aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei).",
+          "mismatch": "Traseul e pe «{surface}», iar varianta aleasă e «{chosen}»: pentru el se potrivește «{wanted}». Alege-o mai sus, dacă traseul e cel corect."
         }
       },
       "identical": {
@@ -1870,7 +1871,7 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Cele trei texte pe care le acceptă participantul la înscriere — declarația de concurs în două variante, trail și șosea sau parc — și cele două declarații opționale ale alergărilor de grup. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
+      "intro": "Textele pe care le acceptă participantul la înscriere — nota de confidențialitate, termenii și declarația de concurs, aceasta în două variante, trail și șosea sau parc — și cele două declarații opționale ale alergărilor de grup: {count, plural, one {# text} few {# texte} other {# de texte}} în total. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
@@ -1892,10 +1893,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni de concurs",
-        "EVENT_DECLARATION": "Declarație pe propria răspundere (concurs, trail)",
+        "EVENT_DECLARATION": "Declarație pe propria răspundere — cursă trail",
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)",
-        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere (concurs, șosea sau parc)"
+        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — cursă pe asfalt / în parc"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -1945,7 +1946,7 @@
       "deleteBlockedTermsAccepted": "Nu se poate șterge definitiv: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), iar niciuna nu reține ce versiune a termenilor a fost acceptată.",
       "legalVersionDeleted": "Ciorna a fost ștearsă.",
       "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
-      "platformApproved": "Gata: {count} texte aprobate, cu datele clubului. Înscrierile sunt deschise; declarația se alege pe fiecare eveniment, la Înscrieri (dacă nu e deja).",
+      "platformApproved": "Gata: {count, plural, one {# text aprobat} few {# texte aprobate} other {# de texte aprobate}}, cu datele clubului. Înscrierile sunt deschise; un concurs nou pornește cu declarația potrivită traseului, în cardul «Declarația pe propria răspundere», iar unul salvat o păstrează pe cea aleasă.",
       "platform": {
         "title": "Într-un pas: aprobă textele platformei cu datele clubului",
         "intro": "Lipsesc aprobate: {keys}. Butonul de mai jos creează și aprobă, pe numele tău, versiunea 1 a fiecăruia, din textul platformei, cu datele de mai jos scrise în el. Un text deja aprobat nu este atins.",
@@ -1959,7 +1960,7 @@
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
-        "button": "Aprobă cele trei texte acum",
+        "button": "Aprobă {count, plural, one {# text} few {# texte} other {# de texte}} acum",
         "pending": "Se aprobă…"
       },
       "withdraw": "Retrage versiunea",
@@ -2210,7 +2211,7 @@
           "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea. Procedura: docs/RUNBOOKS.md § Legal document version.",
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
-            "Calea scurtă (§132): /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → „Aprobă cele trei texte acum”. Gata: nota, termenii și declarația sunt în vigoare, cu datele clubului scrise în ele.",
+            "Calea scurtă (§132): /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă. Gata: nota, termenii și cele două declarații de concurs, trail și șosea sau parc, sunt în vigoare, cu datele clubului scrise în ele.",
             "Dacă vrei să citești mai întâi: sub casetă, „pornește de la textul platformei” → deschide fiecare, citește, apoi apasă butonul din casetă.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
@@ -2460,9 +2461,9 @@
           "todo": "Declarația de concurs are acum două variante, din același text comun: trail și șosea sau parc. Cel puțin una nu are încă o versiune în vigoare scrisă din textul platformei — care spune vârsta minimă a evenimentului și nu mai are niciun flux pentru minori sub 14 ani. Până o aprobi pe cea de șosea sau parc, concursurile pe asfalt semnează declarația de trail.",
           "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din textul platformei: fiecare concurs semnează declarația potrivită traseului lui.",
           "how": [
-            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (concurs, trail)” → „pornește de la textul platformei”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
-            "La fel pentru „Declarație pe propria răspundere (concurs, șosea sau parc)”.",
-            "În editorul fiecărui concurs, la «Declarația pe propria răspundere», alege varianta potrivită traseului; fără o alegere, decide suprafața din «Traseul»."
+            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere — cursă trail” → „pornește de la textul platformei”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
+            "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
+            "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci — cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului; alege-o pe cea de șosea sau parc și salvează."
           ]
         }
       },
@@ -4418,7 +4419,7 @@
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
                 "«Documente legale» → «Versiune nouă».",
-                "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs, trail)», «Declarație pe propria răspundere (concurs, șosea sau parc)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
+                "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere — cursă trail», «Declarație pe propria răspundere — cursă pe asfalt / în parc», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
                 "Citește tot și apasă «Salvează ciorna».",
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",

@@ -909,7 +909,7 @@
       "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter the backoffice as soon as they set a password.",
       "changeRoleTitle": "Change the role?",
       "changeRoleBody": "{name} gets the chosen role from the next page they open.",
-      "approvePlatformTitle": "Approve the three texts?",
+      "approvePlatformTitle": "Approve {count, plural, one {# text} other {# texts}}?",
       "approvePlatformBody": "From this moment they are in effect on the site, as the club's texts; a correction is a new version.",
       "approveVersionTitle": "Approve and publish version {version}?",
       "approveVersionBody": "The text becomes public and can no longer be changed. A later correction means a new version.",
@@ -1120,7 +1120,7 @@
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
-      "declarationDocumentHelp": "Trail for mountain or forest courses, road or park for asphalt, concrete, tartan or paving. The participant signs the newest approved version of the kind chosen; with no choice, the surface in “The course” decides. The text is never edited here: a new version is approved under Legal documents.",
+      "declarationDocumentHelp": "Trail for mountain or forest courses, road or park for asphalt, concrete, tartan or paving. For a race with no declaration chosen, the box starts on the kind that fits the surface in “The course” — the road or park one on asphalt, once approved; otherwise the trail one — and you can change it. The participant signs the newest approved version of the kind chosen. The text is never edited here: a new version is approved under Legal documents.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
@@ -1695,7 +1695,8 @@
           "title": "Self-declaration",
           "newest": "{kind}: the newest approved version is v{version} · {title}. The participant signs it when confirming the registration.",
           "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration.",
-          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the trail declaration. Approve one under Legal documents (New version → start from the platform's text)."
+          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the trail declaration. Approve one under Legal documents (New version → start from the platform's text).",
+          "mismatch": "The course is on “{surface}” and the kind chosen is “{chosen}”: “{wanted}” fits it. Choose it above, if the course is right."
         }
       },
       "identical": {
@@ -1870,7 +1871,7 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The three texts a participant accepts at registration — the race declaration in two kinds, trail and road or park — and the two optional declarations of the group runs. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "intro": "The texts a participant accepts at registration — the privacy notice, the terms and the race declaration, the latter in two kinds, trail and road or park — and the two optional declarations of the group runs: {count, plural, one {# text} other {# texts}} in all. An approved version never changes (people signed exactly that text); a correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
@@ -1892,10 +1893,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Racing TOS",
-        "EVENT_DECLARATION": "Self-declaration (race, trail)",
+        "EVENT_DECLARATION": "Self-declaration — trail race",
         "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
-        "EVENT_DECLARATION_ROAD": "Self-declaration (race, road or park)"
+        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park race"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -1945,7 +1946,7 @@
       "deleteBlockedTermsAccepted": "Cannot be deleted: registrations were submitted or declarations signed while it was in force, {window} ({count}), and neither records which version of the terms was accepted.",
       "legalVersionDeleted": "The draft has been deleted.",
       "newFromTemplateComplete": "Prefilled with the platform's text and the club's facts, complete. Read it all, save the draft, then approve it from its page.",
-      "platformApproved": "Done: {count} texts approved, with the club's facts. Registrations are open; the declaration is chosen on each event, under Registration (if not already).",
+      "platformApproved": "Done: {count, plural, one {# text approved} other {# texts approved}}, with the club's facts. Registrations are open; a new race starts on the declaration that fits its course, in the “Self-declaration” card, and a saved one keeps the one chosen.",
       "platform": {
         "title": "One step: approve the platform's texts with the club's facts",
         "intro": "Not yet approved: {keys}. The button below creates and approves, in your name, version 1 of each from the platform's text, with the facts below written in. A text already approved is not touched.",
@@ -1959,7 +1960,7 @@
         "missing": "not set",
         "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
         "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",
-        "button": "Approve the three texts now",
+        "button": "Approve {count, plural, one {# text} other {# texts}} now",
         "pending": "Approving…"
       },
       "withdraw": "Withdraw the version",
@@ -2210,7 +2211,7 @@
           "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone. The procedure is docs/RUNBOOKS.md § Legal document version.",
           "done": "The club’s approved wording is published.",
           "how": [
-            "The short way (§132): /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → “Approve the three texts now”. Done: the notice, the terms and the declaration are in force, with the club's facts written in.",
+            "The short way (§132): /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box. Done: the notice, the terms and both race declarations, trail and road or park, are in force, with the club's facts written in.",
             "To read first: under the box, “start from the platform's text” → open each, read, then press the button in the box.",
             "The long way, for a change: “New version” → text → save the draft → PDF → “Approve”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
@@ -2460,9 +2461,9 @@
           "todo": "The race declaration now comes in two kinds, from the same shared text: trail, and road or park. At least one has no version in force written from the platform's text yet — the one that states the event's minimum age and has no flow for minors under 14. Until you approve the road or park one, asphalt races sign the trail declaration.",
           "done": "Both race declarations, trail and road or park, are in force from the platform's text: every race signs the declaration that fits its course.",
           "how": [
-            "/admin/legal → “New version” → “Self-declaration (race, trail)” → “start from the platform's text”. Read the text, fill in the club's name, save the draft, then “Approve”.",
-            "The same for “Self-declaration (race, road or park)”.",
-            "In each race's editor, under “Self-declaration”, choose the kind that fits its course; with no choice, the surface in “The course” decides."
+            "/admin/legal → “New version” → “Self-declaration — trail race” → “start from the platform's text”. Read the text, fill in the club's name, save the draft, then “Approve”.",
+            "The same for “Self-declaration — road / park race”.",
+            "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then — the trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course; choose the road or park one and save."
           ]
         }
       },
@@ -4418,7 +4419,7 @@
               "title": "Approve a new version of a legal text",
               "steps": [
                 "«Legal documents» → «New version».",
-                "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race, trail)», «Self-declaration (race, road or park)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
+                "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration — trail race», «Self-declaration — road / park race», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
                 "Read all of it and press «Save draft».",
                 "On the draft's page: «Download PDF» to read it on paper or give it to a lawyer.",

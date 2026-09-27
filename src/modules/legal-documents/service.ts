@@ -36,7 +36,7 @@ import {
 } from "./repository";
 import { templatePrefill } from "./templates/catalogue";
 import { type ClubFacts, remainingPlaceholders } from "./templates/club-facts";
-import { REGISTRATION_LEGAL_KEYS } from "./domain/keys";
+import { PLATFORM_APPROVAL_KEYS } from "./domain/keys";
 
 /**
  * Writing legal documents from the backoffice (BR-REQ-053-02, `DECISIONS.md` §46).
@@ -789,9 +789,10 @@ async function assertDeletable<T extends Record<string, unknown>>(
 }
 
 /**
- * The platform's three texts, with the club's facts written in, created and approved in one act
+ * The platform's texts a race rests on (`PLATFORM_APPROVAL_KEYS`: the notice, the terms and both
+ * race declarations since §NNN), with the club's facts written in, created and approved in one act
  * (`DECISIONS.md` §132): what "New version → start from the platform's text → read → save →
- * approve, three times" did, as one press by the person who takes responsibility for them.
+ * approve", once per text, did, as one press by the person who takes responsibility for them.
  *
  * The same rules as the long way, because it is the long way: an Administrator's act (§450)
  * (`assertMayEdit`), a version number derived and never chosen, the hash computed from what is
@@ -815,7 +816,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
 ): Promise<PlatformApproval> {
   assertMayEdit(actor);
 
-  const keys: readonly LegalDocumentKey[] = REGISTRATION_LEGAL_KEYS;
+  const keys: readonly LegalDocumentKey[] = PLATFORM_APPROVAL_KEYS;
   const result: PlatformApproval = { approved: [], alreadyApproved: [] };
 
   for (const key of keys) {

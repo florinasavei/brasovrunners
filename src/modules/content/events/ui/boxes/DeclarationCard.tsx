@@ -1,16 +1,15 @@
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { EVENT_SURFACES, EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
-import { RACE_DECLARATION_KEYS, type RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
-import RecallField from "@/shared/forms/recall";
+import { preselectedRaceDeclaration, RACE_DECLARATION_KEYS, raceDeclarationKeysFor, type RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import Panel from "@/shared/ui/Panel";
 import { declarationSummary, type SummaryWords } from "../box-summaries";
 import GroupRunDeclarationField from "../GroupRunDeclarationField";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
+import RaceDeclarationSelect from "../RaceDeclarationSelect";
 import { BoxNote, type BoxProps } from "./box-kit";
 import type { DeclarationOption } from "./RegistrationBox";
 
@@ -102,6 +101,30 @@ export default async function DeclarationCard({
   // The newest approved version of each kind (§NNN): what a race of that kind signs today.
   const newest = RACE_DECLARATION_KEYS.map((key) => ({ key, option: declarations.find((option) => option.key === key) ?? null }));
   const kind = (key: RaceDeclarationKey) => t(`editor.declarationKinds.${key}`);
+  /*
+    Where the select starts for a race with no declaration chosen (§NNN): the newest version in
+    force of the kind each surface reads — asphalt the road text once approved, else the trail
+    one — so the choice the organizer sees is the one the course calls for, and the save's rule
+    (an INTERNAL race names a declaration, §39) is met by default. One entry per value of the
+    surface select, blank included; the island follows the select live.
+  */
+  const now = new Date();
+  const surfaceValues = ["", ...EVENT_SURFACES] as const;
+  const preselect = Object.fromEntries(
+    surfaceValues.map((surface) => [surface, preselectedRaceDeclaration(declarations, surface || null, now)?.id ?? ""]),
+  );
+  // The note under the select when the kind chosen is not the one the course calls for; an
+  // unstated course has none (`declarationKindMismatch`).
+  const mismatch = Object.fromEntries(
+    EVENT_SURFACES.map((surface) => {
+      const wanted = raceDeclarationKeysFor({ surface })[0];
+      const chosen = RACE_DECLARATION_KEYS.find((key) => key !== wanted);
+      return [
+        surface,
+        chosen ? { [wanted]: t("editor.boxes.declaration.mismatch", { surface: tEvent(`surface.${surface}`), chosen: kind(chosen), wanted: kind(wanted) }) } : {},
+      ];
+    }),
+  );
   return (
     <Panel collapsible {...card} openWhen={{ attention: needsDeclaration }}>
       <Stack spacing={2}>
@@ -140,20 +163,24 @@ export default async function DeclarationCard({
         <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={initialType}>
           <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
             <Stack spacing={1.5}>
-              <RecallField
-                select
-                name="event.declarationDocumentId"
-                label={t("editor.declarationDocument")}
-                helperText={declarations.length === 0 ? t("editor.declarationNone") : t("editor.declarationDocumentHelp")}
-                defaultValue={event?.declarationDocumentId ?? ""}
-              >
-                <MenuItem value="">{t("editor.declarationUnset")}</MenuItem>
-                {declarations.map((document) => (
-                  <MenuItem key={document.id} value={document.id}>
-                    {kind(document.key)} · v{document.version} · {document.title}
-                  </MenuItem>
-                ))}
-              </RecallField>
+              <RaceDeclarationSelect
+                initialType={initialType}
+                initialMode={initialMode}
+                initialSurface={event?.surface ?? ""}
+                savedId={event?.declarationDocumentId ?? null}
+                options={declarations.map((document) => ({
+                  id: document.id,
+                  key: document.key,
+                  label: `${kind(document.key)} · v${document.version} · ${document.title}`,
+                }))}
+                preselect={preselect}
+                words={{
+                  label: t("editor.declarationDocument"),
+                  help: declarations.length === 0 ? t("editor.declarationNone") : t("editor.declarationDocumentHelp"),
+                  unset: t("editor.declarationUnset"),
+                  mismatch,
+                }}
+              />
               {/* Which text each kind of race signs today (§NNN), and — while the club approved no
                   road text — that a road race signs the trail one (`raceDeclarationKeysFor`). */}
               {declarations.length > 0 &&

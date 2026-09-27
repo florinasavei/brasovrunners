@@ -163,7 +163,7 @@ describe("§440 a group run's minimum age is its own box in «Traseul»", () => 
   it("the reader takes `minAge` once, from the group run's box when the type is GROUP_RUN, else the race box", () => {
     expect(RETURNED.match(/\bminAge:/g)?.length ?? 0).toBe(1);
     const line = RETURNED.slice(RETURNED.indexOf("minAge:"), RETURNED.indexOf("\n", RETURNED.indexOf("minAge:")));
-    expect(line).toMatch(/groupRunAgeBoxAnswers\(form\) \? value\("groupRunMinAge"\) : value\("minAge"\)/);
+    expect(line).toMatch(/groupRunAgeBoxAnswers\(form\) \? groupRunMinAgeFrom\(form\) : value\("minAge"\)/);
     const predicate = ACTIONS.slice(ACTIONS.indexOf("function groupRunAgeBoxAnswers"));
     expect(predicate.slice(0, predicate.indexOf("\n}"))).toMatch(/text\(form, "event\.type"\) === "GROUP_RUN" && form\.has\("event\.groupRunMinAge"\)/);
   });
@@ -179,6 +179,16 @@ describe("§440 a group run's minimum age is its own box in «Traseul»", () => 
     expect(ACTIONS.match(/fieldNames: eventFormFieldNames\b/g) ?? []).toEqual([]);
     expect(ACTIONS.match(/fieldNames: \(refusal\) => eventFormFieldNames\(refusal, form\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
     expect(read("src/modules/content/events/ui/field-labels.ts")).toContain('"event.groupRunMinAge": inBox("course", t("editor.minAge"))');
+  });
+
+  // §NNN: the box's `min` of eighteen holds on the server too — refused naming the box, never
+  // stored under eighteen and read as eighteen without a word.
+  it("the save refuses a group run's age under eighteen, naming `minAge` (the group run's own box)", () => {
+    const reader = ACTIONS.slice(ACTIONS.indexOf("function groupRunMinAgeFrom"));
+    const body = reader.slice(0, reader.indexOf("\n}"));
+    expect(body).toContain('text(form, "event.groupRunMinAge")');
+    expect(body).toMatch(/Number\(typed\) < ADULT_AGE/);
+    expect(body).toMatch(/new DomainError\("VALIDATION_ERROR", [^;]*\["minAge"\]\)/);
   });
 
   it("CourseBox posts `event.groupRunMinAge` inside the GROUP_RUN-only block", () => {

@@ -190,6 +190,22 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 }
 
 /**
+ * `declarationAsksMinorToSignByLocale` for each event of a list whose rows span events (the
+ * registrations list, §NNN): each race signs its own kind of declaration, trail or road
+ * (`findEventDeclaration`), and the two approved texts may ask differently — so each row reads its
+ * own event's answer, never the trail text's on behalf of every race. One read per distinct event.
+ */
+export async function declarationAsksMinorToSignByEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+  eventIds: readonly string[],
+): Promise<Record<string, Record<Locale, boolean>>> {
+  const distinct = [...new Set(eventIds)];
+  const answers = await Promise.all(distinct.map((eventId) => declarationAsksMinorToSignByLocale(db, now, eventId)));
+  return Object.fromEntries(distinct.map((eventId, index) => [eventId, answers[index]]));
+}
+
+/**
  * Whether the privacy notice in force describes the public list's states (§396,
  * `describesListStates`) — in **every** language, because the list is one list: a runner who
  * registered in English was told what the English notice says, and a state shown beside their

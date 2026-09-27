@@ -32,12 +32,12 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   // The race's two declarations, one body with a risk section per course (§NNN): the trail one keeps
   // the key every signature so far was recorded under.
   EVENT_DECLARATION: {
-    ro: { title: "Declarație pe propria răspundere (concurs, trail)", body: declarationTrailRo },
-    en: { title: "Declaration of own responsibility (race, trail)", body: declarationTrailEn },
+    ro: { title: "Declarație pe propria răspundere — cursă trail", body: declarationTrailRo },
+    en: { title: "Declaration of own responsibility — trail race", body: declarationTrailEn },
   },
   EVENT_DECLARATION_ROAD: {
-    ro: { title: "Declarație pe propria răspundere (concurs, șosea sau parc)", body: declarationRoadRo },
-    en: { title: "Declaration of own responsibility (race, road or park)", body: declarationRoadEn },
+    ro: { title: "Declarație pe propria răspundere — cursă pe asfalt / în parc", body: declarationRoadRo },
+    en: { title: "Declaration of own responsibility — road / park race", body: declarationRoadEn },
   },
   // The group runs' optional self-declarations, one per surface (§393).
   GROUP_RUN_DECLARATION_ASPHALT: {

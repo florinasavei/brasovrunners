@@ -168,15 +168,15 @@ describe("§440 the age gate: one rule, the race's", () => {
   });
 
   /*
-    §495: the box starts at the club's minimum for a race, which binds nobody on an adults-only
-    declaration. The help leads with that — the number shown does nothing at 18 or below — and
-    names neither the starting number (a constant that may change) nor anything but 18, the
-    declaration's own age, and an example above it.
+    §495, then §NNN: the box used to start at the club's minimum for a race, and the help led with
+    "18 or less changes nothing". Since §NNN the box starts and stops at 18 (the save refuses less),
+    so the help leads with that bound — at least 18, the declaration covers no minor — and names
+    neither the race's minimum (a constant that may change) nor anything but 18 and an example above it.
   */
-  it("the editor's help says first that 18 or less changes nothing, the starting number included", () => {
+  it("the editor's help says first that the age is at least 18, and when a higher one is worth setting", () => {
     const help = { ro: ro.Admin.editor.groupRunDeclaration.minAgeHelp, en: en.Admin.editor.groupRunDeclaration.minAgeHelp };
-    expect(help.ro).toMatch(/^Declarația alergării e oricum doar pentru adulți \(18 ani împliniți\), așa că orice număr de 18 sau mai mic/);
-    expect(help.en).toMatch(/^The run's declaration is for adults anyway \(18 or older\), so any number of 18 or less/);
+    expect(help.ro).toMatch(/^Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii/);
+    expect(help.en).toMatch(/^Reached by the day of the run, at least 18: the declaration covers no minor/);
     for (const sentence of Object.values(help)) {
       expect(sentence).not.toContain(String(MIN_PARTICIPANT_AGE));
       expect(sentence).toContain("21");

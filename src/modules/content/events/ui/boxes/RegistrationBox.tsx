@@ -56,7 +56,8 @@ const BIB_COLOURS = [
 ] as const;
 
 /** An approved race declaration the editor offers (§39), with the kind of course it is for (§NNN). */
-export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string };
+/** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§NNN). */
+export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
 
 /** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
 function box(field: EventFieldName, extra: Record<string, unknown> = {}) {

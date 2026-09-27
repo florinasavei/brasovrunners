@@ -60,6 +60,7 @@ import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { eraseGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { ADULT_AGE } from "@/modules/registrations/domain/age";
 
 /**
  * Server Actions for the backoffice.
@@ -133,6 +134,22 @@ const eventFormFieldNames = (error: DomainError, form: FormData) =>
 /** The group run's own age box is the one the save read (`eventFieldsFromForm`'s `minAge`). */
 function groupRunAgeBoxAnswers(form: FormData): boolean {
   return text(form, "event.type") === "GROUP_RUN" && form.has("event.groupRunMinAge");
+}
+
+/**
+ * A group run's age as its box posted it (§440, §NNN), refused under eighteen: the run's
+ * self-declaration covers no minor, and the box says so with its `min` — this is the same bound on
+ * the server, so a request that skips the browser's check is refused naming the box rather than
+ * stored and read as eighteen (`groupRunMinimumAge`) without a word. The schema's own bounds (a
+ * whole number, fourteen to ninety-nine, `fields.ts`) are the race's and still apply; an empty box
+ * is left to them — the club's default, which a group run reads as eighteen.
+ */
+function groupRunMinAgeFrom(form: FormData): string {
+  const typed = text(form, "event.groupRunMinAge");
+  if (/^\d+$/.test(typed) && Number(typed) < ADULT_AGE) {
+    throw new DomainError("VALIDATION_ERROR", `minAge: a group run's self-declaration covers adults only — at least ${ADULT_AGE}`, ["minAge"]);
+  }
+  return typed;
 }
 
 /**
@@ -292,7 +309,7 @@ function eventFieldsFrom(form: FormData) {
     // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). A group
     // run's is its own box in "Traseul", beside the declaration that states it (§440): the race box
     // is hidden for a group run but still posts, so the type decides which one answers.
-    minAge: groupRunAgeBoxAnswers(form) ? value("groupRunMinAge") : value("minAge"),
+    minAge: groupRunAgeBoxAnswers(form) ? groupRunMinAgeFrom(form) : value("minAge"),
     // The event's own reminder lead (§377), only when the form carried its select: the empty
     // choice is "as usual" (null), and a form without the select is "not editing it".
     reminderHoursBefore: form.has("event.reminderHoursBefore") ? value("reminderHoursBefore") : undefined,

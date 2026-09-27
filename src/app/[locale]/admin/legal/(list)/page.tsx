@@ -44,7 +44,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
-import { LEGAL_DOCUMENT_KEYS, REGISTRATION_LEGAL_KEYS } from "@/modules/legal-documents/domain/keys";
+import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -140,14 +140,14 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const versions = await listVersionsForBackoffice(getDb());
-  // The one press (§132): offered while any of the three has no approved version, with the
+  // The one press (§132): offered while any text it covers (`PLATFORM_APPROVAL_KEYS`, §NNN) has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
   // The contact address as the club chose to show it (§442).
   const facts = clubFactsFromEnv(env, await shownContactAddresses(getDb()));
   const now = new Date();
   const missingKeys = (
     await Promise.all(
-      REGISTRATION_LEGAL_KEYS.map(async (key) =>
+      PLATFORM_APPROVAL_KEYS.map(async (key) =>
         (await findCurrentApprovedDocument(getDb(), key, "ro", now)) ? null : key,
       ),
     )
@@ -358,14 +358,14 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           ) : (
             <ActionForm
               action={approvePlatformTemplatesAction}
-              confirm={{ title: t("confirm.approvePlatformTitle"), body: t("confirm.approvePlatformBody"), confirmLabel: t("legal.platform.button"), cancelLabel: words.cancel, destructive: true }}
+              confirm={{ title: t("confirm.approvePlatformTitle", { count: missingKeys.length }), body: t("confirm.approvePlatformBody"), confirmLabel: t("legal.platform.button", { count: missingKeys.length }), cancelLabel: words.cancel, destructive: true }}
               data-testid="approve-platform-form"
             >
               <input type="hidden" name="uiLocale" value={locale} />
               <Stack spacing={1}>
                 <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
                 <Box>
-                  <GlyphSubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
+                  <GlyphSubmitButton label={t("legal.platform.button", { count: missingKeys.length })} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
                 </Box>
               </Stack>
             </ActionForm>
@@ -378,9 +378,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           {t("legal.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("legal.intro")}
+          {t("legal.intro", { count: LEGAL_DOCUMENT_KEYS.length })}
         </Typography>
-        {/* What each of the three is, in one line (the owner, 2026-09-19: "it is not clear what
+        {/* What each text is, in one line (the owner, 2026-09-19: "it is not clear what
             these documents are — is the privacy notice GDPR? and what is the other one?"). */}
         <Box component="dl" sx={{ m: 0, mt: 1, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" }, columnGap: 2, rowGap: 0.5 }}>
           {LEGAL_DOCUMENT_KEYS.map((key) => (
