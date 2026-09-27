@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.07-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.08-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.07-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.08-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -18610,3 +18610,349 @@ The projection keeps §447's hourly pace (the spend so far divided by the hours 
 «Luna trecută» for Neon is the period Neon's consumption answer names before the current one, using that period's own `period_start`, so a period that turns on the 16th reads as the 16th. The query asks from the first of the calendar month before, which reaches back past that start whatever the day. The first of the month is used as the start only when the answer names no period start.
 
 Baseline `BR-V2.07-2026-09-27`.
+
+## 480. The public pages at 360 px: 44-pixel folds, unstretched lines, a compact footer fold
+
+**Asked.** The owner, 2026-09-26, from his phone: «Informațiile din footer sunt mult prea spațiate», and a density pass over the public pages at 360 px, the width he reads the site at. §380 put every phone spacing on one scale (`src/theme/density.ts`). This pass measures the built pages at 320, 360 and 390 px and fixes what the scale did not reach. It amends §385 (the footer fold) and keeps §366's rule that no hit area overlaps another.
+
+**1. A public fold is the 44 pixels it claims.** `DISCLOSURE_SUMMARY_SX` said its 44 px included the padding. A `<summary>` sits in its `<details>`'s shadow tree, where MUI's `box-sizing: inherit` does not reach (§366). So it sized its content box, and every public fold was 64 px tall: the listing's past events, the calendar's feed address, a race's steps and start list, the partners, and the registration form's sections. `boxSizing: "border-box"` on the summary makes it 44. **This changes the desktop too, on purpose.** Each of those folds shrinks from 64 to 44 px at every width, because the site was inflated at every width, not only on a phone. The backoffice's boxed bars (`BOXED_DISCLOSURE_SX`) pin `content-box` and keep the height approved in §269. All backoffice folds use that style (checked).
+
+**2. A link inside a sentence keeps its 44 px without stretching its line.** `TAP_TARGET` on an `inline-flex` link made it 44 px tall *in the line*, so the line holding it grew. For example, a four-line notice measured 124 px at 360 instead of 96. `INLINE_TAP_TARGET` gives the link padding above its words and takes it back with an equal negative margin: `calc(44px - 1.4em)` / `calc(1.4em - 44px)`.
+- `em` rather than `lh`, because Safari before 16.4 and Firefox before 120 drop `lh` and would shrink the link under 44.
+- 1.4 is under body2's 1.43 and body1's 1.5 line heights, so the link is 44.4 px in body2 and 45.6 px in body1.
+- All the reach is above the words, because the next line is painted later and would take a press on the pixels they share.
+
+It is used for «scrie-ne» (`ContactLink`) and for the privacy notice and the club's address on the contact page. Two consequences:
+- The address line keeps 24 px above it at every width, so the first address's 21.6 px of reach never covers the send button.
+- A second address («a sau b»), which may wrap under the first, takes `TAP_TARGET`'s own shape (44 px tall in its line). Its reach would otherwise cover the first address's lower half.
+
+**3. The contact form's first box is one gap under the legend, not two.** The hidden inputs were the `Stack`'s first children, which pushed the name box down by the column's 16-pixel gap on top of the legend's margin. They now sit before the `Stack`.
+
+**4. The flat spacing values the first pass left on the contact page, the gallery, «Echipa» and the two legal pages** now use the steps their neighbours already use: `gapSm`, `sectionGap` and `sectionGapLg` on a phone, unchanged from `sm`. They are recorded in `tests/unit/theme/density.test.ts`.
+
+**5. The footer fold, amending §385.** The panel is now four lines instead of one wrapping row of 44-pixel targets:
+1. the terms and «Înscrierile mele»;
+2. «Scrie-ne» with the address;
+3. the weather credit;
+4. the build stamp.
+
+The credit and the stamp are in caption size. On a phone every link and the stamp's box use the footer bar's own tap size (§372): 24 px below 360 and 28 px up to `sm`. The lines are the bar's phone gap apart (4 px, then 6 px), so no two targets overlap. From `sm` everything is 44 px, as before (BR-REQ-041-01 criterion 6). The desktop stamp pinned to the bar's corner keeps its 44 px.
+
+The open fold, measured on the build in Romanian with the club's address configured:
+
+| width | before | after |
+| --- | --- | --- |
+| 320 | 128 | 122.8 |
+| 360 | 146 | 130 |
+| 390 | 146 | 130 |
+
+At 320 the local stamp chip wraps to two lines; with a one-line production stamp the fold is 108 px. Three lines (about 96 px at 360) do not fit:
+- The credit is 122 px and the production stamp chip about 245 px, in a panel 260 px wide at 320 and 292 px at 360.
+- The credit does not fit after the first line's two links either (226 px in Romanian; 180 px + 8 + 118 = 306 in English), nor after «Scrie-ne: <address>» (225–242 px).
+
+So four lines of 28 px and three gaps of 6 px (130 px) is the floor at 360 unless the stamp's visible text gets shorter on a phone. That is the owner's call.
+
+**6. What was measured and left alone.** The listing card, the filters row, the event page's facts and the «Înscrie-te» block were already on §380's steps (`cardPadTop`, `sectionGap`, the card's `LINE_GAP` / `GROUP_GAP`). Measured on the build at 320 / 360 / 390 px:
+
+| | 320 | 360 | 390 |
+| --- | --- | --- | --- |
+| listing's first card | 401.4 | 375.4 | 375.4 |
+| filters row | 44 | 44 | 44 |
+| event facts block | 368 | 368 | 334.5 |
+| listing `#main` | 2699.5 | 2649.5 | 2517.5 |
+| event page `#main` | 1098.9 | 1002.9 | 969.4 |
+
+The «Înscrie-te» block's gap is `DENSITY.sectionGap` (16 px on a phone). None of these was changed.
+
+**Tests.**
+- `tests/unit/shared/density-pass-360.test.ts`: the rules (border-box summary, the `em` reach with no `lh`, no reach covering another target).
+- `tests/unit/theme/density.test.ts`: the values.
+- `tests/unit/shared/site-footer.test.ts`: the fold's lines and the stamp's target.
+- `tests/e2e/public-density-360.spec.ts`: the built pages at 360.
+- `tests/e2e/footer.spec.ts`: the fold's height, 3 × (target + gap) plus the stamp's box.
+
+Second round (2026-09-27). The open «Despre club» fold is four lines of 24 pixels on every phone width (`FOLD_LINE` in `footer-target.ts`), not the bar's 28 from 360. The lines touch and never overlap, and they are 44 from `sm`. The four lines are the terms and "my registrations", "Scrie-ne" with the address, Open-Meteo's credit, and the build stamp. Measured at 360 the fold is 130 → 96 pixels. At 320 it is 96 with the production stamp and 110.8 where the stamp carries its environment ("local · ", "test · ") and its chip wraps onto a second line. `footer.spec.ts` pins those numbers: ≤ 100 from 360, ≤ 104 at 320 with a one-line chip, ≤ 112 with a wrapped one.
+
+The stamp's box keeps a 44-pixel long-press area as 20 pixels of padding above its 24-pixel line, given back as an equal negative margin (the §366 tight shape). The reach goes up into the credit's line, never down: below the stamp is the end of the page. Every link in the panel paints over the reach (`position: relative; z-index: 1`), so a press on the credit is the credit's and only the empty rest of that line is the stamp's. Every word in the panel is 14 pixels; the credit's 12-pixel caption size is gone.
+
+Three lines are not possible without changing the stamp's words. At 14 pixels the credit is 142 wide and the production stamp about 250, in a panel 260 wide at 320 and 292 at 360. A shorter stamp would drop the environment, `app-ver` and the minute that `build-badge.spec.ts` holds it to.
+
+The listing and the event page moved one step tighter on the phone scale, `sm` and up unchanged:
+- The card grid's gap is 6 pixels (`cardGridGap` 1 → 0.75).
+- A card's facts start 8 pixels under the summary or the title (`gapSm`; 12 from `sm`). That is exactly the title link's reach below its words.
+- Two facts are 6 pixels apart (`gapXs`). The pills then sit 10 under a tight place link, exactly its reach.
+- Route pills and the share row's buttons are 6 pixels apart.
+- The filter row is 6 pixels from the intro and from the grid.
+
+At 360 on the sample data the listing went 1974.8 → 1910.8 pixels, the first card 375.4 → 363.4 and the others about 10 each. The sample race's page went 1002.9 → 965.4, its route pills now on one line. At 320 the listing went 2024.8 → 1960.8 and the race's page 1098.9 → 1090.9. The stacked facts' question-to-answer and answer-to-question gaps (4 and 6) stay as §380 left them.
+
+The event page on the scale, a third round (the review of the 360-px pass): below `sm` every spacing on an event page moves one step down the scale. The divider over the facts, the cancelled and completed notices, the partners section, the registration door and the film go from `sectionGap` to `gapSm`. The route, links, programme, rules and start-list sections go from `sectionGapLg` to `sectionGap`. Two partner cards sit `gapXs` apart. The description's last paragraph kept sixteen pixels under it whatever the divider said, because its margin merges into the divider's. On a phone it now takes `gapSm` too: the summary's last paragraph in `PAGE_EXCERPT_SX`, and the body's box with its last block's margin removed. Measured at 360 on the built sample race: 965.4 → 949.4 px, the facts sixteen pixels higher. A partnered event: 921.5 → 897.5. At 320 the race: 1090.9 → 1074.9. The facts' own rows were already on the scale's lowest step (six under an answer, four between a question and its answer) and stay as they are. Going tighter would need a step below `gapXs`, which the scale does not have. From `sm` nothing changes.
+
+The footer round (the owner, 2026-09-27: "footer is too tall on mobile"). Measured on the built listing, the resting footer on a phone is one row and its border — 25 pixels at 320, 29 at 360 and 390, with no padding of its own — on QA's BR-V2.07 and on this pass alike. What was tall is the open «Despre club» fold: its panel was 180 pixels on QA and is 96 at 360 after this pass (111 at 320 when the stamp carries its environment and its chip wraps). From `sm` up the panel is §385's single wrapping row, unchanged: the phone's two groups give their items to it (`display: contents`), 92 pixels at 640 and 768 and 48 at 1280, as before the pass. An earlier round had let the phone's stacked lines reach the desktop, where they measured 136.
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 481. The event editor in fewer cards: «Când și unde», «Program, regulament și declarație», and the film only in the description (amends §406, §350, §358, §448, §403/§478, §69/§266)
+
+**2026-09-27. The owner, three messages queued for BR-V2.08:** «The back-office event creator/editor needs to be more grouped: date and location can be on the same card» · «Programul, regulamentul și declarația la fel pe același card» · «Cardul cu filmul poate să dispară pentru că putem pune YouTube direct în descrierea completă».
+
+§406's rule stands: the editor mirrors the page, one numbered card per section in the page's order, a map at the top, and every closed card naming the required fields still empty in each language. What changes is that a card may now hold more than one of the page's sections, as §466 already let the cost sit inside card 1.
+
+**1. «Când și unde» / "When and where" (`#box-when`).** §350's box 4 «Data și ora» and box 5 «Locul» become one card, because the page draws «Când» and «Unde» one under the other. The order inside is:
+- «Data și ora»: the start, a race's gun time, the duration as hours and minutes;
+- «Locul», the place's own part (`#box-place`): «Locația se anunță mai târziu» (§328), the meeting point once per language (§362), the map link, «Coordonate» and the weather line (§416);
+- the folded level-3 «Fus orar» (`#box-timezone`).
+
+The two parts are headed by plain h3 headings, not folds.
+- **Closed line:** the meeting point's missing-fields line («lipsesc: Punct de întâlnire (RO, EN)» / «complet»), then the date, then the place.
+- **Page map:** one chip, «Când și unde», carrying the place's missing-fields mark.
+- **Publică:** still scrolls to `#box-place`.
+- **With people registered:** the card is amber and says both risk sentences, the date's and the place's.
+- **Unchanged:** field names, ids and refusals. Refusal labels now read «Când și unde › …».
+
+`page-sections.ts` nests `place` in `when` (`nestedIn`).
+
+**Deviation from the brief:** the brief listed «the address (box-address in TextBoxes)» in this card. `box-address` is the page's own URL and SEO card, not the event's street address. The street address was folded into the meeting point by §362, so it is already in the place part. «Adresa paginii și motoarele de căutare» stays under «Nu apar pe pagină».
+
+**2. «Program, regulament și declarație» / "Programme, rules and declaration" (`#box-programme`, `ProgrammeRulesBox`).** One card for what a runner reads the night before and signs, holding three level-3 cards in the page's order:
+- «Programul zilei și ce să aduci» (`#box-schedule`, §405: its rows grid, its «i» help fold, its tabs);
+- «Regulamentul» (`#box-rules`, its tabs);
+- «Declarația pe propria răspundere» (`#box-declaration`, §448).
+
+Each keeps its fields, closed line and refusals. The declaration is now a sibling after the rules, no longer inside them.
+- **Closed line:** the programme's line, «regulamentul: RO: completat · EN: gol», and the declaration's part.
+- **Opens itself:** the card and the declaration card open while a saved event that registers on the site has no declaration.
+- **With people registered:** the card is amber, because the programme is one of the boxes a change reaches (§350).
+- **Refusal labels:** «Program, regulament și declarație › Declarația pe propria răspundere › Declarația pe care o semnează participantul», «… › Programul zilei și ce să aduci › …», «… › Regulamentul › English › …».
+
+`page-sections.ts` nests `rules` in `programme`.
+
+The public page's `#schedule` and `#rules` anchors are unchanged.
+
+**A card that holds several sections is drawn when any of them is** (`cardStates`). The card's heading and its map chip read that. For example, «Program, regulament și declarație» is «apare pe pagină» when the event has rules and no programme. The numbered cards now run 1 to 10: type, title, description, when and where, course, registration, partners, links, programme-rules-declaration, public list. The page map shows ten chips plus the automatic share links.
+
+**3. The film is a figure in the description only (amends §69, §266, §403, §478).** The read-only film card (§406) and the event page's own film section (`EventVideo`, under the rules) are removed. So are the preview's film, the calendar entry's «Vezi filmul evenimentului» line and the `video` page section.
+- `events.video_url` and `events.video_poster_url` are neither read nor written by the code any more: not by `fields.ts`, the service, the public columns or the preview. `resolveEventVideoPoster` is gone.
+- `.strict()` refuses a caller that posts `videoUrl`.
+- A film is a `youtube` node in the description, drawn by `RichTextVideo` through the same `VideoFacade`: the club's stored poster, nothing fetched from YouTube before the press, the quiet corner volume glyph and the `vq=hd1080` / `setPlaybackQuality` HD request (§478).
+- Posters for films in a body are still fetched before any transaction opens (§403).
+- The node's `poster` / `posterSource` fields are untouched, so the gallery-poster chain can hook in there.
+- The media sweep still counts `video_poster_url` as a reference while the column exists, so a rollback finds its poster.
+- JSON-LD never carried a `video`, so there was nothing to move.
+- A duplicate now carries a migrated film with the description it is part of (§69 had left the film out of a duplicate).
+
+**4. Migration `0092_film_into_description`.** It is hand-written and data only, marked `-- expand:` (AGENTS.md §7.6). Its journal `when` is later than 0091's, and its snapshot is 0091's schema chained by id. For every event whose `video_url` yields an eleven-character YouTube id, it appends to the END of each translation's `body_json` a node shaped as `rich-text/domain/schema.ts` parses it: `{"type":"youtube","attrs":{"videoId":…,"caption":"","widthPercent":100,"align":"block","poster":…,"posterSource":…}}`.
+- **Reading the id:** by `youtubeVideoId`'s rules — https only; youtu.be/, /watch?v=, /embed|shorts|live|v/; the known hosts.
+- **Poster:** the stored `video_poster_url` when it passes the schema's `posterSrc` rule, else `null`. The next save then fetches one outside any transaction.
+- **No duplicates:** a description that already contains that film is left alone.
+- **Empty description:** a null description becomes a document holding only the film.
+- **Odd shapes:** a description that is not a document with a list of blocks is never rewritten.
+- **Versions:** each touched translation's `version` goes up by one, so an editor tab opened before the migration is refused as stale rather than saving the description back without the film.
+
+Proven in PGlite (`tests/integration/db/film-into-description-migration.test.ts`) with:
+- an RO+EN event with a film and a stored poster;
+- a short link whose film was already pasted into the English description;
+- a shorts link with a foreign poster;
+- a link with no id;
+- an event with no film.
+
+The columns and their check stay in the schema. **Their DROP is a later contract migration** (the §390 pattern), once this release has been served long enough that a rollback no longer needs them.
+
+**5. Words.** The backoffice guide's editor steps (§441) name «Când și unde» and «Program, regulament și declarație», and say that a YouTube film goes into «Descrierea evenimentului» with the «YouTube» button. The race step that still placed the declaration in «Condiții de participare» now points to its card. The same keys exist in both catalogues. `Admin.editor.boxes.video.*`, `pageFlow.short.video` and `Event.video.open` are removed.
+
+**Rejected:**
+- the page address inside «Când și unde» (see the deviation above);
+- a folded level-3 «Locul» inside «Când și unde» (the owner asked for one card; the place is a headed part);
+- keeping `video_url` readable for the page (two places for one film is what the owner removed);
+- clearing `video_url` in the same migration (that would be a contract step).
+
+Tests:
+- unit: `events/page-sections.test.ts` (nesting, 1..10, `cardStates`, no film section), `content/editor-page-flow.test.ts` (headings, chips, the place gap on «Când și unde»), `content/editor-order.test.ts`, `content/create-page.test.ts` (no film anywhere, the journal order), `content/editor-declaration-card.test.ts`, `content/event-form-together.test.ts`, `content/registered-line.test.ts`, `content/location-to-be-announced.test.ts`, `content/place-one-name-per-language.test.ts` (the refusal labels), `events/video-facade.test.ts` (`RichTextVideo` carries the poster, no-cookie embed, HD and mute), `events/ical.test.ts`, `theme/density.test.ts`;
+- integration: `db/film-into-description-migration.test.ts` (new), `cms/video-poster.test.ts` (no event-row fetch; body posters still fetched outside transactions);
+- e2e (edited, not run here): `editor-page-flow.spec.ts` and the specs that open «Data și ora» / «Locul» (`cms-publish`, `event-notices`, `forms-keep-values`, `location-to-be-announced`, `night-event`, `series-edit`, `toasts-and-confirms`, `weather-place`).
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 482. «Copiază și tradu tot: RO → EN» — one button, always there, one press
+
+**The owner, 2026-09-27:** «I can't find or don't know how to use the AI translate from 1 language to the other, I just wanna copy all from RO to English and auto-translate with a single button click.»
+
+§464 built the automatic translation, but two things stopped him from using it:
+
+- On a deployment with no DeepL key, no button was drawn at all. A button that is not there cannot be found.
+- Where the button was drawn, «Tradu tot din română» always asked a question first.
+
+**What changed**
+
+- **One button, always there, for anyone who writes the club's words.** «Copiază și tradu tot: RO → EN» / "Copy and translate everything: RO → EN" sits at the top of every editor: the event (new and saved), a page, an album, and on «Echipa» both the introduction and every person card.
+  - Without a DeepL key it is drawn grey, with a sentence saying why.
+  - A reader who may open `/admin/tasks` also gets «Vezi pașii», a link to the row with the steps (`#task-translation`). A reader who may not open it is told to ask an Administrator.
+  - The per-box «Tradu din română» buttons still need the key: thirty grey buttons would say nothing.
+  - A role that writes no words sees nothing.
+  - The layout's offer (`TranslateOffer { action, setupHref }`) is only a courtesy. The Server Action still checks the role and the key (BR-REQ-060-01).
+- **The label follows the owner's own words.** The first brief said «Tradu tot din română» / "Translate everything from Romanian". The label deliberately follows his phrase "copy all from RO to English" instead, and the arrow shows the direction.
+- **One press.** When every English box it would fill is empty, it translates at once. It asks first (§384) in two cases only:
+  - Some English boxes already hold words. The title says how many («N câmpuri în engleză au deja text. Le înlocuiesc?») and the body names them. There are two answers:
+    - «Înlocuiește tot» / "Replace everything" translates every box.
+    - «Doar cele goale» / "Only the empty ones" leaves the written boxes as they are and fills the rest. It is offered only when some boxes are empty.
+
+So filling the remaining empty boxes is still one decision, not a choice between overwriting everything and cancelling. `ConfirmDialog` gains an optional second answer for this. It is outlined, sits between cancel and confirm, and Enter never picks it.
+  - The press would send more than 20 000 characters (`ASK_ABOVE_CHARACTERS`, two fifths of the default day). The question then says «Se trimit ~N caractere din bugetul de azi», plus the smaller count for «Doar cele goale» when that answer is offered.
+- **One count of characters.** `charactersToSend` (`domain/budget.ts`) counts what the service charges: a rich text as the HTML that is sent, tags included; a plain box with each `{placeholder}` as its numbered marker; a blank box as nothing. The service and the button both call it, so the figure the question names is the figure the budget is charged.
+- **Why there is no «Netradus» marker on a field.** The service and DeepL accept or refuse a request as a whole: the budget, the month's quota, the key, a timeout. So one press fills every box it named or none of them, and a partly translated form cannot happen. The refusal is shown once, in words, under the button. An English box left empty is still caught by the both-languages rule at save (§352), and the editor's missing-fields line (§406) names it.
+- **«Echipa» can be translated.** A card's role, the words about the person, its links' labels and the page's introduction are on the allowlist. Each card is its own form, and every card posts `bioEnBody`, so a rich-text fill now carries the form that pressed. A box in another form ignores it, and one person's translation never lands in every card.
+- **Nothing is saved by the press.** The boxes change as if typed, and the ordinary save stores them under every rule it already had.
+- **The texts that name the button were updated:**
+  - the `/admin/tasks` row;
+  - the Costuri notes;
+  - the guide. The Redactor's two-languages rule has a step about the button. The Organizator's and the Administrator's sections each have a task, «Engleza dintr-o apăsare» / "The English in one press": write in Romanian, press, choose «Înlocuiește tot» or «Doar cele goale» if asked, read, «Salvează». Each ends with what a grey button means for that role.
+
+**How it is built**
+
+The press is plain functions that React only wraps: `planTranslateAll`, `collectItems` and `translateBoxes` in `ui/form-fields.ts`. They are tested in Node against stand-ins for the few DOM shapes they touch, with no DOM library added (the platform over a dependency).
+
+No migration and no new dependency.
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 483. The accepted nits of V2.03–V2.07 in one branch
+
+The landings of `BR-V2.03` to `BR-V2.07` accepted a set of review leftovers and queued them. This change carries them in one branch. None of them changes what a participant sees.
+
+- **Colleagues' first names leave the public repository.** They are gone from `src/`, `tests/`, `messages/` and `docs/QUEUE.md`.
+  - Quoted remarks name the role instead.
+  - Fixtures use neutral sample names.
+  - The club checklist's starting lists (§438) now belong to the Administrator and the Organizer. Their ids are `start-admin-NN` / `start-organizer-NN`, and «pentru cine» offers the roles.
+  - The starting list is read only while the `clubTodo` row is missing, so a stored checklist gains no duplicate lines.
+- **Every setting's audit id is its own.** Four settings had each taken a sibling's id:
+  - the job cadence: `e007` → `e00d`
+  - the club's notices: `e003` → `e00e`
+  - the checklist: `e00b` → `e00f`
+  - the translation budget: `e00a` → `e010`
+
+Nothing reads a setting's history by id, so older audit rows stay as they are and no migration is needed. A source-walk test keeps every id unique.
+- **The desk and the guide** follow §450 and §423. The desk's help says an Administrator makes the volunteers' accounts. The guide publishes a draft with «Publică» in one press.
+- **Costuri** drops the «.ro (ROTLD)» next-plan row, since the .ro is dropped. The domain row's ceiling says one invoice a year for the .com.
+- **«Echipa»** (§459, §474):
+  - A save reads at most twelve link rows, indexes 0 to 11, the ceiling of an event's own links (§332). It skips any higher index instead of growing an array to it.
+  - The meta description is about 160 characters of the introduction. The first sentence is used when it fits and fills at least half the room. Otherwise the text is cut at the last whole word that fits, with an ellipsis, so a greeting such as «Bun venit!» never stands for the page.
+  - The §430 older-pictures press also rewrites the bios and the page's introduction, in the same transaction.
+- **The event editor:**
+  - The «Încheiat» refusal names the status once.
+  - The declaration line says when a ticked group run's surface has no approved text in force (§393).
+  - A series never copies its source's Anulat to future dates, and gives «Încheiat» only to dates that have started.
+- **Stale comments** now read «Medie / Mare» (§437) instead of the old «Normală / Înaltă». The older-pictures end-to-end assertion matches every plural form.
+
+**Not in this change.** The per-person link cap stays at **six** in `BR-V2.08`, in the code (`MAX_TEAM_LINKS`) and in the database's CHECK `team_members_links_is_a_short_array_of_https_links`. Raising it to twelve needs a generated, expand-only migration that drops and re-adds the CHECK with `<= 12`. `drizzle-kit generate` cannot run until the migrations' snapshot chain is rebuilt. The row is queued in `docs/QUEUE.md`, and the save already reads twelve rows, so raising the cap later is the constant and the migration only. The snapshot chain itself is also left as it is.
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 484. The weather line says where and for which hours
+
+**Amends §469 and §416.** The owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul» ("for the weather I want to say the place and the interval too").
+
+**The sentence.** The event page's «Vremea» line and the reminder's weather row are one sentence, where and when first:
+
+- RO: «Vremea la <loc>, <zi> <HH:MM>–<HH:MM>: <cer>, <min>–<max> °C, ploaie probabilă N %», e.g. «Vremea la Parcul Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie, 12–15 °C, ploaie probabilă 70 %»
+- EN: «Weather at <place>, <day> <HH:MM>–<HH:MM>: <sky>, <min>–<max> °C, rain likely N%»
+
+An event with no end is its start hour alone, «sâmbătă, 26 sept. 18:00», with no dash. An interval past midnight keeps the start's day: «22:00–01:00». The day and the hours are on the event's own clock, through the one date helper (§349, §439, §452: no preposition before the weekday).
+
+**How each surface draws it.** In the reminder, the facts block's row label is the head of the sentence («Vremea la …, <zi> <interval>»), so its text reads as the whole sentence. The credit line stays under it. On the page the dt stays «Vremea» and the dd opens with «la <loc>, <zi> <interval>:», so the two read together as the sentence. The sky's word, the degrees and the umbrella follow as §469's pieces, and §473's «?» comes last.
+
+**The place.** It is the one §416 reads the forecast at. When the forecast was read at the map link's or the typed coordinates, it is the meeting point's name in the reader's language (§362). When it was read at the club's fallback coordinates (no pin, no typed pair, or a place still to be announced), it is the club's locality (`CLUB_LOCALITY`). It is never a coordinate pair in words, and never a meeting point the numbers were not read at. With no name, it says «locul evenimentului» / «the event's place».
+
+**The interval** (`pickSpan`) runs from the start's hour, rounded to the nearest hour as §402 already rounds it, to the end's hour, rounded the same way. So an event from 18:00 to 19:40 reads «18:00–20:00». The span is capped at six hours after the start (`WEATHER_SPAN_MAX_HOURS`). A longer event, such as a camp or a day on the ridge, is read for its first six hours, and the line names exactly those hours, so it never claims more than it read.
+
+**Over those hours:**
+
+- **The sky's word, and the page row's glyph:** when rain is likely in any hour, the wettest of those hours (the highest chance, the earlier on a tie). The line therefore never says «Parțial noros» beside an umbrella. Otherwise it is the dominant sky, the kind most hours share, with a tie going to the start's.
+- **The degrees:** the coldest and the warmest, as one figure when they round alike.
+- **The rain phrase:** only when rain is likely in any hour, by §469's rule, with the highest chance among those hours.
+
+**Unchanged.** One function (`weatherSpanWords`) feeds the page and the reminder. The listing card's pill and the hero keep the start hour's line (§429, §449).
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 485. Pictures from the gallery everywhere, and a croppable film poster
+
+**The owner asked:** reuse a picture the club already stored wherever the backoffice takes one, and crop a film's thumbnail, with aspect-ratio options.
+
+**What was built.** «Din galerie» now appears in every place the backoffice takes a picture:
+- a picture in a rich text (every event text, every standing page, «Echipa»'s bios and introduction);
+- a film's poster;
+- a card's photo on «Echipa»;
+- an album.
+
+It is one client component, `media/ui/GalleryPicker`, over `GET /api/admin/media`.
+
+**How the picker works.**
+- The list is fetched only when the picker opens, newest first.
+- A name box narrows it. Accents and case are ignored, so «hartă» is found by "harta".
+- A row of chips, «Folosită în» (toate / eveniment / album / pagină / echipă), narrows it by the kind of place a picture is already used. The team page's introduction counts as «Echipa».
+- The server does the narrowing before its 300-picture cap, so an old picture is found by name however many came after it. The rule is one pure module, `media/picker.ts`, which the route and the picker both call.
+- Each 88-pixel thumbnail has a caption with the stored width × height and weight. The caption is visible on a phone, where a hover title never shows.
+
+**Who may read the list.** Only a role that may put a picture somewhere: `canEditTexts` or `canEditEventFields` (BR-REQ-060-01). A volunteer gets 403. The upload itself stays open to every staff session.
+
+**A reused picture is linked, not copied.** One `media_assets` row is referenced from every place that uses it.
+- An album takes a stored picture as a `gallery_items` row. Pressing twice is a no-op that says so.
+- A film's automatic poster (`yt-<id>`, §403) is refused as an album photo and as a card photo, on the server and not only in the picker. Only the film's own poster picker lists those posters (`?posters=1`).
+
+**Removing a picture from one place never deletes it from another.** Taking a photo out of an album, or deleting an album, now deletes a picture only if nothing else references it. The check is `deleteAssetsNoLongerReferenced`, the orphan sweep's own predicate, run in the same statement. Before, deleting an album broke a picture a page had chosen from the gallery. An album with no cover still gets its first remaining photo on any removal, as before.
+
+**The film poster.**
+- The club can pick a poster from the gallery as well as upload one.
+- The poster takes a crop (`posterCrop`, §241's four fractions) drawn in the same crop box as a picture.
+- All five shapes are offered (Liber, 16:9, 4:3, 1:1, 4:5), with 16:9 pressed at rest because it is the film box's own shape. A rectangle of another shape shows its largest 16:9 part, using the listing card's arithmetic (`cardFrameGeometry`).
+- `posterCrop` is optional with no transform, so a film stored before keeps its exact JSON and is covered, centred, as always.
+- Drawing a crop records the poster's width and height, YouTube's thumbnail included. `pictureSrcSet` still ignores a `yt-` address, which has no ladder.
+
+**A picture from the gallery in a text** goes in with the same shape choice as an upload (§454): one state shared by both, a crop of the stored photograph and never new pixels.
+
+No migration: a film's poster was already a media row.
+
+**The picker opens on the place it was opened from.** A Redactor editing an event reaches for that event's pictures first, so the picker has a first chip for the editor's own place: «Acest eveniment» / «This event», «Această pagină» / «This page», «Acest album» / «This album». «Toate» and the kinds of place stay beside it. The slot hands the picker its place as plain data (kind and id), and `GET /api/admin/media?for=<kind>:<uuid>` marks each picture `here` from its own references, kind AND id. `source=here` narrows on the server before the cap, so the browser never filters the whole list. An event's texts and a stored page's text open on their own chip. If the place uses no picture yet, the picker falls back to «Toate» on its first answer. An album's picker offers «Acest album» but opens on «Toate», because every picture the album uses is already in it. A create form has no id and so no chip.
+
+**The film's old poster column is no longer a reference.** Since migration `0092` moved every film into the description as a youtube node, the older pictures' button (§430) no longer rewrites `events.video_poster_url`, and the orphan sweep no longer counts it. A poster named only by that unread column is swept after the usual grace, like any picture no page draws. A poster the description's film names is kept, as every body's picture is. The column itself goes with its contract migration.
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 486. The whole listing card is one tap to the event page, and a date of a repeated event wears the repeat chip
+
+The owner, 2026-09-27: «I should be able to press anywhere on the card», and «…încă o iconiță în card, ca o rotiță…» for a date that belongs to a repeated event.
+
+**One tap, with the card's own links kept (amending §366).** Since §366 only the title was the card's link, so a thumb on the summary, the pills or the picture did nothing. An `<a>` around the card is still ruled out, because a link cannot hold the map link, the dates, the door or the registration button (§366's reason still holds). Instead the title's link is *stretched*: its `::after` covers the card (`CARD_TITLE_SX`), and the card is `position: relative; isolation: isolate` (`CARD_TAP_SX`), so the cover measures the card and never paints over the header. Every control on the card is lifted above the cover (`z-index: 2`): the map, a date, the fold, the door, the registration button, and a pill with a tooltip (`GlyphChip` marks those with `data-has-tooltip`, so the night pill's sunset still opens on a tap). The lift rule is `.card :where(a, button, summary, [data-has-tooltip])`. The `:where` adds nothing, but the card's class still counts, so the rule has the card's (0,1,0) specificity. The title's own `.title a` rule outranks it, so the title link stays `static` and its cover measures the card. A child whose own single-class rule sets `position: absolute` wins only because Emotion inserts it after the card's rule.
+
+There is still one anchor per card and none nested, so screen readers and the keyboard meet exactly the links they met before. **The focus ring belongs to the card.** The title's link now targets the whole card, so while the keyboard is on it the card wears the 2-pixel ring (`:has(h2 a:focus-visible)`) and the title keeps only its underline. A focused map link, date or door keeps its own ring.
+
+The cost is that the card's words can no longer be selected with a drag; the event page has them all.
+
+**A date of a repeated event says so (amending §470, §113).** The filters or the lead (§470) can leave one date of a weekly run alone on its card, and then it read as a one-off. The page now looks each card's series up on the whole list, before the filters and the lead (`seriesLookup`). The single-date card then wears the series card's own repeat chip (the `series` glyph) with the same short word, «Săptămânal» / «La două săptămâni», or the count for a set of dates with no rhythm, «3 date», through one shared `rhythmLabel`. On both cards the chip's tooltip and accessible name give the rule: «Se repetă în fiecare marți, la 18:30» / «Repeats every Tuesday at 18:30» (`repeatTooltip`, built on `recurrenceSentence`). When the dates are neither weekly nor fortnightly, it says «Eveniment recurent» / «Recurring event». A one-off wears no chip.
+
+**Not in the backoffice.** The backoffice event list does not use `EventCard` or `SeriesCard`; it shares only `RoutePills` with the public cards (§388). So neither the stretched tap nor the repeat chip applies there, and the backoffice rows keep opening the editor as before.
+
+A film on a listing card is lifted whole above the title's cover: `VideoFacade` marks its root `data-lifted`, and the card's lift rule (`CARD_TAP_SX`) lifts `[data-lifted]` like a link or a button. The play button, the playing iframe with YouTube's own controls, and the volume glyph (§478) all take their own presses, while a press beside the film still opens the page. Lifting only the facade's `summary` got the first press through and then left the player under the cover. Anything else that must keep its presses on a card wears the same mark.
+
+The repeat chip's glyph is Material's `Autorenew`, a wheel of arrows («ca o rotiță», the owner), registered as `repeat`. It is the same on the single-date card of a series, the series card and the featured card. The calendar-with-arrows `series` glyph (`EventRepeat`) read as one more date at 16–20 px; it stays for the backoffice's own uses.
+
+The card draws the keyboard's ring for the title's link only where `:has` exists: the title link removes its own outline inside `@supports selector(:has(a))` and keeps it everywhere else, so no browser loses the focus ring.
+
+Baseline `BR-V2.08-2026-09-27`.
+
+## 487. The calendar page's head on a phone: a «?» fold, one period row, one chip row
+
+**What changed.** On a phone the calendar page's head is shorter by about two lines, so the month starts higher:
+
+- **The intro sentence.** It is no longer a paragraph under «Calendar». It sits behind a «?» beside the H1. The «?» is a native `<details>` fold (`CalendarIntroFold`) rendered on the server. Its summary is a small muted glyph with a 44-pixel target and its own name: «Despre calendar și cum îl iei în telefon» / "About the calendar and how to take it into your phone". Opened, it shows a panel under the heading row. The panel holds the sentence and the two links the sentence promises (§107): Google Calendar's add link and the `webcal://` feed. One helper, `calendarFeedLinks`, builds both links, and "Adaugă în calendarul tău" lower on the page uses the same helper.
+- **The period heading.** The month's H2 is hidden from sight on a phone, because the month and year selects directly under it already say it. It keeps its text and its id, so it still names the section (`aria-labelledby="calendar-title"`) and a screen reader still reads it.
+- **The period row.** The month select, the year select, ‹, «Azi» and › are one row that never wraps. The year select has a fixed narrow width, since it holds four digits. The month select takes the rest, in 13-px type, so its longest name still fits at 320 pixels. Every control keeps its 44-pixel height (BR-REQ-041-01 criterion 6).
+- **The chip row.** The two pill pairs (Lună / An and Calendar / Listă) have a row of their own. The rule between them (§175) now shows on every width, because the pairs share a row on a phone too.
+
+**What stays.** From `sm` the page looks as before: the sentence under the heading, the heading drawn, the selects at their old type and padding. There is no «?» there, so a reader never sees both the fold and the paragraph. Every phone-only style names its `sm` value, because a rule written only for `xs` is a `min-width: 0px` rule and would reach the desktop too.
+
+**Why a fold and not a tooltip.** The first version reused the weather line's «?» tooltip (§473). A tooltip cannot hold links, and without JavaScript it shows nothing. A `<details>` fold does both. The page head then keeps what the intro sentence promised: taking the calendar into your phone is one press away.
+
+**The phone spacing.** The header's bottom margin and the gap between the two selects are on the phone density scale (§380). Three literals are on the allowlist, each with its reason: zero row gap, zero spacing between the arrows, and the select's text inset.
+
+Baseline `BR-V2.08-2026-09-27`.

@@ -7,12 +7,12 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
-import { countForm } from "@/i18n/count-form";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TITLE_SX, GROUP_GAP, LINE_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TAP_SX, CARD_TITLE_SX, LINE_GAP } from "./card-layout";
 import type { Locale } from "@/i18n/routing";
+import { DENSITY } from "@/theme/density";
 import { riseIn } from "@/theme/motion";
-import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
+import { editionDifference, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
@@ -20,7 +20,7 @@ import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 import SeriesDates from "./SeriesDates";
-import { editionNote, recurrenceSentence } from "./series-sentence";
+import { editionNote, recurrenceSentence, repeatTooltip, rhythmLabel } from "./series-sentence";
 
 /** How many dates the card lists before pointing at the month view for the rest. */
 
@@ -47,17 +47,11 @@ export default async function SeriesCard({
   const locale = (await getLocale()) as Locale;
   const next = members[0];
   const sentence = await recurrenceSentence(members, next.timezone, locale);
-  // The chip says how often, not how many (the owner: "8 dates here is redundant, just show
-  // weekly"); a set of dates with no rhythm keeps the count. Every date is shown — "2 more in
-  // the calendar" meant nothing to him.
-  const recurrence = recurrenceOf(members, next.timezone);
-  const rhythm =
-    recurrence.kind === "weekly"
-      ? t("series.weeklyChip")
-      : recurrence.kind === "fortnightly"
-        ? t("series.fortnightlyChip")
-        // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
-        : t(`series.count.${countForm(members.length, locale)}`, { count: members.length });
+  // The chip says how often, not how many (`rhythmLabel`); every date is shown in the fold — "2
+  // more in the calendar" meant nothing to the owner.
+  const rhythm = await rhythmLabel(members, next.timezone, locale);
+  // The rule behind the word (§486), the same on the one-date card of a repeated event.
+  const repeats = await repeatTooltip(members, next.timezone, locale);
   const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).
@@ -78,12 +72,12 @@ export default async function SeriesCard({
     the door — each a group's gap from the one before it and nothing else.
   */
   return (
-    <Card component="li" variant="outlined" sx={{ ...(special ? specialCard : {}), ...riseIn(index) }}>
+    <Card component="li" variant="outlined" sx={{ ...CARD_TAP_SX, ...(special ? specialCard : {}), ...riseIn(index) }}>
       <Box sx={CARD_BODY_SX}>
         <Box sx={CARD_CHIPS_SX}>
           {/* The type; the surface is a pill with the facts below, said once (§366). */}
           <EventKindChips type={next.type} surface={null} />
-          <GlyphChip glyph="series" variant="outlined" label={rhythm} />
+          <GlyphChip glyph="repeat" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />
           {/* An edition apart on *any* of the dates (§168, §169). A repeated event is one card
               (§113), so the badge the single-event card wears would otherwise be shown nowhere
               for the owner's own case — "some dates can be special events where we overlap
@@ -116,8 +110,8 @@ export default async function SeriesCard({
 
         {/* The next date's facts: "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" on one line — the
             label used to be a line of its own above them — then the place, its map link, and the
-            pills. */}
-        <Box sx={{ mt: GROUP_GAP }}>
+            pills. A group's gap above them, the density scale's short step on a phone (§480). */}
+        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           {/* The next date's weather at its start (§416) is the last pill of its route's row, the
               umbrella when rain is likely (§429). */}
           <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} cardWeather={weather} />

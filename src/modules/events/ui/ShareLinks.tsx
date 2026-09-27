@@ -3,6 +3,7 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { DENSITY } from "@/theme/density";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import SocialIcon from "@/shared/ui/SocialIcon";
@@ -64,7 +65,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
   );
   return (
     <Stack spacing={0.5}>
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
         {caption(t("share.title"))}
         <NativeShareButton url={url} title={title} text={title} label={t("share.native")} />
         {anchor(facebookShareUrl(url), t("share.facebook"), <SocialIcon network="facebook" size={20} />)}
@@ -81,7 +82,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
         </InstagramShareButton>
       </Stack>
       {calendar && (
-        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
           {caption(t("share.calendarTitle"))}
           {anchor(calendar.googleUrl, t("share.googleCalendar"), <EventAvailableIcon sx={SHARE_ICON_SX} aria-hidden="true" />)}
           {anchor(calendar.icsHref, t("share.ics"), <EventAvailableIcon sx={SHARE_ICON_SX} aria-hidden="true" />, true)}

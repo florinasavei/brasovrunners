@@ -10,14 +10,16 @@ import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
-import { footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
+import { foldLineSx, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
- * The height of the bar from `sm` up, and of every link inside the fold's panel at every width.
- * 44px is what BR-REQ-041-01 asks of a control; the bar is one line of them.
+ * The height of the bar from `sm` up, and of the fold's links and stamp from `sm` up. 44px is what
+ * BR-REQ-041-01 asks of a control; the bar is one line of them. On a phone the bar's items are the
+ * bar's own target instead (`footerTargetSx`, §372): 24px below 360, 28px up to `sm`; and since
+ * §480 (the 360-px density pass) the fold's lines are 24px at every phone width (`foldLineSx`).
  */
 const BAR_HEIGHT = 44;
 
@@ -55,7 +57,8 @@ const BAR_HEIGHT = 44;
  * Every item is a target of the bar's size (`footer-target.ts`): 24 pixels below 360, which is
  * WCAG 2.2 SC 2.5.8's AA floor, 28 from 360, and 44 from `sm`, where nothing changed — a square,
  * except the summary and the word, which are as wide as their words. The rule is decoration, not
- * a target. It is a footer-bar-only exception to criterion 6: the fold's panel is 44 throughout.
+ * a target. It is a footer-only exception to criterion 6: since §480 (the 360-px density pass) the
+ * fold's lines are 24 on a phone too (`FOLD_LINE`), and 44 from `sm`.
  *
  * ## The gap, measured (§378, §385)
  *
@@ -291,7 +294,21 @@ export default async function SiteFooter() {
               when it does not. The stamp is last.
 
               Measured on the built listing at 360 pixels, in Romanian, the open panel was 188
-              pixels tall and is 136 now (the numbers in the comment at the top of this file).
+              pixels tall and 136 after §385. §480 (the 360-px density pass) replaced the 44-pixel
+              row with the lines below: 146 with the stamp's 44-pixel box, 130 with the stamp at
+              the bar's target too — four lines of 28 and three gaps of 6 — and, in its second
+              round, 96: four lines of 24 (`FOLD_LINE`), abutting, the stamp's 44-pixel long-press
+              area reaching up into the credit's line rather than adding a line's height. At 320
+              it is 96 too with the production stamp (one line of chip, 245 pixels in a 260-pixel
+              panel), and 111 where the stamp carries its environment ("local · " or "test · ",
+              about 280 pixels, so its chip wraps onto a second line).
+
+              Four lines, not three: the credit is 142 pixels of 14-pixel Roboto (122 at the 12 it
+              was) and the production stamp's chip about 250, in a panel 260 wide at 320 and 292
+              at 360 — the two never share a line on a phone — nor does the credit fit after the
+              first two lines' links (226 in Romanian) or after "Scrie-ne: <address>" (225). A
+              shorter stamp would share it, and would drop what `build-badge.spec.ts` holds it to:
+              the environment, `app-ver` and the date with its minute.
             */}
             <Box
               sx={{
@@ -305,28 +322,47 @@ export default async function SiteFooter() {
                 // before: the widest switch, a scrollbar and a margin, capped at 40rem.
                 width: { xs: "calc(100vw - 60px)", sm: "min(40rem, calc(100vw - 80px))" },
                 [PHONE_WIDE]: { width: "calc(100vw - 68px)" },
+                // §480, amending §385 (the owner, 2026-09-26: "Informațiile din footer sunt mult
+                // prea spațiate"): the lines set on purpose — the terms and "my registrations",
+                // "Scrie-ne" with the address, then the weather credit and the stamp, every word at
+                // the panel's 14 pixels (the second round: the credit's 12 was under the site's
+                // floor for words a person reads). On a phone every line is `FOLD_LINE`, 24 pixels
+                // (`footer-target.ts`), the lines touching and never overlapping — a press is on
+                // one link or the next, never on two. From `sm` they are 44 tall as before
+                // (BR-REQ-041-01 criterion 6), and from `sm` the panel is §385's one wrapping row
+                // again, unchanged: the two groups below give their items to it (`display:
+                // contents`), sixteen pixels apart, as many to a line as fit — the lines above are
+                // the phone's (§480, the owner's "footer is too tall on mobile" round).
                 display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                // A column gap rather than a margin: a margin is kept by an item that wraps to the
-                // next line, so it started further in than the one above. Two links on one line
-                // are the density scale's short step apart on a phone (§380), 16 pixels from `sm`.
-                columnGap: { xs: DENSITY.gapSm, sm: 2 },
+                flexDirection: { xs: "column", sm: "row" },
+                flexWrap: { sm: "wrap" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                columnGap: { sm: 2 },
                 rowGap: 0,
                 pt: 0,
-                pb: 0.5,
+                pb: { xs: 0, sm: 0.5 },
                 // Indented to where the summary's words start, so it reads as the fold's body.
                 pl: { xs: 1.5, sm: 2 },
                 // The address's own size before (`body2`), for every link now: 14 pixels rather
                 // than 16, so the terms and "my registrations" share a line at 320.
                 fontSize: "0.875rem",
-                "& a": { display: "inline-flex", alignItems: "center", minHeight: 44 },
+                // Every link paints over the stamp's long-press reach (`BuildBadge`, `phoneTarget`),
+                // which runs up into the line above it: a press on a link is the link's; only the
+                // empty part of that line is the stamp's.
+                "& a": { display: "inline-flex", alignItems: "center", position: "relative", zIndex: 1, ...foldLineSx(["minHeight"]) },
               }}
             >
-              {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
-              <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
-              {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
-              <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+              <Box
+                data-testid="footer-panel-links"
+                // Two links on one line are the density scale's short step apart on a phone (§380),
+                // 16 pixels from `sm`; a column gap, so a wrapped link starts flush.
+                sx={{ display: { xs: "flex", sm: "contents" }, flexWrap: "wrap", alignItems: "center", columnGap: { xs: DENSITY.gapSm, sm: 2 }, ...footerGapSx(["rowGap"], 0), maxWidth: "100%" }}
+              >
+                {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
+                <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
+                {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
+                <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+              </Box>
               {/* "Scrie-ne" once (BR-REQ-070-04): the form, and — when the club's mailbox is
                   configured (§8; nothing here invents an address) — the address beside it as the
                   mail link, "Scrie-ne: <address>". One item, so the address wraps under its own
@@ -336,7 +372,7 @@ export default async function SiteFooter() {
               <Box
                 component="span"
                 data-testid="footer-contact"
-                sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, minWidth: 0, maxWidth: "100%" }}
+                sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, ...footerGapSx(["rowGap"], 0), minWidth: 0, maxWidth: "100%" }}
               >
                 <Link href="/contact">{contacts.length > 0 ? footer("about.contact") : footer("contactPage")}</Link>
                 {/* The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …». */}
@@ -349,18 +385,25 @@ export default async function SiteFooter() {
                   </Box>
                 ))}
               </Box>
-              {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
-                  cards (§429); the event page and the featured hero keep their own beside the
-                  forecast. */}
-              <MuiLink href={OPEN_METEO_SITE} target="_blank" rel="noopener noreferrer" data-testid="footer-weather-credit">
-                {weatherCredit}
-              </MuiLink>
-              {/* The build stamp and the staff entrance (§34), a chip since §385: below `md` this
-                  is the only place it shows, opened on purpose, and the panel's last item. From
-                  `md` a second copy is pinned to the bar's own corner (below), so this one steps
-                  aside there rather than repeat it. */}
-              <Box data-testid="footer-build-badge-panel" sx={{ display: { xs: "flex", md: "none" }, maxWidth: "100%" }}>
-                <BuildBadge />
+              {/* The last line (§480, amending §385): Open-Meteo's credit and the stamp, side by side
+                  from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
+              <Box
+                data-testid="footer-panel-meta"
+                sx={{ display: { xs: "flex", sm: "contents" }, flexWrap: "wrap", alignItems: "center", columnGap: 1, rowGap: 0, maxWidth: "100%" }}
+              >
+                {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
+                    cards (§429); the event page and the featured hero keep their own beside the
+                    forecast. */}
+                <MuiLink href={OPEN_METEO_SITE} target="_blank" rel="noopener noreferrer" data-testid="footer-weather-credit">
+                  {weatherCredit}
+                </MuiLink>
+                {/* The build stamp and the staff entrance (§34), a chip since §385: below `md` this
+                    is the only place it shows, opened on purpose, and the panel's last item. From
+                    `md` a second copy is pinned to the bar's own corner (below), so this one steps
+                    aside there rather than repeat it. */}
+                <Box data-testid="footer-build-badge-panel" sx={{ display: { xs: "flex", md: "none" }, maxWidth: "100%" }}>
+                  <BuildBadge phoneTarget />
+                </Box>
               </Box>
             </Box>
           </Box>

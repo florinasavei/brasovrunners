@@ -1,7 +1,7 @@
 /**
  * A save that a corporate network refused, sent again as a plain browser form (§436).
  *
- * The owner, 2026-09-26: "Amalia is still having trouble on her Siemens laptop, but just on some
+ * The owner, 2026-09-26: "[the Administrator] is still having trouble on her work laptop, but just on some
  * pages, performing some actions in the back-office like saving stuff". Her pages load; her saves
  * do not. A save with JavaScript on is not a form post: it is a `fetch` POST to the page's own
  * address with a `Next-Action` header, and its answer is an RSC stream (`text/x-component`). An

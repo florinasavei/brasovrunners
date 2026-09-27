@@ -55,6 +55,20 @@ export function groupSeries<T extends SeriesMember>(events: readonly T[]): Serie
 }
 
 /**
+ * The series an event belongs to, read off a whole list (§486): its dates, soonest first, when it
+ * has others in the list, else undefined. The listing groups what it *shows* (`groupSeries`), which
+ * a filter or the lead (§470) can leave at one date of a weekly run; asked of the list before
+ * those, this says the date is still one of a series, so its card wears the rhythm.
+ */
+export function seriesLookup<T extends SeriesMember>(events: readonly T[]): (event: Pick<SeriesMember, "type" | "title">) => readonly T[] | undefined {
+  const byKey = new Map(groupSeries(events).map((series) => [series.key, series.members]));
+  return (event) => {
+    const members = byKey.get(seriesKey(event));
+    return members && members.length > 1 ? members : undefined;
+  };
+}
+
+/**
  * How a series recurs, read off its dates on the wall clock of `timeZone`:
  *
  *   - `weekly` / `fortnightly` — every occurrence on one of `weekdays` (ISO, 1 = Monday), and

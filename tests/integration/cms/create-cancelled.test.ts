@@ -65,7 +65,7 @@ describe("BR-REQ-050-01 an event created cancelled or completed (§448)", () => 
 
   beforeEach(async () => {
     await resetTables(db);
-    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Amalia", role: "ADMIN" }).returning();
+    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
   });
 
   const refusalOf = (promise: Promise<unknown>) =>
@@ -134,5 +134,42 @@ describe("BR-REQ-050-01 an event created cancelled or completed (§448)", () => 
     const created = await createEvent(db, { actor: admin, fields: past, now: NOW });
     expect(created.eventStatus).toBe("COMPLETED");
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+
+  /* §483 — the create-status rule per date: a series never copies its source's status. */
+  it("makes a cancelled series source's future dates scheduled, and only its own date cancelled", async () => {
+    const result = await createEventAndPublish(db, {
+      actor: admin,
+      fields: { ...FIELDS, type: "GROUP_RUN", eventStatus: "CANCELLED" },
+      cancellation: { reason: REASON, notify: false },
+      publish: false,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: null },
+      now: NOW,
+    });
+    expect(result.repeated).toBeGreaterThan(0);
+    const [source] = await db.select().from(events).where(eq(events.id, result.event.id));
+    expect(source.eventStatus).toBe("CANCELLED");
+    const copies = await db.select().from(events).where(eq(events.repeatOf, result.event.id));
+    expect(copies).toHaveLength(result.repeated);
+    expect(copies.every((copy) => copy.eventStatus === "SCHEDULED")).toBe(true);
+    // One cancellation recorded: the source's own.
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.cancelled"))).toHaveLength(1);
+  });
+
+  it("keeps «Încheiat» only on a series' dates that have started, the rest scheduled", async () => {
+    const result = await createEventAndPublish(db, {
+      actor: admin,
+      fields: { ...FIELDS, type: "GROUP_RUN", eventStatus: "COMPLETED", startsAtWallTime: "2026-09-13T08:00" },
+      publish: false,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: null },
+      now: NOW,
+    });
+    const copies = await db.select().from(events).where(eq(events.repeatOf, result.event.id));
+    const started = copies.filter((copy) => copy.startsAt.getTime() <= NOW.getTime());
+    const ahead = copies.filter((copy) => copy.startsAt.getTime() > NOW.getTime());
+    expect(started.length).toBeGreaterThan(0);
+    expect(ahead.length).toBeGreaterThan(0);
+    expect(started.every((copy) => copy.eventStatus === "COMPLETED")).toBe(true);
+    expect(ahead.every((copy) => copy.eventStatus === "SCHEDULED")).toBe(true);
   });
 });

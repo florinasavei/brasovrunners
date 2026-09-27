@@ -107,7 +107,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
   /*
     Reading what the club published is not writing it (§208). The Organizer must be able to see
-    the texts in force — "Dani îi zice Amaliei să modifice X, Y lucru" cannot be said about a
+    the texts in force — "organizatorul îi zice administratorului să modifice X, Y lucru" cannot be said about a
     document he cannot read. Writing, approving, withdrawing and deleting each assert their own
     role below and again in the service (§46, §181, §203).
   */

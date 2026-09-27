@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * at send time through the same request the event page makes; no row when Open-Meteo fails, and
  * none on any other message.
  *
- * The tests run with `WEATHER_SOURCE=off`, so `weatherForEvent` is stood in for by the real one
+ * The tests run with `WEATHER_SOURCE=off`, so `forecastForEvent` is stood in for by the real one
  * reading through a stub `fetch` — the code path is the server's, the answer is the test's.
  */
 const HOUR = 60 * 60 * 1000;
@@ -47,8 +47,8 @@ vi.mock("@/modules/weather/source", async (importOriginal) => {
   }) as unknown as typeof fetch;
   return {
     ...real,
-    weatherForEvent: (event: Parameters<typeof real.weatherForEvent>[0], now: Date) =>
-      real.weatherForEvent(event, now, { fetch: openMeteo, source: "open-meteo", timeoutMs: 50 }),
+    forecastForEvent: (event: Parameters<typeof real.forecastForEvent>[0], now: Date) =>
+      real.forecastForEvent(event, now, { fetch: openMeteo, source: "open-meteo", timeoutMs: 50 }),
   };
 });
 
@@ -136,19 +136,19 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r1"), db, NOW);
     const lines = message.text.split("\n");
     // Romanian half: right under «Când», the credit the licence asks for under it, then «Unde».
-    const ro = lines.indexOf("Vremea: Ploaie, 6 °C, ploaie probabilă 80 %");
+    const ro = lines.indexOf("Vremea la Brașov, sâmbătă, 26 sept. 08:00: Ploaie, 6 °C, ploaie probabilă 80 %");
     expect(ro).toBeGreaterThan(0);
     expect(lines[ro - 1]).toMatch(/^Când: /);
     expect(lines[ro + 1]).toBe("  Prognoză: Open-Meteo");
     expect(lines[ro + 2]).toMatch(/^Unde: /);
     // English half, in its own words.
-    const en = lines.indexOf("Weather: Rain, 6 °C, rain likely 80%");
+    const en = lines.indexOf("Weather at Brașov, Saturday, 26 Sept 08:00: Rain, 6 °C, rain likely 80%");
     expect(en).toBeGreaterThan(ro);
     expect(lines[en - 1]).toMatch(/^When: /);
     expect(lines[en + 1]).toBe("  Forecast: Open-Meteo");
     // In the HTML, inside the facts block, the label bold as every row's.
     const block = message.html.match(/<div data-email-part="event-facts"[^]*?<\/div>/)?.[0] ?? "";
-    expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, ploaie probabilă 80 %<br>Prognoză: Open-Meteo");
+    expect(block).toContain("<strong>Vremea la Brașov, sâmbătă, 26 sept. 08:00</strong><br>Ploaie, 6 °C, ploaie probabilă 80 %<br>Prognoză: Open-Meteo");
   });
 
   it("stays one line — the start hour's facts, never the page's details (§416)", async () => {
@@ -170,6 +170,13 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     // Rounded to three decimals (≈ 100 m) — the cache key and the request are the same place.
     expect(own.searchParams.get("latitude")).toBe("45.512");
     expect(own.searchParams.get("longitude")).toBe("25.368");
+  });
+
+  it("says where and for which hours (§484): the meeting point once read at its own pair, and the hours to the end", async () => {
+    await db.update(events).set({ latitude: 45.51234, longitude: 25.36789, endsAt: new Date("2026-09-26T07:00:00.000Z") });
+    const message = await renderOutboxMessage(row("EVENT_REMINDER", "r6"), db, NOW);
+    expect(message.text).toContain("Vremea la Parcul Tractorul, sâmbătă, 26 sept. 08:00–10:00: Ploaie, 6 °C, ploaie probabilă 80 %");
+    expect(message.text).toContain("Weather at Parcul Tractorul, Saturday, 26 Sept 08:00–10:00: Rain, 6 °C, rain likely 80%");
   });
 
   it("goes out without the row when Open-Meteo fails", async () => {

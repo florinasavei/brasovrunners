@@ -31,7 +31,7 @@ type Props = {
 
 /**
  * Who reads what "Scrie-ne" sends (`DECISIONS.md` §164; the owner: "I wanna allow CC on the
- * contact form so that Amalia can receive emails… configurable in the app").
+ * contact form so that [the Administrator] can receive emails… configurable in the app").
  *
  * The email plan's own shape (§100): a Server Component with one form, two ordinary text
  * boxes and a Save. No JavaScript decides anything; the service validates each address and

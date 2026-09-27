@@ -196,4 +196,14 @@ describe("§354 the note's and the reason's boxes in the refusal summary", () =>
     const english = await eventFormFieldLabels();
     expect(english["cancel.reasonEn"]).toContain("Why the event is cancelled (English): required in both languages, at most 500 characters");
   });
+
+  it("names the status once when «Încheiat» is refused (§483)", async () => {
+    catalogue = ro;
+    locale = "ro";
+    const label = (await eventFormFieldLabels())["event.eventStatus"];
+    expect(label).toBe(
+      "Ce fel de eveniment › Starea evenimentului: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat",
+    );
+    expect(label.match(/Starea/g)).toHaveLength(1);
+  });
 });

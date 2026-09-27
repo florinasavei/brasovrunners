@@ -48,6 +48,71 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(main.getByRole("table")).toBeVisible();
   });
 
+  // §487: the calendar page's head on a phone — the H1 and a «?» fold in place of the intro
+  // paragraph, the selects and ‹ Azi › on one row, the two chip pairs on the next.
+  test("keeps the calendar's head compact on a phone", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "the compact head is the phone's; from sm the head is unchanged");
+    await page.goto("/ro/calendar");
+    const main = page.locator("#main");
+    await expect(main.getByRole("table")).toBeVisible();
+
+    // The intro sentence is not a paragraph on a phone: it is inside the closed fold.
+    const intro = "Luna clubului: alergările săptămânale și cursele, pe zile.";
+    await expect(main.locator("p", { hasText: intro }).filter({ visible: true })).toHaveCount(0);
+
+    // The «?» is a native fold with a name and a 44-pixel target; opened, it shows the sentence and both links.
+    const fold = main.getByTestId("calendar-intro-help");
+    const summary = fold.locator("summary");
+    await expect(summary).toHaveAttribute("aria-label", /calendar/i);
+    const summaryBox = await summary.boundingBox();
+    expect(roundToTenth(summaryBox?.height ?? 0)).toBeGreaterThanOrEqual(44);
+    expect(roundToTenth(summaryBox?.width ?? 0)).toBeGreaterThanOrEqual(44);
+    await summary.click();
+    await expect(fold).toHaveAttribute("open", "");
+    await expect(fold.getByText(intro)).toBeVisible();
+    await expect(fold.getByRole("link", { name: "Google Calendar" })).toHaveAttribute("href", /^https:\/\/calendar\.google\.com\/calendar\/r\?cid=webcal%3A%2F%2F/);
+    await expect(fold.getByRole("link", { name: "Apple / Outlook / telefon" })).toHaveAttribute("href", /^webcal:\/\/.+\/ro\/events\/calendar\.ics$/);
+    await summary.click();
+    await expect(fold).not.toHaveAttribute("open", "");
+
+    // One row: the selects, the arrows and «Azi», none of them under 44 pixels, the row no taller than one of them.
+    const periodRow = main.getByTestId("calendar-period-row");
+    const rowBox = await periodRow.boundingBox();
+    expect(rowBox?.height ?? 99).toBeLessThanOrEqual(48);
+    for (const control of [
+      periodRow.locator("select").first(),
+      periodRow.locator("select").last(),
+      main.getByRole("link", { name: "Luna anterioară" }),
+      main.getByRole("link", { name: "Azi", exact: true }),
+      main.getByRole("link", { name: "Luna următoare" }),
+    ]) {
+      const box = await control.boundingBox();
+      expect(roundToTenth(box?.height ?? 0)).toBeGreaterThanOrEqual(44);
+    }
+
+    // The month's longest name fits its select at 320 pixels: the value is never clipped.
+    const fits = await periodRow.locator("select").first().evaluate((select: HTMLSelectElement) => {
+      const style = getComputedStyle(select);
+      const context = document.createElement("canvas").getContext("2d");
+      if (!context) return { widest: 0, room: 0 };
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const widest = Math.max(...Array.from(select.options, (option) => context.measureText(option.text).width));
+      const room = select.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      return { widest, room };
+    });
+    expect(fits.widest).toBeLessThanOrEqual(fits.room);
+
+    // The chip pairs on their own row, the period heading still the section's name.
+    const chipRow = main.getByTestId("calendar-chip-row");
+    for (const word of ["Lună", "An", "Calendar", "Listă"]) await expect(chipRow.getByText(word, { exact: true })).toBeVisible();
+    const chipBox = await chipRow.boundingBox();
+    expect(chipBox?.y ?? 0).toBeGreaterThanOrEqual((rowBox?.y ?? 0) + (rowBox?.height ?? 0) - 1);
+    await expect(page.locator("#calendar-title")).toHaveText(/\d{4}/);
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+
   // `DECISIONS.md` §157: a real tap at the switch's centre — the footer's fold once painted over it.
   test("switches to the dark scheme from the footer's corner, by a tap", async ({ page }) => {
     await page.goto("/ro/evenimente");

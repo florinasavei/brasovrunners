@@ -96,10 +96,13 @@ export default function GlyphChip({
     ) : (
       label
     );
+  // A chip with a tooltip says so, so a listing card lifts it above the title's cover (§486,
+  // `CARD_TAP_SX`): a tap on the night pill opens its sunset rather than the event's page.
+  const marked = tooltip ? { "data-has-tooltip": "true" } : {};
   const chip = href ? (
-    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} />
+    <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} {...marked} />
   ) : (
-    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} />
+    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} {...marked} />
   );
   // `describeChild` sets `aria-describedby` on the chip while the tooltip is open, so a screen
   // reader that already read the sentence out of `srSuffix` — part of the chip's own accessible

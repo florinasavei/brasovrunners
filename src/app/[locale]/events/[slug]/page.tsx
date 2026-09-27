@@ -19,7 +19,6 @@ import EventRoute from "@/modules/events/ui/EventRoute";
 import { hasRouteDescription } from "@/modules/events/domain/route-section";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
-import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
@@ -206,13 +205,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* Stated in words, not only by colour — BR-REQ-070-03 criterion 3. */}
       {event.eventStatus === "CANCELLED" && (
-        <Alert severity="error" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
+        <Alert severity="error" sx={{ mb: { xs: DENSITY.gapSm, sm: 3 } }}>
           {t("cancelledNotice")}
         </Alert>
       )}
       {/* The race is over (§82): said in words, and registration hides itself below. */}
       {event.eventStatus === "COMPLETED" && (
-        <Alert severity="info" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
+        <Alert severity="info" sx={{ mb: { xs: DENSITY.gapSm, sm: 3 } }}>
           {t("completedNotice")}
         </Alert>
       )}
@@ -252,7 +251,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           with the preview so the two cannot show it in different places. */}
       <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
-      <Divider sx={{ my: { xs: DENSITY.sectionGap, sm: 3 } }} />
+      <Divider sx={{ my: { xs: DENSITY.gapSm, sm: 3 } }} />
       {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
       <EventFacts event={event} now={now} stacked weather={weather} />
@@ -347,16 +346,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
       {!isRichTextEmpty(readRichText(event.rulesJson)) && (
-        <Box component="section" id="rules" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+        <Box component="section" id="rules" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
             {t("rules")}
           </Typography>
           <RichText body={event.rulesJson} />
         </Box>
       )}
-
-      {/* Last year's film, when the club has one, loaded only when opened (criterion 9). */}
-      <EventVideo videoUrl={event.videoUrl} posterUrl={event.videoPosterUrl} eventTitle={event.title} />
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       <StartList event={event} page={lista} />

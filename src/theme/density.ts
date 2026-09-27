@@ -16,7 +16,11 @@
  * - **`card-layout.ts`'s `LINE_GAP` and `GROUP_GAP`.** They are not a phone override at all —
  *   they apply at every width — and §366's title, the door and the fold measure their 44-pixel
  *   tap targets against those two numbers exactly (10px reach above a title, 8px below). Moving
- *   them would silently break a proven tap-target height, not just add whitespace.
+ *   them would silently break a proven tap-target height, not just add whitespace. What the
+ *   360-px density pass (§480) moved onto this scale is only what no reach is measured against:
+ *   the gap above a card's facts (`gapSm`, eight — the title's reach below its words, exactly,
+ *   when there is no summary), the gap between two facts (`gapXs`, six — the pills then ten under
+ *   a tight place link, its reach exactly) and the gap between two route pills (`gapXs`).
  * - **The listing card's horizontal padding (`CARD_BODY_SX`'s `px`)** and **`EventFacts.tsx`'s
  *   row layout.** §366/§375 measured the card's "when" row against an exact width budget — 94
  *   reserved pixels at every phone width, a 226px row at 320px, a 376px breakpoint for a series'
@@ -41,10 +45,12 @@ export const DENSITY = {
    */
   cardPadTop: 1.5,
   /**
-   * Between two cards in the listing's grid, on a phone. Was 1.5 (12px). The featured event's own
-   * padding step, `heroPad`, went with the hero (§470): the lead is a card, with a card's padding.
+   * Between two cards in the listing's grid, on a phone. Was 1.5 (12px), then 1 (8px) until the
+   * 360-px density pass (§480): six pixels, the outlined cards' own borders marking where one ends.
+   * The featured event's own padding step, `heroPad`, went with the hero (§470): the lead is a
+   * card, with a card's padding.
    */
-  cardGridGap: 1,
+  cardGridGap: 0.75,
   /**
    * The tightest step: between two lines of facts — the featured event's `<dl>` rows (was 1,
    * 8px) and, on an event page, under one answer before the next question (the stacked `dd`'s
@@ -60,9 +66,13 @@ export const DENSITY = {
    */
   gapSm: 1,
   /** A section's own separation from what precedes it — an alert, a divider, a filter row — on
-   * a phone. Was 3 (24px). */
+   * a phone. Was 3 (24px). On an event page, since the 360-px density pass's third round (§480),
+   * the sections under the facts — the route, "Linkuri și fișiere", the programme, the rules, the
+   * start list — take this step rather than `sectionGapLg`, and what used to take this one there
+   * (the divider over the facts, the partners, the registration door, the film, the notices) takes
+   * `gapSm`: one step tighter each, so the event page is on the pass as the listing is. */
   sectionGap: 2,
-  /** A large section break — a hero's foot, "Linkuri și fișiere", the programme, the rules, the
-   * past-events fold — on a phone. Was 4 (32px). */
+  /** A large section break — the past-events fold, the calendar's foot, the team page's contact
+   * line — on a phone. Was 4 (32px). */
   sectionGapLg: 2.5,
 } as const;

@@ -113,7 +113,10 @@ export default function ImageCropBox({
   focus = null,
   onFocusChange,
   card = false,
+  presets = CROP_PRESETS,
+  resting,
   labels,
+  testId = "rich-text-crop",
 }: {
   src: string;
   /** The photograph's own size: a shape is a pixel ratio, and this turns it into fractions. */
@@ -126,15 +129,30 @@ export default function ImageCropBox({
   onFocusChange?: (focus: ImageFocus | null) => void;
   /** A picture in the short description, which the listing card draws in its 16∶9 frame. */
   card?: boolean;
+  /** The shapes this picture may take; all five unless a place narrows them. */
+  presets?: readonly CropPreset[];
+  /**
+   * The shape held when nothing is stored and after «Fără decupaj» (§485): «Liber» by default,
+   * 16∶9 for a film's poster, whose box has that shape — the other shapes stay offered, and the
+   * page shows the largest 16∶9 part of whichever rectangle is drawn.
+   */
+  resting?: CropPreset;
   labels: ImageCropLabels;
+  /** The photograph's own test id: two boxes can be on one screen (a picture's, a poster's). */
+  testId?: string;
 }) {
   const surface = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   /** The rectangle being dragged, before it is worth storing; `null` between gestures. */
   const [draft, setDraft] = useState<ImageCrop | null>(null);
   const [draftFocus, setDraftFocus] = useState<ImageFocus | null>(null);
-  /** The shape held while drawing: the one the stored crop was drawn with, or «Liber». */
-  const [preset, setPreset] = useState<CropPreset>(() => presetOf(crop, intrinsic));
+  /** The shape held after «Fără decupaj»: the place's own, else «Liber» where it is offered, else the first. */
+  const restingPreset: CropPreset = resting && presets.includes(resting) ? resting : presets.includes("free") ? "free" : presets[0];
+  /** The shape held while drawing: the one the stored crop was drawn with, or the resting one. */
+  const [preset, setPreset] = useState<CropPreset>(() => {
+    const stored = presetOf(crop, intrinsic);
+    return presets.includes(stored) ? stored : restingPreset;
+  });
   const [target, setTarget] = useState<Target>("crop");
   const ratio = preset === "free" ? null : PRESET_RATIOS[preset];
   const focusing = card && target === "focus";
@@ -220,7 +238,7 @@ export default function ImageCropBox({
         data-testid="rich-text-crop-presets"
         sx={{ flexWrap: "wrap", mb: 1 }}
       >
-        {CROP_PRESETS.map((value) => (
+        {presets.map((value) => (
           <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
             {labels.preset[value]}
           </ToggleButton>
@@ -248,7 +266,7 @@ export default function ImageCropBox({
       )}
       <Box
         ref={surface}
-        data-testid="rich-text-crop"
+        data-testid={testId}
         sx={{
           position: "relative",
           width: "100%",
@@ -407,7 +425,7 @@ export default function ImageCropBox({
       <Typography variant="caption" color="text.secondary" component="p">
         {labels.help}
       </Typography>
-      <Button size="small" onClick={() => { setPreset("free"); commit(null); }} disabled={crop === null} startIcon={<ResetGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
+      <Button size="small" onClick={() => { setPreset(restingPreset); commit(null); }} disabled={crop === null} startIcon={<ResetGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
         {labels.reset}
       </Button>
       {card && (

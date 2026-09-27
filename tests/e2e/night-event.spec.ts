@@ -168,7 +168,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
-    await openEditorBox(page, "Data și ora");
+    await openEditorBox(page, "Când și unde");
     await fillDateField(page, "Începutul evenimentului", JUNE);
     await openEditorBox(page, "Traseul");
     await expect(autoLine(page)).toHaveText(/^Automat: mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/);
@@ -202,7 +202,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
-    await openEditorBox(page, "Data și ora");
+    await openEditorBox(page, "Când și unde");
     // Back to November, light at 16:00 (civil dusk that day is 17:17), but 90 minutes of duration
     // crosses it — a start in daylight that finishes after dusk (§394).
     await fillDateField(page, "Începutul evenimentului", NOVEMBER);

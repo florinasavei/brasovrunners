@@ -125,6 +125,11 @@ describe("BR-REQ-090-05 criterion 1 the money question, answered with a number",
       if (row.nextCost) expect(row.nextCost, row.id).toMatch(/(\$|EUR)/);
     }
   });
+
+  it("names no next plan for the domain: the .ro is dropped, the next step is renewing the .com (§483)", () => {
+    const domain = platformServices(BASE).find((row) => row.id === "domain");
+    expect(domain).toMatchObject({ nextPlan: null, nextCost: null });
+  });
 });
 
 describe("BR-REQ-090-05 criterion 4 how close this deployment is, right now", () => {

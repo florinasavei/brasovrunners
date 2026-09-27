@@ -166,9 +166,10 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
   });
 
   it("is on both pages, and the create button's gap follows it", () => {
-    // One Locul box for the editor and the create page (§303, §350).
-    expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain("<PlaceBox");
-    expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("<PlaceBox");
+    // One «Când și unde» card for the editor and the create page (§303, §350), holding the place (§481).
+    expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain("<WhenBox");
+    expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("<WhenBox");
+    expect(read("src/modules/content/events/ui/boxes/WhenBox.tsx")).toContain("<PlaceFields event={event} mayEditSettings languages={languages} />");
     // The create button and the Publicare list ask the one shared check, which follows the switch.
     expect(read("src/modules/content/events/ui/CreateAndPublishButton.tsx")).toContain("missingForPublish(");
     const check = read("src/modules/content/events/ui/publish-check.ts");

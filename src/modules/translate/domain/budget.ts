@@ -1,4 +1,7 @@
 import { z } from "zod";
+import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
+import { protectPlaceholders } from "./placeholders";
+import { richTextSegments, segmentCharacters } from "./rich-text-html";
 
 /**
  * The club's daily allowance of translated characters (`DECISIONS.md` §464).
@@ -51,3 +54,29 @@ export function budgetAllows(usedToday: number, asked: number, budget: Translati
   const remaining = Math.max(0, budget.dailyCharacters - usedToday);
   return { allowed: asked <= remaining, remaining };
 }
+
+/**
+ * The characters a press sends, counted exactly as the service counts them against the budget
+ * (§464): a rich text's lines as the HTML that travels, tags included; a plain box's words with
+ * its `{placeholders}` as the numbered markers that travel; a blank box nothing. The service and
+ * «Copiază și tradu tot» both read this one function (§482), so the figure the question names
+ * before the press is the figure the budget is charged after it.
+ */
+export function charactersToSend(items: readonly ({ kind: "text"; text: string } | { kind: "rich"; doc: RichTextDoc })[]): number {
+  let total = 0;
+  for (const item of items) {
+    if (item.kind === "rich") {
+      for (const segment of richTextSegments(item.doc)) total += segmentCharacters(segment);
+    } else if (item.text.trim() !== "") {
+      total += protectPlaceholders(item.text).text.length;
+    }
+  }
+  return total;
+}
+
+/**
+ * Above this many characters «Copiază și tradu tot» always asks first, naming the figure (§482):
+ * two fifths of the default day (50 000), so one press of a long race page never spends most of
+ * the day's allowance without the person seeing the number.
+ */
+export const ASK_ABOVE_CHARACTERS = 20_000;

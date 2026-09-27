@@ -48,7 +48,7 @@ export default function EventLinks({
   if (rows.length === 0) return null;
 
   return (
-    <Box component="section" id="links" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+    <Box component="section" id="links" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
         {heading}
       </Typography>

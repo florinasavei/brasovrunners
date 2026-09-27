@@ -10,7 +10,7 @@ import { routing } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { forecastsForEvents } from "@/modules/weather/source";
-import { groupSeries } from "@/modules/events/domain/series";
+import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import { listingSections } from "@/modules/events/domain/listing";
 import {
   activeFilterCount,
@@ -175,7 +175,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2.5 } }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapXs, sm: 2.5 } }}>
         {t("intro")}
       </Typography>
 
@@ -240,11 +240,12 @@ async function ListingLead({
           of kind chips and §401's «Colaborare» chip beside them. Nothing to narrow and nothing
           ticked, it does not render, and nothing on the listing moves for that.
 
-          The gap around it is `DENSITY.gapSm` (§458, tightening §401's `sectionGap` — the owner: "in
-          general prea mult padding între carduri și restul"): 8px on a phone and 12px from `sm`,
-          above and below alike. */}
+          The gap around it is `DENSITY.gapXs` (§458, tightening §401's `sectionGap` — the owner: "in
+          general prea mult padding între carduri și restul" — and again in §480, the 360-px density
+          pass, 8px to 6): 6px on a phone and 12px from `sm`, above and below alike, the intro's
+          own margin above it the same six. */}
       {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
-        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 }, mb: { xs: DENSITY.gapSm, sm: 1.5 } }}>
+        <Box sx={{ mt: { xs: DENSITY.gapXs, sm: 1.5 }, mb: { xs: DENSITY.gapXs, sm: 1.5 } }}>
           <ListingFilterPanel
             locale={locale}
             pathname="/events"
@@ -361,6 +362,9 @@ async function PastEvents({
   const tEvent = await getTranslations("Event");
   // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
   const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
+  // A date left alone on its card by the filter or the cut still wears its series' rhythm (§486):
+  // the series is read off every past row the page holds, before either.
+  const seriesOf = seriesLookup(rows);
   const onlyOneType = sourceType !== undefined && activeFilterCount(filter) === 1;
 
   return (
@@ -381,7 +385,7 @@ async function PastEvents({
           series.members.length > 1 ? (
             <SeriesCard key={series.key} members={series.members} index={index} now={now} />
           ) : (
-            <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
+            <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} />
           ),
         )}
       </Box>
@@ -423,6 +427,10 @@ async function ListingBody({
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
+  // The series each date belongs to, read off the whole list before the filters and the lead
+  // (§486): a weekly run's one matching date, or the lead that is one of a series' dates, is still
+  // a repeated event, and its card says so with the series card's repeat chip and rhythm.
+  const seriesOf = seriesLookup(events);
 
   // Nothing matches the filters: say so in those words, not "nothing is published" (§413) — the
   // panel above still names every tick and "Șterge filtrele" is one press away.
@@ -449,13 +457,20 @@ async function ListingBody({
   return (
     <Box component="ul" sx={CARD_GRID_SX} data-testid="listing-cards">
       {featured && raceWeekDays !== null && (
-        <EventCard event={featured} index={0} now={now} weather={weatherOf(featured)} featured={{ raceWeekDays }} />
+        <EventCard event={featured} index={0} now={now} weather={weatherOf(featured)} featured={{ raceWeekDays }} seriesDates={seriesOf(featured)} />
       )}
       {cards.map((series, index) =>
         series.members.length > 1 ? (
           <SeriesCard key={series.key} members={series.members} index={index + offset} now={now} weather={weatherOf(series.members[0])} />
         ) : (
-          <EventCard key={series.key} event={series.members[0]} index={index + offset} now={now} weather={weatherOf(series.members[0])} />
+          <EventCard
+            key={series.key}
+            event={series.members[0]}
+            index={index + offset}
+            now={now}
+            weather={weatherOf(series.members[0])}
+            seriesDates={seriesOf(series.members[0])}
+          />
         ),
       )}
     </Box>

@@ -27,13 +27,13 @@ describe("the Zitadel invitation", () => {
       "/v2/users/human": () => new Response(JSON.stringify({ userId: "42" }), { status: 201 }),
       "/v2/users/42/invite_code": () => new Response(JSON.stringify({ inviteCode: "" }), { status: 200 }),
     });
-    const outcome = await inviteZitadelUser({ email: "dani@example.ro", displayName: "Dani Pop", locale: "ro" }, { ...deps, fetch: call });
+    const outcome = await inviteZitadelUser({ email: "mihai@example.ro", displayName: "Mihai Pop", locale: "ro" }, { ...deps, fetch: call });
     expect(outcome).toEqual({ kind: "invited" });
     expect(calls[0].url).toBe("https://id.example.test/v2/users/human");
     expect(calls[0].body).toMatchObject({
-      username: "dani@example.ro",
-      profile: { givenName: "Dani", familyName: "Pop", displayName: "Dani Pop", preferredLanguage: "ro" },
-      email: { email: "dani@example.ro", isVerified: true },
+      username: "mihai@example.ro",
+      profile: { givenName: "Mihai", familyName: "Pop", displayName: "Mihai Pop", preferredLanguage: "ro" },
+      email: { email: "mihai@example.ro", isVerified: true },
     });
     expect(calls[1].url).toBe("https://id.example.test/v2/users/42/invite_code");
     expect(calls[1].body).toEqual({ sendCode: { applicationName: "Brașov Runners" } });
@@ -69,8 +69,8 @@ describe("the Zitadel invitation", () => {
 
   /**
    * §170. The lookup was by login name alone, and Zitadel scopes a login name to the
-   * organization's primary domain — so a colleague created as `dani@example.ro` has the login
-   * name `dani@example.ro@<org>.zitadel.cloud`, an equality match on the address finds nobody,
+   * organization's primary domain — so a colleague created as `mihai@example.ro` has the login
+   * name `mihai@example.ro@<org>.zitadel.cloud`, an equality match on the address finds nobody,
    * and "Retrimite invitația" told the owner there was no account for somebody who had one.
    */
   it("resends by looking the account up by its email address", async () => {
@@ -78,8 +78,8 @@ describe("the Zitadel invitation", () => {
       "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "7" }] }), { status: 200 }),
       "/v2/users/7/invite_code": () => new Response("{}", { status: 200 }),
     });
-    expect(await resendZitadelInvite("dani@example.ro", { ...deps, fetch: call })).toEqual({ kind: "invited" });
-    expect(calls[0].body).toMatchObject({ queries: [{ emailQuery: { emailAddress: "dani@example.ro" } }] });
+    expect(await resendZitadelInvite("mihai@example.ro", { ...deps, fetch: call })).toEqual({ kind: "invited" });
+    expect(calls[0].body).toMatchObject({ queries: [{ emailQuery: { emailAddress: "mihai@example.ro" } }] });
     // One search was enough: the fallback below is not paid for when the first one answers.
     expect(calls.filter((entry) => entry.url.endsWith("/v2/users")).length).toBe(1);
   });
@@ -94,8 +94,8 @@ describe("the Zitadel invitation", () => {
       },
       "/v2/users/9/invite_code": () => new Response("{}", { status: 200 }),
     });
-    expect(await resendZitadelInvite("dani@example.ro", { ...deps, fetch: call })).toEqual({ kind: "invited" });
-    expect(calls[1].body).toMatchObject({ queries: [{ loginNameQuery: { loginName: "dani@example.ro" } }] });
+    expect(await resendZitadelInvite("mihai@example.ro", { ...deps, fetch: call })).toEqual({ kind: "invited" });
+    expect(calls[1].body).toMatchObject({ queries: [{ loginNameQuery: { loginName: "mihai@example.ro" } }] });
 
     const nobody = fakeFetch({ "/v2/users": () => new Response(JSON.stringify({ result: [] }), { status: 200 }) });
     expect(await resendZitadelInvite("ghost@example.ro", { ...deps, fetch: nobody.call })).toEqual({
@@ -115,7 +115,7 @@ describe("the account verbs", () => {
       "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
       "/v2/users/42/password_reset": () => new Response("{}", { status: 200 }),
     });
-    expect(await sendZitadelPasswordReset("dani@example.ro", { ...deps, fetch: call })).toEqual({ kind: "done" });
+    expect(await sendZitadelPasswordReset("mihai@example.ro", { ...deps, fetch: call })).toEqual({ kind: "done" });
     expect(calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/password_reset");
     // The link, not a code handed back to us: nothing here ever holds a password or its code.
     expect(calls.at(-1)?.body).toEqual({ sendLink: { notificationType: "NOTIFICATION_TYPE_Email" } });
@@ -129,21 +129,21 @@ describe("the account verbs", () => {
       "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
       "/v2/users/42/deactivate": () => new Response("{}", { status: 200 }),
     });
-    expect(await setZitadelUserActive("dani@example.ro", false, { ...deps, fetch: off.call })).toEqual({ kind: "done" });
+    expect(await setZitadelUserActive("mihai@example.ro", false, { ...deps, fetch: off.call })).toEqual({ kind: "done" });
     expect(off.calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/deactivate");
 
     const on = fakeFetch({
       "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
       "/v2/users/42/reactivate": () => new Response("{}", { status: 200 }),
     });
-    expect(await setZitadelUserActive("dani@example.ro", true, { ...deps, fetch: on.call })).toEqual({ kind: "done" });
+    expect(await setZitadelUserActive("mihai@example.ro", true, { ...deps, fetch: on.call })).toEqual({ kind: "done" });
     expect(on.calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/reactivate");
 
     // Without the key nothing is attempted: "not configured" is an answer, not a failure.
-    expect(await setZitadelUserActive("dani@example.ro", false, { issuer: "", token: "", fetch: off.call })).toEqual({
+    expect(await setZitadelUserActive("mihai@example.ro", false, { issuer: "", token: "", fetch: off.call })).toEqual({
       kind: "unconfigured",
     });
-    expect(await sendZitadelPasswordReset("dani@example.ro", { issuer: "", token: "", fetch: off.call })).toEqual({
+    expect(await sendZitadelPasswordReset("mihai@example.ro", { issuer: "", token: "", fetch: off.call })).toEqual({
       kind: "unconfigured",
     });
   });
@@ -153,7 +153,7 @@ describe("the account verbs", () => {
       "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
       "/v2/users/42/deactivate": () => new Response(JSON.stringify({ message: "permission denied" }), { status: 403 }),
     });
-    expect(await setZitadelUserActive("dani@example.ro", false, { ...deps, fetch: refused.call })).toEqual({
+    expect(await setZitadelUserActive("mihai@example.ro", false, { ...deps, fetch: refused.call })).toEqual({
       kind: "failed",
       reason: "403 permission denied",
     });
@@ -173,7 +173,7 @@ describe("the accounts the key can see", () => {
           JSON.stringify({
             result: [
               { userId: "1", username: "Florin@Example.ro", loginNames: ["Florin@Example.ro@club.zitadel.cloud"], human: { email: { email: "Florin@Example.ro" } } },
-              { userId: "2", username: "dani", preferredLoginName: "dani@club.zitadel.cloud", human: { email: { email: "dani@example.ro" } } },
+              { userId: "2", username: "mihai", preferredLoginName: "mihai@club.zitadel.cloud", human: { email: { email: "mihai@example.ro" } } },
               { userId: "3" },
             ],
           }),
@@ -185,11 +185,11 @@ describe("the accounts the key can see", () => {
     if (listed.kind !== "listed") return;
     expect(listed.count).toBe(3);
     expect([...listed.accounts].sort()).toEqual([
-      "dani",
-      "dani@club.zitadel.cloud",
-      "dani@example.ro",
       "florin@example.ro",
       "florin@example.ro@club.zitadel.cloud",
+      "mihai",
+      "mihai@club.zitadel.cloud",
+      "mihai@example.ro",
     ]);
     expect(calls[0].body).toEqual({ query: { limit: 200 }, queries: [{ typeQuery: { type: "TYPE_HUMAN" } }] });
     expect((calls[0] as { url: string }).url).toBe("https://id.example.test/v2/users");

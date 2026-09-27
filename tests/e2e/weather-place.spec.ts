@@ -223,7 +223,7 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
   await hydrated(page);
   const editorUrl = page.url();
 
-  await openEditorBox(page, "Data și ora");
+  await openEditorBox(page, "Când și unde");
   // What is there now, read back from the hidden inputs `WallTimeField` posts under, so the
   // `finally` below can put exactly this back — the seed's own `nextWeekday(0, 21)` has no
   // fixed value to restore to.
@@ -259,7 +259,7 @@ async function runFeaturedHeroWeatherCase(page: Page): Promise<void> {
     // expects it — three weeks out, the seed's own dates — even on a failed assertion.
     await page.goto(editorUrl);
     await hydrated(page);
-    await openEditorBox(page, "Data și ora");
+    await openEditorBox(page, "Când și unde");
     await moveFeaturedRaceTimes(page, original.startDate, original.startTime, original.raceDate, original.raceTime);
   }
 }

@@ -60,7 +60,7 @@ describe("§416 the event's «Coordonate»", () => {
 
   beforeEach(async () => {
     await resetTables(db);
-    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Amalia", role: "ADMIN" }).returning();
+    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
   });
 
   const rowOf = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];

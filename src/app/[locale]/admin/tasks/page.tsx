@@ -816,7 +816,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             <Box
               component="li"
               key={task.id}
-              sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
+              // An address for the row: the editors' grey «Copiază și tradu tot» links `#task-translation` (§482).
+              id={`task-${task.id}`}
+              sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, scrollMarginTop: 16 }}
             >
               <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
                 <Chip size="small" color={STATE_COLOR[task.state]} label={task.label ? t(`stateLabel.${task.label}`) : t(`state.${task.state}`)}

@@ -3,7 +3,7 @@ import { z } from "zod";
 
 /**
  * Who reads what the contact form sends (`DECISIONS.md` §164; the owner: "I wanna allow CC on
- * the contact form so that Amalia can receive emails… I need these CC's to be configurable in
+ * the contact form so that [the Administrator] can receive emails… I need these CC's to be configurable in
  * the app").
  *
  * Pure: no database, no environment. The club edits these on `/admin/emails`, they are stored
@@ -83,7 +83,7 @@ export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
 export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [] };
 
 /**
- * A typed line — "club@…, amalia@…" — as a list. Commas and semicolons both, because both are
+ * A typed line — "club@…, secretar@…" — as a list. Commas and semicolons both, because both are
  * what people type, and the empty entries a trailing separator leaves are dropped rather than
  * rejected, as `env.ts`'s `allowlist` drops them.
  *

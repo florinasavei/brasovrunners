@@ -67,7 +67,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "The place is announced soon.");
     await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
-    await expect(editorBox(page, "Locul").getByTestId("required-place")).toHaveText("complet");
+    await expect(editorBox(page, "Când și unde").getByTestId("required-place")).toHaveText("complet");
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await confirmDialog(page, "Creezi și publici evenimentul?");
@@ -103,7 +103,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await page.goto(editorUrl);
     await hydrated(page);
     // The Locul box is folded on the editor, and its closed line says the place is to come.
-    const place = await openEditorBox(page, "Locul");
+    const place = await openEditorBox(page, "Când și unde");
     await expect(place.locator(":scope > summary")).toContainText("Se anunță mai târziu");
     await expect(page.getByRole("switch", { name: "Locația se anunță mai târziu" })).toBeChecked();
     await expect(field("event.locationName")).toBeHidden();
@@ -141,7 +141,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await expect(page.locator("#admin-alert")).toContainText("Modificările au fost salvate.", { timeout: 15_000 });
     await expect(page.getByTestId("place-announced")).toHaveCount(0);
     await hydrated(page);
-    await openEditorBox(page, "Locul");
+    await openEditorBox(page, "Când și unde");
     await expect(page.getByRole("switch", { name: "Locația se anunță mai târziu" })).toBeChecked();
     await expect(field("event.mapUrl")).toHaveValue("");
 

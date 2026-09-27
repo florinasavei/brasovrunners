@@ -89,7 +89,7 @@ const reading = (overrides: Partial<WeatherReading> = {}): WeatherReading => ({
   ...overrides,
 });
 
-const forecast = (start: WeatherReading): EventForecast => ({ start, hours: [start], place: "typed" });
+const forecast = (start: WeatherReading): EventForecast => ({ start, hours: [start], span: [start], place: "typed" });
 
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");

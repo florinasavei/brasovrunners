@@ -49,8 +49,9 @@ export type ServiceId = "domain" | "mailgun" | "vercel" | "neon" | "zitadel" | "
  * What this service costs the club per year, right now.
  *
  * `notTaken` is not `free`: nothing is bought, so nothing is being paid — but there is no free
- * plan to stay on either. No row carries it today, since the domain was bought on 2026-09-16; it
- * stays in the type because the `.ro` will be exactly this until it is bought.
+ * plan to stay on either. No row carries it today, since the domain was bought on 2026-09-16 and
+ * the `.ro` is not bought at all (the owner, 2026-09-26: one address for search engines); it stays
+ * in the type for a paid service the club has not taken yet.
  */
 export type AnnualCost =
   | { kind: "free" }
@@ -151,8 +152,9 @@ export type ServiceRow = {
  * at. This is the **registry** price, which no club can buy at directly: the registrar (ROMARG,
  * `DECISIONS.md` §56) adds its margin and Romania's VAT and invoices in lei at the National
  * Bank's rate on the day, which is why the page calls this the registry price and not the
- * invoice. The owner bought the `.com` on 2026-09-16 and a `.ro` follows a year later
- * (`DECISIONS.md` §55); the `.ro` is 12 EUR + VAT at ROTLD and is this row's "next plan".
+ * invoice. The owner bought the `.com` on 2026-09-16 (`DECISIONS.md` §55). The `.ro` that §55
+ * planned a year later was dropped on 2026-09-26 (one address for search engines, §435), so the
+ * row has no "next plan": the next step is renewing the `.com`, which `/admin/tasks` carries (§483).
  *
  * Romania's standard VAT has been 21% since 2025-08-01. The page prints the amount with "+ VAT"
  * and the rate beside it rather than one blended number, because those are two facts with two
@@ -161,8 +163,6 @@ export type ServiceRow = {
 export const DOMAIN_PRICE_USD_PER_YEAR = 10.97;
 export const DOMAIN_PRICE_CHECKED_ON = "2026-09-16";
 export const ROMANIAN_VAT_PERCENT = 21;
-/** ROTLD's `.ro` registration fee, checked 2026-09-16 with the `.com` (`DECISIONS.md` §55). */
-export const RO_DOMAIN_PRICE_EUR_PER_YEAR = 12;
 
 /**
  * Cloudflare R2, where the pictures live (§66, §414): 10 GB-month of storage free, then
@@ -263,11 +263,10 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       // The one fact about the domain the software can read: is *this* deployment on it.
       headroom: { kind: "derived", reached: input.clubDomainBound },
       severity: "ok",
-      // The `.ro`, a year after the `.com`, both alive at once (§55). The bare amount and its
-      // currency: "+ VAT", "per year" and the conversion to lei are words, so they live in the
-      // catalogues and not in a string built here.
-      nextPlan: ".ro (ROTLD)",
-      nextCost: `${RO_DOMAIN_PRICE_EUR_PER_YEAR} EUR`,
+      // No next plan: the `.ro` of §55 is dropped (2026-09-26), and renewing the `.com` for
+      // several years is the catalogue's `whenCrossed` sentence and the renewal row (§435, §483).
+      nextPlan: null,
+      nextCost: null,
       bump: null,
     },
     {

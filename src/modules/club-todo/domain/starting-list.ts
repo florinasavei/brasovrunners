@@ -17,15 +17,19 @@ import type { ClubTodoItem } from "./club-todo";
  * the same line in the list the write starts from.
  */
 
-/** The names «pentru cine» offers before anybody types one; any other name is kept as typed. */
-export const CLUB_TODO_OWNER_SUGGESTIONS: readonly string[] = ["Amalia", "Dani", "Florin"];
+/**
+ * What «pentru cine» offers before anybody types one; any other name is kept as typed. Roles, not
+ * first names: the repository is public (§483), and a list is the Administrator's or the Organizer's
+ * whoever holds the role this year.
+ */
+export const CLUB_TODO_OWNER_SUGGESTIONS: readonly string[] = ["Administrator", "Organizator"];
 
 /** When the lists were written: the `createdAt` of every starting line. */
 const WRITTEN_AT = "2026-09-26T12:00:00.000Z";
 const AFTER_THE_TENTH = "2026-10-10";
 const MAILGUN_PLAN_SWITCH = "2026-11-01";
 
-const AMALIA: ReadonlyArray<readonly [text: string, due?: string]> = [
+const ADMINISTRATOR: ReadonlyArray<readonly [text: string, due?: string]> = [
   ["Intră în backoffice (/ro/admin) cu contul tău. Dacă nu merge, îmi scrii."],
   [
     "Fă-ți un cont de Gmail (dacă nu ai deja), ca să îți pot da delegare pe adresa de Gmail a clubului — fără să îți dau parola. Îmi trimiți adresa.",
@@ -39,7 +43,7 @@ const AMALIA: ReadonlyArray<readonly [text: string, due?: string]> = [
     "Textele — le citești și le aprobi: (a) descrierile evenimentelor, copiate de pe Facebook: backoffice → Evenimente → fiecare eveniment → «Rezumat» și «Descrierea evenimentului», română și engleză → «Salvează»; (b) textele legale din backoffice → Legal (termeni, nota de confidențialitate, declarațiile) — scrise cu AI, notează ce ți se pare greșit; ideal, un avocat citește paragraful de răspundere și §5 din termeni; (c) după release-ul de azi (îți scriu când e gata): aprobi cele cinci texte noi, într-o singură ședință: backoffice → Legal → «Versiune nouă» → «pornește de la textul platformei» → completezi cele patru date ale clubului → «Aprobă». De cinci ori: termeni, nota de confidențialitate, declarația de cursă, declarația pentru asfalt, declarația pentru trail. Până atunci lista publică de participanți arată doar confirmații.",
   ],
   [
-    "Poze pentru Happy Monday, Running Up That Hill și Crosul Aniversar: pun eu ceva acum; tu le poți înlocui oricând (backoffice → eveniment → «Rezumat» → butonul de poză din editor; la încărcare alege «Calitate: Normală»).",
+    "Poze pentru Happy Monday, Running Up That Hill și Crosul Aniversar: pun eu ceva acum; tu le poți înlocui oricând (backoffice → eveniment → «Rezumat» → butonul de poză din editor; la încărcare alege «Calitate: Medie»).",
   ],
   [
     "Crosul Aniversar: scrie textele (se poate și mai târziu); evenimentul e deocamdată fără locație, se completează când știm. Decidem împreună când dăm drumul la înscrieri și câte locuri.",
@@ -55,15 +59,15 @@ const AMALIA: ReadonlyArray<readonly [text: string, due?: string]> = [
     "Pagina «Echipa»: backoffice → Pagini → Echipa → pune cardurile cu noi și cu voluntarii care vor să apară (poză, nume, rol) → «Publică».",
   ],
   [
-    "După 10 octombrie: voluntarii de la masă (scanează QR-ul și dau kitul) — Dani îți dă numele și emailurile lor; le faci conturile din backoffice → Echipa → «Adaugă» (primesc invitația pe email).",
+    "După 10 octombrie: voluntarii de la masă (scanează QR-ul și dau kitul) — Organizatorul îți dă numele și emailurile lor; le faci conturile din backoffice → Echipa → «Adaugă» (primesc invitația pe email).",
     AFTER_THE_TENTH,
   ],
 ];
 
-const DANI: ReadonlyArray<readonly [text: string, due?: string]> = [
+const ORGANIZER: ReadonlyArray<readonly [text: string, due?: string]> = [
   ["Intră în backoffice (/ro/admin) cu contul tău → «Înscrieri». Dacă nu merge sau nu vezi lista, îmi scrii."],
   [
-    "Confirmă datele evenimentelor de pe site (/ro/evenimente): zilele, orele, locurile de întâlnire, traseele — Happy Monday, Running Up That Hill, Crosul Aniversar. Ce e greșit îi spui Amaliei, ea corectează în backoffice.",
+    "Confirmă datele evenimentelor de pe site (/ro/evenimente): zilele, orele, locurile de întâlnire, traseele — Happy Monday, Running Up That Hill, Crosul Aniversar. Ce e greșit îi spui Administratorului, care corectează în backoffice.",
   ],
   [
     "Test complet pe QA (site-ul de test, nu cel real): pe QA → /ro/evenimente → «Crosul de toamnă» → «Înscrie-te». Completează formularul cu numele și emailul tău → primești un email cu link → confirmi → semnezi declarația pe telefon → primești PDF-ul și codul QR. Apoi intră în backoffice-ul de pe QA (/ro/admin) → «Înscrieri» și verifică că apari «Confirmat».",
@@ -78,12 +82,12 @@ const DANI: ReadonlyArray<readonly [text: string, due?: string]> = [
     "Descarcă numerele de concurs (bib-urile): backoffice → Evenimente → cursa → «Numere de concurs» → «Descarcă foaia» (A4, două pe pagină). Verifică că se tipăresc bine.",
   ],
   [
-    "După 10 octombrie, împreună cu Amalia: dăm drumul la înscrieri pentru Crosul Aniversar și decidem postările pe social media; îi dai Amaliei numele și emailurile voluntarilor de la masă (ea le face conturile), iar tu le faci un instructaj scurt cu pașii de la punctul 5.",
+    "După 10 octombrie, împreună cu Administratorul: dăm drumul la înscrieri pentru Crosul Aniversar și decidem postările pe social media; îi dai Administratorului numele și emailurile voluntarilor de la masă (el le face conturile), iar tu le faci un instructaj scurt cu pașii de la punctul 5.",
     AFTER_THE_TENTH,
   ],
 ];
 
-function lines(owner: string, prefix: string, source: typeof AMALIA, firstOrder: number): ClubTodoItem[] {
+function lines(owner: string, prefix: string, source: typeof ADMINISTRATOR, firstOrder: number): ClubTodoItem[] {
   return source.map(([text, due], index) => ({
     id: `start-${prefix}-${String(index + 1).padStart(2, "0")}`,
     text,
@@ -99,5 +103,5 @@ function lines(owner: string, prefix: string, source: typeof AMALIA, firstOrder:
 
 /** The nineteen starting lines: the Administrator's twelve, then the Organizer's seven. */
 export function startingClubTodo(): ClubTodoItem[] {
-  return [...lines("Amalia", "amalia", AMALIA, 1), ...lines("Dani", "dani", DANI, AMALIA.length + 1)];
+  return [...lines("Administrator", "admin", ADMINISTRATOR, 1), ...lines("Organizator", "organizer", ORGANIZER, ADMINISTRATOR.length + 1)];
 }

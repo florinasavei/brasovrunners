@@ -7,8 +7,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
  *
  * Found by re-review: the first version read `parseImageQuality(stored) ?? inMemory`, and
  * `parseImageQuality(null)` is the default — so in a private window, where every write throws
- * and every read answers nothing, «Înaltă» was chosen, shown for one render, and uploaded as
- * «Normală». Each case loads the module afresh, because its memory is the module's own.
+ * and every read answers nothing, «Mare» was chosen, shown for one render, and uploaded as
+ * «Medie». Each case loads the module afresh, because its memory is the module's own.
  */
 type Store = { getItem(key: string): string | null; setItem(key: string, value: string): void };
 
@@ -64,7 +64,7 @@ describe("§414 the remembered quality", () => {
   });
 
   it("never reads back an older value once a write has failed", async () => {
-    // The store holds «Înaltă» from before and then refuses the change to «Normală».
+    // The store holds «Mare» from before and then refuses the change to «Medie».
     const { readRemembered, rememberQuality } = await withStore({
       getItem: () => "high",
       setItem: () => {

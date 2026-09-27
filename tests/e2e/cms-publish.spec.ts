@@ -674,7 +674,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
 
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
     // "Data și ora" is folded on the editor (§350).
-    await openEditorBox(page, "Data și ora");
+    await openEditorBox(page, "Când și unde");
     await fillDateField(page, "Începutul evenimentului", "2027-05-13");
     await expect(field("event.startsAtDate")).toHaveValue("2027-05-13");
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-13");
@@ -976,7 +976,7 @@ test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time alwa
     // A full page load: the scriptless box's own hydration swap is where finding 1's bug lived,
     // and it is the same swap this display format has to survive.
     await loadAfresh(page);
-    await openEditorBox(page, "Data și ora");
+    await openEditorBox(page, "Când și unde");
 
     await readsTheClubsWay();
   });
@@ -1042,7 +1042,7 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await expect(page.getByTestId("create-draft-line")).toContainText("și datele seriei din următoarele 8 săptămâni");
 
     await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
-    await expect(editorBox(page, "Locul").getByTestId("required-place")).toHaveText("complet");
+    await expect(editorBox(page, "Când și unde").getByTestId("required-place")).toHaveText("complet");
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);

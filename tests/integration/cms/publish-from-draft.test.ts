@@ -68,8 +68,8 @@ describe("BR-REQ-051-01 «Publică» from a draft in one press (§423)", () => {
     [admin, organizer, copywriter] = await db
       .insert(staffUsers)
       .values([
-        { email: "admin@dev.test", displayName: "Amalia", role: "ADMIN" },
-        { email: "organizer@dev.test", displayName: "Dani", role: "MODERATOR" },
+        { email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" },
+        { email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" },
         { email: "copywriter@dev.test", displayName: "Ioana", role: "COPYWRITER" },
       ])
       .returning();

@@ -70,6 +70,21 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
     reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
   },
   {
+    file: "src/modules/events/ui/CalendarHeader.tsx",
+    line: "rowGap: { xs: 0, sm: 1 }",
+    reason: "zero on a phone: the period row and the chip row are each 44 pixels of tap target already (§487)",
+  },
+  {
+    file: "src/modules/events/ui/CalendarHeader.tsx",
+    line: "spacing={{ xs: 0, sm: 0.5 }}",
+    reason: "zero on a phone: ‹, «Azi» and › are adjacent 44-pixel targets, so the row fits beside the selects at 320px (§487)",
+  },
+  {
+    file: "src/modules/events/ui/CalendarPicker.tsx",
+    line: 'pl: { xs: 1, sm: "14px" }',
+    reason: "a select's text inset, not whitespace between elements — narrower so the month fits beside ‹ Azi › (§487)",
+  },
+  {
     file: "src/modules/events/ui/EventCalendar.tsx",
     line: "p: { xs: 0.25, sm: 0.5 },",
     reason: "a month-grid day cell's two pixels — already the tight end",
@@ -87,7 +102,7 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
   {
     file: "src/app/[locale]/gallery/[slug]/page.tsx",
     line: "gap: { xs: 1, sm: 1.5 },",
-    reason: "eight pixels between two photos, already at the listing grid's own phone step",
+    reason: "eight pixels between two photos, the listing grid's own phone step until §480 took the cards to six",
   },
   {
     file: "src/app/[locale]/error.tsx",
@@ -124,6 +139,19 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/calendar/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/pages/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/contact/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // The 360-px density pass (§480): the flat values the first pass left on the contact page, the
+  // gallery, «Echipa» and the two legal texts, each onto the step its neighbours already use.
+  { file: "src/app/[locale]/contact/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/contact/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  // Not the address line's `mt: 3`: it stays 24 at every width, room for its link's reach (§480).
+  { file: "src/app/[locale]/gallery/page.tsx", prop: "mb", step: "sectionGap", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/team/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 }, // the lead, or the club's introduction in its place (§474)
+  { file: "src/app/[locale]/team/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/app/[locale]/legal/terms/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/gallery/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
@@ -144,15 +172,15 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/newsletter/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/sign-in/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The listing.
-  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2.5, xsBefore: 2.5 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapXs", sm: 2.5, xsBefore: 2.5 }, // §480: gapSm → gapXs, the filter row's six
   // Filter row: `mt` above it (unchanged), plus three more below it (§401 — the owner:
   // "filters still need to be a bit above the grid"), one on each of `ListingBody`'s three
   // return shapes so the grid, the empty notice and the "Alte evenimente" fold each keep the
   // same gap under the row whichever one follows it — the filter row carried no `mb` and the
   // grid no `mt` before, so this is a genuinely new gap rather than a literal being converted.
   // The filter panel's wrapper (§458, tightening §401): less space between it and the cards.
-  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 3 },
-  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 3 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "gapXs", sm: 1.5, xsBefore: 3 }, // §480: gapSm → gapXs
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapXs", sm: 1.5, xsBefore: 3 }, // §480: gapSm → gapXs
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   // One grid for the upcoming cards and the past fold since §470 (`CARD_GRID_SX`) — it was three
@@ -161,33 +189,47 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
   // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§470): the
   // lead event is a card, with a card's padding, in the grid's gap.
-  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1 },
+  // The featured facts' rows, and since §480 (the 360-px density pass) a card's facts' rows too.
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1, count: 2 },
+  // §480: the card's facts a group's gap under the title or the summary — eight on a phone, the
+  // title's reach below its words exactly (§366) — on both cards; the route pills and the share
+  // row's buttons six apart.
+  { file: "src/modules/events/ui/EventCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/SeriesCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/RoutePills.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1 },
+  { file: "src/modules/events/ui/ShareLinks.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1, count: 2 },
   // The calendar.
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },
+  // The calendar's compact phone head (§487): the controls' foot, and the gap between the two selects.
+  { file: "src/modules/events/ui/CalendarHeader.tsx", prop: "mb", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/CalendarPicker.tsx", prop: "spacing", step: "gapXs", sm: 1, xsBefore: 1 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mb", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "spacing", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "gap", step: "gapSm", sm: 2, xsBefore: 2 },
   // The event page.
   { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "my", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 3, xsBefore: 3, count: 2 }, // §480: one step tighter on a phone, the event page
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "my", step: "gapSm", sm: 3, xsBefore: 3 }, // §480: one step tighter on a phone, the event page
   { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2, count: 2 },
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "mb", step: "gapXs", sm: 0, xsBefore: 1 },
-  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1.5, xsBefore: 1.5 }, // §480: one step tighter on a phone, the event page
   // The partners section (§401 — "this should be block, and collapsible"): its own gap under
   // the `<dl>`, new rather than converted — a section that did not exist before this change.
-  { file: "src/modules/events/ui/EventFacts.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
-  { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3 }, // §480: one step tighter on a phone, the event page
+  // The description over the divider (§480): its last paragraph's margin collapsed into the
+  // divider's, so the divider alone could not bring the facts up.
+  { file: "src/modules/events/ui/EventExcerpt.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/EventDescription.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The photographs notice (§323, the photographs amendment's item 6), born on the scale.
   { file: "src/modules/events/ui/EventPhotosNotice.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
-  { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
-  { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
-  { file: "src/modules/events/ui/EventVideo.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
-  { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3, count: 6 },
-  { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3, count: 6 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The filter panel (§424, a fix round on §413/§424's small-chip button — the owner: "Butonul
   // de filtre e mult prea mare"): the open form's own padding and grid gap, tighter on a phone.
   { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "p", step: "gapXs", sm: 1, xsBefore: 1.5 }, // §458: was gapSm (8px) / sm 1.5 (12px), now 6px / 8px

@@ -8,7 +8,7 @@ import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ValidityProxy from "@/shared/forms/ValidityProxy";
 import { useTwinFold } from "@/shared/ui/LocaleTabPanels";
 import { isRichTextEmpty, readRichText, type RichTextDoc } from "../domain/schema";
-import { RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
+import { fillIsFor, RICH_TEXT_FILL_EVENT, type RichTextFillDetail } from "./fill-event";
 import RichTextEditor from "./RichTextEditor";
 
 /**
@@ -78,7 +78,7 @@ function LazyRichTextEditorIsland({
     if (mounted) return;
     const onFill = (event: Event) => {
       const detail = (event as CustomEvent<RichTextFillDetail>).detail;
-      if (detail?.name === editor.name) setFilled(detail.doc);
+      if (fillIsFor(detail, editor.name, hidden.current)) setFilled(detail.doc);
     };
     window.addEventListener(RICH_TEXT_FILL_EVENT, onFill);
     return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);

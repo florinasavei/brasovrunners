@@ -88,6 +88,7 @@
       "yearEmpty": "Nothing scheduled this year.",
       "pageTitle": "Calendar",
       "pageIntro": "The club's month: the weekly runs and the races, day by day. You can take the whole calendar into your phone or your Google Calendar.",
+      "introHelp": "About the calendar and how to take it into your phone",
       "addTitle": "Add to your calendar",
       "feedAddress": "The address for other apps",
       "subscribeGoogle": "Google Calendar",
@@ -329,6 +330,8 @@
       },
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
+      "repeats": "Repeats {sentence}",
+      "recurring": "Recurring event",
       "nextLabel": "Next:",
       "allDatesCount": "Upcoming dates ({count})",
       "fullDescription": "Full event description"
@@ -341,7 +344,6 @@
     "openRoute": "View the route",
     "routeJump": "About the route",
     "video": {
-      "open": "Watch the event film",
       "title": "Event film (YouTube)",
       "notice": "The player is YouTube's and loads only when you open it.",
       "play": "Play the film",
@@ -1081,7 +1083,7 @@
         "autoLine": "Automatic: on {day}, starts at {start}, sunset at {sunset} — {verdict}",
         "autoLineDawn": "Automatic: on {day}, starts at {start}, before sunrise at {sunrise} — {verdict}",
         "autoLineNoTime": "Automatic: on {day}, sunset at {sunset} — pick the start time",
-        "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
+        "autoLineNoDate": "Automatic: pick the start's date and time under “When and where”, and the answer shows here.",
         "verdictNight": "a night event",
         "verdictDay": "not a night event",
         "endLine": "The start is before dusk, but the run lasts until {end} and reaches the dark — still a night event.",
@@ -1435,6 +1437,9 @@
         "description": {
           "title": "Event description"
         },
+        "whenWhere": {
+          "title": "When and where"
+        },
         "when": {
           "title": "Date and time",
           "timezone": "Time zone",
@@ -1443,6 +1448,10 @@
         },
         "place": {
           "title": "The place"
+        },
+        "programmeRules": {
+          "title": "Programme, rules and declaration",
+          "rulesLine": "rules: {state}"
         },
         "programme": {
           "title": "The day's programme and what to bring"
@@ -1463,7 +1472,7 @@
         "conditions": {
           "title": "Who may enter",
           "legalLink": "Legal documents — where a new version of the declaration is approved",
-          "declarationUnderRules": "The declaration a participant signs is chosen under “Rules” → “Self-declaration”."
+          "declarationUnderRules": "The declaration a participant signs is chosen under “Programme, rules and declaration” → “Self-declaration”."
         },
         "reminder": {
           "title": "The reminder before the start"
@@ -1490,7 +1499,7 @@
         "status": {
           "title": "Event status",
           "createNote": "Usually Scheduled. Choose Cancelled for an event already called off (recorded, say, from Facebook) or Completed for one that already took place. Neither sends an email: nobody is registered yet.",
-          "completedRefused": "Status: Completed can only be chosen for an event that has already started; otherwise choose Scheduled or Cancelled"
+          "completedRefused": "Completed can only be chosen for an event that has already started; otherwise choose Scheduled or Cancelled"
         },
         "course": {
           "title": "The course"
@@ -1662,17 +1671,10 @@
           },
           "declaration": {
             "offered": "declaration for {surface}",
+            "offeredNoText": "declaration for {surface} — no approved text in force, the button does not show",
             "notOffered": "no declaration",
             "notAsked": "not asked"
           }
-        },
-        "video": {
-          "title": "The film",
-          "stored": "a film, from an older link",
-          "none": "no separate film",
-          "storedHelp": "The page shows this film under the rules, behind one press. It is a link saved before the editor had its YouTube button, and it is kept on every save. A new film goes in the description.",
-          "noneHelp": "A film goes in the description, with the text editor's YouTube button, like a picture. The page has no other section for a film.",
-          "toDescription": "Go to the description"
         },
         "declaration": {
           "title": "Self-declaration",
@@ -1708,7 +1710,7 @@
           "kind": "Type",
           "title": "Title",
           "description": "Description",
-          "when": "When",
+          "when": "When and where",
           "place": "Where",
           "course": "The course",
           "cost": "Cost",
@@ -1716,9 +1718,8 @@
           "coHosts": "Together with",
           "share": "Share",
           "links": "Links and files",
-          "programme": "Programme",
+          "programme": "Programme and rules",
           "rules": "Rules",
-          "video": "The film",
           "startList": "Participant list"
         }
       },
@@ -2282,7 +2283,7 @@
           "done": "Events are published.",
           "how": [
             "Open /admin/events → “New event”. Fill in the type, the date, the place and the title in both languages. Save.",
-            "Press “Submit for review”, then “Publish”. Both languages go live together; until then the page is a 404 for visitors.",
+            "Press “Publish” — a draft goes live in one press. Both languages go live together; until then the page is a 404 for visitors.",
             "Only one event can be “featured” — it opens the home page. Next year: “Duplicate” this year's."
           ]
         },
@@ -2403,13 +2404,13 @@
         },
         "translation": {
           "title": "Automatic translation from Romanian (DeepL, free)",
-          "todo": "Built: beside every English box in the editors there is \"Translate from Romanian\", and \"Translate everything from Romanian\" at the top. It starts once DeepL's free key is on the server; until then the English boxes are written by hand, as now.",
-          "done": "Automatic translation is on: the editors have the \"Translate from Romanian\" buttons.",
+          "todo": "Built: at the top of every editor (event, page, album, team card) there is the \"Copy and translate everything: RO → EN\" button, and \"Translate from Romanian\" beside every English box. It starts once DeepL's free key is on the server; until then the top button is grey and points here, and the English boxes are written by hand.",
+          "done": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press.",
           "how": [
             "Create a DeepL API Free account (the \"DeepL API\" page on DeepL's site → the Free plan): 500,000 characters a month, free. DeepL may ask for a card for verification only; the Free plan is not charged.",
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
             "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
-            "Open an event: under the English boxes there is \"Translate from Romanian\". This row turns green. The daily budget is chosen under Tasks → Costs."
+            "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Tasks → Costs."
           ]
         }
       },
@@ -2466,7 +2467,7 @@
         "domain": {
           "name": "The site's address (the .com domain)",
           "freeGives": "There is no free version — this is the one thing on the page that is paid for. Bought on 16 September 2026 from ROMARG, for a year. The registry price for a .com is 10.97 USD a year from 1 November 2026; ROMARG invoices in lei, with its margin and VAT.",
-          "ceiling": "No ceiling: one invoice a year, in lei.",
+          "ceiling": "No ceiling: one invoice a year for the .com, in lei.",
           "whenCrossed": "The next step is renewing the .com for several years; the .ro is no longer bought (one address for search engines).",
           "closeYes": "This deployment answers on the club's domain.",
           "closeNo": "This deployment answers on the provider's address — for QA or a laptop, that is as it should be."
@@ -2614,14 +2615,14 @@
       },
       "translationBudget": {
         "title": "Automatic translation (DeepL)",
-        "intro": "The editors' \"Translate from Romanian\" and \"Translate everything from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
+        "intro": "The editors' \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
         "inForce": {
           "off": "In force: off (0 characters a day) — the buttons refuse every translation.",
           "daily": "In force: at most {count} characters a day."
         },
         "today": "Today {used} of {budget} characters were sent.",
         "configured": "The DeepL key is set on this server: the buttons show for the Copywriter, the Organizer and the Administrator.",
-        "notConfigured": "The DeepL key is not set on this server: the buttons do not show (see the row in Tasks).",
+        "notConfigured": "The DeepL key is not set on this server: in the editors, \"Copy and translate everything\" is grey, with a link to the steps under Tasks → Club.",
         "privacy": "Only the club's own texts from the content boxes go to DeepL (EU) — never a participant's data and never the legal texts. The privacy notice does not change.",
         "updatedAt": "Last changed: {when}.",
         "readOnly": "Only an Administrator can change the budget.",
@@ -2692,7 +2693,7 @@
           "vercel": "Not measured without VERCEL_API_TOKEN and VERCEL_PROJECT_ID on this environment."
         },
         "unread": "The provider did not answer just now ({reason}).",
-        "deeplOff": "The DeepL key is not set on this server, so the translation buttons do not appear.",
+        "deeplOff": "The DeepL key is not set on this server, so the editors' translation button is grey.",
         "period": "Calendar month: {span}.",
         "periodNeon": "Neon's billing period: {span}.",
         "others": "No cost and no usage tracked here: Zitadel (the team's sign-in), cron-job.org and GitHub (the automatic jobs) and Open-Meteo (the weather).",
@@ -2755,7 +2756,7 @@
         "text": "What to do",
         "textHelp": "A sentence or a few: what, where in the backoffice, by when. No email addresses or passwords — the whole team sees this list.",
         "owner": "For whom",
-        "ownerHelp": "A first name — Amalia, Dani, Florin — or empty if it is anyone's.",
+        "ownerHelp": "A role or a first name — Administrator, Organizator, say — or empty if it is anyone's.",
         "due": "Due",
         "dueHelp": "Optional: the day it has to be done by."
       },
@@ -2821,6 +2822,18 @@
       "imageFromGalleryShort": "From gallery",
       "imageGalleryLoading": "Loading the pictures…",
       "imageGalleryEmpty": "No picture has been uploaded yet.",
+      "imageGalleryFilter": "Search by file name",
+      "imageGalleryNoMatch": "No picture matches.",
+      "imageGallerySourceLegend": "Used in",
+      "imageGallerySourceAll": "All",
+      "imageGallerySourceEvent": "Event",
+      "imageGallerySourceAlbum": "Album",
+      "imageGallerySourcePage": "Page",
+      "imageGallerySourceTeam": "The team",
+      "imageGalleryHereEvent": "This event",
+      "imageGalleryHereAlbum": "This album",
+      "imageGalleryHerePage": "This page",
+      "imageFromGalleryPicked": "From the gallery: {name}, {width} × {height} px.",
       "imageNoAltOne": "One picture has no alt text — click the picture to write it.",
       "imageNoAltMany": "{count} pictures have no alt text — click each one to write it.",
       "youtube": "Add a YouTube film",
@@ -2834,6 +2847,11 @@
       "youtubePosterUploading": "Uploading…",
       "youtubePosterFailed": "The poster could not be uploaded; try again.",
       "youtubePosterUseYoutube": "Use YouTube's own thumbnail",
+      "youtubePosterFromGallery": "From the gallery",
+      "youtubePosterCrop": "The thumbnail's crop — what shows before the film starts",
+      "youtubePosterCropHelp": "The film's frame is 16:9. Drag the rectangle over the thumbnail to choose the part that shows (another shape shows as much of it as fits in 16:9); the arrows move it, Shift with them makes it larger or smaller.",
+      "youtubePosterCropReset": "The middle of the thumbnail",
+      "youtubePosterCropWaiting": "YouTube's own thumbnail is kept at the first save; after that you can crop it here. You can also choose one from the gallery or upload another.",
       "imageAlign": "Where it sits in the text",
       "imageAlignBlock": "In the flow",
       "imageAlignLeft": "Left",
@@ -2986,6 +3004,10 @@
       "uploading": "Uploading {done} of {total}…",
       "uploaded": "{total} photos uploaded.",
       "uploadFailed": "Could not upload: {names}",
+      "fromGallery": "From the gallery",
+      "galleryAdded": "{name} is in the album now.",
+      "galleryAlready": "{name} was already in the album.",
+      "galleryFailed": "{name} could not be added; try again.",
       "qualityLegend": "Quality",
       "qualityLow": "Minimum (small file)",
       "qualityNormal": "Medium (recommended)",
@@ -3005,10 +3027,10 @@
       "setCover": "Cover",
       "removePhoto": "Remove",
       "removePhotoTitle": "Remove the photo?",
-      "removePhotoBody": "The photo leaves the album and the storage. This cannot be undone.",
+      "removePhotoBody": "The photo leaves the album and, unless something else still uses it (a text, a card on «The team», another album), the storage too. This cannot be undone.",
       "delete": "Delete the album",
       "deleteTitle": "Delete the album?",
-      "deleteBody": "The album, both translations and every photo in it are removed for good, from storage too. To take it off the site only, use “Archive”.",
+      "deleteBody": "The album, both translations and every photo in it are removed for good, from storage too — except those used somewhere else as well, which stay there. To take it off the site only, use “Archive”.",
       "viewPublic": "View the public album →",
       "photoAlt": "Photo {n}: {title}",
       "columnTitle": "Title",
@@ -3126,7 +3148,7 @@
       "howTitle": "How race day works, step by step",
       "how": [
         "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
-        "Volunteers: a Superadministrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
+        "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens. Or search by name or by race number.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name. If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
@@ -3834,7 +3856,7 @@
               "title": "Correct an event's text",
               "steps": [
                 "«Events» → «Edit» on the event's row.",
-                "Open the card with the text: «Title and summary», «Event description», «The day's programme and what to bring» or «Rules».",
+                "Open the card with the text: «Title and summary», «Event description» or «Programme, rules and declaration» (then «The day's programme and what to bring» or «Rules»).",
                 "Write in the «Română» tab and in the «English» tab.",
                 "At the bottom, on a published event, tick «I understand that I am editing published content.».",
                 "Press «Save». It is on the site at once, in both languages."
@@ -3874,7 +3896,8 @@
               "steps": [
                 "An event is not published without a title and a summary in Romanian and in English.",
                 "An optional text (the description, the rules, the programme's notes, the SEO fields) is written in both languages or neither: the save refuses one language only and points at the empty box, with everything you typed kept.",
-                "If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning only."
+                "If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning only.",
+                "The English in one press: write everything in Romanian, then press «Copy and translate everything: RO → EN» at the top of the editor (event, page, album, team card). Every text goes, translated, into its English box, with the same layout. Read, correct, then «Save». If the button is grey, the DeepL key is not set yet: the link to the steps is under it. If the English already has text, you choose «Replace everything» or «Only the empty ones»."
               ]
             },
             {
@@ -3976,10 +3999,19 @@
               "title": "Change a setting of the event",
               "steps": [
                 "«Events» → «Edit».",
-                "Open the card: «Date and time», «The place», «The course», «Cost» or «Taking part and registration». Change what is needed.",
+                "Open the card: «When and where», «The course», «Cost» or «Taking part and registration». Change what is needed.",
                 "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
                 "Must the participants know? Tick «Tell participants about the change» and write the note in both languages.",
                 "Press «Save». The texts (the title, the description) are not yours to save: tell the Administrator what is wrong."
+              ]
+            },
+            {
+              "title": "The English in one press",
+              "steps": [
+                "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
+                "At the top of the editor press «Copy and translate everything: RO → EN». Every box goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
+                "Read the English and correct what reads wrong.",
+                "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
             },
             {
@@ -4013,8 +4045,8 @@
                 "Each card is a part of the public page, in the site's order. The map at the top, «The page, top to bottom», takes you to each card.",
                 "«What kind of event» → «Event type» (Race, Group run and the others).",
                 "«Title and summary»: «Title» and «Summary», in the «Română» tab and in the «English» tab.",
-                "«Date and time», then «The place»: the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
-                "The other cards as needed: «Event description», «The course», «Cost», «Taking part and registration», «The day's programme and what to bring», «Rules».",
+                "«When and where»: the date and time, then the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
+                "The other cards as needed: «Event description» (a YouTube film goes here, with the «YouTube» button), «The course», «Cost», «Taking part and registration», «Programme, rules and declaration».",
                 "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
                 "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
                 "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."
@@ -4033,6 +4065,15 @@
               ]
             },
             {
+              "title": "The English in one press",
+              "steps": [
+                "Write every box in Romanian: the title, the summary, the description, the rules, the route, the programme.",
+                "At the top of the editor (event, page, album, team card) press «Copy and translate everything: RO → EN». Every text goes, translated, into its English twin, with the same layout. If the English already has text, it asks, naming how many and which: «Replace everything» or «Only the empty ones»; for a very long text it also says how many characters of today's budget will be sent. Is the button grey? The server has no free DeepL key yet: «See the steps», under the button, opens the row under Tasks → Club.",
+                "Read the English and correct what reads wrong.",
+                "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
+              ]
+            },
+            {
               "title": "Put a picture in the summary or the description",
               "steps": [
                 "Open the card («Title and summary» or «Event description») and put the cursor where the picture goes.",
@@ -4047,7 +4088,7 @@
               "title": "Publish an event, or take it off the site",
               "steps": [
                 "«Events» → «Edit» → the «Publication» card.",
-                "A draft: press «Trimite spre verificare» (submit for review), then «Publică» (publish).",
+                "A draft: press «Publică» (publish) — it goes live in one press, no «Trimite spre verificare» (submit for review) first.",
                 "In the window press «Publică» again. Both languages go live together.",
                 "Something missing? «Cannot publish yet» appears with the list: fill it in, «Save», then «Publică».",
                 "Several at once: on the «Events» list tick them and press «Publish the ticked ones».",
@@ -4072,7 +4113,7 @@
                 "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
-                "«Who may enter»: «Declaration a participant signs» and «Minimum age (years)» (14 unless you change it, 0 for none).",
+                "«Who may enter»: «Minimum age (years)» (14 unless you change it, 0 for none). The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
                 "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
                 "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
               ]
@@ -4659,6 +4700,7 @@
       "photoChoose": "Choose a photo",
       "photoReplace": "Change the photo",
       "photoRemove": "Remove the photo",
+      "photoFromGallery": "From the gallery",
       "photoUploading": "Uploading…",
       "photoFailed": "The photo did not upload. Try again or choose another file (JPEG, PNG or WebP).",
       "photoNone": "No photo",
@@ -5665,6 +5707,11 @@
     "humidity": "humidity {percent}%",
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
+    "temperatureRange": "{from}–{to} °C",
+    "hourRange": "{from}–{to}",
+    "scope": "at {place}, {day} {hours}",
+    "heading": "Weather {scope}",
+    "eventPlace": "the event’s place",
     "atStart": "Weather at the start",
     "codes": {
       "clear": "Clear",
@@ -6061,16 +6108,29 @@
   "Translate": {
     "button": "Translate from Romanian",
     "pending": "Translating…",
-    "all": "Translate everything from Romanian",
-    "allHelp": "Replaces every English box that has Romanian text with its translation, with the same layout. Nothing is saved until you press Save.",
+    "all": "Copy and translate everything: RO → EN",
+    "allHelp": "One button: every text written in Romanian goes into its English box, translated automatically (DeepL), with the same layout — headings, lists, pictures, links. Empty boxes are filled at once; if the English already has text, you choose «Replace everything» or «Only the empty ones». Read, correct, then press Save.",
+    "off": "Automatic translation is not on yet: the server has no free DeepL key. It is set once, and then the button works in every editor.",
+    "offAskAdmin": "Automatic translation is not on yet: the server has no free DeepL key. Ask an Administrator to set it (the steps are under Tasks → Club).",
+    "offSteps": "See the steps",
     "done": "Translated. Read it, correct it if needed, then save.",
     "doneAll": "Boxes translated: {count}. Read them, correct them if needed, then save.",
     "cut": "Cut to the box's limit, check the ending: {fields}.",
     "confirm": {
       "title": "Replace the English text?",
       "body": "The English box already has text. The translation from Romanian replaces it; nothing is saved until you press Save.",
-      "allTitle": "Translate everything from Romanian?",
-      "allBody": "{count} English boxes are replaced with the translation of the Romanian ones, with the same layout (headings, lists, tables, pictures, links). Nothing is saved until you press Save. The boxes: {fields}",
+      "allTitle": {
+        "one": "{count} English box already has text. Replace it?",
+        "few": "{count} English boxes already have text. Replace them?",
+        "other": "{count} English boxes already have text. Replace them?"
+      },
+      "allBody": "Already written: {fields}. «Replace everything» translates them again from Romanian; «Only the empty ones», when it shows, leaves them untouched and fills the rest. Nothing is saved until you press Save.",
+      "bigTitle": "Translate everything from Romanian?",
+      "bigBody": "The English boxes are filled with the translation, with the same layout. Nothing is saved until you press Save.",
+      "budget": "About {count} characters of today's budget will be sent.",
+      "budgetEmpty": "The empty ones alone: about {count} characters.",
+      "replaceAll": "Replace everything",
+      "onlyEmpty": "Only the empty ones",
       "go": "Translate",
       "cancel": "Cancel"
     },
@@ -6079,6 +6139,7 @@
       "notConfigured": "Automatic translation is not set up on this server (the DeepL key is missing).",
       "invalid": "This box cannot be translated automatically.",
       "nothing": "The Romanian box is empty: there is nothing to translate.",
+      "nothingAll": "Nothing to translate: write the Romanian texts first.",
       "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
       "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
       "quota": "DeepL has used this month's free characters. Translation comes back next month.",

@@ -12,13 +12,11 @@ import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
-import PlaceBox from "@/modules/content/events/ui/boxes/PlaceBox";
-import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
+import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
-import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
-import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
+import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
 import CreateDraftLine, { TickedLine } from "@/modules/content/events/ui/CreateDraftLine";
@@ -119,7 +117,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   const gapLabels: PublishGapLabels = {
     boxes: {
       titleSummary: t("editor.boxes.titleSummary.title"),
-      place: t("editor.boxes.place.title"),
+      // The meeting point is asked inside «Când și unde» since §481.
+      place: t("editor.boxes.whenWhere.title"),
       address: t("editor.boxes.address.title"),
     },
     fields: {
@@ -224,23 +223,21 @@ export default async function NewEventPage({ params, searchParams }: Props) {
             <Stack spacing={2}>
               {/* "Creează și publică" pressed while something publication needs is empty (§406). */}
               <PublishGapsSummary id="publish-gaps" title={t("editor.publishGaps.title")} intro={t("editor.publishGaps.intro")} labels={gapLabels} />
-              {/* «Tradu tot din română» (§464), as on the editor: write the Romanian, then fill the English. */}
+              {/* «Copiază și tradu tot: RO → EN» (§464, §482), as on the editor: write the Romanian, then
+                  fill the English in one press — drawn greyed, saying why, where no DeepL key is set. */}
               <TranslateAllButton />
               {/* The page, top to bottom (§406): the editor's same cards, in the same order. */}
               <EditorGroup label={t("editor.groups.page")} />
               <KindBox {...box} heading={flow.headings.kind} languages={languages} />
               <TitleSummaryBox languages={languages} creating heading={flow.headings.title} />
               <DescriptionBox languages={languages} heading={flow.headings.description} />
-              <WhenBox {...box} heading={flow.headings.when} />
-              <PlaceBox {...box} languages={languages} heading={flow.headings.place} />
+              <WhenBox {...box} languages={languages} heading={flow.headings.when} />
               <CourseBox {...box} languages={languages} heading={flow.headings.course} />
               <RegistrationBox {...box} heading={flow.headings.registration} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
               <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />
-              <ProgrammeBox {...box} languages={languages} heading={flow.headings.programme} />
-              <RulesBox {...box} languages={languages} heading={flow.headings.rules} declarations={declarations} />
-              <VideoBox {...box} heading={flow.headings.video} />
+              <ProgrammeRulesBox {...box} languages={languages} heading={flow.headings.programme} declarations={declarations} />
               <StartListBox {...box} heading={flow.headings.startList} />
 
               {/* Not a section of the page: the marks, the address. The status is in the first
