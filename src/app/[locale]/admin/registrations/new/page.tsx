@@ -11,6 +11,9 @@ import { staffRegistrationConstraints } from "@/modules/registrations/constraint
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import NationalityField from "@/modules/registrations/ui/NationalityField";
+import { countryOptions } from "@/modules/registrations/countries";
+import { countryName } from "@/modules/registrations/names";
 import {
   StaffBirthDateEcho,
   StaffBirthDateField,
@@ -99,6 +102,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
     open: rt("countrySearch.open"),
     close: rt("countrySearch.close"),
   };
+  // The country of residence's list (§NNN), the public form's own: named and ordered here.
+  const countries = countryOptions(locale, (code) => countryName(code, locale));
   // The next free desk spare per event (§444), suggested only to the desk — a person on the
   // telephone, entered from the list, is not standing at a table with a bib.
   const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
@@ -137,6 +142,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             lastName: rt("lastName"),
             birthDate: rt("birthDate"),
             guardianName: rt("guardianName"),
+            country: rt("country"),
             city: rt("city"),
             phone: rt("phone"),
             emergencyContactName: rt("emergencyContactName"),
@@ -196,6 +202,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               {...textFieldConstraints(staffRegistrationConstraints("guardianName"))}
             />
           </StaffGuardian>
+          {/* Where the person lives (§NNN): the country before the city, as on the public form —
+              the same searchable native select, on Romania unless the volunteer changes it. */}
+          <NationalityField name="country" label={rt("country")} defaultValue="RO" countries={countries} words={countrySearchWords} />
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
           <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} searchWords={countrySearchWords} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />

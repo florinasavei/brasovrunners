@@ -31,6 +31,7 @@ import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { countryName } from "@/modules/registrations/names";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -249,6 +250,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {registration.guardianName && (
         <Typography variant="body2" color="text.secondary">
           {tr("desk.guardian", { name: registration.guardianName })}
+        </Typography>
+      )}
+      {/* Where the person lives (§NNN): the city, then the country named in the reader's language;
+          for the club's "where do our runners come from", never shown publicly. */}
+      {(registration.city || registration.country) && (
+        <Typography variant="body2" color="text.secondary">
+          {tr("registrations.livesIn", {
+            place: [registration.city, registration.country ? countryName(registration.country, locale) : null].filter(Boolean).join(", "),
+          })}
         </Typography>
       )}
       {/* The socials the person offered (§106): links to follow back — and whether the public

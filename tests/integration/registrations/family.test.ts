@@ -108,6 +108,7 @@ const submission = (firstName: string, at: Date = NOW, overrides: Record<string,
   birthDate: BIRTH_DATES[firstName] ?? "1980-01-01",
   sex: "UNSPECIFIED",
   nationality: "RO",
+  country: "RO",
   city: "Brașov",
   phone: "+40711111111",
   emergencyContactName: "Ion Vecinul",
@@ -713,5 +714,36 @@ describe("§468 the family email's facts in bold, and «Nu înscriu această per
     expect(lapsed.text).not.toContain("Nu înscriu această persoană:");
     expect(lapsed.text).not.toContain("data-email-part");
     expect(lapsed.html).not.toContain("family-facts");
+  });
+});
+
+
+/**
+ * §NNN — the country of residence through the family flow. The kept form carries the country the
+ * form posted; a form kept before the country was asked has none, and the press still registers
+ * the person — in Romania, as the column's default reads every older row — rather than refusing
+ * a parent under the public schema that now requires it.
+ */
+describe("§NNN the country of residence on a kept family entry", () => {
+  it("stores the country the kept form carried", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    const secret = await offer(event, "Maria", 5, { country: "AT", city: "Wien" });
+    expect((await entries())[0].fields).toMatchObject({ country: "AT", city: "Wien" });
+    expect(await press(secret, at(7))).toMatchObject({ ok: true });
+    const maria = (await rowsOf(event.id)).find((row) => row.registeredName === "Maria Pop");
+    expect(maria).toMatchObject({ country: "AT", city: "Wien" });
+  });
+
+  it("confirms an entry kept before the country was asked, as România", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    const secret = await offer(event, "Maria", 5);
+    // The form as a release before §NNN kept it: no country at all.
+    await db.update(pendingFamilyEntries).set({ fields: sql`${pendingFamilyEntries.fields} - 'country'` });
+    expect((await entries())[0].fields).not.toHaveProperty("country");
+    expect(await press(secret, at(7))).toMatchObject({ ok: true });
+    const maria = (await rowsOf(event.id)).find((row) => row.registeredName === "Maria Pop");
+    expect(maria?.country).toBe("RO");
   });
 });

@@ -124,8 +124,11 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
     const created = await submitRegistration(
       tx,
       event,
-      // The address is the token's participant's, never one kept or posted (§389).
-      { ...entry.fields, email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
+      // The address is the token's participant's, never one kept or posted (§389). An entry kept
+      // before the country was asked (§NNN) has none, and the public schema now requires it: it
+      // lives in Romania, as the column's default reads every older row — never a refusal of a
+      // parent who did everything right.
+      { country: "RO", ...entry.fields, email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
       now,
       "REAL",
       { source: "PUBLIC", createdByStaffUserId: null, anotherPerson: { participantId: participant.id } },

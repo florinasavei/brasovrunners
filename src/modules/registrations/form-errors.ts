@@ -21,9 +21,11 @@ export const REGISTRATION_FORM_FIELDS = [
   "displayName",
   "email",
   "birthDate",
+  // The form's own order (§467, §NNN): where the person lives, then sex and citizenship.
+  "country",
+  "city",
   "sex",
   "nationality",
-  "city",
   "phone",
   "emergencyContactName",
   "emergencyContactPhone",

@@ -8,6 +8,7 @@ import {
   type RegistrationRow,
 } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 
 /**
  * §420 (the registration audit) — two browser-rendered checks the integration tests
@@ -44,6 +45,8 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
+    // «Sex» starts empty (§NNN): the form is refused without an answer.
+    await chooseSex(page);
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();

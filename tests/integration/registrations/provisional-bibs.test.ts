@@ -86,6 +86,7 @@ function submissionInput(email: string, at: Date) {
     birthDate: "1990-05-17",
     sex: "UNSPECIFIED",
     nationality: "RO",
+    country: "RO",
     city: "Brașov",
     phone: "+40711111111",
     emergencyContactName: "Contact Urgență",

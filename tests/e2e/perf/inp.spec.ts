@@ -4,6 +4,7 @@ import { expect, type Locator, type Page, type Route, test } from "@playwright/t
 import { confirmDialog } from "../support/confirm";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, hydrated, signIn } from "../support/featured-event";
 import { languagePanel, languageTab, openEditorBox } from "../support/fold";
+import { chooseSex } from "../support/sex-choice";
 
 /**
  * How long a press of each heavy form's primary button blocks the page — its Interaction to Next
@@ -453,6 +454,8 @@ async function fillRegistration(page: Page, omit?: string) {
     if (name === omit) continue;
     await field(page, name).fill(value);
   }
+  // «Sex» starts empty (§NNN): the form is refused without an answer.
+  if (omit !== "sex") await chooseSex(page);
   await field(page, "emailConfirm").fill(values.email);
   for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     const box = field(page, name);

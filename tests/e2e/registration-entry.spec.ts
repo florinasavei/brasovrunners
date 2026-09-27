@@ -1,5 +1,6 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { mintActionLink, registrationByEmail, registrationStatus } from "./support/action-link";
+import { chooseSex } from "./support/sex-choice";
 import {
   ensureRegistrationIsOpen,
   FEATURED,
@@ -96,10 +97,11 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="birthDate"]').fill("1990-05-17");
     await page.locator('[name="city"]').fill("Brașov");
 
-    // Sex, nationality and t-shirt size are MUI selects — a hidden input and a listbox, not
-    // a <select> — and all three carry a default the schema accepts. Left untouched on
-    // purpose: this asserts that somebody who fills in only the text fields is still
-    // accepted, which is what most people will actually do.
+    // The country, the citizenship and the t-shirt size carry a default the schema accepts
+    // (§432, §NNN) and are left untouched on purpose: somebody who fills in only the text
+    // fields and answers «Sex» is accepted. «Sex» alone starts empty (§NNN) — an answer
+    // nobody gave is not one — so it is chosen.
+    await chooseSex(page);
     await page.locator('[name="phone"]').fill("+40711111111");
     await page.locator('[name="emergencyContactName"]').fill("Ion Popescu");
     await page.locator('[name="emergencyContactPhone"]').fill("+40722222222");

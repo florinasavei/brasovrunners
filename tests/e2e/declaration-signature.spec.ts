@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { latestAcceptance, mintActionLink, mintProfileLink, registrationByEmail, registrationStatus, type RegistrationRow } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature on the declaration is the registered name.
@@ -53,6 +54,8 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
+    // «Sex» starts empty (§NNN): the form is refused without an answer.
+    await chooseSex(page);
     // The parent's box opens once the birth date says the runner is a minor (§188).
     if (guardianName) await page.locator('[name="guardianName"]').fill(guardianName);
     await page.locator('[name="emailConfirm"]').fill(email);

@@ -2,6 +2,7 @@ import { expect, type Locator, test, type Page } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { chooseSex } from "./support/sex-choice";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -36,6 +37,8 @@ async function fillRequired(page: Page, omit?: string) {
     if (name === omit) continue;
     await page.locator(`[name="${name}"]`).fill(value);
   }
+  // «Sex» starts empty (§NNN): answered unless the test wants it missing.
+  if (omit !== "sex") await chooseSex(page);
   /*
     The address a second time (§206): typed by hand on the real form, because QA's outbox held
     three bounced messages to "…@gmail.con" and one letter loses somebody for good. Omitting
@@ -108,6 +111,14 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // native select the form posts, searchable once the island runs (§463).
     await expect(page.locator('select[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('select[name="nationality"]')).toHaveAttribute("required", "");
+    // The country of residence sits before the city (§NNN): required, a native select the form
+    // posts, and on Romania unless the runner says otherwise.
+    await expect(page.locator('select[name="country"]')).toHaveValue("RO");
+    await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
+    // «Sex» forces a choice (§NNN): a native, required select on its empty «Alege…», nothing pre-chosen.
+    await expect(page.locator('select[name="sex"]')).toHaveValue("");
+    await expect(page.locator('select[name="sex"]')).toHaveAttribute("required", "");
+    await expect(page.locator('select[name="sex"] option').first()).toHaveText("Alege…");
     // The city is required and asked right after the birth date (§467, reversing §322).
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");
@@ -550,6 +561,17 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
       // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
+      // So is the country of residence (§NNN), and «Sex»: a native select on «Alege…», required,
+      // that a reader without JavaScript answers from the phone's own list — the form can be sent.
+      await expect(noScript.locator('select[name="country"]')).toHaveValue("RO");
+      const sex = noScript.locator('select[name="sex"]');
+      await expect(sex).toHaveValue("");
+      await expect(sex).toHaveAttribute("required", "");
+      await expect(noScript.locator('input[name="sex"]')).toHaveCount(0);
+      expect(await sex.evaluate((select: HTMLSelectElement) => select.validity.valueMissing)).toBe(true);
+      await sex.selectOption("UNSPECIFIED");
+      await expect(sex).toHaveValue("UNSPECIFIED");
+      expect(await sex.evaluate((select: HTMLSelectElement) => select.validity.valid)).toBe(true);
       await expect(noScript.getByRole("button", { name: /^Cetățenie/ })).toHaveCount(0);
       // The mask's placeholder is in the server's HTML; the grouping itself needs the script.
       await expect(phone).toHaveAttribute("placeholder", "0712 345 678");
@@ -662,6 +684,27 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Popescu");
   });
 
+  test("names an unanswered «Sex» by what to do, and that «Prefer să nu spun» is an answer (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page, "sex");
+    // The browser would refuse it itself; the server's own refusal is what this reads.
+    await page.locator("form").evaluate((form) => {
+      (form as HTMLFormElement).noValidate = true;
+    });
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+
+    await page.waitForURL(/error=VALIDATION_ERROR/);
+    expect(page.url()).toContain("fields=sex");
+    const link = page.locator("#registration-errors").getByRole("link", { name: SEX_MISSING, exact: true });
+    await expect(link).toBeVisible();
+    await link.click();
+    await expect(page.locator('select[name="sex"]')).toBeFocused();
+  });
+
   test("keeps a chosen option and says a phone number is not valid", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -671,9 +714,8 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
     await fillRequired(page);
     await page.locator('[name="phone"]').fill("12");
-    // A MUI select: the choice lives in React state, which is exactly what a redirect loses (§142).
-    await page.locator("#f-sex").click();
-    await page.getByRole("option", { name: "Feminin" }).click();
+    // A choice the redirect would lose unless the draft brings it back (§142).
+    await page.locator('select[name="sex"]').selectOption("FEMALE");
     // Behind the fold since §171; the point of the test is that what was typed comes back.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     await page.locator('[name="healthNotes"]').fill("Astm");
@@ -685,7 +727,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
     await page.waitForURL(/error=VALIDATION_ERROR/);
     expect(page.url()).toContain("fields=phone");
-    await expect(page.locator("#f-sex")).toHaveText("Feminin");
+    await expect(page.locator('select[name="sex"]')).toHaveValue("FEMALE");
     await expect(page.locator('[name="phone"]')).toHaveValue("12");
     await expect(page.locator('[name="healthNotes"]')).toHaveValue("Astm");
     await expect(page.locator("#main")).toContainText("Numărul nu e valid");
@@ -960,6 +1002,8 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
       "Prenume",
       "Nume de familie",
       "Data nașterii",
+      // «Sex» starts on «Alege…» (§NNN), named by what to do about it.
+      SEX_MISSING,
       "Adresa scrisă a doua oară",
       "Declarația că ești apt medical",
       "Nota de confidențialitate",
@@ -990,6 +1034,9 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
     await expect(submit).toHaveCSS("opacity", "1");
   });
 });
+
+/** How the summary and the list above the send button name an unanswered «Sex» (§NNN). */
+const SEX_MISSING = "Alege sexul — poți alege „Prefer să nu spun”";
 
 /** How the list above the send button names the race's conditions: what is missing and what to do (§422). */
 const RULES_MISSING = "Condițiile concursului — deschide-le și citește-le până la capăt";

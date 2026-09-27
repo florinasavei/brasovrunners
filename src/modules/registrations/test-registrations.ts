@@ -210,6 +210,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
       birthDate: syntheticBirthDate(event),
       sex: "UNSPECIFIED",
       nationality: "RO",
+      country: "RO",
       city: "Brașov",
       phone: "+40000000000",
       emergencyContactName: "Test Contact",

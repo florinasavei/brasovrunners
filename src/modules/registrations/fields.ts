@@ -63,6 +63,12 @@ const submissionFields = z.object({
    * and asked right after the birth date; optional for a staff entry.
    */
   nationality: z.string().trim().length(2).toUpperCase(),
+  /**
+   * The country the person lives in (§NNN), right before the city: ISO 3166-1 alpha-2 like the
+   * citizenship, and like it required on the public form and pre-chosen on `RO`; optional for a
+   * staff entry, relaxed below.
+   */
+  country: z.string().trim().length(2).toUpperCase(),
   city: z.string().trim().min(1).max(120),
 
   /**
@@ -429,6 +435,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
     sex: true,
     // Citizenship is required on the public form only (§432): a paper entry may not have it.
     nationality: true,
+    // The country of residence likewise (§NNN): required on the public form, optional on paper.
+    country: true,
     // The city likewise (§467): required on the public form, optional on paper.
     city: true,
     phone: true,

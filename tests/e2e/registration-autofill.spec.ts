@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ensureRegistrationIsOpen, FEATURED, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 
 /**
  * `DECISIONS.md` §282 — what a password manager does to this form, and what a person refused by
@@ -37,6 +38,8 @@ async function fillRequired(page: Page, email: string, lastName = "Popescu") {
     // Spaces aside: the telephone boxes group the digits as they arrive (§337), which is not a wipe.
     if ((await box.inputValue()).replace(/\s/g, "") !== value.replace(/\s/g, "")) await box.fill(value);
   }
+  // «Sex» starts empty (§NNN): the form is refused without an answer.
+  await chooseSex(page);
   await page.locator('[name="emailConfirm"]').fill(email);
   await page.locator('[name="privacyAcknowledged"]').check();
   await page.locator('[name="rulesAcknowledged"]').check();
