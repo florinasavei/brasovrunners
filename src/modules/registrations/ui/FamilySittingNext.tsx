@@ -1,6 +1,7 @@
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -11,12 +12,17 @@ import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import PressWhenWindowEnds from "./PressWhenWindowEnds";
 
 type Props = {
   /** The address the sitting's forms are sent with, as typed on its first form. */
   email: string;
   /** Everybody the sitting sent the form for so far, as typed, the latest last. */
   names: readonly string[];
+  /** The form just sent named another person on the birth date of one typed before (§493), and was not kept. */
+  sameBirthDate: { typed: string; kept: string } | null;
+  /** How long until the window ends, by the server's clock: the open screen presses «Gata» then. */
+  releaseInMs: number;
   /** The first name of the form just sent (§224), for the heading; null once its cookie is gone. */
   firstName: string | null;
   eventTitle: string;
@@ -35,17 +41,20 @@ type Props = {
  * Two answers, one each, big: «Încă o persoană» opens the form again with the address fixed, and
  * «Gata — trimite-mi emailul» sends the one email, for everybody, with one button in it. Between
  * them, in plain words, what happens: nothing has been mailed yet, one email comes for all, the
- * declarations are signed one after the other, and — for a page closed without an answer — the email
- * leaves by itself after the club's window («Termene»).
+ * declarations are signed one after the other, and the email leaves by itself after the club's window
+ * («Termene»): pressed by the open screen when the window ends (`PressWhenWindowEnds`), or — the page
+ * closed — at the outbox job's next run after it, which the external pinger starts; the sentence says
+ * both, and that the second can take up to an hour at night.
  *
  * What it lists came from this browser's own forms and nothing else, so it reads the same for a first
  * registration, a family and an address that was registered already (§39, AGENTS.md §19.4). A Server
  * Component: the glyphs are children here, never props across the boundary (§370).
  */
-export default async function FamilySittingNext({ email, names, firstName, eventTitle, addHref, locale, slug, releaseAction }: Props) {
+export default async function FamilySittingNext({ email, names, sameBirthDate, releaseInMs, firstName, eventTitle, addHref, locale, slug, releaseAction }: Props) {
   const t = await getTranslations("Registration");
   const minutes = minutesPhrase(locale, (await cachedDeadlines()).familySittingMinutes);
-  const latest = names.at(-1) ?? null;
+  // A form that was not kept (§493) is not «the form for …» that arrived: the plain lead then.
+  const latest = sameBirthDate ? null : (names.at(-1) ?? null);
 
   return (
     <Stack spacing={3} data-testid="family-sitting">
@@ -77,6 +86,17 @@ export default async function FamilySittingNext({ email, names, firstName, event
         </Typography>
       </Box>
 
+      {/*
+        Another name on a birth date typed before (§493): twins, or a corrected name. The form was not
+        kept and nobody was replaced — the list below is what the email will name — so the screen says
+        so, with what can be done. Both names were typed on this browser (§39).
+      */}
+      {sameBirthDate && (
+        <Alert severity="warning" data-testid="family-sitting-same-birth-date">
+          {t("sitting.sameBirthDate", { name: sameBirthDate.typed, kept: sameBirthDate.kept })}
+        </Alert>
+      )}
+
       <Box component="section" aria-labelledby="family-sitting-so-far" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
         <Typography id="family-sitting-so-far" variant="body2" color="text.secondary">
           {t("sitting.soFar")}{" "}
@@ -106,6 +126,8 @@ export default async function FamilySittingNext({ email, names, firstName, event
           <form action={releaseAction} data-testid="family-sitting-done">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="slug" value={slug} />
+            {/* The window's end, while this screen is open: the same press, by itself. */}
+            <PressWhenWindowEnds delayMs={releaseInMs} />
             <SubmitButton label={t("sitting.done")} pendingLabel={t("sitting.donePending")} size="large" fullWidth>
               <MarkEmailReadIcon />
             </SubmitButton>

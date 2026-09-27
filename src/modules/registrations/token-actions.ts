@@ -470,6 +470,8 @@ export type FamilySittingPress =
       ok: true;
       /** Why somebody on the list did not join, as markers (`FamilySittingRefusal`), one each. */
       refused: FamilySittingRefusal[];
+      /** How many people of the list joined (a place or the waiting list); 0 when every kept form was unticked or refused. */
+      joined: number;
       /** The wizard's pass over the address's declarations to sign, bound to this spent link; null with nobody to sign. */
       pass: FamilySigningPass | null;
     }
@@ -494,7 +496,8 @@ export async function consumeAndConfirmFamilySitting(
     originSignable: false,
     signedIds: [],
   });
-  if (!currentFamilyStep(steps)) return { ok: true, refused: result.refused, pass: null };
+  const joined = result.registrations.length;
+  if (!currentFamilyStep(steps)) return { ok: true, refused: result.refused, joined, pass: null };
   const { pass } = await nextFamilyPass(
     db,
     {
@@ -508,7 +511,7 @@ export async function consumeAndConfirmFamilySitting(
     },
     now,
   );
-  return { ok: true, refused: result.refused, pass };
+  return { ok: true, refused: result.refused, joined, pass };
 }
 
 /** «Nu înscriu această persoană» (§468): the token spent, the kept form deleted, nobody registered. */

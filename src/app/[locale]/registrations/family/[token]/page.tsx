@@ -27,7 +27,7 @@ import { confirmFamilyEntryAction, confirmFamilySittingAction, declineFamilyEntr
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; refused?: string; decline?: string; wizard?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; refused?: string; decline?: string; wizard?: string; nobody?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, refused, decline, wizard } = await searchParams;
+  const { done, invalid, refused, decline, wizard, nobody } = await searchParams;
   const t = await getTranslations("Registrations");
   const tEvent = await getTranslations("Event");
 
@@ -102,16 +102,27 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
       markers.has("waitlist") ? t("familySitting.refusedWaitlist") : null,
       markers.has("other") ? t("familySitting.refusedOther") : null,
     ].filter((sentence): sentence is string => sentence !== null);
+    /*
+      Nobody joined (`nobody=1`): every kept form unticked, or every person refused. The address was
+      not confirmed and nobody registered, so the page says that, never «the registrations are made».
+    */
+    const nobodyJoined = nobody === "1";
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-          {t("familySitting.doneTitle")}
+          {nobodyJoined ? t("familySitting.nobodyTitle") : t("familySitting.doneTitle")}
         </Typography>
-        <RegistrationJourney current="declare" />
+        {!nobodyJoined && <RegistrationJourney current="declare" />}
         <Stack spacing={2}>
-          <Alert severity="success" data-testid="family-sitting-done">
-            {t("familySitting.done")}
-          </Alert>
+          {nobodyJoined ? (
+            <Alert severity="info" data-testid="family-sitting-nobody">
+              {refusals.length > 0 ? t("familySitting.nobodyRefused") : t("familySitting.nobody")}
+            </Alert>
+          ) : (
+            <Alert severity="success" data-testid="family-sitting-done">
+              {t("familySitting.done")}
+            </Alert>
+          )}
           {refusals.map((sentence) => (
             <Alert key={sentence} severity="warning" data-testid="family-sitting-refused">
               {sentence}
@@ -130,7 +141,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
                 {t("familySitting.sign")}
               </Button>
             </div>
-          ) : (
+          ) : nobodyJoined ? null : (
             <Typography>{t("familySitting.nothingToSign")}</Typography>
           )}
           <Typography variant="body2" color="text.secondary">

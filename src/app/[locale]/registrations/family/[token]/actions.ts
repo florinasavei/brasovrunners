@@ -83,9 +83,14 @@ export async function confirmFamilySittingAction(form: FormData): Promise<void> 
   if (!result.ok) redirect(`${path}?invalid=1`);
   if (result.pass) await writeFamilySigningPass(result.pass, token, now);
   const declarations = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
-  if (result.pass && result.refused.length === 0) redirect(declarations);
+  if (result.pass && result.refused.length === 0 && result.joined > 0) redirect(declarations);
   const refused = result.refused.length > 0 ? `&refused=${[...new Set(result.refused)].join(",")}` : "";
-  redirect(`${path}?done=family${result.pass ? "&wizard=1" : ""}${refused}`);
+  /*
+    Nobody joined — every kept form unticked, or every person refused: the address is not confirmed
+    and nobody is registered, which the page says instead of «the registrations are made».
+  */
+  const nobody = result.joined === 0 ? "&nobody=1" : "";
+  redirect(`${path}?done=family${result.pass ? "&wizard=1" : ""}${nobody}${refused}`);
 }
 
 /**

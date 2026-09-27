@@ -26,7 +26,9 @@ import {
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
   sittingCookieLive,
-  withSittingName,
+  sittingNames,
+  sittingSharedValues,
+  withSittingPerson,
 } from "@/modules/registrations/domain/family-sitting";
 import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { releaseFamilySitting } from "@/modules/registrations/family-sitting";
@@ -182,10 +184,15 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
 
   await clearFormDraft(path);
   /*
-    The sitting's browser half (§NNN): the address the next form is sent with, the names typed so far
-    — this one last — and the club's window from now, which the server moved to the same instant.
+    The sitting's browser half (§NNN): the address the next form is sent with, the people typed so far
+    — this one last, by the rule the server keeps for the sitting (`withSittingPerson`) — the boxes a
+    family shares, which the next form starts filled with, and the club's window from now, which the
+    server moved to the same instant. Everything from this browser's own forms (§39).
   */
-  const names = withSittingName(continuing && liveSitting ? liveSitting.names : [], `${input.firstName} ${input.lastName}`);
+  const prior = continuing && liveSitting ? liveSitting : null;
+  const typedPerson = withSittingPerson(prior?.people ?? [], { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
+  const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
+  const names = sittingNames(typedPerson.people);
   const minutes = (await currentDeadlines(db)).familySittingMinutes;
   /*
     Always an id of one shape (§39): a sitting that held nothing — a re-send about somebody already
@@ -198,8 +205,10 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       sittingId: sittingId ?? randomUUID(),
       eventId: publicEvent.id,
       email: input.email.trim(),
-      names,
+      people: typedPerson.people,
       heldUntil: new Date(now.getTime() + minutes * 60_000),
+      shared,
+      sameBirthDate: typedPerson.sameBirthDate,
     },
     path,
     now,

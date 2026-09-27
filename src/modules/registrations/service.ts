@@ -1399,10 +1399,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     };
     const keptInSitting = sitting ? await liveSittingEntries(tx, sitting.id, now) : [];
     /*
-      The same person as a form this sitting kept (§NNN): the newer form replaces it — a corrected
-      birth date, a name spelled right — rather than keeping the person twice for the one button.
-      Asked only where the address's registrations call the form another person: a form that is the
-      same as a registration is that registration's re-send, sitting or not.
+      A form this sitting kept, named again (§NNN). Asked only where the address's registrations call
+      the form another person: a form that is the same as a registration is that registration's
+      re-send, sitting or not.
+
+      - The same name (`sameRunner`): the newer form replaces the kept one — a corrected birth date,
+        the name's spelling — rather than keeping the person twice for the one button.
+      - Another name on a kept form's birth date (§493: twins, or a corrected name): neither replaced
+        nor added. Overwriting would drop the first person without a word; the screen after the form
+        says what happened and what to do, by the same rule on the browser's own forms
+        (`withSittingPerson`), and the held message names the kept person as before.
     */
     const sameKept =
       decision.kind === "offerAnother" && keptInSitting.length > 0
@@ -1414,9 +1420,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             { legalName, birthDate: input.birthDate ?? null },
           )
         : null;
+    if (sameKept?.kind === "sameBirthDate") {
+      await finishSitting();
+      return;
+    }
     if (sameKept) {
       const expiresAt = emailLinkExpiresAt(now, settings);
-      await replaceFamilyEntry(tx, sameKept.entry.id, {
+      await replaceFamilyEntry(tx, sameKept.entry.entry.id, {
         fields: familyEntryFields(input as unknown as Record<string, unknown>, now),
         locale: input.locale,
         expiresAt,

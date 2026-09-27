@@ -46,7 +46,7 @@ import {
   registeredOnAddress,
 } from "@/modules/registrations/family-entries";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
-import { findSittingById, linkSittingToken, sittingPeople, sittingStillOpen } from "@/modules/registrations/family-sitting";
+import { extendSittingLinks, findSittingById, linkSittingToken, sittingPeople, sittingStillOpen } from "@/modules/registrations/family-sitting";
 import { readAddressCap } from "@/modules/registrations/address-cap";
 import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
@@ -679,6 +679,12 @@ async function renderRow(
   let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
   if (purpose === "REGISTER_ANOTHER_PERSON" && familySitting) {
     if (row.participantId && !clubCopy) {
+      /*
+        The link's life counted from this send, as the message states it (§377): the sitting's
+        registrations and kept forms still live, and the sitting, move to the club's email-link window
+        from now — the form was sent a window and a pinger's wait ago.
+      */
+      familySitting = await extendSittingLinks(db, familySitting, emailLinkExpiresAt(now, settings), now);
       /*
         The family's one link (§NNN): single use, hashed at rest, minted here at send time (§12.8,
         §14.5), scoped to the registration the sitting names and tied to the sitting by the token's

@@ -73,7 +73,7 @@ import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { releaseFamilySittingAction, submitRegistrationAction } from "./actions";
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
-import { FAMILY_SITTING_FIELD, FAMILY_SITTING_PARAM, sittingCookieLive } from "@/modules/registrations/domain/family-sitting";
+import { FAMILY_SITTING_FIELD, FAMILY_SITTING_PARAM, sittingCookieLive, sittingNames } from "@/modules/registrations/domain/family-sitting";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -367,7 +367,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
   // While resting too (§447): a press the database refused left the answers in the draft cookie.
-  const draft = error || resting ? await readFormDraft() : null;
+  /*
+    The next form of a family sitting (§NNN) starts with the boxes the family shares — the city, the
+    citizenship, the guardian, the emergency contact, the emails' language — as this browser posted
+    them on the sitting's earlier forms; the person's own boxes start empty. A refusal's draft, which
+    holds everything typed, outranks them.
+  */
+  const draft = error || resting ? await readFormDraft() : familyForm && sitting?.shared ? sitting.shared : null;
   /*
   What was typed before a rejected submission (§142), by field name.
 
@@ -523,7 +529,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         */
         <FamilySittingNext
           email={sitting.email}
-          names={sitting.names}
+          names={sittingNames(sitting.people)}
+          sameBirthDate={sitting.sameBirthDate ?? null}
+          releaseInMs={sitting.heldUntil.getTime() - now.getTime()}
           firstName={submittedFacts?.firstName ?? null}
           eventTitle={event.title}
           addHref={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?${FAMILY_SITTING_PARAM}=1`}
@@ -722,7 +730,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           {familyForm && sitting && (
             <Alert severity="success" icon={false} sx={{ mb: 2 }} data-testid="family-sitting-intro">
               <AlertTitle>{t("sitting.formTitle")}</AlertTitle>
-              <Typography variant="body2">{t("sitting.formSoFar", { names: sitting.names.join(", ") })}</Typography>
+              <Typography variant="body2">{t("sitting.formSoFar", { names: sittingNames(sitting.people).join(", ") })}</Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {t("sitting.formNothingSent")}{" "}
                 <MuiLink href={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?submitted=1`} sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}>

@@ -5178,13 +5178,14 @@
       "nothingYet": "We send nothing until you press “Done”.",
       "oneEmail": "Then you get one email for everybody above, with one button: you confirm the address and every registration at once.",
       "wizard": "You sign the declarations right away, one after the other, on the same page; each person then gets their own QR code.",
-      "byItself": "If you close the page without pressing, the email leaves by itself in {minutes}.",
+      "byItself": "If you leave this page open, the email leaves by itself in {minutes}. If you close it, it leaves at the first check after that — usually within a quarter of an hour, at night within an hour.",
       "addressLabel": "Email address (the same as for the person before)",
       "addressHelp": "Every message for this person comes here too.",
       "formTitle": "One more person with the same address",
       "formSoFar": "So far: {names}. Fill in the new person's details — the address stays the same.",
       "formNothingSent": "We have not sent any email yet.",
-      "formBack": "I am not registering anyone else — back to “Done”"
+      "formBack": "I am not registering anyone else — back to “Done”",
+      "sameBirthDate": "The form for {name} was not kept: it has the same date of birth as {kept}, sent already. The list below is the one in the email. Did you mean to correct the name? Reply to the email and we will correct it. For a twin, send the form from another email address, or write to us and we will register them."
     }
   },
   "Registrations": {
@@ -5478,7 +5479,10 @@
       "sign": "Sign the declarations",
       "nothingToSign": "Nobody has a declaration to sign yet: those on the waiting list get an email when a place is offered to them.",
       "mineHint": "Everybody's state, any time:",
-      "mine": "All my registrations"
+      "mine": "All my registrations",
+      "nobodyTitle": "Nobody was registered",
+      "nobody": "We registered nobody; the details sent have been deleted.",
+      "nobodyRefused": "We registered nobody on the list."
     }
   },
   "Devs": {

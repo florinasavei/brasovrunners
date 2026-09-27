@@ -235,6 +235,10 @@ test.describe("§389 §446 a family on one address", () => {
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-address")).toContainText(email);
     await expect(page.locator('[name="emailConfirm"]')).toHaveCount(0);
+    // The boxes a family shares start as the first form left them; the person's own start empty.
+    await expect(page.locator('[name="city"]')).toHaveValue("Brașov");
+    await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");
+    await expect(page.locator('[name="firstName"]')).toHaveValue("");
     await fillPerson(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, null, false);
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Maria ${lastName}`);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -244,7 +248,8 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page).toHaveURL(/sent=1/, { timeout: 30_000 });
     await expect(page.getByTestId("check-email-family")).toContainText(`Ana ${lastName}, Maria ${lastName}`);
 
-    const family = await capturedEmail(page, email, "Înscriere de familie");
+    // «Înscriere de familie: 2 persoane la …» is the subject; the captured words are the body's.
+    const family = await capturedEmail(page, email, "Confirm și semnez declarațiile (2)");
     expect(family.text).toContain(`Persoana 1 din 2: Ana ${lastName}`);
     expect(family.text).toContain(`Persoana 2 din 2: Maria ${lastName}, data nașterii 11 iulie 1990`);
     expect(family.text).toContain("Confirm și semnez declarațiile (2)");

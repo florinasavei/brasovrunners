@@ -1,4 +1,5 @@
 import { comparePerson, type PostedPerson } from "./family";
+import { sameRunner } from "./name-key";
 
 /**
  * A family registered in one sitting, with one email (§NNN; the owner, 2026-09-27: "niciun email
@@ -38,23 +39,99 @@ export type FamilySittingCookie = {
   sittingId: string | null;
   eventId: string;
   email: string;
-  names: string[];
+  /** Everybody the sitting's forms were sent for, as typed, the latest last (`withSittingPerson`). */
+  people: SittingPerson[];
   /** When the email leaves by itself: the club's window from the last form. */
   heldUntil: Date;
+  /**
+   * The facts the next form of the sitting starts with (`sittingSharedValues`): the city, the
+   * citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a
+   * cookie written before they were kept.
+   */
+  shared?: Readonly<Record<string, string>>;
+  /** The last form named another person on the birth date of one typed before it (`withSittingPerson`). */
+  sameBirthDate?: { typed: string; kept: string } | null;
 };
+
+/** One person of the sitting, as this browser typed them: the name, and the birth date ("YYYY-MM-DD", or ""). */
+export type SittingPerson = { name: string; birthDate: string };
+
+/** The names, in the order the screen lists them. */
+export function sittingNames(people: readonly SittingPerson[]): string[] {
+  return people.map((person) => person.name);
+}
+
+/**
+ * The boxes a family shares, which the next form of a sitting starts filled with (the owner,
+ * 2026-09-27: «claritate»; a parent does not retype the town, the citizenship, the guardian and the
+ * emergency contact for every child). Everything else — the name, the birth date, the sex, the
+ * phone, the health note, the socials, every consent — belongs to the one person and starts empty.
+ * The phone's country and digits are the posted pair `PhoneField` reads back.
+ */
+export const SITTING_SHARED_FIELDS = [
+  "city",
+  "nationality",
+  "guardianName",
+  "emergencyContactName",
+  "emergencyContactPhoneCountry",
+  "emergencyContactPhone",
+  "preferredLocale",
+] as const;
+
+/**
+ * The shared boxes after one more form: what this form posted, and — for a box it left blank (an
+ * adult's form has no guardian) — what an earlier form of the sitting posted. Never a value read
+ * from the registrations table: only what this browser typed (§39).
+ */
+export function sittingSharedValues(
+  prior: Readonly<Record<string, string>> | undefined,
+  posted: (name: string) => string,
+): Record<string, string> {
+  const shared: Record<string, string> = {};
+  for (const name of SITTING_SHARED_FIELDS) {
+    const value = posted(name).trim();
+    const kept = prior?.[name]?.trim() ?? "";
+    if (value !== "") shared[name] = value;
+    else if (kept !== "") shared[name] = kept;
+  }
+  return shared;
+}
 
 /** Whether the cookie still stands for a sitting of this event: the email has not left by itself yet. */
 export function sittingCookieLive(cookie: FamilySittingCookie | null, eventId: string, now: Date): cookie is FamilySittingCookie {
   return cookie !== null && cookie.eventId === eventId && cookie.heldUntil.getTime() > now.getTime() && cookie.email !== "";
 }
 
-/** The names after one more form: the new one last, the same name typed again not twice. */
-export function withSittingName(names: readonly string[], name: string): string[] {
-  const trimmed = name.replace(/\s+/g, " ").trim();
-  if (trimmed === "") return [...names];
-  const folded = trimmed.toLocaleLowerCase("ro-RO");
-  const kept = names.filter((existing) => existing.toLocaleLowerCase("ro-RO") !== folded);
-  return [...kept, trimmed].slice(-SITTING_NAMES_MAX);
+/**
+ * The people after one more form, by the rule the server keeps for the sitting's own people
+ * (`sittingEntryFor`, `decideSubmission`) — so the list on the screen is the list the email and its
+ * page will name:
+ *
+ * - the **same name** (`sameRunner`) as somebody typed before: that person again, with the date as
+ *   now typed — a corrected birth date replaces, never adds; the new spelling moves to the end;
+ * - **another name on a birth date** typed before (§493: twins, or a corrected name): nobody is added
+ *   and nobody is replaced — the form is not kept, and `sameBirthDate` names the two for the screen's
+ *   sentence;
+ * - anybody else: added, last.
+ *
+ * Decided from this browser's own forms alone, never from what the address holds, so the screen reads
+ * the same whether the earlier form registered somebody, was kept, or re-sent a registration the
+ * address had already (§39, AGENTS.md §19.4).
+ */
+export function withSittingPerson(
+  people: readonly SittingPerson[],
+  typed: { name: string; birthDate: string | null | undefined },
+): { people: SittingPerson[]; sameBirthDate: { typed: string; kept: string } | null } {
+  const name = typed.name.replace(/\s+/g, " ").trim();
+  const birthDate = (typed.birthDate ?? "").slice(0, 10);
+  if (name === "") return { people: [...people], sameBirthDate: null };
+  const sameName = people.find((person) => sameRunner(person.name, name));
+  if (sameName) {
+    return { people: [...people.filter((person) => person !== sameName), { name, birthDate }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
+  }
+  const sameDay = birthDate !== "" ? people.find((person) => person.birthDate === birthDate) : undefined;
+  if (sameDay) return { people: [...people], sameBirthDate: { typed: name, kept: sameDay.name } };
+  return { people: [...people, { name, birthDate }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
 }
 
 /**
@@ -67,15 +144,27 @@ export function isFamilySitting(people: number): boolean {
 }
 
 /**
- * The kept form of this sitting a new form is about (§NNN): the same person, or a slip on one of
- * the two (§446's rule, `comparePerson`) — then the new form replaces it, so a parent who corrects a
- * date by sending the form again is not registering one more child. Null for a different person.
+ * The kept form of this sitting a new form is about (§NNN), and what to do with it:
+ *
+ * - `replace` — the **same name** (`sameRunner`), whatever the date: the same person again, or a
+ *   corrected birth date. The new form replaces the kept one, so a parent who corrects a date is not
+ *   registering one more child.
+ * - `sameBirthDate` — **another name on a kept form's birth date** (§493): twins, whom the owner's
+ *   rule reads as a slip, or a corrected name. Neither replaced nor added: overwriting would lose the
+ *   first person without a word. The screen says what to do (`withSittingPerson` keeps the same rule).
+ *
+ * Null for a different person (both differ, `comparePerson`).
  */
+export type SittingEntryMatch<E> = { kind: "replace"; entry: E } | { kind: "sameBirthDate"; entry: E } | null;
+
 export function sittingEntryFor<E extends { registeredName: string; birthDate: string | null }>(
   entries: readonly E[],
   posted: PostedPerson,
-): E | null {
-  return entries.find((entry) => comparePerson(entry, posted) !== "different") ?? null;
+): SittingEntryMatch<E> {
+  const byName = entries.find((entry) => sameRunner(entry.registeredName, posted.legalName));
+  if (byName) return { kind: "replace", entry: byName };
+  const byDate = entries.find((entry) => comparePerson(entry, posted) === "partial");
+  return byDate ? { kind: "sameBirthDate", entry: byDate } : null;
 }
 
 /**

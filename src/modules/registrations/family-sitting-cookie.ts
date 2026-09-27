@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { env } from "@/shared/config/env";
-import type { FamilySittingCookie } from "./domain/family-sitting";
+import type { FamilySittingCookie, SittingPerson } from "./domain/family-sitting";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
  * The browser's half of a family sitting (§NNN): which sitting, the address its forms are sent
- * with, and the names typed so far — sealed (AES-256-GCM under the deployment's secret bound to
+ * with, the people typed so far (name and birth date), the boxes a family shares for the next form
+ * and the last form's birth-date clash (§493) — sealed (AES-256-GCM under the deployment's secret bound to
  * this purpose, the form draft's sealing), `httpOnly`, `sameSite=lax`, on the registration form's
  * own path, and alive exactly as long as the sitting holds its email. Nothing in it goes in a URL
  * (§14.5); nothing in it was read from the registrations table, so the screen that lists it back
@@ -15,17 +16,46 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 const COOKIE = "br_family_sitting";
 const PURPOSE = "family-sitting";
 
+/** One line per person: the name, a tab, the birth date as typed ("" when none). */
+function peopleLines(people: readonly SittingPerson[]): string {
+  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}`).join("\n");
+}
+
+function peopleOf(lines: string | undefined): SittingPerson[] {
+  return (lines ?? "")
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => {
+      const [name = "", birthDate = ""] = line.split("\t");
+      return { name, birthDate };
+    });
+}
+
+function sharedOf(json: string | undefined): Record<string, string> | undefined {
+  if (!json) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object") return undefined;
+    return Object.fromEntries(Object.entries(parsed).filter(([, value]) => typeof value === "string")) as Record<string, string>;
+  } catch {
+    return undefined;
+  }
+}
+
 export function sealFamilySittingCookie(value: FamilySittingCookie, secret = purposeSecret(PURPOSE)): string | null {
-  return sealFormDraft(
-    {
-      s: value.sittingId ?? "",
-      e: value.eventId,
-      m: value.email,
-      n: value.names.join("\n"),
-      x: String(value.heldUntil.getTime()),
-    },
-    secret,
-  );
+  const base = {
+    s: value.sittingId ?? "",
+    e: value.eventId,
+    m: value.email,
+    n: peopleLines(value.people),
+    x: String(value.heldUntil.getTime()),
+    w: value.sameBirthDate ? `${value.sameBirthDate.typed}\t${value.sameBirthDate.kept}` : "",
+  };
+  /*
+    The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
+    the address and the people without them, rather than losing the sitting.
+  */
+  return sealFormDraft({ ...base, f: value.shared ? JSON.stringify(value.shared) : "" }, secret) ?? sealFormDraft(base, secret);
 }
 
 export function openFamilySittingCookie(sealed: string, secret = purposeSecret(PURPOSE)): FamilySittingCookie | null {
@@ -33,12 +63,15 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
   if (!opened?.e || !opened.m || !opened.x) return null;
   const heldUntil = new Date(Number(opened.x));
   if (!Number.isFinite(heldUntil.getTime())) return null;
+  const [typed = "", kept = ""] = (opened.w ?? "").split("\t");
   return {
     sittingId: opened.s ? opened.s : null,
     eventId: opened.e,
     email: opened.m,
-    names: (opened.n ?? "").split("\n").filter((name) => name.trim() !== ""),
+    people: peopleOf(opened.n),
     heldUntil,
+    shared: sharedOf(opened.f),
+    sameBirthDate: typed !== "" && kept !== "" ? { typed, kept } : null,
   };
 }
 

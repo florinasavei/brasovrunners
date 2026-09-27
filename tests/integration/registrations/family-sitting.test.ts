@@ -196,6 +196,63 @@ describe("§NNN a family in one sitting", () => {
     ]);
   });
 
+  it("never overwrites a kept form with another name on its birth date (§493: twins, or a corrected name)", async () => {
+    const event = await createEvent();
+    const sittingId = await send(event, "Ana", 0, null);
+    await send(event, "Maria", 2, sittingId);
+    // Twins: another name on Maria's birth date. Maria is kept as she was, and Ioana is not added.
+    expect(await send(event, "Ioana", 3, sittingId, { birthDate: "2010-07-11", guardianName: "Ana Pop" })).toBe(sittingId);
+    // A corrected name, the same birth date: read the same way — Maria stays, nothing is added.
+    expect(await send(event, "Mariana", 4, sittingId, { birthDate: "2010-07-11", guardianName: "Ana Pop" })).toBe(sittingId);
+    const kept = await db.select().from(pendingFamilyEntries);
+    expect(kept.map((entry) => [entry.fields.firstName, entry.fields.birthDate])).toEqual([["Maria", "2010-07-11"]]);
+    // Another name on the birth date of the sitting's own registration: nothing created, nothing kept.
+    expect(await send(event, "Anca", 5, sittingId, { birthDate: "1985-03-02" })).toBe(sittingId);
+    expect((await db.select().from(registrations)).map((row) => row.registeredName)).toEqual(["Ana Pop"]);
+    expect(await db.select().from(pendingFamilyEntries)).toHaveLength(1);
+    // Still one message, and it names the two the screen lists: Ana and Maria.
+    const rows = await outbox();
+    expect(rows).toHaveLength(1);
+    const { message } = await familyLink(at(20));
+    expect(message.subject).toContain("2 persoane");
+    expect(message.text).toContain("Maria Pop");
+    expect(message.text).not.toContain("Ioana Pop");
+    expect(message.text).not.toContain("Mariana Pop");
+  });
+
+  it("the family link lives the club's email-link window from the send, not from the first form", async () => {
+    const event = await createEvent();
+    const sittingId = await send(event, "Ana", 0, null);
+    await send(event, "Maria", 2, sittingId);
+    const sentAt = at(75);
+    await familyLink(sentAt);
+    const lapse = new Date(sentAt.getTime() + 48 * 3_600_000).toISOString();
+    const [ana] = await db.select().from(registrations);
+    expect(ana.emailLinkExpiresAt?.toISOString()).toBe(lapse);
+    const [maria] = await db.select().from(pendingFamilyEntries);
+    expect(maria.expiresAt.toISOString()).toBe(lapse);
+    const [sitting] = await db.select().from(familySittings);
+    expect(sitting.expiresAt.toISOString()).toBe(lapse);
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
+    expect(token.expiresAt.toISOString()).toBe(lapse);
+  });
+
+  it("a press that registers nobody says so: every kept form unticked, the address not confirmed", async () => {
+    const event = await createEvent();
+    // Ana registered outside any sitting; the sitting holds two kept forms and no registration of its own.
+    await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
+    const sittingId = await send(event, "Maria", 1, null);
+    await send(event, "Dan", 2, sittingId);
+    const { secret } = await familyLink(at(20));
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: [], fitnessAcknowledged: false }, at(21));
+    if (!press.ok) throw new Error("the press did nothing");
+    expect(press.joined).toBe(0);
+    expect(press.refused).toEqual([]);
+    expect(await db.select().from(pendingFamilyEntries)).toHaveLength(0);
+    const [participant] = await db.select().from(participants);
+    expect(participant.emailVerifiedAt).toBeNull();
+  });
+
   it("renders one family message: the subject, everybody by name and birth date, one button, and «Toate înscrierile mele»", async () => {
     const event = await createEvent();
     const sittingId = await send(event, "Ana", 0, null);
@@ -246,7 +303,9 @@ describe("§NNN a family in one sitting", () => {
     const result = await confirmFamilySitting(db, secret!, { includedKeys: [keyOf("Maria Pop"), keyOf("Ion Pop")], fitnessAcknowledged: true }, at(23));
     if (!result.ok) throw new Error("the press did nothing");
     expect(result.refused).toEqual([]);
-    const rows = await db.select().from(registrations).orderBy(registrations.createdAt);
+    // In the press's order: Maria and Ion are created at one instant, so `created_at` cannot order them.
+    const rows = result.registrations;
+    expect(await db.select().from(registrations)).toHaveLength(3);
     expect(rows.map((row) => [row.registeredName, row.status])).toEqual([
       ["Ana Pop", "PENDING_DECLARATION"],
       ["Maria Pop", "PENDING_DECLARATION"],

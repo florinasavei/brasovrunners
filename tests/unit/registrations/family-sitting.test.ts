@@ -9,7 +9,9 @@ const {
   sittingCookieLive,
   sittingEntryFor,
   sittingLinkExpiresAt,
-  withSittingName,
+  sittingNames,
+  sittingSharedValues,
+  withSittingPerson,
   SITTING_NAMES_MAX,
 } = await import("@/modules/registrations/domain/family-sitting");
 const { openFamilySittingCookie, sealFamilySittingCookie } = await import("@/modules/registrations/family-sitting-cookie");
@@ -27,13 +29,33 @@ const NOW = new Date("2026-09-27T10:00:00.000Z");
 const EVENT_ID = "00000000-0000-4000-8000-000000000001";
 
 describe("§NNN the browser's half of a sitting", () => {
-  const cookie = { sittingId: "00000000-0000-4000-8000-0000000000aa", eventId: EVENT_ID, email: "familia.pop@example.ro", names: ["Ana Pop", "Maria Pop"], heldUntil: new Date(NOW.getTime() + 900_000) };
+  const cookie = {
+    sittingId: "00000000-0000-4000-8000-0000000000aa",
+    eventId: EVENT_ID,
+    email: "familia.pop@example.ro",
+    people: [
+      { name: "Ana Pop", birthDate: "1985-03-02" },
+      { name: "Maria Pop", birthDate: "2010-07-11" },
+    ],
+    heldUntil: new Date(NOW.getTime() + 900_000),
+    shared: { city: "Brașov", nationality: "RO", guardianName: "Ana Pop" },
+    sameBirthDate: null,
+  };
 
   it("seals and opens under its own key, never as a form draft", () => {
     const sealed = sealFamilySittingCookie(cookie)!;
     expect(openFamilySittingCookie(sealed)).toEqual(cookie);
     expect(openFormDraft(sealed)).toBeNull();
     expect(sealed).not.toContain("familia");
+  });
+
+  it("carries the last form's birth-date clash, and keeps the sitting without the shared boxes when they would not fit", () => {
+    const clash = { ...cookie, sameBirthDate: { typed: "Ioana Pop", kept: "Maria Pop" } };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(clash)!)?.sameBirthDate).toEqual({ typed: "Ioana Pop", kept: "Maria Pop" });
+    const huge = { ...cookie, shared: { city: "x".repeat(4_000) } };
+    const opened = openFamilySittingCookie(sealFamilySittingCookie(huge)!);
+    expect(opened?.people).toEqual(cookie.people);
+    expect(opened?.shared).toBeUndefined();
   });
 
   it("stands for a sitting of this event until its email leaves by itself", () => {
@@ -43,12 +65,40 @@ describe("§NNN the browser's half of a sitting", () => {
     expect(sittingCookieLive(null, EVENT_ID, NOW)).toBe(false);
   });
 
-  it("keeps each name once, the latest last, and at most ten", () => {
-    expect(withSittingName(["Ana Pop", "Maria Pop"], "  ana   pop ")).toEqual(["Maria Pop", "ana pop"]);
-    expect(withSittingName([], "   ")).toEqual([]);
-    const many = Array.from({ length: 12 }, (_, index) => `Copil ${index}`).reduce<string[]>((names, name) => withSittingName(names, name), []);
+  it("keeps each person once, the latest last, and at most ten", () => {
+    const people = [
+      { name: "Ana Pop", birthDate: "1985-03-02" },
+      { name: "Maria Pop", birthDate: "2010-07-11" },
+    ];
+    expect(sittingNames(withSittingPerson(people, { name: "  ana   pop ", birthDate: "1985-03-02" }).people)).toEqual(["Maria Pop", "ana pop"]);
+    expect(withSittingPerson([], { name: "   ", birthDate: "2010-01-01" }).people).toEqual([]);
+    const many = Array.from({ length: 12 }, (_, index) => ({ name: `Copil ${index}`, birthDate: `2010-01-${String(index + 1).padStart(2, "0")}` })).reduce<
+      { name: string; birthDate: string }[]
+    >((kept, person) => withSittingPerson(kept, person).people, []);
     expect(many).toHaveLength(SITTING_NAMES_MAX);
-    expect(many.at(-1)).toBe("Copil 11");
+    expect(many.at(-1)?.name).toBe("Copil 11");
+  });
+
+  it("lists what the email will name: a corrected date replaces, another name on a typed birth date is not added (§493)", () => {
+    const ana = [{ name: "Ana Pop", birthDate: "2015-05-05" }];
+    // A corrected birth date: the same person, the new date, one line.
+    expect(withSittingPerson(ana, { name: "Ana Pop", birthDate: "2015-05-06" })).toEqual({ people: [{ name: "Ana Pop", birthDate: "2015-05-06" }], sameBirthDate: null });
+    // Twins, or a corrected name: nobody added, nobody replaced, and the screen names the two.
+    expect(withSittingPerson(ana, { name: "Maria Pop", birthDate: "2015-05-05" })).toEqual({ people: ana, sameBirthDate: { typed: "Maria Pop", kept: "Ana Pop" } });
+    // Somebody else: added.
+    expect(sittingNames(withSittingPerson(ana, { name: "Ion Pop", birthDate: "1987-02-14" }).people)).toEqual(["Ana Pop", "Ion Pop"]);
+  });
+
+  it("starts the next form with the boxes a family shares, a blank one keeping the earlier form's", () => {
+    const posted = (values: Record<string, string>) => (name: string) => values[name] ?? "";
+    const first = sittingSharedValues(undefined, posted({ city: "Brașov", nationality: "RO", firstName: "Ana", phone: "722000000", emergencyContactName: "Dan Pop" }));
+    expect(first).toEqual({ city: "Brașov", nationality: "RO", emergencyContactName: "Dan Pop" });
+    // The person's own boxes are never carried.
+    expect(first).not.toHaveProperty("firstName");
+    expect(first).not.toHaveProperty("phone");
+    // A child's form adds the guardian; an adult's blank guardian keeps it.
+    const second = sittingSharedValues(first, posted({ city: "Brașov", nationality: "RO", guardianName: "Ana Pop" }));
+    expect(sittingSharedValues(second, posted({ city: "Codlea" }))).toEqual({ city: "Codlea", nationality: "RO", guardianName: "Ana Pop", emergencyContactName: "Dan Pop" });
   });
 });
 
@@ -59,10 +109,12 @@ describe("§NNN the sitting's decisions", () => {
     expect(isFamilySitting(2)).toBe(true);
   });
 
-  it("reads a second form for a kept person — or a slip on one of the two — as that person, and anybody else as somebody new", () => {
+  it("replaces a kept form only by its name — a corrected date — and never overwrites it with another name on its birth date", () => {
     const kept = [{ id: "e1", registeredName: "Maria Pop", birthDate: "2010-07-11" }];
-    expect(sittingEntryFor(kept, { legalName: "maria  pop", birthDate: "2010-07-11" })?.id).toBe("e1");
-    expect(sittingEntryFor(kept, { legalName: "Maria Pop", birthDate: "2010-07-12" })?.id).toBe("e1");
+    expect(sittingEntryFor(kept, { legalName: "maria  pop", birthDate: "2010-07-11" })).toEqual({ kind: "replace", entry: kept[0] });
+    expect(sittingEntryFor(kept, { legalName: "Maria Pop", birthDate: "2010-07-12" })).toEqual({ kind: "replace", entry: kept[0] });
+    // §493: twins, or a corrected name — neither replaced nor added.
+    expect(sittingEntryFor(kept, { legalName: "Ioana Pop", birthDate: "2010-07-11" })).toEqual({ kind: "sameBirthDate", entry: kept[0] });
     expect(sittingEntryFor(kept, { legalName: "Ion Pop", birthDate: "1987-02-14" })).toBeNull();
   });
 

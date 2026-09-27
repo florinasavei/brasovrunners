@@ -5178,13 +5178,14 @@
       "nothingYet": "Nu trimitem nimic până nu apeși „Gata”.",
       "oneEmail": "Apoi primești un singur email pentru toți cei de mai sus, cu un singur buton: confirmi adresa și toate înscrierile deodată.",
       "wizard": "Semnezi declarațiile pe loc, una după alta, pe aceeași pagină; fiecare persoană primește apoi propriul cod QR.",
-      "byItself": "Dacă închizi pagina fără să apeși, emailul pleacă singur peste {minutes}.",
+      "byItself": "Dacă lași pagina deschisă, emailul pleacă singur peste {minutes}. Dacă o închizi, pleacă la prima verificare de după aceea — de obicei într-un sfert de oră, noaptea în cel mult o oră.",
       "addressLabel": "Adresa de email (aceeași ca la persoana dinainte)",
       "addressHelp": "Toate mesajele pentru această persoană vin tot aici.",
       "formTitle": "Încă o persoană cu aceeași adresă",
       "formSoFar": "Până acum: {names}. Completează datele persoanei noi — adresa rămâne aceeași.",
       "formNothingSent": "Încă nu am trimis niciun email.",
-      "formBack": "Nu mai înscriu pe nimeni — înapoi la „Gata”"
+      "formBack": "Nu mai înscriu pe nimeni — înapoi la „Gata”",
+      "sameBirthDate": "Formularul pentru {name} nu a fost păstrat: are aceeași dată de naștere ca {kept}, trimis(ă) deja. Lista de mai jos este cea din email. Ai vrut să corectezi numele? Răspunde la email și îl corectăm noi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email sau scrie-ne și facem noi înscrierea."
     }
   },
   "Registrations": {
@@ -5478,7 +5479,10 @@
       "sign": "Semnează declarațiile",
       "nothingToSign": "Nimeni nu are încă o declarație de semnat: cei de pe lista de așteptare primesc un email când li se oferă un loc.",
       "mineHint": "Starea fiecăruia, oricând:",
-      "mine": "Toate înscrierile mele"
+      "mine": "Toate înscrierile mele",
+      "nobodyTitle": "Nu am înscris pe nimeni",
+      "nobody": "Nu am înscris pe nimeni; datele trimise s-au șters.",
+      "nobodyRefused": "Nu am înscris pe nimeni din listă."
     }
   },
   "Devs": {

@@ -1,6 +1,6 @@
-import { and, asc, eq, inArray, lte } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lt, lte } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { type FamilySitting, familySittings, type PendingFamilyEntry } from "@/db/schema/family-entries";
+import { type FamilySitting, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -173,6 +173,43 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
   });
   // Sent after this response, as a message queued now would be (§68).
   if (released) drainOutboxAfterResponse();
+}
+
+/**
+ * The family message is rendered — it is leaving now (§NNN): everything its one link acts on lives
+ * the club's email-link window («Termene», §377) from this instant, as the message says («linkul e
+ * valabil 48 de ore»), not from the form that was sent a window and a pinger's wait earlier. Only
+ * what is still live is lengthened, and never shortened: a registration whose link already lapsed and
+ * a kept form past its time stay lapsed. Returns the sitting with its new lapse, for the token.
+ */
+export async function extendSittingLinks<T extends Record<string, unknown>>(
+  db: Database<T>,
+  sitting: FamilySitting,
+  until: Date,
+  now: Date,
+): Promise<FamilySitting> {
+  return db.transaction(async (tx) => {
+    if (sitting.registrationIds.length > 0) {
+      await tx
+        .update(registrations)
+        .set({ emailLinkExpiresAt: until })
+        .where(
+          and(
+            inArray(registrations.id, [...sitting.registrationIds]),
+            eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+            gt(registrations.emailLinkExpiresAt, now),
+            lt(registrations.emailLinkExpiresAt, until),
+          ),
+        );
+    }
+    await tx
+      .update(pendingFamilyEntries)
+      .set({ expiresAt: until })
+      .where(and(eq(pendingFamilyEntries.sittingId, sitting.id), gt(pendingFamilyEntries.expiresAt, now), lt(pendingFamilyEntries.expiresAt, until)));
+    if (sitting.expiresAt.getTime() >= until.getTime()) return sitting;
+    const [row] = await tx.update(familySittings).set({ expiresAt: until }).where(eq(familySittings.id, sitting.id)).returning();
+    return row ?? { ...sitting, expiresAt: until };
+  });
 }
 
 export async function findSittingById<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<FamilySitting | undefined> {
