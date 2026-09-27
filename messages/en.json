@@ -1123,7 +1123,7 @@
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
-      "declarationDocumentHelp": "Trail for mountain or forest courses, road or park for asphalt, concrete, tartan or paving. For a race with no declaration chosen, the box starts on the kind that fits the surface in “The course” — the road or park one on asphalt, once approved; otherwise the trail one — and you can change it. The participant signs the newest approved version of the kind chosen. The text is never edited here: a new version is approved under Legal documents.",
+      "declarationDocumentHelp": "Trail for mountain or forest, road or park for asphalt, concrete, tartan or paving. The box starts from the surface in “The course”; you can change it. The text is approved under Legal documents.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
@@ -1717,7 +1717,7 @@
         "help": "The run's page shows “Sign the self-declaration”, optional; the signer and the club each get a copy. It needs an approved privacy notice.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
-        "minAgeHelp": "The run's declaration covers no minor: it says at least 18, even if this box says less. Set more than 18, for example 21, only if the run requires it: the signing page then asks for the birth date and refuses anyone younger.",
+        "minAgeHelp": "Reached by the day of the run, at least 18: the declaration covers no minor, even if this box says less. Above 18, for example 21, the signing page asks for the birth date.",
         "surface": "Surface, from “The course” card: {surface}",
         "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
@@ -1880,7 +1880,7 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The texts accepted at registration — the privacy notice, the terms and the race declaration, in two kinds, trail and road or park — and the two optional declarations of the group runs; in all: {count}. An approved version never changes; a correction is a new version.",
+      "intro": "The privacy notice, the terms, the race declaration (trail and road or park) and the two group-run declarations: {count} texts. A correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
@@ -1990,7 +1990,7 @@
       },
       "tokens": {
         "title": "The fields that fill themselves in",
-        "intro": "Leave them exactly as they are. The participant's and the event's appear in the declaration only and are filled in at signing; the deadlines, in any text, with the values under Settings → “Deadlines”. The club's own facts are already written into the text.",
+        "intro": "Leave them exactly as they are. The participant's and the event's are filled in at signing; the deadlines, with the values under Settings → “Deadlines”.",
         "inText": "in this text",
         "participant": "The name the participant registered under",
         "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
@@ -3400,7 +3400,7 @@
     },
     "emails": {
       "title": "The emails participants receive",
-      "intro": "Every message the platform sends, exactly as it reaches the participant, with sample data. The links in the samples go nowhere. Each leaves through the email queue: on the platform's scheduled round (the default) or right after the request, by «Deadlines» → «When emails leave». Each one's «when» line says what queues it.",
+      "intro": "Every message the platform sends, as the participant gets it, with sample data; the links in the samples go nowhere. When messages leave is set under Settings → «Deadlines».",
       "link": "See the emails participants receive →",
       "subject": "Subject",
       "aside": "{count} messages · {language}",
@@ -3744,7 +3744,7 @@
       },
       "deadlines": {
         "title": "Deadlines",
-        "intro": "How long each deadline given to a participant lasts. A deadline runs from when the email announcing it leaves, not from when it joined the queue. It applies from the save onwards; the numbers appear by themselves in the emails, on the form and in new legal texts.",
+        "intro": "How long each deadline given to a participant lasts, counted from when the email announcing it leaves. It applies from the save onwards.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
         "bounds": "Recommended: {recommended}. Between {min} and {max}.",
@@ -3876,9 +3876,9 @@
       "newsletterLinkHelp": "The subscribers and the messages to them have their own page in the menu.",
       "deliveryTiming": {
         "title": "When emails leave",
-        "intro": "On the scheduled round (the default), emails wait in the queue and leave at the platform's next check — on this site within {day} by day and {night} at night: sending is paced, the daily allowance is spent predictably, and what one registration queues leaves together. «Right after the request» sends them within seconds of the press. No email is lost either way, and «Send now» empties the queue at any time.",
+        "intro": "On the scheduled round (the default), emails leave at the platform's next check: within {day} by day and {night} at night. «Right after the request» sends them within seconds. No email is lost.",
         "field": "Emails leave",
-        "help": "The page after the registration form, the link resend and the newsletter sign-up tell the person how long it may take. However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing to the wait.",
+        "help": "However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing.",
         "option": {
           "scheduled": "On the platform's scheduled round (within {wait}; recommended)",
           "immediate": "Right after the request"
@@ -5325,7 +5325,7 @@
       "family": {
         "stepsLabel": "The declarations on this address",
         "stepTitle": "Declaration {step} of {total} — {name}",
-        "intro": "Several people are registered on this address. Sign the declarations here one after the other, each with their own name and document. The confirmation, with the QR codes, the race numbers and the PDFs, comes by email.",
+        "intro": "Several people are registered on this address. Each signs here in turn, with their own name and document. The confirmation, with the QR codes, numbers and PDFs, comes by email.",
         "lastSigned": "The declaration for {name} is signed. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
         "lastWaitlisted": "The place for {name} was no longer free: {name} is now on the waiting list.",
         "doneTitle": "The declarations on this address",

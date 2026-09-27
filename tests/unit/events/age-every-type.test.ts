@@ -14,7 +14,8 @@ import ro from "../../../messages/ro.json";
  * type, and the event's page says it for every type, inside «Condiții de participare» (§498) after
  * the rules, no longer as a «Vârstă» row of the facts (amending §329's "only where the club counts
  * it"). Where the club takes the registrations, the form's own sentence (§410); anywhere else the
- * minimum with the parent's consent below eighteen; nothing for no minimum where nobody registers.
+ * minimum with the parent's consent below eighteen. Never under fourteen (§NNN): an event saved
+ * with 0 reads as fourteen (`effectiveMinimumAge`), so every event states a minimum.
  */
 vi.mock("next-intl/server", async () => {
   const { createFormatter, createTranslator: translator } = await import("next-intl");
@@ -46,14 +47,15 @@ describe("§505 the page says the minimum age for every type", () => {
     // The club's own door: the form's sentence, the parent's clause by the number (§329, §410).
     expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 14 })).toBe("minimumAndGuardian");
     expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 18 })).toBe("minimumOnly");
-    expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 0 })).toBe("guardianOnly");
+    // An older event's 0 reads as fourteen (§NNN): the minimum and the parent, never «no minimum».
+    expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 0 })).toBe("minimumAndGuardian");
     // Every type, registered elsewhere or not at all: the minimum with the parent's consent under
-    // eighteen, the minimum alone from eighteen, nothing for none.
+    // eighteen, the minimum alone from eighteen; 0 reads as fourteen.
     for (const type of EVENT_TYPES) {
       for (const registrationMode of ["NONE", "EXTERNAL"] as const) {
         expect(publicAgeRule({ type, registrationMode, minAge: 16 }), `${type} ${registrationMode}`).toBe("minimumAndConsent");
         expect(publicAgeRule({ type, registrationMode, minAge: 18 }), `${type} ${registrationMode}`).toBe("minimumOnly");
-        expect(publicAgeRule({ type, registrationMode, minAge: 0 }), `${type} ${registrationMode}`).toBeNull();
+        expect(publicAgeRule({ type, registrationMode, minAge: 0 }), `${type} ${registrationMode}`).toBe("minimumAndConsent");
       }
     }
     // A group run is turned up to whatever its hidden mode says (§111): the consent, not a registration.
@@ -84,8 +86,10 @@ describe("§505 the page says the minimum age for every type", () => {
     );
   });
 
-  it("no minimum and no registration here: nothing at all", async () => {
-    expect(await ageOf({ type: "GROUP_RUN", registrationMode: "NONE", minAge: 0 })).toBe("");
+  it("an older event's 0 says fourteen, never «no minimum» (§NNN)", async () => {
+    expect(await ageOf({ type: "GROUP_RUN", registrationMode: "NONE", minAge: 0 })).toContain(
+      "Vârsta minimă: 14 ani. Sub 18 ani, participarea se face cu acordul unui părinte.",
+    );
   });
 
   it("is drawn inside «Condiții de participare», after the rules and before the photographs notice — no longer a facts row", () => {
@@ -136,8 +140,10 @@ describe("§505 the editor's one box, for every type", () => {
     }
   });
 
-  it("the box's help says the default, 14, and 0 for no limit", async () => {
-    expect(await rulesBox("GROUP_RUN")).toContain("Implicit 14; pune 0 pentru fără limită.");
+  it("the box's help says the floor, 14, never «0 for no limit» (§NNN)", async () => {
+    const html = await rulesBox("GROUP_RUN");
+    expect(html).toContain("Cel puțin 14 ani, împliniți în ziua evenimentului.");
+    expect(html).not.toContain("fără limită");
   });
 
   it("a role without settings rights reads the number instead of the box", async () => {
@@ -149,8 +155,12 @@ describe("§505 the editor's one box, for every type", () => {
   it("the label and the help are the owner's words, in both languages", () => {
     expect(ro.Admin.editor.minAge).toBe("Vârsta minimă de participare");
     expect(en.Admin.editor.minAge).toBe("Minimum age to take part");
-    expect(ro.Admin.editor.minAgeHelp).toBe("Implicit {default}; pune 0 pentru fără limită. Sub 18 ani, înscrierea se face de un părinte.");
-    expect(en.Admin.editor.minAgeHelp).toBe("{default} by default; put 0 for no limit. Under 18, a parent registers the runner.");
+    expect(ro.Admin.editor.minAgeHelp).toBe(
+      "Cel puțin {default} ani, împliniți în ziua evenimentului. Între {default} și 17 ani, înscrierea o face un părinte sau tutore, iar declarația o semnează minorul și părintele.",
+    );
+    expect(en.Admin.editor.minAgeHelp).toBe(
+      "At least {default}, reached by the day of the event. From {default} to 17, a parent or legal guardian registers the runner, and the declaration is signed by the minor and the parent.",
+    );
     for (const catalogue of [ro, en]) {
       expect(catalogue.Admin.editor.boxes.summary.age.from).toContain("{age}");
       expect(catalogue.Admin.editor.boxes.summary.age.from).not.toMatch(/\d/);

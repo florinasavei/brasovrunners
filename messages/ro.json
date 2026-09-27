@@ -1123,7 +1123,7 @@
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
-      "declarationDocumentHelp": "Trail pentru trasee montane sau de pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. La un concurs fără declarație aleasă, căsuța pornește de la varianta potrivită suprafeței din «Traseul» — pe asfalt cea de șosea sau parc, dacă e aprobată; altfel cea de trail — și o poți schimba. Participantul semnează cea mai nouă versiune aprobată de tipul ales. Textul nu se editează aici: o versiune nouă se aprobă în Documente legale.",
+      "declarationDocumentHelp": "Trail pentru munte sau pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. Căsuța pornește de la suprafața din «Traseul»; o poți schimba. Textul se aprobă în Documente legale.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
@@ -1717,7 +1717,7 @@
         "help": "Pe pagina alergării apare „Semnează declarația pe propria răspundere”, opțională; semnatarul și clubul primesc câte o copie. Cere o notă de confidențialitate aprobată.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
-        "minAgeHelp": "Declarația alergării nu acoperă minorii: spune cel puțin 18 ani, chiar dacă aici e mai puțin. Pune mai mult de 18, de exemplu 21, doar dacă alergarea o cere: atunci pagina de semnare cere data nașterii și refuză pe cine e mai tânăr.",
+        "minAgeHelp": "Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii, chiar dacă aici e mai puțin. Peste 18, de exemplu 21, pagina de semnare cere data nașterii.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
         "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
@@ -1880,7 +1880,7 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Textele acceptate la înscriere — nota de confidențialitate, termenii și declarația de concurs, în două variante, trail și șosea sau parc — și cele două declarații opționale ale alergărilor de grup; în total: {count}. O versiune aprobată nu se mai schimbă; o corectură e o versiune nouă.",
+      "intro": "Nota de confidențialitate, termenii, declarația de concurs (trail și șosea sau parc) și cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
@@ -1990,7 +1990,7 @@
       },
       "tokens": {
         "title": "Câmpurile care se completează singure",
-        "intro": "Le lași exact așa în text. Cele ale participantului și ale evenimentului apar doar în declarație și se completează la semnare; termenele, în orice text, cu valorile de la Setări → „Termene”. Datele clubului sunt deja scrise în text.",
+        "intro": "Le lași exact așa în text. Cele ale participantului și ale evenimentului se completează la semnare; termenele, cu valorile din Setări → „Termene”.",
         "inText": "în text",
         "participant": "Numele cu care s-a înscris participantul",
         "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
@@ -3400,7 +3400,7 @@
     },
     "emails": {
       "title": "Emailurile trimise participanților",
-      "intro": "Fiecare mesaj pe care platforma îl trimite, exact cum ajunge la participant, cu date de exemplu. Linkurile din exemple nu duc nicăieri. Fiecare pleacă prin coada de emailuri: la trecerea programată a platformei (implicit) sau imediat după cerere, după «Termene» → «Când pleacă emailurile». Rândul «când» al fiecăruia spune ce îl pune în coadă.",
+      "intro": "Fiecare mesaj al platformei, cum ajunge la participant, cu date de exemplu; linkurile din exemple nu duc nicăieri. Când pleacă mesajele se alege în Setări → «Termene».",
       "link": "Vezi emailurile pe care le primesc participanții →",
       "subject": "Subiect",
       "aside": "{count} mesaje · {language}",
@@ -3744,7 +3744,7 @@
       },
       "deadlines": {
         "title": "Termene",
-        "intro": "Cât durează fiecare termen dat unui participant. Termenul curge de când pleacă emailul care îl anunță, nu de când a intrat în coadă. Se aplică de la salvare înainte; numerele apar singure în emailuri, pe formular și în textele legale noi.",
+        "intro": "Cât durează fiecare termen dat unui participant, socotit de când pleacă emailul care îl anunță. Se aplică de la salvare înainte.",
         "aside": "Link {confirmation} · loc ținut {hold} · ofertă {offer} · reminder {reminder}",
         "reminderOff": "fără",
         "bounds": "Recomandat: {recommended}. Între {min} și {max}.",
@@ -3876,9 +3876,9 @@
       "newsletterLinkHelp": "Abonații și mesajele către ei au pagina lor în meniu.",
       "deliveryTiming": {
         "title": "Când pleacă emailurile",
-        "intro": "La trecerea programată (implicit), emailurile se adună în coadă și pleacă la următoarea verificare a platformei — pe acest site în cel mult {day} ziua și {night} noaptea: trimiterea e eșalonată, limita zilnică se consumă previzibil, iar ce pune în coadă o singură înscriere pleacă împreună. «Imediat după cerere» le trimite în câteva secunde de la apăsare. Niciun email nu se pierde în niciun caz, iar «Trimite acum» golește coada oricând.",
+        "intro": "La trecerea programată (implicit), emailurile pleacă la următoarea verificare: în cel mult {day} ziua și {night} noaptea. «Imediat după cerere» le trimite în câteva secunde. Niciun email nu se pierde.",
         "field": "Emailurile pleacă",
-        "help": "Pagina de după formularul de înscriere, retrimiterea linkului și abonarea la noutăți îi spun persoanei cât poate dura. Oricât ar aștepta un email, termenul curge de când pleacă emailul: locul ținut, oferta și linkurile nu pierd nimic din așteptare.",
+        "help": "Oricât ar aștepta un email, termenul curge de când pleacă: locul ținut, oferta și linkurile nu pierd nimic.",
         "option": {
           "scheduled": "La trecerea programată a platformei (în cel mult {wait}; recomandat)",
           "immediate": "Imediat după cerere"
@@ -5392,7 +5392,7 @@
       "family": {
         "stepsLabel": "Declarațiile de pe această adresă",
         "stepTitle": "Declarația {step} din {total} — {name}",
-        "intro": "Pe această adresă sunt mai multe persoane înscrise. Declarațiile se semnează aici pe rând, fiecare cu numele și actul ei. Confirmarea, cu codurile QR, numerele de concurs și PDF-urile, vine pe email.",
+        "intro": "Pe această adresă sunt mai multe persoane înscrise. Fiecare semnează aici pe rând, cu numele și actul ei. Confirmarea, cu codurile QR, numerele și PDF-urile, vine pe email.",
         "lastSigned": "Declarația pentru {name} a fost semnată. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
         "lastWaitlisted": "Locul pentru {name} nu mai era disponibil: {name} este acum pe lista de așteptare.",
         "doneTitle": "Declarațiile de pe această adresă",

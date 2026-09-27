@@ -10,7 +10,7 @@ import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -65,8 +65,8 @@ beforeEach(async () => {
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   const declaration: LegalDocumentTranslationInput[] = [
-    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-    { locale: "en", title: "Declaration", body: declarationEn },
+    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+    { locale: "en", title: "Declaration", body: declarationTrailEn },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
@@ -93,6 +93,7 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
   birthDate: BIRTH_DATES[firstName] ?? "1980-01-01",
   sex: "UNSPECIFIED",
   nationality: "RO",
+  country: "RO",
   city: "Brașov",
   phone: "+40711111111",
   emergencyContactName: "Ion Vecinul",
@@ -348,10 +349,11 @@ describe("§NNN a family in one sitting", () => {
     expect(declined[0].metadataJson).toEqual({ by: "family_sitting" });
 
     // The declaration requests wait the wizard's half hour, and go only to whoever is still unsigned then.
+    // Each starts its hold (`startsDeadline`): the hold counts from when the request leaves.
     const requests = (await outbox()).filter((row) => row.messageType === "COMPLETE_DECLARATION" && row.participantId !== null);
     expect(requests).toHaveLength(3);
     for (const row of requests) {
-      expect(row.payloadJson).toEqual({ familyHeld: true });
+      expect(row.payloadJson).toEqual({ familyHeld: true, startsDeadline: true });
       expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(23).getTime() + 30 * 60_000).toISOString());
     }
     await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.id, rows[0].id));
