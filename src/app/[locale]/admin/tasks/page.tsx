@@ -80,6 +80,7 @@ import type { JobName } from "@/modules/jobs/schedule";
 import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { isTranslationConfigured } from "@/infrastructure/translate/translator";
 import { charactersTranslatedSince, charactersTranslatedToday, readTranslationBudget } from "@/modules/translate/budget";
+import { readTranslationCredit } from "@/modules/translate/credit";
 import TranslationBudgetPanel from "@/modules/translate/ui/TranslationBudgetPanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
@@ -446,6 +447,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     readNeonConsumption(env),
     panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
   ]);
+  // DeepL's credit from its own meter (§NNN), cached ten minutes: the task row, «Luna aceasta» and
+  // the translation panel read this one answer. No key, no request.
+  const deeplCredit = await readTranslationCredit(env);
 
   const tasks = sortTasks(
     ownerTasks({
@@ -479,6 +483,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
       // «Tradu din română» (§464): DeepL chosen and its key set; `off` reads as done — nothing owed.
       translationConfigured: isTranslationConfigured(env) || env.TRANSLATE_PROVIDER === "off",
+      translationCredit: deeplCredit.ok ? deeplCredit.credit.level : null,
       // Capture counts, like local storage does: on a laptop the form works and nothing is
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
       // the page does: is there a way out, and is there anybody at the other end.
@@ -602,6 +607,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             mailgunSentBetween: (start, end) => mailgunMessagesSentBetween(db, start, end),
             neonPreviousPeriod: (periodStart) => readNeonPreviousPeriod(env, periodStart),
             mediaBytes: () => storedMediaBytes(db),
+            deeplCredit: async () => deeplCredit,
           },
         )
       : null;
@@ -940,6 +946,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             state={translation.state}
             usedToday={translation.usedToday}
             configured={isTranslationConfigured(env)}
+            credit={deeplCredit}
             mayEdit={canManageClubSettings(actor.role)}
           />
         )}

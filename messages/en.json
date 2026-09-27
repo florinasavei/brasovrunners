@@ -2414,6 +2414,14 @@
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
             "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
             "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Tasks → Costs."
+          ],
+          "low": "The key's DeepL credit is nearly spent (over 95% used). It is given once and does not come back next month: get a new credit or key ready before translation stops.",
+          "spent": "The key's DeepL credit is spent: \"Copy and translate everything\" and \"Translate from Romanian\" refuse every translation. It does not come back next month — a new credit or key is needed.",
+          "howCredit": [
+            "Sign in to the DeepL account (the \"DeepL API\" page on DeepL's site) → Usage: see what is left of the credit — the same figure as under Tasks → Costs.",
+            "Choose: a new key on the free DeepL API Free plan (500,000 characters a month, renewed monthly) or a paid plan — a paid plan only with the club's explicit yes, since the club uses free plans.",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables: DEEPL_API_KEY = the new key. Redeploy.",
+            "Within ten minutes, Tasks → Costs shows the new credit, and this row turns green."
           ]
         }
       },
@@ -2618,7 +2626,7 @@
       },
       "translationBudget": {
         "title": "Automatic translation (DeepL)",
-        "intro": "The editors' \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL API Free — free, 500,000 characters a month. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the month.",
+        "intro": "The editors' \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes with the translation of the Romanian ones, through DeepL. The club's key has a credit of characters given once, which is not renewed monthly. Here you choose how many characters may be sent a day, so one afternoon of translating does not use up the credit.",
         "inForce": {
           "off": "In force: off (0 characters a day) — the buttons refuse every translation.",
           "daily": "In force: at most {count} characters a day."
@@ -2630,9 +2638,22 @@
         "updatedAt": "Last changed: {when}.",
         "readOnly": "Only an Administrator can change the budget.",
         "field": "Characters a day",
-        "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters.",
+        "fieldHelp": "Between 0 (off) and {max}. A whole event translated is usually 5,000–15,000 characters; each one comes off the DeepL credit.",
         "save": "Save the budget",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "credit": {
+          "line": "The DeepL credit: {used} of {limit} characters used, {remaining} left. DeepL's own figure, read at most ten minutes ago; the credit is given once.",
+          "level": {
+            "watch": "Over 80% of the credit is used.",
+            "low": "The credit is nearly spent: get a new credit or key ready (Tasks → Club).",
+            "spent": "The credit is spent: the buttons refuse every translation until a new credit or key."
+          },
+          "unread": {
+            "quota": "DeepL says there are no characters left on this key.",
+            "refused": "The DeepL credit could not be read: DeepL refuses the key.",
+            "unavailable": "The DeepL credit could not be read just now: DeepL did not answer."
+          }
+        }
       },
       "month": {
         "title": "This month",
@@ -2721,8 +2742,21 @@
           "mailgun": "It would cost money only on a paid plan ({plan}, {price} USD a month) — your choice under «Emails», never the platform's.",
           "vercel": "It would cost money only on the Pro plan; Hobby sends no invoice — at the limit, new deployments stop until next month.",
           "neon": "Free sends no invoice: at {hours} CU-hours the database stops until the next period. It would cost money only on Launch.",
-          "deepl": "It would cost money only with DeepL API Pro; on Free, after {free} characters in a month translations stop until next month, with no invoice.",
+          "deepl": "No invoice: the key's DeepL credit is given once and is not renewed monthly. When it runs out, translation stops until a new credit or key; it would cost money only on a paid DeepL API Pro plan.",
           "r2": "It would cost money only above {free} GB stored: {price} USD per GB a month, for the excess."
+        },
+        "credit": {
+          "line": "The DeepL credit: {used} of {limit} characters used ({percent}), {remaining} left — read from DeepL, given once.",
+          "level": {
+            "watch": "Over 80% of the credit is used.",
+            "low": "The credit is nearly spent: get a new credit or key ready (Tasks → Club).",
+            "spent": "The credit is spent: the translation buttons refuse every translation until a new credit or key."
+          },
+          "unread": {
+            "quota": "DeepL says there are no characters left on this key.",
+            "refused": "The DeepL credit could not be read: DeepL refuses the key.",
+            "unavailable": "The DeepL credit could not be read just now: DeepL did not answer."
+          }
         }
       },
       "database": {
@@ -6196,10 +6230,11 @@
       "nothingAll": "Nothing to translate: write the Romanian texts first.",
       "rateLimited": "Too many translations in the last hour. Try again in a few minutes.",
       "budget": "This translation needs more than is left of today's budget (characters left: {remaining}). Translate fewer boxes at once or come back tomorrow; an Administrator can raise it under Tasks → Costs.",
-      "quota": "DeepL has used this month's free characters. Translation comes back next month.",
+      "quota": "DeepL has no characters left on this key: the credit is spent. Translation comes back when an Administrator sets a new credit or key (Tasks → Club).",
       "refused": "DeepL refused the key. An Administrator needs to check DEEPL_API_KEY (Tasks).",
       "unavailable": "DeepL did not answer. Try again in a minute.",
-      "failed": "The translation did not start. Check the connection and try again."
+      "failed": "The translation did not start. Check the connection and try again.",
+      "credit": "This translation asks for more than is left of the DeepL credit (characters left: {remaining}). Translate fewer boxes at once; an Administrator sees the credit under Tasks → Costs."
     }
   }
 }

@@ -38,7 +38,9 @@ export function useTranslatePress() {
           text:
             result.reason === "budget"
               ? t("refusal.budget", { remaining: new Intl.NumberFormat(locale).format(result.remainingToday ?? 0) })
-              : t(`refusal.${result.reason}`),
+              : result.reason === "credit"
+                ? t("refusal.credit", { remaining: new Intl.NumberFormat(locale).format(result.remainingCredit ?? 0) })
+                : t(`refusal.${result.reason}`),
         });
         return;
       }

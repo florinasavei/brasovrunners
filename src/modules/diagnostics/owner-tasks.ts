@@ -18,6 +18,7 @@
  * so "register the domain" is gone; its renewal is here instead (§435).
  */
 
+import type { CreditLevel } from "@/modules/translate/domain/credit";
 import type { DomainRenewal } from "./domain/domain-renewal";
 import { isNeonQuotaNearLimit } from "./domain/neon-limits";
 
@@ -234,6 +235,12 @@ export type OwnerTaskInputs = {
    */
   translationConfigured: boolean;
   /**
+   * The DeepL credit's level from DeepL's own meter (§NNN), or null when there is no key or it
+   * could not be read just now. The credit is given once: `spent` turns the row red (translation
+   * refuses everything until a new credit or key), `low` reopens it with the same steps.
+   */
+  translationCredit: CreditLevel | null;
+  /**
    * Can the contact form reach the club (§149, §164)? Both halves: a way to send — the Gmail
    * account and its app password, `CONTACT_FORM_MODE` (`capture` on a laptop counts, as the
    * local media store does) — and somebody to send to, from the club's own list on
@@ -425,9 +432,14 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // «Tradu din română» (§464): built; open until DeepL's free key is on the deployment, never
   // blocking — without it the English boxes are written by hand, as before.
+  // Since §NNN the credit behind the key is read too: it is given once and never refilled, so a
+  // key that is set and spent is `broken` (it translates nothing), and one nearly spent is `open`
+  // with the steps for a new credit — the row is where the club hears it before a press fails.
+  const credit = input.translationConfigured ? input.translationCredit : null;
   push("translation", {
     owner: "club",
-    state: input.translationConfigured ? "done" : "open",
+    state: !input.translationConfigured ? "open" : credit === "spent" ? "broken" : credit === "low" ? "open" : "done",
+    ...(credit === "spent" || credit === "low" ? { text: credit, steps: "howCredit" } : {}),
   });
 
   // Built (§149); open until the club's Gmail lends the form its app password, never

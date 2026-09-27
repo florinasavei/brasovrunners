@@ -42,6 +42,7 @@ const LAUNCHED: OwnerTaskInputs = {
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
   translationConfigured: true,
+  translationCredit: "ok",
   contactFormConfigured: true,
   // Production's own numbers set on Neon the evening of 2026-09-23: a 100 CU-hour quota, well
   // under a fifth spent.
@@ -268,6 +269,27 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.translation;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("DEEPL_API_KEY");
+    }
+  });
+
+  // §NNN: the credit behind the key is given once — spent is red, nearly spent reopens the row.
+  it("reads the DeepL credit: spent is broken, low is open, both with the credit's own sentence and steps", () => {
+    const row = (translationCredit: OwnerTaskInputs["translationCredit"]) =>
+      ownerTasks({ ...LAUNCHED, translationCredit }).find((task) => task.id === "translation");
+    expect(row("spent")).toMatchObject({ state: "broken", text: "spent", steps: "howCredit" });
+    expect(row("low")).toMatchObject({ state: "open", text: "low", steps: "howCredit" });
+    for (const level of ["ok", "watch", null] as const) {
+      expect(row(level)?.state).toBe("done");
+      expect(row(level)?.text ?? row(level)?.steps).toBeUndefined();
+    }
+    // Never blocking: a spent credit stops no registration.
+    expect(row("spent")?.state).not.toBe("blocking");
+    // Without a key the credit is not the question.
+    expect(ownerTasks({ ...LAUNCHED, translationConfigured: false, translationCredit: "spent" }).find((task) => task.id === "translation")?.state).toBe("open");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.translation;
+      expect(item.spent && item.low).toBeTruthy();
+      expect(item.howCredit.join("\n")).toContain("DEEPL_API_KEY");
     }
   });
 

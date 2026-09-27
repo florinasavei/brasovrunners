@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { type MonthCostFacts, monthCosts, monthTotals, utcMonth } from "@/modules/diagnostics/domain/month-costs";
 import type { MonthCostReasons } from "@/modules/diagnostics/month-costs-read";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
+import { translationCredit } from "@/modules/translate/domain/credit";
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 
 /**
@@ -43,15 +44,18 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-10-20" },
     deepl: { charactersThisMonth: 1_234 },
+    deeplCredit: { expected: false, credit: null },
     r2: { storedBytes: 2 * GB },
     lastMonth: { neonCuHours: 20, mailgunSent: 500 },
     ...patch,
   };
 }
 
-function reasons(patch: { current?: Partial<MonthCostReasons["current"]>; lastMonth?: Partial<MonthCostReasons["lastMonth"]> } = {}): MonthCostReasons {
+function reasons(
+  patch: { current?: Partial<MonthCostReasons["current"]>; lastMonth?: Partial<MonthCostReasons["lastMonth"]>; deeplCredit?: string | null } = {},
+): MonthCostReasons {
   const none = { neon: null, mailgun: null, vercel: null, domain: null, deepl: null, r2: null };
-  return { current: { ...none, vercel: "unconfigured", ...patch.current }, lastMonth: { ...none, ...patch.lastMonth } };
+  return { current: { ...none, vercel: "unconfigured", ...patch.current }, lastMonth: { ...none, ...patch.lastMonth }, deeplCredit: patch.deeplCredit ?? "unconfigured" };
 }
 
 async function render(locale: "ro" | "en", input: MonthCostFacts, why: MonthCostReasons = reasons()) {
@@ -120,7 +124,8 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(html).not.toContain('data-testid="month-cost-neon-trigger"');
     expect(html).not.toContain('data-testid="month-cost-domain-trigger"');
     expect(words).toContain("Ar costa doar trecând la un plan plătit (Basic, 15,00 USD pe lună)");
-    expect(words).toContain("după 500.000 de caractere");
+    expect(words).toContain("creditul DeepL al cheii se dă o singură dată și nu se reînnoiește lunar");
+    expect(words).not.toContain("500.000");
     expect(words).toContain("Ar costa doar peste 10 GB stocați: 0,015 USD pe GB pe lună");
     // Vercel's deployments beside its build minutes.
     expect(words).toContain("7 publicări luna aceasta.");
@@ -156,6 +161,27 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     const words = text(await render("ro", facts({ deepl: null, r2: null }), reasons({ current: { deepl: "error", r2: "error" }, lastMonth: { r2: "error" } })));
     expect(words).toContain("Nu s-a putut citi acum din baza de date a site-ului.");
     expect(words).toContain("— nu s-a putut citi (baza de date a site-ului).");
+  });
+
+  it("§NNN: says the DeepL credit as DeepL counts it — used, left, given once — and its level, in both languages", async () => {
+    const withCredit = (used: number) => facts({ deeplCredit: { expected: true, credit: translationCredit({ used, limit: 1_000_000 }) } });
+    const ro = text(await render("ro", withCredit(250_000), reasons({ deeplCredit: null })));
+    expect(ro).toContain("Creditul DeepL: 250.000 din 1.000.000 caractere folosite (25 %), rămân 750.000 — citit de la DeepL, se dă o singură dată.");
+    expect(ro).not.toContain("Peste 80 %");
+    const spent = await render("ro", withCredit(1_000_000), reasons({ deeplCredit: null }));
+    expect(text(spent)).toContain("Creditul s-a terminat: butoanele de traducere refuză orice traducere");
+    expect(spent).toMatch(/data-testid="month-cost-deepl" data-severity="act"/);
+    expect(text(await render("ro", withCredit(850_000), reasons({ deeplCredit: null })))).toContain("Peste 80 % din credit e folosit.");
+    const en = text(await render("en", withCredit(960_000), reasons({ deeplCredit: null })));
+    expect(en).toContain("The DeepL credit: 960,000 of 1,000,000 characters used (96%), 40,000 left");
+    expect(en).toContain("The credit is nearly spent");
+  });
+
+  it("§NNN: says why the credit could not be read, and nothing about it without a key", async () => {
+    const unread = facts({ deeplCredit: { expected: true, credit: null } });
+    expect(text(await render("ro", unread, reasons({ deeplCredit: "refused" })))).toContain("Creditul DeepL nu s-a putut citi: DeepL refuză cheia.");
+    expect(text(await render("en", unread, reasons({ deeplCredit: "unavailable" })))).toContain("The DeepL credit could not be read just now");
+    expect(text(await render("ro", facts()))).not.toContain("Creditul DeepL");
   });
 
   it("is a card of words only: no form, nothing to press", async () => {

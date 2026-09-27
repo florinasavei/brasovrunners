@@ -1,4 +1,4 @@
-import { type TranslateLanguage, type TranslateRequest, type Translator, TranslatorError } from "./adapter";
+import { type TranslateLanguage, type TranslateRequest, type TranslateUsage, type Translator, TranslatorError } from "./adapter";
 
 /**
  * DeepL's text API, v2 (`DECISIONS.md` §464; the owner, 2026-09-26: «use the free stuff, we are
@@ -72,6 +72,44 @@ function failureOf(status: number): TranslatorError {
   if (status === 456) return new TranslatorError("quota", "DeepL: the plan's character allowance is spent (456)");
   if (status === 401 || status === 403) return new TranslatorError("refused", `DeepL refused the key (${status})`);
   return new TranslatorError("unavailable", `DeepL answered ${status}`);
+}
+
+/** The usage question is a small GET; Costuri must not wait on it the way a translation may. */
+const USAGE_TIMEOUT_MS = 5_000;
+
+/**
+ * What the key has used and may use, from DeepL's own meter (§NNN): `GET /v2/usage` on the key's
+ * host, the same header as a translation. DeepL's reference (developers.deepl.com, read
+ * 2026-09-27): `character_count` is the characters translated so far in the key's current
+ * allowance and `character_limit` the allowance — on the club's Developer key a one-time credit
+ * (1 000 000 at 0 used on 2026-09-27), on Free the month's 500 000. The request is not billed.
+ *
+ * Throws `TranslatorError` in the same three words as a translation, so the screen says why.
+ */
+export async function readDeeplUsage({ apiKey, fetchImpl }: DeeplOptions): Promise<TranslateUsage> {
+  const send: FetchLike = fetchImpl ?? ((input, init) => fetch(input, init));
+  let response: Response;
+  try {
+    response = await send(`${deeplHostFor(apiKey)}/v2/usage`, {
+      method: "GET",
+      headers: { Authorization: `DeepL-Auth-Key ${apiKey.trim()}` },
+      signal: AbortSignal.timeout(USAGE_TIMEOUT_MS),
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new TranslatorError("unavailable", `DeepL could not be reached: ${error instanceof Error ? error.name : "error"}`);
+  }
+  if (!response.ok) throw failureOf(response.status);
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw new TranslatorError("unavailable", "DeepL answered something that is not JSON");
+  }
+  const { character_count: used, character_limit: limit } = (body ?? {}) as { character_count?: unknown; character_limit?: unknown };
+  const whole = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0;
+  if (!whole(used) || !whole(limit)) throw new TranslatorError("unavailable", "DeepL answered a usage without its two counts");
+  return { used, limit };
 }
 
 export function createDeeplTranslator({ apiKey, fetchImpl }: DeeplOptions): Translator {

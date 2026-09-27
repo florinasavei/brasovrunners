@@ -1,6 +1,6 @@
 import type { TranslateProviderSetting } from "@/shared/config/env-enums";
-import type { Translator } from "./adapter";
-import { createDeeplTranslator } from "./deepl-adapter";
+import type { TranslateUsage, Translator } from "./adapter";
+import { createDeeplTranslator, readDeeplUsage } from "./deepl-adapter";
 
 /**
  * The translator this deployment has, or none (`DECISIONS.md` §464).
@@ -17,5 +17,17 @@ export function isTranslationConfigured(env: TranslateEnvironment): boolean {
 
 export function createTranslatorForEnvironment(env: TranslateEnvironment): Translator | null {
   if (env.TRANSLATE_PROVIDER === "deepl" && env.DEEPL_API_KEY) return createDeeplTranslator({ apiKey: env.DEEPL_API_KEY });
+  return null;
+}
+
+/**
+ * What the configured key has used and may use (§NNN), from the provider's own meter, or null
+ * when no translator is configured here. Throws `TranslatorError` when the provider says no.
+ */
+export async function readTranslationUsageForEnvironment(
+  env: TranslateEnvironment,
+  fetchImpl?: (input: string, init: RequestInit) => Promise<Response>,
+): Promise<TranslateUsage | null> {
+  if (env.TRANSLATE_PROVIDER === "deepl" && env.DEEPL_API_KEY) return readDeeplUsage({ apiKey: env.DEEPL_API_KEY, fetchImpl });
   return null;
 }

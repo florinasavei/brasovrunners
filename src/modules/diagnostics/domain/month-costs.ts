@@ -1,4 +1,4 @@
-import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
+import type { TranslationCredit } from "@/modules/translate/domain/credit";
 import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "../platform-plans";
 import { NEON_BUDGET_MIN_PACE_HOURS } from "./neon-budget";
 import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
@@ -30,7 +30,7 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * `diagnostics/vercel.ts` already count, so each line names its period.
  *
  * **Every price comes from its catalogue** (`neon-plan.ts`, `email-plan.ts`, the domain and R2
- * constants in `platform-plans.ts`, DeepL's allowance in `translate/domain/budget.ts`), never from
+ * constants in `platform-plans.ts`; DeepL's credit is DeepL's own answer, §NNN), never from
  * here: this file multiplies and adds, and says "estimate" wherever it projects — `AGENTS.md`
  * §1.2's rule that a vendor's price is quoted, never invented. Every amount is in USD, the
  * currency every one of those vendors bills in and the cost table below already prints.
@@ -88,7 +88,11 @@ export type MonthCostLine = {
   /** The domain only: whether the renewal falls inside this period and is in the projection. */
   renewsThisPeriod: boolean;
   /** A usage fact beside the money that is not the metered one: Vercel's deployments, Neon's stored gigabytes. */
-  detail: { kind: "deployments"; count: number } | { kind: "storageGb"; gb: number } | null;
+  detail:
+    | { kind: "deployments"; count: number }
+    | { kind: "storageGb"; gb: number }
+    | ({ kind: "credit" } & TranslationCredit)
+    | null;
   /** The period before this one: its money (null when nothing kept it) and its usage where one was counted. */
   lastMonth: { period: MonthPeriod; usd: number | null; usage: number | null; estimated: boolean; plusVat: boolean };
   /** How the row should read at a glance — `ServiceSeverity`'s four words (§1.2: unmeasured is not green). */
@@ -119,6 +123,11 @@ export type MonthCostFacts = {
   domain: { planName: string; usdPerYear: number; expiresOn: string | null };
   /** The month's translated characters (§464), or null when the audit trail could not be read. */
   deepl: { charactersThisMonth: number } | null;
+  /**
+   * DeepL's credit from its own meter (§NNN), or null — not configured here (`expected: false`),
+   * or configured and not read just now (`expected: true`, the line is then «nu știm», §1.2).
+   */
+  deeplCredit: { expected: boolean; credit: TranslationCredit | null };
   /** The pictures' recorded bytes (`media_assets.byte_size`), or null when they could not be read. */
   r2: { storedBytes: number } | null;
   lastMonth: {
@@ -367,15 +376,20 @@ function domainLine(facts: MonthCostFacts): MonthCostLine {
   return { ...line, severity: inPeriod ? "watch" : "ok" };
 }
 
-/** DeepL API Free: free; the characters this month against its 500,000 (§464). */
+/**
+ * DeepL: nothing billed; the month's characters as the club counted them (§464), with no monthly
+ * ceiling — the key's allowance is a credit given once (§NNN), so it is the credit, from DeepL's
+ * own meter, that the line measures against: used, left, and its level. The level is the line's
+ * severity — `low` and `spent` are `act`, `watch` is `watch` — and a configured key whose
+ * credit could not be read is «nu știm», never green.
+ */
 function deeplLine(facts: MonthCostFacts): MonthCostLine {
   const period = utcMonth(facts.now);
-  const use = facts.deepl
-    ? usage("characters", facts.deepl.charactersThisMonth, period, facts.now, DEEPL_FREE_CHARACTERS_PER_MONTH, "plan")
-    : null;
+  const use = facts.deepl ? usage("characters", facts.deepl.charactersThisMonth, period, facts.now, null, null) : null;
+  const { expected, credit } = facts.deeplCredit;
   const line = {
     id: "deepl" as const,
-    plan: "API Free",
+    plan: "API",
     billing: "free" as const,
     period,
     soFarUsd: 0,
@@ -385,10 +399,19 @@ function deeplLine(facts: MonthCostFacts): MonthCostLine {
     usage: use,
     renewsOn: null,
     renewsThisPeriod: false,
-    detail: null,
+    detail: credit ? { kind: "credit" as const, ...credit } : null,
     lastMonth: nothingLastMonth(period),
   };
-  return { ...line, severity: severityOf(line, facts.deepl !== null) };
+  const severity: MonthCostLine["severity"] = credit
+    ? credit.level === "spent" || credit.level === "low"
+      ? "act"
+      : credit.level === "watch"
+        ? "watch"
+        : severityOf(line, facts.deepl !== null)
+    : expected
+      ? "unknown"
+      : severityOf(line, facts.deepl !== null);
+  return { ...line, severity };
 }
 
 /**
