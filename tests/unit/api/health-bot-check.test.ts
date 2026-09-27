@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-031-01 — `/api/health` says how often the anti-bot check let people down in the last day
- * (`DECISIONS.md` §NNN): held presses the valve sent, widgets that failed or never loaded. A figure,
- * never the status; `null` when it could not be read, never a reason for `down`. The words travel
+ * (`DECISIONS.md` §NNN): held presses the valve sent, widgets that failed or never loaded. A level —
+ * none / some / many — never the count (the body is public) and never the status; `null` when it could not be read, never a reason for `down`. The words travel
  * with the registration form and are counted by its action: there is no endpoint of their own.
  */
 const countBotCheckSignals = vi.fn();
@@ -32,6 +32,7 @@ vi.mock("@/modules/registrations/bot-check-signals", async (original) => ({
 }));
 
 const { GET } = await import("@/app/api/health/route");
+const { botCheckSignalLevel } = await import("@/modules/registrations/bot-check-signals");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -39,13 +40,26 @@ beforeEach(() => {
 });
 
 describe("§NNN /api/health carries the check's last day", () => {
-  it("reports the counts and stays ok however high they are", async () => {
-    countBotCheckSignals.mockResolvedValue({ heldPressValve: 40, widgetFailed: 12 });
+  it("reports a level, never the count, and stays ok however high it is", async () => {
+    countBotCheckSignals.mockResolvedValue({ heldPressValve: 40, widgetFailed: 3 });
     const response = await GET();
-    const body = await response.json();
+    const text = await response.text();
+    const body = JSON.parse(text);
     expect(response.status).toBe(200);
     expect(body.status).toBe("ok");
-    expect(body.turnstile).toEqual({ status: "ok", lastDay: { heldPressValve: 40, widgetFailed: 12 } });
+    expect(body.turnstile).toEqual({ status: "ok", lastDay: { heldPressValve: "many", widgetFailed: "some" } });
+    // The public body carries no raw figure: a daily count would bound the club's registrations.
+    expect(JSON.stringify(body.turnstile)).not.toMatch(/\d/);
+  });
+
+  it("a quiet day is none", async () => {
+    countBotCheckSignals.mockResolvedValue({ heldPressValve: 0, widgetFailed: 0 });
+    const body = await (await GET()).json();
+    expect(body.turnstile.lastDay).toEqual({ heldPressValve: "none", widgetFailed: "none" });
+  });
+
+  it("the level's edges: 0 none, 1–4 some, 5 and up many", () => {
+    expect([0, 1, 4, 5, 500].map(botCheckSignalLevel)).toEqual(["none", "some", "some", "many", "many"]);
   });
 
   it("a count that cannot be read is null, never a database that is down", async () => {

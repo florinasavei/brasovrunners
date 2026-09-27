@@ -11,7 +11,7 @@ import { checkNeonQuotaHealth, type NeonQuotaHealth, QUOTA_NOT_READ } from "@/mo
 import { domainRenewal } from "@/modules/diagnostics/domain/domain-renewal";
 import { isQuotaRefusalError } from "@/modules/resilience/domain/database-away";
 import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
-import { type BotCheckSignalCounts, countBotCheckSignals } from "@/modules/registrations/bot-check-signals";
+import { type BotCheckSignalLevels, botCheckSignalLevels, countBotCheckSignals } from "@/modules/registrations/bot-check-signals";
 import { readTranslationCredit } from "@/modules/translate/credit";
 import { creditHealth } from "@/modules/translate/domain/credit";
 import { buildInfo } from "@/shared/config/build-info";
@@ -79,9 +79,9 @@ async function askTheDatabase(
       Promise.all(JOB_NAMES.map((jobName) => checkJobHealth(db, jobName, now, governorFloorMinutes))),
       // Whether the club can still send email (§98): deferred by the allowance, overdue, or failed.
       checkEmailHealth(db, now, governorFloorMinutes),
-      // The anti-bot check's last day (§NNN): a figure, never the status — and never the reason
-      // this whole half fails, so its own failure is `null` and nothing else.
-      countBotCheckSignals(db, now).catch((error: unknown) => {
+      // The anti-bot check's last day (§NNN): a level, never the count and never the status — and
+      // never the reason this whole half fails, so its own failure is `null` and nothing else.
+      countBotCheckSignals(db, now).then(botCheckSignalLevels, (error: unknown) => {
         console.error("[health] the bot-check counts could not be read", error);
         return null;
       }),
@@ -113,7 +113,7 @@ export const dynamic = "force-dynamic";
 
 type SchemaCheck = Awaited<ReturnType<typeof checkSchemaVersion>>;
 type EmailCheck = Awaited<ReturnType<typeof checkEmailHealth>>;
-type DatabaseHalf = { schema: SchemaCheck; jobs: JobHealth[]; email: EmailCheck; botCheck: BotCheckSignalCounts | null };
+type DatabaseHalf = { schema: SchemaCheck; jobs: JobHealth[]; email: EmailCheck; botCheck: BotCheckSignalLevels | null };
 
 class NotStored extends Error {}
 
@@ -325,8 +325,10 @@ export async function GET(): Promise<Response> {
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
       // endpoint reports; only `misconfigured` is.
       // And what the check did to people in the last 24 hours (§NNN): held presses the eight-second
-      // valve sent because the check never answered, and widgets that failed or never loaded —
-      // counts, level-only, `null` when they could not be read. No effect on `status`: a blocked
+      // valve sent because the check never answered, and widgets that failed or never loaded — each
+      // as a level, `none` / `some` (1–4) / `many` (5+), never the count: this body is public, and a
+      // daily count of held presses would bound the club's registrations that day. `null` when they
+      // could not be read. No effect on `status`: a blocked
       // check still lets everybody register (§205); a figure that climbs is for the owner to read.
       turnstile: { status: turnstile, lastDay: checks?.botCheck ?? null },
       // The DeepL credit (§497): its level and, when low or spent, a note — never the characters

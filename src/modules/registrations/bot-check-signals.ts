@@ -30,6 +30,25 @@ export async function recordBotCheckSignal<T extends Record<string, unknown>>(
 
 export type BotCheckSignalCounts = { heldPressValve: number; widgetFailed: number };
 
+/**
+ * What `/api/health` publishes in place of a count (§NNN): the body is readable by anyone, and a
+ * raw daily count of held presses is a lower bound on the club's registrations that day. A level
+ * says whether the owner should look — `none`, `some` (1–4), `many` (5 or more) — and nothing more.
+ */
+export type BotCheckSignalLevel = "none" | "some" | "many";
+export type BotCheckSignalLevels = { heldPressValve: BotCheckSignalLevel; widgetFailed: BotCheckSignalLevel };
+
+export const BOT_CHECK_SIGNAL_MANY = 5;
+
+export function botCheckSignalLevel(count: number): BotCheckSignalLevel {
+  if (count >= BOT_CHECK_SIGNAL_MANY) return "many";
+  return count > 0 ? "some" : "none";
+}
+
+export function botCheckSignalLevels(counts: BotCheckSignalCounts): BotCheckSignalLevels {
+  return { heldPressValve: botCheckSignalLevel(counts.heldPressValve), widgetFailed: botCheckSignalLevel(counts.widgetFailed) };
+}
+
 const DAY_MS = 24 * 60 * 60_000;
 
 /**
