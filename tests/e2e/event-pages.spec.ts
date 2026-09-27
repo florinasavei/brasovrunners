@@ -91,18 +91,32 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     }
 
     // The month's longest name fits its select at 320 pixels: the value is never clipped.
+    // Measured as drawn (§487): the select capitalises the month (`text-transform: capitalize`),
+    // and «Septembrie» is wider than «septembrie», so the option's raw text would under-measure it.
+    // The select's own transform and letter spacing are applied before `measureText`.
     const fits = await periodRow.locator("select").first().evaluate((select: HTMLSelectElement) => {
       const style = getComputedStyle(select);
       const context = document.createElement("canvas").getContext("2d");
-      if (!context) return { widest: 0, room: 0 };
+      if (!context) return { widest: 0, room: 0, transform: "" };
       context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
       // The select draws its value capitalised (`textTransform: capitalize`), the catalogue's month
       // is lower case: measure what the reader sees, «Septembrie», not «septembrie».
       const drawn = (text: string) => text.charAt(0).toLocaleUpperCase() + text.slice(1);
+      if (style.letterSpacing !== "normal") context.letterSpacing = style.letterSpacing;
+      const drawn = (text: string) =>
+        style.textTransform === "uppercase"
+          ? text.toLocaleUpperCase("ro")
+          : style.textTransform === "lowercase"
+            ? text.toLocaleLowerCase("ro")
+            : style.textTransform === "capitalize"
+              ? text.replace(/(^|\s)(\p{L})/gu, (_match, space: string, letter: string) => space + letter.toLocaleUpperCase("ro"))
+              : text;
       const widest = Math.max(...Array.from(select.options, (option) => context.measureText(drawn(option.text)).width));
       const room = select.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-      return { widest, room };
+      return { widest, room, transform: style.textTransform };
     });
+    // The transform is the one the page draws with; a change to it is a change to this check.
+    expect(fits.transform).toBe("capitalize");
     expect(fits.widest).toBeLessThanOrEqual(fits.room);
 
     // The chip pairs on their own row, the period heading still the section's name.
