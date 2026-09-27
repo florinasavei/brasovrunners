@@ -5080,7 +5080,7 @@
     "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție.",
     "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
     "phoneValid": "Arată bine. Îl salvăm ca",
-    "botCheckWait": "Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
+    "botCheckWait": "Verificăm o secundă că nu ești robot — dacă apare o căsuță de bifat, bifeaz-o; trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {

@@ -10,6 +10,7 @@ import { type ComponentType, type MouseEvent, useEffect, useId, useRef, useState
 import { useFormStatus } from "react-dom";
 import { TURNSTILE_FIELD, TURNSTILE_TOKEN_EVENT } from "@/modules/registrations/domain/turnstile-widget";
 import { paintedScheduler } from "@/shared/forms/after-paint";
+import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from "./held-press";
 import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
 import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
@@ -295,7 +296,13 @@ export default function SubmitButton({
     and the sentence goes with the held press. Every held press is its own: nothing is spent at
     the first one. A widget never drawn at all — a blocked script — is waited for only
     in the page's first eight seconds (§285); after that a press goes straight through, and the
-    server accepts a missing token as the check not running (§216).
+    server accepts a missing token as the check not running (§216). A widget drawn but without a
+    token — an interactive challenge nobody has ticked — holds every press for its eight seconds,
+    however old the page: before, a press after the page's eighth second went straight through
+    without a token. That is why the sentence asks for the tick when a box shows.
+
+    One held press per form (`held-press.ts`): the registration form has two awaiting buttons, and
+    each replaying its own press on the token was two POSTs of one registration.
   */
   const RELEASE_AFTER_MS = 8000;
   // When the button was drawn, for the grace a widget not drawn at all is given (§285).
@@ -320,8 +327,10 @@ export default function SubmitButton({
       if (over) return;
       over = true;
       setHeld(false);
-      // A request already in flight owns the form; a second one would only queue behind it.
-      if (!pendingNow.current) form.requestSubmit(button);
+      // The form's one held press (`held-press.ts`): only the button that was pressed owns it, so
+      // a second awaiting button in the same form never replays a press of its own. A request
+      // already in flight owns the form; a second one would only queue behind it.
+      releaseHeldPress(form, button, !pendingNow.current);
     };
     const check = () => {
       if (!botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) send();
@@ -346,6 +355,8 @@ export default function SubmitButton({
     const valve = setTimeout(send, RELEASE_AFTER_MS);
     return () => {
       over = true;
+      // Unmounted while still held: the hold goes with the button, sending nothing.
+      releaseHeldPress(form, button, false);
       observer.disconnect();
       form.removeEventListener("input", check);
       form.removeEventListener(TURNSTILE_TOKEN_EVENT, onToken);
@@ -354,6 +365,24 @@ export default function SubmitButton({
       clearTimeout(valve);
     };
   }, [held]);
+
+  /*
+    A press on this button while *another* button of the form holds its press (§NNN): swallowed,
+    and the same sentence said under this one too, until the held press is over — sent or dropped.
+  */
+  const [echoing, setEchoing] = useState(false);
+  useEffect(() => {
+    if (!echoing) return;
+    const form = ref.current?.form;
+    const over = () => setEchoing(false);
+    // Over between the press and this effect: nothing left to listen for.
+    if (!form || !isPressHeld(form)) {
+      const now = setTimeout(over, 0);
+      return () => clearTimeout(now);
+    }
+    form.addEventListener(HELD_PRESS_OVER_EVENT, over);
+    return () => form.removeEventListener(HELD_PRESS_OVER_EVENT, over);
+  }, [echoing]);
 
   /*
     A submit that takes too long says so (§304). `pending` comes from the form's own status and
@@ -377,7 +406,7 @@ export default function SubmitButton({
   }, [pending]);
 
   // A held press is always one nobody has sent yet: `send` clears it before the request starts.
-  const holding = held && !pending;
+  const holding = (held || echoing) && !pending;
   const dimmed = (watches && !complete && !pending) || holding;
   // The list, where one is asked for, says what the sentence beneath would have said — only better.
   const showList = lists && !complete && !pending && missing.length > 0;
@@ -491,20 +520,26 @@ export default function SubmitButton({
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.
-          // A press already held is the same press: it is sent once, by the effect above.
-          if (pending || held) {
+          if (pending) {
             event.preventDefault();
+            return;
+          }
+          // A press already held on this form — by this button or by another one — is the press:
+          // it is sent once, by the button that holds it (§NNN). This one only says the same.
+          const form = ref.current?.form;
+          if (form && isPressHeld(form)) {
+            event.preventDefault();
+            if (!held) setEchoing(true);
             return;
           }
           // Asked of the form now, not of a state from an earlier render (§NNN): the token that
           // landed a moment ago counts, and one that was spent or reset since does not.
-          const form = ref.current?.form;
           if (awaitsBotCheck && form && botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) {
             // The check is still running: hold this press and say so, rather than spending it on
             // a refusal the person did nothing to earn. The effect above sends it the moment the
             // check answers or eight seconds after this press (§304) — the person does not press twice.
             event.preventDefault();
-            setHeld(true);
+            if (holdPress(form, ref.current as HTMLButtonElement)) setHeld(true);
           }
         }}
       >

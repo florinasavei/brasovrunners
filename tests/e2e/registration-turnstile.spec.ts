@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { cancelRegistrationsByEmailPrefix } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 import {
   BLIND_FIELD_FLAG,
@@ -44,7 +45,9 @@ const RELEASE_AFTER_MS = 8_000;
 /** How soon after the answer a held press must be on the wire — far inside the valve. */
 const PROMPTLY_MS = 3_000;
 
-const address = () => `e2e-turnstile-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
+/** Every address this spec registers starts so, per project — what `afterAll` gives the places back by. */
+const addressPrefix = (project: string) => `e2e-turnstile-${project}-`;
+const address = () => `${addressPrefix(test.info().project.name)}${Date.now().toString(36)}@test.invalid`;
 
 async function fillRequired(page: Page, email: string, emailConfirm = email) {
   const values: Record<string, string> = {
@@ -79,11 +82,23 @@ const postWithToken = (page: Page) =>
 const answer = (page: Page, order: TurnstileAnswerOrder = "write-then-call") =>
   page.evaluate((how) => (window as unknown as { __answerTurnstile: (order: string) => void }).__answerTurnstile(how), order);
 
+/** Every POST that carries the token, from now on: a held press must become exactly one (§NNN). */
+function tokenPosts(page: Page): string[] {
+  const sent: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && (request.postData() ?? "").includes(CLOUDFLARE_DUMMY_TOKEN)) sent.push(request.url());
+  });
+  return sent;
+}
+
 /**
  * Answer a held press and prove the answer is what sent it: the request carries the token and is
- * on the wire within `PROMPTLY_MS` of the answer, and before the valve counted from the press.
+ * on the wire within `PROMPTLY_MS` of the answer, and before the valve counted from the press —
+ * and it is the only one: the confirmation arrives, and past the moment a second, replayed send
+ * would have gone, one POST carried the token.
  */
-async function answerAndExpectPromptSend(page: Page, pressedAt: number, order: TurnstileAnswerOrder = "write-then-call") {
+async function answerAndExpectOnePromptSend(page: Page, pressedAt: number, order: TurnstileAnswerOrder = "write-then-call") {
+  const sent = tokenPosts(page);
   const posted = postWithToken(page);
   const answeredAt = Date.now();
   await answer(page, order);
@@ -91,6 +106,9 @@ async function answerAndExpectPromptSend(page: Page, pressedAt: number, order: T
   const postedAt = Date.now();
   expect(postedAt - answeredAt, "sent by the answer, not by the valve").toBeLessThan(PROMPTLY_MS);
   expect(postedAt - pressedAt, "before the valve could have sent it").toBeLessThan(RELEASE_AFTER_MS - 500);
+  await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+  await page.waitForTimeout(1_000);
+  expect(sent, "exactly one request carried the token").toHaveLength(1);
 }
 
 /**
@@ -113,6 +131,10 @@ async function openWithStandIn(page: Page, { blindField = false } = {}) {
 }
 
 test.describe("§NNN a press held for the anti-bot check is sent when the check answers", () => {
+  // Every case registers on the sample race (50 places): give the places back, or two local runs
+  // fill it for the specs after them.
+  test.afterAll(async ({}, testInfo) => cancelRegistrationsByEmailPrefix(addressPrefix(testInfo.project.name)));
+
   test("after the page's first eight seconds, typing and then pressing: sent the moment the check answers", async ({ page }) => {
     test.setTimeout(90_000);
     const openedAt = await openWithStandIn(page);
@@ -133,8 +155,7 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
     await page.waitForTimeout(1_000);
     await expect(page).not.toHaveURL(/submitted=/);
 
-    await answerAndExpectPromptSend(page, pressedAt);
-    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+    await answerAndExpectOnePromptSend(page, pressedAt);
   });
 
   test("the check answered before the press: the press goes straight through, once, never held", async ({ page }) => {
@@ -162,10 +183,7 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
       report();
       new MutationObserver(report).observe(document.body, { subtree: true, childList: true, characterData: true });
     });
-    const sent: string[] = [];
-    page.on("request", (request) => {
-      if (request.method() === "POST" && (request.postData() ?? "").includes(CLOUDFLARE_DUMMY_TOKEN)) sent.push(request.url());
-    });
+    const sent = tokenPosts(page);
 
     const posted = postWithToken(page);
     const pressedAt = Date.now();
@@ -190,8 +208,7 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
 
     // On `type="hidden"`, `.value =` is the `value` attribute, which the button's observer sees:
     // the second signal, on its own.
-    await answerAndExpectPromptSend(page, pressedAt, "write-only");
-    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+    await answerAndExpectOnePromptSend(page, pressedAt, "write-only");
   });
 
   test("a field only the callback reveals, called back before it is written: sent the moment it answers", async ({ page }) => {
@@ -205,8 +222,7 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
 
     // Nothing but the success callback can tell the button here, and it comes before the field is
     // written: the button reads the field on the task after the callback, not inside it.
-    await answerAndExpectPromptSend(page, pressedAt, "call-then-write");
-    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+    await answerAndExpectOnePromptSend(page, pressedAt, "call-then-write");
   });
 
   test("the same field written with no callback: only the valve sends it — the callback was the fast path", async ({ page }) => {
@@ -224,11 +240,14 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
 
     // The control for the case above: the token is in the field, but with no callback nothing the
     // button watches has moved. The press waits for its valve, and then goes with the token.
+    const sent = tokenPosts(page);
     const posted = postWithToken(page);
     await answer(page, "write-only");
     await posted;
     expect(Date.now() - pressedAt, "nothing but the valve could have sent it").toBeGreaterThanOrEqual(RELEASE_AFTER_MS - 500);
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+    await page.waitForTimeout(1_000);
+    expect(sent, "exactly one request carried the token").toHaveLength(1);
   });
 
   test("a refused attempt and then another held press: the second is sent as well", async ({ page }) => {
@@ -254,8 +273,7 @@ test.describe("§NNN a press held for the anti-bot check is sent when the check 
     await expect(heldSentence(page)).toBeVisible();
     // Above the timing floor a real person would be (`HUMAN_PAUSE_MS`) before the answer sends it.
     await page.waitForTimeout(HUMAN_PAUSE_MS);
-    await answerAndExpectPromptSend(page, pressedAt);
-    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+    await answerAndExpectOnePromptSend(page, pressedAt);
   });
 
   test("a check that never answers: the held press is sent eight seconds after it, and accepted (§205)", async ({ page }) => {

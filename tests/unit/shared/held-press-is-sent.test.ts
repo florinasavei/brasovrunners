@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from "@/shared/ui/held-press";
 
 /**
  * BR-REQ-041-01 — the registration form's send button; `DECISIONS.md` §285, §304 and §NNN.
@@ -25,7 +26,8 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
   it("replays the held press with the button as the submitter once the wait is over", () => {
     // The whole fix is this call: the browser's own submit, from this button, so validation and
     // the Server Action run exactly as for a fresh press — and never while a request is in flight.
-    expect(source).toMatch(/if \(!pendingNow\.current\) form\.requestSubmit\(button\);/);
+    expect(source).toMatch(/releaseHeldPress\(form, button, !pendingNow\.current\);/);
+    expect(read("src/shared/ui/held-press.ts")).toMatch(/if \(submit\) form\.requestSubmit\(button\);/);
     // Once per held press: `send` closes the wait before it submits, so the watchers that fire
     // after it (the field, the form's input, the widget's callback) find it over.
     expect(source).toMatch(/if \(over\) return;\s*\r?\n\s*over = true;\s*\r?\n\s*setHeld\(false\);/);
@@ -99,5 +101,63 @@ describe("§NNN a held press is sent whenever the check answers, every time", ()
     expect(widget).toMatch(/callback: \(\) => element\.dispatchEvent\(new Event\(TURNSTILE_TOKEN_EVENT, \{ bubbles: true \}\)\)/);
     // Never Cloudflare's error callback: handing it one changes how the widget retries.
     expect(widget).not.toMatch(/"error-callback"\s*:/);
+  });
+});
+
+/**
+ * §NNN — two awaiting buttons in one form, one request.
+ *
+ * The registration form has the main send button and, after a too-fast refusal, «Retrimite»
+ * (§324), both waiting for the token. Each held its own press and each replayed it when the token
+ * landed: two `requestSubmit` calls, two POSTs of one registration. The hold is the form's now.
+ */
+describe("§NNN one held press per form, sent once from the button that was pressed", () => {
+  function fakeForm() {
+    const submitters: unknown[] = [];
+    const events: string[] = [];
+    return {
+      submitters,
+      events,
+      requestSubmit: (submitter?: unknown) => void submitters.push(submitter),
+      dispatchEvent: (event: Event) => (events.push(event.type), true),
+    };
+  }
+  const button = (name: string) => ({ name }) as unknown as HTMLElement;
+
+  it("two awaiting buttons pressed in one form, the token lands: exactly one submit, from the first pressed", () => {
+    const form = fakeForm();
+    const main = button("main");
+    const resend = button("resend");
+
+    expect(holdPress(form, main)).toBe(true);
+    // The second press while the first is held is refused its own hold — it only echoes.
+    expect(holdPress(form, resend)).toBe(false);
+    expect(isPressHeld(form)).toBe(true);
+
+    // The token lands: every watcher that could fire tries to send.
+    expect(releaseHeldPress(form, resend, true)).toBe(false);
+    expect(releaseHeldPress(form, main, true)).toBe(true);
+    expect(releaseHeldPress(form, main, true)).toBe(false);
+
+    expect(form.submitters).toEqual([main]);
+    expect(form.events).toEqual([HELD_PRESS_OVER_EVENT]);
+    expect(isPressHeld(form)).toBe(false);
+  });
+
+  it("a hold dropped when its button goes away sends nothing, and frees the form for the next press", () => {
+    const form = fakeForm();
+    const main = button("main");
+    const resend = button("resend");
+    holdPress(form, main);
+    expect(releaseHeldPress(form, main, false)).toBe(true);
+    expect(form.submitters).toEqual([]);
+    expect(holdPress(form, resend)).toBe(true);
+  });
+
+  it("the button swallows any press while its form holds one, and claims the hold before holding", () => {
+    const source = read("src/shared/ui/SubmitButton.tsx");
+    expect(source).toMatch(/if \(form && isPressHeld\(form\)\) \{\s*\r?\n\s*event\.preventDefault\(\);/);
+    expect(source).toMatch(/if \(holdPress\(form, ref\.current as HTMLButtonElement\)\) setHeld\(true\);/);
+    expect(source).toMatch(/releaseHeldPress\(form, button, false\);/);
   });
 });
