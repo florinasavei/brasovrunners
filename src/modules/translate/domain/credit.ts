@@ -53,3 +53,27 @@ export function translationCredit(usage: { used: number; limit: number }): Trans
 export function creditAllows(credit: TranslationCredit, asked: number): boolean {
   return credit.level !== "spent" && asked <= credit.remaining;
 }
+
+/** What `/api/health` publishes about the credit (§NNN): a word and a note, never a figure. */
+export type CreditHealth = { level: CreditLevel | "unknown" | "unconfigured"; note: string | null };
+
+/**
+ * The credit as `/api/health` says it (§NNN, after §335 and §447): the level only — the used and
+ * left characters are the club's own account figures and belong on Costuri, not on a public,
+ * unauthenticated answer — and a note once the credit is low or spent, so a monitor's log shows
+ * why translation stopped. It never changes the endpoint's status: translation stops nothing a
+ * visitor or a runner needs, and the `/admin/tasks` row is where it turns red.
+ */
+export function creditHealth(reading: { ok: true; credit: TranslationCredit } | { ok: false; reason: string }): CreditHealth {
+  if (!reading.ok) return { level: reading.reason === "unconfigured" ? "unconfigured" : "unknown", note: null };
+  const { level } = reading.credit;
+  return {
+    level,
+    note:
+      level === "spent"
+        ? "the DeepL credit is spent: translation refuses every press until a new credit or key"
+        : level === "low"
+          ? "the DeepL credit is nearly spent: get a new credit or key ready"
+          : null,
+  };
+}

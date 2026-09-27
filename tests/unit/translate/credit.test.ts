@@ -13,7 +13,7 @@ vi.mock("next/cache", () => ({
   },
 }));
 
-const { forgetTranslationCredit, readTranslationCredit } = await import("@/modules/translate/credit");
+const { FAILURE_MEMO_MS, forgetTranslationCredit, readTranslationCredit } = await import("@/modules/translate/credit");
 
 /**
  * §NNN — the DeepL credit read from DeepL's own meter (`GET /v2/usage`) as the one-time credit it
@@ -118,10 +118,32 @@ describe("§NNN the credit reading the pages share", () => {
       throw new TranslatorError("refused", "403");
     };
     expect(await readTranslationCredit(configured, refusing)).toEqual({ ok: false, reason: "refused" });
+    forgetTranslationCredit();
     const broken = async () => {
       throw new Error("boom");
     };
     expect(await readTranslationCredit(configured, broken)).toEqual({ ok: false, reason: "unavailable" });
+  });
+
+  it("remembers a failure for a minute, so an unreachable DeepL does not hold every page", async () => {
+    forgetTranslationCredit();
+    let clock = 1_000_000;
+    const now = () => clock;
+    const slow = vi.fn(async () => {
+      throw new TranslatorError("unavailable", "timeout");
+    });
+    expect(await readTranslationCredit(configured, slow, now)).toEqual({ ok: false, reason: "unavailable" });
+    clock += FAILURE_MEMO_MS - 1;
+    expect(await readTranslationCredit(configured, slow, now)).toEqual({ ok: false, reason: "unavailable" });
+    expect(slow).toHaveBeenCalledTimes(1);
+    // After the minute, or after a press that reached DeepL, it asks again.
+    clock += 1;
+    const fine = vi.fn(async () => ({ used: 10, limit: 1_000_000 }));
+    expect((await readTranslationCredit(configured, fine, now)).ok).toBe(true);
+    expect(fine).toHaveBeenCalledTimes(1);
+    await readTranslationCredit(configured, slow, now);
+    forgetTranslationCredit();
+    expect((await readTranslationCredit(configured, fine, now)).ok).toBe(true);
   });
 
   it("expires the cached figure after a press", () => {

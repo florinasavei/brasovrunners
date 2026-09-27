@@ -27,7 +27,7 @@ type Props = {
   mayEdit: boolean;
 };
 
-const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "warning.main", spent: "error.main" } as const;
+const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.main", spent: "error.main" } as const;
 
 /**
  * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §464), beside the

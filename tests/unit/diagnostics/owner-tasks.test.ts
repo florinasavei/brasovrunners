@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { translationCredit } from "@/modules/translate/domain/credit";
 import {
   countTasks,
   filterTasks,
@@ -42,7 +43,7 @@ const LAUNCHED: OwnerTaskInputs = {
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
   translationConfigured: true,
-  translationCredit: "ok",
+  translationCredit: { ok: true, credit: translationCredit({ used: 0, limit: 1_000_000 }) },
   contactFormConfigured: true,
   // Production's own numbers set on Neon the evening of 2026-09-23: a 100 CU-hour quota, well
   // under a fifth spent.
@@ -274,22 +275,39 @@ describe("owner tasks", () => {
 
   // §NNN: the credit behind the key is given once — spent is red, nearly spent reopens the row.
   it("reads the DeepL credit: spent is broken, low is open, both with the credit's own sentence and steps", () => {
-    const row = (translationCredit: OwnerTaskInputs["translationCredit"]) =>
-      ownerTasks({ ...LAUNCHED, translationCredit }).find((task) => task.id === "translation");
-    expect(row("spent")).toMatchObject({ state: "broken", text: "spent", steps: "howCredit" });
-    expect(row("low")).toMatchObject({ state: "open", text: "low", steps: "howCredit" });
-    for (const level of ["ok", "watch", null] as const) {
-      expect(row(level)?.state).toBe("done");
-      expect(row(level)?.text ?? row(level)?.steps).toBeUndefined();
+    const at = (used: number): OwnerTaskInputs["translationCredit"] => ({ ok: true, credit: translationCredit({ used, limit: 1_000_000 }) });
+    const row = (reading: OwnerTaskInputs["translationCredit"]) =>
+      ownerTasks({ ...LAUNCHED, translationCredit: reading }).find((task) => task.id === "translation");
+    expect(row(at(1_000_000))).toMatchObject({ state: "broken", text: "spent", steps: "howCredit" });
+    expect(row(at(960_000))).toMatchObject({ state: "open", text: "low", steps: "howCredit" });
+    // Under 95 % the row is done and still says the figures (the `credit` sentence).
+    for (const used of [0, 850_000]) {
+      expect(row(at(used))).toMatchObject({ state: "done", text: "credit" });
+      expect(row(at(used))?.steps).toBeUndefined();
     }
+    // Unread: «—» with the reason; a refused key or a 456 is red, a silent DeepL leaves it done.
+    expect(row({ ok: false, reason: "unavailable" })).toMatchObject({ state: "done", text: "creditUnread" });
+    expect(row({ ok: false, reason: "refused" })).toMatchObject({ state: "broken", text: "creditUnread" });
+    expect(row({ ok: false, reason: "quota" })).toMatchObject({ state: "broken", text: "creditUnread", steps: "howCredit" });
+    // `off` on purpose: no key, nothing to read, nothing owed.
+    expect(row({ ok: false, reason: "unconfigured" })).toMatchObject({ state: "done" });
+    expect(row({ ok: false, reason: "unconfigured" })?.text).toBeUndefined();
     // Never blocking: a spent credit stops no registration.
-    expect(row("spent")?.state).not.toBe("blocking");
+    expect(row(at(1_000_000))?.state).not.toBe("blocking");
     // Without a key the credit is not the question.
-    expect(ownerTasks({ ...LAUNCHED, translationConfigured: false, translationCredit: "spent" }).find((task) => task.id === "translation")?.state).toBe("open");
+    expect(ownerTasks({ ...LAUNCHED, translationConfigured: false, translationCredit: at(1_000_000) }).find((task) => task.id === "translation")?.state).toBe("open");
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.translation;
-      expect(item.spent && item.low).toBeTruthy();
+      // Every credit sentence names the figures the page fills in; the unread one the reason.
+      for (const text of [item.credit, item.low]) {
+        for (const value of ["{creditUsed}", "{creditLimit}", "{creditPercent}", "{creditRemaining}"]) expect(text).toContain(value);
+      }
+      expect(item.spent).toContain("{creditUsed}");
+      expect(item.creditUnread).toContain("—");
+      expect(item.creditUnread).toContain("{creditReason}");
       expect(item.howCredit.join("\n")).toContain("DEEPL_API_KEY");
+      // The key's allowance is a one-time credit: no step promises a monthly one.
+      expect([...item.how, ...item.howCredit].join("\n")).not.toMatch(/500[.,]000|a month, free|pe lună, gratuit|renewed monthly\)|lunar\)/);
     }
   });
 

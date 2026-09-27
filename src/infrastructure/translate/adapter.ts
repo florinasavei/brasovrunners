@@ -58,8 +58,7 @@ export type TranslateUsage = { used: number; limit: number };
  * The three ways a provider says no, as the screen words them:
  *
  * - `quota` — the provider's own allowance is spent, answered as HTTP 456: a credit given once
- *   (the club's key, §NNN) or DeepL Free's 500 000 characters a month. A new credit, a new key or,
- *   on Free, the next month.
+ *   (the club's key, §NNN). A new credit or a new key; no month refills it.
  * - `refused` — the key is wrong or revoked (403). The Administrator's to fix; `/admin/tasks`
  *   names the variable.
  * - `unavailable` — anything else: a timeout, a 5xx, a 429, an answer of the wrong shape. Try

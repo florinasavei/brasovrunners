@@ -23,8 +23,19 @@ export async function translateFieldAction(input: unknown): Promise<TranslateOut
     if (isDomainError(error)) return { ok: false, reason: "forbidden" };
     throw error;
   }
+  // Whether this press actually asked DeepL: a refusal before any request (the local credit check,
+  // the budget, the throttle) leaves DeepL's meter where it was, so the cached figure stands.
+  let reachedDeepl = false;
+  const configured = createTranslatorForEnvironment(env);
+  const translator = configured && {
+    provider: configured.provider,
+    translate: (request: Parameters<typeof configured.translate>[0]) => {
+      reachedDeepl = true;
+      return configured.translate(request);
+    },
+  };
   const outcome = await translateClubTexts(getDb(), actor, input, {
-    translator: createTranslatorForEnvironment(env),
+    translator,
     now: new Date(),
     // DeepL's credit (§NNN): a spent one refuses without a request; an unread one lets DeepL answer.
     credit: async () => {
@@ -33,6 +44,6 @@ export async function translateFieldAction(input: unknown): Promise<TranslateOut
     },
   });
   // A press that reached DeepL moved its meter: the next reading on Costuri is DeepL's new figure.
-  if (outcome.ok || outcome.reason === "quota" || outcome.reason === "unavailable") forgetTranslationCredit();
+  if (reachedDeepl) forgetTranslationCredit();
   return outcome;
 }
