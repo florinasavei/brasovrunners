@@ -28,10 +28,10 @@ describe("§NNN a group run's self-declaration is kept until the signer asks", (
   });
 
   it("says so on the run's page and in the backoffice fold, in both languages, with no number", () => {
-    expect(ro.Event.groupRunDeclaration.line).toMatch(/platforma clubului o păstrează până ne ceri s-o ștergem/);
-    expect(en.Event.groupRunDeclaration.line).toMatch(/the club's platform keeps it until you ask us to delete it/);
-    expect(ro.Admin.groupRunDeclarations.help).toMatch(/păstrează declarațiile până când semnatarul cere ștergerea/);
-    expect(en.Admin.groupRunDeclarations.help).toMatch(/keeps the declarations until the signer asks for their deletion/);
+    expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp vii la alergări și o șterge când îi ceri/);
+    expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it while you keep coming to the runs and deletes it when you ask/);
+    expect(ro.Admin.groupRunDeclarations.help).toMatch(/păstrează o declarație cât timp semnatarul vine la alergări și o șterge când îi cere/);
+    expect(en.Admin.groupRunDeclarations.help).toMatch(/keeps a declaration while the signer keeps coming to the runs and deletes it when they ask/);
     for (const catalogue of [ro, en]) {
       expect(catalogue.Event.groupRunDeclaration.line).not.toMatch(DAYS);
       expect(catalogue.Admin.groupRunDeclarations.help).not.toMatch(DAYS);
@@ -47,11 +47,11 @@ describe("§NNN a group run's self-declaration is kept until the signer asks", (
 
   it("is said by both emails, in both halves, with no number of days", () => {
     const signed = buildOutgoingEmail({ to: "x@example.test", locale: "ro", idempotencyKey: "t:s", messageType: "GROUP_RUN_DECLARATION_SIGNED", data: DATA });
-    expect(signed.text).toContain("Pe platforma clubului, declarația se păstrează până ne ceri s-o ștergem.");
-    expect(signed.text).toContain("On the club's platform the declaration is kept until you ask us to delete it.");
+    expect(signed.text).toContain("Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.");
+    expect(signed.text).toContain("The club keeps the declaration while you keep coming to the runs and deletes it when you ask.");
     const archive = buildOutgoingEmail({ to: "x@example.test", locale: "ro", idempotencyKey: "t:a", messageType: "GROUP_RUN_DECLARATION_ARCHIVE", data: DATA });
-    expect(archive.text).toContain("până când alergătorul cere ștergerea ei");
-    expect(archive.text).toContain("until the runner asks for it to be deleted");
+    expect(archive.text).toContain("cât timp alergătorul vine la alergări; când cere ștergerea ei");
+    expect(archive.text).toContain("while the runner keeps coming to the runs; when they ask for it to be deleted");
     const source = readFileSync("src/modules/notifications/templates.ts", "utf8");
     const entries = [...source.matchAll(/groupRunDeclaration(?:Signed|Archive): \{[\s\S]*?\n {4}\},/g)].map((match) => match[0]);
     // Two entries per language.
@@ -63,15 +63,15 @@ describe("§NNN a group run's self-declaration is kept until the signer asks", (
     const text = (key: keyof typeof LEGAL_TEMPLATES, locale: "ro" | "en") =>
       LEGAL_TEMPLATES[key][locale].body.sections.flatMap((section) => section.paragraphs).join(" ");
     for (const key of ["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"] as const) {
-      expect(text(key, "ro")).toMatch(/Platforma clubului păstrează declarația până când cer ștergerea ei/);
-      expect(text(key, "en")).toMatch(/The club's platform keeps the declaration until I ask for it to be deleted/);
+      expect(text(key, "ro")).toMatch(/Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului/);
+      expect(text(key, "en")).toMatch(/The club's platform keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address/);
       expect(text(key, "ro")).not.toMatch(/șterge declarația la/);
       expect(text(key, "en")).not.toMatch(/deletes the declaration/);
     }
-    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/În baza de date o păstrăm până ne ceri s-o ștergem/);
-    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O declarație semnată pe o alergare de grup: până ne ceri s-o ștergem;/);
-    expect(text("PRIVACY_NOTICE", "en")).toMatch(/We keep it in our database until you ask us to delete it/);
-    expect(text("PRIVACY_NOTICE", "en")).toMatch(/A self-declaration signed on a group run: until you ask us to delete it;/);
+    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/În baza de date o păstrăm cât timp participi la alergările clubului, sau până ne ceri s-o ștergem/);
+    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O declarație semnată pe o alergare de grup: cât timp participi la alergările clubului, sau până ne ceri s-o ștergem;/);
+    expect(text("PRIVACY_NOTICE", "en")).toMatch(/We keep it in our database while you take part in the club's runs, or until you ask us to delete it/);
+    expect(text("PRIVACY_NOTICE", "en")).toMatch(/A self-declaration signed on a group run: while you take part in the club's runs, or until you ask us to delete it;/);
     expect(text("PRIVACY_NOTICE", "ro")).not.toMatch(/alergare de grup: șapte zile/);
     expect(text("PRIVACY_NOTICE", "en")).not.toMatch(/group run: seven days/);
   });

@@ -25,7 +25,8 @@ import { RETENTION_PERIODS } from "./domain/retention-periods";
  *     identity document, health note,  7 days after the event's start (cleared, the rows stay)
  *     emergency contact                  (the contact since §421)
  *     a group run's identity document  7 days after the event's start (cleared; the declaration
- *                                      stays until the signer asks for its deletion; §393, §NNN)
+ *                                      stays while the signer comes to the runs, until they
+ *                                      ask for its deletion; §393, §NNN)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
  *     throttle buckets                 1 day
@@ -121,9 +122,10 @@ export const RETENTION = {
    */
   identityAndHealthDaysAfterEvent: RETENTION_PERIODS.identityAndHealthDaysAfterEvent,
   /**
-   * A group run's optional self-declaration (§393) is **kept until the signer asks for its
-   * deletion** (§NNN, reversing §393's seven days): it is the club's evidence that the runner was
-   * told the run's risks and took them on, and a claim about a run can come long after it. No
+   * A group run's optional self-declaration (§393) is **kept while the signer takes part in the
+   * club's runs and deleted at their request** (§NNN, reversing §393's seven days): it is the
+   * club's evidence that the runner was told the runs' risks and took them on, and that purpose
+   * — the runs the signer keeps coming to — is what bounds it (art. 5(1)(e) GDPR). No
    * window deletes it; the Administrator's erase does, on the signer's request (BR-REQ-037-06's
    * rule: deliberate, per row, audited). Its outbox rows follow the ordinary windows below. What
    * does go at seven days is an identity document typed under a text approved before §418 took
@@ -290,7 +292,8 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    A group run's optional self-declaration is kept until the signer asks for its deletion (§NNN):
+    A group run's optional self-declaration is kept while the signer comes to the runs and until
+    they ask for its deletion (§NNN):
     no step here takes the row. Only an identity document typed under a text that still named
     `{{idDocument}}` (before §418) is cleared, seven days after the run, as the race's is — second,
     beside it, for the same reason: an identity number is the data whose window matters most.

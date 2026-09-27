@@ -384,7 +384,7 @@
     "groupRunDeclaration": {
       "heading": "Self-declaration",
       "button": "Sign the declaration",
-      "line": "Sign the self-declaration for this run: you get it by email, and the club's platform keeps it until you ask us to delete it.",
+      "line": "Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.",
       "page": {
         "back": "Back to {event}",
         "title": "Self-declaration",
@@ -4702,7 +4702,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform keeps the declarations until the signer asks for their deletion: then erase it here, with the reason.",
+      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The club keeps a declaration while the signer keeps coming to the runs and deletes it when they ask: then erase it here, with the reason.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when} (v{version})",
       "pdf": "PDF",

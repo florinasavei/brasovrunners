@@ -384,7 +384,7 @@
     "groupRunDeclaration": {
       "heading": "Declarație pe propria răspundere",
       "button": "Semnează declarația",
-      "line": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o păstrează până ne ceri s-o ștergem.",
+      "line": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
       "page": {
         "back": "Înapoi la {event}",
         "title": "Declarație pe propria răspundere",
@@ -4702,7 +4702,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Platforma păstrează declarațiile până când semnatarul cere ștergerea: atunci o ștergi aici, cu motivul.",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Clubul păstrează o declarație cât timp semnatarul vine la alergări și o șterge când îi cere: atunci o ștergi aici, cu motivul.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when} (v{version})",
       "pdf": "PDF",
