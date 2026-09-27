@@ -236,4 +236,9 @@ describe("BR-REQ-050-02 the surfaces write 19:05, never AM/PM, in both languages
     );
     expect(line).toMatch(/19:05/);
   });
+
+  it("the editor's night line itself asks readTypedTime of the start box, not the raw typed text", () => {
+    const island = readFileSync(path.join(ROOT, "src/modules/content/events/ui/NightEventField.tsx"), "utf8");
+    expect(island).toContain('time: readTypedTime(text("event.startsAtTime"))');
+  });
 });

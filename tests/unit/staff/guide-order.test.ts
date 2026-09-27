@@ -4,7 +4,7 @@ import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { orderGuideSections } from "@/modules/staff-identity/domain/guide-order";
 
 /**
- * BR-REQ-060-01 criterion 34 — the guide's per-role order, as a pure function
+ * BR-REQ-060-01 criterion 38 — the guide's per-role order, as a pure function
  * (`guide-order.ts`), rather than only through the page's own render (`tests/e2e/guide.spec.ts`,
  * which covers MODERATOR and CONTRIBUTOR only).
  *

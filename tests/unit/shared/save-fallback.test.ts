@@ -294,15 +294,18 @@ describe("§436 the words, in both languages", () => {
   });
 
   /*
-    §NNN: the line after the simple way is drawn by the admin layout, which a client navigation
+    §436: the line after the simple way is drawn by the admin layout, which a client navigation
     never re-renders — so its `shown` stayed true on every page clicked to afterwards. It keeps the
-    path it first rendered on and is gone once the path differs. No DOM runner here: the source says it.
+    path it first rendered on and is gone once the path differs, for good: coming back to that path
+    later (Back, a link) does not draw it again. No DOM runner here: the source says it.
   */
   it("the «tried the simple way» line belongs to the page the post landed on, not to the pages after it", () => {
     const notice = read("src/shared/forms/SaveFallbackNotice.tsx");
     expect(notice).toContain("const pathname = usePathname();");
     expect(notice).toContain("const [landedOn] = useState(pathname);");
-    expect(notice).toContain("if (!shown || dismissed || pathname !== landedOn) return null;");
+    expect(notice).toContain("const [left, setLeft] = useState(false);");
+    expect(notice).toContain("if (!left && pathname !== landedOn) setLeft(true);");
+    expect(notice).toContain("if (!shown || dismissed || left || pathname !== landedOn) return null;");
   });
 
   it("names the host to allow through a placeholder, never a literal", () => {

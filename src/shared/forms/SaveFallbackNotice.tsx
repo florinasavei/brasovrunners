@@ -21,15 +21,20 @@ import { SAVE_FALLBACK_COOKIE } from "./save-fallback";
  * the confirmation means saved; no confirmation means check the page and try another network.
  * The close button is 44 px (BR-REQ-041-01).
  *
- * It belongs to the one page the plain POST landed on (§NNN). The admin layout draws it, and Next
+ * It belongs to the one page the plain POST landed on (§436). The admin layout draws it, and Next
  * never re-renders a layout on a client navigation, so `shown` stays true on every page clicked to
- * afterwards: the line remembers the path it first rendered on and is gone once the path differs.
+ * afterwards: the line remembers the path it first rendered on and is gone for good once the path
+ * differs — a later return to that path, by Back or a link, does not bring it back.
  */
 export default function SaveFallbackNotice({ shown }: { shown: boolean }) {
   const t = useTranslations("Network");
   const pathname = usePathname();
   const [landedOn] = useState(pathname);
   const [dismissed, setDismissed] = useState(false);
+  // Latched while rendering (React's own "adjust state when a prop changes"): coming back to the
+  // landed path later — Back, a link to the same page — keeps it gone.
+  const [left, setLeft] = useState(false);
+  if (!left && pathname !== landedOn) setLeft(true);
 
   useEffect(() => {
     if (!shown) return;
@@ -40,7 +45,7 @@ export default function SaveFallbackNotice({ shown }: { shown: boolean }) {
     }
   }, [shown]);
 
-  if (!shown || dismissed || pathname !== landedOn) return null;
+  if (!shown || dismissed || left || pathname !== landedOn) return null;
   return (
     <Alert
       severity="info"
