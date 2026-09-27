@@ -59,6 +59,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
+import ShownWithSocial from "@/modules/registrations/ui/ShownWithSocial";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Hint from "@/shared/ui/Hint";
@@ -1334,16 +1335,24 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                         consent of its own: never folded (§59), never pre-ticked, and meaningless
                         without the list tick above and a social typed in the fold — the service
                         keeps it only with both. Adults only, like the socials themselves (§323):
-                        hidden and disabled once the birth date says under eighteen.
+                        hidden and disabled once the birth date says under eighteen. And asked only
+                        once there is something to show (`ShownWithSocial`): hidden and disabled
+                        until the Strava or the Instagram box holds a value — shown without
+                        JavaScript, where nothing typed is known.
                       */}
                       {listSocialsOn && (
                         <HiddenForMinor birthDateId={fieldId("birthDate")}>
-                          <CheckboxField name="listSocials" defaultChecked={prefill("listSocials") === "on"}>
-                            {`${t("listSocials")} — ${t("optionalSuffix")}`}
-                          </CheckboxField>
-                          <Typography variant="body2" color="text.secondary" data-testid="list-socials-help" sx={{ mt: -0.5 }}>
-                            {t("listSocialsHelp")}
-                          </Typography>
+                          <ShownWithSocial
+                            inputIds={[fieldId("stravaUrl"), fieldId("instagramHandle")]}
+                            forceOpen={prefill("listSocials") === "on"}
+                          >
+                            <CheckboxField name="listSocials" defaultChecked={prefill("listSocials") === "on"}>
+                              {`${t("listSocials")} — ${t("optionalSuffix")}`}
+                            </CheckboxField>
+                            <Typography variant="body2" color="text.secondary" data-testid="list-socials-help" sx={{ mt: -0.5 }}>
+                              {t("listSocialsHelp")}
+                            </Typography>
+                          </ShownWithSocial>
                         </HiddenForMinor>
                       )}
                     </>

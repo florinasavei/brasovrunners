@@ -2039,6 +2039,7 @@
         "undo": "Undo",
         "redo": "Redo"
       },
+      "listSocialsMissing": "The privacy notice in force does not yet describe Strava and Instagram beside a name on the public participant list, so the form does not offer the tick and the list does not show them. So that participants who want to can show them, approve a new version of the notice starting from the platform's text, which describes them.",
       "listStatesMissing": "The privacy notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. For the list to show each person's stage as well — “Registered, awaiting confirmation”, “On the waiting list” — approve a new version of the notice starting from the platform's text, which describes them."
     },
     "tasks": {
@@ -4855,7 +4856,7 @@
     "privacyLinkLabel": "privacy notice",
     "listOptIn": "I want to appear on the participant list",
     "listSocials": "Also show my Strava and Instagram beside my name on the list",
-    "listSocialsHelp": "Only if you ticked that you want to appear on the list and filled in at least one of them under “Socials”. Take them off at any time from “My registrations”, by deleting your Strava and Instagram or by leaving the list.",
+    "listSocialsHelp": "Only together with the tick above, that you want to appear on the list. Take them off at any time from “My registrations”, by deleting your Strava and Instagram or by leaving the list.",
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",

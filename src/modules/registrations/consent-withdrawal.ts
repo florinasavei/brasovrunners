@@ -90,7 +90,7 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
     now: Date;
   },
 ): Promise<{ cleared: OptionalDataField[] }> {
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [current] = await tx
       .select()
       .from(registrations)
@@ -111,9 +111,6 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
         updatedAt: input.now,
       })
       .where(eq(registrations.id, current.id));
-    // A public list may have been printing them (§NNN): off it for the next visitor, not after the
-    // cache's day (§333) — as leaving the list does (`list-consent.ts`).
-    if (cleared.includes("socials")) revalidatePublicContent("places");
 
     await recordAuditEvent(tx, {
       actorStaffUserId: input.actorStaffUserId,
@@ -131,6 +128,12 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
 
     return { cleared };
   });
+  // A public list may have been printing them (§NNN): off it for the next visitor, not after the
+  // cache's day (§333) — as leaving the list does (`list-consent.ts`). After the commit, never
+  // inside the transaction: a public read landing between an early revalidation and the commit
+  // would cache the old row, socials and all, for the cache's life.
+  if (result.cleared.includes("socials")) revalidatePublicContent("places");
+  return result;
 }
 
 /**

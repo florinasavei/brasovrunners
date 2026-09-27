@@ -2039,6 +2039,7 @@
         "undo": "Înapoi",
         "redo": "Înainte"
       },
+      "listSocialsMissing": "Nota de confidențialitate în vigoare nu descrie încă Strava și Instagram lângă nume pe lista publică de participanți, așa că formularul nu oferă bifa și lista nu le arată. Ca să le poată afișa participanții care vor asta, aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie.",
       "listStatesMissing": "Nota de confidențialitate în vigoare nu descrie încă stadiile de pe lista publică de participanți, așa că lista arată doar numele participanților confirmați. Ca lista să arate și stadiul fiecăruia — „Înscris, în așteptarea confirmării”, „Pe lista de așteptare” — aprobă o versiune nouă a notei pornind de la textul platformei, care le descrie."
     },
     "tasks": {
@@ -4855,7 +4856,7 @@
     "privacyLinkLabel": "nota de confidențialitate",
     "listOptIn": "Vreau să apar pe lista de participanți",
     "listSocials": "Arată și Strava și Instagram lângă numele meu pe listă",
-    "listSocialsHelp": "Doar dacă ai bifat că vrei să apari pe listă și ai completat cel puțin unul dintre ele la „Rețele sociale”. Le scoți oricând din „Înscrierile mele”, ștergând Strava și Instagram sau ieșind de pe listă.",
+    "listSocialsHelp": "Doar împreună cu bifa de mai sus, că vrei să apari pe listă. Le scoți oricând din „Înscrierile mele”, ștergând Strava și Instagram sau ieșind de pe listă.",
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
