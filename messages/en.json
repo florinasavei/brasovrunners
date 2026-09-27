@@ -2489,12 +2489,12 @@
         },
         "groupRunSeriesTexts": {
           "title": "The group-run declarations: one signature per series",
-          "todo": "A group-run declaration in force is still written for a single date. The platform's text now says what it covers: for a run that repeats, the whole series — its name, rhythm and starting place — and for a one-day run, that run. Until the new versions are approved, a signature still covers one date — the one it was signed on —, as the text in force says: the runner signs again on each date of the series.",
+          "todo": "The group-run declarations in force cover one date, so a runner signs again on each date. The new template covers the whole series (or the one-day run); approve it.",
           "done": "The group-run declarations in force say what they cover: a runner signs once for the whole series.",
           "how": [
-            "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “start from the platform's text”. Read the text, fill in the club's details, save the draft, then “Approve”.",
+            "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “Start from the template”. Read the text, fill in the club's details, save the draft, then “Approve”.",
             "The same for “Self-declaration (group run, trail)”.",
-            "Approve a new version of the privacy notice from the platform's text too: it says a series' declaration is kept while the runner keeps coming to the runs.",
+            "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while the runner keeps coming to the runs.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
           ]
         }

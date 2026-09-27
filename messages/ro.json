@@ -2489,12 +2489,12 @@
         },
         "groupRunSeriesTexts": {
           "title": "Declarațiile alergărilor de grup: o semnătură pe serie",
-          "todo": "O declarație de alergare de grup în vigoare e scrisă încă pentru o singură dată. Textul platformei spune acum ce acoperă: la o alergare care se repetă, toată seria — numele, ritmul și locul de plecare —, iar la una de o zi, acea alergare. Până sunt aprobate versiunile noi, o semnătură acoperă tot o singură dată — cea pe care a fost semnată —, cum spune textul în vigoare: alergătorul semnează din nou la fiecare dată a seriei.",
+          "todo": "Declarațiile alergărilor de grup în vigoare acoperă o singură dată, deci alergătorul semnează la fiecare dată. Șablonul nou acoperă toată seria (sau alergarea de o zi); aprobă-l.",
           "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
           "how": [
-            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (alergare de grup, asfalt)” → „pornește de la textul platformei”. Citește textul, completează datele clubului, salvează ciorna, apoi „Aprobă”.",
+            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Pornește de la șablon”. Citește textul, completează datele clubului, salvează ciorna, apoi „Aprobă”.",
             "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
-            "Aprobă și o versiune nouă a notei de confidențialitate din textul platformei: ea spune că declarația unei serii se păstrează cât timp alergătorul vine la alergări.",
+            "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp alergătorul vine la alergări.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
           ]
         }
