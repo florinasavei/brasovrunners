@@ -4,6 +4,7 @@ import {
   NEON_MIN_CU,
   type NeonLimitsReading,
   secondsToCuHours,
+  suspendModeOf,
 } from "./domain/neon-limits";
 import { type BudgetThresholds, DEFAULT_BUDGET_THRESHOLDS, type NeonBudgetLevel, neonBudget } from "./domain/neon-budget";
 import {
@@ -12,6 +13,7 @@ import {
   type NeonMeterSource,
   type NeonOperation,
   pickMeterReading,
+  previousPeriodCuSeconds,
 } from "./domain/neon-meter";
 import { NEON_PLANS, type NeonPlanId, neonPlanFromSubscription } from "./domain/neon-plan";
 
@@ -435,6 +437,61 @@ export async function readNeonConsumption(
 }
 
 /**
+ * The billing period before the current one, as Neon metered it — Costuri's «Luna trecută»
+ * (§479). The consumption endpoint is the only place Neon keeps a finished period's figure, and
+ * it answers an organisation's key only: a key scoped to one project is refused (403/404), which
+ * this returns as the reason rather than a zero. Shared, like every other reading of the meter
+ * (`NEON_SHARED_READ_SECONDS`), so an open of Costuri asks Neon at most once a quarter of an hour;
+ * a finished period does not change.
+ *
+ * The previous period is the one Neon's answer names before the current period's start (its own
+ * `period_start`, `previousPeriodCuSeconds`); the calendar month before, UTC, only when the answer
+ * names none.
+ */
+export async function readNeonPreviousPeriod(
+  env: NeonEnv,
+  periodStart: Date,
+  deps: NeonDeps = {},
+): Promise<{ ok: true; cuHours: number; start: Date; end: Date } | { ok: false; reason: string }> {
+  const missing = missingNeonVariables(env);
+  if (missing.length > 0 || !env.NEON_API_KEY || !env.NEON_PROJECT_ID) return { ok: false, reason: "unconfigured" };
+  const configured = { NEON_API_KEY: env.NEON_API_KEY, NEON_PROJECT_ID: env.NEON_PROJECT_ID };
+  const shared = { ...deps, shared: true };
+  const rowAnswer = await neonRequest(configured, `/projects/${encodeURIComponent(env.NEON_PROJECT_ID)}`, { method: "GET" }, shared);
+  if (!rowAnswer.ok) return { ok: false, reason: reasonOf(rowAnswer.failure) };
+  const row = isRecord(rowAnswer.body) && isRecord(rowAnswer.body.project) ? rowAnswer.body.project : null;
+  const orgId = row && typeof row.org_id === "string" ? row.org_id : null;
+  if (!orgId) return { ok: false, reason: "no organisation" };
+  // The meter's own memo of a refusal (`NEON_CONSUMPTION_REFUSAL_MS`): a project key refused there
+  // is refused here, and one more doomed request per open of Costuri buys nothing.
+  const refusalKey = `${env.NEON_PROJECT_ID}:${orgId}`;
+  const refusedAt = consumptionRefusals.get(refusalKey);
+  const now = Date.now();
+  if (refusedAt !== undefined && now - refusedAt >= 0 && now - refusedAt < NEON_CONSUMPTION_REFUSAL_MS) return { ok: false, reason: "HTTP 403/404, remembered" };
+  // Asked from the first of the calendar month before, which reaches back past the previous
+  // period's start whatever day Neon begins its periods on; the answer's own `period_start` then
+  // says where that period began, and the first of the month is the start only when it says nothing.
+  const from = new Date(Date.UTC(periodStart.getUTCFullYear(), periodStart.getUTCMonth() - 1, 1));
+  const query = new URLSearchParams({
+    org_id: orgId,
+    project_ids: env.NEON_PROJECT_ID,
+    from: from.toISOString(),
+    to: periodStart.toISOString(),
+    granularity: "daily",
+    metrics: "compute_unit_seconds",
+  });
+  const answer = await neonRequest(configured, `/consumption_history/v2/projects?${query.toString()}`, { method: "GET" }, shared);
+  if (!answer.ok) {
+    if (answer.failure.kind === "forbidden" || answer.failure.kind === "refused") consumptionRefusals.set(refusalKey, now);
+    return { ok: false, reason: reasonOf(answer.failure) };
+  }
+  const previous = previousPeriodCuSeconds(answer.body, env.NEON_PROJECT_ID, periodStart, from);
+  return previous === null
+    ? { ok: false, reason: "unexpected answer" }
+    : { ok: true, cuHours: previous.seconds / 3600, start: previous.start, end: periodStart };
+}
+
+/**
  * `/api/health`'s early warning for a project's monthly compute-time quota (§335, since §447 the
  * governor's level): the status is `near-limit` — health degrades, the monitor rings — once the
  * month's budget is red (85% of the quota by default, the Administrator's to move), before Neon
@@ -540,7 +597,9 @@ export async function readNeonLimits(
     if (!isRecord(endpoint) || endpoint.type !== "read_write" || typeof endpoint.id !== "string") return [];
     const minCu = cuOrNull(endpoint.autoscaling_limit_min_cu);
     const maxCu = cuOrNull(endpoint.autoscaling_limit_max_cu);
-    return minCu === null || maxCu === null ? [] : [{ id: endpoint.id, minCu, maxCu }];
+    const suspendTimeoutSeconds = cuOrNull(endpoint.suspend_timeout_seconds);
+    if (minCu === null || maxCu === null) return [];
+    return [suspendTimeoutSeconds === null ? { id: endpoint.id, minCu, maxCu } : { id: endpoint.id, minCu, maxCu, suspendTimeoutSeconds }];
   });
   const meter = await meterFromRow(configured, row, endpoints, { ...deps, shared: true }, now);
 
@@ -549,7 +608,11 @@ export async function readNeonLimits(
     snapshot: {
       limits: {
         computes,
-        defaults: { minCu: cuOrNull(defaults.autoscaling_limit_min_cu), maxCu: cuOrNull(defaults.autoscaling_limit_max_cu) },
+        defaults: {
+          minCu: cuOrNull(defaults.autoscaling_limit_min_cu),
+          maxCu: cuOrNull(defaults.autoscaling_limit_max_cu),
+          suspendTimeoutSeconds: cuOrNull(defaults.suspend_timeout_seconds),
+        },
         quotaCuHours: secondsToCuHours(quota.compute_time_seconds),
         usedCuHours: meter?.usedCuHours ?? (cuOrNull(row.compute_time_seconds) ?? 0) / 3600,
         activeHours: meter?.awakeHours ?? (cuOrNull(row.active_time_seconds) ?? 0) / 3600,
@@ -568,6 +631,9 @@ export async function readNeonLimits(
  * read-write compute that is not already where it is asked to be. Nothing is sent that would not
  * change anything, so a save that changes only the limit starts no compute operation at all.
  *
+ * Since §479 the floor (`minCu`, the platform's 0.25 when absent) and scale to zero
+ * (`suspendTimeoutSeconds`, left alone when absent or null) travel the same way.
+ *
  * Stops at the first refusal. `wrote` says what had already been applied by then, so the service
  * can tell "nothing changed" from "half of it did" — and it reads Neon again either way, because
  * what the card shows and the audit row records is Neon's answer, never this request.
@@ -575,7 +641,7 @@ export async function readNeonLimits(
 export async function writeNeonLimits(
   env: NeonEnv,
   current: NeonLimitsSnapshot,
-  change: { maxCu: number; quotaCuHours: number | null },
+  change: { maxCu: number; quotaCuHours: number | null; minCu?: number; suspendTimeoutSeconds?: number | null },
   deps: NeonDeps = {},
 ): Promise<{ ok: true; wrote: string[] } | { ok: false; failure: NeonFailure; wrote: string[] }> {
   const missing = missingNeonVariables(env);
@@ -586,10 +652,21 @@ export async function writeNeonLimits(
   const project = encodeURIComponent(env.NEON_PROJECT_ID);
   const { limits, raw } = current;
   const wrote: string[] = [];
+  const minCu = change.minCu ?? NEON_MIN_CU;
+  const suspend = change.suspendTimeoutSeconds ?? null;
+  // Scale to zero is compared by what it means: 0 and 300 are both Neon's five minutes.
+  const suspendDiffers = (seconds: number | null | undefined) => suspend !== null && suspendModeOf(seconds) !== suspendModeOf(suspend);
 
   const defaultsChange =
-    limits.defaults.minCu !== NEON_MIN_CU || limits.defaults.maxCu !== change.maxCu
-      ? { default_endpoint_settings: { ...raw.defaults, autoscaling_limit_min_cu: NEON_MIN_CU, autoscaling_limit_max_cu: change.maxCu } }
+    limits.defaults.minCu !== minCu || limits.defaults.maxCu !== change.maxCu || suspendDiffers(limits.defaults.suspendTimeoutSeconds)
+      ? {
+          default_endpoint_settings: {
+            ...raw.defaults,
+            autoscaling_limit_min_cu: minCu,
+            autoscaling_limit_max_cu: change.maxCu,
+            ...(suspend === null ? {} : { suspend_timeout_seconds: suspend }),
+          },
+        }
       : {};
   const quotaChange =
     cuHoursToSeconds(limits.quotaCuHours) !== cuHoursToSeconds(change.quotaCuHours)
@@ -602,11 +679,21 @@ export async function writeNeonLimits(
   }
 
   for (const compute of limits.computes) {
-    if (compute.minCu === NEON_MIN_CU && compute.maxCu === change.maxCu) continue;
+    const suspendChange = suspendDiffers(compute.suspendTimeoutSeconds);
+    if (compute.minCu === minCu && compute.maxCu === change.maxCu && !suspendChange) continue;
     const answer = await neonRequest(
       configured,
       `/projects/${project}/endpoints/${encodeURIComponent(compute.id)}`,
-      { method: "PATCH", body: { endpoint: { autoscaling_limit_min_cu: NEON_MIN_CU, autoscaling_limit_max_cu: change.maxCu } } },
+      {
+        method: "PATCH",
+        body: {
+          endpoint: {
+            autoscaling_limit_min_cu: minCu,
+            autoscaling_limit_max_cu: change.maxCu,
+            ...(suspendChange && suspend !== null ? { suspend_timeout_seconds: suspend } : {}),
+          },
+        },
+      },
       deps,
     );
     if (!answer.ok) return { ok: false, failure: answer.failure, wrote };

@@ -164,6 +164,16 @@ export const ROMANIAN_VAT_PERCENT = 21;
 /** ROTLD's `.ro` registration fee, checked 2026-09-16 with the `.com` (`DECISIONS.md` §55). */
 export const RO_DOMAIN_PRICE_EUR_PER_YEAR = 12;
 
+/**
+ * Cloudflare R2, where the pictures live (§66, §414): 10 GB-month of storage free, then
+ * $0.015 per GB-month — cloudflare.com/r2/pricing (developers.cloudflare.com/r2/pricing),
+ * checked 2026-09-27. The operations it also counts (a million writes and ten million reads a
+ * month free) are far beyond a club's gallery and are named, not measured, on Costuri (§479).
+ */
+export const R2_FREE_STORAGE_GB = 10;
+export const R2_USD_PER_GB_MONTH = 0.015;
+export const R2_PRICE_CHECKED_ON = "2026-09-27";
+
 /** The date `docs/PLATFORM.md` verified the six vendor plan rows. */
 export const VENDOR_PLANS_CHECKED_ON = "2026-09-05";
 
