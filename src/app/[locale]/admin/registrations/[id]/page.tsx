@@ -94,7 +94,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       declaration in effect in this registration's language — the one the press binds to — asks
       the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
     */
-    registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date()) : false,
+    registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date(), registration.eventId) : false,
   ]);
 
   const { resent, saved, error, health } = await searchParams;

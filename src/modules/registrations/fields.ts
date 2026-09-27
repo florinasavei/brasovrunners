@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { isMinorOn, isUnderMinimumAge } from "./domain/age";
+import { effectiveMinimumAge, isMinorOn, isUnderMinimumAge } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -287,7 +287,8 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * all meet it through the one door every registration already passes (`AGENTS.md` §12.6: `kind`
  * decides nothing here either). The number is a parameter with no default on purpose: the club's
  * fourteen (`MIN_PARTICIPANT_AGE`) is what an event starts with, never what this rule falls back
- * to behind an event that says otherwise. Zero is no minimum, and then there is nothing to count.
+ * to behind an event that says otherwise — but it is the floor (§NNN): a number under it, stored
+ * under §329 when zero meant "no minimum", binds as fourteen (`effectiveMinimumAge`).
  *
  * *Only when a birth date is given.* The public schema always has one; the staff schema may not
  * (BR-REQ-031-04 criterion 5), and then there is nothing to count — the organizer saw or heard
@@ -300,12 +301,14 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * the minimum is about the day somebody runs; eighteen is about who fills the form in.
  */
 export function minimumAgeRule(eventDay: string, minAge: number) {
+  // Never under fourteen (§NNN): an event saved under §329 with 0 or 12 admits nobody younger.
+  const binding = effectiveMinimumAge(minAge);
   return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
-    if (!value.birthDate || !isUnderMinimumAge(value.birthDate, eventDay, minAge)) return;
+    if (!value.birthDate || !isUnderMinimumAge(value.birthDate, eventDay, binding)) return;
     ctx.addIssue({
       code: "custom",
       path: ["birthDate"],
-      message: `a participant must be at least ${minAge} on the day of the event (${eventDay})`,
+      message: `a participant must be at least ${binding} on the day of the event (${eventDay})`,
     });
     ctx.addIssue({ code: "custom", path: [UNDER_MINIMUM_AGE], message: "under the minimum age" });
   };

@@ -12,7 +12,8 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { asksForMinorSignature, describesListStates, describesNewsletter, describesTeamPage } from "./domain/merge-fields";
+import { raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
+import { asksForMinorSignature, describesListStates, describesNewsletter, describesTeamPage, MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn } from "./domain/merge-fields";
 
 /**
  * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
@@ -89,6 +90,34 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
 }
 
 /**
+ * The declaration a race's participant signs (§NNN): the text in force of the event's kind — trail
+ * or road, by the version the organizer picked, else by the course (`raceDeclarationKeysFor`) — and
+ * the trail text while a road race has no road text approved. Every place that shows, signs, prints
+ * or asks about a race's declaration reads it here, so the page, the signature, the paper and the
+ * desk cannot name two different texts. Undefined while nothing is in force, as
+ * `findCurrentApprovedDocument` is, and for an event id that does not exist the trail text's
+ * answer — the one text every race may fall back to.
+ */
+export async function findEventDeclaration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  locale: Locale,
+  now: Date,
+): Promise<CurrentLegalDocument | undefined> {
+  const [event] = await db
+    .select({ surface: events.surface, chosenKey: legalDocuments.key })
+    .from(events)
+    .leftJoin(legalDocuments, eq(legalDocuments.id, events.declarationDocumentId))
+    .where(eq(events.id, eventId))
+    .limit(1);
+  for (const key of raceDeclarationKeysFor({ surface: event?.surface ?? null, chosenKey: event?.chosenKey ?? null })) {
+    const document = await findCurrentApprovedDocument(db, key, locale, now);
+    if (document) return document;
+  }
+  return undefined;
+}
+
+/**
  * Whether the declaration in effect in `locale` asks a minor to sign beside the parent, with the
  * minor's own document (§330, `asksForMinorSignature`) — false while no declaration is approved,
  * since then nothing is signed at all.
@@ -96,14 +125,19 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
  * For the screens that say what a minor's paper must carry before the press (the desk, the
  * registration's page, the event's printable form): they ask the text in the registration's
  * language, the one `signDeclaration` and the paper confirmation bind to, so the sentence and what
- * the press records agree.
+ * the press records agree. With the event, its own declaration (§NNN, `findEventDeclaration`);
+ * without one — a list whose rows span events — the trail text, which every race falls back to and
+ * which, from the platform's templates, asks exactly what the road text asks.
  */
 export async function declarationAsksMinorToSign<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: Locale,
   now: Date,
+  eventId?: string,
 ): Promise<boolean> {
-  const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now);
+  const document = eventId
+    ? await findEventDeclaration(db, eventId, locale, now)
+    : await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now);
   return document ? asksForMinorSignature(document.body) : false;
 }
 
@@ -124,12 +158,26 @@ export async function groupRunDeclarationsInForce<T extends Record<string, unkno
   return { ASPHALT: asphalt ? { version: asphalt.version } : null, TRAIL: trail ? { version: trail.version } : null };
 }
 
+/**
+ * Whether both race declarations (§NNN) have a version in force, in every language, written from
+ * the platform's shared body — the one that states the event's minimum age through `{{minimumAge}}`
+ * and has no under-14 flow. What `/admin/tasks` asks for its «Declarațiile de concurs» row; false
+ * while either kind has none, which for the road text means its races sign the trail one.
+ */
+export async function raceDeclarationsCurrent<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const texts = await Promise.all(
+    RACE_DECLARATION_KEYS.flatMap((key) => routing.locales.map((locale) => findCurrentApprovedDocument(db, key, locale, now))),
+  );
+  return texts.every((document) => document !== undefined && mergeFieldsIn(document.body).has(MINIMUM_AGE_MERGE_FIELD));
+}
+
 /** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */
 export async function declarationAsksMinorToSignByLocale<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
+  eventId?: string,
 ): Promise<Record<Locale, boolean>> {
-  const [ro, en] = await Promise.all([declarationAsksMinorToSign(db, "ro", now), declarationAsksMinorToSign(db, "en", now)]);
+  const [ro, en] = await Promise.all([declarationAsksMinorToSign(db, "ro", now, eventId), declarationAsksMinorToSign(db, "en", now, eventId)]);
   return { ro, en };
 }
 
@@ -385,6 +433,21 @@ export async function listApprovedVersions<T extends Record<string, unknown>>(
       ),
     )
     .orderBy(desc(legalDocuments.version));
+}
+
+/**
+ * The approved versions of both race declarations (§NNN), for the editor's «Declarația pe care o
+ * semnează participantul»: the trail ones first, then the road ones, each newest first — each with
+ * its key, so the choice says which kind of course it is for.
+ */
+export async function listApprovedRaceDeclarations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  locale: Locale,
+): Promise<Array<{ id: string; key: (typeof RACE_DECLARATION_KEYS)[number]; version: number; title: string; effectiveAt: Date }>> {
+  const lists = await Promise.all(
+    RACE_DECLARATION_KEYS.map(async (key) => (await listApprovedVersions(db, key, locale)).map((row) => ({ ...row, key }))),
+  );
+  return lists.flat();
 }
 
 /**

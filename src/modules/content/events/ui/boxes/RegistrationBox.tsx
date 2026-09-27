@@ -8,7 +8,8 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
-import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
+import { effectiveMinimumAge, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
@@ -54,7 +55,8 @@ const BIB_COLOURS = [
   { key: "black", hex: "#212121" },
 ] as const;
 
-export type DeclarationOption = { id: string; version: number; title: string };
+/** An approved race declaration the editor offers (§39), with the kind of course it is for (§NNN). */
+export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string };
 
 /** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
 function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
@@ -117,7 +119,8 @@ export default async function RegistrationBox({
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
-  const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
+  // Never under fourteen (§NNN): an event saved with less under §329 opens at fourteen, which the box accepts.
+  const minAge = effectiveMinimumAge(event?.minAge);
   const design = readBibDesign(event?.bibDesign ?? null);
   const designOn = (["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const)
     .filter((field) => design[field])

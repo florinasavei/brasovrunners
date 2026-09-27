@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { GROUP_RUN_TOO_YOUNG, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
-import { birthDateRefusal, groupRunMinimumAge } from "@/modules/group-run-declarations/domain";
+import { birthDateRefusal, groupRunAsksBirthDate, groupRunMinimumAge } from "@/modules/group-run-declarations/domain";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { BLANK, dropsParagraph, mergeLegalBody, mergeTextSegments, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
@@ -26,7 +26,8 @@ const TEXTS = [
   { name: "trail en", body: groupRunTrailEn, locale: "en" },
 ] as const;
 
-const SENTENCE = { ro: "Declar că am cel puțin {{minimumAge}}.", en: "I declare that I am at least {{minimumAge}} old." } as const;
+// §NNN: one age rule, the run's, with its day — the text's own «18» is gone.
+const SENTENCE = { ro: "Declar că am cel puțin {{minimumAge}} împliniți la data alergării.", en: "I declare that I am at least {{minimumAge}} old on the day of the run." } as const;
 const paragraphs = (body: LegalDocumentBody) => body.sections.flatMap((section) => [...section.paragraphs]);
 
 describe("§440 {{minimumAge}} in the group-run templates", () => {
@@ -39,7 +40,7 @@ describe("§440 {{minimumAge}} in the group-run templates", () => {
   it("fills sixteen with its unit, and twenty with Romanian's 'de'", () => {
     for (const { name, body, locale } of TEXTS) {
       const merged = paragraphs(mergeLegalBody(body, { minimumAge: minimumAgeMergeValue(16, locale) }));
-      expect(merged[1], name).toBe(locale === "ro" ? "Declar că am cel puțin 16 ani." : "I declare that I am at least 16 years old.");
+      expect(merged[1], name).toBe(locale === "ro" ? "Declar că am cel puțin 16 ani împliniți la data alergării." : "I declare that I am at least 16 years old on the day of the run.");
       expect(merged.join(" "), name).not.toContain("{{minimumAge}}");
     }
     expect(minimumAgeMergeValue(20, "ro")).toBe("20 de ani");
@@ -59,7 +60,7 @@ describe("§440 {{minimumAge}} in the group-run templates", () => {
 
   it("keeps the sentence with its dotted blank when no event gave a value (a preview, the blank form)", () => {
     expect(dropsParagraph(SENTENCE.ro, {})).toBe(false);
-    expect(mergeTextSegments(SENTENCE.ro, {}).map((segment) => segment.text).join("")).toBe(`Declar că am cel puțin ${BLANK}.`);
+    expect(mergeTextSegments(SENTENCE.ro, {}).map((segment) => segment.text).join("")).toBe(`Declar că am cel puțin ${BLANK} împliniți la data alergării.`);
   });
 
   it("is registered in the token legend, with an example and words in both catalogues", () => {
@@ -129,15 +130,18 @@ describe("§440 the age gate: one rule, the race's", () => {
     expect(birthDateRefusal({ ...late, timezone: "UTC" }, "2005-10-07")).toEqual(["birthDate", GROUP_RUN_TOO_YOUNG]);
   });
 
-  it("treats a minimum of eighteen or less as none: the adults-only text already says eighteen", () => {
-    expect([0, 14, 16, 18, 19, 21].map(groupRunMinimumAge)).toEqual([0, 0, 0, 0, 19, 21]);
+  it("states eighteen for a minimum of eighteen or less, and asks no birth date for it (§NNN)", () => {
+    // The text states the run's number, never under eighteen: the declaration covers no minor.
+    expect([0, 14, 16, 18, 19, 21].map(groupRunMinimumAge)).toEqual([18, 18, 18, 18, 19, 21]);
+    // The signer's own statement is the check at eighteen; above it the page asks the date (§440).
+    expect([0, 14, 16, 18, 19, 21].map(groupRunAsksBirthDate)).toEqual([false, false, false, false, true, true]);
     for (const minAge of [14, 16, 18]) {
       expect(birthDateRefusal({ ...run, minAge }, undefined), String(minAge)).toEqual([]);
       expect(birthDateRefusal({ ...run, minAge }, "2012-01-01"), String(minAge)).toEqual([]);
     }
   });
 
-  it("names a missing or unreadable date, and asks nothing of a run with no minimum", () => {
+  it("names a missing or unreadable date, and asks nothing of a run at eighteen or less", () => {
     expect(birthDateRefusal(run, undefined)).toEqual(["birthDate"]);
     expect(birthDateRefusal(run, "07.10.2010")).toEqual(["birthDate"]);
     expect(birthDateRefusal({ ...run, minAge: 0 }, undefined)).toEqual([]);

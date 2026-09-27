@@ -365,7 +365,7 @@ export function registrationSummary(
   return join(words, [
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
-    fillIn(words.registration.minAge, { age: event?.minAge ?? options.defaultMinAge }),
+    fillIn(words.registration.minAge, { age: Math.max(event?.minAge ?? options.defaultMinAge, options.defaultMinAge) }),
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
     event?.participantListVisibility === "NAMES" ? words.registration.listShown : words.registration.listHidden,
   ]);

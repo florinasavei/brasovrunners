@@ -79,7 +79,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const closed = eventId ? await isEventCompleted(db, eventId) : false;
   // Whether a minor's paper carries the minor's signature too (§330): the declaration in effect,
   // per language, read once for every row rather than once per row.
-  const minorSigns = rows.length > 0 ? await declarationAsksMinorToSignByLocale(db, now) : { ro: false, en: false };
+  const minorSigns = rows.length > 0 ? await declarationAsksMinorToSignByLocale(db, now, rows[0].eventId) : { ro: false, en: false };
   // The next free desk spare of each event on the page (§444) — one, or two when a code found a
   // runner of another event — read once for every row.
   const spares = rows.length > 0 ? await spareStates(db, rows.map((row) => row.eventId)) : {};

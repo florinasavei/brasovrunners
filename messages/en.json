@@ -391,7 +391,7 @@
         "fields": {
           "idDocument": "Identity document (series and number)",
           "email": "Email address",
-          "accepted": "I am 18 or older, I have read the declaration and I sign it",
+          "accepted": "I meet the run's minimum age, I have read the declaration and I sign it",
           "typedName": "Signature: your full name",
           "birthDate": "Date of birth",
           "captcha": "The anti-bot check"
@@ -399,8 +399,8 @@
         "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the copies sent by email — yours and the club's — it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
-        "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
-        "accept": "I am 18 or older, I have read the declaration above and sign it on my own responsibility",
+        "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
+        "accept": "I am at least {age} old, I have read the declaration above and sign it on my own responsibility",
         "typedNameHelp": "Type your full name. It appears as a signature.",
         "birthDateHelp": "For the run's minimum age: {age}, reached by the day of the run. We do not keep it and it is not in the declaration.",
         "tooYoung": "The minimum age for this run is {age}, reached by the day of the run. The declaration cannot be signed.",
@@ -1111,7 +1111,7 @@
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
-      "declarationDocumentHelp": "Chosen from the approved versions; the text is never edited here. A new version is approved under Legal documents.",
+      "declarationDocumentHelp": "Trail for mountain or forest courses, road or park for asphalt, concrete, tartan or paving. The participant signs the newest approved version of the kind chosen; with no choice, the surface in “The course” decides. The text is never edited here: a new version is approved under Legal documents.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
@@ -1290,7 +1290,7 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "Reached by the day of the event. Under 18, a parent or legal guardian registers the runner, with their consent. 0 means no minimum age.",
+      "minAgeHelp": "Reached by the day of the event, at least 14 (nobody under 14 can register). From 14 to 17, a parent or legal guardian registers the runner, and the declaration is signed by the minor and the parent.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -1684,8 +1684,9 @@
         },
         "declaration": {
           "title": "Self-declaration",
-          "newest": "Newest approved version: v{version} · {title}. The participant signs it when confirming the registration.",
-          "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration."
+          "newest": "{kind}: the newest approved version is v{version} · {title}. The participant signs it when confirming the registration.",
+          "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration.",
+          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the trail declaration. Approve one under Legal documents (New version → start from the platform's text)."
         }
       },
       "identical": {
@@ -1699,7 +1700,7 @@
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
-        "minAgeHelp": "Reached by the day of the run. The declaration is for adults, so only an age above 18 counts: it is then stated in the declaration, and the signing page asks for the birth date and refuses anyone younger. 18 or less (and 0) changes nothing.",
+        "minAgeHelp": "Reached by the day of the run, at least 18: the declaration covers no minor. The declaration states this age; above 18, the signing page also asks for the birth date and refuses anyone younger.",
         "surface": "Surface, from “The course” card: {surface}",
         "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
@@ -1739,6 +1740,10 @@
         "title": "Cannot publish yet",
         "intro": "Publication needs these fields, in every language:",
         "introSaved": "Publication needs these fields, in every language, filled in and saved:"
+      },
+      "declarationKinds": {
+        "EVENT_DECLARATION": "Trail",
+        "EVENT_DECLARATION_ROAD": "Road or park"
       }
     },
     "preview": {
@@ -1856,13 +1861,14 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The three texts a participant accepts at registration, and the two optional declarations of the group runs. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "intro": "The three texts a participant accepts at registration — the race declaration in two kinds, trail and road or park — and the two optional declarations of the group runs. An approved version never changes (people signed exactly that text); a correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
-        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed.",
+        "EVENT_DECLARATION": "The self-declaration of a race on mountain or forest trails: the minimum age, minors of 14–17, the course's risks (ground, animals, mountain weather), health, the identity document. Signed when the place is confirmed. A road or park race signs it too while its own declaration is not approved.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt: traffic, the group's pace, the dark. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept).",
-        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail: terrain, wild animals and dogs, weather and the dark, one's own equipment with a headlamp. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept)."
+        "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail: terrain, wild animals and dogs, weather and the dark, one's own equipment with a headlamp. Signed, if the runner wishes, on the run's page; it is a condition of nothing. Before that, approve a new version of the privacy notice starting from the platform's text: only it describes this declaration (the data, the basis, how long it is kept).",
+        "EVENT_DECLARATION_ROAD": "The self-declaration of a race on the road or in a park: the same shared text as the trail one (the minimum age, minors of 14–17, liability, health, the data, the signature), with the risks of asphalt, crowding and traffic in place of the mountain's. Signed when the place is confirmed. Until you approve it, road and park races sign the trail declaration."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",
@@ -1877,9 +1883,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Racing TOS",
-        "EVENT_DECLARATION": "Self-declaration (race)",
+        "EVENT_DECLARATION": "Self-declaration (race, trail)",
         "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
-        "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)"
+        "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
+        "EVENT_DECLARATION_ROAD": "Self-declaration (race, road or park)"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -1900,7 +1907,7 @@
       "newTitle": "New version",
       "newFromTemplateIntro": "Prefilled with the platform's text, the club's legal name and the contact address already written in. Left to fill, in angle brackets, in both languages: {blanks}. Read it all, save the draft, then approve it from its page.",
       "templatesIntro": "Or start from the platform's text:",
-      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
+      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{minimumAge}}' (the event's minimum age, with its unit), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
       "newVersion": "New version",
       "saveDraft": "Save draft",
@@ -1980,7 +1987,7 @@
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
-        "minimumAge": "The event's minimum age, with its unit (“16 years”). On an event with no minimum age — on a group run, one of 18 or less — the sentence naming it is left out of the declaration",
+        "minimumAge": "The event's minimum age, with its unit (“16 years”): at least 14 for a race, at least 18 for a group run. Every declaration states it in a sentence of its own",
         "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
         "newsletterTopics": "Only in the privacy notice: the topics the news subscription on the contact page offers, in quotation marks. With it in the notice in force (in both languages), the contact page offers the subscription; without it, the subscription does not appear and no address is kept.",
@@ -2414,6 +2421,16 @@
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
             "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
             "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Tasks → Costs."
+          ]
+        },
+        "raceDeclarations": {
+          "title": "The race declarations: trail, and road or park",
+          "todo": "The race declaration now comes in two kinds, from the same shared text: trail, and road or park. At least one has no version in force written from the platform's text yet — the one that states the event's minimum age and has no flow for minors under 14. Until you approve the road or park one, asphalt races sign the trail declaration.",
+          "done": "Both race declarations, trail and road or park, are in force from the platform's text: every race signs the declaration that fits its course.",
+          "how": [
+            "/admin/legal → “New version” → “Self-declaration (race, trail)” → “start from the platform's text”. Read the text, fill in the club's name, save the draft, then “Approve”.",
+            "The same for “Self-declaration (race, road or park)”.",
+            "In each race's editor, under “Self-declaration”, choose the kind that fits its course; with no choice, the surface in “The course” decides."
           ]
         }
       },
@@ -4332,7 +4349,7 @@
               "title": "Approve a new version of a legal text",
               "steps": [
                 "«Legal documents» → «New version».",
-                "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
+                "Under «Start from the platform's text» pick the document: «Racing TOS», «GDPR», «Self-declaration (race, trail)», «Self-declaration (race, road or park)», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
                 "Read all of it and press «Save draft».",
                 "On the draft's page: «Download PDF» to read it on paper or give it to a lawyer.",
@@ -4352,7 +4369,7 @@
               "title": "How the declaration is signed",
               "steps": [
                 "The participant reads the text filled in with their name and the event, types their identity document's series and number (no ID picture is ever uploaded) and signs with a finger or the mouse.",
-                "A minor aged 14 or over signs with the parent's consent; under 14 only the parent or guardian signs — as the approved declaration says.",
+                "A minor aged 14 to 17 signs beside the parent or guardian, each with their own identity document; nobody under 14 can register for any event.",
                 "Kept: the names, the documents, the text's version, its fingerprint, the moment and the method. It is a simple electronic signature.",
                 "Right after, they get the signed declaration by email, as a PDF. At the desk, the kit is handed over against the document written in the declaration.",
                 "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original."
@@ -4891,12 +4908,10 @@
     "displayNameHelp": "By default the participant list and the results show your full name. If you would rather they showed something else — “Ana P.”, for instance — write it here. To stay off the list entirely, use the option below.",
     "birthDate": "Date of birth",
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
-    "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
     "birthDateEcho": "{date} · {age} on the event day",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
-      "minimumOnly": "Minimum age: {age}.",
-      "guardianOnly": "Under 18, a parent or legal guardian registers the runner, with their consent."
+      "minimumOnly": "Minimum age: {age}."
     },
     "sex": "Sex",
     "sexOptions": {

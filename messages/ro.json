@@ -391,7 +391,7 @@
         "fields": {
           "idDocument": "Act de identitate (seria și numărul)",
           "email": "Adresa de email",
-          "accepted": "Am împlinit 18 ani, am citit declarația și o semnez",
+          "accepted": "Am vârsta minimă a alergării, am citit declarația și o semnez",
           "typedName": "Semnătura: numele tău complet",
           "birthDate": "Data nașterii",
           "captcha": "Verificarea anti-bot"
@@ -399,8 +399,8 @@
         "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copiile trimise pe e-mail — a ta și a clubului — apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
         "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
-        "adultsOnly": "Declarația este pentru adulți: o semnezi doar dacă ai împlinit 18 ani, și nu o semnezi în numele unui minor.",
-        "accept": "Am împlinit 18 ani, am citit declarația de mai sus și o semnez pe propria răspundere",
+        "adultsOnly": "O semnezi doar pentru tine, dacă ai împlinit {age} în ziua alergării; nu o semnezi în numele altcuiva, nici al unui minor.",
+        "accept": "Am cel puțin {age} împliniți, am citit declarația de mai sus și o semnez pe propria răspundere",
         "typedNameHelp": "Scrie numele tău complet. Apare ca o semnătură.",
         "birthDateHelp": "Pentru vârsta minimă a alergării: {age}, împliniți în ziua alergării. Nu o păstrăm și nu apare în declarație.",
         "tooYoung": "Vârsta minimă pentru această alergare este {age}, împliniți în ziua alergării. Declarația nu se poate semna.",
@@ -1111,7 +1111,7 @@
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
-      "declarationDocumentHelp": "Se alege dintre versiunile aprobate; textul nu se editează aici. O versiune nouă se aprobă în Documente legale.",
+      "declarationDocumentHelp": "Trail pentru trasee montane sau de pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. Participantul semnează cea mai nouă versiune aprobată de tipul ales; fără o alegere, decide suprafața din «Traseul». Textul nu se editează aici: o versiune nouă se aprobă în Documente legale.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
@@ -1290,7 +1290,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
+      "minAgeHelp": "Împlinită în ziua evenimentului, cel puțin 14 ani (sub 14 ani nimeni nu se poate înscrie). Între 14 și 17 ani, înscrierea o face un părinte sau tutore, iar declarația o semnează minorul și părintele.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
         "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
@@ -1684,8 +1684,9 @@
         },
         "declaration": {
           "title": "Declarația pe propria răspundere",
-          "newest": "Cea mai nouă versiune aprobată: v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
-          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația."
+          "newest": "{kind}: cea mai nouă versiune aprobată e v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
+          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația.",
+          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația de trail. Aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei)."
         }
       },
       "identical": {
@@ -1699,7 +1700,7 @@
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
-        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic.",
+        "minAgeHelp": "Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii. Declarația spune vârsta aceasta; peste 18 ani, pagina de semnare cere și data nașterii și refuză pe cine e mai tânăr.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
         "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
@@ -1739,6 +1740,10 @@
         "title": "Nu se poate publica încă",
         "intro": "Publicarea cere aceste câmpuri, în fiecare limbă:",
         "introSaved": "Publicarea cere aceste câmpuri, în fiecare limbă, completate și salvate:"
+      },
+      "declarationKinds": {
+        "EVENT_DECLARATION": "Trail",
+        "EVENT_DECLARATION_ROAD": "Șosea sau parc"
       }
     },
     "preview": {
@@ -1856,13 +1861,14 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Cele trei texte pe care le acceptă participantul la înscriere, și cele două declarații opționale ale alergărilor de grup. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
+      "intro": "Cele trei texte pe care le acceptă participantul la înscriere — declarația de concurs în două variante, trail și șosea sau parc — și cele două declarații opționale ale alergărilor de grup. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
-        "EVENT_DECLARATION": "Declarația pe proprie răspundere: sănătate, riscuri, actul de identitate. Se semnează când se confirmă locul.",
+        "EVENT_DECLARATION": "Declarația pe propria răspundere a unui concurs pe trasee montane sau de pădure: vârsta minimă, minorii de 14–17 ani, riscurile traseului (teren, animale, vreme la munte), sănătatea, actul de identitate. Se semnează când se confirmă locul. Un concurs pe șosea sau în parc o semnează și el cât timp nu e aprobată declarația lui.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt: trafic, ritmul grupului, întunericul. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm).",
-        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe trail: teren, animale sălbatice și câini, vreme și întuneric, echipament propriu cu frontală. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm)."
+        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe trail: teren, animale sălbatice și câini, vreme și întuneric, echipament propriu cu frontală. Se semnează, dacă vrea alergătorul, pe pagina alergării; nu condiționează nimic. Înainte, aprobă o versiune nouă a notei de confidențialitate pornind de la textul platformei: numai ea descrie această declarație (datele, temeiul, cât le păstrăm).",
+        "EVENT_DECLARATION_ROAD": "Declarația pe propria răspundere a unui concurs pe șosea sau în parc: același text comun ca la trail (vârsta minimă, minorii de 14–17 ani, răspunderea, sănătatea, datele, semnătura), cu riscurile asfaltului, ale aglomerației și ale traficului în locul celor de munte. Se semnează când se confirmă locul. Până o aprobi, concursurile pe șosea sau în parc semnează declarația de trail."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă, alege documentul, lipește textul aprobat în ambele limbi, salvează ciorna, citește-o, aprob-o.",
@@ -1877,9 +1883,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni de concurs",
-        "EVENT_DECLARATION": "Declarație pe propria răspundere (concurs)",
+        "EVENT_DECLARATION": "Declarație pe propria răspundere (concurs, trail)",
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
-        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)"
+        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)",
+        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere (concurs, șosea sau parc)"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -1900,7 +1907,7 @@
       "newTitle": "Versiune nouă",
       "newFromTemplateIntro": "Precompletat cu textul platformei, cu denumirea clubului și adresa de contact deja scrise. Mai rămân de completat, între paranteze unghiulare, în ambele limbi: {blanks}. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
       "templatesIntro": "Sau pornește de la textul platformei:",
-      "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{participantIdDocument}}' (actul lui de identitate, tastat la semnare), '{{guardian}}' și '{{guardianIdDocument}}' (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), '{{idDocument}}' (actul celui care declară — al părintelui, pentru un minor), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
+      "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{participantIdDocument}}' (actul lui de identitate, tastat la semnare), '{{guardian}}' și '{{guardianIdDocument}}' (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), '{{idDocument}}' (actul celui care declară — al părintelui, pentru un minor), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{minimumAge}}' (vârsta minimă a evenimentului, cu unitatea), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
       "newVersion": "Versiune nouă",
       "saveDraft": "Salvează ciorna",
@@ -1980,7 +1987,7 @@
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
-        "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”). La un eveniment fără vârstă minimă — la o alergare de grup, una de cel mult 18 ani — propoziția care o conține lipsește din declarație",
+        "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”): la un concurs cel puțin 14 ani, la o alergare de grup cel puțin 18. Fiecare declarație o spune într-o propoziție a ei",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
         "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
         "newsletterTopics": "Doar în nota de confidențialitate: temele pe care le oferă abonarea la noutăți de pe pagina de contact, între ghilimele. Cu el în nota în vigoare (în ambele limbi), pagina de contact arată abonarea; fără el, abonarea nu apare și nu se păstrează nicio adresă.",
@@ -2414,6 +2421,16 @@
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
             "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
             "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+          ]
+        },
+        "raceDeclarations": {
+          "title": "Declarațiile de concurs: trail și șosea sau parc",
+          "todo": "Declarația de concurs are acum două variante, din același text comun: trail și șosea sau parc. Cel puțin una nu are încă o versiune în vigoare scrisă din textul platformei — care spune vârsta minimă a evenimentului și nu mai are niciun flux pentru minori sub 14 ani. Până o aprobi pe cea de șosea sau parc, concursurile pe asfalt semnează declarația de trail.",
+          "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din textul platformei: fiecare concurs semnează declarația potrivită traseului lui.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (concurs, trail)” → „pornește de la textul platformei”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
+            "La fel pentru „Declarație pe propria răspundere (concurs, șosea sau parc)”.",
+            "În editorul fiecărui concurs, la «Declarația pe propria răspundere», alege varianta potrivită traseului; fără o alegere, decide suprafața din «Traseul»."
           ]
         }
       },
@@ -4332,7 +4349,7 @@
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
                 "«Documente legale» → «Versiune nouă».",
-                "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
+                "Sub «Pornește de la textul platformei» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere (concurs, trail)», «Declarație pe propria răspundere (concurs, șosea sau parc)», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
                 "Citește tot și apasă «Salvează ciorna».",
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",
@@ -4352,7 +4369,7 @@
               "title": "Cum se semnează declarația",
               "steps": [
                 "Participantul citește textul completat cu numele lui și evenimentul, tastează seria și numărul actului (nu încărcăm poze de buletin) și semnează cu degetul sau cu mouse-ul.",
-                "Un minor de la 14 ani semnează cu acordul părintelui; sub 14 ani semnează doar părintele sau tutorele — cum spune declarația aprobată.",
+                "Un minor de 14–17 ani semnează alături de părinte sau tutore, fiecare cu actul lui de identitate; sub 14 ani nimeni nu se poate înscrie, la niciun eveniment.",
                 "Se păstrează numele, actele, versiunea textului, amprenta lui, momentul și metoda. E semnătură electronică simplă.",
                 "Imediat după, primește pe email declarația semnată, ca PDF. La masă, kitul se dă pe baza actului scris în declarație.",
                 "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul."
@@ -4891,12 +4908,10 @@
     "displayNameHelp": "Implicit, pe lista de participanți și în rezultate apare numele tău complet. Dacă preferi altceva — de exemplu „Ana P.” — scrie-l aici. Dacă nu vrei să apari deloc pe listă, bifează opțiunea de mai jos.",
     "birthDate": "Data nașterii",
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
-    "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
-      "minimumOnly": "Vârsta minimă: {age}.",
-      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia."
+      "minimumOnly": "Vârsta minimă: {age}."
     },
     "sex": "Sex",
     "sexOptions": {

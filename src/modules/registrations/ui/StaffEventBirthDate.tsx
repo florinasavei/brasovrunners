@@ -3,7 +3,7 @@
 import MenuItem from "@mui/material/MenuItem";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
-import { latestBirthDateFor, MIN_PARTICIPANT_AGE } from "../domain/age";
+import { effectiveMinimumAge, latestBirthDateFor } from "../domain/age";
 import { BIB_NUMBER_MAX, type SpareState } from "../domain/spare-bibs";
 import BirthDateEcho from "./BirthDateEcho";
 import GuardianForMinor from "./GuardianForMinor";
@@ -108,9 +108,9 @@ export function StaffEventSelect({
 export function StaffBirthDateField({ label, helperText }: { label: string; helperText: string }) {
   const { selected, eventDays, eventMinAges, today, earliest } = useContext(ChoiceContext);
   const day = selected ? eventDays[selected] : undefined;
-  // The chosen event's own minimum (§329); zero is no minimum, and then the only bound is today.
-  const minAge = selected ? (eventMinAges[selected] ?? MIN_PARTICIPANT_AGE) : MIN_PARTICIPANT_AGE;
-  const youngest = day && minAge > 0 ? latestBirthDateFor(minAge, day) : today;
+  // The chosen event's own minimum (§329), never under fourteen (§NNN); with no event chosen, today.
+  const minAge = effectiveMinimumAge(selected ? eventMinAges[selected] : undefined);
+  const youngest = day ? latestBirthDateFor(minAge, day) : today;
   const max = youngest < today ? youngest : today;
   return (
     <RecallField

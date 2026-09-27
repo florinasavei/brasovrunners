@@ -36,7 +36,7 @@ import { countryOptions } from "@/modules/registrations/countries";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
-import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
+import { ageRuleVariant, dayIn, effectiveMinimumAge, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { acceptanceAfterRefusal, ERROR_SUMMARY_ID, parseInvalidFields, REGISTRATION_FORM_FIELDS } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
@@ -221,10 +221,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   /**
    * Under the event's minimum age on the day of the race (§321, §329). The same kind of marker
    * as the one above: the summary links the birth date, and this says which rule refused it —
-   * "complete this field correctly" about somebody's real birth date would be untrue. Never on
-   * an event with no minimum, whatever a typed-in address says: "the minimum age is 0" is no rule.
+   * "complete this field correctly" about somebody's real birth date would be untrue. Every event
+   * has a minimum since §NNN, never under fourteen (`effectiveMinimumAge`), so the marker always
+   * has a number to say.
    */
-  const tooYoung = event.minAge > 0 && (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
+  const minAge = effectiveMinimumAge(event.minAge);
+  const tooYoung = (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
   /**
    * No place, and the waiting list full — or no waiting list at all (§348). A rule about the
    * event, like the throttle's marker: read from the raw parameter, matched against the two
@@ -259,15 +261,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     them too. The upper bound is the latest birth date that still reaches this event's own
     minimum (`events.min_age`, §329) on the race's own day in the race's own zone — computed here,
     for this event, from the arithmetic the server refuses with — so the picker never offers a
-    date the submission would be turned back for. Today stays a bound as well: for an event with
-    no minimum, and for the event absurdly far ahead that would allow a future date.
+    date the submission would be turned back for. Today stays a bound as well, for the event
+    absurdly far ahead that would allow a future date.
   */
   const today = now.toISOString().slice(0, 10);
-  const youngestAllowed = latestBirthDateFor(event.minAge, dayIn(event.startsAt, event.timezone));
+  const youngestAllowed = latestBirthDateFor(minAge, dayIn(event.startsAt, event.timezone));
   const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
   // "14 ani", "20 de ani" — the event's number as this page's sentences say it (§329).
-  const minimumAge = { age: yearsPhrase(event.minAge, locale) };
-  const hasMinimumAge = event.minAge > 0;
+  const minimumAge = { age: yearsPhrase(minAge, locale) };
   const earliestBirthDate = new Date(
     Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()),
   )
@@ -454,13 +455,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         {/* Who may enter, among the facts of what is being signed up for and before the first
             field (§321): the event's own minimum age (§329), and who fills the form in for a
             minor (§108). A line, not a banner — it is a condition of the race like its date, not
-            a warning. Three sentences, so it reads right whatever the number: no minimum says
-            only who registers a minor, eighteen or more says nothing about parents, and the
+            a warning. Two forms, so it reads right whatever the number (§NNN: never under
+            fourteen): under eighteen it names who registers a minor, eighteen or more says nothing about parents, and the
             same sentence stands on the event page. Gone once the form has been sent: by then it
             has been answered. */}
         {!submitted && (
           <Typography variant="body2" color="text.secondary" data-testid="age-rule">
-            {t(`ageRule.${ageRuleVariant(event.minAge)}`, minimumAge)}
+            {t(`ageRule.${ageRuleVariant(minAge)}`, minimumAge)}
           </Typography>
         )}
       </Box>
@@ -785,8 +786,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate")}
-                /* The event's minimum age and the categories, in the help (§321, §329) — only the
-                   categories on an event with no minimum; a refusal for age says the rule again
+                /* The event's minimum age and the categories, in the help (§321, §329; never under
+                   fourteen since §NNN); a refusal for age says the rule again
                    rather than "complete this field correctly". Left native, not the backoffice's
                    MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a runner's own birth
                    date is decades back, faster typed than paged through a calendar month by
@@ -796,9 +797,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     ? tooYoung
                       ? t("errors.tooYoung", minimumAge)
                       : t("errors.field")
-                    : hasMinimumAge
-                      ? t("birthDateHelp", minimumAge)
-                      : t("birthDateHelpNoMinimum")
+                    : t("birthDateHelp", minimumAge)
                 }
                 type="date"
                 label={t("birthDate")}

@@ -18,7 +18,8 @@ import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
 import NightEventField from "../NightEventField";
 import OnlyForType from "../OnlyForType";
-import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { groupRunMinimumAge } from "@/modules/group-run-declarations/domain";
+import { ADULT_AGE, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
@@ -183,14 +184,16 @@ export default async function CourseBox({
         {/* The group run's minimum age (§329, §440), beside the declaration it is stated in: the
             event's own `min_age`, which the registration card holds for a race and hides for a group
             run (§111). Its own name, so the hidden race box cannot answer for it — the reader picks
-            this one for a group run (`admin/actions.ts`). */}
+            this one for a group run (`admin/actions.ts`). Since §NNN it is set, not written into the
+            text: the self-declaration covers no minor, so the box starts and stops at eighteen, and
+            the text says whatever it holds through `{{minimumAge}}` (`groupRunMinimumAge`). */}
         <OnlyForType type="GROUP_RUN" selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
           <RecallField
             name="event.groupRunMinAge"
             label={t("editor.minAge")}
             helperText={t("editor.groupRunDeclaration.minAgeHelp")}
-            defaultValue={event?.minAge ?? MIN_PARTICIPANT_AGE}
-            {...textFieldConstraints(eventInputConstraints("minAge"), { inputMode: "numeric" })}
+            defaultValue={groupRunMinimumAge(event?.minAge ?? MIN_PARTICIPANT_AGE)}
+            {...textFieldConstraints({ ...eventInputConstraints("minAge"), min: ADULT_AGE }, { inputMode: "numeric" })}
             sx={{ width: { sm: 220 } }}
             data-testid="group-run-min-age"
           />

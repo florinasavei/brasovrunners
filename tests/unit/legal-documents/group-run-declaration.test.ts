@@ -35,17 +35,21 @@ const TEXTS = {
 const bullets = (list: readonly string[]) => list.filter((p) => p.startsWith("• "));
 
 describe("§393 the kinds and their names", () => {
-  it("lists every enum value, in order, and the two optional kinds after the three a registration rests on", () => {
-    expect([...LEGAL_DOCUMENT_KEYS]).toEqual([...legalDocumentKey.enumValues]);
+  it("lists every enum value, the road race's beside the trail one (§NNN), and the two optional kinds after them", () => {
+    // The enum appends a value; the backoffice lists the road declaration beside the trail one.
+    expect([...LEGAL_DOCUMENT_KEYS].sort()).toEqual([...legalDocumentKey.enumValues].sort());
+    expect([...LEGAL_DOCUMENT_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
     expect([...REGISTRATION_LEGAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"]);
     expect([...GROUP_RUN_DECLARATION_KEYS]).toEqual(["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
   });
 
-  it("names the three declarations in both catalogues, as the owner did", () => {
-    expect(ro.Admin.legal.keys.EVENT_DECLARATION).toBe("Declarație pe propria răspundere (concurs)");
+  it("names the four declarations in both catalogues, as the owner did", () => {
+    expect(ro.Admin.legal.keys.EVENT_DECLARATION).toBe("Declarație pe propria răspundere (concurs, trail)");
+    expect(ro.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Declarație pe propria răspundere (concurs, șosea sau parc)");
     expect(ro.Admin.legal.keys.GROUP_RUN_DECLARATION_ASPHALT).toBe("Declarație pe propria răspundere (alergare de grup, asfalt)");
     expect(ro.Admin.legal.keys.GROUP_RUN_DECLARATION_TRAIL).toBe("Declarație pe propria răspundere (alergare de grup, trail)");
-    expect(en.Admin.legal.keys.EVENT_DECLARATION).toBe("Self-declaration (race)");
+    expect(en.Admin.legal.keys.EVENT_DECLARATION).toBe("Self-declaration (race, trail)");
+    expect(en.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Self-declaration (race, road or park)");
     expect(en.Admin.legal.keys.GROUP_RUN_DECLARATION_ASPHALT).toBe("Self-declaration (group run, asphalt)");
     expect(en.Admin.legal.keys.GROUP_RUN_DECLARATION_TRAIL).toBe("Self-declaration (group run, trail)");
     for (const key of LEGAL_DOCUMENT_KEYS) {
@@ -129,10 +133,10 @@ describe("§393 the two templates", () => {
   it("names the trail's risks: terrain, wild animals and dogs, weather and the dark, own equipment with a headlamp, own pace", () => {
     const ro = bullets(TEXTS.trail.ro).join(" ");
     const en = bullets(TEXTS.trail.en).join(" ");
-    for (const pattern of [/porțiuni abrupte/, /cădere/, /animalelor sălbatice/, /urși/, /câini de stână/, /furtună, fulgere/, /întunericului/, /Echipamentul este responsabilitatea mea/, /lanternă frontală funcțională/, /în ritmul meu/]) {
+    for (const pattern of [/porțiuni abrupte/, /cădere/, /animalelor sălbatice/, /să nu provoc sau hrănesc animalele/, /câini de stână/, /furtună, fulgere/, /întunericului/, /Echipamentul este responsabilitatea mea/, /lanternă frontală funcțională/, /în ritmul meu/]) {
       expect(ro).toMatch(pattern);
     }
-    for (const pattern of [/steep sections/, /falls/, /wild animals/, /bears/, /sheepdogs/, /storms, lightning/, /after dark/, /equipment is my own responsibility/, /working headlamp/, /at my own pace/]) {
+    for (const pattern of [/steep sections/, /falls/, /wild animals/, /not to provoke or feed the animals/, /sheepdogs/, /storms, lightning/, /after dark/, /equipment is my own responsibility/, /working headlamp/, /at my own pace/]) {
       expect(en).toMatch(pattern);
     }
   });
@@ -140,7 +144,12 @@ describe("§393 the two templates", () => {
   it("is informed acceptance, never a waiver: every sentence that says the organiser does not answer carries the law's limit", () => {
     const limit = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
     const disclaimer = { ro: /nu (?:pot|poate) fi (?:tras|trasă)|nu răspunde\b/, en: /cannot be held liable|not responsible/ } as const;
-    const waiver = { ro: /renunț|în niciun fel/i, en: /waive|in any way/i } as const;
+    // A waiver, or the organiser free "in any way" — never the Civil Code's own sentence that accepting the
+    // risks is *not* a waiver (art. 1355(4), §NNN), which the text now says in so many words.
+    const waiver = {
+      ro: /(?<!nu înseamnă, prin ea însăși, că )renunț|în niciun fel/i,
+      en: /(?<!not, by itself, a )waive|in any way/i,
+    } as const;
     for (const surface of ["asphalt", "trail"] as const) {
       for (const locale of ["ro", "en"] as const) {
         const text = TEXTS[surface][locale];
@@ -185,15 +194,24 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("is an adult's: the signer declares in the first sentence that they are 18 or older, and the page's consent box says it too", () => {
+  it("states one age, the run's {{minimumAge}}, and no 18 of its own; the consent box repeats the run's age (§NNN)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
-      expect(TEXTS[surface].ro[0]).toMatch(/declar pe propria răspundere că am împlinit 18 ani/);
-      expect(TEXTS[surface].en[0]).toMatch(/declare on my own responsibility that I am 18 or older/);
+      for (const locale of ["ro", "en"] as const) {
+        const text = TEXTS[surface][locale].join("\n");
+        expect(text, `${surface} ${locale}`).not.toMatch(/\b18\b|împlinit 18|18 or older/);
+        expect(text.match(/\{\{minimumAge\}\}/g)?.length, `${surface} ${locale}`).toBe(1);
+      }
+      expect(TEXTS[surface].ro).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data alergării.");
+      expect(TEXTS[surface].en).toContain("I declare that I am at least {{minimumAge}} old on the day of the run.");
+      // Signed personally, for oneself: it covers nobody else, no minor.
+      expect(TEXTS[surface].ro.join(" ")).toContain("Semnez această declarație personal, doar pentru mine.");
+      expect(TEXTS[surface].en.join(" ")).toContain("I sign this declaration personally, for myself only.");
     }
-    expect(ro.Event.groupRunDeclaration.page.accept).toMatch(/^Am împlinit 18 ani/);
-    expect(en.Event.groupRunDeclaration.page.accept).toMatch(/^I am 18 or older/);
-    expect(ro.Event.groupRunDeclaration.page.adultsOnly).toMatch(/18 ani/);
-    expect(en.Event.groupRunDeclaration.page.adultsOnly).toMatch(/18 or older/);
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Event.groupRunDeclaration.page.accept).toContain("{age}");
+      expect(catalogue.Event.groupRunDeclaration.page.adultsOnly).toContain("{age}");
+      expect(catalogue.Event.groupRunDeclaration.page.accept).not.toMatch(/18/);
+    }
   });
 });
 

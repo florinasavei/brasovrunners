@@ -315,9 +315,9 @@ describe("BR-REQ-052-02 who may enter (§329)", () => {
     expect(parsed(sportsEventJsonLd(race({ minAge: 16 } as Partial<PublicEvent>), URL, "Brașov Runners")).typicalAgeRange).toBe("16-");
   });
 
-  it("states nothing for no minimum, and nothing where the club counts no age", () => {
-    // Zero is no minimum: "0-" would be a rule nobody set.
-    expect("typicalAgeRange" in parsed(sportsEventJsonLd(race({ minAge: 0 } as Partial<PublicEvent>), URL, "Brașov Runners"))).toBe(false);
+  it("states fourteen for an older event's 0 (§NNN: fourteen is the floor), and nothing where the club counts no age", () => {
+    // An event saved under §329 with 0 binds at fourteen, and says so.
+    expect(parsed(sportsEventJsonLd(race({ minAge: 0 } as Partial<PublicEvent>), URL, "Brașov Runners")).typicalAgeRange).toBe("14-");
     // Registered elsewhere, or not at all, or turned up to (§111): the platform refuses nobody there.
     for (const overrides of [{ registrationMode: "EXTERNAL" }, { registrationMode: "NONE" }, { type: "GROUP_RUN" }] as const) {
       const block = parsed(sportsEventJsonLd(race(overrides as Partial<PublicEvent>), URL, "Brașov Runners"));

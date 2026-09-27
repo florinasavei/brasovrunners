@@ -227,15 +227,16 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       },
     });
 
-    it("stores the organizer's number, zero for no minimum, and fourteen when the box is empty or absent", async () => {
+    it("stores the organizer's number, fourteen itself, and fourteen when the box is empty or absent", async () => {
       expect((await createEvent(db, { actor: admin, fields: withMinAge("16", "saisprezece") })).minAge).toBe(16);
-      expect((await createEvent(db, { actor: admin, fields: withMinAge("0", "fara-minim") })).minAge).toBe(0);
+      expect((await createEvent(db, { actor: admin, fields: withMinAge("14", "paisprezece-ani") })).minAge).toBe(14);
       expect((await createEvent(db, { actor: admin, fields: withMinAge("", "gol") })).minAge).toBe(14);
       expect((await createEvent(db, { actor: admin, fields: withMinAge(undefined, "absent") })).minAge).toBe(14);
     });
 
-    it("refuses a number no person has, or a fraction, naming the box, and writes nothing", async () => {
-      for (const minAge of ["100", "-1", "14.5", "paisprezece"]) {
+    // §NNN: fourteen is the floor — "0, no minimum" and anything under fourteen are refused at the box.
+    it("refuses a number under fourteen, a number no person has, or a fraction, naming the box, and writes nothing", async () => {
+      for (const minAge of ["0", "13", "100", "-1", "14.5", "paisprezece"]) {
         let fields: readonly string[] = [];
         try {
           await createEvent(db, { actor: admin, fields: withMinAge(minAge, `refuzat-${fields.length}`) });

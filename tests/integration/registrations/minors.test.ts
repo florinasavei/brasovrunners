@@ -11,7 +11,7 @@ import {
   declarationAsksMinorToSignByLocale,
   insertLegalDocumentVersion,
 } from "@/modules/legal-documents/repository";
-import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
+import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { isMinorOn } from "@/modules/registrations/fields";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import {
@@ -83,8 +83,8 @@ const LEGACY_DECLARATION: LegalDocumentTranslationInput[] = [
 async function approve(
   db: TestDatabase,
   declaration: LegalDocumentTranslationInput[] = [
-    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-    { locale: "en", title: "Declaration", body: declarationEn },
+    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+    { locale: "en", title: "Declaration", body: declarationTrailEn },
   ],
 ) {
   const privacy: LegalDocumentTranslationInput[] = [
@@ -189,7 +189,9 @@ describe("a minor registered by a parent (§108)", () => {
     // The platform's text since §330: the minor declares with their own document, and the parent
     // is named with theirs in a sentence of its own.
     expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al/a actului de identitate MP 123456");
-    expect(text).toContain("părintele sau tutorele legal: Ion Popescu, posesor/posesoare al/a actului de identitate BV 654321");
+    expect(text).toContain("părintele sau tutorele legal, care o semnează alături de el: Ion Popescu, posesor/posesoare al/a actului de identitate BV 654321");
+    // The event's minimum age, never under fourteen (§NNN), stated where the text opens.
+    expect(text).toContain("Declar că am cel puțin 14 ani împliniți la data evenimentului.");
     expect(text).not.toContain("{{");
     // Both signatures, each with its document, under the one instant.
     expect(entry!.signature).toMatchObject({ typedName: "Ion Popescu", idDocument: "BV 654321", minor: { typedName: "Maria Popescu", idDocument: "MP 123456" } });
@@ -372,8 +374,8 @@ describe("a minor registered by a parent (§108)", () => {
     expect(await declarationAsksMinorToSignByLocale(db, NOW)).toEqual({ ro: false, en: false });
     // The club approves a declaration made from the platform's text: on by itself, in both.
     const current: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-      { locale: "en", title: "Declaration", body: declarationEn },
+      { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationTrailRo },
+      { locale: "en", title: "Declaration", body: declarationTrailEn },
     ];
     await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(current), translations: current, now: NOW });
     expect(await declarationAsksMinorToSignByLocale(db, NOW)).toEqual({ ro: true, en: true });

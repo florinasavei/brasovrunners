@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
-import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
+import { ageRuleVariant, effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
@@ -1029,7 +1029,7 @@ export default async function EventFacts({
       key: "age",
       label: t("age"),
       icon: CakeIcon,
-      value: rt(`ageRule.${ageRuleVariant(event.minAge)}`, { age: yearsPhrase(event.minAge, locale) }),
+      value: rt(`ageRule.${ageRuleVariant(event.minAge)}`, { age: yearsPhrase(effectiveMinimumAge(event.minAge), locale) }),
     });
   }
   if (state === "NOT_APPLICABLE" && mentionsRegistration) {

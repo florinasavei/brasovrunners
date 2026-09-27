@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { EVENT_SURFACES, EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { RACE_DECLARATION_KEYS, type RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
 import { declarationSummary, type SummaryWords } from "../box-summaries";
@@ -98,7 +99,9 @@ export default async function DeclarationCard({
   const needsDeclaration = line.missing;
   if (!mayEditSettings) return <Panel {...card} />;
 
-  const newest = declarations[0];
+  // The newest approved version of each kind (§NNN): what a race of that kind signs today.
+  const newest = RACE_DECLARATION_KEYS.map((key) => ({ key, option: declarations.find((option) => option.key === key) ?? null }));
+  const kind = (key: RaceDeclarationKey) => t(`editor.declarationKinds.${key}`);
   return (
     <Panel collapsible {...card} openWhen={{ attention: needsDeclaration }}>
       <Stack spacing={2}>
@@ -147,15 +150,24 @@ export default async function DeclarationCard({
                 <MenuItem value="">{t("editor.declarationUnset")}</MenuItem>
                 {declarations.map((document) => (
                   <MenuItem key={document.id} value={document.id}>
-                    v{document.version} · {document.title}
+                    {kind(document.key)} · v{document.version} · {document.title}
                   </MenuItem>
                 ))}
               </RecallField>
-              {newest && (
-                <Typography variant="body2" data-testid="race-declaration-newest">
-                  {t("editor.boxes.declaration.newest", { version: newest.version, title: newest.title })}
-                </Typography>
-              )}
+              {/* Which text each kind of race signs today (§NNN), and — while the club approved no
+                  road text — that a road race signs the trail one (`raceDeclarationKeysFor`). */}
+              {declarations.length > 0 &&
+                newest.map(({ key, option }) =>
+                  option ? (
+                    <Typography key={key} variant="body2" data-testid="race-declaration-newest">
+                      {t("editor.boxes.declaration.newest", { kind: kind(key), version: option.version, title: option.title })}
+                    </Typography>
+                  ) : key === "EVENT_DECLARATION_ROAD" ? (
+                    <Typography key={key} variant="body2" data-testid="race-declaration-road-fallback">
+                      {t("editor.boxes.declaration.roadFallback", { kind: kind(key) })}
+                    </Typography>
+                  ) : null,
+                )}
               <Typography variant="body2">
                 <Link href="/admin/legal">{t("editor.boxes.conditions.legalLink")}</Link>
               </Typography>
