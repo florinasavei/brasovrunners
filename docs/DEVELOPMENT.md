@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.08-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.09-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.08-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.09-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -114,6 +114,12 @@ yarn release             versioned archive and share copies under dist/
 
 `yarn check` is the single gate. The pre-commit hook runs it and CI runs it, so they cannot
 drift. When a step is added to CI that a developer can run locally, it belongs inside `check`.
+
+**Dead code.** `node scripts/unused-exports.mjs` lists the exports under `src/` that no other file
+under `src/`, `tests/`, `scripts/` or `docs/` names and their own file does not use — a grep walk,
+no dependency; `--types` adds types and interfaces, `--local` adds exports only their own file uses.
+It is a list of candidates to read, not a gate, and not in `check`; the script's `ALLOWLIST` names
+what is kept on purpose, with the reason (§489).
 
 ## The dev server port
 

@@ -97,23 +97,6 @@ export function resolveDisplayName(input: {
 }
 
 /**
- * The shortened form — a first name and a last initial.
- *
- * Offered as a suggestion when somebody opens the "what appears publicly" section, and never
- * reached for by `resolveDisplayName`: a default that quietly abbreviated everybody would
- * surprise the club on the morning it printed a start list.
- */
-export function shortenedName(
-  firstName: string | null | undefined,
-  lastName: string | null | undefined,
-): string {
-  const first = collapse(firstName);
-  const last = collapse(lastName);
-  if (first && last) return `${first} ${[...last][0]}.`;
-  return first || last;
-}
-
-/**
  * A country name in the reader's own language, from the platform (`AGENTS.md` §1.5: prefer the
  * platform over a library). `Intl.DisplayNames` ships with Node and every browser, so a
  * country-name table — 250 rows in two languages, stale the day a country renames itself — is

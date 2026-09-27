@@ -13,7 +13,8 @@ import { stashDraftValues, stashFormDraft } from "@/modules/registrations/form-d
 import { subscribeToNewsletter } from "@/modules/newsletter/service";
 import { NEWSLETTER_DIALOG_ID, NEWSLETTER_SECTION_ID } from "@/modules/newsletter/ui/newsletter-box";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
-import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
+import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
+import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";

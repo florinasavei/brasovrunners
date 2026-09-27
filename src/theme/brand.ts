@@ -83,6 +83,28 @@ export const COLOR_DARK = {
 } as const;
 
 /**
+ * The public pages' background tints the club may choose from (§488, «Aspectul site-ului» under
+ * Pagini → «Aspect»). Light scheme only: after dark the page stays `COLOR_DARK.paper`.
+ *
+ * The owner asked for "a slight shade of blue (club colours)": white, the club's blue laid over
+ * white at about 4 % and about 8 %, and a blue-grey. Each is a page colour under white cards, so
+ * every text colour that sits on it has to clear AA and the cards have to stay visible without the
+ * page turning into a wash — `tests/unit/theme/brand.test.ts` asserts both over every preset, and
+ * the same two rules refuse a «Personalizat» colour the club types
+ * (`modules/appearance/domain/tint-contrast.ts`).
+ */
+export const SITE_TINT = {
+  /** «Alb»: the platform's page colour, unchanged — the default. */
+  paper: COLOR.paper,
+  /** «Albastru abia vizibil»: `COLOR.blue` at 4 % over white (255 − 0.04 × 255 = 245). */
+  faintBlue: "#f5f5ff",
+  /** «Albastru deschis»: `COLOR.blue` at 8 % over white (255 − 0.08 × 255 ≈ 235). */
+  lightBlue: "#ebebff",
+  /** «Gri albăstrui»: a cool grey leaning to the club's blue. */
+  blueGrey: "#eef1f5",
+} as const;
+
+/**
  * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
  * body, to white at the hem. It is the most distinctive thing the club already owns, and the
  * one part of the identity that is theirs rather than generic.
