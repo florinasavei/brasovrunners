@@ -72,7 +72,7 @@ export default async function AlbumPage({ params }: Props) {
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <LastGoodNotice read={read} />
 
-      <Typography variant="body2" sx={{ mb: 2 }}>
+      <Typography variant="body2" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
         <Link href="/gallery">{t("backToGallery")}</Link>
       </Typography>
       <Typography variant="h1" gutterBottom>
@@ -88,7 +88,7 @@ export default async function AlbumPage({ params }: Props) {
         )}
       </Typography>
       {album.description && (
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: "60rem" }}>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 }, maxWidth: "60rem" }}>
           {album.description}
         </Typography>
       )}
@@ -129,7 +129,7 @@ export default async function AlbumPage({ params }: Props) {
       </Box>
 
       {/* Under the photographs, where somebody recognises themselves (§323): how to have one taken down. */}
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
         {t.rich("photosNotice", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
     </Container>

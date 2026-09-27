@@ -51,7 +51,7 @@ const BIO_SX = {
 } as const;
 
 /** The club's introduction (§474): the page's lead, in the renderer's own type, a little quieter. */
-const INTRO_SX = { color: "text.secondary", mb: 3, "& > :last-child": { mb: 0 } } as const;
+const INTRO_SX = { color: "text.secondary", mb: { xs: DENSITY.sectionGap, sm: 3 }, "& > :last-child": { mb: 0 } } as const;
 
 /**
  * The page's state and cards, or null when the database cannot say. A DRAFT page is a 404, as an
@@ -114,7 +114,7 @@ export default async function TeamPage({ params }: Props) {
           <RichText body={page.intro} />
         </Box>
       ) : (
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("lead", { club: CLUB_NAME })}
         </Typography>
       )}
@@ -176,7 +176,7 @@ export default async function TeamPage({ params }: Props) {
         </Box>
       )}
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
         {t.rich("contact", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
     </Container>

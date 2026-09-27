@@ -81,7 +81,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
           </Typography>
           {/* Which text this is (§323): a registration records the version it was shown, and a
               reader comparing the two needs the number and the day it took effect. */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
             {t("inForce", {
               version: document.version,
               date: formatDay(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),

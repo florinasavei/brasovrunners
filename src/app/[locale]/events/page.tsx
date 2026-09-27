@@ -175,7 +175,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2.5 } }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapXs, sm: 2.5 } }}>
         {t("intro")}
       </Typography>
 
@@ -240,11 +240,12 @@ async function ListingLead({
           of kind chips and §401's «Colaborare» chip beside them. Nothing to narrow and nothing
           ticked, it does not render, and nothing on the listing moves for that.
 
-          The gap around it is `DENSITY.gapSm` (§458, tightening §401's `sectionGap` — the owner: "in
-          general prea mult padding între carduri și restul"): 8px on a phone and 12px from `sm`,
-          above and below alike. */}
+          The gap around it is `DENSITY.gapXs` (§458, tightening §401's `sectionGap` — the owner: "in
+          general prea mult padding între carduri și restul" — and again in §NNN, the 360-px density
+          pass, 8px to 6): 6px on a phone and 12px from `sm`, above and below alike, the intro's
+          own margin above it the same six. */}
       {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
-        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 }, mb: { xs: DENSITY.gapSm, sm: 1.5 } }}>
+        <Box sx={{ mt: { xs: DENSITY.gapXs, sm: 1.5 }, mb: { xs: DENSITY.gapXs, sm: 1.5 } }}>
           <ListingFilterPanel
             locale={locale}
             pathname="/events"

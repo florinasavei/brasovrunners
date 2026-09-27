@@ -59,7 +59,7 @@ export default async function GalleryPage({ params }: Props) {
       </Typography>
       {/* Photographs are a legitimate-interest processing, so the way to object is said where
           they are (§323): a message, no reason asked. */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 4 } }}>
         {t.rich("photosNotice", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
 

@@ -263,11 +263,14 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // gap under the title's words is never less than the link's reach below them.
     expect(CARD_EXCERPT_SX.mt).toBe(LINE_GAP);
     const html = await single({ excerptJson: null, excerpt: null });
-    // With no summary the facts follow, a group's gap below.
+    // With no summary the facts follow, a group's gap below: twelve from `sm`, and on a phone the
+    // density scale's short step (§NNN, the 360-px density pass) — eight, the title's reach below
+    // its words exactly, so still nothing nearer.
     const markup = withoutStyles(html);
     const after = markup.slice(markup.indexOf("</h2>") + "</h2>".length);
     const facts = /^<div\b[^>]*class="[^"]*\b(css-[\w-]+)"/.exec(after)?.[1] ?? "";
-    expect(rulesFor(html, facts)).toContain("margin-top:12px");
+    // The phone's rule first (MUI emits `xs` before `sm`), then the twelve from `sm`.
+    expect(rulesFor(html, facts)).toBe(`{margin-top:${LINE_GAP * 8}px;}\n{margin-top:12px;}`);
   });
 
   it("titles itself exactly as the series card does — one class, one size, one weight, one blue", async () => {

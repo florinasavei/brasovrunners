@@ -7,6 +7,7 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { DENSITY } from "@/theme/density";
 import { riseIn } from "@/theme/motion";
 import { featuredCard, specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
@@ -150,7 +151,9 @@ export default async function EventCard({
             it to `tests/e2e/weather-place.spec.ts` or `tests/e2e/listing-cards.spec.ts`, the way
             other breakpoints in this module are measured and pasted (`EventFacts.tsx`'s own
             comments). */}
-        <Box sx={{ mt: GROUP_GAP }}>
+        {/* A group's gap above the facts, the density scale's short step on a phone (§NNN): eight,
+            no nearer than the title's reach below its words when there is no summary (§366). */}
+        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           <EventFacts event={event} now={now} variant="compact" cardWeather={weather} raceWeek={week !== null} />
         </Box>
 

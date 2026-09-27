@@ -6,6 +6,10 @@ import type { Locale } from "@/i18n/routing";
 import { formatBuildDate, formatVersion } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 import BuildBadgeLink from "./BuildBadgeLink";
+import { FOLD_LINE, foldLineSx } from "./footer-target";
+
+/** The stamp's long-press reach above its line in the phone's fold: 44 less the fold's 24-pixel line (§NNN). */
+const FOLD_REACH = 44 - FOLD_LINE.xs;
 
 /**
  * When this site was built — and, for the club's own people, the way in.
@@ -33,7 +37,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
  * A Server Component either way: the values are inlined at build time and never change while
  * the page is open. Only the interactive half is a client island, and only where it is real.
  */
-export default async function BuildBadge() {
+export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?: boolean } = {}) {
   const locale = await getLocale();
   const t = await getTranslations("Site");
 
@@ -61,14 +65,34 @@ export default async function BuildBadge() {
    * and 44 pixels tall, like everything else in the panel below `md`, because a long press is
    * aimed at it (BR-REQ-041-01 criterion 6). The chip is the 24 pixels you see; this box is the
    * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§385).
+   *
+   * `phoneTarget` — the fold's copy (§NNN, the 360-px density pass, amending §385): on a phone
+   * every line of the fold is 24 pixels (`FOLD_LINE`, `footer-target.ts`), and a 44-pixel box here
+   * was the one line the fold could not lose. So the box still reaches 44 — a long press is aimed
+   * at it — but the twenty pixels above its line are padding given back as an equal negative
+   * margin (the §366 "tight" shape): the line is the chip's 24, and the reach lies over the line
+   * above, the weather credit's. That line's link paints over it (`position: relative` on every
+   * link in the panel, `SiteFooter`), so a press on the credit is the credit's and only the empty
+   * rest of its line is the stamp's. Up, never down: under the stamp is the bottom of the page,
+   * and a reach there would lengthen the page by its twenty pixels. From `sm` the box is 44 with no
+   * reach. `content-box`, said here, because the fold's content is slotted into the `<details>`'s
+   * shadow tree, where MUI's `box-sizing: inherit` does not reach (§366): the padding is always
+   * on top of the line. The pinned copy on the bar's corner from `md` keeps its plain 44.
    */
   const sx = {
     alignSelf: "flex-start",
     display: "flex",
     alignItems: "center",
-    minHeight: 44,
     maxWidth: "100%",
     m: 0,
+    ...(phoneTarget
+      ? {
+          boxSizing: "content-box",
+          ...foldLineSx(["minHeight"]),
+          pt: { xs: `${FOLD_REACH}px`, sm: 0 },
+          mt: { xs: `-${FOLD_REACH}px`, sm: 0 },
+        }
+      : { minHeight: 44 }),
     pointerEvents: "none",
   };
 
