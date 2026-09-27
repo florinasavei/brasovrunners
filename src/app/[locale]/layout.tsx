@@ -133,7 +133,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   const site = await getTranslations({ locale, namespace: "Site" });
   const messages = await getMessages({ locale });
-  // «Fundalul site-ului» (§NNN): the club's tint for the public pages, from the public cache, as
+  // «Aspectul site-ului» (§NNN): the club's tint for the public pages, from the public cache, as
   // one rule on MUI's page-colour variable — nothing at all for the default.
   const tintStyle = siteTintStyle(await cachedSiteTint());
 
@@ -142,7 +142,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} suppressHydrationWarning>
       <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
         {/* Drawn on the server, before the first paint; light scheme and public pages only
-            (`modules/appearance/domain/site-tint.ts`). Its text is built from a preset, never typed. */}
+            (`modules/appearance/domain/site-tint.ts`). Its text is a preset or a checked #rrggbb, never raw typed text. */}
         {tintStyle && <style data-site-tint="">{tintStyle}</style>}
         {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
             (§93). Light unless the visitor pressed the switch — the owner: "by default we are on

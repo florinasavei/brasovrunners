@@ -83,24 +83,25 @@ export const COLOR_DARK = {
 } as const;
 
 /**
- * The public pages' background tints the club may choose from (§NNN, «Fundalul site-ului» under
+ * The public pages' background tints the club may choose from (§NNN, «Aspectul site-ului» under
  * Pagini → «Aspect»). Light scheme only: after dark the page stays `COLOR_DARK.paper`.
  *
- * Presets, never a typed colour: each is `COLOR.paper` walked a small step towards one of the
- * club's own colours — the logo's blue, the kit's cyan hem, the orange accent — about as far as
- * a page can move while the white cards on it still read as cards and every text colour on it
- * still clears AA. `tests/unit/theme/brand.test.ts` asserts ink, muted ink and the club blue
- * against each one, which is what makes a new preset safe to add here and nowhere else.
+ * The owner asked for "a slight shade of blue (club colours)": white, the club's blue laid over
+ * white at about 4 % and about 8 %, and a blue-grey. Each is a page colour under white cards, so
+ * every text colour that sits on it has to clear AA and the cards have to stay visible without the
+ * page turning into a wash — `tests/unit/theme/brand.test.ts` asserts both over every preset, and
+ * the same two rules refuse a «Personalizat» colour the club types
+ * (`modules/appearance/domain/tint-contrast.ts`).
  */
 export const SITE_TINT = {
-  /** The platform's page colour, unchanged: the default. */
+  /** «Alb»: the platform's page colour, unchanged — the default. */
   paper: COLOR.paper,
-  /** A breath of the club's blue. */
-  blue: "#f2f5ff",
-  /** The kit's cyan, from the light end of `GRADIENT` below. */
-  sky: "#eef7fc",
-  /** The orange accent, as sand. */
-  sand: "#fcf6ee",
+  /** «Albastru abia vizibil»: `COLOR.blue` at 4 % over white (255 − 0.04 × 255 = 245). */
+  faintBlue: "#f5f5ff",
+  /** «Albastru deschis»: `COLOR.blue` at 8 % over white (255 − 0.08 × 255 ≈ 235). */
+  lightBlue: "#ebebff",
+  /** «Gri albăstrui»: a cool grey leaning to the club's blue. */
+  blueGrey: "#eef1f5",
 } as const;
 
 /**

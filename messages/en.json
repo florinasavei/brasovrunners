@@ -935,7 +935,7 @@
       "shownAddressTitle": "Change the contact address shown?",
       "shownAddressBody": "The site (the footer, the contact page, the race numbers) shows the chosen address from now on, and every email the platform sends takes replies there. Legal texts already approved keep the address they were approved with.",
       "siteTintTitle": "Change the site's background?",
-      "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “Paper” at any time.",
+      "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted."
     },
@@ -954,6 +954,8 @@
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody.",
+      "SITE_TINT_UNREADABLE": "The colour was not saved: on it, the page's text or the secondary text would have a contrast under 4.5 : 1 (level AA). Choose a lighter colour.",
+      "SITE_TINT_TOO_DARK": "The colour was not saved: it is too dark for a light page — the white cards would no longer stand out (the contrast between card and page would pass 1.2 : 1). Choose a lighter colour.",
       "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
       "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: a new limit must be above what this period has already spent plus the margin, or it would stop the database the moment it is saved. The spend and the smallest limit are written under the box.",
       "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a new or changed limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
@@ -2939,8 +2941,8 @@
       "tabAppearance": "Appearance"
     },
     "appearance": {
-      "title": "The site's background",
-      "intro": "The light colour the public pages sit on — the events list, the event pages, the calendar, the contact page. You choose from tints taken from the club's colours; each keeps the text easy to read and the white cards visible.",
+      "title": "Site appearance",
+      "intro": "The light colour the public pages sit on — the events list, the event pages, the calendar, the contact page. Choose a tint from the club's colours or type one; each shows the header, a card and the text on its colour below.",
       "current": "Now: {tint}",
       "updatedAt": "Set {when}.",
       "legend": "The public pages' background",
@@ -2952,21 +2954,38 @@
       "scope": "Light theme only: whoever presses the dark-theme switch sees the platform's dark background. The backoffice always stays on the neutral background.",
       "tints": {
         "paper": {
-          "name": "Paper",
+          "name": "White",
           "help": "The platform's warm white, as until now."
         },
-        "blue": {
-          "name": "Club blue",
-          "help": "A breath of the logo's blue."
+        "faintBlue": {
+          "name": "Barely-there blue",
+          "help": "The club's blue, about 4 % over white."
         },
-        "sky": {
-          "name": "Kit sky",
-          "help": "The light cyan at the hem of the club's shirt."
+        "lightBlue": {
+          "name": "Light blue",
+          "help": "The club's blue, about 8 % over white."
         },
-        "sand": {
-          "name": "Sand",
-          "help": "A warmth from the club's orange."
+        "blueGrey": {
+          "name": "Blue-grey",
+          "help": "A cool grey leaning to the club's blue."
+        },
+        "custom": {
+          "name": "Custom",
+          "help": "A colour you type, as #rrggbb."
         }
+      },
+      "hexLabel": "The colour (#rrggbb)",
+      "pickerLabel": "Pick the colour from the palette",
+      "rule": "Only a light colour is saved: the page's text and the secondary text must have a contrast of at least 4.5 : 1 on it (level AA), and the white cards must still show on it (at most 1.2 : 1 between card and page).",
+      "verdict": {
+        "ok": "Can be saved: the text reads and the cards show.",
+        "notAColour": "Type the colour as # followed by six hex digits, for example #f5f5ff.",
+        "unreadable": "Too dark for text: the page's text or the secondary text would be under 4.5 : 1 on it.",
+        "tooDark": "Too dark for a light page: the white cards would no longer stand out (over 1.2 : 1)."
+      },
+      "preview": {
+        "card": "A card",
+        "text": "The page's text"
       }
     },
     "pictures": {

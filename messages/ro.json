@@ -935,7 +935,7 @@
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
       "shownAddressBody": "Site-ul (subsolul, pagina de contact, numerele de concurs) arată de acum adresa aleasă, și fiecare email trimis de platformă primește răspunsurile la ea. Textele legale deja aprobate păstrează adresa cu care au fost aprobate.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
-      "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Hârtie».",
+      "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat."
     },
@@ -954,6 +954,8 @@
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
       "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri sau declarații semnate din perioada în care a fost în vigoare, iar niciuna nu reține ce versiune a termenilor a fost acceptată. O poți retrage — rămâne în evidență și nu se mai oferă nimănui.",
+      "SITE_TINT_UNREADABLE": "Culoarea nu s-a salvat: pe ea, textul paginii sau textul secundar ar avea un contrast sub 4,5 : 1 (nivelul AA). Alege o culoare mai deschisă.",
+      "SITE_TINT_TOO_DARK": "Culoarea nu s-a salvat: e prea închisă pentru o pagină deschisă — cardurile albe n-ar mai ieși în evidență (contrastul dintre card și pagină ar trece de 1,2 : 1). Alege o culoare mai deschisă.",
       "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana.",
       "NEON_QUOTA_BELOW_USAGE": "Limita nu a fost trimisă: o limită nouă trebuie să fie peste ce s-a consumat deja în perioada aceasta plus marja, altfel ar opri baza de date chiar la salvare. Consumul și limita minimă sunt scrise sub câmp.",
       "NEON_QUOTA_UNCONFIRMED": "Nu s-a schimbat nimic: o limită nouă sau schimbată pe producție cere bifa de confirmare — când e atinsă, site-ul se oprește până la perioada următoare.",
@@ -2939,8 +2941,8 @@
       "tabAppearance": "Aspect"
     },
     "appearance": {
-      "title": "Fundalul site-ului",
-      "intro": "Culoarea deschisă pe care stau paginile publice — lista de evenimente, paginile evenimentelor, calendarul, contactul. Alegi dintre nuanțe luate din culorile clubului; fiecare păstrează textul ușor de citit și cardurile albe vizibile.",
+      "title": "Aspectul site-ului",
+      "intro": "Culoarea deschisă pe care stau paginile publice — lista de evenimente, paginile evenimentelor, calendarul, contactul. Alegi o nuanță din culorile clubului sau scrii una; fiecare arată mai jos antetul, un card și textul pe culoarea ei.",
       "current": "Acum: {tint}",
       "updatedAt": "Setat {when}.",
       "legend": "Fundalul paginilor publice",
@@ -2952,21 +2954,38 @@
       "scope": "Doar în tema deschisă: cine apasă comutatorul pentru tema întunecată vede fundalul întunecat al platformei. Backoffice-ul rămâne mereu pe fundalul neutru.",
       "tints": {
         "paper": {
-          "name": "Hârtie",
+          "name": "Alb",
           "help": "Albul cald al platformei, ca până acum."
         },
-        "blue": {
-          "name": "Albastrul clubului",
-          "help": "O adiere din albastrul logoului."
+        "faintBlue": {
+          "name": "Albastru abia vizibil",
+          "help": "Albastrul clubului, cam 4 % peste alb."
         },
-        "sky": {
-          "name": "Cerul tricoului",
-          "help": "Azuriul deschis de la poalele tricoului clubului."
+        "lightBlue": {
+          "name": "Albastru deschis",
+          "help": "Albastrul clubului, cam 8 % peste alb."
         },
-        "sand": {
-          "name": "Nisip",
-          "help": "Un cald din portocaliul clubului."
+        "blueGrey": {
+          "name": "Gri albăstrui",
+          "help": "Un gri rece, înspre albastrul clubului."
+        },
+        "custom": {
+          "name": "Personalizat",
+          "help": "O culoare scrisă de tine, ca #rrggbb."
         }
+      },
+      "hexLabel": "Culoarea (#rrggbb)",
+      "pickerLabel": "Alege culoarea din paletă",
+      "rule": "Se salvează doar o culoare deschisă: textul paginii și textul secundar trebuie să aibă un contrast de cel puțin 4,5 : 1 pe ea (nivelul AA), iar cardurile albe trebuie să se vadă încă pe ea (cel mult 1,2 : 1 între card și pagină).",
+      "verdict": {
+        "ok": "Se poate salva: textul se citește și cardurile se văd.",
+        "notAColour": "Scrie culoarea ca # urmat de șase cifre hexazecimale, de exemplu #f5f5ff.",
+        "unreadable": "Prea închisă pentru text: textul paginii sau cel secundar ar avea sub 4,5 : 1 pe ea.",
+        "tooDark": "Prea închisă pentru o pagină deschisă: cardurile albe n-ar mai ieși în evidență (peste 1,2 : 1)."
+      },
+      "preview": {
+        "card": "Un card",
+        "text": "Textul paginii"
       }
     },
     "pictures": {

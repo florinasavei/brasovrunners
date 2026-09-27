@@ -6,10 +6,19 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { DEFAULT_SITE_TINT, parseSiteTint, type SiteTint, siteTintSchema } from "./domain/site-tint";
+import {
+  CUSTOM_SITE_TINT,
+  DEFAULT_SITE_TINT_SETTING,
+  describeSiteTint,
+  parseSiteTint,
+  SITE_TINT_CHOICES,
+  type SiteTintSetting,
+  siteTintSchema,
+} from "./domain/site-tint";
+import { judgeTint } from "./domain/tint-contrast";
 
 /**
- * «Fundalul site-ului» (§NNN): one `platform_settings` row, written by an Administrator under
+ * «Aspectul site-ului» (§NNN): one `platform_settings` row, written by an Administrator under
  * Pagini → «Aspect», audited, read by the locale layout through the public cache (§333).
  * No migration: the settings table takes any key (§100).
  */
@@ -18,7 +27,14 @@ export const SITE_TINT_SETTING_KEY = "siteTint";
 /** The audit row's fixed entity id for this key — one per key, never reused (`…e00a` is the shown contact address). */
 export const SITE_TINT_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00d";
 
-export type SiteTintState = { tint: SiteTint; updatedAt: Date | null };
+export type SiteTintState = { setting: SiteTintSetting; updatedAt: Date | null };
+
+/**
+ * The markers a refused «Personalizat» colour carries beside its box's name, so the action can say
+ * which rule it broke in words rather than "check what you entered" (the `UNDER_MINIMUM_AGE`
+ * pattern, §321). Markers, not boxes: the action drops them from the field list.
+ */
+export const SITE_TINT_REFUSAL = { unreadable: "tintUnreadable", tooDark: "tintTooDark" } as const;
 
 /** The tint in force: the default with no row (`updatedAt: null`), or with a value this code cannot read. */
 export async function readSiteTint<T extends Record<string, unknown>>(db: Database<T>): Promise<SiteTintState> {
@@ -27,8 +43,8 @@ export async function readSiteTint<T extends Record<string, unknown>>(db: Databa
     .from(platformSettings)
     .where(eq(platformSettings.key, SITE_TINT_SETTING_KEY))
     .limit(1);
-  if (!row) return { tint: DEFAULT_SITE_TINT, updatedAt: null };
-  return { tint: parseSiteTint(row.value), updatedAt: row.updatedAt };
+  if (!row) return { setting: DEFAULT_SITE_TINT_SETTING, updatedAt: null };
+  return { setting: parseSiteTint(row.value), updatedAt: row.updatedAt };
 }
 
 /**
@@ -44,12 +60,29 @@ export async function updateSiteTint<T extends Record<string, unknown>>(
   if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the site's background`);
   }
-  const tint = rawInput && typeof rawInput === "object" ? (rawInput as { tint?: unknown }).tint : undefined;
-  const parsed = siteTintSchema.safeParse({ tint });
-  if (!parsed.success) {
-    throw new DomainError("VALIDATION_ERROR", `tint: not one of the presets (${String(tint)})`, ["tint"]);
+  const raw = rawInput && typeof rawInput === "object" ? (rawInput as { tint?: unknown; hex?: unknown }) : {};
+  if (typeof raw.tint !== "string" || !(SITE_TINT_CHOICES as readonly string[]).includes(raw.tint)) {
+    throw new DomainError("VALIDATION_ERROR", `tint: not one of the choices (${String(raw.tint)})`, ["tint"]);
   }
-  const next = parsed.data;
+  let candidate: unknown = { tint: raw.tint };
+  if (raw.tint === CUSTOM_SITE_TINT) {
+    // Typed by hand: spaces around it and a missing "#" are forgiven, nothing else.
+    const typed = typeof raw.hex === "string" ? raw.hex.trim() : "";
+    const hex = typed.startsWith("#") ? typed : `#${typed}`;
+    const verdict = judgeTint(hex);
+    if (verdict === "notAColour") {
+      throw new DomainError("VALIDATION_ERROR", "hex: not a #rrggbb colour", ["hex"]);
+    }
+    if (verdict !== null) {
+      throw new DomainError("VALIDATION_ERROR", `hex: ${verdict} as a page colour`, ["hex", SITE_TINT_REFUSAL[verdict]]);
+    }
+    candidate = { tint: CUSTOM_SITE_TINT, hex };
+  }
+  const parsed = siteTintSchema.safeParse(candidate);
+  if (!parsed.success) {
+    throw new DomainError("VALIDATION_ERROR", "tint: not a setting this code can store", ["tint"]);
+  }
+  const next: SiteTintSetting = parsed.data;
 
   const before = await readSiteTint(db);
   await db.transaction(async (tx) => {
@@ -65,11 +98,11 @@ export async function updateSiteTint<T extends Record<string, unknown>>(
       action: "site_tint.changed",
       entityType: "platform_setting",
       entityId: SITE_TINT_SETTING_ENTITY_ID,
-      metadata: { from: before.tint, to: next.tint },
+      metadata: { from: describeSiteTint(before.setting), to: describeSiteTint(next) },
       now,
     });
   });
   // Every public page reads the tint from the public cache (§333).
   revalidatePublicContent("settings");
-  return { tint: next.tint, updatedAt: now };
+  return { setting: next, updatedAt: now };
 }

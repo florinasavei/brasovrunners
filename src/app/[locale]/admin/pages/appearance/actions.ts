@@ -5,11 +5,14 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { updateSiteTint } from "@/modules/appearance/site-tint";
+import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { flashOutcome } from "@/shared/feedback/flash";
+import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+
+const REFUSAL_MARKERS: readonly string[] = Object.values(SITE_TINT_REFUSAL);
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
 function localeOf(form: FormData): Locale {
@@ -18,7 +21,7 @@ function localeOf(form: FormData): Locale {
 }
 
 /**
- * «Fundalul site-ului» (§NNN): the public pages' background tint, one of the presets. A club
+ * «Aspectul site-ului» (§NNN): the public pages' background tint, a preset or «Personalizat». A club
  * setting (§450) — the Administrator's at the door, and the service asserts it again. Asked first
  * (§384): every visitor sees the new colour from the next page view.
  */
@@ -28,9 +31,14 @@ export async function updateSiteTintAction(_previous: FormOutcome | null, form: 
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
-    await updateSiteTint(getDb(), actor, { tint: form.get("tint") }, new Date());
+    await updateSiteTint(getDb(), actor, { tint: form.get("tint"), hex: form.get("hex") }, new Date());
   } catch (error) {
-    return refused(error, form);
+    const refusal = refused(error, form, { fieldNames: (failure) => failure.fields.filter((name) => !REFUSAL_MARKERS.includes(name)) });
+    // A typed colour that breaks a rule says the rule in words (the catalogue's sentence), not
+    // "check what you entered": the box is filled correctly, the colour is what is wrong.
+    if (isDomainError(error) && error.fields.includes(SITE_TINT_REFUSAL.unreadable)) return { ...refusal, error: "SITE_TINT_UNREADABLE" };
+    if (isDomainError(error) && error.fields.includes(SITE_TINT_REFUSAL.tooDark)) return { ...refusal, error: "SITE_TINT_TOO_DARK" };
+    return refusal;
   }
   // The public pages read the tint through the public cache, which the service expired (§333);
   // this is the backoffice page's own payload, so it comes back saying what was saved.
