@@ -92,7 +92,7 @@ export const maxDuration = 60;
  * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
  * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
  * every service on the way. Five panels, then three since §NNN, which moved «Anti-robot» and
- * «Costuri» to «Setări» → «Platformă» and «Costuri» (their old `?panel=` answers 308 there):
+ * «Costuri» to «Setări» → «Anti-robot» and «Costuri» (their old `?panel=` answers 308 there):
  *
  * - `club` — «Club»: what is still owed, read from the system, with its filters, and the
  *   decisions still open. It was `todo`, «De făcut», until §438, and it is still where a bare
@@ -262,7 +262,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const db = getDb();
   const now = new Date();
 
-  // The anti-bot switch (§254), for its row: switched on «Setări» → «Platformă» since §NNN.
+  // The anti-bot switch (§254), for its row: switched on «Setări» → «Anti-robot» since §NNN.
   const botCheck = await readBotCheck(db);
   // Whether the configured secret works, not merely whether it is set (§420, finding (10)'s
   // health half) — cached fifteen minutes, same as `/api/health`.

@@ -3,7 +3,7 @@ import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-090-07 criterion 7 (§334) — "Cât de des verifică platforma": the owner's throttle, on
+ * BR-REQ-090-07 criterion 7 (§334) — "Cât de des verifică site-ul": the owner's throttle, on
  * «Setări» → «Costuri» beside the Neon plan (it was `/admin/tasks` → Costuri until §NNN).
  *
  * One round trip, on the page a unit test cannot see: the card says what a longer interval costs
@@ -24,7 +24,7 @@ test.describe("BR-REQ-090-07 the minimum interval between two real runs, on the 
     const main = page.locator("#main");
     const card = main.getByTestId("job-cadence");
 
-    await expect(card.getByRole("heading", { name: "Cât de des verifică platforma" })).toBeVisible();
+    await expect(card.getByRole("heading", { name: "Cât de des verifică site-ul" })).toBeVisible();
     await expect(card.getByTestId("job-cadence-in-force")).toContainText(/^Setarea în vigoare: la nevoie/);
     // What it costs the runners, and what it does not, before the choice.
     await expect(card.getByText(/pot pleca cu până la atâtea minute mai târziu/)).toBeVisible();

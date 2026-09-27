@@ -33,11 +33,11 @@ test.describe("§265 the configuration panels", () => {
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/emails$/);
     const settingsNav = main.getByRole("navigation", { name: "Setări" });
     // Seven for an Administrator: the six tabs of /admin/settings and «Configurație» (/devs) last.
-    await expect(settingsNav.getByRole("link")).toHaveText(["Emailuri", "Termene", "Contact", "Aspect", "Costuri", "Platformă", "Configurație"]);
+    await expect(settingsNav.getByRole("link")).toHaveText(["Emailuri", "Termene", "Contact", "Aspect", "Costuri", "Anti-robot", "Configurație"]);
     await expect(settingsNav.getByRole("link", { name: "Emailuri" })).toHaveAttribute("aria-current", "page");
 
     // The switch, one press away.
-    await settingsNav.getByRole("link", { name: "Platformă" }).click();
+    await settingsNav.getByRole("link", { name: "Anti-robot" }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/platform/);
     await expect(main.getByRole("heading", { name: /anti-bot/i })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Cât costă" })).toHaveCount(0);
@@ -71,7 +71,7 @@ test.describe("§265 the configuration panels", () => {
     const main = page.locator("#main");
     await page.goto("/ro/admin/tasks");
     // No Turnstile keys on the test server, so the anti-robot row is open and carries its link.
-    const link = main.getByTestId("task-target").filter({ hasText: "Setări → Platformă" }).first();
+    const link = main.getByTestId("task-target").filter({ hasText: "Setări → Anti-robot" }).first();
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await link.click();
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/platform#bot-check$/);
@@ -110,11 +110,11 @@ test.describe("§265 the configuration panels", () => {
     await expect(main.getByRole("heading", { name: /e-?mail/i }).first()).toBeVisible();
     await expect(main.getByRole("heading", { name: "Configurație" })).toHaveCount(0);
 
-    // The anti-bot switch is the club's, on «Setări» → «Platformă» (§NNN), and the sub-nav says so.
+    // The anti-bot switch is the club's, on «Setări» → «Anti-robot» (§NNN), and the sub-nav says so.
     await panels.getByRole("link", { name: "Anti-robot" }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/platform/);
 
-    // And back: «Configurație» is a tab of the same row, one tap from «Platformă» or «Costuri».
+    // And back: «Configurație» is a tab of the same row, one tap from «Anti-robot» or «Costuri».
     await main.getByRole("navigation", { name: "Setări" }).getByRole("link", { name: "Configurație", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/devs$/);
   });

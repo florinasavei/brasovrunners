@@ -198,7 +198,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
  *
  * A Redactor's verb, not an Administrator's: §103 is explicit that the Redactor writes the
  * words. The service asserts that again, validates every placeholder, and records the one
- * message that changed. "Revino la textul platformei" is the same form's second button — it
+ * message that changed. "Revino la textul implicit" is the same form's second button — it
  * posts `reset`, and the service reads that as "no override". "Înlocuiește cu câmpurile" is a
  * third, drawn only while the saved text holds sample values (§359): it posts `replace`, and the
  * service rewrites them to their fields before it saves. A text that still holds one is refused,

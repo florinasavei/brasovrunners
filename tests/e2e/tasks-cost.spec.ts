@@ -63,7 +63,7 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§NN
     const nav = main.getByRole("navigation", { name: "Setări" });
     await expect(nav.getByRole("link", { name: "Emailuri" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Costuri" })).toHaveCount(0);
-    await expect(nav.getByRole("link", { name: "Platformă" })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Anti-robot" })).toHaveCount(0);
 
     expect((await page.goto("/ro/admin/settings/costs"))?.status()).toBe(404);
     expect((await page.goto("/ro/admin/tasks?panel=costs"))?.status()).toBe(404);

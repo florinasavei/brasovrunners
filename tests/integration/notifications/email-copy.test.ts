@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * The unit test holds the rules about words and placeholders; this one holds the three things
  * only a database can answer: who may write them (§103 — the Redactor writes), that a saved
- * text is what the worker renders, and that "revino la textul platformei" really removes the
+ * text is what the worker renders, and that "revino la textul implicit" really removes the
  * override rather than storing an empty one.
  */
 const NOW = new Date("2026-10-11T09:00:00.000Z");

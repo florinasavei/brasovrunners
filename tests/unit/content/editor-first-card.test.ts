@@ -288,9 +288,9 @@ describe("§448 the create page's status is the editor's select", () => {
     // While "Programat" is chosen, no cancellation block — and never a "tell them" box on a create.
     expect(drawn.kind).not.toContain('data-testid="cancel-fields"');
     expect(drawn.kind).not.toContain('name="cancel.notify"');
-    expect(drawn.kind).toContain("De obicei Programat. Alege Anulat pentru un eveniment deja anulat");
+    expect(drawn.kind).toContain("Implicit Programat. Alege Anulat pentru un eveniment deja anulat");
     const en = await boxes(null, { locale: "en" });
-    expect(en.kind).toContain("Usually Scheduled. Choose Cancelled for an event already called off");
+    expect(en.kind).toContain("Scheduled by default. Choose Cancelled for an event already called off");
   });
 
   it("offers all three statuses, and the cancellation's reason with nobody to tell", () => {

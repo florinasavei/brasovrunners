@@ -126,7 +126,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateSiteTintAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
-  // Asks for "Revino la textul platformei" (`reset=1`) only; saving the wording is an editorial save.
+  // Asks for "Revino la textul implicit" (`reset=1`) only; saving the wording is an editorial save.
   updateEmailCopyAction: [],
   updateNeonPlanAction: [],
   updateBotCheckAction: [],

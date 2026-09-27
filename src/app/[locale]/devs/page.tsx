@@ -312,7 +312,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
       )}
       {/*
         The panels (§265), and the anti-bot switch beside them: that switch lives on «Setări» →
-        «Platformă» since §NNN (it was a panel of `/admin/tasks`, §254), and "where do I turn the
+        «Anti-robot» since §NNN (it was a panel of `/admin/tasks`, §254), and "where do I turn the
         captcha off" is a configuration question wherever the answer is kept. The link is offered only
         to a role that may open that tab (`canOpenSettingsTab`, the page's own gate), so it can reach
         it (§397) — a Tehnic who followed it used to land on «Aplicația» instead, under a label that

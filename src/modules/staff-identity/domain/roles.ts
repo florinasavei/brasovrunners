@@ -538,7 +538,7 @@ export function canWriteLegalTexts(role: StaffRole): boolean {
  * What makes a Superadministrator more than an Administrator: a setting whose wrong value takes
  * the site down or holds every message back, for every participant at once —
  *
- *     "Cât de des verifică platforma"   the jobs' throttle (§334): a long interval delays every
+ *     "Cât de des verifică site-ul"   the jobs' throttle (§334): a long interval delays every
  *                                       hand-over of a place and every email the jobs send
  *     "Limitele bazei de date"          Neon's size ceiling and monthly quota (§335): a quota
  *                                       reached suspends the database, and the site with it
@@ -598,7 +598,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§NNN), each tab
  *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
  *                                             «Contact», «Aspect» canReadContent, «Costuri» and
- *                                             «Platformă» canManageRegistrations; the forms on them ask
+ *                                             «Anti-robot» canManageRegistrations; the forms on them ask
  *                                             `canManageClubSettings` or `canManagePlatform` (§450)
  *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
  *                                             «Club» canManageRegistrations, «Aplicația»
@@ -703,7 +703,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     /*
       «Setări» (§NNN): the club's settings as one row of tabs — the email page (§250, which had no
       entry at all until the owner's "I am missing the email templates config … in this navbar"),
-      «Termene», «Contact», «Aspect», «Costuri», «Platformă». Offered to whoever may open one tab of
+      «Termene», «Contact», «Aspect», «Costuri», «Anti-robot». Offered to whoever may open one tab of
       it (`settings-tabs.ts`); the Redactor opens «Emailuri» for the words (§247).
     */
     settings: canOpenSettings(role),

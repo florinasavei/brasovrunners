@@ -32,7 +32,7 @@ const routeExists = (route: string) =>
   existsSync(path.join(ROOT, pageOf(route))) || existsSync(path.join(ROOT, "src/app/[locale]", route, "(list)", "page.tsx"));
 
 describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
-  it("offers the four content tabs from the Redactor up, «Costuri» and «Platformă» to the Administrators, nothing to the volunteer", () => {
+  it("offers the four content tabs from the Redactor up, «Costuri» and «Anti-robot» to the Administrators, nothing to the volunteer", () => {
     const content = ["emails", "deadlines", "contact", "appearance"];
     const expected: Record<StaffRole, string[]> = {
       CONTRIBUTOR: [],
@@ -45,7 +45,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
     for (const role of STAFF_ROLES) expect(visibleSettingsTabs(role), role).toEqual(expected[role]);
   });
 
-  it("keeps the gates of the panels that moved: «Costuri» and «Platformă» were `canManageRegistrations` on «Sarcini»", () => {
+  it("keeps the gates of the panels that moved: «Costuri» and «Anti-robot» were `canManageRegistrations` on «Sarcini»", () => {
     for (const role of STAFF_ROLES) {
       expect(canOpenSettingsTab(role, "costs"), role).toBe(role === "ADMIN" || role === "SUPERADMIN");
       expect(canOpenSettingsTab(role, "platform"), role).toBe(role === "ADMIN" || role === "SUPERADMIN");
