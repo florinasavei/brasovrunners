@@ -55,6 +55,7 @@ export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "
 export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
+  | "listSocialsNotice"
   | "newsletterNotice"
   | "teamPageNotice"
   | "liveEmail"
@@ -80,6 +81,7 @@ export type TaskId =
 export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
+  listSocialsNotice: "text",
   newsletterNotice: "text",
   teamPageNotice: "text",
   liveEmail: "account",
@@ -148,6 +150,12 @@ export type OwnerTaskInputs = {
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
    */
   listStatesDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe Strava and Instagram beside a name on
+   * the public list (§NNN, `noticeDescribesListSocials`)? Until it does, the form does not offer
+   * the tick and the list prints them for nobody.
+   */
+  listSocialsDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the newsletter (§445,
    * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
@@ -290,6 +298,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listStatesNotice", {
       owner: "club",
       state: input.listStatesDescribed ? "done" : "open",
+    });
+    /*
+      Strava and Instagram beside a name (§NNN), the same shape: open, never blocking — nothing is
+      refused, the form simply does not ask — and done by itself the day a notice naming
+      `{{participantListSocials}}` takes effect.
+    */
+    push("listSocialsNotice", {
+      owner: "club",
+      state: input.listSocialsDescribed ? "done" : "open",
     });
     /*
       The newsletter (§445), the same shape: open, never blocking — nothing is refused, the contact

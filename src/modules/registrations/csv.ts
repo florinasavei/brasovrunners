@@ -74,6 +74,11 @@ export type RegistrationCsvRow = {
    */
   termsVersion?: number | null;
   termsAcceptedAt?: string;
+  /**
+   * Whether the public list prints the socials beside the name (§NNN): "Yes" or empty, like the
+   * member claim — an empty cell is "not ticked", or ticked where it could not be kept.
+   */
+  listSocials?: boolean;
 };
 
 const HEADER = [
@@ -104,6 +109,8 @@ const HEADER = [
   // Last (§425), so a script that reads the columns by position still finds every earlier one.
   "Terms version",
   "Terms accepted",
+  // After them (§NNN), for the same reason: every earlier column keeps its position.
+  "Socials on the public list",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -134,6 +141,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.emailBounced ? "Yes" : "",
         String(row.termsVersion ?? ""),
         row.termsAcceptedAt ?? "",
+        row.listSocials ? "Yes" : "",
       ]
         .map(csvCell)
         .join(","),

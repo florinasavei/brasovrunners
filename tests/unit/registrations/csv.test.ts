@@ -71,7 +71,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Number settled,Checked in,Email bounced,Terms version,Terms accepted");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Number settled,Checked in,Email bounced,Terms version,Terms accepted,Socials on the public list");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -130,13 +130,13 @@ describe("CSV formula neutralization", () => {
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty.
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,2026-09-04T10:00:00.000Z,,17,Yes,2026-10-11T06:40:00.000Z,Yes,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,2026-09-04T10:00:00.000Z,,17,Yes,2026-10-11T06:40:00.000Z,Yes,,,",
     );
 
     // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
     expect(other.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,",
     );
     expect(other).not.toContain("No");
   });
@@ -207,9 +207,38 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    expect(columns.slice(-2)).toEqual(["Terms version", "Terms accepted"]);
-    expect(accepted.split(",").slice(-2)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
-    expect(staff.split(",").slice(-2)).toEqual(["", ""]);
-    expect(older.split(",").slice(-2)).toEqual(["", ""]);
+    // Since §NNN appended the socials column, the two terms columns are the two before the last.
+    expect(columns.slice(-3, -1)).toEqual(["Terms version", "Terms accepted"]);
+    expect(accepted.split(",").slice(-3, -1)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
+    expect(staff.split(",").slice(-3, -1)).toEqual(["", ""]);
+    expect(older.split(",").slice(-3, -1)).toEqual(["", ""]);
+  });
+
+  // §NNN — whether the public list prints the socials: the last column, "Yes" or empty.
+  it("says in the last column whether the public list prints the socials, Yes or empty", () => {
+    const base = {
+      eventTitle: "Test",
+      registeredName: "Ana Pop",
+      firstName: "Ana",
+      lastName: "Pop",
+      idDocument: "",
+      email: "ana@example.ro",
+      status: "CONFIRMED",
+      clubMemberDeclared: false,
+      fitnessDeclaredAt: null,
+      stravaUrl: "https://www.strava.com/athletes/12345",
+      instagramHandle: "ana.pop",
+      guardianName: "",
+      guardianIdDocument: "",
+      submittedAt: "2026-09-25T10:00:00.000Z",
+      confirmedAt: "",
+      checkedInAt: "",
+      emailBounced: false,
+    };
+    const [header, shown, kept, older] = buildRegistrationsCsv([{ ...base, listSocials: true }, { ...base, listSocials: false }, base]).split("\r\n");
+    expect(header.split(",").at(-1)).toBe("Socials on the public list");
+    expect(shown.split(",").at(-1)).toBe("Yes");
+    expect(kept.split(",").at(-1)).toBe("");
+    expect(older.split(",").at(-1)).toBe("");
   });
 });

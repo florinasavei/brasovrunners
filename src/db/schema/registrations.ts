@@ -352,6 +352,18 @@ export const registrations = pgTable(
     listOptOut: boolean("list_opt_out").notNull().default(true),
 
     /**
+     * "Show my Strava and Instagram beside my name on the list" (§NNN): the runner's own tick,
+     * separate from the list tick above and from typing the socials at all (§106 kept them off
+     * the site). True only when the runner ticked it, was listed, was an adult, typed at least one
+     * of the two, and the privacy notice they were given names `{{participantListSocials}}` —
+     * `service.ts` decides it at submission. The public list prints the socials only where this
+     * is true *and* the notice in force still names the marker. Leaving the list, or deleting the
+     * socials from "Înscrierile mele", sets it back to false. Defaults to false, the direction a
+     * disclosure has to fail in, for every row written before it and any row written another way.
+     */
+    listSocials: boolean("list_socials").notNull().default(false),
+
+    /**
      * The race number on the participant's chest (BR-REQ-038-01, `DECISIONS.md` §65).
      *
      * Assigned by `modules/registrations/bibs.ts` to confirmed, real registrations, in order

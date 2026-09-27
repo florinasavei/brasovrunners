@@ -161,6 +161,7 @@ export async function GET(request: Request): Promise<Response> {
         guardianName: row.guardianName ?? "",
         guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
         instagramHandle: row.instagramHandle ?? "",
+        listSocials: row.listSocials,
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
@@ -209,6 +210,8 @@ export async function GET(request: Request): Promise<Response> {
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
       termsVersion: row.termsVersion,
       termsAcceptedAt: row.termsAcceptedAt?.toISOString() ?? "",
+      // Whether the public list prints the socials (§NNN): last, so no earlier column moves.
+      listSocials: row.listSocials,
     })),
   );
 

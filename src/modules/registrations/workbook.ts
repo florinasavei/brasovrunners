@@ -112,6 +112,8 @@ const COLUMNS: Array<{
   { header: "Guardian identity document", width: 18, cell: (row) => ({ value: row.guardianIdDocument, type: String }) },
   { header: "Strava", width: 30, cell: (row) => ({ value: row.stravaUrl, type: String }) },
   { header: "Instagram", width: 18, cell: (row) => ({ value: row.instagramHandle, type: String }) },
+  // Beside the two (§NNN): whether the public list prints them. The sheet is matched by header, not position.
+  { header: "Socials on the public list", width: 12, cell: (row) => ({ value: row.listSocials ?? false, type: Boolean }) },
   { header: "Submitted", width: 18, cell: (row) => ({ value: onClubClock(row.submittedAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Confirmed", width: 18, cell: (row) => ({ value: onClubClock(row.confirmedAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Checked in", width: 18, cell: (row) => ({ value: onClubClock(row.checkedInAt), type: Date, format: STAMP_FORMAT }) },

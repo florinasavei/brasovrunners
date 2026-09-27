@@ -5,6 +5,7 @@ import { TOKEN_NOT_FOUND, type TokenRejection } from "@/modules/action-tokens/do
 import { readActionTokenContext } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { DomainError } from "@/shared/errors/domain-error";
 import { findRegistrationById } from "./repository";
 
@@ -104,11 +105,15 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
       .update(registrations)
       .set({
         ...(cleared.includes("health") ? { healthNotes: null, healthConsentVersion: null, healthConsentAt: null } : {}),
-        ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null } : {}),
+        // The tick that printed them beside the name goes with them (§NNN).
+        ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null, listSocials: false } : {}),
         ...(cleared.includes("results") ? { resultsNameConsent: false } : {}),
         updatedAt: input.now,
       })
       .where(eq(registrations.id, current.id));
+    // A public list may have been printing them (§NNN): off it for the next visitor, not after the
+    // cache's day (§333) — as leaving the list does (`list-consent.ts`).
+    if (cleared.includes("socials")) revalidatePublicContent("places");
 
     await recordAuditEvent(tx, {
       actorStaffUserId: input.actorStaffUserId,

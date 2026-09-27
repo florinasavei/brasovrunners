@@ -6,6 +6,7 @@ import { publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
 import {
   cachedDeadlines,
   cachedFirstStatesNoticeVersion,
+  cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
   cachedStartListCounts,
   cachedStartListOthersCounts,
@@ -20,6 +21,7 @@ import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
 import { confirmedPhrase, othersPhrases } from "./counted-phrases";
 import ListStateLabel from "./ListStateLabel";
+import StartListSocials from "./StartListSocials";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 
 /**
@@ -74,6 +76,16 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
  *
+ * ## Strava and Instagram, behind the notice and the runner's own tick (§NNN)
+ *
+ * The owner: "on the who's coming I want to show people's social as well, if they put that, like
+ * their Strava and Instagram". Once the privacy notice in force names `{{participantListSocials}}`
+ * (`cachedListSocialsDisclosed`), a named row — confirmed, or behind §396's gate pending or
+ * waiting — carries the network's mark, linked, beside the name (`StartListSocials`), for the
+ * runners who ticked «Arată și Strava și Instagram» on the form. The query returns the two values
+ * only for them; a hidden row never has any, because nothing about it is read. Without that notice
+ * the list reads no social at all.
+ *
  * ## While the database is away
  *
  * Nothing, rather than the event page's error (§447): the list is never served from a copy — a
@@ -111,6 +123,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
   const statesOn = await cachedListStatesDisclosed(now);
+  // The socials' gate (§NNN), the same reading: off, no Strava or Instagram is even selected.
+  const socialsOn = await cachedListSocialsDisclosed(now);
   /*
     …and only for the ticks given under a notice that described them (§421): a registration that
     recorded an older notice agreed to a list of confirmed names, and appears once confirmed, as
@@ -121,9 +135,21 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const others = firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   const [participants, otherRows] = await Promise.all([
-    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit) : [],
-    firstStatesNotice !== null && view.othersLimit > 0 ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit) : [],
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn) : [],
+    firstStatesNotice !== null && view.othersLimit > 0
+      ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit, socialsOn)
+      : [],
   ]);
+  /** The marks beside a name — only behind the gate, and only what the row carries. */
+  const socialsOf = (row: { displayName: string; stravaUrl?: string | null; instagramHandle?: string | null }) =>
+    socialsOn ? (
+      <StartListSocials
+        stravaUrl={row.stravaUrl}
+        instagramHandle={row.instagramHandle}
+        stravaLabel={t("startList.socials.strava", { name: row.displayName })}
+        instagramLabel={t("startList.socials.instagram", { name: row.displayName })}
+      />
+    ) : null;
   const extra = statesOn ? othersPhrases(t, locale, others) : [];
   /** The word beside a name — only behind the gate; without it a row carries no state. */
   const stateOf = (group: PublicListGroup) =>
@@ -219,6 +245,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                     <Box component="td">{view.firstPosition + index}</Box>
                     <Box component="td">
                       {participant.displayName}
+                      {socialsOf(participant)}
                       {stateOf("CONFIRMED")}
                     </Box>
                     <Box component="td" sx={{ color: "text.secondary" }}>
@@ -262,6 +289,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                     <Box component="td" />
                     <Box component="td">
                       {row.displayName}
+                      {socialsOf(row)}
                       {stateOf(row.group)}
                     </Box>
                     <Box component="td" sx={{ color: "text.secondary" }}>
@@ -298,6 +326,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
               to change it. */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
             {statesOn ? t("startList.noteStates") : t("startList.note")}
+            {socialsOn ? ` ${t("startList.socialsNote")}` : null}
           </Typography>
         </>
       )}

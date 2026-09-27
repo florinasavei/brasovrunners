@@ -82,7 +82,9 @@ export async function setListConsent<T extends Record<string, unknown>>(
 
   await db
     .update(registrations)
-    .set({ listOptOut: !listed, updatedAt: now })
+    // Leaving the list takes the socials beside the name with it (§NNN), for good: coming back
+    // through this door puts the name back, never a Strava or Instagram nobody asked about again.
+    .set({ listOptOut: !listed, ...(listed ? {} : { listSocials: false }), updatedAt: now })
     .where(eq(registrations.id, registrationId));
   // Off the public list (or back on it) for the next visitor, not after the cache's day (§333).
   revalidatePublicContent("places");

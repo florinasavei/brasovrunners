@@ -114,6 +114,8 @@ export function readRegistrationForm(
     resultsNameConsent: false,
     // Opted into, not out of (§143): the row keeps the column's name, the box asks the other way.
     listOptOut: !checked(form, "listOptIn"),
+    // The socials beside the name on the list (§NNN): the tick as posted; the service decides what is kept.
+    listSocials: checked(form, "listSocials"),
 
     // Validated in the service, not here: a honeypot failure and a timing failure are answered
     // exactly like success, never as a validation error that would tell a bot what it tripped.
