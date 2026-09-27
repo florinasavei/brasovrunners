@@ -43,7 +43,7 @@ export type Glyph = ComponentType<SvgIconProps>;
  * being tried); "other event" is a group of people; an external event opens elsewhere;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
  * mixed the fork in the path; difficulty is a gauge, its needle in one of five bands and, since
- * §NNN (the owner's «ușor, mediu, greuț, greu, foarte greu»), at one of three steps inside it, the
+ * §526 (the owner's «ușor, mediu, greuț, greu, foarte greu»), at one of three steps inside it, the
  * step as dots (§412: "un gauge icon custom mai degrabă", replacing §399's scale of weights — drawn
  * in `DifficultyGaugeIcon.tsx`);
  * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
@@ -112,7 +112,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * the `difficulty:*` entries exist — one per band of `DIFFICULTY_BANDS` (`difficulty:MEDIUM`, the
  * needle at the band's middle, §412: a filter box, the editor's band select) and one per level of
  * the club's scale of fifteen (`difficulty:MEDIUM-3`, the needle at the step and the step's dots
- * lit, §NNN: an event's own pill) — a half-dial drawn by `DifficultyGaugeIcon.tsx`, one `<svg>` each
+ * lit, §526: an event's own pill) — a half-dial drawn by `DifficultyGaugeIcon.tsx`, one `<svg>` each
  * so `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
  * hands them.
  */

@@ -80,7 +80,7 @@ export type PageSectionGlyph =
 export type PageSectionEvent = {
   type: EventType;
   surface: string | null;
-  /** The level on the club's scale of fifteen (§NNN), the difficulty's one column; absent on a cached row from before it. */
+  /** The level on the club's scale of fifteen (§526), the difficulty's one column; absent on a cached row from before it. */
   difficultyLevel?: number | null;
   distanceMeters: number | null;
   elevationGainMeters: number | null;

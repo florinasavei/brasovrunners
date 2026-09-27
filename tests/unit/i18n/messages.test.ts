@@ -186,9 +186,9 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
       expect(roFlat[`Event.surface.${surface}`], `ro label for ${surface}`).toBeDefined();
       expect(enFlat[`Event.surface.${surface}`], `en label for ${surface}`).toBeDefined();
     }
-    // The five difficulty bands (§412, the owner's since §NNN): the public pill reads `Event.difficultyValues` (and a screen reader `difficultyBandWords`), the
+    // The five difficulty bands (§412, the owner's since §526): the public pill reads `Event.difficultyValues` (and a screen reader `difficultyBandWords`), the
     // editor's select `Admin.editor.difficultyValues` — both, in both locales, for every band. And
-    // the three steps inside a band (§NNN): the editor's «Treapta» reads `Admin.editor.difficultySteps`.
+    // the three steps inside a band (§526): the editor's «Treapta» reads `Admin.editor.difficultySteps`.
     const { DIFFICULTY_BANDS, DIFFICULTY_STEPS } = await import("@/modules/events/domain/difficulty");
     for (const band of DIFFICULTY_BANDS) {
       for (const key of [`Event.difficultyValues.${band}`, `Event.difficultyBandWords.${band}`, `Admin.editor.difficultyValues.${band}`]) {

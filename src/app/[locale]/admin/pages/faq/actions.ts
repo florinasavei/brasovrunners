@@ -13,7 +13,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The writes of «Întrebări frecvente» (§NNN): the page's one save (§28) — the introduction and
+ * The writes of «Întrebări frecvente» (§525): the page's one save (§28) — the introduction and
  * every question card, an arrow on a card being the same save with a move — and the page's
  * publish switch. Every outcome is a redirect to the screen carrying a language-neutral code,
  * except a refused save, which returns so every box comes back as typed (§315). Every one asserts

@@ -72,7 +72,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
     expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Noapte", "Gratuit"]);
-    // A row with a band and no level — one the data cache kept from before §NNN — is at the band's middle.
+    // A row with a band and no level — one the data cache kept from before §526 — is at the band's middle.
     expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY-2", "distance", "elevation", "night", "cost:FREE"]);
   });
 
@@ -135,9 +135,9 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
 
   // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
   // what the eye and a screen reader are given — the visible «Mediu 2», hidden from the reader, and
-  // the visually-hidden «Dificultate: mediu, treapta 2 din 3» in its place (§NNN).
+  // the visually-hidden «Dificultate: mediu, treapta 2 din 3» in its place (§526).
   it.each([
-    // The owner's five bands (§NNN): ușor, mediu, greuț, greu, foarte greu — three steps each.
+    // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three steps each.
     ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor, treapta 1 din 3", "Ușor, treapta 1 din 3"],
     ["ro", "MEDIUM", 5, "Mediu 2", "Dificultate: mediu, treapta 2 din 3", "Mediu, treapta 2 din 3"],
     ["ro", "FAIRLY_HARD", 9, "Greuț 3", "Dificultate: greuț, treapta 3 din 3", "Greuț, treapta 3 din 3"],

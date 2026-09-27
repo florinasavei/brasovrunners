@@ -5,7 +5,7 @@ import type { AdminFaqItem } from "@/modules/content/faq/repository";
 import type { ConfirmSpec } from "@/shared/feedback/notice";
 
 /**
- * §NNN — «Întrebări frecvente» in the backoffice, as the server draws its one form:
+ * §525 — «Întrebări frecvente» in the backoffice, as the server draws its one form:
  *
  * - the form's default button — the one Enter in any box presses, the first submit button in
  *   tree order — is the plain save, never a card's ↑/↓ (the review of 2026-09-28: Enter in card 1
@@ -91,7 +91,7 @@ async function renderPage(): Promise<string> {
   return html(element);
 }
 
-describe("§NNN the FAQ page's one form in the backoffice", () => {
+describe("§525 the FAQ page's one form in the backoffice", () => {
   beforeEach(() => {
     forms.length = 0;
   });

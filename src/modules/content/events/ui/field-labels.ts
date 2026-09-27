@@ -75,7 +75,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.participantListVisibility": inProgrammeRules("startList", t("editor.participantList")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
-    // Both in «Ce fel de eveniment», side by side (§NNN).
+    // Both in «Ce fel de eveniment», side by side (§526).
     "event.difficulty": inBox("kind", t("editor.fields.difficulty")),
     "event.difficultyStep": inBox("kind", t("editor.fields.difficultyStep")),
     "event.costType": inBox("registration", t("editor.fields.costType")),

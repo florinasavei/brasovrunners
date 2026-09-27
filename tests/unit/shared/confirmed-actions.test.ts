@@ -108,7 +108,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setTeamMemberVisibleAction: [],
   deleteTeamMemberAction: [],
   setTeamPagePublishedAction: [],
-  // «Întrebări frecvente» (§NNN): the page's one save, which asks when a card is put on the site,
+  // «Întrebări frecvente» (§525): the page's one save, which asks when a card is put on the site,
   // taken off or deleted (and nothing else), and the page's own publish switch.
   saveFaqPageAction: [],
   setFaqPagePublishedAction: [],

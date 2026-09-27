@@ -185,7 +185,7 @@ describe("§448 the first box holds the type and the status, and its line says b
     expect(kind).toContain("Ce înseamnă fiecare tip?");
   });
 
-  it("says the type, the status, the cost and the difficulty on its closed line, in both catalogues (§466, §NNN)", async () => {
+  it("says the type, the status, the cost and the difficulty on its closed line, in both catalogues (§466, §526)", async () => {
     expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat · Ușor 2<\/span>/);
     // No difficulty stated, nothing said of it.
     const unstated = { ...EVENT, difficultyLevel: null } as unknown as EditableEvent;
@@ -220,7 +220,7 @@ describe("§448 the first box holds the type and the status, and its line says b
   it("posts the same names as before, each from its own box — and no declaration from «Traseul» (§448)", async () => {
     const drawn = await boxes(EVENT);
     for (const name of ["event.surface", "event.distanceMeters", "event.elevationGainMeters", "event.routeUrl"]) expect(drawn.course, name).toContain(`name="${name}"`);
-    // How hard is asked with what kind (§NNN): the band and its step side by side in the first box.
+    // How hard is asked with what kind (§526): the band and its step side by side in the first box.
     for (const name of ["event.difficulty", "event.difficultyStep"]) {
       expect(drawn.kind, name).toContain(`name="${name}"`);
       expect(drawn.course, name).not.toContain(`name="${name}"`);

@@ -134,7 +134,7 @@ async function editorForm(eventId: string, texts: Record<"ro" | "en", Record<str
   put("event.startsAtWallTime", toWallTimeInput(row.startsAt, row.timezone));
   put("event.locationName", row.locationName ?? "");
   put("event.surface", row.surface ?? "");
-  // The level as the editor posts it (§NNN): its band and its step.
+  // The level as the editor posts it (§526): its band and its step.
   put("event.difficulty", row.difficultyLevel ? difficultyBandOf(row.difficultyLevel) : "");
   put("event.difficultyStep", row.difficultyLevel ? String(difficultyStepOf(row.difficultyLevel)) : "");
   put("event.costType", row.costType ?? "");

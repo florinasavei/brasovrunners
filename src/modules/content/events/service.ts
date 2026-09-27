@@ -399,7 +399,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
   return {
     type: fields.type,
     surface: fields.surface,
-    // The level on the club's scale of fifteen (§NNN): the band select and «Treapta» make one level;
+    // The level on the club's scale of fifteen (§526): the band select and «Treapta» make one level;
     // the retired `difficulty` column gets a best-effort word, for the release before this one.
     ...storedDifficulty(fields.difficulty ? difficultyLevel(fields.difficulty, fields.difficultyStep) : null),
     eventStatus: fields.eventStatus,
@@ -1606,7 +1606,7 @@ const SERIES_COLUMNS = [
   // Whether the place is announced travels with the place (§328): a series moved to a venue
   // not yet settled is moved on every date it reaches, and announced on them all at once.
   "locationToBeAnnounced",
-  // The level (§NNN), and the retired column's best-effort word written beside it.
+  // The level (§526), and the retired column's best-effort word written beside it.
   "difficulty",
   "difficultyLevel",
   "costType",

@@ -50,7 +50,7 @@ const LANGUAGES = [
 ] as const;
 
 /**
- * «Întrebări frecvente» in the backoffice (§NNN): the page first — DRAFT until an Administrator
+ * «Întrebări frecvente» in the backoffice (§525): the page first — DRAFT until an Administrator
  * publishes it, both languages at once, asked first (§384) — then the page's **one form** (§28):
  * «Copiază și tradu tot: RO → EN» at the top (§482), the introduction, and every question as a
  * card in the page's own order, the last card a spare for a new question, and one save.

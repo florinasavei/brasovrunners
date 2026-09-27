@@ -234,7 +234,7 @@ describe("the calendar file", () => {
     expect(bare).toBe("Pagina evenimentului: https://example.test/ro/evenimente/crosul-aniversar");
     // A difficulty alone is a facts line of one word; a cost left unstated is not "free"; no gun time, no times line.
     expect(calendarDescription({ ...event, difficultyLevel: 11 }, labelsRo)).toContain("\n\nGreu, treapta 2 din 3\n\n");
-    // The step the club chose (§NNN), in words: a calendar entry has no gauge to read it off.
+    // The step the club chose (§526), in words: a calendar entry has no gauge to read it off.
     expect(calendarDescription({ ...event, difficultyLevel: 12 }, labelsRo)).toContain("\n\nGreu, treapta 3 din 3\n\n");
     expect(calendarDescription({ ...event, difficultyLevel: 11 }, labelsRo)).not.toContain("Gratuit");
     expect(calendarDescription({ ...event, difficultyLevel: 11 }, labelsRo)).not.toContain("întâlnire");

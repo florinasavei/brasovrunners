@@ -179,7 +179,7 @@ export default async function SiteFooter() {
   const locale = (await getLocale()) as "ro" | "en";
   const weatherCredit = weatherListWords(locale).credit;
   const contacts = await cachedShownContactAddresses();
-  // «Întrebări frecvente» in the fold (§NNN) while the page is on the site — the header's own rule.
+  // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },

@@ -3,10 +3,10 @@ import { createElement, type ComponentType } from "react";
 import { DIFFICULTY_BANDS, DIFFICULTY_STEPS, difficultyBandOf, difficultyStepOf, type DifficultyBand, type DifficultyStep } from "../domain/difficulty";
 import DifficultyGaugeIcon from "./DifficultyGaugeIcon";
 
-/** A level's registry key: its band and its step, `MEDIUM-2` (§NNN). */
+/** A level's registry key: its band and its step, `MEDIUM-2` (§526). */
 export type DifficultyLevelKey = `${DifficultyBand}-${DifficultyStep}`;
 
-/** The registry name of a level's gauge — `difficulty:MEDIUM-2` for level 5 (§NNN). */
+/** The registry name of a level's gauge — `difficulty:MEDIUM-2` for level 5 (§526). */
 export function difficultyLevelGlyph(level: number): `difficulty:${DifficultyLevelKey}` {
   return `difficulty:${difficultyBandOf(level)}-${difficultyStepOf(level)}`;
 }
@@ -36,7 +36,7 @@ export const DIFFICULTY_ICONS = Object.fromEntries(DIFFICULTY_BANDS.map((name, i
 >;
 
 /**
- * One registry glyph per level of the club's scale of fifteen (§NNN) — `MEDIUM-3`: the band's
+ * One registry glyph per level of the club's scale of fifteen (§526) — `MEDIUM-3`: the band's
  * segments lit, the needle at the step's third of the band, the step's dots lit. What an event's
  * own pill draws (`route-pills.ts`), by `difficultyLevelGlyph(level)`.
  */

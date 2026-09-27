@@ -4,7 +4,7 @@ import { cardOnListing, openEditorBox } from "./support/fold";
 
 /**
  * `DECISIONS.md` §412 — the difficulty as a gauge ("un gauge icon custom mai degrabă"), replacing
- * §399's scale of weights; §NNN — the owner's five bands, «ușor, mediu, greuț, greu, foarte greu»,
+ * §399's scale of weights; §526 — the owner's five bands, «ușor, mediu, greuț, greu, foarte greu»,
  * three steps each, fifteen levels. One glyph, drawn by `DifficultyGaugeIcon.tsx` and shared
  * through `RoutePills` (§388) by every surface: the event page's pill, the listing card's, the
  * backoffice's own list, and the editor's select.
@@ -72,7 +72,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       await expect(pill).toBeVisible();
       await expectWords(pill, "Mediu 1", "Dificultate: mediu, treapta 1 din 3");
       await expectGauge(pill, 2, 1);
-      // The hardest end of the scale, on the seeded interval session (§NNN's seed).
+      // The hardest end of the scale, on the seeded interval session (§526's seed).
       const hardest = page.locator("li", { hasText: "Antrenament de intervale" }).first().locator('[data-fact="pills"] .MuiChip-root', { hasText: "Foarte greu 3" });
       await expectWords(hardest, "Foarte greu 3", "Dificultate: foarte greu, treapta 3 din 3");
       await expectGauge(hardest, 5, 3);
@@ -122,11 +122,11 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     await expect(page.getByRole("option")).toHaveText([/.+/, ...levels]);
     await page.getByRole("option", { name: "Foarte greu", exact: true }).click();
     await expect(page.locator('[name="event.difficulty"]')).toHaveValue("VERY_HARD");
-    // A band alone draws no step dots (§NNN): the step is the second control's.
+    // A band alone draws no step dots (§526): the step is the second control's.
     await expectGauge(page.getByRole("combobox", { name: "Dificultate" }), 5);
   });
 
-  test("the editor's «Treapta» is a segmented 1 · 2 · 3 beside the band, at the middle by default, each segment a 44-px target with its dots (§NNN)", async ({ page }) => {
+  test("the editor's «Treapta» is a segmented 1 · 2 · 3 beside the band, at the middle by default, each segment a 44-px target with its dots (§526)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);

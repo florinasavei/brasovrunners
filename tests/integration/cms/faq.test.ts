@@ -15,12 +15,12 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Întrebări frecvente»: the page's one save (§28) — the introduction and every question
+ * §525 — «Întrebări frecvente»: the page's one save (§28) — the introduction and every question
  * card together — who may write and who may put a question on the site, both languages required,
  * the categories, the order and the arrows, deletion, the page's version guard, the audit row,
  * the two gates the public read keeps, and a picture in an answer kept by the orphan sweep.
  */
-describe("§NNN the FAQ page's one save", () => {
+describe("§525 the FAQ page's one save", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Partial<Record<StaffRole, StaffUser>> = {};

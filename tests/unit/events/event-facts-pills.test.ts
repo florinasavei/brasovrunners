@@ -170,7 +170,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     expect(new Set(glyphClasses).size).toBe(1);
     expect(route.dd).toContain('data-testid="StraightenIcon"');
     expect(route.dd).toContain('data-testid="TrendingUpIcon"');
-    // «Ușor 2» is level 2 of the club's fifteen (§NNN): the first of five bands lit, four faint, and
+    // «Ușor 2» is level 2 of the club's fifteen (§526): the first of five bands lit, four faint, and
     // two of the three step dots.
     expect(route.dd).toContain("data-band=\"1\"");
     expect(route.dd).toContain("data-level=\"2\"");

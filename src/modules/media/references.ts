@@ -85,10 +85,10 @@ const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(
  */
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
-/** Whether a question of «Întrebări frecvente» carries the asset in its answer, either language (§NNN). */
+/** Whether a question of «Întrebări frecvente» carries the asset in its answer, either language (§525). */
 const inFaqAnswer = sql`(${names(sql`${faqQuestions.answerRoJson}::text`)} OR ${names(sql`${faqQuestions.answerEnJson}::text`)})`;
 
-/** Whether the FAQ page's introduction carries the asset (§NNN), kept in its platform setting like «Echipa»'s. */
+/** Whether the FAQ page's introduction carries the asset (§525), kept in its platform setting like «Echipa»'s. */
 const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
 /**
@@ -112,7 +112,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
   -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
-  -- A picture in an answer of «Întrebări frecvente» (§NNN), hidden questions included, and in
+  -- A picture in an answer of «Întrebări frecvente» (§525), hidden questions included, and in
   -- the page's introduction.
   OR EXISTS (SELECT 1 FROM ${faqQuestions} WHERE ${inFaqAnswer})
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
@@ -310,7 +310,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
-  // A picture in an answer of «Întrebări frecvente», or in its introduction (§NNN): one reference, the page.
+  // A picture in an answer of «Întrebări frecvente», or in its introduction (§525): one reference, the page.
   const inFaq = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)

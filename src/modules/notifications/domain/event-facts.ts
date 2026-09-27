@@ -57,7 +57,7 @@ export type EmailEventFacts = Pick<
   | "latitude"
   | "longitude"
 > & {
-  /** The level on the club's scale of fifteen (§NNN), the difficulty's one column. */
+  /** The level on the club's scale of fifteen (§526), the difficulty's one column. */
   difficultyLevel?: number | null;
   startsAt: Date;
   timezone: string;
@@ -136,7 +136,7 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   // The night pill's sunset sentence rides on `tooltip` on the page and the card, where hovering
   // or focusing the chip opens it; an email has no chip to hover, so it goes in parentheses right
   // after the word instead — the same sentence, never a second one written here. The difficulty's
-  // step, which the page's gauge draws as dots, is in its words here (`plain`, §NNN).
+  // step, which the page's gauge draws as dots, is in its words here (`plain`, §526).
   const pills = orderRoutePills(routePillParts(details, t, format)).map((pill) => ({
     text: pill.tooltip ? `${pill.plain ?? pill.label} (${pill.tooltip})` : (pill.plain ?? pill.label),
   }));

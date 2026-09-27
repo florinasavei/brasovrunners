@@ -11,7 +11,7 @@ import { type FaqPageFields, type FaqRow, faqFieldName, faqPageFieldsSchema } fr
 import { DEFAULT_FAQ_PAGE, FAQ_PAGE_SETTING_ENTITY_ID, FAQ_PAGE_SETTING_KEY, type FaqPageSettings, parseFaqPageSettings } from "./page-settings";
 
 /**
- * «Întrebări frecvente» — the page's one save (§NNN, §28): the introduction and every question
+ * «Întrebări frecvente» — the page's one save (§525, §28): the introduction and every question
  * card, in the order of the cards, written together or not at all. «Echipa»'s thresholds (§459),
  * asserted here whatever the screen offered (BR-REQ-060-01):
  *

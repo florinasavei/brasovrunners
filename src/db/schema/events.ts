@@ -390,14 +390,14 @@ export const events = pgTable(
      * an event with no stated cost is not thereby free, and one with no stated difficulty is
      * not thereby easy. That is why neither column has a default.
      *
-     * Since §NNN `difficulty` is retired: no code reads it. Every save still writes a best-effort
+     * Since §526 `difficulty` is retired: no code reads it. Every save still writes a best-effort
      * word into it (`legacyDifficultyOf`, `events/domain/difficulty.ts`) so the release before it,
      * which reads only this column, shows something near the truth during a rollback; the level
      * below is the fact. The column leaves the schema in a later contract migration.
      */
     difficulty: eventDifficulty("difficulty"),
     /**
-     * How hard the event is, on the club's scale of fifteen (§NNN): five bands — ușor, mediu,
+     * How hard the event is, on the club's scale of fifteen (§526): five bands — ușor, mediu,
      * greuț, greu, foarte greu (`DIFFICULTY_BANDS`) — of three steps each, 1 «Ușor 1» and 15
      * «Foarte greu 3»; the band is ceil(level / 3). One column for the one fact, so a filter, an
      * order or a comparison is one number. Nullable on purpose: "the club has not said" is a real
@@ -650,7 +650,7 @@ export const events = pgTable(
     ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
-    // The club's scale of fifteen (§NNN): five bands of three steps.
+    // The club's scale of fifteen (§526): five bands of three steps.
     check("events_difficulty_level_in_scale", sql`${t.difficultyLevel} IS NULL OR ${t.difficultyLevel} BETWEEN 1 AND 15`),
     // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The
     // `IS NOT NULL`s are needed: half a pair makes the BETWEEN branch NULL, which a CHECK lets through.

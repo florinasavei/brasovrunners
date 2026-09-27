@@ -495,7 +495,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canCreatePage: /*         */ [false, false, true, false, false, true, true],
     canEditTeamPage: /*       */ [false, false, true, false, false, true, true],
     canShowTeamMember: /*     */ [false, false, false, false, false, true, true],
-    // «Întrebări frecvente» (§NNN): «Echipa»'s two thresholds, for questions.
+    // «Întrebări frecvente» (§525): «Echipa»'s two thresholds, for questions.
     canEditFaqPage: /*        */ [false, false, true, false, false, true, true],
     canShowFaqItem: /*        */ [false, false, false, false, false, true, true],
     canDeleteEvent: /*        */ [false, false, false, false, false, true, true],

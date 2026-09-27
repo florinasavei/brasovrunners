@@ -4,7 +4,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN — «Întrebări frecvente»: an Administrator writes a question on the page's one form — the
+ * §525 — «Întrebări frecvente»: an Administrator writes a question on the page's one form — the
  * question, its «Categorie» and its answer in both languages, «Pe site» ticked, one save that asks
  * first — and a visitor reads it at `/ro/intrebari`: under its category heading, a fold closed
  * until pressed, with its glyph, opened by a link's `#q-…`, and no sideways scroll at 320 px (the
@@ -30,7 +30,7 @@ async function faqEditor(page: Page) {
   await hydrated(page);
 }
 
-test.describe.serial("§NNN the FAQ page", () => {
+test.describe.serial("§525 the FAQ page", () => {
   test("an Administrator writes a question in both languages and puts it on the site in the page's one save", async ({ page }) => {
     test.setTimeout(90_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;

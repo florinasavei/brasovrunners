@@ -102,7 +102,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(emailOutbox);
   // «Echipa»'s cards (§459) reference a photo: before the assets.
   await db.delete(teamMembers);
-  // «Întrebări frecvente»'s questions (§NNN) reference only staff rows.
+  // «Întrebări frecvente»'s questions (§525) reference only staff rows.
   await db.delete(faqQuestions);
   // The gallery: items, then albums (which the cover references), then the assets.
   await db.delete(galleryItems);

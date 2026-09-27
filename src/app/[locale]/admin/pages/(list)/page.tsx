@@ -88,7 +88,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   ]);
   const t = await getTranslations("Admin");
   /*
-    The standard pages (§NNN): the platform's own, whose address and title the club does not
+    The standard pages (§525): the platform's own, whose address and title the club does not
     choose and whose contents it keeps on their own screens — «Contact» (§442, §461), «Echipa»
     (§459), «Întrebări frecvente» and «Membri» (§524). Each wears its glyph and says whether it is on the site and
     what of it is, so the list answers "what is live" for every page the club has, standard and
@@ -192,7 +192,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* The club's own pages, and the platform's standard ones: «Contact», «Echipa» (§459), «Întrebări frecvente» (§NNN), «Membri» (§524). */}
+      {/* The club's own pages, and the platform's standard ones: «Contact», «Echipa» (§459), «Întrebări frecvente» (§525), «Membri» (§524). */}
       <PagesSubNav locale={locale} active="pages" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>

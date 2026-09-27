@@ -101,7 +101,7 @@ function Question({ item }: { item: PublicFaqItem }) {
 }
 
 /**
- * «Întrebări frecvente» / "FAQ" (§NNN): the club's introduction, then the club's questions grouped
+ * «Întrebări frecvente» / "FAQ" (§525): the club's introduction, then the club's questions grouped
  * under their «Categorie», each a fold that opens on its answer — a `<details>` that works with
  * JavaScript off, 44 pixels to a thumb (BR-REQ-041-01 criterion 6) — and the same questions as an
  * `FAQPage` in JSON-LD for search engines.
@@ -130,7 +130,7 @@ export default async function FaqPage({ params }: Props) {
         {t("title")}
       </Typography>
       {page?.intro ? (
-        // The club's own introduction (§NNN), through the renderer's allowlist (§11.3).
+        // The club's own introduction (§525), through the renderer's allowlist (§11.3).
         <Box sx={LEAD_SX} data-testid="faq-intro">
           <RichText body={page.intro} />
         </Box>

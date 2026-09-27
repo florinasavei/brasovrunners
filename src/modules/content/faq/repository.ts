@@ -6,7 +6,7 @@ import { parseRichText, type RichTextDoc } from "@/modules/content/rich-text/dom
 import { faqIntroFor, readFaqPageSettings } from "./page-settings";
 
 /**
- * Reads for «Întrebări frecvente» (§NNN), public and backoffice.
+ * Reads for «Întrebări frecvente» (§525), public and backoffice.
  *
  * The public read names its columns (BR-REQ-070-01), reads only the questions shown on the site,
  * and gives each the words of the page's own language alone — never the other language's (§28).
@@ -62,7 +62,7 @@ function docOrNull(value: unknown): RichTextDoc | null {
 }
 
 /**
- * The page's questions grouped under their «Categorie» (§NNN), each group where its first question
+ * The page's questions grouped under their «Categorie» (§525), each group where its first question
  * sits in the club's order, the questions keeping that order inside it. The questions with no
  * category come first, under no heading: a heading-less group after a headed one would read as
  * part of it.

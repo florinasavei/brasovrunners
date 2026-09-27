@@ -1,7 +1,7 @@
 import type { PublicFaqItem } from "./repository";
 
 /**
- * The page's `FAQPage` (§NNN, schema.org): every question on it as a `Question` whose
+ * The page's `FAQPage` (§525, schema.org): every question on it as a `Question` whose
  * `acceptedAnswer` is an `Answer` with the answer's words — the same questions, in the same order
  * and the same language, as the folds a visitor opens, which is what a search engine asks of it
  * (the markup must describe what the page shows). Plain words rather than the answer's markup:

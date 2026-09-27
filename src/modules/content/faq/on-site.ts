@@ -4,7 +4,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import { faqPageOnSite } from "./repository";
 
 /**
- * Whether «Întrebări frecvente» is offered in this language (§NNN): the page published with a
+ * Whether «Întrebări frecvente» is offered in this language (§525): the page published with a
  * question on the site — the rule the header's entry, the footer's «Despre club» link and the
  * contact page's line all read, from the public cache with its last good copy behind it (§447),
  * and false on anything that does not answer: a missing link is never an error page.

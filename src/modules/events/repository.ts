@@ -128,7 +128,7 @@ const PUBLIC_COLUMNS = {
   locationName: publicLocationName,
   locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
   locationToBeAnnounced: events.locationToBeAnnounced,
-  // The level on the club's scale of fifteen (§NNN) — the difficulty's one column; the retired
+  // The level on the club's scale of fifteen (§526) — the difficulty's one column; the retired
   // `difficulty` is never read.
   difficultyLevel: events.difficultyLevel,
   costType: events.costType,

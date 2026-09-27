@@ -12,7 +12,7 @@ import { faqPageJsonLd } from "@/modules/content/faq/structured-data";
 import { isRichTextField, isTranslatableEnglishField, romanianTwinCandidates } from "@/modules/translate/domain/fields";
 
 /**
- * §NNN — «Întrebări frecvente»: what the page's one save accepts and refuses (the introduction and
+ * §525 — «Întrebări frecvente»: what the page's one save accepts and refuses (the introduction and
  * every card), how the cards are read from the form, the categories' grouping, and the page's
  * `FAQPage` JSON-LD.
  */
@@ -36,7 +36,7 @@ const refusedBoxes = (input: Record<string, unknown>) => {
   return [...new Set(parsed.error.issues.map((issue) => faqFieldName(issue.path)))].sort();
 };
 
-describe("§NNN the FAQ page's fields", () => {
+describe("§525 the FAQ page's fields", () => {
   it("keeps each question on one line, each answer as a document with its words, and drops the empty spare card", () => {
     const parsed = faqPageFieldsSchema.parse({
       items: [card({ questionRo: "  Cum\n mă   înscriu?  ", answerRoBody: JSON.stringify(doc("Din pagina", "evenimentului.")) }), {}],
@@ -105,7 +105,7 @@ describe("§NNN the FAQ page's fields", () => {
   });
 });
 
-describe("§NNN the cards as the form posts them", () => {
+describe("§525 the cards as the form posts them", () => {
   it("reads `faq[n].box` into rows by index, a hole as an empty card, and nothing past the editor's rows", () => {
     const form = new FormData();
     form.append("faq[0].questionRo", "A?");
@@ -134,7 +134,7 @@ const item = (question: string, category: string | null = null, answerText = "R�
   answerText,
 });
 
-describe("§NNN the questions grouped under their categories", () => {
+describe("§525 the questions grouped under their categories", () => {
   it("puts the questions with no category first, then each category where its first question sits, the order kept inside", () => {
     const groups = groupFaqItems([item("A?", "Înscriere"), item("B?"), item("C?", "Traseu"), item("D?", "Înscriere"), item("E?")]);
     expect(groups.map((group) => [group.category, group.items.map((entry) => entry.question)])).toEqual([
@@ -150,7 +150,7 @@ describe("§NNN the questions grouped under their categories", () => {
   });
 });
 
-describe("§NNN the FAQ page's JSON-LD", () => {
+describe("§525 the FAQ page's JSON-LD", () => {
   it("is an FAQPage of the page's questions in order, each with its answer's words", () => {
     const data = faqPageJsonLd([item("Cum mă înscriu?", null, "Din pagina evenimentului."), item("Ce aduc?", "Echipament", "Apă.")], "https://club.test/ro/intrebari", "ro");
     expect(data).toEqual({
@@ -170,7 +170,7 @@ describe("§NNN the FAQ page's JSON-LD", () => {
   });
 });
 
-describe("§NNN «Copiază și tradu tot» and «Tradu cardul» fill a card's English boxes", () => {
+describe("§525 «Copiază și tradu tot» and «Tradu cardul» fill a card's English boxes", () => {
   it("allows a card's question, category and answer and the introduction, and finds each one's Romanian twin", () => {
     expect(isTranslatableEnglishField("faq[3].questionEn")).toBe(true);
     expect(isTranslatableEnglishField("faq[3].categoryEn")).toBe(true);

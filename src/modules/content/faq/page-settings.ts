@@ -11,7 +11,7 @@ import { canShowFaqItem } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Întrebări frecvente» as a page (§NNN): whether it is on the site at all, the club's own
+ * «Întrebări frecvente» as a page (§525): whether it is on the site at all, the club's own
  * introduction, and the page's version — one `platform_settings` row, «Echipa»'s shape (§459).
  *
  * `status` is DRAFT until an Administrator publishes it, both languages at once (§28); each

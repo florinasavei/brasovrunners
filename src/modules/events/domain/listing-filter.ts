@@ -58,7 +58,7 @@ export type FilterFlag = (typeof FILTER_FLAGS)[number];
 type GroupValues = {
   type: EventType;
   surface: EventSurface;
-  // A box per band, not per level (§NNN): fifteen boxes would be a list to read, and «Greu»
+  // A box per band, not per level (§526): fifteen boxes would be a list to read, and «Greu»
   // ticked means every step of it — the address keeps §413's `?difficulty=HARD`.
   difficulty: DifficultyBand;
   distance: DistanceBand;
@@ -165,7 +165,7 @@ function canonical(group: FilterGroup, asked: string): string {
   // `Object.hasOwn`, not `in`: `?distance=constructor` must not find the prototype's.
   if (group === "distance" && Object.hasOwn(DISTANCE_ALIASES, asked)) return DISTANCE_ALIASES[asked];
   const name = asked.toUpperCase().replaceAll("-", "_");
-  // A §413 bookmark names the old four-level keys; read them as the migration mapped them (§NNN).
+  // A §413 bookmark names the old four-level keys; read them as the migration mapped them (§526).
   if (group === "difficulty" && Object.hasOwn(LEGACY_DIFFICULTY, name)) return LEGACY_DIFFICULTY[name];
   return name;
 }
@@ -229,7 +229,7 @@ function valueOf(event: FilterableEvent, group: FilterGroup): string | null {
     case "surface":
       return event.surface;
     case "difficulty": {
-      // The band of the event's level (§NNN): every step of «Greu» is «Greu».
+      // The band of the event's level (§526): every step of «Greu» is «Greu».
       const level = difficultyLevelOf(event);
       return level === null ? null : difficultyBandOf(level);
     }

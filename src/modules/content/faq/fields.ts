@@ -5,7 +5,7 @@ import { refuseOneLanguage, type TextLanguage } from "@/shared/forms/both-langua
 import { isUuid } from "@/shared/ids";
 
 /**
- * What the club types on «Întrebări frecvente» (§NNN) — the whole page in one save (§28): the
+ * What the club types on «Întrebări frecvente» (§525) — the whole page in one save (§28): the
  * page's introduction and every question card, in the order of the cards.
  *
  * **The introduction**, written in the rich-text editor (§72, §474), Romanian **and** English or

@@ -1,7 +1,7 @@
 import type { events } from "@/db/schema/events";
 
 /**
- * The club's difficulty scale (§NNN; the owner, 2026-09-27: «ușor, mediu, greuț, greu, foarte
+ * The club's difficulty scale (§526; the owner, 2026-09-27: «ușor, mediu, greuț, greu, foarte
  * greu», each in three steps): five bands in ascending order, each holding three steps, so the scale
  * has fifteen levels and one column says the event's level (`events.difficulty_level`, 1 … 15).
  *
@@ -23,7 +23,7 @@ export const DIFFICULTY_BANDS = ["EASY", "MEDIUM", "FAIRLY_HARD", "HARD", "VERY_
 export type DifficultyBand = (typeof DIFFICULTY_BANDS)[number];
 
 /**
- * The three steps inside a band (§NNN): 1 the easiest of the band, 3 the hardest. «Mediu 3» is
+ * The three steps inside a band (§526): 1 the easiest of the band, 3 the hardest. «Mediu 3» is
  * harder than «Mediu 1» and easier than «Greuț 1».
  */
 export const DIFFICULTY_STEPS = [1, 2, 3] as const;
@@ -63,13 +63,13 @@ export function difficultyStepOf(level: number): DifficultyStep {
 }
 
 /**
- * What a row stores of the difficulty: the level alone (§NNN). Optional, not only nullable: a
+ * What a row stores of the difficulty: the level alone (§526). Optional, not only nullable: a
  * public row the data cache kept from before this release (§333) has no such field, and reads as
  * "not stated" until the next write expires it.
  */
 export type StoredDifficulty = { difficultyLevel?: number | null };
 
-/** The event's level as the pages, the filters, the emails and the editor read it — the level column alone (§NNN). */
+/** The event's level as the pages, the filters, the emails and the editor read it — the level column alone (§526). */
 export function difficultyLevelOf(row: StoredDifficulty): number | null {
   return isDifficultyLevel(row.difficultyLevel) ? row.difficultyLevel : null;
 }
@@ -78,7 +78,7 @@ export function difficultyLevelOf(row: StoredDifficulty): number | null {
 type LegacyDifficulty = NonNullable<(typeof events.$inferSelect)["difficulty"]>;
 
 /**
- * The old column's best-effort value for a level (§NNN), so the release before this one — which
+ * The old column's best-effort value for a level (§526), so the release before this one — which
  * reads only that column — still shows a word near the truth during the rollback window: the
  * inverse of migration `0104`'s backfill (1 → VERY_EASY, 2 → EASY, 5 → MODERATE, 11 → HARD,
  * 14 → VERY_HARD), the rest to the nearest old word. «Greuț», which the old scale lacked, is HARD.
@@ -93,7 +93,7 @@ export function legacyDifficultyOf(level: number): LegacyDifficulty {
   return "VERY_HARD";
 }
 
-/** The two columns a save writes for a level (or for none): the level, and the old column's best-effort word beside it (§NNN). */
+/** The two columns a save writes for a level (or for none): the level, and the old column's best-effort word beside it (§526). */
 export function storedDifficulty(level: number | null): { difficulty: LegacyDifficulty | null; difficultyLevel: number | null } {
   if (level === null) return { difficulty: null, difficultyLevel: null };
   return { difficulty: legacyDifficultyOf(level), difficultyLevel: level };

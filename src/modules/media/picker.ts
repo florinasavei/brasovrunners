@@ -52,7 +52,7 @@ export function usedHere(references: readonly { kind: string; id: string }[], sc
 }
 
 /** A reference kind from the pictures page (`MediaReference`) as the picker's chip: the team page's introduction is «Echipa». */
-// «Întrebări frecvente» (§NNN) and the members' pages (§524) are pages the club writes: «Pagini».
+// «Întrebări frecvente» (§525) and the members' pages (§524) are pages the club writes: «Pagini».
 export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage"): PictureUse {
   if (kind === "teamIntro") return "team";
   if (kind === "faq" || kind === "membersPage") return "page";

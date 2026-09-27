@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.16-2026-09-27
+
+- **«Întrebări frecvente» / "FAQ"**: the club writes its questions and answers in Romanian and English on `/admin/pages/faq`, and an Administrator puts them on the site. On the public page each question opens on its answer, and search engines read the same questions as an FAQPage. The menu shows it once a question is on the site. «Pagini» now lists the standard pages (Echipa, Întrebări frecvente) above the club's custom pages. §525.
+- **The difficulty has fifteen levels:** five bands with three steps each («Spre ușor», «La mijloc», «Spre greu»), stored as one number. The gauge shows the step as three dots, and the emails and the calendar name it in words («Mediu, treapta 2 din 3»). The editor asks for the band and then the step («Treapta»), the filter still ticks a whole band, and «Ghid» explains the club's scale; migration `0101`. §526.
 ## BR-V2.15-2026-09-27
 
 - **The members' zone**: a «Membru» role added on Echipa with the usual invitation, which opens only a members-only page behind the sign-in and nothing of the backoffice; the public «Beneficiile membrilor» page with the sign-in button; both texts in Romanian and English under «Pagini» → «Membri», the public page published by an Administrator; migration `0101`. §524.

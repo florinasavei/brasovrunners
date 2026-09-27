@@ -107,7 +107,7 @@ export type CalendarEvent = {
    */
   nightOverride?: boolean | null;
   surface?: EventSurface | null;
-  /** The level on the club's scale of fifteen (§NNN), the difficulty's one column. */
+  /** The level on the club's scale of fifteen (§526), the difficulty's one column. */
   difficultyLevel?: number | null;
   costType?: EventCostType | null;
   /** What a paid event costs, or what a donation suggests (§343); free text, the club's own. */
@@ -357,7 +357,7 @@ function htmlLine(line: Line): string {
  * before.
  */
 /**
- * The difficulty in the facts line, with its step (§NNN) — «Mediu, treapta 2 din 3»: a calendar
+ * The difficulty in the facts line, with its step (§526) — «Mediu, treapta 2 din 3»: a calendar
  * entry has no gauge to read the step off, so the words say it, as the emails' facts do.
  */
 function difficultyWords(event: CalendarEvent, t: CalendarLabels["t"]): string {

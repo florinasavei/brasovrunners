@@ -151,7 +151,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
    * goes into an email the club reads.
    */
   const aboutEvent = about ? await orNull(() => cachedPublishedEventBySlug(locale, about)) : null;
-  // «Poate găsești răspunsul la Întrebări frecvente» (§NNN), while that page is on the site.
+  // «Poate găsești răspunsul la Întrebări frecvente» (§525), while that page is on the site.
   const showFaq = await faqOnSite(locale);
 
   const field = (name: "name" | "email" | "message", help?: string) => ({

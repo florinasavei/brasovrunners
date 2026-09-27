@@ -3,7 +3,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §333 for «Întrebări frecvente» (§NNN): the public page reads its questions from Next's data
+ * §333 for «Întrebări frecvente» (§525): the public page reads its questions from Next's data
  * cache, and the page's one save expires that answer, so the next visitor reads the question just
  * saved — the shape of `revalidation.test.ts`, with the in-memory cache of `helpers/next-cache.ts`
  * standing in for Next's so the hit, the expiry and the fresh read are all observable.

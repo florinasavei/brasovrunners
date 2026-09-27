@@ -130,7 +130,7 @@ export default async function SiteHeader() {
   const pages = await navigationPages(locale as Locale);
   const showGallery = await hasPublishedAlbum(locale as Locale);
   const showTeam = await hasVisibleTeam(locale as Locale);
-  // «Întrebări frecvente» (§NNN): the page published with a question on it — «Echipa»'s rule.
+  // «Întrebări frecvente» (§525): the page published with a question on it — «Echipa»'s rule.
   const showFaq = await faqOnSite(locale as Locale);
   const showMembers = await hasMembersPage(locale as Locale);
   /**

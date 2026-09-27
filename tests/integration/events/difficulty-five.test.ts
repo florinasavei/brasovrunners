@@ -79,8 +79,8 @@ async function created(difficulty: DifficultyBand | null, slug: string, difficul
 const stored = async (id: string) =>
   (await db.select({ difficulty: events.difficulty, difficultyLevel: events.difficultyLevel }).from(events).where(eq(events.id, id)))[0];
 
-describe("BR-REQ-041-01 §412 the five-word enum, migration 0078 — retired by §NNN, still written", () => {
-  it("the migrated enum keeps §412's order — the column the release before §NNN reads", async () => {
+describe("BR-REQ-041-01 §412 the five-word enum, migration 0078 — retired by §526, still written", () => {
+  it("the migrated enum keeps §412's order — the column the release before §526 reads", async () => {
     const result = await db.execute<{ level: string }>(sql`select unnest(enum_range(null::event_difficulty))::text as level`);
     expect(result.rows.map((row) => row.level)).toEqual(["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
   });
@@ -108,7 +108,7 @@ describe("BR-REQ-041-01 §412 the five-word enum, migration 0078 — retired by 
     expect(ranked.map((row) => difficultyBandOf(row.level!))).toEqual([...DIFFICULTY_BANDS]);
   });
 
-  it("the sample seed shows both ends of the scale (§NNN), so local and QA draw the gauge at one and at fifteen", () => {
+  it("the sample seed shows both ends of the scale (§526), so local and QA draw the gauge at one and at fifteen", () => {
     const seed = readFileSync(path.join(process.cwd(), "src", "db", "seeds", "pilot.ts"), "utf8");
     expect(seed).toContain("difficultyLevel: 1,");
     expect(seed).toContain("difficultyLevel: 15,");

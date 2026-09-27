@@ -22,7 +22,7 @@ function StepDotsIcon({ step }: { step: DifficultyStep }) {
 }
 
 /**
- * «Treapta» (§NNN): the editor's second difficulty control, beside the band select in «Ce fel de
+ * «Treapta» (§526): the editor's second difficulty control, beside the band select in «Ce fel de
  * eveniment» — where inside the band the event stands, as a segmented 1 · 2 · 3, each segment with
  * its dots glyph. With the band it is the level on the club's scale of fifteen, which the save
  * writes (`fields.ts`, `difficultyLevel`).

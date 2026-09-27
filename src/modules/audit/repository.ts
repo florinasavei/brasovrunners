@@ -254,7 +254,7 @@ export type AuditAction =
   | "team_page.unpublished"
   | "team_page.intro_saved"
   /**
-   * «Întrebări frecvente» (§NNN): the page saved as one — its introduction and every question,
+   * «Întrebări frecvente» (§525): the page saved as one — its introduction and every question,
    * the ids added, deleted, shown and taken off in the metadata, never the words (§12.12) — and
    * the page published or taken off.
    */

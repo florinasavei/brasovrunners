@@ -13,10 +13,10 @@ import {
 import { matchesListingFilter, NO_FILTER, parseListingFilter } from "@/modules/events/domain/listing-filter";
 
 /**
- * BR-REQ-041-01 (`DECISIONS.md` §NNN) — the club's scale of fifteen: the owner's five bands, «ușor,
+ * BR-REQ-041-01 (`DECISIONS.md` §526) — the club's scale of fifteen: the owner's five bands, «ușor,
  * mediu, greuț, greu, foarte greu», of three steps each, one level 1 … 15 and the one column read.
  */
-describe("§NNN the level is the band and the step", () => {
+describe("§526 the level is the band and the step", () => {
   it("has the owner's five bands, in order", () => {
     expect([...DIFFICULTY_BANDS]).toEqual(["EASY", "MEDIUM", "FAIRLY_HARD", "HARD", "VERY_HARD"]);
   });
@@ -48,7 +48,7 @@ describe("§NNN the level is the band and the step", () => {
   });
 });
 
-describe("§NNN difficultyLevelOf reads the level column alone", () => {
+describe("§526 difficultyLevelOf reads the level column alone", () => {
   it("has no difficulty when the level is null, absent (a cached row) or off the scale", () => {
     expect(difficultyLevelOf({ difficultyLevel: null })).toBeNull();
     expect(difficultyLevelOf({})).toBeNull();
@@ -62,7 +62,7 @@ describe("§NNN difficultyLevelOf reads the level column alone", () => {
   });
 });
 
-describe("§NNN the retired column gets a best-effort word, the inverse of migration 0104", () => {
+describe("§526 the retired column gets a best-effort word, the inverse of migration 0104", () => {
   it("maps every backfilled level back to the word it came from", () => {
     expect([1, 2, 5, 11, 14].map(legacyDifficultyOf)).toEqual(["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]);
   });
@@ -80,7 +80,7 @@ describe("§NNN the retired column gets a best-effort word, the inverse of migra
   });
 });
 
-describe("§NNN the listing's difficulty boxes tick a band — every step of it", () => {
+describe("§526 the listing's difficulty boxes tick a band — every step of it", () => {
   const event = (difficultyLevel: number | null) => ({
     type: "GROUP_RUN",
     surface: null,

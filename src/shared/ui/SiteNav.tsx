@@ -30,7 +30,7 @@ const SECTIONS = [
   // «Echipa» (§459): a page this application ships, like the gallery, so it sits with the
   // sections and not with the club's pages — offered while a card is on the site (`showTeam`).
   { segment: "team", href: "/team" },
-  // «Întrebări frecvente» (§NNN): another page this application ships, offered while a question is
+  // «Întrebări frecvente» (§525): another page this application ships, offered while a question is
   // on the site (`showFaq`).
   { segment: "faq", href: "/faq" },
   // «Membri» (§524): «Beneficiile membrilor» and its sign-in — offered while the page is published

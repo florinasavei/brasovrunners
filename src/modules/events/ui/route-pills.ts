@@ -14,7 +14,7 @@ import type { GlyphName } from "./glyphs";
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
  * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394). `srLabel` replaces
  * the words a screen reader hears altogether: the difficulty pill shows «Mediu 2» and is heard as
- * «Dificultate: mediu, treapta 2 din 3» (§NNN). Content, not an
+ * «Dificultate: mediu, treapta 2 din 3» (§526). Content, not an
  * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
  * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
  * own text (visually hidden) rather than on the attribute.
@@ -24,11 +24,11 @@ export type Pill = {
   label: string;
   tooltip?: string;
   srSuffix?: string;
-  /** What a screen reader hears in place of `label` (the visible words are then hidden from it) — §NNN. */
+  /** What a screen reader hears in place of `label` (the visible words are then hidden from it) — §526. */
   srLabel?: string;
   /**
    * The pill's words where no glyph is drawn beside them (an email's facts, §392) and the glyph
-   * said something the word does not — the difficulty's step (§NNN): «Mediu, treapta 2 din 3».
+   * said something the word does not — the difficulty's step (§526): «Mediu, treapta 2 din 3».
    * Absent, `label` is the whole of it.
    */
   plain?: string;
@@ -59,7 +59,7 @@ export type RouteFactsSource = Pick<
   | "longitude"
   | "locationToBeAnnounced"
 > &
-  // The level on the club's scale of fifteen (§NNN), the difficulty's one column; optional like
+  // The level on the club's scale of fifteen (§526), the difficulty's one column; optional like
   // `StoredDifficulty`'s, for a cached row from before it.
   Pick<StoredDifficulty, "difficultyLevel">;
 
@@ -125,7 +125,7 @@ export function routePillParts(
 }
 
 /**
- * The difficulty's pill for a level on the club's scale of fifteen (§NNN): the gauge of the level
+ * The difficulty's pill for a level on the club's scale of fifteen (§526): the gauge of the level
  * (the band's segments lit, the needle at the step, its dots), the band and the step in words —
  * «Mediu 2» — and, for a screen reader, «Dificultate: mediu, treapta 2 din 3». Every word from the
  * catalogue (`Event.difficultyValues`, `difficultyBandWords`, `difficultyLevelShort`,

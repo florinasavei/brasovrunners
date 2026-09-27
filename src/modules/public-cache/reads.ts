@@ -400,7 +400,7 @@ export async function cachedTeamPage(locale: Locale) {
 }
 
 /**
- * `readPublicFaqPage`: «Întrebări frecvente» (§NNN) — the page's state and its shown questions, for
+ * `readPublicFaqPage`: «Întrebări frecvente» (§525) — the page's state and its shown questions, for
  * the page, its entry in the navigation and the sitemap. Filed under `pages`, as «Echipa» is: every
  * write to a question or to the page's setting expires that kind (`content/faq/service.ts`).
  */

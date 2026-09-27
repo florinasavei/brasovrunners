@@ -337,7 +337,7 @@ export function canShowTeamMember(role: StaffRole): boolean {
 }
 
 /**
- * **«Întrebări frecvente» — the FAQ page's questions (§NNN).** A question and its answer are
+ * **«Întrebări frecvente» — the FAQ page's questions (§525).** A question and its answer are
  * words, so writing, moving and deleting a hidden one is the Redactor's and the Administrator's,
  * as a team card is (§459).
  */

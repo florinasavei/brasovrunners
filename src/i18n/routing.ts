@@ -130,7 +130,7 @@ export const routing = defineRouting({
      */
     "/team": { ro: "/echipa", en: "/team" },
     /**
-     * «Întrebări frecvente» / "FAQ" (§NNN): the club's questions and answers, in folds. A platform
+     * «Întrebări frecvente» / "FAQ" (§525): the club's questions and answers, in folds. A platform
      * page like «Echipa», so a standing page the club once called `intrebari` keeps its own
      * address under `/pagini/`.
      */
@@ -235,7 +235,7 @@ export const routing = defineRouting({
     "/admin/pages/new": "/admin/pages/new",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
-    /** The questions of «Întrebări frecvente» (§NNN): a standard page, beside «Echipa». */
+    /** The questions of «Întrebări frecvente» (§525): a standard page, beside «Echipa». */
     "/admin/pages/faq": "/admin/pages/faq",
     /** The members' pages (§524): the public benefits and the member-only words, beside «Echipa». */
     "/admin/pages/members": "/admin/pages/members",

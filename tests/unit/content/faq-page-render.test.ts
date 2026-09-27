@@ -5,7 +5,7 @@ import type { PublicFaqItem, PublicFaqPage } from "@/modules/content/faq/reposit
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 
 /**
- * §NNN — «Întrebări frecvente» as the server sends it: the menu offers the page only when the
+ * §525 — «Întrebări frecvente» as the server sends it: the menu offers the page only when the
  * header says so (`showFaq`), the page is a 404 while a DRAFT, a published page with no question
  * answers a sentence and asks not to be indexed, and a page with questions draws the club's
  * introduction, then each question as a native fold with its glyph — working with JavaScript off —
@@ -68,7 +68,7 @@ const item = (id: string, question: string, answer: string, category: string | n
   answerText: answer,
 });
 
-describe("§NNN the FAQ page and its menu entry", () => {
+describe("§525 the FAQ page and its menu entry", () => {
   beforeEach(() => {
     page = EMPTY;
   });

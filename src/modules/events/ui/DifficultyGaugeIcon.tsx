@@ -6,7 +6,7 @@ import { DIFFICULTY_BANDS, DIFFICULTY_STEPS } from "../domain/difficulty";
 
 /**
  * The difficulty as a gauge (§412; the owner, 2026-09-25: "un gauge icon custom mai degrabă"),
- * replacing §399's scale of weights; five bands since §NNN are the owner's «ușor, mediu, greuț,
+ * replacing §399's scale of weights; five bands since §526 are the owner's «ușor, mediu, greuț,
  * greu, foarte greu». One half-dial on the same 24-unit grid as every other glyph (`RoadIcon`), one
  * `<svg>` — what `GlyphChip`'s clone and `.MuiChip-icon`'s sizing expect — and one icon-width
  * wide, where §399's scale was one icon-width per level and five would have been five.
@@ -21,7 +21,7 @@ import { DIFFICULTY_BANDS, DIFFICULTY_STEPS } from "../domain/difficulty";
  * faint, at `theme.palette.action.disabledOpacity` (MUI's own 0.38, the fraction a disabled
  * control already uses), so neither scheme needs a value of its own.
  *
- * **Fifteen levels since §NNN** — five bands of three steps. `band` lights the segments; `step`
+ * **Fifteen levels since §526** — five bands of three steps. `band` lights the segments; `step`
  * places the needle inside the band's own segment (its easier end, its middle, its harder end) and
  * lights that many of three dots under the hub — «Mediu, treapta 3» is three lit segments, the
  * needle at the right of the third, and three lit dots. Without a `step` (a filter box, the

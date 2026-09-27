@@ -28,7 +28,7 @@ import { LanguageTabs } from "./TextBoxes";
  * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
  * moved whole. What they run on, how hard, how
  * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
- * seen — a separate question from the meeting point (§49). How hard is asked in «Ce fel de eveniment» since §NNN,
+ * seen — a separate question from the meeting point (§49). How hard is asked in «Ce fel de eveniment» since §526,
  * with the band and its step side by side. All optional, so folded on both pages. "Nespecificat" is a real answer on the surface select:
  * the page omits the row rather than guessing (migration `0018`).
  *

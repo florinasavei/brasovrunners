@@ -208,7 +208,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
-      // «Întrebări frecvente»'s questions (§NNN): one screen, written here by hand, like «Echipa»'s.
+      // «Întrebări frecvente»'s questions (§525): one screen, written here by hand, like «Echipa»'s.
       "/admin/pages/faq",
       // The members' pages (§524): one screen for both texts, by hand.
       "/admin/pages/members",
@@ -242,7 +242,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // A group run's optional self-declaration (§393): signed, never edited here.
       "/events/[slug]/declaration",
       "/events/[slug]/register",
-      // «Întrebări frecvente» (§NNN): a platform page like «Echipa», never one the CMS makes.
+      // «Întrebări frecvente» (§525): a platform page like «Echipa», never one the CMS makes.
       "/faq",
       "/gallery",
       "/gallery/[slug]",

@@ -39,7 +39,7 @@ import StatusCard, { type StatusNotice } from "./StatusBox";
  * «Alergare de grup · Programat · Gratuit».
  * It is drawn for every role — a words-only reader may own the discount note (§394).
  *
- * **The difficulty is asked here since §NNN** — the band («Ușor» … «Foarte greu») and its step
+ * **The difficulty is asked here since §526** — the band («Ușor» … «Foarte greu») and its step
  * (1 · 2 · 3) side by side from `sm`: with the type, what kind of outing this is. The closed line
  * names it last, «Mediu 2», and says nothing while the club has not said.
  *
@@ -68,12 +68,12 @@ export default async function KindBox({
   /** One sentence per type, for the note under the select (§170). */
   const typeNotes = Object.fromEntries(EVENT_TYPES.map((type) => [type, t(`editor.typeNotes.${type}`)]));
   const separator = (t.raw("editor.boxes.summary") as { separator: string }).separator;
-  // The level on the club's scale of fifteen (§NNN), as the two controls show it: its band and its step.
+  // The level on the club's scale of fifteen (§526), as the two controls show it: its band and its step.
   const level = event ? difficultyLevelOf(event) : null;
   const band = level === null ? null : difficultyBandOf(level);
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const difficultyLine = band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null;
-  // The type, the status and the cost (§466), and the difficulty when stated (§NNN): what this box asks, on its closed line.
+  // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
   const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine]
     .filter((part): part is string => Boolean(part))
     .join(separator);
@@ -121,7 +121,7 @@ export default async function KindBox({
               warning
             />
           )}
-          {/* How hard (§NNN): the band and its step, side by side from `sm` — the level on the
+          {/* How hard (§526): the band and its step, side by side from `sm` — the level on the
               club's scale of fifteen, which «Ghid» explains. */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
             <GlyphSelect

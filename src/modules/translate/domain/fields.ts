@@ -16,7 +16,7 @@
  * - the organizer's note on an update, the cancellation's reason, a message to the participants;
  * - «Echipa» (§474, §482): a card's role, its words about the person and its links' labels, and
  *   the page's introduction — one form per card, each posting the same names;
- * - «Întrebări frecvente» (§NNN): each card's question, «Categorie» and answer (`faq[<n>].…`), and
+ * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
  *   the page's introduction — the whole page one form.
  *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
@@ -56,14 +56,14 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^roleEn$/,
   /^links\[\d{1,2}\]\.labelEn$/,
   /^(bio|intro)EnBody$/,
-  // «Întrebări frecvente» (§NNN): a card's question, its category and its answer.
+  // «Întrebări frecvente» (§525): a card's question, its category and its answer.
   /^faq\[\d{1,3}\]\.(question|category)En$/,
   /^faq\[\d{1,3}\]\.answerEnBody$/,
 ];
 
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
- * (§474), and a question's answer on «Întrebări frecvente» (§NNN).
+ * (§474), and a question's answer on «Întrebări frecvente» (§525).
  */
 const TEAM_RICH_TEXT = /^(?:bio|intro|faq\[\d{1,3}\]\.answer)EnBody$/;
 

@@ -125,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // «Întrebări frecvente» (§NNN), once per locale — «Echipa»'s rule: published with a question on it.
+  // «Întrebări frecvente» (§525), once per locale — «Echipa»'s rule: published with a question on it.
   if ((await readWithLastGood("sitemap:faq", async () => faqPageOnSite(await cachedFaqPage(routing.defaultLocale)), now)).value) {
     for (const locale of routing.locales) {
       entries.push({

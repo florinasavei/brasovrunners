@@ -3,7 +3,7 @@ import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, uuid }
 import { staffUsers } from "./staff-users";
 
 /**
- * «Întrebări frecvente» / "FAQ" (§NNN): the questions a runner asks the club before a first run,
+ * «Întrebări frecvente» / "FAQ" (§525): the questions a runner asks the club before a first run,
  * one row each, on a platform page of its own — like «Echipa» (§459), not a standing page the club
  * writes from nothing, because the page has a fixed shape (a question, its answer, in folds,
  * grouped under the club's categories) and a search engine reads it as an `FAQPage` only when that

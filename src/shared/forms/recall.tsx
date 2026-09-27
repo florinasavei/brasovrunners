@@ -189,7 +189,7 @@ export function RecallDetails({ children, sx }: { children: ReactNode; sx?: BoxP
 
 /**
  * A plain checkbox that comes back as it was ticked, posting `on` (§315): «Pe site» and «Șterge
- * la salvare» on a card of «Întrebări frecvente» (§NNN). `defaultChecked` is what the page says;
+ * la salvare» on a card of «Întrebări frecvente» (§525). `defaultChecked` is what the page says;
  * after a refusal it is whether the box was posted ticked.
  */
 export function RecallCheckbox({

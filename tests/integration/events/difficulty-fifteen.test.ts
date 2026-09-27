@@ -13,7 +13,7 @@ import { difficultyLevelOf } from "@/modules/events/domain/difficulty";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-041-01 (`DECISIONS.md` §NNN) — the difficulty as the owner's five bands of three steps
+ * BR-REQ-041-01 (`DECISIONS.md` §526) — the difficulty as the owner's five bands of three steps
  * (ușor, mediu, greuț, greu, foarte greu), one level column on the club's scale of fifteen, end to
  * end on PGlite: migration `0104_difficulty_level` over rows the previous release wrote, and the
  * editor's services writing the level (and the retired column's best-effort word beside it).
@@ -23,7 +23,7 @@ const MIGRATIONS = "src/db/migrations";
 const TAG = "0104_difficulty_level";
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
-describe("§NNN migration 0104 — the old five words onto the owner's scale", () => {
+describe("§526 migration 0104 — the old five words onto the owner's scale", () => {
   let client: PGlite;
   let folder: string;
   const ids: Record<string, string> = {};
@@ -92,7 +92,7 @@ describe("§NNN migration 0104 — the old five words onto the owner's scale", (
   });
 });
 
-describe("§NNN migration 0104 in the same run as 0078 — a database migrated from further back", () => {
+describe("§526 migration 0104 in the same run as 0078 — a database migrated from further back", () => {
   it("backfills without naming an enum value 0078 added in the same transaction (55P04)", async () => {
     const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
     const position = journal.entries.findIndex((entry) => entry.tag === "0078_difficulty_five");
@@ -144,7 +144,7 @@ const FIELDS = {
   costUrl: "",
 } as const;
 
-describe("§NNN the editor writes the level, and the retired column's best-effort word beside it", () => {
+describe("§526 the editor writes the level, and the retired column's best-effort word beside it", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
