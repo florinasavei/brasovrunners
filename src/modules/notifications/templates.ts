@@ -10,7 +10,6 @@ import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst, formatBirthDate } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
@@ -984,7 +983,7 @@ const T = {
       subject: (d: TemplateData) => `Declarația ta pe propria răspundere — ${d.eventTitle ?? "alergarea de grup"}`,
       body: (d: TemplateData) => [
         `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
-        `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Pe platforma clubului, declarația se șterge la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare.`,
+        `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Pe platforma clubului, declarația se păstrează până ne ceri s-o ștergem.`,
       ],
     },
     groupRunDeclarationArchive: {
@@ -994,7 +993,7 @@ const T = {
       body: (d: TemplateData) => [
         `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}.`,
         // The legitimate-interest, three-year choice of the notice, and the right to object (§419).
-        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la alergare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare, când platforma o șterge.`,
+        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la alergare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până când alergătorul cere ștergerea ei; atunci o ștergi de acolo, cu motivul, și copia de aici.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1404,7 +1403,7 @@ const T = {
       subject: (d: TemplateData) => `Your self-declaration — ${d.eventTitle ?? "the group run"}`,
       body: (d: TemplateData) => [
         `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
-        `Signing it was optional and registers you for nothing: come to the run as usual. On the club's platform the declaration is deleted ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run.`,
+        `Signing it was optional and registers you for nothing: come to the run as usual. On the club's platform the declaration is kept until you ask us to delete it.`,
       ],
     },
     groupRunDeclarationArchive: {
@@ -1412,7 +1411,7 @@ const T = {
       greeting: () => "Hello,",
       body: (d: TemplateData) => [
         `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
-        `The club's archive copy. Keep it in the club's mailbox for ${archivePeriod("en")} from the run, as the privacy notice says, then delete it from here, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, until ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run, when the platform deletes it.`,
+        `The club's archive copy. Keep it in the club's mailbox for ${archivePeriod("en")} from the run, as the privacy notice says, then delete it from here, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, until the runner asks for it to be deleted; then erase it there, with the reason, and this copy too.`,
       ],
     },
     clubConfirmationNotice: {

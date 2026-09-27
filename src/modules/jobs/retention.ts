@@ -13,7 +13,7 @@ import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
+import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { RETENTION_PERIODS } from "./domain/retention-periods";
 
@@ -24,7 +24,8 @@ import { RETENTION_PERIODS } from "./domain/retention-periods";
  *
  *     identity document, health note,  7 days after the event's start (cleared, the rows stay)
  *     emergency contact                  (the contact since §421)
- *     a group run's self-declarations  7 days after the event's start (the rows go; §393)
+ *     a group run's identity document  7 days after the event's start (cleared; the declaration
+ *                                      stays until the signer asks for its deletion; §393, §NNN)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
  *     throttle buckets                 1 day
@@ -120,16 +121,16 @@ export const RETENTION = {
    */
   identityAndHealthDaysAfterEvent: RETENTION_PERIODS.identityAndHealthDaysAfterEvent,
   /**
-   * A group run's optional self-declaration (§393) goes whole seven days after the run's start —
-   * the row, the name, the identity document and the address, and the messages that carry them.
-   * It exists for the run: nobody registered, no kit was handed out, and there is no three-year
-   * record of a registration for it to be the evidence of. The signer keeps the PDF that was
-   * emailed; the club's archive copy has the document masked (§320). The same seven days as the
-   * identity document above, so the run's page and the privacy notice can say one number. The
-   * number itself lives in `group-run-declarations/domain.ts`, where the pages and the emails
-   * read it too.
+   * A group run's optional self-declaration (§393) is **kept until the signer asks for its
+   * deletion** (§NNN, reversing §393's seven days): it is the club's evidence that the runner was
+   * told the run's risks and took them on, and a claim about a run can come long after it. No
+   * window deletes it; the Administrator's erase does, on the signer's request (BR-REQ-037-06's
+   * rule: deliberate, per row, audited). Its outbox rows follow the ordinary windows below. What
+   * does go at seven days is an identity document typed under a text approved before §418 took
+   * `{{idDocument}}` off — the same seven days as the race's above. The number lives in
+   * `group-run-declarations/domain.ts`, where the signing page reads it too.
    */
-  groupRunDeclarationsDaysAfterEvent: GROUP_RUN_DECLARATION_RETENTION_DAYS,
+  groupRunIdDocumentDaysAfterEvent: GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
 } as const;
@@ -151,8 +152,8 @@ export type PruneCounts = {
   emergencyContacts: number;
   /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
   minorSocials: number;
-  /** A group run's self-declarations, gone seven days after the run (§393). */
-  groupRunDeclarations: number;
+  /** Group-run self-declarations whose identity document was cleared, seven days after the run (§NNN). */
+  groupRunIdDocuments: number;
   auditLogs: number;
   /** Newsletter addresses never confirmed, and the newsletter's links nobody can use any more (§445). */
   newsletter: number;
@@ -164,7 +165,7 @@ export type PruneCounts = {
  */
 export const PRUNE_STEPS = [
   "identity-and-health",
-  "group-run-declarations",
+  "group-run-identity-documents",
   "minor-socials",
   "job-runs",
   "rate-limit-buckets",
@@ -225,7 +226,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     healthNotes: 0,
     emergencyContacts: 0,
     minorSocials: 0,
-    groupRunDeclarations: 0,
+    groupRunIdDocuments: 0,
     auditLogs: 0,
     newsletter: 0,
   };
@@ -289,32 +290,22 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    A group run's optional self-declarations (§393), seven days after the run: the whole row, and
-    first the outbox rows about it, which carry the signer's address — a message not sent by then
-    has nothing left to send. Second, beside the identity documents, for the same reason: an
-    identity number is the data whose window matters most.
+    A group run's optional self-declaration is kept until the signer asks for its deletion (§NNN):
+    no step here takes the row. Only an identity document typed under a text that still named
+    `{{idDocument}}` (before §418) is cleared, seven days after the run, as the race's is — second,
+    beside it, for the same reason: an identity number is the data whose window matters most.
   */
-  await step("group-run-declarations", async (tx) => {
-    const stale = tx
-      .select({ id: groupRunDeclarations.id })
-      .from(groupRunDeclarations)
-      .innerJoin(events, eq(events.id, groupRunDeclarations.eventId))
-      .where(lt(events.startsAt, daysBefore(now, RETENTION.groupRunDeclarationsDaysAfterEvent)));
-    // Compared as text, so a payload of any other shape is simply not matched.
-    await tx
-      .delete(emailOutbox)
-      .where(
-        inArray(
-          sql`${emailOutbox.payloadJson}->>'groupRunDeclarationId'`,
-          tx
-            .select({ id: sql<string>`${groupRunDeclarations.id}::text` })
-            .from(groupRunDeclarations)
-            .innerJoin(events, eq(events.id, groupRunDeclarations.eventId))
-            .where(lt(events.startsAt, daysBefore(now, RETENTION.groupRunDeclarationsDaysAfterEvent))),
-        ),
-      );
-    const deleted = await tx.delete(groupRunDeclarations).where(inArray(groupRunDeclarations.id, stale)).returning({ id: groupRunDeclarations.id });
-    counts.groupRunDeclarations = deleted.length;
+  await step("group-run-identity-documents", async (tx) => {
+    const ran = tx
+      .select({ id: events.id })
+      .from(events)
+      .where(lt(events.startsAt, daysBefore(now, RETENTION.groupRunIdDocumentDaysAfterEvent)));
+    const cleared = await tx
+      .update(groupRunDeclarations)
+      .set({ idDocument: null })
+      .where(and(isNotNull(groupRunDeclarations.idDocument), inArray(groupRunDeclarations.eventId, ran)))
+      .returning({ id: groupRunDeclarations.id });
+    counts.groupRunIdDocuments = cleared.length;
   });
 
   /*
@@ -539,7 +530,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.healthNotes +
     counts.emergencyContacts +
     counts.minorSocials +
-    counts.groupRunDeclarations +
+    counts.groupRunIdDocuments +
     counts.auditLogs +
     counts.newsletter
   );

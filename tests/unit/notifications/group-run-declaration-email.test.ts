@@ -46,7 +46,9 @@ describe("§393 the group run's declaration messages", () => {
       expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la alergare`);
       expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the run`);
       expect(email.text).toContain("dacă alergătorul se opune");
-      expect(email.text).toContain(`până la ${durationPhrase("ro", RETENTION.groupRunDeclarationsDaysAfterEvent, "days")} după alergare`);
+      // Kept on the platform until the runner asks (§NNN), never a number of days.
+      expect(email.text).toContain("până când alergătorul cere ștergerea ei");
+      expect(email.text).toContain("until the runner asks for it to be deleted");
       expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);
     }
   });

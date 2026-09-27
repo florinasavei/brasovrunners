@@ -31,7 +31,8 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * for a document only when the text names one, asks for none. The basis is the club's legitimate
  * interest in evidence (art. 6(1)(f)), and art. 9(2)(f) for the health statement — the privacy
  * notice's §3 says the same — so the rights list names objection and restriction, and the data
- * paragraph names the archive copy's three years beside the platform's seven days.
+ * paragraph names the archive copy's three years beside the platform's keeping it until the
+ * signer asks for its deletion (§NNN, reversing §393's seven days).
  *
  * **Adults only, for now.** The signer declares for themselves: `{{participant}}` is the signer's
  * own name. A minor's signature beside a parent's
@@ -49,8 +50,8 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * **No hardcoded value (§357).** One approved text serves every group run of its surface, so
  * nothing names a run, a place, a date or a distance — those are merge fields — and the club is
  * named only by the four `<PLACEHOLDER>`s (§132): the legal name, the seat, the registration number
- * and the contact address. The retention period is the platform's own (`jobs/retention.ts`), the
- * same for every run because the code makes it so.
+ * and the contact address. The platform's retention is no period at all — kept until the signer
+ * asks (`jobs/retention.ts` sweeps no row, §NNN) — the same for every run because the code makes it so.
  */
 
 /** What both surfaces open with: who, which run, that it is optional and not a race. */
@@ -72,7 +73,7 @@ const openingEn = [
 const closingRo = [
   "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
   "Această declarație arată că am fost informat/ă despre riscurile de mai sus și că le accept, împreună cu obligațiile mele; nu mă lipsește de niciun drept pe care mi-l dă legea. Organizatorul nu poate fi tras la răspundere, în limitele permise de lege, pentru urmările propriilor mele alegeri pe traseu.",
-  "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestei alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Platforma clubului șterge declarația la șapte zile după alergare; copia din arhiva clubului se păstrează trei ani de la alergare (termenul general de prescripție, art. 2517 din Codul civil), apoi se șterge. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
+  "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestei alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Platforma clubului păstrează declarația până când cer ștergerea ei; copia din arhiva clubului se păstrează trei ani de la alergare (termenul general de prescripție, art. 2517 din Codul civil), apoi se șterge. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
   "Această declarație este semnată electronic: numele scris mai jos, bifa de acceptare, momentul semnării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună (semnătură electronică simplă, în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea).",
   "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>.",
 ];
@@ -80,7 +81,7 @@ const closingRo = [
 const closingEn = [
   "I take responsibility for my own safety, my equipment and the decisions I make on the course.",
   "This declaration shows that I have been informed of the risks above and that I accept them, together with my own obligations; it does not take away any right the law gives me. The organiser cannot be held liable, to the extent the law allows, for the consequences of my own choices on the course.",
-  "I am informed that the data in this declaration — my name and my email address — is processed by the organiser*, under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, as evidence that I was informed of this run's risks and accepted them, on the basis of the organiser's legitimate interest (art. 6(1)(f) GDPR), and the statement about my health only for the establishment or defence of legal claims (art. 9(2)(f) GDPR). A copy is sent to the email address I gave, and one to the club's archive. The club's platform deletes the declaration seven days after the run; the copy in the club's archive is kept for three years from the run (the general limitation period, art. 2517 of the Romanian Civil Code), then deleted. I have the rights of access, rectification, erasure, restriction and objection, and the right to complain to the Romanian supervisory authority (ANSPDCP); for them I write to <CONTACT EMAIL>.",
+  "I am informed that the data in this declaration — my name and my email address — is processed by the organiser*, under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, as evidence that I was informed of this run's risks and accepted them, on the basis of the organiser's legitimate interest (art. 6(1)(f) GDPR), and the statement about my health only for the establishment or defence of legal claims (art. 9(2)(f) GDPR). A copy is sent to the email address I gave, and one to the club's archive. The club's platform keeps the declaration until I ask for it to be deleted; the copy in the club's archive is kept for three years from the run (the general limitation period, art. 2517 of the Romanian Civil Code), then deleted. I have the rights of access, rectification, erasure, restriction and objection, and the right to complain to the Romanian supervisory authority (ANSPDCP); for them I write to <CONTACT EMAIL>.",
   "This declaration is signed electronically: the name written below, the acceptance tick, the moment of signing ({{signedAt}}) and the fingerprint of the text read are recorded together (a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them).",
   "*Organiser means <THE CLUB'S FULL LEGAL NAME>, with its registered seat at <REGISTERED ADDRESS>, <REGISTRATION NUMBER>.",
 ];

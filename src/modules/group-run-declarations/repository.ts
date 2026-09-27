@@ -7,8 +7,9 @@ import type { Locale } from "@/i18n/routing";
 
 /**
  * The rows of a group run's optional self-declarations (§393). No update: a signature is what it
- * was when it was made (§57). Rows leave by the retention sweep, the Administrator's erase, or with
- * their event.
+ * was when it was made (§57), apart from the identity document the retention sweep clears at seven
+ * days. Rows are kept until the signer asks for their deletion (§NNN): they leave by the
+ * Administrator's erase, or with their event.
  */
 
 export type NewGroupRunDeclaration = typeof groupRunDeclarations.$inferInsert;
@@ -86,7 +87,7 @@ export type SignedGroupRunDeclaration = NonNullable<Awaited<ReturnType<typeof fi
 /**
  * The outbox rows about an event's declarations (§393), deleted before the event goes: the
  * declarations cascade with it, and a message about one would then be a row that carries the
- * signer's address and can never render. The same match the erase and the retention sweep use —
+ * signer's address and can never render. The same match the erase uses —
  * the payload's id compared as text, so a payload of any other shape is simply not matched.
  */
 export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<string, unknown>>(
