@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.12-2026-09-27 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.11-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.12-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -846,7 +846,9 @@ result locally means a clean result in CI. Once the application exists, also run
 
 If `yarn check` fails for a reason you believe is wrong, fix the check rather than
 bypassing it. `git commit --no-verify` exists for emergencies, does not bypass CI, and leaves
-the problem for the next person.
+the problem for the next person. The one documented exception is a batch's landing commit
+(`docs/DISPATCHER.md` § Land a batch), whose branches all passed the hook and whose pull request
+CI checks with the full `yarn check` minutes later; every other commit keeps the hook (§504).
 
 ## 28. Daily Git flow
 

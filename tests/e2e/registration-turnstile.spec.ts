@@ -12,7 +12,7 @@ import {
 
 /**
  * BR-REQ-031-01, BR-REQ-041-01 — the send button held for Cloudflare's token, with the widget on
- * the page; `DECISIONS.md` §285, §304 and §NNN.
+ * the page; `DECISIONS.md` §285, §304 and §502.
  *
  * The owner, 2026-09-27, with the form showing «Verificăm o secundă că nu ești robot — trimitem noi
  * înscrierea imediat ce răspunde» under a widget that already said «Success!»: «Am rămas în acest
@@ -82,7 +82,7 @@ const postWithToken = (page: Page) =>
 const answer = (page: Page, order: TurnstileAnswerOrder = "write-then-call") =>
   page.evaluate((how) => (window as unknown as { __answerTurnstile: (order: string) => void }).__answerTurnstile(how), order);
 
-/** Every POST that carries the token, from now on: a held press must become exactly one (§NNN). */
+/** Every POST that carries the token, from now on: a held press must become exactly one (§502). */
 function tokenPosts(page: Page): string[] {
   const sent: string[] = [];
   page.on("request", (request) => {
@@ -130,7 +130,7 @@ async function openWithStandIn(page: Page, { blindField = false } = {}) {
   return Date.now();
 }
 
-test.describe("§NNN a press held for the anti-bot check is sent when the check answers", () => {
+test.describe("§502 a press held for the anti-bot check is sent when the check answers", () => {
   // Every case registers on the sample race (50 places): give the places back, or two local runs
   // fill it for the specs after them.
   test.afterAll(async ({}, testInfo) => cancelRegistrationsByEmailPrefix(addressPrefix(testInfo.project.name)));

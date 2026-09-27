@@ -31,7 +31,7 @@ const PORT = Number(process.env.E2E_PORT ?? (DEV ? 4784 : 4783));
 const baseURL = `http://localhost:${PORT}`;
 
 /**
- * A second server over the same build and the same database, with the anti-bot check ON (§NNN).
+ * A second server over the same build and the same database, with the anti-bot check ON (§502).
  *
  * The suite's own server runs without Turnstile keys, on purpose: every form there is sent without
  * waiting for Cloudflare, and no spec depends on a third party. But the one defect that lived in

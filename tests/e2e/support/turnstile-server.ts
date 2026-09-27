@@ -1,5 +1,5 @@
 /**
- * The suite's second server, the one that runs the anti-bot check (§NNN), and what a spec needs to
+ * The suite's second server, the one that runs the anti-bot check (§502), and what a spec needs to
  * drive its widget. Imports nothing: `playwright.config.ts` reads the port and the keys from here.
  *
  * The keys are Cloudflare's own published test values

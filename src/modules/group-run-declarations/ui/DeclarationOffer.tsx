@@ -5,14 +5,13 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
-import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
+import { signingOpen } from "../domain";
 
 /**
  * "Semnează declarația pe propria răspundere" on a group run's page (§393; the owner, 2026-09-25:
@@ -72,7 +71,7 @@ export default async function DeclarationOffer({
         {t("groupRunDeclaration.heading")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {t("groupRunDeclaration.line", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_RETENTION_DAYS, "days") })}
+        {t("groupRunDeclaration.line")}
       </Typography>
       <Button component="a" href={href} variant="outlined" size="small" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
         <DrawIcon aria-hidden="true" data-testid="declaration-offer-glyph" sx={glyphSx("small")} />

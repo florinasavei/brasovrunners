@@ -93,7 +93,7 @@ describe("§347 one event form for five features, on both pages", () => {
     }
     // And both actions hand the refusal back with the form, through the same name map.
     expect(
-      ACTIONS.match(/refused\(error, form, \{ fieldNames: \(refusal\) => eventFormFieldNames\(refusal, form\) \}\)/g)?.length ?? 0,
+      ACTIONS.match(/refused\(error, form, \{ fieldNames: eventFormFieldNames \}\)/g)?.length ?? 0,
     ).toBeGreaterThanOrEqual(2);
   });
 
@@ -159,31 +159,30 @@ describe("§347 one event form for five features, on both pages", () => {
   });
 });
 
-describe("§440 a group run's minimum age is its own box in «Traseul»", () => {
-  it("the reader takes `minAge` once, from the group run's box when the type is GROUP_RUN, else the race box", () => {
+describe("§505 the minimum age is one box in «Regulamentul» for every type", () => {
+  it("the reader takes `minAge` once, from `event.minAge`, whatever the type", () => {
     expect(RETURNED.match(/\bminAge:/g)?.length ?? 0).toBe(1);
     const line = RETURNED.slice(RETURNED.indexOf("minAge:"), RETURNED.indexOf("\n", RETURNED.indexOf("minAge:")));
-    expect(line).toMatch(/groupRunAgeBoxAnswers\(form\) \? value\("groupRunMinAge"\) : value\("minAge"\)/);
-    const predicate = ACTIONS.slice(ACTIONS.indexOf("function groupRunAgeBoxAnswers"));
-    expect(predicate.slice(0, predicate.indexOf("\n}"))).toMatch(/text\(form, "event\.type"\) === "GROUP_RUN" && form\.has\("event\.groupRunMinAge"\)/);
+    expect(line).toMatch(/minAge: value\("minAge"\),/);
+    expect(ACTIONS).not.toContain("groupRunMinAge");
+    expect(ACTIONS).not.toContain("groupRunAgeBoxAnswers");
   });
 
-  /*
-    §495: a refusal of the age names the box the reader can see. The save reads a group run's age
-    from «Traseul»; `fields.ts` reports it as `minAge`, which the form's names turned into the
-    race's hidden box — so the summary's link opened a block the group run does not show.
-  */
-  it("a refusal of a group run's age names its own box in «Traseul», by the same predicate the save reads", () => {
-    const names = ACTIONS.slice(ACTIONS.indexOf("const eventFormFieldNames"), ACTIONS.indexOf("function groupRunAgeBoxAnswers"));
-    expect(names).toContain('name === "event.minAge" && groupRunAgeBoxAnswers(form) ? "event.groupRunMinAge" : name');
-    expect(ACTIONS.match(/fieldNames: eventFormFieldNames\b/g) ?? []).toEqual([]);
-    expect(ACTIONS.match(/fieldNames: \(refusal\) => eventFormFieldNames\(refusal, form\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
-    expect(read("src/modules/content/events/ui/field-labels.ts")).toContain('"event.groupRunMinAge": inBox("course", t("editor.minAge"))');
-  });
-
-  it("CourseBox posts `event.groupRunMinAge` inside the GROUP_RUN-only block", () => {
-    const course = read(`${BOX_DIR}/CourseBox.tsx`);
-    const block = course.slice(course.indexOf('<OnlyForType type="GROUP_RUN"'));
-    expect(block.slice(0, block.indexOf("</OnlyForType>"))).toContain('name="event.groupRunMinAge"');
+  it("a refusal of the age names «Regulamentul»'s box, and no form posts a second age box", () => {
+    expect(read(`${UI_DIR}/field-labels.ts`)).toContain('"event.minAge": inProgrammeRules("rules", t("editor.minAge"))');
+    expect(UI).not.toContain("groupRunMinAge");
+    // Posted once, by the rules card, outside any type- or mode-only block.
+    expect(EVENT_FORM.match(/name="event\.minAge"/g)?.length ?? 0).toBe(1);
+    const text = read(`${BOX_DIR}/TextBoxes.tsx`);
+    const rules = text.slice(text.indexOf("export async function RulesBox"));
+    const body = rules.slice(0, rules.search(/\r?\n\}\r?\n/));
+    expect(body).toContain('name="event.minAge"');
+    const beforeBox = body.slice(0, body.indexOf('name="event.minAge"'));
+    expect(beforeBox).not.toContain("<OnlyForType");
+    expect(beforeBox).not.toContain("<OnlyForMode");
+    // The registration card and «Traseul» carry no age box of their own any more.
+    for (const file of ["RegistrationBox.tsx", "CourseBox.tsx"]) {
+      expect(read(`${BOX_DIR}/${file}`), file).not.toMatch(/name="event\.(minAge|groupRunMinAge)"/);
+    }
   });
 });

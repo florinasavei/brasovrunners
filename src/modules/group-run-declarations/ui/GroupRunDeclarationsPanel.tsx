@@ -10,8 +10,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
-import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
-import { ERASE_REASON_MAX, GROUP_RUN_DECLARATION_RETENTION_DAYS } from "../domain";
+import { ERASE_REASON_MAX } from "../domain";
 import type { GroupRunDeclarationListRow } from "../repository";
 
 /**
@@ -52,7 +51,7 @@ export default async function GroupRunDeclarationsPanel({
     >
       <Stack spacing={2} data-testid="group-run-declarations">
         <Typography variant="body2" color="text.secondary">
-          {t("groupRunDeclarations.help", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_RETENTION_DAYS, "days") })}
+          {t("groupRunDeclarations.help")}
         </Typography>
         {rows.length === 0 ? (
           <Typography variant="body2">{t("groupRunDeclarations.none")}</Typography>

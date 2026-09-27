@@ -3,44 +3,79 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.11-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.12-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
  *      in a row, so a check that registers late is not missed (§426) — stops unless every one is
  *      green, and merges it into `qa` — an already-merged batch PR is taken as done, and the run
  *      continues from step 3;
- *   3. opens the `qa → main` release PR, or takes the one already open;
- *   4. waits for `qa`'s docs-check run on that merge, rerunning it once when the only failure is the
- *      Google Fonts download the build makes (a flake, not the code);
+ *   3. waits for `qa`'s docs-check run on that merge, found by its commit, until its status says
+ *      completed (§504). It is short when the batch PR's run tested the same tree: that run
+ *      recorded the tree, and this one skips its heavy jobs;
+ *   4. only then opens the `qa → main` release PR, or takes the one already open — so the release
+ *      PR's run finds `qa`'s tree recorded and skips too, rather than testing it a third time;
  *   5. waits the same way for the release PR's checks, stops on a red one — a Vercel deployment
  *      check's red is reported and not stopped on, since the qa run has judged the code — and
  *      merges the release PR;
- *   6. approves the gated `migrate.yml` run on `main` if one is waiting (`DECISIONS.md` §31) and waits for it;
+ *   6. if the release changes a migration, waits for the gated `migrate.yml` run on `main`, approves
+ *      it (`DECISIONS.md` §31) and waits for it to complete; if it changes none, waits for nothing;
  *   7. waits until production's `/api/health` reports the new baseline — the same answer `yarn smoke` reads.
+ *
+ * It measures itself (§504): each step's minutes and the total are printed at the end — and at a
+ * stop, with the step it stopped in — and appended as one JSON line to `SHIP_TIMES_FILE`, by
+ * default `brasovrunners-ship-times.jsonl` in the system's temporary directory.
  *
  * The owner authorised every one of these steps (merging into qa, the release PR, approving the production
  * migration); a person runs the same command. It needs `gh` signed in with the right to merge and to approve
- * the `production` environment.
+ * the `production` environment, and `git` with the `origin` remote.
  *
  * Production's origin is `SHIP_PRODUCTION_URL`, from the environment or the git-ignored `.env.local`, never
  * from this file: the repository is public and the club's domain lives in `SETUP.md` §26 alone.
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { judgeChecks, waitForSettledChecks } from "./ship-checks.mjs";
+import { createClock, formatDuration, judgeChecks, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
 
+// Each step's time as it ends (m:ss), and the whole at the end or at a stop (§504).
+const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
 const [PR, NEW, PREV, TITLE] = process.argv.slice(2);
-if (!PR || !NEW || !PREV || !TITLE) stop('Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<title>"');
+if (!PR || !NEW || !PREV || !TITLE) {
+  console.error('Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<title>"');
+  process.exit(1);
+}
 
 const sleep = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
+/** The clock's lines on the console and one JSON line in the times file; never fails the release. */
+function measured(outcome) {
+  const { steps, totalMs } = clock.summary();
+  console.log(`\n== ${NEW}: ${outcome}, step by step (m:ss)`);
+  for (const line of clock.report()) console.log(line);
+  const file = process.env.SHIP_TIMES_FILE || join(tmpdir(), "brasovrunners-ship-times.jsonl");
+  const record = {
+    at: new Date().toISOString(),
+    release: NEW,
+    batchPr: Number(PR),
+    outcome,
+    totalSeconds: Math.round(totalMs / 1000),
+    steps: steps.map((s) => ({ name: s.name, seconds: Math.round(s.ms / 1000) })),
+  };
+  try {
+    appendFileSync(file, `${JSON.stringify(record)}\n`);
+    console.log(`  (appended to ${file})`);
+  } catch {
+    // A times file that cannot be written is not a reason to fail a release.
+  }
+}
+
 function stop(message) {
   console.error(`\n  STOP: ${message}\n`);
+  measured(`stopped: ${message.split("\n")[0]}`);
   process.exit(1);
 }
 
@@ -77,7 +112,7 @@ async function until(test, every, times) {
   for (let i = 0; i < times; i++) {
     const value = await test();
     if (value) return value;
-    await sleep(every);
+    if (i < times - 1) await sleep(every);
   }
   return null;
 }
@@ -105,9 +140,32 @@ async function settledChecks(pr, { tolerate } = {}) {
   if (judged.verdict !== "green") stop(`PR #${pr} is not green: ${judged.red.join(", ")}`);
 }
 
+/** The newest push run of `workflow` on exactly `sha`, or null while none has appeared. */
+function pushRunOf(workflow, sha) {
+  const runs = JSON.parse(
+    ghMayFail("run", "list", "--workflow", workflow, "--commit", sha, "--event", "push", "--limit", "5", "--json", "databaseId,status,conclusion") ||
+      "[]",
+  );
+  return runs.length ? runs.reduce((a, b) => (b.databaseId > a.databaseId ? b : a)) : null;
+}
+
+/**
+ * Whether the release changes a migration — the same question `migrate.yml`'s `paths` filter asks
+ * of the push to `main`: the files that differ between `main` and `qa`. Null when git cannot say,
+ * and then the migration run is waited for as if it were expected.
+ */
+function releaseChangesMigrations() {
+  const fetched = spawnSync("git", ["fetch", "--quiet", "origin", "main", "qa"], { encoding: "utf8" });
+  if (fetched.status !== 0) return null;
+  const diff = spawnSync("git", ["diff", "--name-only", "origin/main", "origin/qa", "--", "src/db/migrations"], { encoding: "utf8" });
+  if (diff.status !== 0) return null;
+  return diff.stdout.trim().length > 0;
+}
+
 const BASE = productionUrl();
 const REPO = gh("repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner");
 
+clock.step(`${PREV} on production`);
 console.log(`== waiting for ${PREV} on production`);
 const onProduction = await until(async () => {
   const body = await health(BASE);
@@ -115,6 +173,7 @@ const onProduction = await until(async () => {
 }, 30, 120);
 if (!onProduction) stop(`production never reported ${PREV}`);
 
+clock.step(`batch PR #${PR}`);
 console.log(`== batch PR #${PR}`);
 const batchInfo = JSON.parse(gh("pr", "view", PR, "--json", "state,baseRefName,mergeCommit"));
 let batchMerge;
@@ -129,14 +188,23 @@ if (batchInfo.state === "MERGED" && batchInfo.baseRefName === "qa") {
   batchMerge = gh("pr", "view", PR, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 }
 
-console.log("== the qa run on that merge");
-const qaRun = await until(() => {
-  const runs = JSON.parse(ghMayFail("run", "list", "--branch", "qa", "--limit", "10", "--json", "databaseId,name,headSha") || "[]");
-  return runs.find((r) => r.name === "docs-check" && r.headSha === batchMerge)?.databaseId;
-}, 15, 40);
-if (!qaRun) stop(`no docs-check run appeared on qa for ${batchMerge.slice(0, 8)}`);
-console.log(`qa run: ${qaRun}`);
+clock.step("qa run");
+console.log(`== the qa run on ${batchMerge.slice(0, 8)}`);
+const qaRun = await waitForRun(() => pushRunOf("docs-check.yml", batchMerge), {
+  sleep,
+  every: 15,
+  polls: 360, // ninety minutes
+  maxMissing: 40, // ten minutes without the run appearing
+  onRead: (r, i) => {
+    if (i % 8 === 0) console.log(`  qa run ${r.databaseId}: ${String(r.status).toLowerCase()}`);
+  },
+});
+if (qaRun.status === "missing") stop(`no docs-check run appeared on qa for ${batchMerge.slice(0, 8)}`);
+if (qaRun.status === "timeout") stop(`the qa run ${qaRun.run.databaseId} was still ${qaRun.run.status} after ninety minutes`);
+console.log(`qa run ${qaRun.run.databaseId}: ${qaRun.conclusion}`);
+if (qaRun.conclusion !== "success") stop(`the release is not opened: the qa run ${qaRun.run.databaseId} ended ${qaRun.conclusion || "without a conclusion"}`);
 
+clock.step("release PR");
 let release = ghMayFail("pr", "list", "--base", "main", "--head", "qa", "--json", "number", "-q", ".[0].number");
 if (!release) {
   const body = join(tmpdir(), `ship-${PR}.md`);
@@ -144,50 +212,47 @@ if (!release) {
   const url = gh("pr", "create", "--base", "main", "--head", "qa", "--title", `Release ${NEW}: ${TITLE}`, "--body-file", body);
   release = url.split("/").pop();
 }
-console.log(`release PR: #${release}`);
-
-let conclusion = "";
-for (let attempt = 1; attempt <= 2; attempt++) {
-  ghMayFail("run", "watch", String(qaRun), "--interval", "30");
-  conclusion = gh("run", "view", String(qaRun), "--json", "conclusion", "-q", ".conclusion");
-  console.log(`qa run attempt ${attempt}: ${conclusion}`);
-  if (conclusion === "success" || attempt === 2) break;
-  if (!ghMayFail("run", "view", String(qaRun), "--log-failed").includes("font/google")) break;
-  console.log("the Google Fonts flake: rerunning once");
-  ghMayFail("run", "rerun", String(qaRun), "--failed");
-  await sleep(30);
-}
-if (conclusion !== "success") stop(`the release is not merged: the qa run ended ${conclusion}`);
+console.log(`== release PR #${release}`);
 
 // The qa run above judged the code; a Vercel deployment check on the release PR can be red for
 // Hobby's daily deploy limit alone, so its red is reported and not stopped on.
 await settledChecks(release, { tolerate: /^Vercel\b/i });
+const migrationExpected = releaseChangesMigrations();
 gh("pr", "merge", release, "--merge");
 const releaseMerge = gh("pr", "view", release, "--json", "mergeCommit", "-q", ".mergeCommit.oid");
 
-console.log("== the migration run on main, if any");
-const migration = await until(() => {
-  const runs = JSON.parse(ghMayFail("run", "list", "--branch", "main", "--workflow", "migrate.yml", "--limit", "5", "--json", "databaseId,status,headSha") || "[]");
-  return runs.find((r) => r.headSha === releaseMerge);
-}, 15, 12);
-if (!migration) console.log("no migration run for this release");
-else {
-  const id = String(migration.databaseId);
-  const waiting = await until(() => {
-    const status = gh("run", "view", id, "--json", "status", "-q", ".status");
-    return status === "waiting" || status === "completed" ? status : null;
-  }, 15, 40);
-  if (waiting === "waiting") {
-    const env = gh("api", `repos/${REPO}/actions/runs/${id}/pending_deployments`, "-q", ".[0].environment.id");
-    gh("api", "-X", "POST", `repos/${REPO}/actions/runs/${id}/pending_deployments`, "-F", `environment_ids[]=${env}`, "-f", "state=approved", "-f", `comment=Release ${NEW}`);
-    console.log(`approved migration run ${id}`);
+clock.step("migration");
+if (migrationExpected === false) {
+  console.log("== no migration in this release: migrate.yml does not run");
+} else {
+  console.log(`== the migration run on main${migrationExpected === null ? " (git could not say whether one is due)" : ""}`);
+  let approved = false;
+  const migration = await waitForRun(() => pushRunOf("migrate.yml", releaseMerge), {
+    sleep,
+    every: 15,
+    polls: 240, // an hour
+    maxMissing: migrationExpected ? 40 : 12, // ten minutes when one is due, three when unsure
+    onRead: (r) => {
+      if (approved || String(r.status).toLowerCase() !== "waiting") return;
+      const id = String(r.databaseId);
+      const env = gh("api", `repos/${REPO}/actions/runs/${id}/pending_deployments`, "-q", ".[0].environment.id");
+      gh("api", "-X", "POST", `repos/${REPO}/actions/runs/${id}/pending_deployments`, "-F", `environment_ids[]=${env}`, "-f", "state=approved", "-f", `comment=Release ${NEW}`);
+      approved = true;
+      console.log(`approved migration run ${id}`);
+    },
+  });
+  if (migration.status === "missing") {
+    if (migrationExpected) stop(`the release changes a migration, but no migrate.yml run appeared on main for ${releaseMerge.slice(0, 8)} in ten minutes`);
+    console.log("no migration run for this release");
+  } else if (migration.status === "timeout") {
+    stop(`the migration run ${migration.run.databaseId} was still ${migration.run.status} after an hour`);
+  } else {
+    console.log(`migration: ${migration.conclusion}`);
+    if (migration.conclusion !== "success") stop(`the migration run ${migration.run.databaseId} ended ${migration.conclusion}; production still runs the previous build`);
   }
-  ghMayFail("run", "watch", id, "--interval", "15");
-  const migrated = gh("run", "view", id, "--json", "conclusion", "-q", ".conclusion");
-  console.log(`migration: ${migrated}`);
-  if (migrated !== "success") stop(`the migration run ${id} ended ${migrated}; production still runs the previous build`);
 }
 
+clock.step(`${NEW} on production`);
 console.log(`== waiting for ${NEW} on production`);
 const live = await until(async () => {
   const body = await health(BASE);
@@ -195,3 +260,5 @@ const live = await until(async () => {
 }, 20, 60);
 if (!live) stop(`production did not report ${NEW} in time — check the Vercel deployment`);
 console.log(`production: ${live.match(/"status":"[a-z]+"/)?.[0] ?? "?"} ${NEW}`);
+clock.end();
+measured("released");

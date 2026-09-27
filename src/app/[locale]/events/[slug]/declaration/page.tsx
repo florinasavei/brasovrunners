@@ -18,7 +18,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
-import { GROUP_RUN_DECLARATION_RETENTION_DAYS, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
+import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
 import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
@@ -240,7 +240,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               typeLabel={tDeclare("declare.idDocumentType")}
               typeHelp={tDeclare("declare.idDocumentTypeHelp")}
               label={fieldLabel("idDocument")}
-              help={t("groupRunDeclaration.page.idDocumentHelp", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_RETENTION_DAYS, "days") })}
+              help={t("groupRunDeclaration.page.idDocumentHelp", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, "days") })}
               placeholder={tDeclare("declare.idDocumentPlaceholder")}
               kinds={documentKinds}
               defaultKind={draftKind}

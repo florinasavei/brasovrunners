@@ -20,7 +20,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.11` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.12` |
 
 ## Next, queued
 
@@ -54,6 +54,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.12` | the registration form's held press sends again once Turnstile answers, proven with Cloudflare's test keys in an end-to-end spec (§506) · the group run's optional self-declaration is kept while the person takes part and deleted at their request — the seven-day purge, its sentences, the legal templates and the emails follow (§507) · the release tests one tree once — a passing run records its tree and a later run of the same tree within 24 h skips the heavy jobs, eight shards on every pull request, `yarn ship` polls each run to its end and times every step, the landing commit skips the hook after docs:check (§508) · «Vârsta minimă de participare» is one field in the Regulament card for every event type and the page says it for every type (§509) |
+| `BR-V2.12` | the registration form's held press sends again once Turnstile answers, proven with Cloudflare's test keys in an end-to-end spec (§502) · the group run's optional self-declaration is kept while the person takes part and deleted at their request — the seven-day purge, its sentences, the legal templates and the emails follow (§503) · the release tests one tree once — a passing run records its tree and a later run of the same tree within 24 h skips the heavy jobs, eight shards on every pull request, `yarn ship` polls each run to its end and times every step, the landing commit skips the hook after docs:check (§504) · «Vârsta minimă de participare» is one field in the Regulament card for every event type and the page says it for every type (§505) |
 | `BR-V2.11` | chore/migration-0095-film-columns-dropped (§494) · chore/queue-after-v203-rest (§495) · fix/toasts-on-top-and-translate-done-toast (§496) · fix/deepl-credit-from-usage-api (§497) · fix/event-page-conditions-fold-and-public-buttons (§498) · fix/declaration-documents-say-their-version (§499) · feat/start-list-socials (§500) · chore/cloud-session-setup (§501) |
 | `BR-V2.10` | the review nits of V2.08–V2.09 — orphaned keys, the guide's exact button words, stale comments, the calendar's desktop gap (§490) · the film columns and the six-link check retired (migration `0093`), the twelve-link check (`0094`), the snapshot chain repaired at its newest link (§491) · end-to-end coverage for «Din galerie», the whole-card tap and the calendar head, run against a build (§492) · the V2.03 behaviour nits — a Gmail cap deferral is not a stall, a permanent SMTP refusal is FAILED, one connection per drain, the governor's RED edges, the newsletter alert under the lock, twins named (§493) |
 | `BR-V2.09` | «Aspectul site-ului» — the public pages' light background tint as a club setting, presets from the club's colours, a contrast guard (§488) · the public pages measured on a production build and the top wins taken — query counts pinned by a test, dead code removed (§489) |

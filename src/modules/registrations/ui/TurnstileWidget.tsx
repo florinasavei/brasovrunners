@@ -48,7 +48,7 @@ import { isPressHeld } from "@/shared/ui/held-press";
  * a box, and says nothing at all when its script is blocked, when it fails, when its token lapses
  * or when the box waited too long — and the send button (`SubmitButton`'s `awaitsBotCheck`) was
  * left to guess from an empty field. Now each of Cloudflare's documented callbacks names a state
- * (`BOT_CHECK_STATES`), the line under the widget says it in the reader's language, and:
+ * (`BOT_CHECK_WIDGET_STATES`), the line under the widget says it in the reader's language, and:
  *
  * - a failure, a lapse, a script that never came and a check that takes too long offer
  *   «Reîncearcă verificarea» — `turnstile.reset()` on the widget, or the script injected again;
@@ -155,11 +155,14 @@ export default function TurnstileWidget({
       if (cancelled || !holder.current || !window.turnstile) return;
       /*
         Drawn once, reset on every later attempt (`drawBotCheck`). Say so when the token arrives
-        (§NNN): a send button held for the token also watches the hidden field's `value` attribute,
+        (§502): a send button held for the token also watches the hidden field's `value` attribute,
         but that holds only while Cloudflare draws the field as `type="hidden"`; the success
         callback is its documented answer. The event bubbles to the form from here, and the button
         reads the field on the next task — so a held press is sent the moment the check says yes,
-        whatever the field is and whichever order the script calls back and writes it in.
+        whatever the field is and whichever order the script calls back and writes it in. §502 left
+        the failure callbacks out because an `error-callback` can change how the widget retries;
+        the ones `drawBotCheck` hands Cloudflare (§NNN) answer `false`, which leaves Cloudflare's
+        own retry as it was, and only name the state.
       */
       const element = holder.current;
       drawBotCheck(window.turnstile, element, widgetId, relay, {

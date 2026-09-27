@@ -22,7 +22,7 @@ import { constraintsOf, htmlConstraints, textFieldConstraints } from "@/shared/f
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 // The event editor's boxes (§350): every box that renders an event field, read as one source.
-const EVENT_FORM = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox"]
+const EVENT_FORM = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");
 const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFields.tsx");

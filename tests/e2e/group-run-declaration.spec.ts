@@ -264,7 +264,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     // A named section: its heading is its accessible name — without «(opțional)» since §498.
     await expect(page.getByRole("region", { name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
     await expect(offer.getByRole("heading", { level: 3, name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
-    await expect(offer).toContainText("Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o șterge la 7 zile după alergare");
+    await expect(offer).toContainText("Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri");
     await expect(offer).not.toContainText("Dacă vrei");
     // The photographs notice comes before it in the fold, the declaration last (§498).
     expect(
@@ -298,7 +298,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const offer = page.getByTestId("group-run-declaration-offer");
     await openFold(page.getByTestId("conditions-fold"));
     await expect(offer.getByRole("heading", { level: 3, name: "Self-declaration", exact: true })).toBeVisible();
-    await expect(offer).toContainText("Sign the self-declaration for this run: you get it by email, and the club's platform deletes it 7 days after the run");
+    await expect(offer).toContainText("Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask");
     await expect(offer).not.toContainText("If you wish");
     await offer.getByRole("link", { name: "Sign the declaration", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/en/events/${englishSlug}/declaration$`));

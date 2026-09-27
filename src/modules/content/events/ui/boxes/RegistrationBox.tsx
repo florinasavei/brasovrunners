@@ -8,7 +8,6 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
-import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
@@ -27,7 +26,6 @@ import {
   bibDesignSummary,
   bibsSummary,
   confirmationSummary,
-  conditionsSummary,
   registrationSummary,
   registrationWindowSummary,
   summaryDate,
@@ -65,7 +63,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * "Participare și înscrieri" (§350): how people register — here, with another organizer, or not at
  * all — and under which rules; on the page, who may enter and the button, under the cost row (§406:
  * the cost is its own card, `CostBox`, just above this one, where the page draws its row). Registration's rules are
- * in this one box, as named cards: the period, who may enter and what they sign, the confirmation
+ * in this one box, as named cards: the period (the minimum age and the declaration are under «Regulamentul», §505, §448), the confirmation
  * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
  * printing). The public list was the fifth card here (owner requirement 1 of §350); since §406 it is
  * its own card, last, because the page draws it last (`StartListBox`).
@@ -117,7 +115,6 @@ export default async function RegistrationBox({
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
-  const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
   const design = readBibDesign(event?.bibDesign ?? null);
   const designOn = (["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const)
     .filter((field) => design[field])
@@ -166,7 +163,6 @@ export default async function RegistrationBox({
     takesRegistrations: takesRegistrations(initialType),
     // The cost is its own card since §406 (`CostBox`), and its closed line says it.
     declarationVersion: declaration?.version ?? null,
-    defaultMinAge: MIN_PARTICIPANT_AGE,
     locale,
     creating: event === null,
   });
@@ -275,22 +271,11 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
 
-                  {/* 8.2 — who may enter. What they sign at confirmation is chosen under «Regulamentul»
-                      since §448 (`DeclarationCard`): one place for declarations, under the rules. */}
-                  <Panel collapsible level={3} id="box-conditions" title={t("editor.boxes.conditions.title")} aside={conditionsSummary(words, minAge)}>
-                    <Stack spacing={2}>
-                      {/* Years reached by the event's day (§329), never below fourteen (§321). */}
-                      <RecallField
-                        name="event.minAge"
-                        label={t("editor.minAge")}
-                        helperText={t("editor.minAgeHelp")}
-                        defaultValue={minAge}
-                        {...box("minAge", { inputMode: "numeric" })}
-                        sx={{ width: { sm: 220 } }}
-                      />
-                      <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>
-                    </Stack>
-                  </Panel>
+                  {/* 8.2 — who may enter was a card here («Condiții de participare», §329). Since
+                      §505 the minimum age is one box of «Regulamentul» for every type, and what a
+                      runner signs is chosen beside it since §448 (`DeclarationCard`): one line
+                      says where both went. */}
+                  <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>
 
                   {/* 8.3 — the participation window (§104). */}
                   <Panel
