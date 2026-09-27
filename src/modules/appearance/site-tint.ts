@@ -25,7 +25,7 @@ import { judgeTint } from "./domain/tint-contrast";
 
 export const SITE_TINT_SETTING_KEY = "siteTint";
 /** The audit row's fixed entity id for this key — one per key, never reused (`…e00a` is the shown contact address). */
-export const SITE_TINT_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00d";
+export const SITE_TINT_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e011";
 
 export type SiteTintState = { setting: SiteTintSetting; updatedAt: Date | null };
 

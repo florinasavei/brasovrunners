@@ -64,7 +64,10 @@ export const siteTintSchema = z.union([
     .strict(),
 ]);
 
-/** Where the tint applies: the light scheme, and never inside the backoffice (see above). */
+/**
+ * Where the tint applies: the light scheme, and never inside the backoffice (see above). A browser
+ * without `:has()` drops the whole rule and shows the plain paper — accepted (§NNN).
+ */
 export const SITE_TINT_SELECTOR = ":root:not([data-dark]) body:not(:has([data-backoffice]))";
 
 /** MUI's page colour, as `theme.vars.palette.background.default` names it (pinned by a test). */
