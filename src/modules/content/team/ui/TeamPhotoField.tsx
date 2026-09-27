@@ -7,7 +7,9 @@ import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import GalleryPicker, { type GalleryPickerLabels } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 export type TeamPhotoLabels = {
   /** "Fotografia" — the group's name. */
@@ -19,8 +21,11 @@ export type TeamPhotoLabels = {
   failed: string;
   none: string;
   help: string;
-  /** «Calitate: Normală / Înaltă» beside the upload (§414), the gallery's words. */
+  /** «Calitate: Minimă / Medie / Mare / Originală» beside the upload (§414), the gallery's words. */
   quality: ImageQualityLabels;
+  /** «Din galerie» and its picker's words (§NNN). */
+  fromGallery: string;
+  gallery: GalleryPickerLabels;
 };
 
 type Props = {
@@ -39,6 +44,10 @@ type Props = {
  * the form is — the picture waits in the store and is swept after a week if the card never keeps
  * it (§73).
  *
+ * Or a picture the club already stored (§NNN): «Din galerie» opens the same picker every other
+ * picture comes from, and the card keeps that picture's id exactly as it would an upload's — the
+ * picture stays where else it is used, and the orphan sweep counts the card as one more place.
+ *
  * All its words arrive as strings from the page (§353: a backoffice island reads no catalogue of
  * its own). After a refused save it comes back with the picture that was chosen: the id and the
  * preview's address are both posted and recalled (§315).
@@ -55,6 +64,7 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
     preview: recall.value("photoPreview") ?? previewUrl ?? "",
   }));
   const [state, setState] = useState<"idle" | "uploading" | "failed">("idle");
+  const [galleryOpen, setGalleryOpen] = useState(false);
   // The session's choice, shared with every other uploader on the page (§414).
   const [quality, setQuality] = useImageQuality();
   const named = recall.named("photoAssetId");
@@ -113,12 +123,38 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           {state === "uploading" ? labels.uploading : photo.id ? labels.replace : labels.choose}
           <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onChoose} />
         </Button>
+        {/* The same glyph as the album's and the film poster's «Din galerie» (§NNN): one action, one look. */}
+        <GlyphButton
+          icon="gallery"
+          variant="outlined"
+          disabled={state === "uploading"}
+          aria-expanded={galleryOpen}
+          onClick={() => setGalleryOpen((open) => !open)}
+          sx={{ minHeight: 44 }}
+        >
+          {labels.fromGallery}
+        </GlyphButton>
         {photo.id && (
           <Button variant="text" color="error" sx={{ minHeight: 44 }} onClick={() => setPhoto({ id: "", preview: "" })}>
             {labels.remove}
           </Button>
         )}
       </Stack>
+      {galleryOpen && (
+        <Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
+          <GalleryPicker
+            onPick={(picture) => {
+              // The small file for the 96-pixel preview, as the saved card's own preview is.
+              setPhoto({ id: picture.id, preview: picture.thumb });
+              setState("idle");
+              setGalleryOpen(false);
+            }}
+            onClose={() => setGalleryOpen(false)}
+            labels={labels.gallery}
+            testId={`${inputId}-gallery`}
+          />
+        </Box>
+      )}
       <Box sx={{ mt: 1 }}>
         <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={state === "uploading"} />
       </Box>

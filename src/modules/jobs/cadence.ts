@@ -27,8 +27,12 @@ import { forgetJobSchedules } from "./schedule-cache";
  */
 
 export const JOB_CADENCE_SETTING_KEY = "jobCadence";
-/** One fixed id per setting for the audit row; `…e001`–`…e006` are taken (§100, §164, §244, §247, §254, §280). */
-export const JOB_CADENCE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e007";
+/**
+ * One fixed id per setting for the audit row. It was `…e007` until §NNN, which the Neon limits'
+ * setting had taken the day before: the audit rows written before keep that id and are told apart
+ * by their `action`. `tests/unit/settings/entity-ids.test.ts` holds every setting's id unique.
+ */
+export const JOB_CADENCE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00d";
 
 export const jobCadenceSettingSchema = z
   .object({

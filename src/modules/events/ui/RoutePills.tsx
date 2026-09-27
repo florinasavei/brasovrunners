@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { DENSITY } from "@/theme/density";
 import type { ReactNode } from "react";
 import GlyphChip from "./GlyphChip";
 import type { Pill } from "./route-pills";
@@ -32,7 +33,7 @@ const PILL_SX = { height: "auto", minHeight: 24, maxWidth: "100%", "& .MuiChip-l
 export default function RoutePills({ pills, trailing }: { pills: Pill[]; trailing?: ReactNode }) {
   if (pills.length === 0 && !trailing) return null;
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
       {pills.map((item) => (
         <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} tooltip={item.tooltip} srSuffix={item.srSuffix} variant="outlined" sx={PILL_SX} />
       ))}

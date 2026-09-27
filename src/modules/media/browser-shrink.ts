@@ -21,9 +21,9 @@ import { BROWSER_SEND_BYTES, HIGH_WEB_MAX, MAX_DIMENSION, MAX_UPLOAD_BYTES, ORIG
  */
 
 /**
- * The longest side worth sending, per choice. At «Normală» the server keeps `WEB_MAX` (2400)
+ * The longest side worth sending, per choice. At «Medie» the server keeps `WEB_MAX` (2400)
  * and throws the rest away, and a little headroom means a picture the club later wants larger is
- * not already destroyed. At «Înaltă» the server keeps `HIGH_WEB_MAX` (4000; §414), so the
+ * not already destroyed. At «Mare» the server keeps `HIGH_WEB_MAX` (4000; §414), so the
  * browser sends that much: capping it at 3000 here was the half of "high is no sharper" the
  * server could not undo.
  *
@@ -82,11 +82,11 @@ export async function prepareImageUpload(
     original means one lossy encode instead of two — and for a PNG (a poster, a screenshot, a
     diagram) it means the only encode, rather than a canvas turning it lossy on the way out.
 
-    At «Înaltă» a file that fits is sent as it is **whatever its pixels** (within the server's
+    At «Mare» a file that fits is sent as it is **whatever its pixels** (within the server's
     `MAX_DIMENSION`): the server resizes to 4000 before its one encode, and a phone's 4032-pixel
     JPEG re-encoded here at 0.95 measured larger than the JPEG itself — 4.85 MB from 2.37 MB for
     a leaf-covered hillside, over the send limit, so it would have been stepped down to 3200 and
-    the choice lost. «Normală» keeps its edge: the server keeps 2400 of it either way. «Originală»
+    the choice lost. «Medie» keeps its edge: the server keeps 2400 of it either way. «Originală»
     (§437) is sent as it is on the same terms as «Mare»; «Minimă» keeps its edge like «Medie».
 
     `imageOrientation: "from-image"` above is the one thing the canvas was also doing for us; the
@@ -116,7 +116,7 @@ export async function prepareImageUpload(
   });
 
   /*
-    A photograph at 3000px (4000 at «Înaltă») and quality 0.95 can still exceed the send limit.
+    A photograph at 3000px (4000 at «Mare») and quality 0.95 can still exceed the send limit.
     Rather than refuse it at the server with a message about megabytes, step the long edge down
     until it fits — quality is held, because size is the constraint the platform actually has and
     softness is the one the reader actually sees.

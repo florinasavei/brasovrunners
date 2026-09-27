@@ -99,7 +99,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(again).toBeVisible();
 
     /*
-      And the way out, in **one press** (§286; the owner: "gen vreau ca dani sa mai apese inca o
+      And the way out, in **one press** (§286; the owner: "gen vreau ca [organizatorul] sa mai apese inca o
       data submit si atat!").
 
       Nothing is re-typed and nothing is re-ticked: the answers and the three consents come back
@@ -116,7 +116,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
   });
 
   /**
-   * §312 — Amalia's report, end to end: the same person, autofilled, sends the form twice.
+   * §312 — the Administrator's report, end to end: the same person, autofilled, sends the form twice.
    *
    * The visitor sees the same screen both times (§19.4: nothing public says whether an address
    * was already registered). The club, which saw nothing before, finds her by name from the

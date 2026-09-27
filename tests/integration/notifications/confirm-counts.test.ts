@@ -36,7 +36,7 @@ describe("§384 the dialog's count is the send's recipients", () => {
 
   beforeEach(async () => {
     await resetTables(db);
-    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Dani", role: "MODERATOR" }).returning();
+    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" }).returning();
   });
 
   async function seedEvent(startsAt = new Date("2026-10-11T09:00:00+03:00")) {

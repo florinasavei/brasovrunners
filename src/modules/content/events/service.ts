@@ -51,8 +51,7 @@ import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
-import { youtubeVideoId } from "@/modules/events/domain/video";
-import { attachYoutubePosters, resolveEventVideoPoster } from "@/modules/media/video-poster";
+import { attachYoutubePosters } from "@/modules/media/video-poster";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
@@ -411,10 +410,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
-    // No form posts a film any more (a film is a figure in the description, §266), and a
-    // column nobody mentioned is a column nobody may erase: the stored link of an older event
-    // survives every save. Only a caller that says `videoUrl` writes it.
-    ...(fields.videoUrl === undefined ? {} : { videoUrl: fields.videoUrl }),
+    // No `video_url` (§NNN): a film is a figure in the description (§266), and the column is
+    // written by nobody until a later contract migration drops it.
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
     // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
@@ -1456,8 +1453,6 @@ export type SaveEventFieldsInput = {
   /** Required when the save moves the event to CANCELLED (§331). */
   cancellation?: EventCancellationRequest;
   now?: Date;
-  /** Only for tests: a `fetch` stand-in for the YouTube poster fetch, never a live default. */
-  fetchImpl?: typeof fetch;
 };
 
 /**
@@ -1487,16 +1482,6 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
-  // Outside the transaction below: this is a network fetch to YouTube, never something that
-  // should hold the event's row lock or the capacity check open (`DECISIONS.md` §403).
-  const posterColumns = await resolveEventVideoPoster(db, {
-    nextVideoUrl: fields.videoUrl,
-    currentVideoUrl: current.videoUrl,
-    currentPosterUrl: current.videoPosterUrl,
-    videoIdOf: youtubeVideoId,
-    now,
-    fetchImpl: input.fetchImpl,
-  });
 
   /**
    * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -1522,7 +1507,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       tx,
       input.eventId,
       input.expectedVersion,
-      { ...eventColumnsFrom(fields, times), ...posterColumns, updatedByStaffUserId: input.actor.id },
+      { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
       now,
     );
     // The place's name in each language is the event's (§362): written with the row, under its version.
@@ -2011,17 +1996,6 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
-  // A network fetch, kept out of the transaction below for the same reason as `saveEventFields`.
-  const posterColumns = parsedEventFields
-    ? await resolveEventVideoPoster(db, {
-        nextVideoUrl: parsedEventFields.videoUrl,
-        currentVideoUrl: current.videoUrl,
-        currentPosterUrl: current.videoPosterUrl,
-        videoIdOf: youtubeVideoId,
-        now,
-        fetchImpl: input.fetchImpl,
-      })
-    : {};
   /*
     Every translation's YouTube posters, fetched before the transaction opens (`DECISIONS.md`
     §403): `applyTranslationSave` runs inside the transaction below, behind `lockEventForCapacity`
@@ -2082,7 +2056,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         tx,
         input.eventId,
         input.expectedVersion as number,
-        { ...eventColumnsFrom(parsedEventFields, times), ...posterColumns, updatedByStaffUserId: input.actor.id },
+        { ...eventColumnsFrom(parsedEventFields, times), updatedByStaffUserId: input.actor.id },
         now,
       );
       // Before the words, so each row a text save writes back already carries its new name.
@@ -2232,7 +2206,6 @@ export type CreateEventInput = {
 type PreparedEventCreate = {
   parsed: ReturnType<typeof normalizeForMode>;
   times: ReturnType<typeof resolveTimes>;
-  posterColumns: Awaited<ReturnType<typeof resolveEventVideoPoster>>;
   translationColumns: { ro: ReturnType<typeof translationColumnsFrom>; en: ReturnType<typeof translationColumnsFrom> };
   names: PlaceNames;
   /** The reason of an event created cancelled (§448), for its audit row; null for any other status. */
@@ -2267,9 +2240,22 @@ function readCreateStatus(actor: Actor, status: EditableEvent["eventStatus"], st
 }
 
 /**
+ * The status a new date of a series is made with — the create-status rule of §448 applied per
+ * date, not copied from the source (§NNN; the review of §448: a weekly run created «Anulat» made
+ * every future Monday «Anulat» too, and one created «Încheiat» made future dates «over»).
+ *
+ * - `CANCELLED` is one date's news, asked with its own reason in both languages: never inherited.
+ * - `COMPLETED` only for a date whose start has passed — an event cannot be over before it begins.
+ * - Anything else is `SCHEDULED`, as every new event is.
+ */
+export function seriesDateStatus(sourceStatus: EditableEvent["eventStatus"], startsAt: Date, now: Date): EditableEvent["eventStatus"] {
+  return sourceStatus === "COMPLETED" && startsAt.getTime() <= now.getTime() ? "COMPLETED" : "SCHEDULED";
+}
+
+/**
  * Everything a create needs from outside the database — parsing, the two rules-based checks, and
- * every YouTube poster fetch (the event's own `video_url` and any film pasted into a body) — run
- * once, before any transaction opens.
+ * every YouTube poster fetch (any film in a body — the only home of a film since §NNN) — run once,
+ * before any transaction opens.
  *
  * Split out of `createEvent` (found by re-review, `DECISIONS.md` §403): `createEventAndPublish`
  * used to call `createEvent(tx, …)` from *inside* its own transaction, so this exact same fetch
@@ -2296,14 +2282,6 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   const posterOptions = { now, fetchImpl: input.fetchImpl };
   parsed.translations.ro = await attachPostersToParsedTexts(db, parsed.translations.ro, posterOptions);
   parsed.translations.en = await attachPostersToParsedTexts(db, parsed.translations.en, posterOptions);
-  const posterColumns = await resolveEventVideoPoster(db, {
-    nextVideoUrl: parsed.videoUrl,
-    currentVideoUrl: null,
-    currentPosterUrl: null,
-    videoIdOf: youtubeVideoId,
-    now,
-    fetchImpl: input.fetchImpl,
-  });
   // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
   // then inserted exactly as checked. The discount note is gated on the cost the insert stores: an
   // absent cost type is `COST_TYPE_ON_CREATE`, exactly as `eventColumnsFrom` writes it.
@@ -2320,7 +2298,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);
 
-  return { parsed, times, posterColumns, translationColumns, names, cancelledBecause };
+  return { parsed, times, translationColumns, names, cancelledBecause };
 }
 
 /** The insert half of a create: no network fetch, safe to run inside any transaction or savepoint. */
@@ -2330,14 +2308,13 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
   prepared: PreparedEventCreate,
   now: Date,
 ): Promise<EditableEvent> {
-  const { parsed, times, posterColumns, translationColumns, names, cancelledBecause } = prepared;
+  const { parsed, times, translationColumns, names, cancelledBecause } = prepared;
   if (parsed.featured) await clearFeaturedExcept(tx, null, now);
 
   const [event] = await tx
     .insert(events)
     .values({
       ...eventColumnsFrom(parsed, times, { isCreate: true }),
-      ...posterColumns,
       editorialStatus: "DRAFT",
       createdByStaffUserId: actor.id,
       updatedByStaffUserId: actor.id,
@@ -2584,13 +2561,12 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
     links: source.links,
-    // Not carried by a *duplicate*: a film is of one edition, and last year's would be wrong on
-    // next year's; next year's race has its own Strava and Facebook event pages. A *repeat* is
-    // different — a recurring Strava club event and a Facebook event with several dates keep one
-    // address for every occurrence — so `repeatEvent` and the job put the source's two links
-    // back on top of this (§300). The co-host is carried by both: a series held with a partner
-    // is held with them every time.
-    videoUrl: null,
+    // Not carried by a *duplicate*: next year's race has its own Strava and Facebook event pages.
+    // A *repeat* is different — a recurring Strava club event and a Facebook event with several
+    // dates keep one address for every occurrence — so `repeatEvent` and the job put the source's
+    // two links back on top of this (§300). The co-host is carried by both: a series held with a
+    // partner is held with them every time. (A film is a figure in the description since §NNN and
+    // travels with the words; `video_url` is written by nobody.)
     stravaEventUrl: null,
     facebookEventUrl: null,
     coHosts: source.coHosts,
@@ -2839,6 +2815,8 @@ async function materializeSeries<T extends Record<string, unknown>>(
           updatedByStaffUserId: by,
           repeatOf: source.id,
           startsAt: occurrence.startsAt,
+          // The date's own status, never the source's cancellation or completion (§NNN).
+          eventStatus: seriesDateStatus(source.eventStatus, occurrence.startsAt, now),
           endsAt: shift(source.endsAt, occurrence),
           raceStartsAt: shift(source.raceStartsAt, occurrence),
           scheduleItems: source.scheduleItems

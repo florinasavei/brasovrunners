@@ -1,5 +1,6 @@
 import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
@@ -120,6 +121,10 @@ export const GLYPHS = {
   featured: StarIcon,
   special: AutoAwesomeIcon,
   series: EventRepeatIcon,
+  // The repeat chip on a listing card (§NNN) — the single date of a series, the series card and
+  // the featured card alike: a wheel of arrows, «ca o rotiță» (the owner), not the calendar
+  // `series` draws, which reads as one more date at 16–20 pixels.
+  repeat: AutorenewIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
   night: ModeNightIcon,

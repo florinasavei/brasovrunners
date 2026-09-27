@@ -347,7 +347,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
   });
 
-  it("condenses the fold's panel: one wrapping row of 44px links, no margin between lines, 'Scrie-ne' once, the stamp last", async () => {
+  it("condenses the fold's panel: four touching 24-pixel lines on a phone, 14-pixel words, 'Scrie-ne' once, the credit and the stamp last", async () => {
     // §385, the owner, 2026-09-25: "the info from the expanded footer must be more condensed."
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -366,13 +366,45 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const containerClass = /data-testid="footer-about-panel"[^>]*>\s*<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(markup);
     expect(containerClass, "the panel's one container").not.toBeNull();
     const container = rulesOf(css, containerClass![1]!);
-    expect(container).toMatch(/flex-wrap:wrap;/);
-    expect(container, "no margin between two lines").toMatch(/row-gap:0(px)?;/);
-    // The density scale's short step between two links on a phone (§380), 16px from `sm`.
-    expect(container).toMatch(/(^|[;{])column-gap:8px;/);
-    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
-    // Every link in it a 44px target (BR-REQ-041-01 criterion 6).
-    expect(container).toMatch(/ a\{[^}]*min-height:44px;/);
+    // §NNN, amending §385: the lines set on purpose, touching.
+    expect(container).toMatch(/flex-direction:column;/);
+    // The fold's line on every link (`FOLD_LINE`, `footer-target.ts`): 24px at every phone width,
+    // 44px from `sm` (BR-REQ-041-01 criterion 6); no pseudo-element hit area overlapping a
+    // neighbour; every link painted over the stamp's reach.
+    expect(container).toMatch(/ a\{[^}]*min-height:24px;/);
+    expect(container).not.toMatch(/min-height:28px;/);
+    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*a\{[^}]*min-height:44px;/);
+    expect(container).toMatch(/ a\{[^}]*position:relative;[^}]*z-index:1;/);
+    expect(container).not.toMatch(/::before/);
+    // The lines touch: no row gap at any width, and no 360 band of their own.
+    expect(container).toMatch(/(^|[;{])row-gap:0(px)?;/);
+    expect(container).not.toMatch(/row-gap:[46]px;/);
+
+    // Line one: the terms and "my registrations", and nothing else, the density scale's short step apart.
+    const linksStart = panel.indexOf('data-testid="footer-panel-links"');
+    expect(linksStart, "the links' line").toBeGreaterThan(-1);
+    const linksLine = panel.slice(linksStart, panel.indexOf('data-testid="footer-contact"'));
+    expect(linksLine).toContain('href="/ro/legal/terms"');
+    expect(linksLine).toContain('href="/ro/registrations/mine"');
+    expect((linksLine.match(/<a /g) ?? []).length, "two links on the first line").toBe(2);
+    const linksRule = rulesOf(css, /data-testid="footer-panel-links"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-links"/.exec(markup)!.slice(1).find(Boolean)!);
+    expect(linksRule).toMatch(/(^|[;{])column-gap:8px;/);
+    expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
+    // The last line: Open-Meteo's credit, then the stamp, at the panel's 14 pixels — no caption
+    // size of its own (the second round of §NNN: 12 was under the floor for words a person reads).
+    const metaStart = panel.indexOf('data-testid="footer-panel-meta"');
+    expect(metaStart, "the credit's line").toBeGreaterThan(panel.indexOf('data-testid="footer-contact"'));
+    const metaLine = panel.slice(metaStart);
+    expect(metaLine.indexOf('data-testid="footer-weather-credit"')).toBeGreaterThan(-1);
+    expect(metaLine.indexOf('data-testid="footer-build-badge-panel"')).toBeGreaterThan(metaLine.indexOf('data-testid="footer-weather-credit"'));
+    const metaRule = rulesOf(css, /data-testid="footer-panel-meta"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-meta"/.exec(markup)!.slice(1).find(Boolean)!);
+    expect(metaRule).not.toMatch(/font-size/);
+    // From `sm` the panel is §385's one wrapping row again, desktop unchanged by the phone's lines
+    // (§NNN, the owner's "footer is too tall on mobile" round): both groups give their items to it.
+    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*flex-direction:row;[^}]*flex-wrap:wrap;/);
+    expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:contents;/);
+    expect(metaRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:contents;/);
+    expect(container).toMatch(/(^|[;{])font-size:0\.875rem;/);
     // No stacked `spacing`, no paragraph of its own for the address.
     expect(panel).not.toMatch(/<p class="MuiTypography/);
 
@@ -403,7 +435,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     }
   });
 
-  it("draws the build stamp as a small outlined chip in both places, the name and the title on its 44px box", async () => {
+  it("draws the build stamp as a small outlined chip in both places, the name and the title on its box", async () => {
     // §385, the owner, 2026-09-25: "Version must be within a chip."
     const html = await renderFooter();
     const markup = markupOnly(html);
@@ -428,9 +460,22 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
       expect(chipRules).toMatch(/color:rgba\(0, 0, 0, 0\.6\);/);
       expect(chipRules).toMatch(/height:auto;/);
       expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
-      // The 44px box a long press is aimed at (BR-REQ-041-01 criterion 6).
+      // The box a long press is aimed at: 44px on the bar's corner (BR-REQ-041-01 criterion 6);
+      // in the fold, the fold's 24-pixel line on a phone with twenty more pixels of reach above it,
+      // given back as a negative margin so the line stays 24, and a plain 44 from `sm` (§NNN, the
+      // 360-px density pass, amending §385).
       const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
-      expect(box).toMatch(/min-height:44px;/);
+      if (testId === "footer-build-badge-pinned") expect(box).toMatch(/(^|[;{])min-height:44px;/);
+      else {
+        expect(box).toMatch(/(^|[;{])box-sizing:content-box;/);
+        expect(box).toMatch(/(^|[;{])min-height:24px;/);
+        expect(box).toMatch(/(^|[;{])padding-top:20px;/);
+        expect(box).toMatch(/(^|[;{])margin-top:-20px;/);
+        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*min-height:44px;/);
+        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*padding-top:0(px)?;/);
+        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*margin-top:0(px)?;/);
+        expect(box, "no 28px band in the fold").not.toMatch(/min-height:28px;/);
+      }
     }
   });
 

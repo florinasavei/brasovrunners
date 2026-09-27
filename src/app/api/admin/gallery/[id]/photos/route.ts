@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
-import { addPhoto } from "@/modules/content/gallery/service";
+import { addPhoto, addStoredPhoto } from "@/modules/content/gallery/service";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
 import { parseImageQuality } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -14,7 +14,8 @@ export const maxDuration = 60;
 
 /**
  * One photo into an album (BR-REQ-054-01). `POST` multipart with a `file`; the uploader sends
- * one request per photo. Editorial roles only. The bytes are checked by `processUploadedImage`
+ * one request per photo. Or with an `assetId` instead: a picture already stored, chosen from the
+ * gallery (§NNN), added as it is. Editorial roles only. The bytes are checked by `processUploadedImage`
  * whatever the client claimed, and nothing is written anywhere until they pass.
  */
 export async function POST(
@@ -38,6 +39,23 @@ export async function POST(
   const { id } = await context.params;
   if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const form = await request.formData();
+
+  // A picture the club already stored (§NNN, «Din galerie»): its id, no file, nothing encoded.
+  const assetId = form.get("assetId");
+  if (typeof assetId === "string" && assetId !== "") {
+    if (!isUuid(assetId)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+    try {
+      const result = await addStoredPhoto(getDb(), { actor, albumId: id, assetId });
+      return NextResponse.json(result, { status: result.added ? 201 : 200 });
+    } catch (error) {
+      if (isDomainError(error)) {
+        const status = error.code === "NOT_FOUND" ? 404 : error.code === "FORBIDDEN" ? 403 : 400;
+        return NextResponse.json({ error: error.code, detail: error.message }, { status });
+      }
+      throw error;
+    }
+  }
+
   const file = form.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });

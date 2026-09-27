@@ -19,7 +19,6 @@ import {
   fetchYoutubeThumbnail,
   posterKeyPrefix,
   posterUrlFor,
-  resolveEventVideoPoster,
 } from "@/modules/media/video-poster";
 import { countMediaAssets, sweepOrphanAssets } from "@/modules/media/references";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
@@ -125,89 +124,6 @@ describe("§403 the club's own copy of a YouTube poster", () => {
     });
   });
 
-  describe("resolveEventVideoPoster — what an event save writes to video_poster_url", () => {
-    const videoIdOf = (url: string | null | undefined) => {
-      const match = /v=([\w-]{11})/.exec(url ?? "");
-      return match?.[1] ?? null;
-    };
-
-    it("leaves the column untouched when videoUrl was not part of this save, and a poster is already stored", async () => {
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: undefined,
-        currentVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentPosterUrl: "https://media.example.test/old.webp",
-        videoIdOf,
-      });
-      expect(result).toEqual({});
-    });
-
-    it("leaves the column untouched when videoUrl was not part of this save, and the row has no video at all", async () => {
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: undefined,
-        currentVideoUrl: null,
-        currentPosterUrl: null,
-        videoIdOf,
-      });
-      expect(result).toEqual({});
-    });
-
-    it("fetches one, even though videoUrl was not part of this save, for a row that already has a YouTube video_url but no poster yet (found by re-review: §266 means no form posts videoUrl any more, so this was the only way an existing event's blank rectangle was ever going to fill in)", async () => {
-      const bytes = await JPEG();
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: undefined,
-        currentVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentPosterUrl: null,
-        videoIdOf,
-        fetchImpl: fetchWithHqdefault(bytes),
-      });
-      expect(result).toEqual({ videoPosterUrl: posterUrlFor("dQw4w9WgXcQ") });
-    });
-
-    it("clears the poster when the film is cleared", async () => {
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: null,
-        currentVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentPosterUrl: "https://media.example.test/old.webp",
-        videoIdOf,
-      });
-      expect(result).toEqual({ videoPosterUrl: null });
-    });
-
-    it("stores the new poster on a successful fetch", async () => {
-      const bytes = await JPEG();
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentVideoUrl: null,
-        currentPosterUrl: null,
-        videoIdOf,
-        fetchImpl: fetchWithHqdefault(bytes),
-      });
-      expect(result).toEqual({ videoPosterUrl: posterUrlFor("dQw4w9WgXcQ") });
-    });
-
-    it("keeps the old poster on a failed re-fetch of the *same* video (a transient failure)", async () => {
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentPosterUrl: "https://media.example.test/old.webp",
-        videoIdOf,
-        fetchImpl: fetchAlwaysFails,
-      });
-      expect(result).toEqual({ videoPosterUrl: "https://media.example.test/old.webp" });
-    });
-
-    it("falls back to no poster (the text facade) when a *new* video's first fetch fails", async () => {
-      const result = await resolveEventVideoPoster(db, {
-        nextVideoUrl: "https://www.youtube.com/watch?v=AAAAAAAAAAA",
-        currentVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        currentPosterUrl: "https://media.example.test/old.webp",
-        videoIdOf,
-        fetchImpl: fetchAlwaysFails,
-      });
-      expect(result).toEqual({ videoPosterUrl: null });
-    });
-  });
-
   describe("a rich-text body's own films", () => {
     it("attaches a poster to a youtube block that has none, and leaves one that already has one", async () => {
       const bytes = await JPEG();
@@ -227,7 +143,10 @@ describe("§403 the club's own copy of a YouTube poster", () => {
   });
 
   describe("save → poster stored → read model, and the orphan sweep", () => {
-    it("an event's stored poster is read back through the public columns, and counted by the sweep", async () => {
+    // The column is unread since §NNN and stays only until its contract migration: migration 0092
+    // carried every stored poster into the description's youtube node, which is what the sweep
+    // reads. A poster only the old column names is a picture no page draws, and goes like one.
+    it("a poster only the event's old film column names is swept like any unreferenced picture", async () => {
       const bytes = await JPEG();
       const now = new Date("2026-09-25T10:00:00Z");
       const posterUrl = await ensureYoutubePoster(db, "dQw4w9WgXcQ", { now, fetchImpl: fetchWithHqdefault(bytes) });
@@ -248,15 +167,39 @@ describe("§403 the club's own copy of a YouTube poster", () => {
         .returning();
       expect(event.videoPosterUrl).toBe(posterUrl);
 
-      // Referenced by the event row it is on: the sweep must not take it.
+      // The event row's column is no reference any more.
       const before = await countMediaAssets(db, now);
       expect(before.total).toBe(1);
-      expect(before.unreferenced).toBe(0);
+      expect(before.unreferenced).toBe(1);
+
+      const deleted = await sweepOrphanAssets(db, new Date(now.getTime() + 8 * 24 * 60 * 60_000));
+      expect(deleted).toBe(1);
+      const gone = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, posterKeyPrefix("dQw4w9WgXcQ")));
+      expect(gone).toHaveLength(0);
+    });
+
+    it("keeps a poster the description's film names, the place migration 0092 moved it to", async () => {
+      const bytes = await JPEG();
+      const now = new Date("2026-09-25T10:00:00Z");
+      const posterUrl = await ensureYoutubePoster(db, "dQw4w9WgXcQ", { now, fetchImpl: fetchWithHqdefault(bytes) });
+      const [event] = await db
+        .insert(events)
+        .values({ type: "GROUP_RUN", eventStatus: "SCHEDULED", timezone: "Europe/Bucharest", startsAt: now, createdAt: now, updatedAt: now })
+        .returning();
+      await db.insert(eventTranslations).values({
+        eventId: event.id,
+        locale: "ro",
+        slug: "film",
+        title: "Film",
+        bodyJson: { type: "doc", content: [{ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", caption: "", poster: posterUrl, posterSource: "youtube" } }] },
+        createdAt: now,
+        updatedAt: now,
+      });
 
       const deleted = await sweepOrphanAssets(db, new Date(now.getTime() + 8 * 24 * 60 * 60_000));
       expect(deleted).toBe(0);
-      const stillThere = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, posterKeyPrefix("dQw4w9WgXcQ")));
-      expect(stillThere).toHaveLength(1);
+      const kept = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, posterKeyPrefix("dQw4w9WgXcQ")));
+      expect(kept).toHaveLength(1);
     });
 
     it("sweeps a poster once its event no longer points at it, like any other unreferenced picture", async () => {
@@ -312,7 +255,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
 
   /**
    * The wiring, not just the fetch (found by re-review): the earlier tests here call
-   * `ensureYoutubePoster`/`attachYoutubePosters`/`resolveEventVideoPoster` directly and insert
+   * `ensureYoutubePoster`/`attachYoutubePosters` directly and insert
    * the event row by hand, which proves the fetch and the storage but nothing about whether the
    * real save services ever call them with the right arguments. These go the whole way through
    * `createEvent` and `saveEventAndTranslations` — the paths the editor and the create form
@@ -346,22 +289,23 @@ describe("§403 the club's own copy of a YouTube poster", () => {
       externalRegistrationUrl: "",
     };
 
-    it("createEvent stores a poster for the event's own videoUrl, fetched before the row exists", async () => {
-      const bytes = await JPEG();
-      const created = await createEvent(db, {
-        actor: admin,
-        fields: {
-          ...EVENT_FIELDS,
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-          translations: {
-            ro: { slug: "cros-video", title: "Cros cu film", excerpt: "" },
-            en: { slug: "video-race", title: "Race with a film", excerpt: "" },
+    it("createEvent takes no film of the event's own any more (§NNN): a posted videoUrl is refused, and nothing is fetched", async () => {
+      const fetchImpl = fetchWithHqdefault(await JPEG());
+      await expect(
+        createEvent(db, {
+          actor: admin,
+          fields: {
+            ...EVENT_FIELDS,
+            videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            translations: {
+              ro: { slug: "cros-video", title: "Cros cu film", excerpt: "" },
+              en: { slug: "video-race", title: "Race with a film", excerpt: "" },
+            },
           },
-        },
-        fetchImpl: fetchWithHqdefault(bytes),
-      });
-      const [row] = await db.select().from(events).where(eq(events.id, created.id));
-      expect(row.videoPosterUrl).toBe(posterUrlFor("dQw4w9WgXcQ"));
+          fetchImpl,
+        }),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+      expect(fetchImpl).not.toHaveBeenCalled();
     });
 
     it("createEvent attaches a poster to a film pasted straight into a new event's description", async () => {
@@ -432,7 +376,6 @@ describe("§403 the club's own copy of a YouTube poster", () => {
       const NEVER_ANSWERS = "never-answr";
       const film = (...videoIds: string[]) =>
         JSON.stringify({ type: "doc", content: videoIds.map((videoId) => ({ type: "youtube", attrs: { videoId } })) });
-      const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${videoId}`;
 
       afterEach(() => {
         vi.restoreAllMocks();
@@ -479,7 +422,6 @@ describe("§403 the club's own copy of a YouTube poster", () => {
       /** A new event with a film in every rich text of both languages, and one that never answers. */
       const FILMED_EVENT = () => ({
         ...EVENT_FIELDS,
-        videoUrl: watchUrl("event-film1"),
         translations: Object.fromEntries(
           (["ro", "en"] as const).map((locale) => [
             locale,
@@ -496,7 +438,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
           ]),
         ),
       });
-      const FILMED_EVENT_IDS = ["event-film1", "body-film-1", NEVER_ANSWERS, "rules-film1", "sched-film1", "route-film1", "excpt-film1"];
+      const FILMED_EVENT_IDS = ["body-film-1", NEVER_ANSWERS, "rules-film1", "sched-film1", "route-film1", "excpt-film1"];
 
       async function expectEveryTextPostered(eventId: string) {
         const rows = await db.select().from(eventTranslations).where(eq(eventTranslations.eventId, eventId));
@@ -509,8 +451,9 @@ describe("§403 the club's own copy of a YouTube poster", () => {
           expect(posterOf(row.excerptJson)).toBe(posterUrlFor("excpt-film1"));
           // A group run keeps no programme (§111); the film in it was still fetched, outside.
         }
+        // The event row holds no film of its own since §NNN: its old columns are written by nobody.
         const [event] = await db.select().from(events).where(eq(events.id, eventId));
-        expect(event.videoPosterUrl).toBe(posterUrlFor("event-film1"));
+        expect(event).toMatchObject({ videoUrl: null, videoPosterUrl: null });
       }
 
       async function plainEvent(capacity = "") {
@@ -546,17 +489,17 @@ describe("§403 the club's own copy of a YouTube poster", () => {
         await expectEveryTextPostered(result.event.id);
       });
 
-      it("saveEventFields: the event's own film is fetched before the transaction that locks it for capacity", async () => {
+      it("saveEventFields: fetches nothing — the event row holds no film since §NNN, only the texts do", async () => {
         const { created } = await plainEvent("10");
         const calls = watchPosterFetches(await JPEG());
         const saved = await saveEventFields(db, {
           actor: admin,
           eventId: created.id,
           expectedVersion: created.version,
-          fields: { ...EVENT_FIELDS, capacity: "10", videoUrl: watchUrl("event-film2") },
+          fields: { ...EVENT_FIELDS, capacity: "10" },
         });
-        expectFetchedOutside(calls, ["event-film2"]);
-        expect(saved.videoPosterUrl).toBe(posterUrlFor("event-film2"));
+        expect(calls).toEqual([]);
+        expect(saved).toMatchObject({ videoUrl: null, videoPosterUrl: null });
       });
 
       it("saveEventAndTranslations: every text's films, and one whose first fetch failed, are never fetched again behind the capacity lock", async () => {
@@ -577,13 +520,13 @@ describe("§403 the club's own copy of a YouTube poster", () => {
           actor: admin,
           eventId: created.id,
           expectedVersion: created.version,
-          fields: { ...EVENT_FIELDS, capacity: "10", videoUrl: watchUrl("event-film3") },
+          fields: { ...EVENT_FIELDS, capacity: "10" },
           translations: [
             { translationId: ro.id, expectedVersion: ro.version, fields: texts(ro) },
             { translationId: en.id, expectedVersion: en.version, fields: texts(en) },
           ],
         });
-        expectFetchedOutside(calls, ["event-film3", "body-film-2", NEVER_ANSWERS, "rules-film2", "route-film2", "excpt-film2"]);
+        expectFetchedOutside(calls, ["body-film-2", NEVER_ANSWERS, "rules-film2", "route-film2", "excpt-film2"]);
         // Asked once per quality and never again: three for the film that never answers.
         expect(calls.filter((call) => call.videoId === NEVER_ANSWERS)).toHaveLength(3);
         const [saved] = await db.select().from(eventTranslations).where(eq(eventTranslations.id, ro.id));

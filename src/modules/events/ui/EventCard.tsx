@@ -7,18 +7,20 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { DENSITY } from "@/theme/density";
 import { riseIn } from "@/theme/motion";
 import { featuredCard, specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 import { raceWeek } from "../domain/race-week";
 import type { PublicEvent } from "../repository";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
+import { repeatTooltip, rhythmLabel } from "./series-sentence";
 
 /**
  * One event on the listing — the single-date card, beside `SeriesCard`, and since §366 the same
@@ -35,6 +37,16 @@ import PartnerChip from "./PartnerChip";
  * in the one blue style every card's title has, and the facts carry their links (the map) as they
  * do on the series card and the page. The lift under a pointer went with the whole-card link: it
  * said "all of this is one press", which is no longer true, and the series card never had it.
+ *
+ * **One press anywhere, all the same** (§NNN): the title's link is stretched over the card
+ * (`CARD_TAP_SX`, `CARD_TITLE_SX`), so a thumb on the summary, the pills or the room under the door
+ * opens the page, while the map, the door and the registration button stay links of their own —
+ * the whole-card tap without the `<a>` around it that took the map link away.
+ *
+ * **A date of a repeated event says so** (§NNN): when the listing's filters or the lead (§470) leave
+ * one date of a series alone on this card, it wears the series card's repeat chip with its rhythm
+ * — «Săptămânal» — so a weekly run does not read as a one-off. `seriesDates` is the whole series,
+ * read by the page before any filter.
  *
  * Every card carries the summary, pictures and all (§251). It did not under the featured event
  * — §242 kept that list dense so the lead was not followed by a scroll — and the owner asked
@@ -56,6 +68,7 @@ export default async function EventCard({
   now,
   weather = null,
   featured,
+  seriesDates,
 }: {
   event: PublicEvent;
   index: number;
@@ -64,6 +77,12 @@ export default async function EventCard({
   weather?: WeatherReading | null;
   /** The listing's lead event (§470): the club's race-week days (§377), read by the page from the data cache. */
   featured?: { raceWeekDays: number };
+  /**
+   * Every date of the repeated event this one belongs to (§113), this one included, when it has
+   * others — the page groups its whole list before the filters (`seriesLookup`). Absent, or a
+   * single date, the card wears no repeat chip.
+   */
+  seriesDates?: readonly { startsAt: Date }[];
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -72,14 +91,18 @@ export default async function EventCard({
   // event's own calendar — the featured card only.
   const week = featured ? raceWeek(event, now, featured) : null;
   const tEvents = featured ? await getTranslations("Events") : null;
+  const rhythm = seriesDates && seriesDates.length > 1 ? await rhythmLabel(seriesDates, event.timezone, locale) : null;
+  // The rule behind the word, on hover, on a tap and to a screen reader (§NNN): «Se repetă în fiecare marți, la 18:30».
+  const repeats = seriesDates && seriesDates.length > 1 ? await repeatTooltip(seriesDates, event.timezone, locale) : undefined;
   return (
     <Card
       component="li"
       variant="outlined"
       data-featured={featured ? "true" : undefined}
+      data-series={rhythm ? "true" : undefined}
       /* The lead event wears its frame and background (§470); one the club marked special wears
          that on the whole card (§272), not only as a chip. One frame per card: the lead's wins. */
-      sx={{ ...riseIn(index), ...(featured ? featuredCard : event.isSpecial ? specialCard : {}) }}
+      sx={{ ...CARD_TAP_SX, ...riseIn(index), ...(featured ? featuredCard : event.isSpecial ? specialCard : {}) }}
     >
       {/* The shape the series card has, from the same constants (`card-layout.ts`, §366): the door
           right after the facts, and what the row leaves over below it rather than above it. The
@@ -95,6 +118,9 @@ export default async function EventCard({
           {/* What it is, with its glyph (§112). What it is run on is a pill with the facts below,
               said once on the card (§366). */}
           <EventKindChips type={event.type} surface={null} />
+          {/* One date of a repeated event, alone on its card (§NNN): the series card's repeat chip,
+              in the same place, so the rhythm is read the same way on both cards. */}
+          {rhythm && <GlyphChip glyph="repeat" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />}
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
@@ -150,7 +176,9 @@ export default async function EventCard({
             it to `tests/e2e/weather-place.spec.ts` or `tests/e2e/listing-cards.spec.ts`, the way
             other breakpoints in this module are measured and pasted (`EventFacts.tsx`'s own
             comments). */}
-        <Box sx={{ mt: GROUP_GAP }}>
+        {/* A group's gap above the facts, the density scale's short step on a phone (§NNN): eight,
+            no nearer than the title's reach below its words when there is no summary (§366). */}
+        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           <EventFacts event={event} now={now} variant="compact" cardWeather={weather} raceWeek={week !== null} />
         </Box>
 

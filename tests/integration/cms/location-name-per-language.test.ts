@@ -91,8 +91,8 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
 
   beforeEach(async () => {
     await resetTables(db);
-    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Amalia", role: "ADMIN" }).returning();
-    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Dani", role: "MODERATOR" }).returning();
+    [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
+    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" }).returning();
     [copywriter] = await db.insert(staffUsers).values({ email: "copy@dev.test", displayName: "Ioana", role: "COPYWRITER" }).returning();
   });
 

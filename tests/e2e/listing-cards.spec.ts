@@ -290,6 +290,8 @@ async function publishWithPicture(page: Page, created: Created): Promise<{ ro: s
   await fillTimeField(page, "Ora", "18:30");
   await field("event.locationName").fill("Parcul Titulescu");
   await field("event.locationNameEn").fill("Titulescu Park");
+  // A map link, so the whole-card tap (§NNN) can check the place stays its own link.
+  await field("event.mapUrl").fill("https://maps.example.test/parcul-titulescu");
   await field("translations.ro.title").fill(title);
   await field("translations.ro.slug").fill(`tura-cu-poza-${suffix}`);
   const ro = await summaryEditor("ro");
@@ -360,7 +362,96 @@ async function removeCreated(page: Page, created: Created, quiet: boolean): Prom
 }
 
 test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
-  test("are no whole-card link: the title is the card's link, the heading holds it, nothing is a link inside a link", async ({ page }) => {
+  /**
+   * §NNN — the owner: "I should be able to press anywhere on the card". A one-off with a picture in
+   * its summary and a map link (`publishWithPicture`), so the picture, the date's line and the room
+   * under the door are each pressed and land on the event's page, while the place stays its map
+   * link. A one-off, never a series card: the middle of a series card's rows can fall on a date,
+   * which is a link of its own and rightly lifted above the cover.
+   */
+  test("are one tap to the page (§NNN): the picture, the date's line and the room under the door open the page, the place stays its map", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 60_000);
+    const created: Created = [];
+    let passed = false;
+    try {
+      const event = await publishWithPicture(page, created);
+      /** The card, afresh on the listing — each press leaves for the event's page. */
+      const card = async () => {
+        await page.goto("/ro/evenimente");
+        const found = await cardOnListing(page, event.ro);
+        await expect(found).toHaveCount(1);
+        await expect(found).not.toHaveAttribute("data-series", "true");
+        return found;
+      };
+      const first = await card();
+      const href = (await first.locator("h2 a").getAttribute("href"))!;
+      expect(href).toMatch(/^\/ro\/evenimente\/[^/]+$/);
+      const onPage = new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);
+
+      // The place is still its own link, the map, and a press at its centre reaches it.
+      const place = first.locator('[data-fact="where"] a');
+      await expect(place).toHaveAttribute("href", "https://maps.example.test/parcul-titulescu");
+      await place.scrollIntoViewIfNeeded();
+      const placeHit = await place.evaluate((anchor) => {
+        const box = anchor.getBoundingClientRect();
+        return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)?.closest("a") === anchor;
+      });
+      expect(placeHit).toBe(true);
+
+      /**
+       * Where on the card to press: the picture's frame at its centre, the date's line at its
+       * middle, and the card's own padding under the door (the door is an inline box, so the four
+       * pixels under it are the card's). Each must be the title's link by `elementFromPoint`, then
+       * a real press there opens the page — by the pointer, not `locator.click()`, which refuses an
+       * element whose spot another one takes (exactly the point here).
+       */
+      /** A spot is: what to bring to the viewport's middle (clear of a phone's floating header and footer), then where to press. */
+      const spots: Array<[string, (card: Locator) => Locator, (card: Locator) => Promise<{ x: number; y: number }>]> = [
+        [
+          "the picture",
+          (found) => found.getByTestId("card-picture"),
+          async (found) => {
+            const box = (await found.getByTestId("card-picture").boundingBox())!;
+            return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+          },
+        ],
+        [
+          "the date's line",
+          (found) => found.locator('[data-fact="when"]'),
+          async (found) => {
+            const box = (await found.locator('[data-fact="when"]').boundingBox())!;
+            return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+          },
+        ],
+        [
+          "the room under the door",
+          // The door, «Descrierea completă a evenimentului», is the card's last link.
+          (found) => found.locator("a").last(),
+          async (found) => {
+            const door = (await found.locator("a").last().boundingBox())!;
+            const box = (await found.boundingBox())!;
+            const y = box.y + box.height - 2;
+            expect(y, "under the door").toBeGreaterThan(door.y + door.height);
+            return { x: box.x + box.width / 2, y };
+          },
+        ],
+      ];
+      for (const [name, target, spotOf] of spots) {
+        const found = await card();
+        await target(found).evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }));
+        const { x, y } = await spotOf(found);
+        const hit = await page.evaluate(([px, py]) => document.elementFromPoint(px, py)?.closest("a")?.getAttribute("href") ?? null, [x, y] as const);
+        expect(hit, `${name}: under the title's cover`).toBe(href);
+        await page.mouse.click(x, y);
+        await expect(page, `${name}: opens the event's page`).toHaveURL(onPage);
+      }
+      passed = true;
+    } finally {
+      await removeCreated(page, created, !passed);
+    }
+  });
+
+  test("are no <a> around the card: the title is the card's link, the heading holds it, nothing is a link inside a link", async ({ page }) => {
     const list = await cards(page);
     const count = await list.count();
     expect(count).toBeGreaterThan(0);

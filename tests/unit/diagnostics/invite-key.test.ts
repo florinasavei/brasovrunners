@@ -44,16 +44,16 @@ describe("§288 the invitation key, tested rather than merely present", () => {
           loginNames: ["florin@example.ro@club.zitadel.cloud"],
           human: { email: { email: "Florin@Example.ro" } },
         },
-        { userId: "2", username: "dani", loginNames: ["dani@club.zitadel.cloud"], human: { email: { email: "dani@example.ro" } } },
+        { userId: "2", username: "mihai", loginNames: ["mihai@club.zitadel.cloud"], human: { email: { email: "mihai@example.ro" } } },
       ]),
     );
     const check = await checkInviteKey(reader, { ...deps, fetch: call });
     expect(check.kind).toBe("ok");
-    expect(hasNoAccount(check, "dani@example.ro")).toBe(false);
+    expect(hasNoAccount(check, "mihai@example.ro")).toBe(false);
     // Case is not identity here: Echipa stores lowercase, Zitadel stores what was typed.
-    expect(hasNoAccount(check, "DANI@example.ro")).toBe(false);
+    expect(hasNoAccount(check, "MIHAI@example.ro")).toBe(false);
     // A person created by hand with a username that is not their address still counts, by login name.
-    expect(hasNoAccount(check, "dani@club.zitadel.cloud")).toBe(false);
+    expect(hasNoAccount(check, "mihai@club.zitadel.cloud")).toBe(false);
     expect(hasNoAccount(check, "ghost@example.ro")).toBe(true);
   });
 

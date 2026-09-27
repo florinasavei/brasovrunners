@@ -242,7 +242,9 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
         await expect(rule).toBeHidden();
       }
 
-      // Never a second line: the closed bar is one target tall, plus its border.
+      // Never a second line: the closed bar is one target tall, plus its border — the whole
+      // resting footer, measured on the built listing (§NNN, the owner's "footer is too tall on
+      // mobile" round): 25px at 320, 29 at 360 and 390, 45 from `sm`. No padding of its own.
       const bar = await boxOf(footer, "the footer");
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(target + 2);
       await expect(summary).toBeVisible();
@@ -329,26 +331,62 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             const terms = fold.getByRole("link", { name: /termeni|racing tos/i });
             await terms.click({ trial: true });
 
-            // Condensed (§385): every link and the stamp a 44px target, the lines 44px apart with
-            // no margin between them, "Scrie-ne" once, and the whole panel shorter than the 188px
-            // it was at 360 in Romanian (with the club's address configured) before the change.
-            const panelControls = panelContent(fold).locator("a, [role=button]");
-            const tops: number[] = [];
-            for (let i = 0; i < (await panelControls.count()); i++) {
-              const box = await boxOf(panelControls.nth(i), `the panel's control ${i}`);
-              expect(box.height, `the panel's control ${i} is 44px tall at ${width}px`).toBeGreaterThanOrEqual(43.5);
-              tops.push(box.y);
+            // Condensed (§385), then compact (§NNN, amending §385): every line of the panel is 24px
+            // on a phone (`FOLD_LINE`), 44px from `sm`, every word 14px, no two links overlapping,
+            // and the stamp's long-press box 44px tall without adding a line; "Scrie-ne" once.
+            const line = width >= SM ? 44 : 24;
+            const panelLinks = panelContent(fold).locator("a");
+            const boxes: Array<{ x: number; y: number; width: number; height: number }> = [];
+            for (let i = 0; i < (await panelLinks.count()); i++) {
+              const link = panelLinks.nth(i);
+              const box = await boxOf(link, `the panel's link ${i}`);
+              expect(box.height, `the panel's link ${i} is a ${line}px target at ${width}px`).toBeGreaterThanOrEqual(line - 0.5);
+              expect(await link.evaluate((el) => getComputedStyle(el, "::before").content), `no pseudo-element hit area on link ${i}`).toMatch(/^(none|normal)$/);
+              expect(await link.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize)), `the panel's link ${i} is 14px words`).toBeGreaterThanOrEqual(14);
+              boxes.push(box);
             }
-            const lines = [...new Set(tops.map((top) => Math.round(top - panel.y)))];
-            for (const line of lines) {
-              expect(line % 44 <= 1 || line % 44 >= 43, `a panel line starts at ${line}px, a multiple of 44 at ${width}px`).toBe(true);
+            for (let i = 0; i < boxes.length; i++) {
+              for (let j = i + 1; j < boxes.length; j++) {
+                const [a, b] = [boxes[i]!, boxes[j]!];
+                const overlap = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > 0.5 && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > 0.5;
+                expect(overlap, `the panel's links ${i} and ${j} do not overlap at ${width}px`).toBe(false);
+              }
             }
-            expect(panel.height, `the panel's height at ${width}px`).toBeLessThanOrEqual(lines.length * 44 + 8);
-            expect(panel.height, `the panel is shorter than §378's 188px at ${width}px`).toBeLessThan(188);
+            const stampBox = panelContent(fold).getByTestId("footer-build-badge-panel");
+            const stampButton = stampBox.getByLabel(/versiunea site-ului|website version/i);
+            const stamp = await boxOf(stampButton, "the stamp");
+            const chip = await boxOf(stampBox.getByTestId("build-badge-chip"), "the stamp's chip");
+            expect(stamp.height, `the stamp's long-press box is 44px at ${width}px`).toBeGreaterThanOrEqual(43.5);
+            // The reach is the stamp's where the line above is empty (right of the credit), and the
+            // credit's own press stays the credit's.
+            const credit = await boxOf(panelContent(fold).getByTestId("footer-weather-credit"), "the weather credit");
+            const landsOn = (x: number, y: number) =>
+              page.evaluate(([px, py]) => {
+                const hit = document.elementFromPoint(px!, py!);
+                return hit?.closest("[data-testid='footer-weather-credit']") ? "credit" : hit?.closest("[data-testid='footer-build-badge-panel'] [aria-label]") ? "stamp" : hit?.tagName ?? "nothing";
+              }, [x, y]);
+            expect(await landsOn(chip.x + chip.width - 4, stamp.y + 2), `the stamp's reach, 2px under its top, at ${width}px`).toBe("stamp");
+            expect(await landsOn(credit.x + credit.width / 2, credit.y + credit.height - 2), `the credit keeps its own press at ${width}px`).toBe("credit");
+            // The terms and "my registrations" share the first line.
+            expect(Math.abs(boxes[0]!.y - boxes[1]!.y), `the first two links share a line at ${width}px`).toBeLessThanOrEqual(1);
+            // Measured, not derived (§NNN): four lines of 24 on a phone — the two links, "Scrie-ne"
+            // with the address, the credit, the stamp — 96px at 320, 360, 390 and 412. At 320 a
+            // stamp carrying its environment ("local · ", "test · ") is wider than the panel and
+            // its chip wraps onto a second line: 111px there, production's one-line chip 96.
+            if (width < SM) {
+              const wrappedChip = chip.height > 30;
+              const bound = width >= 360 ? 100 : wrappedChip ? 112 : 104;
+              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}`).toBeLessThanOrEqual(bound);
+            } else {
+              // From `sm` §385's one wrapping row, unchanged by the phone's lines (§NNN): 92px at
+              // 768 on qa before this pass and after it, two 44-pixel lines and the 4 under them.
+              expect(panel.height, `the panel's height at ${width}px`).toBeLessThanOrEqual(96);
+            }
             const panelText = await panelContent(fold).evaluate((el) => el.textContent ?? "");
             expect(panelText.match(/Scrie-ne|Write to us/g), `"Scrie-ne" once at ${width}px`).toHaveLength(1);
             // The stamp, a chip, is the panel's last item.
-            await expect(panelContent(fold).locator(":scope > *").last()).toHaveAttribute("data-testid", "footer-build-badge-panel");
+            await expect(panelContent(fold).locator(":scope > *").last()).toHaveAttribute("data-testid", "footer-panel-meta");
+            await expect(panelContent(fold).getByTestId("footer-panel-meta").locator(":scope > *").last()).toHaveAttribute("data-testid", "footer-build-badge-panel");
           }
 
           const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

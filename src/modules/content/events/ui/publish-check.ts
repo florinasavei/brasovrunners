@@ -58,7 +58,7 @@ export type PublishGapLabels = {
   languages: Readonly<Record<string, string>>;
 };
 
-/** "Titlu și rezumat › English › Rezumat", "Locul › English › Punct de întâlnire". */
+/** "Titlu și rezumat › English › Rezumat", "Când și unde › English › Punct de întâlnire". */
 export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): string {
   return [labels.boxes[gap.box], gap.locale ? (labels.languages[gap.locale] ?? gap.locale) : null, labels.fields[gap.field]]
     .filter((part): part is string => Boolean(part))
@@ -74,6 +74,7 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
  */
 export const PUBLISH_GAP_CARD: Readonly<Record<PublishGapBox, `box-${string}`>> = {
   titleSummary: "box-title",
+  // The place's own part of «Când și unde» since §NNN: the fold around it opens (`openFoldsAround`).
   place: "box-place",
   address: "box-address",
 };

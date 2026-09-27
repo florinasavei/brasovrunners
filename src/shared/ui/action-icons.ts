@@ -29,6 +29,7 @@ import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import PostAddIcon from "@mui/icons-material/PostAdd";
 import PrintIcon from "@mui/icons-material/Print";
@@ -124,6 +125,9 @@ export type ActionIconName =
   // Looking and finding.
   | "preview"
   | "picture"
+  // «Din galerie» (§NNN): a picture the club already stored, chosen again — the stack of photos,
+  // never the single picture, which is looking at one.
+  | "gallery"
   | "filter"
   | "clearFilter"
   | "search"
@@ -197,6 +201,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
 
   preview: VisibilityIcon,
   picture: ImageIcon,
+  gallery: PhotoLibraryIcon,
   filter: FilterAltIcon,
   clearFilter: FilterAltOffIcon,
   search: SearchIcon,

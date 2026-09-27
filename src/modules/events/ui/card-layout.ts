@@ -12,6 +12,8 @@
  *    a black heading; the series card's title was a blue link. A link cannot hold another link, so
  *    the single card's place could not be its map link. Now neither card is a link: on both the
  *    title is the link, in one blue style (`CARD_TITLE_SX`), and the place is free to be the map.
+ *    Since §NNN that title link is stretched over the card (`CARD_TAP_SX`), so the whole card is one
+ *    tap to the page while the map, the dates and the doors stay links of their own.
  * 2. **Holes inside the cards.** A row of cards is as tall as its tallest (§275), and the door to
  *    the page was pushed to the foot of every card, so a short card beside a series card had a
  *    hundred and fifty pixels of nothing between its facts and its own link. Now the door follows
@@ -79,6 +81,51 @@ export const CARD_BODY_SX = {
  */
 export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
 
+/**
+ * **The whole card is one tap to the event's page, its own links kept** (§NNN, reversing what §366
+ * refused and §113 rejected). The owner wanted a press anywhere on a card — its summary, its
+ * rhythm, its pills, the room below the door — to open the page, as every other listing on a phone
+ * does; §366 had made only the title the link, so a thumb on the card's words did nothing.
+ *
+ * Still no card is an `<a>`: a link cannot hold the map link, the dates or the registration button
+ * (§366's reason stands). The title's link is *stretched* instead — its `::after` covers the card
+ * (`CARD_TITLE_SX`) — and every control of the card's own is lifted above that cover here, so a
+ * press on the map, a date, the fold, the door, the registration button or a pill with a tooltip
+ * (the night pill's sunset, §415 — `GlyphChip` marks it `data-has-tooltip`) still reaches it. A
+ * screen reader and the keyboard meet exactly the links they met before: the cover is the title's
+ * link, not a new one.
+ *
+ * - `position: relative` makes the card the cover's box; MUI's `Card` already clips to its border.
+ * - `isolation: isolate` keeps the cover's `z-index` inside the card, never above the header.
+ * - The lift is `.card :where(…)`: the `:where` adds nothing, but the card's class still counts
+ *   (0,1,0), so it is *not* weightless. The title's own rule (`.title a`, 0,1,1) outranks it, so the
+ *   title's link stays `static` and its cover measures the card rather than the title. A child whose
+ *   own single-class rule sets `position: absolute` (a film's play overlay, were one ever in the
+ *   excerpt) ties with the lift and wins only by coming later in Emotion's sheet — which a child's
+ *   rule does, being inserted after the card's; mind that before lifting anything else here.
+ * - **A film is lifted whole** (§NNN): a card's summary may hold a YouTube film (§417), and the
+ *   lift of its `summary` alone let the play press through, then left the player, its own controls
+ *   and the volume glyph (§478) under the cover. `VideoFacade` marks its root `data-lifted`, which
+ *   this rule lifts like a control, so every press on the film is the film's; a press beside it
+ *   still opens the page. Anything else that must keep its presses on a card wears the same mark.
+ * - **The focus ring is the card's** (§NNN): the title's link now targets the whole card, so while
+ *   the keyboard is on that link the card wears the ring (`:has(h2 a:focus-visible)`) and the title
+ *   keeps only its underline. A focused map link, date or door keeps its own ring. A browser without
+ *   `:has` keeps the title's own ring (`CARD_TITLE_SX` removes it only under `@supports selector(:has(a))`).
+ * - Anything else positioned on the card (the weather pill, a picture's frame) stays under the
+ *   cover: the cover's `z-index` is 1, not `auto`, so a positioned element later in the card does
+ *   not take the press by painting over it.
+ *
+ * Paid for: the words on a card can no longer be selected with a drag (the event page has them
+ * all). Plain objects, as everything here (see the head of this file).
+ */
+export const CARD_TAP_SX = {
+  position: "relative",
+  isolation: "isolate",
+  "& :where(a, button, summary, [data-has-tooltip], [data-lifted])": { position: "relative", zIndex: 2 },
+  "&:has(h2 a:focus-visible)": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+} as const;
+
 /** The chips at the top of a card: one wrapping row, six pixels apart. */
 export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" } as const;
 
@@ -117,6 +164,10 @@ export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, ali
  * more pixels between the title and the line under it than the gap says — on a listing the owner
  * had asked to be tighter. Nothing overlapped, so the edge presses passed; the browser measure of
  * the heading against its words is what found it.
+ *
+ * **The link's cover** (§NNN): its `::after` is laid over the whole card (`CARD_TAP_SX` makes the
+ * card its box), so a press anywhere on the card that is not one of its own controls is a press on
+ * this link. The link itself stays `static`, or the cover would measure the title alone.
  */
 export const CARD_TITLE_SX = {
   mt: GROUP_GAP,
@@ -138,7 +189,17 @@ export const CARD_TITLE_SX = {
     borderRadius: 1,
     "&:visited": { color: "primary.main" },
     "&:hover": { textDecoration: "underline" },
-    "&:focus-visible": { textDecoration: "underline", outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+    // The ring is the card's (`CARD_TAP_SX`, §NNN): the link's target is the whole card now. Only
+    // where the card can draw it — a browser without `:has` keeps the link's own ring.
+    "&:focus-visible": {
+      textDecoration: "underline",
+      outline: "2px solid",
+      outlineColor: "primary.main",
+      outlineOffset: 2,
+      "@supports selector(:has(a))": { outline: "none" },
+    },
+    position: "static",
+    "&::after": { content: '""', position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 1 },
   },
 } as const;
 

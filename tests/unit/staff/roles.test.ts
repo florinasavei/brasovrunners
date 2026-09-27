@@ -87,8 +87,8 @@ describe("BR-REQ-051-01 criterion 3 publishing is out of a copywriter's hands", 
  * BR-REQ-051-01 criterion 2 and `DECISIONS.md` §201 — **crossing into or out of public view is
  * the Administrator's**.
  *
- * The owner, of his two colleagues: "Amalia e Administrator, Dani e Organizator dar poate face
- * prostii, deci trebuie manageuit de Amalia". The rule is one sentence — below Administrator,
+ * The owner, of his two colleagues: "[colega] e Administrator, [colegul] e Organizator dar poate
+ * face prostii, deci trebuie manageuit de [ea]". The rule is one sentence — below Administrator,
  * nothing the public can see changes — and these assertions are that sentence from both sides.
  */
 describe("BR-REQ-051-01 criterion 2 the Administrator publishes", () => {
@@ -331,8 +331,8 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     /*
       From the copywriter up, the sections are what a role may *look* at (§208): reading the
       club's content and changing it are two questions now, and the navigation asks the first.
-      The Organizer sees the same content as the copywriter and changes none of it — "Dani îi
-      zice Amaliei să modifice X, Y lucru".
+      The Organizer sees the same content as the copywriter and changes none of it — "organizatorul îi
+      zice administratorului să modifice X, Y lucru".
     */
     // "emails" joins them in §253: the messages and the words in them are the Redactor's work
     // (§247), and the panels behind that page ask their own questions — the queue and the

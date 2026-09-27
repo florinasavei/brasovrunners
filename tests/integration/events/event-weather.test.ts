@@ -4,7 +4,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 
 /**
  * BR-REQ-011-01 (§402) — «Vremea» on the event page: the page reads the forecast
- * (`weatherForEvent`, Open-Meteo answered here by a stub `fetch`) and the facts draw it as a row,
+ * (`forecastForEvent`, Open-Meteo answered here by a stub `fetch`) and the facts draw it as a row,
  * glyph, word, temperature, chance of rain and wind, with the credit under it. Absent beyond
  * seven days and absent when the service fails — never a sentence about a missing forecast.
  *

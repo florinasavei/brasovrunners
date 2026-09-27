@@ -88,6 +88,7 @@
       "yearEmpty": "Nimic programat în acest an.",
       "pageTitle": "Calendar",
       "pageIntro": "Luna clubului: alergările săptămânale și cursele, pe zile. Poți lua tot calendarul în telefon sau în Google Calendar.",
+      "introHelp": "Despre calendar și cum îl iei în telefon",
       "addTitle": "Adaugă în calendarul tău",
       "feedAddress": "Adresa pentru alte aplicații",
       "subscribeGoogle": "Google Calendar",
@@ -329,6 +330,8 @@
       },
       "weeklyChip": "Săptămânal",
       "fortnightlyChip": "La două săptămâni",
+      "repeats": "Se repetă {sentence}",
+      "recurring": "Eveniment recurent",
       "nextLabel": "Următoarea:",
       "allDatesCount": "Următoarele date ({count})",
       "fullDescription": "Descrierea completă a evenimentului"
@@ -341,7 +344,6 @@
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",
     "video": {
-      "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
       "play": "Redă filmul",
@@ -1085,7 +1087,7 @@
         "autoLine": "Automat: {day}, începe la {start}, apusul la {sunset} — {verdict}",
         "autoLineDawn": "Automat: {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}",
         "autoLineNoTime": "Automat: {day}, apusul la {sunset} — alege ora startului",
-        "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
+        "autoLineNoDate": "Automat: alege data și ora startului în „Când și unde”, iar răspunsul apare aici.",
         "verdictNight": "eveniment de noapte",
         "verdictDay": "nu e eveniment de noapte",
         "endLine": "Startul e înainte de amurg, dar alergarea ține până la {end} și prinde întunericul — tot eveniment de noapte.",
@@ -1439,6 +1441,9 @@
         "description": {
           "title": "Descrierea evenimentului"
         },
+        "whenWhere": {
+          "title": "Când și unde"
+        },
         "when": {
           "title": "Data și ora",
           "timezone": "Fus orar",
@@ -1447,6 +1452,10 @@
         },
         "place": {
           "title": "Locul"
+        },
+        "programmeRules": {
+          "title": "Program, regulament și declarație",
+          "rulesLine": "regulamentul: {state}"
         },
         "programme": {
           "title": "Programul zilei și ce să aduci"
@@ -1467,7 +1476,7 @@
         "conditions": {
           "title": "Condiții de participare",
           "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
-          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Regulamentul» → «Declarația pe propria răspundere»."
+          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Program, regulament și declarație» → «Declarația pe propria răspundere»."
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -1494,7 +1503,7 @@
         "status": {
           "title": "Starea evenimentului",
           "createNote": "De obicei Programat. Alege Anulat pentru un eveniment deja anulat (trecut în evidență, de exemplu de pe Facebook) sau Încheiat pentru unul care a avut loc deja. Niciuna nu trimite emailuri: nimeni nu e încă înscris.",
-          "completedRefused": "Starea: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
+          "completedRefused": "Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
         },
         "course": {
           "title": "Traseul"
@@ -1666,17 +1675,10 @@
           },
           "declaration": {
             "offered": "declarație pentru {surface}",
+            "offeredNoText": "declarație pentru {surface} — niciun text aprobat în vigoare, butonul nu apare",
             "notOffered": "fără declarație",
             "notAsked": "nu se cere"
           }
-        },
-        "video": {
-          "title": "Filmul",
-          "stored": "un film, dintr-un link vechi",
-          "none": "niciun film separat",
-          "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
-          "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
-          "toDescription": "Mergi la descriere"
         },
         "declaration": {
           "title": "Declarația pe propria răspundere",
@@ -1712,7 +1714,7 @@
           "kind": "Tipul",
           "title": "Titlul",
           "description": "Descrierea",
-          "when": "Când",
+          "when": "Când și unde",
           "place": "Unde",
           "course": "Traseul",
           "cost": "Costul",
@@ -1720,9 +1722,8 @@
           "coHosts": "Împreună cu",
           "share": "Distribuie",
           "links": "Linkuri și fișiere",
-          "programme": "Programul",
+          "programme": "Program și regulament",
           "rules": "Regulamentul",
-          "video": "Filmul",
           "startList": "Lista participanților"
         }
       },
@@ -2286,7 +2287,7 @@
           "done": "Există evenimente publicate.",
           "how": [
             "Deschide /admin/events → „Eveniment nou”. Completează tipul, data, locul și titlul în ambele limbi. Salvează.",
-            "Apasă „Trimite spre verificare”, apoi „Publică”. Ambele limbi apar deodată; până atunci pagina e 404 pentru vizitatori.",
+            "Apasă „Publică” — o ciornă trece pe site dintr-o apăsare. Ambele limbi apar deodată; până atunci pagina e 404 pentru vizitatori.",
             "Un singur eveniment poate fi „principal” — el deschide prima pagină. Anul viitor: „Duplică” pe cel de anul acesta."
           ]
         },
@@ -2407,13 +2408,13 @@
         },
         "translation": {
           "title": "Traducerea automată din română (DeepL, gratuit)",
-          "todo": "Construit: lângă fiecare câmp în engleză din editoare apare „Tradu din română”, iar sus „Tradu tot din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci câmpurile în engleză se scriu de mână, ca acum.",
-          "done": "Traducerea automată e pornită: editoarele au butoanele „Tradu din română”.",
+          "todo": "Construit: sus în fiecare editor (eveniment, pagină, album, card din Echipa) e butonul „Copiază și tradu tot: RO → EN”, iar lângă fiecare câmp în engleză „Tradu din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci butonul de sus e gri și trimite aici, iar câmpurile în engleză se scriu de mână.",
+          "done": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare.",
           "how": [
             "Fă-ți un cont DeepL API Free (pagina „DeepL API” de pe site-ul DeepL → planul Free): 500.000 de caractere pe lună, gratuit. DeepL poate cere un card doar pentru verificare; planul Free nu se taxează.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
             "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
-            "Deschide un eveniment: sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
           ]
         }
       },
@@ -2470,7 +2471,7 @@
         "domain": {
           "name": "Adresa site-ului (domeniul .com)",
           "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește. Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA.",
-          "ceiling": "Nu are o limită: o factură pe an, în lei.",
+          "ceiling": "Nu are o limită: o factură pe an pentru .com, în lei.",
           "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani; .ro nu se mai cumpără (o singură adresă pentru motoarele de căutare).",
           "closeYes": "Acest mediu răspunde pe domeniul clubului.",
           "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie."
@@ -2618,14 +2619,14 @@
       },
       "translationBudget": {
         "title": "Traducerea automată (DeepL)",
-        "intro": "Butoanele „Tradu din română” și „Tradu tot din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
         "inForce": {
           "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
           "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
         },
         "today": "Azi s-au trimis {used} din {budget} caractere.",
         "configured": "Cheia DeepL e pusă pe acest server: butoanele apar pentru Redactor, Organizator și Administrator.",
-        "notConfigured": "Cheia DeepL nu e pusă pe acest server: butoanele nu apar (vezi rândul din Sarcini).",
+        "notConfigured": "Cheia DeepL nu e pusă pe acest server: în editoare, „Copiază și tradu tot” e gri, cu un link spre pașii din Sarcini → Club.",
         "privacy": "Pleacă la DeepL (UE) doar textele clubului din câmpurile de conținut — niciodată datele unui participant și niciodată textele legale. Nota de confidențialitate nu se schimbă.",
         "updatedAt": "Ultima schimbare: {when}.",
         "readOnly": "Doar un Administrator poate schimba bugetul.",
@@ -2696,7 +2697,7 @@
           "vercel": "Nu se măsoară fără VERCEL_API_TOKEN și VERCEL_PROJECT_ID pe acest mediu."
         },
         "unread": "Furnizorul nu a răspuns acum ({reason}).",
-        "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butoanele de traducere nu apar.",
+        "deeplOff": "Cheia DeepL nu e pusă pe acest server, deci butonul de traducere din editoare e gri.",
         "period": "Luna calendaristică: {span}.",
         "periodNeon": "Perioada de facturare Neon: {span}.",
         "others": "Fără cost și fără consum urmărit aici: Zitadel (contul echipei), cron-job.org și GitHub (sarcinile automate) și Open-Meteo (vremea).",
@@ -2759,7 +2760,7 @@
         "text": "Ce e de făcut",
         "textHelp": "O propoziție sau câteva: ce, unde în backoffice, până când. Fără adrese de email sau parole — lista o vede toată echipa.",
         "owner": "Pentru cine",
-        "ownerHelp": "Un prenume — Amalia, Dani, Florin — sau gol dacă e al oricui.",
+        "ownerHelp": "Un rol sau un prenume — de exemplu Administrator, Organizator — sau gol dacă e al oricui.",
         "due": "Termen",
         "dueHelp": "Opțional: ziua până la care trebuie făcut."
       },
@@ -2825,6 +2826,18 @@
       "imageFromGalleryShort": "Din galerie",
       "imageGalleryLoading": "Se încarcă imaginile…",
       "imageGalleryEmpty": "Nu există nicio imagine încărcată încă.",
+      "imageGalleryFilter": "Caută după numele fișierului",
+      "imageGalleryNoMatch": "Nicio imagine nu se potrivește.",
+      "imageGallerySourceLegend": "Folosită în",
+      "imageGallerySourceAll": "Toate",
+      "imageGallerySourceEvent": "Eveniment",
+      "imageGallerySourceAlbum": "Album",
+      "imageGallerySourcePage": "Pagină",
+      "imageGallerySourceTeam": "Echipa",
+      "imageGalleryHereEvent": "Acest eveniment",
+      "imageGalleryHereAlbum": "Acest album",
+      "imageGalleryHerePage": "Această pagină",
+      "imageFromGalleryPicked": "Din galerie: {name}, {width} × {height} px.",
       "imageNoAltOne": "O imagine nu are text alternativ — apasă pe imagine ca să-l scrii.",
       "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii.",
       "youtube": "Adaugă un film de pe YouTube",
@@ -2838,6 +2851,11 @@
       "youtubePosterUploading": "Se încarcă…",
       "youtubePosterFailed": "Thumbnail-ul nu a putut fi încărcat; încearcă din nou.",
       "youtubePosterUseYoutube": "Folosește thumbnail-ul de pe YouTube",
+      "youtubePosterFromGallery": "Din galerie",
+      "youtubePosterCrop": "Decupajul thumbnail-ului — ce se vede înainte de pornire",
+      "youtubePosterCropHelp": "Chenarul filmului e 16:9. Trage dreptunghiul peste thumbnail ca să alegi partea care se vede (altă formă se vede cât încape în 16:9); săgețile îl mută, Shift cu ele îl mărește sau îl micșorează.",
+      "youtubePosterCropReset": "Mijlocul thumbnail-ului",
+      "youtubePosterCropWaiting": "Thumbnail-ul de pe YouTube se păstrează la prima salvare; după aceea îl poți decupa aici. Poți alege și unul din galerie sau încărca altul.",
       "imageAlign": "Poziția în text",
       "imageAlignBlock": "În flux",
       "imageAlignLeft": "Stânga",
@@ -3039,6 +3057,10 @@
       "uploading": "Se încarcă {done} din {total}…",
       "uploaded": "{total} fotografii încărcate.",
       "uploadFailed": "Nu s-au putut încărca: {names}",
+      "fromGallery": "Din galerie",
+      "galleryAdded": "{name} e acum în album.",
+      "galleryAlready": "{name} era deja în album.",
+      "galleryFailed": "{name} nu a putut fi adăugată; încearcă din nou.",
       "qualityLegend": "Calitate",
       "qualityLow": "Minimă (fișier mic)",
       "qualityNormal": "Medie (recomandat)",
@@ -3058,10 +3080,10 @@
       "setCover": "Copertă",
       "removePhoto": "Șterge",
       "removePhotoTitle": "Ștergi fotografia?",
-      "removePhotoBody": "Fotografia dispare din album și din stocare. Nu se poate anula.",
+      "removePhotoBody": "Fotografia dispare din album și, dacă nu o mai folosește nimic altceva (un text, un card din «Echipa», alt album), și din stocare. Nu se poate anula.",
       "delete": "Șterge albumul",
       "deleteTitle": "Ștergi albumul?",
-      "deleteBody": "Albumul, ambele traduceri și toate fotografiile lui dispar definitiv, și din stocare. Dacă vrei doar să-l scoți de pe site, folosește „Arhivează”.",
+      "deleteBody": "Albumul, ambele traduceri și toate fotografiile lui dispar definitiv, și din stocare — în afară de cele folosite și în altă parte, care rămân acolo. Dacă vrei doar să-l scoți de pe site, folosește „Arhivează”.",
       "viewPublic": "Vezi albumul public →",
       "photoAlt": "Fotografia {n}: {title}",
       "columnTitle": "Titlu",
@@ -3179,7 +3201,7 @@
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
         "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc.",
-        "Voluntarii: un Superadministrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
@@ -3887,7 +3909,7 @@
               "title": "Corectează textul unui eveniment",
               "steps": [
                 "«Evenimente» → «Editează» pe rândul evenimentului.",
-                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului», «Programul zilei și ce să aduci» sau «Regulamentul».",
+                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului» sau «Program, regulament și declarație» (apoi «Programul zilei și ce să aduci» ori «Regulamentul»).",
                 "Scrie în tabul «Română» și în tabul «English».",
                 "Jos, la un eveniment publicat, bifează «Am înțeles că modific conținut publicat.».",
                 "Apasă «Salvează». Apare imediat pe site, în ambele limbi."
@@ -3927,7 +3949,8 @@
               "steps": [
                 "Un eveniment nu se publică fără titlu și rezumat în română și în engleză.",
                 "Un text opțional (descrierea, regulamentul, notele programului, câmpurile SEO) se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța goală, cu tot ce ai scris păstrat.",
-                "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment."
+                "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment.",
+                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă: sub el e linkul spre pași. Dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale»."
               ]
             },
             {
@@ -4029,10 +4052,19 @@
               "title": "Schimbă o setare a evenimentului",
               "steps": [
                 "«Evenimente» → «Editează».",
-                "Deschide cardul: «Data și ora», «Locul», «Traseul», «Cost» sau «Participare și înscrieri». Schimbă ce trebuie.",
+                "Deschide cardul: «Când și unde», «Traseul», «Cost» sau «Participare și înscrieri». Schimbă ce trebuie.",
                 "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
                 "Participanții trebuie să afle? Bifează «Anunță participanții despre schimbare» și scrie nota în ambele limbi.",
                 "Apasă «Salvează». Textele (titlul, descrierea) nu le poți salva: spune-i Administratorului ce e greșit."
+              ]
+            },
+            {
+              "title": "Engleza dintr-o apăsare",
+              "steps": [
+                "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
+                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+                "Citește engleza și corectează ce sună greșit.",
+                "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
             },
             {
@@ -4066,8 +4098,8 @@
                 "Fiecare card e o parte a paginii publice, în ordinea de pe site. Harta de sus, «Pagina, de sus în jos», te duce la fiecare card.",
                 "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
                 "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
-                "«Data și ora», apoi «Locul»: punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
-                "Restul cardurilor după nevoie: «Descrierea evenimentului», «Traseul», «Cost», «Participare și înscrieri», «Programul zilei și ce să aduci», «Regulamentul».",
+                "«Când și unde»: data și ora, apoi punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
+                "Restul cardurilor după nevoie: «Descrierea evenimentului» (un film de pe YouTube se pune aici, cu butonul «YouTube»), «Traseul», «Cost», «Participare și înscrieri», «Program, regulament și declarație».",
                 "«Creează evenimentul» îl salvează ca ciornă (nu apare pe site). «Creează și publică» îl pune direct pe site.",
                 "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou.",
                 "Greșeala obișnuită: tabul «English» necompletat lasă evenimentul fără engleză; sau apeși «Creează evenimentul» crezând că a intrat pe site — rămâne ciornă, nu «Creează și publică»."
@@ -4086,6 +4118,15 @@
               ]
             },
             {
+              "title": "Engleza dintr-o apăsare",
+              "steps": [
+                "Scrie în română fiecare câmp: titlul, rezumatul, descrierea, regulamentul, traseul, programul.",
+                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club.",
+                "Citește engleza și corectează ce sună greșit.",
+                "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
+              ]
+            },
+            {
               "title": "Pune o poză în rezumat sau în descriere",
               "steps": [
                 "Deschide cardul («Titlu și rezumat» sau «Descrierea evenimentului») și pune cursorul unde vrei poza.",
@@ -4100,7 +4141,7 @@
               "title": "Publică un eveniment sau scoate-l de pe site",
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Publicare».",
-                "O ciornă: apasă «Trimite spre verificare», apoi «Publică».",
+                "O ciornă: apasă «Publică» — trece pe site dintr-o apăsare, fără «Trimite spre verificare».",
                 "În fereastră apasă din nou «Publică». Ambele limbi apar împreună.",
                 "Lipsește ceva? Apare «Nu se poate publica încă», cu lista: completează, «Salvează», apoi «Publică».",
                 "Mai multe deodată: pe lista «Evenimente» bifează-le și apasă «Publică cele bifate».",
@@ -4125,7 +4166,7 @@
                 "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Condiții de participare»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
+                "«Condiții de participare»: «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără). Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]
@@ -4712,6 +4753,7 @@
       "photoChoose": "Alege o fotografie",
       "photoReplace": "Schimbă fotografia",
       "photoRemove": "Scoate fotografia",
+      "photoFromGallery": "Din galerie",
       "photoUploading": "Se încarcă…",
       "photoFailed": "Fotografia nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
       "photoNone": "Fără fotografie",
@@ -5718,6 +5760,11 @@
     "humidity": "umiditate {percent}%",
     "uv": "indice UV {index}",
     "rainShort": "{percent}% ploaie",
+    "temperatureRange": "{from}–{to} °C",
+    "hourRange": "{from}–{to}",
+    "scope": "la {place}, {day} {hours}",
+    "heading": "Vremea {scope}",
+    "eventPlace": "locul evenimentului",
     "atStart": "Vremea la start",
     "codes": {
       "clear": "Senin",
@@ -6115,16 +6162,29 @@
   "Translate": {
     "button": "Tradu din română",
     "pending": "Se traduce…",
-    "all": "Tradu tot din română",
-    "allHelp": "Înlocuiește fiecare câmp în engleză care are text în română cu traducerea lui, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
+    "all": "Copiază și tradu tot: RO → EN",
+    "allHelp": "Un singur buton: fiecare text scris în română ajunge în câmpul lui din engleză, tradus automat (DeepL), cu aceeași așezare — titluri, liste, poze, linkuri. Câmpurile goale se completează direct; dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale». Citește, corectează, apoi apasă Salvează.",
+    "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
+    "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+    "offSteps": "Vezi pașii",
     "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
     "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
     "cut": "Scurtat la limita câmpului, verifică finalul: {fields}.",
     "confirm": {
       "title": "Înlocuiești textul în engleză?",
       "body": "Câmpul în engleză are deja text. Traducerea din română îl înlocuiește; nimic nu se salvează până nu apeși Salvează.",
-      "allTitle": "Traduci totul din română?",
-      "allBody": "Se înlocuiesc {count} câmpuri în engleză cu traducerea celor în română, cu aceeași așezare (titluri, liste, tabele, poze, linkuri). Nimic nu se salvează până nu apeși Salvează. Câmpurile: {fields}",
+      "allTitle": {
+        "one": "{count} câmp în engleză are deja text. Îl înlocuiesc?",
+        "few": "{count} câmpuri în engleză au deja text. Le înlocuiesc?",
+        "other": "{count} de câmpuri în engleză au deja text. Le înlocuiesc?"
+      },
+      "allBody": "Cu text deja scris: {fields}. «Înlocuiește tot» le traduce din nou din română; «Doar cele goale», când apare, le lasă neatinse și completează restul. Nimic nu se salvează până nu apeși Salvează.",
+      "bigTitle": "Traduci totul din română?",
+      "bigBody": "Câmpurile în engleză se completează cu traducerea, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
+      "budget": "Se trimit ~{count} caractere din bugetul de azi.",
+      "budgetEmpty": "Doar cele goale: ~{count} caractere.",
+      "replaceAll": "Înlocuiește tot",
+      "onlyEmpty": "Doar cele goale",
       "go": "Tradu",
       "cancel": "Renunță"
     },
@@ -6133,6 +6193,7 @@
       "notConfigured": "Traducerea automată nu e configurată pe acest server (lipsește cheia DeepL).",
       "invalid": "Câmpul acesta nu se poate traduce automat.",
       "nothing": "Câmpul în română e gol: nu e nimic de tradus.",
+      "nothingAll": "Nu e nimic de tradus: scrie întâi textele în română.",
       "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
       "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
       "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",

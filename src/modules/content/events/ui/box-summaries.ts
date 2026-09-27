@@ -69,7 +69,7 @@ export type SummaryWords = {
   window: { range: string; fromPublication: string; soon: string; untilStart: string };
   conditions: { noDeclaration: string };
   /** A group run's optional self-declaration, under «Regulamentul» (§448). */
-  declaration: { offered: string; notOffered: string; notAsked: string };
+  declaration: { offered: string; offeredNoText: string; notOffered: string; notAsked: string };
   confirmation: { sentence: string; atStart: string; off: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
@@ -407,12 +407,23 @@ type DeclarationEvent = Pick<EditableEvent, "registrationMode" | "offersGroupRun
 export function declarationSummary(
   words: SummaryWords,
   event: DeclarationEvent | null,
-  options: { takesRegistrations: boolean; declarationVersion: number | null; surface: string | null },
+  options: {
+    takesRegistrations: boolean;
+    declarationVersion: number | null;
+    surface: string | null;
+    /**
+     * Whether an approved, not withdrawn text of the run's surface is in force (§393). Ticked with
+     * none, the public button does not show, so the line says so rather than «declarație pentru
+     * Trail» (§NNN). Absent means "not known here" and reads as in force, as before.
+     */
+    groupRunTextInForce?: boolean;
+  },
 ): string | null {
   if (!options.takesRegistrations) {
-    return event?.offersGroupRunDeclaration && options.surface
-      ? fillIn(words.declaration.offered, { surface: options.surface })
-      : words.declaration.notOffered;
+    if (!event?.offersGroupRunDeclaration || !options.surface) return words.declaration.notOffered;
+    return fillIn(options.groupRunTextInForce === false ? words.declaration.offeredNoText : words.declaration.offered, {
+      surface: options.surface,
+    });
   }
   if ((event?.registrationMode ?? "NONE") !== "INTERNAL") return null;
   return options.declarationVersion !== null

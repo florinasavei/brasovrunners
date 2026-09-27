@@ -119,7 +119,6 @@ export type CalendarEvent = {
   discountNote?: string | null;
   /** The links group (§159): each line only when the organizer gave the link. */
   routeUrl?: string | null;
-  videoUrl?: string | null;
   stravaEventUrl?: string | null;
   facebookEventUrl?: string | null;
   /** "What to bring", the translation's one line (§81). */
@@ -459,7 +458,6 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     ...(hasRules ? [{ text: t("calendar.rules"), url: `${event.url}#rules` }] : []),
     ...(programme.length > 0 ? [{ text: t("calendar.programme"), url: `${event.url}#schedule` }] : []),
     ...(event.routeUrl ? [{ text: t("route"), url: event.routeUrl }] : []),
-    ...(event.videoUrl ? [{ text: t("video.open"), url: event.videoUrl }] : []),
     ...(event.stravaEventUrl ? [{ text: t("openStravaEvent"), url: event.stravaEventUrl }] : []),
     ...(event.facebookEventUrl ? [{ text: t("openFacebookEvent"), url: event.facebookEventUrl }] : []),
   ];

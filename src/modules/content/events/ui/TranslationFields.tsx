@@ -7,6 +7,7 @@ import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEdito
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { fromPlainText, isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import type { Locale } from "@/i18n/routing";
+import type { PickerScope } from "@/modules/media/picker";
 import { EVENT_TYPES, type EventType, hasProgramme } from "@/modules/events/domain/event-type";
 import { type TranslationFieldName, translationInputConstraints } from "../constraints";
 import type { EditableTranslation } from "../repository";
@@ -72,7 +73,7 @@ export type TranslationDraft = Pick<
   | "seoDescription"
   | "discountNote"
 > &
-  Partial<Pick<EditableTranslation, "id" | "version">>;
+  Partial<Pick<EditableTranslation, "id" | "version" | "eventId">>;
 
 /** The empty language of an event being created: every field blank, no row behind it. */
 export function blankTranslation(locale: Locale): TranslationDraft {
@@ -102,6 +103,13 @@ function box(field: TranslationFieldName) {
 }
 
 const named = (translation: TranslationDraft) => (field: string) => `translations.${translation.locale}.${field}`;
+
+/**
+ * The event a stored translation belongs to, as the gallery picker's place (§NNN): «Din galerie»
+ * in any of its texts opens on «Acest eveniment». The create form's blank rows have none.
+ */
+const pictureScopeOf = (translation: TranslationDraft): PickerScope | undefined =>
+  translation.eventId ? { kind: "event", id: translation.eventId } : undefined;
 
 /** A stored document's state in two words, for a reader who may not change it. */
 async function documentState(value: unknown): Promise<string> {
@@ -179,6 +187,7 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.excerptEmpty")}
         initialBody={translation.excerptJson ?? fromPlainText(translation.excerpt)}
         accessibleSuffix={translation.locale.toUpperCase()}
+        pictureScope={pictureScopeOf(translation)}
         // Its pictures are the listing card's, in the card's 16∶9 frame (§454).
         cardPictures
         labels={await editorLabels()}
@@ -216,6 +225,7 @@ export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.bodyEmpty")}
         initialBody={translation.bodyJson}
         accessibleSuffix={translation.locale.toUpperCase()}
+        pictureScope={pictureScopeOf(translation)}
         labels={await editorLabels()}
       />
       {translateButton(translation, name("body"))}
@@ -253,6 +263,7 @@ export async function ProgrammeTextFields({ translation, mayEdit, eventType }: P
           emptyHint={t("editor.bodyEmpty")}
           initialBody={translation.scheduleJson}
           accessibleSuffix={translation.locale.toUpperCase()}
+          pictureScope={pictureScopeOf(translation)}
           labels={await editorLabels()}
         />
         {translateButton(translation, name("schedule"))}
@@ -293,6 +304,7 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.rulesEmpty")}
         initialBody={translation.rulesJson}
         accessibleSuffix={translation.locale.toUpperCase()}
+        pictureScope={pictureScopeOf(translation)}
         labels={await editorLabels()}
       />
       {translateButton(translation, name("rules"))}
@@ -329,6 +341,7 @@ export async function RouteDescriptionFields({ translation, mayEdit }: PieceProp
         emptyHint={t("editor.routeDescriptionEmpty")}
         initialBody={translation.routeDescriptionJson}
         accessibleSuffix={translation.locale.toUpperCase()}
+        pictureScope={pictureScopeOf(translation)}
         labels={await editorLabels()}
       />
       {translateButton(translation, name("routeDescription"))}

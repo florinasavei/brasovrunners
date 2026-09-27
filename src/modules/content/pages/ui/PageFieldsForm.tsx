@@ -49,11 +49,14 @@ export default async function PageFieldsForm({
   navOrder,
   translations,
   slugLocked,
+  pageId,
 }: {
   navOrder: number;
   translations: readonly EditablePageTranslation[];
   /** AGENTS.md §11.5: a published page's address is stable. */
   slugLocked: boolean;
+  /** The stored page (§NNN): «Din galerie» in its text opens on «Această pagină». None on create. */
+  pageId?: string;
 }) {
   const t = await getTranslations("Admin.pages");
   // The editor is a client island and cannot read the catalogue itself, so its control names are
@@ -72,7 +75,7 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
-      {/* «Tradu tot din română» (§464): every English box from its Romanian twin, one question first. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): every English box from its Romanian twin, in one press. */}
       <TranslateAllButton />
 
       <LocaleTabPanels
@@ -108,6 +111,7 @@ export default async function PageFieldsForm({
                 label={t("fields.body")}
                 initialBody={translation?.bodyJson}
                 accessibleSuffix={t(`language.${locale}`)}
+                pictureScope={pageId ? { kind: "page", id: pageId } : undefined}
                 labels={richTextEditorLabels(rt)}
               />
               {translate("body")}
