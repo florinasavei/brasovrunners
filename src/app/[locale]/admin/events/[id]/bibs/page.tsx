@@ -14,6 +14,7 @@ import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -73,7 +74,10 @@ export default async function EventBibsPage({ params }: Props) {
         </Box>
       )}
       {bibs.length === 0 ? (
-        <Typography color="text.secondary">{t("bibs.helpNone")}</Typography>
+        <Typography color="text.secondary">
+          {t("bibs.helpNone")}
+          <QuietHelp text={t("bibs.helpMore")} />
+        </Typography>
       ) : (
         <Box
           component="ul"

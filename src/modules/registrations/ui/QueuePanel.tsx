@@ -11,6 +11,7 @@ import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { computeOccupied } from "../domain/capacity";
 import { countOccupied } from "../repository";
 import { listQueueForEvent } from "../admin-repository";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 /**
  * The queue of one event as the allocator sees it (`DECISIONS.md` §92; the owner: "I need to
@@ -91,6 +92,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t("queue.holdsHelp", { hold: words.hold, offer: words.offer })}
+        <QuietHelp text={t("queue.holdsHelpMore")} />
       </Typography>
 
       <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>

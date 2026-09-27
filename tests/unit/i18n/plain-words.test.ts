@@ -7,112 +7,151 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — Costuri's words are one plain sentence per field, and the details are behind a «?».
+ * §NNN — the backoffice's words: one plain sentence of help per field or card, the rest behind a
+ * «?» or in the guide.
  *
- * The owner, 2026-09-27: the page answered a treasurer's question with paragraphs. Every string a
- * Costuri card shows on its own — an intro, a field's help, a fact, a warning, a row of the cost
- * table — is now one sentence, short enough to read at a glance; what explained it (the why, the
- * exceptions, the arithmetic, the history) moved into a sibling key ending in `More` (or a key
- * named `more`), which the page draws as the discreet «?» (`shared/ui/QuietHelp`), its words the
- * tooltip and the accessible name.
+ * The owner, 2026-09-27, of the Neon limits card: «nu înțeleg asta man… e prea mult AI slop
+ * comments, prea multe detalii!!». A field or a card gets at most one plain sentence, in the
+ * club's words, saying what happens when you change it — never a §-number, never a file name
+ * (SETUP.md, DECISIONS), never a measurement history, never a parenthesis of caveats. What
+ * explains it goes behind the discreet «?» (`shared/ui/QuietHelp`: a sibling `…More` key, a
+ * Panel's `introMore`, a RecallField's `helpMore`) — short too — or into the guide.
  *
- * This test is what keeps it so: a second sentence typed into one of these namespaces, in either
- * language, fails here and asks for a `…More` key instead.
+ * What this test holds, in both catalogues:
+ * 1. every help, intro, description or helper text of the backoffice (`Admin.*`, the translate
+ *    panel) and of the public forms (`Registration.*`, `Registrations.*`, `Event.*`) — the «?»
+ *    texts included — is at most 200 characters, carries no forbidden reference and no
+ *    parenthesis of more than 12 words;
+ * 2. no string anywhere under `Admin.*` names a §-number, a repository file or a release number:
+ *    those are for the people who build the platform, never for the club.
+ *
+ * `ALLOWED_LONG` names the few texts that are long on purpose, each with its reason.
  */
-
-/** The namespaces Costuri (`/admin/tasks?panel=costs`) draws its cards from. */
-const PLAIN_SCOPES = [
-  "Admin.tasks.month",
-  "Admin.tasks.database",
-  "Admin.tasks.neonPlan",
-  "Admin.tasks.neonLimits",
-  "Admin.tasks.jobCadence",
-  "Admin.tasks.translationBudget",
-  "Admin.tasks.budgetThresholds",
-  "Admin.tasks.costTitle",
-  "Admin.tasks.costToday",
-  "Admin.tasks.nextSpend",
-  "Admin.tasks.currencyNote",
-  "Admin.tasks.freshness",
-  "Admin.tasks.servicesTitle",
-  "Admin.tasks.servicesIntro",
-  "Admin.tasks.freeVerdict",
-  "Admin.tasks.registrationsLeft",
-  "Admin.tasks.services",
-  "Admin.tasks.field",
-  "Admin.tasks.severity",
-  "Admin.tasks.bump",
-  "Admin.tasks.checkedOn",
-  "Budget",
-] as const;
-
-/** A plain line's ceiling, in characters with each `{placeholder}` counted as a short word. */
-const MAX_PLAIN = 160;
-/** A «?»'s ceiling: a tooltip is read to the end, so it stays a paragraph, never a page. */
-const MAX_MORE = 600;
 
 type Catalogue = Record<string, unknown>;
 
-/** Every string under a dotted path, with its full key. */
+/** The namespaces whose help texts the rule covers. */
+const HELP_SCOPES = ["Admin", "Translate", "Registration", "Registrations", "Event"] as const;
+
+/** A help text by its key's last segment: `help`, `bodyHelp`, `intro`, `introMore`, `description`, `helperText`… */
+const HELP_KEY = /(help|intro|description|helper)/i;
+
+/** A help text's ceiling, in characters, each `{placeholder}` counted as one. */
+const MAX_HELP = 200;
+
+/** A parenthesis longer than this many words is a caveat that belongs behind the «?». */
+const MAX_PAREN_WORDS = 12;
+
+/**
+ * What a screen never says: a §-number, a repository document, a source path, a release number.
+ * A URL path such as `/admin/legal` or `/devs` is a place on the site the club can open, and stays.
+ */
+const FORBIDDEN: ReadonlyArray<[string, RegExp]> = [
+  ["a §-number", /§/],
+  ["SETUP.md", /SETUP\.md/i],
+  ["DECISIONS", /DECISIONS/],
+  ["a repository document", /\b[\w-]+\.md\b/i],
+  ["a repository folder", /(^|[\s(`])(docs|src|tests|scripts)\//],
+  ["a release number", /\bBR-V\d/],
+];
+
+/**
+ * Help texts that are long on purpose. Each entry says why; a new one needs a reason as good.
+ */
+const ALLOWED_LONG: Record<string, string> = {
+  // The legal editor's token legend: every token the declaration may carry and what fills it.
+  // It IS the help — cutting a token out leaves the club typing one nobody explained.
+  "Admin.legal.tokensHelp": "the legal editor's token legend lists every declaration token with what fills it",
+  // The photographs amendment's upload rule, verbatim as the privacy notice words it
+  // (`event-photos-notice.test.ts` holds the two to the letter): a legal text is not shortened here.
+  "Admin.gallery.uploadHelp": "ends with the photographs amendment's upload rule, verbatim, as the notice words it",
+};
+
+/** Every string under a namespace, with its full dotted key. */
 function leaves(catalogue: Catalogue, scope: string): Array<[string, string]> {
-  const start = scope.split(".").reduce<unknown>((node, part) => (node as Catalogue | undefined)?.[part], catalogue);
   const out: Array<[string, string]> = [];
   const walk = (node: unknown, key: string) => {
     if (typeof node === "string") out.push([key, node]);
     else if (node && typeof node === "object" && !Array.isArray(node)) for (const [k, v] of Object.entries(node)) walk(v, `${key}.${k}`);
   };
-  walk(start, scope);
+  walk(catalogue[scope], scope);
   return out;
 }
 
-/** Whether a key holds a «?»'s words rather than a line on the screen. */
-function isMore(key: string): boolean {
-  const last = key.slice(key.lastIndexOf(".") + 1);
-  return last === "more" || last.endsWith("More");
-}
-
-/** The text as a reader counts it: a placeholder is one short word. */
+/** The text as a reader counts it: a placeholder is one character. */
 function readable(text: string): string {
   return text.replace(/\{[^}]+\}/g, "X").trim();
 }
 
-/** How many sentences follow the first: a full stop, a question or an exclamation followed by more words. */
-function extraSentences(text: string): string[] {
-  return readable(text).match(/[.!?](?=\s+\S)/g) ?? [];
+function isHelp(key: string): boolean {
+  return HELP_KEY.test(key.slice(key.lastIndexOf(".") + 1));
 }
 
-describe("§NNN Costuri says one plain sentence per field, the rest behind «?»", () => {
+/** The parentheses of more than `MAX_PAREN_WORDS` words. */
+function longParentheses(text: string): string[] {
+  return (text.match(/\(([^()]*)\)/g) ?? []).filter((group) => group.slice(1, -1).trim().split(/\s+/).filter(Boolean).length > MAX_PAREN_WORDS);
+}
+
+/** Why a text breaks the rule, or an empty list. */
+function breaches(text: string): string[] {
+  const why: string[] = [];
+  if (readable(text).length > MAX_HELP) why.push(`${readable(text).length} characters`);
+  for (const [name, pattern] of FORBIDDEN) if (pattern.test(text)) why.push(name);
+  for (const group of longParentheses(text)) why.push(`a parenthesis of more than ${MAX_PAREN_WORDS} words: ${group}`);
+  return why;
+}
+
+describe("§NNN the backoffice says one plain sentence per field, the rest behind «?»", () => {
   for (const [locale, catalogue] of [
-    ["ro", ro],
-    ["en", en],
+    ["ro", ro as Catalogue],
+    ["en", en as Catalogue],
   ] as const) {
-    it(`finds every namespace it guards in the ${locale} catalogue`, () => {
-      for (const scope of PLAIN_SCOPES) expect(leaves(catalogue, scope).length, scope).toBeGreaterThan(0);
+    const helpTexts = HELP_SCOPES.flatMap((scope) => leaves(catalogue, scope)).filter(([key]) => isHelp(key));
+
+    it(`finds the help texts it guards (${locale})`, () => {
+      // Every scope is present, and the walk is not silently empty.
+      for (const scope of HELP_SCOPES) expect(leaves(catalogue, scope).length, scope).toBeGreaterThan(0);
+      expect(helpTexts.length).toBeGreaterThan(200);
     });
 
-    it(`keeps every line one sentence of at most ${MAX_PLAIN} characters (${locale})`, () => {
-      const offenders = PLAIN_SCOPES.flatMap((scope) => leaves(catalogue, scope))
-        .filter(([key]) => !isMore(key))
-        .filter(([, text]) => extraSentences(text).length > 0 || readable(text).length > MAX_PLAIN || text.includes("\n"))
-        .map(([key, text]) => `${key} (${readable(text).length}): ${text}`);
+    it(`keeps every help, intro, description and helper to ${MAX_HELP} characters, no references and no long parenthesis (${locale})`, () => {
+      const offenders = helpTexts
+        .filter(([key]) => !(key in ALLOWED_LONG))
+        .map(([key, text]) => [key, breaches(text)] as const)
+        .filter(([, why]) => why.length > 0)
+        .map(([key, why]) => `${key}: ${why.join("; ")}`);
       expect(offenders).toEqual([]);
     });
 
-    it(`keeps every «?» a paragraph of at most ${MAX_MORE} characters (${locale})`, () => {
-      const more = PLAIN_SCOPES.flatMap((scope) => leaves(catalogue, scope)).filter(([key]) => isMore(key));
-      // The move happened: the details exist, rather than having been deleted to pass the rule above.
-      expect(more.length).toBeGreaterThanOrEqual(40);
-      const offenders = more.filter(([, text]) => readable(text).length > MAX_MORE).map(([key, text]) => `${key} (${readable(text).length})`);
+    it(`names no §-number, repository file or release number anywhere on the backoffice (${locale})`, () => {
+      const offenders = leaves(catalogue, "Admin")
+        .flatMap(([key, text]) => FORBIDDEN.filter(([, pattern]) => pattern.test(text)).map(([name]) => `${key}: ${name}`));
       expect(offenders).toEqual([]);
+    });
+
+    it(`keeps its allowlist honest: every entry exists, is a help text, and is still long (${locale})`, () => {
+      const all = new Map(HELP_SCOPES.flatMap((scope) => leaves(catalogue, scope)));
+      for (const [key, reason] of Object.entries(ALLOWED_LONG)) {
+        expect(reason.length, key).toBeGreaterThan(20);
+        expect(all.has(key), key).toBe(true);
+        expect(isHelp(key), key).toBe(true);
+        // An entry that now passes the rule is an entry to delete.
+        expect(breaches(all.get(key) ?? "").length, key).toBeGreaterThan(0);
+      }
     });
   }
 
-  it("counts a second sentence, and not an abbreviation, a decimal or a file name", () => {
-    expect(extraSentences("Până acum: {amount}.")).toEqual([]);
-    expect(extraSentences("Lipsește {missing} pe acest mediu (SETUP.md §33).")).toEqual([]);
-    expect(extraSentences("În medie ≈ 0,25 CU sau 0.25 CU.")).toEqual([]);
-    expect(extraSentences("Setat {when}. Notă: {note}")).toHaveLength(1);
-    expect(extraSentences("Nu. Da? Poate!")).toHaveLength(2);
+  it("fails on the texts the owner quoted, and passes a plain sentence", () => {
+    expect(breaches("Lipsește {missing} pe acest mediu (SETUP.md §33).")).toEqual(expect.arrayContaining(["a §-number", "SETUP.md", "a repository document"]));
+    expect(breaches("SETUP.md §40. Producția a consumat cam 4 ore-CU pe zi.")).toContain("SETUP.md");
+    expect(breaches("Datele de acces: docs/RUNBOOKS.md § Staff sign-in.")).toEqual(expect.arrayContaining(["a repository folder", "a repository document"]));
+    expect(breaches("Vezi DECISIONS.md.")).toContain("DECISIONS");
+    expect(breaches("De la BR-V1.94 fluxul e pornit.")).toContain("a release number");
+    expect(breaches(`Un câmp (${"cuvânt ".repeat(13).trim()}).`)[0]).toMatch(/parenthesis/);
+    expect(breaches("x".repeat(201))).toEqual(["201 characters"]);
+    // A URL path is a place the club opens; a short parenthesis is a clarification.
+    expect(breaches("Deschide /admin/legal (caseta „Într-un pas”).")).toEqual([]);
+    expect(breaches("Când se atinge, Neon oprește baza până la începutul perioadei următoare. Recomandat: {hours}.")).toEqual([]);
   });
 });
 
@@ -127,8 +166,11 @@ describe("§NNN the «?» itself", () => {
 
   it("draws a small glyph inside a 44-pixel hit area (BR-REQ-041-01 criterion 6)", () => {
     // 16 px of glyph and 14 px of invisible overlay on every side: 44 px for a thumb.
-    expect(html).toMatch(/font-size:\s*16px|fontSize/);
     expect(html).toContain("inset:-14px");
+    // The weather line's own 14 px (§473) reaches the same 44 px with 15 px of overlay.
+    const weather = renderToStaticMarkup(createElement(QuietHelp, { text: "Prognoză.", size: 14, testId: "event-weather-help" }));
+    expect(weather).toContain("inset:-15px");
+    expect(weather).toContain('data-testid="event-weather-help"');
   });
 
   it("follows a panel's one-sentence intro when the panel has more to say", () => {

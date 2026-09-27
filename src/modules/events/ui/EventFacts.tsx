@@ -14,10 +14,10 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
-import WeatherHelp from "@/modules/weather/ui/WeatherHelp";
 import { weatherSpanWords, weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
@@ -129,7 +129,7 @@ function withScope(pieces: ReactNode[], words: { scope: string; help: string }):
   scoped[lastIndex] = (
     <Fragment key="last">
       {scoped[lastIndex]}
-      <WeatherHelp text={words.help} />
+      <QuietHelp text={words.help} size={14} testId="event-weather-help" />
     </Fragment>
   );
   return scoped;

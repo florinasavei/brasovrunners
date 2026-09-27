@@ -55,7 +55,9 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     });
     expect(html).toContain('data-testid="neon-limits-unconfigured"');
     expect(text(html)).toContain("Lipsește NEON_API_KEY, NEON_PROJECT_ID pe acest mediu");
-    expect(text(html)).toContain("SETUP.md §33");
+    // No file name or §-number on a screen (§NNN): where the variables go is the «?».
+    expect(text(html)).not.toMatch(/SETUP\.md|§/);
+    expect(html).toContain("proiectul Vercel al mediului");
     expect(html).not.toContain("<form");
     expect(html).not.toContain('name="maxCu"');
   });
@@ -72,51 +74,45 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(text(forbidden)).toContain("Project-scoped");
   });
 
-  it("shows what Neon holds in words, with the worst hour at Launch's rate, above the form", async () => {
+  it("shows what Neon holds in words above the form, and the limit as the owner asked for it (§NNN)", async () => {
     const html = await render({ locale: "ro", reading: { ok: true, limits: LIMITS }, appEnv: "qa", mayEdit: true });
     const words = text(html);
     expect(words).toContain("Mărimea maximă: 1 CU (≈ 4 GB RAM) · Limită lunară: fără");
-    expect(words).toContain("La tariful Launch (0,106 $/oră-CU), la mărimea maximă: cel mult 0,106 $ pe oră");
-    expect(words).toContain("76,32 $ pe lună");
     expect(words).toContain("12,3 ore-CU consumate, 40 ore trează");
     expect(words).toContain("1 oct. 2026");
-    // The form: six ceilings on Launch, the current one chosen, no limit chosen, the floor stated.
+    // The form: six ceilings on Launch, each with its worst hour and month; the current one chosen, no limit chosen.
     expect(html).toContain("<form");
     expect(html.match(/<option value="(0\.25|0\.5|1|2|4|8)"/g)).toHaveLength(12);
     expect(html).toMatch(/<option value="1" selected="">/);
+    expect(words).toContain("cel mult 0,106 $/oră, 76,32 $/lună");
     expect(html).toMatch(/<option value="none" selected="">/);
-    // One sentence on the card; the margin's arithmetic in its «?» (§NNN).
-    expect(words).toContain("o limită nouă trebuie să fie de cel puțin 17,4 ore-CU.");
-    expect(html).toContain("Adică consumul plus 5 de marjă");
-    // The warning is on the page, not folded, and says the site stops.
-    expect(html).toContain('data-testid="neon-limits-warning"');
-    expect(words).toContain("Neon SUSPENDĂ baza de date");
-    // QA: the recommendation is a limit with room, QA's own figure (SETUP.md §40), and no
-    // confirmation box — that guard is production's.
-    expect(html).toContain('data-testid="neon-limits-recommendation"');
-    expect(words).toContain("Recomandat: o limită cu rezervă, 30 ore-CU pe acest mediu");
-    expect(words).toContain("notificarea de cheltuieli din Neon → Billing");
-    expect(words).not.toContain("Pe producție, orice schimbare a limitei cere bifa");
+    // The limit: the label, «Fără limită / Cu limită», the box and ONE sentence with QA's own figure.
+    expect(words).toContain("Limită lunară (ore-CU)");
+    expect(html).toMatch(/<option value="none"[^>]*>Fără limită<\/option>/);
+    expect(html).toMatch(/<option value="limit"[^>]*>Cu limită<\/option>/);
+    expect(words).toContain("Când se atinge, Neon oprește baza până la începutul perioadei următoare. Recomandat: 30.");
+    // The smallest limit is the «?», not a line; the old paragraphs are gone.
+    expect(html).toContain("Cel puțin 17,4: cele 12,3 ore-CU consumate deja, plus o marjă.");
+    for (const gone of ["neon-limits-warning", "neon-limits-recommendation", "neon-limits-floor", "neon-limits-price", "neon-limits-quota-active"]) {
+      expect(html).not.toContain(`data-testid="${gone}"`);
+    }
+    expect(words).not.toContain("SUSPENDĂ");
+    // QA: no confirmation box — that guard is production's.
     expect(html).not.toContain('name="confirmSuspension"');
   });
 
-  it("on production, recommends a limit with room, never none, and carries the confirmation box as a guard", async () => {
+  it("on production, recommends production's figure and carries the confirmation box as a guard", async () => {
     const html = await render({ locale: "ro", reading: { ok: true, limits: { ...LIMITS, quotaCuHours: 50 } }, appEnv: "production", mayEdit: true });
     const words = text(html);
-    // The owner capped production (2026-09-23): the advice is production's own 100 CU-hours plus
-    // Neon's spending notification, and nothing on the card advises against a limit.
-    expect(words).toContain("Recomandat: o limită cu rezervă, 100 ore-CU pe acest mediu");
+    expect(words).toContain("Recomandat: 100.");
     // Setting, changing and removing production's limit all ask for the one box (§327: never left uncapped by a click).
-    expect(words).toContain("Pe producție, orice schimbare a limitei cere bifa de confirmare de mai jos");
-    expect(words).toContain("fără limită, producția nu are plafon");
-    expect(words).not.toContain("fără limită pe producție");
     expect(html).toContain('name="confirmSuspension"');
+    expect(words).toContain("Înțeleg că baza se oprește când limita e atinsă.");
     // A limit in force is said above the form, and chosen in it.
     expect(words).toContain("Limită lunară: 50 ore-CU pe perioadă");
     // The period's end with its weekday, in the club's zone, inside the sentence (§350 weekday
     // on every date): 1 October at midnight UTC is Thursday morning in Bucharest.
     expect(words).toContain("perioada se încheie joi, 1 oct. 2026");
-    expect(html).toContain('data-testid="neon-limits-quota-active"');
     expect(html).toMatch(/<option value="limit" selected="">/);
     expect(html).toMatch(/name="quotaCuHours"[^>]*value="50"|value="50"[^>]*name="quotaCuHours"/);
   });
@@ -222,6 +218,9 @@ describe("§479 the compute's floor and scale to zero, and the money the confirm
     };
     const launch = await bodies(LIMITS);
     expect(launch).toContain("USD în plus pe lună la 100 % utilizare");
+    // The owner's confirm sentence (§NNN), the number filled from the box at the press.
+    expect(launch).toContain("Limita nouă: {quotaCuHours} ore-CU.");
+    expect(launch).toContain("Fără limită lunară.");
     expect(launch).not.toContain("Pe planul Free");
     const onFree = await bodies({ ...LIMITS, reportedPlan: "FREE" });
     expect(onFree).toContain("Pe planul Free schimbarea nu costă nimic");

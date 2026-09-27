@@ -122,7 +122,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
           {t(`source.${meter.source}`)}
           <QuietHelp
             text={[
-              t("sourceMore", {
+              t("readings", {
                 metered: meter.meteredCuHours === null ? t("notRead") : hours(meter.meteredCuHours),
                 operations: meter.operationsCuHours === null ? t("notRead") : hours(meter.operationsCuHours),
                 legacy: hours(meter.legacyCuHours),
@@ -130,7 +130,8 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
               meter.meteredCuHours === null ? t("meteredNeedsKey") : null,
             ]
               .filter(Boolean)
-              .join("\n")}
+              // A space, not a line break: the same string is the button's accessible name, which must not carry one.
+              .join(" ")}
           />
         </Typography>
       )}

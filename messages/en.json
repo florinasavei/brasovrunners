@@ -396,7 +396,7 @@
           "birthDate": "Date of birth",
           "captcha": "The anti-bot check"
         },
-        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the copies sent by email — yours and the club's — it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
+        "idDocumentHelp": "Your identity card (e.g. “BV 123456”) or your passport. It is masked in the copies sent by email; the platform deletes it {days} after the run and keeps no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
         "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
@@ -554,7 +554,7 @@
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
       "withdraw": {
         "title": "Withdraw consent",
-        "help": "For a person who asked, in writing, to have what they gave on consent deleted. Only what you tick is deleted; the registration's state, place and number stay as they are, and the person is sent no message.",
+        "help": "For a person who asked in writing to delete what they gave on consent. Only what you tick is deleted; the registration stays and the person is sent no message.",
         "health": "The health note and its consent",
         "socials": "The Strava link and the Instagram username",
         "results": "The public-results consent",
@@ -590,7 +590,7 @@
         "en": "English"
       },
       "deleteTitle": "Delete permanently",
-      "deleteHelp": "Deletes the registration and the signed declaration, permanently. The place is released to the waiting list, and the log keeps who deleted it and why — not the person’s data. Use it for an erasure request; for an ordinary withdrawal, cancel instead.",
+      "deleteHelp": "Deletes the registration and the signed declaration for good; the place goes to the waiting list. Only for an erasure request; otherwise, cancel.",
       "deleteReason": "Reason for deletion",
       "reasonNoIdentity": "Do not write the person's name, address or anything that identifies them.",
       "deleteAction": "Delete permanently",
@@ -798,7 +798,7 @@
       "seriesAutoPublishStarted": "Automatic publication is on: the series' new dates go on the site by themselves. The ones already created stay drafts until you press “{button}”.",
       "bulkSelectAll": "All",
       "bulkSelected": "Ticked: {count}",
-      "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
+      "bulkHelp": "Tick events: “Publish” publishes those complete in both languages, “Archive” takes them off the site, “Delete” removes the ones nobody registered for.",
       "bulkPublishAction": "Publish the ticked ones",
       "bulkDeleteAction": "Delete the ticked ones",
       "eventsDeletedDone": {
@@ -929,7 +929,6 @@
       "jobCadenceTitle": "Save the interval?",
       "jobCadenceBody": "The email queue and the maintenance run at most once per chosen interval; an email may wait that long.",
       "neonLimitsTitle": "Save the Neon limits?",
-      "neonLimitsBody": "A project that reaches its monthly quota is suspended until the next period — the site does not answer until then.",
       "neonPlanTitle": "Change the Neon plan?",
       "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
       "olderPicturesTitle": "Make the phone sizes?",
@@ -961,7 +960,7 @@
       "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
       "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: a new limit must be above what this period has already spent plus the margin, or it would stop the database the moment it is saved. The spend and the smallest limit are written under the box.",
       "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a new or changed limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
-      "NEON_UNCONFIGURED": "Nothing changed: NEON_API_KEY or NEON_PROJECT_ID is missing on this environment (SETUP.md §33).",
+      "NEON_UNCONFIGURED": "Nothing changed: NEON_API_KEY or NEON_PROJECT_ID is missing on this environment.",
       "NEON_KEY_FORBIDDEN": "Neon refused the change: the key in NEON_API_KEY reads the project but may not modify it — most likely a personal key whose owner may only view the project. A project-scoped key may: in Neon, the organization's Settings → API keys → Create new → Project-scoped, on this environment's project — an organization Admin creates it, and Neon gives it Editor access to that one project. A personal key works only if its owner is an Admin of the organization or an Editor on the project. Put the key in NEON_API_KEY on the environment's Vercel project and redeploy. The figures above the form are what Neon holds now.",
       "NEON_BUSY": "Neon was working on another change to the project and did not take this one. Try again in a minute; the figures above the form are what Neon holds now.",
       "NEON_REFUSED": "Neon refused the values sent. The figures above the form are what Neon holds now; if the size chosen is above what the plan allows, choose a smaller one.",
@@ -988,22 +987,22 @@
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
       "coordinates": "Coordinates (lat, lng)",
-      "coordinatesHelp": "Optional: latitude, longitude — e.g. 45.6427, 25.5887. Copy them from Google Maps: right-click the point → the first line. Used only for the weather, when the map link does not carry them (a short link, a venue's page).",
+      "coordinatesHelp": "Optional: latitude, longitude, e.g. 45.6427, 25.5887 (right-click the point in Google Maps). Only for the weather, when the map link does not carry them.",
       "weatherPlace": {
         "map": "The weather is read for the point in the map link ({coordinates}).",
         "typed": "The weather is read for these coordinates ({coordinates}).",
         "club": "The weather is read for {place} ({coordinates}): the map link carries no coordinates and none are typed."
       },
-      "locationHelp": "The place, as you would tell a friend: a name, a street, or both — in Romanian and in English, each for its own language's page. If it is called the same in both, press “Same name in English”: while the two say the same, what you type in Romanian is written in English too.",
+      "locationHelp": "The place, as you would tell a friend, in Romanian and in English. If the name is the same, press “Same name in English”.",
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
       "placeToBeAnnounced": "Location to be announced",
-      "placeToBeAnnouncedHelp": "Turn it on when the place is not settled yet. The event can be published anyway: the page, the cards, the calendar, the share picture and the emails say “Location to be announced soon”, and the place, the address, the map and the programme's places appear nowhere. What you fill in below, in both languages, is kept, unpublished. When you announce the place, turn the switch off and save — it appears everywhere at once.",
+      "placeToBeAnnouncedHelp": "On, everywhere says “Location to be announced soon” and the place and the map stay hidden. What you fill in stays unpublished until you turn it off.",
       "placeUnpublished": "Not published while the location is to be announced.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "special": "A special edition",
-      "specialHelp": "An edition apart — an anniversary, a charity run, a race the club joins somebody else at. Shown with a badge on the card and on the page. Any number of events may be special, including one date of a series; the mark does not travel to the other dates.",
+      "specialHelp": "An edition apart, such as an anniversary or a charity run, with a badge on the card and the page. In a series, the badge stays on this date only.",
       "saveEvent": "Save the event details",
       "saveCoversSettingsOnly": "Your save changes the settings only; the texts are the editor's.",
       "version": "version {version}",
@@ -1014,7 +1013,7 @@
       "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
-      "costHelp": "What a participant pays. The platform does not collect money itself — the fee or the donation happens directly, with the organiser or at the link below. Leave \"Not stated\" when this has not been decided yet. A donation is the participant’s choice: if the place is given only once paid, choose \"Paid\" and add the payment link.",
+      "costHelp": "What a participant pays; the platform collects no money. If the place is given only once paid, choose “Paid” and add the payment link.",
       "costAmount": "Amount",
       "costAmountHelp": "For example \"50 lei\". Required for a paid event.",
       "costPaidUrl": "Where to pay (optional)",
@@ -1056,7 +1055,7 @@
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
       "programmeHelpSummary": "How the programme works",
-      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. Every row starts on the event's day; a row with no time and no text is ignored. If you change the event's start date, the rows' dates move with it. Leave “Where” empty when it is the event's own place.",
+      "programmeHelp": "The day by the hour, one row each: kits, briefing, start, awards. Shown on the page, in the reminder email and in the calendar; leave “Where” empty for the event's own place.",
       "programmeRows": {
         "row": "Row",
         "date": "Date",
@@ -1069,10 +1068,10 @@
         "remove": "Remove row",
         "empty": "No rows yet."
       },
-      "rulesHelp": "Optional, in both languages or neither. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
+      "rulesHelp": "Optional, in both languages or neither: the race rules. Shown on the page under “Rules”; the declaration and the emails point there.",
       "checklistHelp": "Optional, in both languages or neither, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email, the reminder and the calendar entry.",
       "type": "Event type",
-      "typeHelp": "A group run is simply turned up to: no registration, no participants, no programme. A race has all of them; a hike, a coffee, an equipment test and another event may take registrations; an external event is somebody else's — its registration is on their page.",
+      "typeHelp": "A group run takes no registration; a race has registration and a programme; an external event registers on the organiser's page.",
       "surface": "Surface",
       "eventStatus": "Event status",
       "timezone": "Time zone",
@@ -1095,7 +1094,7 @@
         "endLine": "The start is before dusk, but the run lasts until {end} and reaches the dark — still a night event.",
         "endLineProgramme": "The start is before dusk, but the day's programme runs until {end} (its last row) and reaches the dark — still a night event.",
         "series": "In a series, each date follows its own day's sunset: the winter dates are night events, the summer ones are not.",
-        "help": "Automatic: it is a night event when any part of it, from the start to the end, falls after dusk (the sun 6° below the horizon) or before dawn. The end comes from “Duration” or, without it, the day's last programme row. Shown on the event's card, page and calendar, and in the reminder email."
+        "help": "Automatic: a night event when any part of it falls after dusk or before dawn. Shown on the card, the page, the calendar and the reminder email."
       },
       "registrationSection": "Registration",
       "registrationMode": "Registration mode",
@@ -1104,10 +1103,10 @@
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
       "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, {offer} each.",
       "waitlistCapacity": "Maximum waiting-list length",
-      "waitlistCapacityHelp": "Leave empty for unlimited. 0 means no waiting list: once the places are gone, registration stops. It only counts with a number of places. Lowered below how many already wait, it removes nobody from the list — it only takes nobody new.",
+      "waitlistCapacityHelp": "Empty: unlimited; 0: no waiting list. Lowered below how many already wait, it removes nobody; it just takes no one new.",
       "registrationOpensAt": "Registration opens",
       "registrationOpensSoon": "Registration opens soon (no date yet)",
-      "registrationOpensSoonHelp": "Ticked, the page, the card and the calendar say “Registration opens soon” and the form stays closed. Leave the opening date empty. When you open registration, untick it: it opens when you save, or at the date you type then, and the people who asked to be told get the email.",
+      "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
@@ -1115,13 +1114,13 @@
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
-      "participantListHelp": "Publishes the name and club of the confirmed participants who ticked “I want to appear on the participant list”; every other confirmed participant appears as “Participant (name hidden)”, with nothing about them, and the list says how many are confirmed in all. No email addresses. Once the privacy notice in force describes the stages, the list shows each registration's stage beside the name and also holds those who ticked and have not confirmed yet, then the waiting list; a cancelled or expired registration never appears. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on, and the save is refused while no privacy notice is approved and in force.",
+      "participantListHelp": "Publishes the names of the confirmed who ticked “I want to appear on the participant list”, with no email addresses.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
       "duplicate": "Duplicate",
       "delete": "Delete",
-      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
+      "deleteHelp": "A duplicate is created as a draft, with its own addresses. Delete only an event nobody registered for; archive the ones that happened.",
       "difficultyValues": {
         "VERY_EASY": "Very easy",
         "EASY": "Easy",
@@ -1137,8 +1136,8 @@
       "notStated": "Not stated",
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
-      "routeDescriptionHelp": "Optional, in both languages or neither. Pit stops, climbs, what to expect — and a map if you have one (the picture button). Shown on the event page under “The route”, with the route link and the GPX and map links from “Links and files”.",
-      "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next {horizon} are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
+      "routeDescriptionHelp": "Optional, in both languages or neither: stops, climbs, what to expect, a map (the picture button). Shown on the page under “The route”.",
+      "repeatHelp": "Make this event a series at a fixed interval. The next {horizon} are created now and the platform creates the rest; each date can be moved or cancelled on its own.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
       "repeatRuleForever": "{sentence} — for ever",
@@ -1165,7 +1164,7 @@
         "this": "This date only",
         "following": "This and the following dates",
         "all": "All dates of the series",
-        "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays.",
+        "help": "As in Google Calendar: only what you changed here reaches the other dates; a date moved or cancelled on its own stays so.",
         "countThis": "The save changes this date only.",
         "countFollowing": "The save changes {dates}: {first} and the following {rest}, until {last}.",
         "countRange": "The save changes {dates}, from {first} to {last}.",
@@ -1195,7 +1194,7 @@
       "timeOfDay": "Time",
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
-      "repeatWeekdaysHelp": "This event's own day is always in the series; tick the others too — Wednesday, say, for a Sunday run. Only days after this event are made. Nothing ticked: the event's own day alone, at the chosen interval.",
+      "repeatWeekdaysHelp": "This event's day is always in the series; tick other days too, say Wednesday for a Sunday run.",
       "weekdays": {
         "1": "Mo",
         "2": "Tu",
@@ -1240,7 +1239,7 @@
         "tooManyLinksGeneric": "A partner can carry at most {max} links",
         "tooMany": "Partners: at most {max} on one event"
       },
-      "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional, in both languages or neither: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
+      "linksHelp": "Optional, at most {max}: GPX, map, form, album, results. Share the file with “Anyone with the link”; the label is in both languages or neither.",
       "linkRows": {
         "kind": "Kind",
         "url": "Address (https://…)",
@@ -1258,13 +1257,13 @@
         "tooMany": "Links and files: at most {max} on one event"
       },
       "stravaEventUrl": "Strava event link",
-      "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
+      "stravaEventUrlHelp": "Optional: the event's address in the Strava club (strava.com/clubs/…/group_events/…). The series inherits it; one date can change its own.",
       "facebookEventUrl": "Link to the Facebook event",
-      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. A Facebook event with several dates keeps one address, so the series inherits it from the source event; any one date can change its own.",
-      "bodyHelp": "Optional, in both languages or neither. The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
+      "facebookEventUrlHelp": "Optional: the event's address on Facebook (facebook.com/events/…). The series inherits it; one date can change its own.",
+      "bodyHelp": "Optional, in both languages or neither: the full description, with headings, lists and links. Shown at the top of the event page; the short one stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before (0 = at the start)",
-      "confirmationWindowHelp": "A runner confirms by signing the declaration, any time after confirming their email: online, from the registration email, or on paper at the registration desk. At the first number of days before the start we email them to ask for the confirmation. Until the deadline the place is theirs; after the deadline the place goes to the next in line only if someone is waiting. With 0 as the deadline, the place does not lapse before the start. Whoever registers after the window has opened, or when the first number is 0 (as on the weekly runs), has {hold} to sign.",
+      "confirmationWindowHelp": "The first number: how many days before the start we ask for the declaration. The second: the deadline until which the place is the runner's; 0 means it never lapses.",
       "typeHelpSummary": "What each type means",
       "typeNotes": {
         "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
@@ -1288,7 +1287,7 @@
         "before": "{lead} before the start",
         "none": "No reminder",
         "clubNone": "no reminder by default",
-        "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
+        "help": "The email with the time, the place, the QR code and the number, sent once to everyone confirmed. “As usual” is the club's setting ({lead}), under “Deadlines”."
       },
       "minAgeHelp": "Reached by the day of the event. Under 18, a parent or legal guardian registers the runner, with their consent. 0 means no minimum age.",
       "bibDesign": {
@@ -1355,7 +1354,7 @@
         "countNone": "Nobody is registered for this date right now, so the box sends no email.",
         "countSeries": "If the change also reaches other dates of the series, their participants are told too, once each, about their own date.",
         "note": "What changed (optional)",
-        "noteHelp": "Optional, in both languages or neither · plain text, at most {max} characters each. Each participant gets it in the language they registered in, under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
+        "noteHelp": "Optional, in both languages or neither, at most {max} characters each. Without it, the email goes only if the place, the date or the programme changed.",
         "cancelTitle": "You are cancelling the event",
         "cancelTitleCreate": "You are creating the event as cancelled",
         "cancelIntroCreate": "The event is created with the status Cancelled and shows so on the site if you publish it. No email goes out: nobody is registered for a new event.",
@@ -1696,10 +1695,10 @@
       },
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
-        "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
+        "help": "The run's page shows “Sign the self-declaration”, optional; the signer and the club each get a copy. It needs an approved privacy notice.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
-        "minAgeHelp": "Reached by the day of the run. The declaration is for adults, so only an age above 18 counts: it is then stated in the declaration, and the signing page asks for the birth date and refuses anyone younger. 18 or less (and 0) changes nothing.",
+        "minAgeHelp": "The age reached on the day of the run. Only above 18 counts: the signing page then asks for the birth date and refuses anyone younger.",
         "surface": "Surface, from “The course” card: {surface}",
         "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
@@ -1739,7 +1738,9 @@
         "title": "Cannot publish yet",
         "intro": "Publication needs these fields, in every language:",
         "introSaved": "Publication needs these fields, in every language, filled in and saved:"
-      }
+      },
+      "participantListHelpMore": "Everyone else shows as “Participant (name hidden)”. The save is refused while no approved privacy notice that describes the list is in force.",
+      "confirmationWindowHelpMore": "After the deadline, the place goes to the next in line only if someone is waiting. Whoever registers after the window opens, or when the first number is 0, has {hold} to sign."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -1759,11 +1760,11 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "This puts the address on the team list and emails them the invitation: who added them, with which role, and the sign-in link. The sign-in account is not created on its own — set the Zitadel key (Tasks → Club → “Invite the team”, SETUP.md §37) and we create it with a password link; until then create it in the Zitadel console. Access begins at their first sign-in.",
-      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation — who added them, as what, the sign-in link — and the link to choose a password. Then they sign in at /admin.",
+      "inviteHelp": "Adds the address to the team list and emails the invitation. The sign-in account is created by itself only with the Zitadel key set; until then, in the Zitadel console.",
+      "inviteHelpSends": "Adds the address to the team list, creates their sign-in account and emails them the invitation and the password link.",
       "inviteSent": "Added. The invitation is on its way to their mailbox, with the link to choose a password.",
       "inviteExists": "Added, the invitation is on its way. They already have a sign-in account with this address — they can sign in at /admin right away.",
-      "inviteManual": "Added, and the invitation is on its way. No sign-in account was created — the Zitadel key is not set. Create their account in the Zitadel console with exactly this address, or set the key (SETUP.md §37) and press “Resend the invitation”.",
+      "inviteManual": "Added, and the invitation is on its way, but no sign-in account was created: the Zitadel key is missing. Create it in the Zitadel console with exactly this address.",
       "inviteFailed": "Added and the invitation is on its way, but the sign-in provider refused to create the account ({reason}). They can create it at the sign-in page with exactly this address.",
       "resendInvite": "Resend the invitation",
       "resendInvitePending": "Sending…",
@@ -1806,13 +1807,13 @@
       "accountDeactivated": "The sign-in account is deactivated: they can no longer sign in anywhere. The team row stays — to take their access away too, use “Withdraw access”.",
       "accountReactivated": "The sign-in account is active again.",
       "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the table.",
-      "accountUnconfigured": "This needs the Zitadel key (Tasks → Club → “Invite the team”, SETUP.md §37). Until then, from the Zitadel console.",
+      "accountUnconfigured": "This needs the Zitadel key (Tasks → Club → “Invite the team”). Until then, from the Zitadel console.",
       "accountFailed": "The identity provider refused ({reason}).",
       "noAccount": "No sign-in account",
-      "noAccountHelp": "“No sign-in account”: the person is on the list, but Zitadel has no account with their address, so they cannot sign in — usually they were added while the invitation key could not create accounts. The fix: ⋮ → “Revoke access”, then “Add” again with the same address — this time the account is created and Zitadel sends them the password link.",
-      "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; Tasks → Club → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
+      "noAccountHelp": "“No sign-in account”: the person is on the list but cannot sign in. The fix: ⋮ → “Revoke access”, then “Add” again with the same address.",
+      "accountsBlind": "Could not check who has an account: the Zitadel key sees only {seen} accounts, so it lacks the “Org User Manager” role. See Tasks → Club → “The invitation key”.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
-      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
+      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key (ZITADEL_MANAGEMENT_PAT) is missing. Until it is set, create the account in the Zitadel console, with exactly the address in the table.",
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
       "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
@@ -1826,7 +1827,7 @@
       "holds": "Held",
       "free": "Free",
       "waiting": "Waiting",
-      "holdsHelp": "“Held” are the places kept while somebody signs the declaration ({hold}, or until the confirmation deadline for events further away than their window) or answers a waiting-list offer ({offer}). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place, when somebody registers whom the waiting list has no room for, or when the event starts. Free = places − confirmed − held, exactly the formula the public sees; while the waiting list is full, the public also sees the place of a lapsed hold as free, because the next person to register gets it.",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration ({hold}) or answers an offer ({offer}). Free = places − confirmed − held.",
       "lineTitle": "Waiting list ({count})",
       "lineTitleLimited": "Waiting list ({count} of {limit})",
       "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
@@ -1835,12 +1836,13 @@
       "offered": "offer until {until}",
       "since": "since {when}",
       "interestTitle": "Addresses waiting for the opening notice: {count}",
-      "interestHelp": "Left at \"Tell me\" on the event's page. Each gets one email on the job's first run after registration opens and is deleted with it. If somebody writes that they no longer want the message, type their address here: it leaves the list. The addresses themselves are not shown.",
+      "interestHelp": "The addresses left at “Tell me”: each gets one email when registration opens. Type here the address of someone who no longer wants the message.",
       "interestEmail": "Address to withdraw",
       "interestRemove": "Remove from the list",
       "interestRemoved": "The address was removed from the notification list.",
       "interestNotFound": "That address was not on this event's list. Check whether they wrote from another one.",
-      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (held for {hold} each), the rest queue here, in order. Cancel a confirmed one, let a hold lapse (the maintenance job runs every 15 minutes) or raise the number of places and the first in line gets the offer; its email shows in the Outbox on that registration."
+      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (held for {hold} each), the rest queue here, in order. Cancel a confirmed one, let a hold lapse (the maintenance job runs every 15 minutes) or raise the number of places and the first in line gets the offer; its email shows in the Outbox on that registration.",
+      "holdsHelpMore": "A lapsed hold stays the person's, and is released only when somebody is waiting for a place or when the event starts."
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -1856,7 +1858,7 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The three texts a participant accepts at registration, and the two optional declarations of the group runs. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "intro": "The three texts accepted at registration and the two optional declarations of the group runs. An approved version never changes; a correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
@@ -1898,7 +1900,7 @@
       "backToList": "Back to legal documents",
       "noTranslations": "This version has no text yet.",
       "newTitle": "New version",
-      "newFromTemplateIntro": "Prefilled with the platform's text, the club's legal name and the contact address already written in. Left to fill, in angle brackets, in both languages: {blanks}. Read it all, save the draft, then approve it from its page.",
+      "newFromTemplateIntro": "Prefilled with the platform's text. Left to fill, in both languages, in angle brackets: {blanks}. Save the draft, then approve it from its page.",
       "templatesIntro": "Or start from the platform's text:",
       "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
@@ -1906,7 +1908,7 @@
       "saveDraft": "Save draft",
       "titleField": "Title",
       "bodyField": "Text",
-      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading. A link: [the words](https://…). A picture, on a line of its own: ![what it shows](https://…) — copy the address from Gallery → Pictures.",
+      "bodyHelp": "A blank line separates paragraphs; ## at the start makes a heading. Link: [words](https://…). Picture, on its own line: ![what it shows](https://…), from Gallery → Pictures.",
       "keyLocked": "The document cannot change after creation.",
       "editorWarning": "This is the club’s legal text. Write or paste only wording the club has approved — never invent legal content.",
       "approveTitle": "Approve this version",
@@ -1959,12 +1961,12 @@
       "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere.",
       "startFrom": {
         "title": "Start from the platform's text",
-        "intro": "Pick the document and you get the complete text, with the club's legal name, registration number, registered address and contact address already written in. Read it, change what you like, then approve it.",
+        "intro": "Pick the document and you get the complete text, with the club's facts already written in. Read it, change what you like, then approve it.",
         "orBlank": "Or write from nothing, in the form below."
       },
       "tokens": {
         "title": "The fields that fill themselves in",
-        "intro": "Leave them exactly as they are in the text. The participant's and the event's — in the declaration only — are replaced at signing, for each person and each race; the four deadlines, in any of the three texts, with the values under “Deadlines” on the Emails page. The club's own facts are not here: those are already written into the text.",
+        "intro": "Leave them exactly as they are. The participant's and the event's are filled in at signing; the deadlines, with the values under “Deadlines”.",
         "inText": "in this text",
         "participant": "The name the participant registered under",
         "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
@@ -2083,7 +2085,7 @@
         "saving": "Saving…",
         "saved": "The Neon plan is saved; the figures on /devs and the Neon row below follow it from now on.",
         "readOnly": "The Administrator changes the plan; the figures above are current.",
-        "introMore": "The project names, every time the page opens, the plan of the account that owns it. The fallback is used only when NEON_API_KEY is missing or Neon does not answer. The figures on /devs and the Neon row in the table follow the plan: on Free the hours ceiling and the storage, red from 80%; on Launch the estimated cost, with no ceiling.",
+        "introMore": "The plan is read from Neon each time the page opens; the fallback here counts only when the key is missing or Neon does not answer.",
         "estimateMore": "They are worked out from the consumption read from Neon. The invoice adds storage and restore history.",
         "fieldHelpMore": "The rates and limits come from the Neon console and neon.com/pricing. The account holds both projects, QA and production.",
         "decemberMore": "Choose Free only if the invoices say so, and check Free's limits at that time first, on both projects."
@@ -2091,7 +2093,7 @@
       "neonLimits": {
         "title": "The database's limits",
         "intro": "Two brakes on the Neon bill, set in Neon itself: the database's size and its CU-hours per period.",
-        "unconfigured": "{missing} is missing on this environment, so the limits can be neither read nor changed (SETUP.md §33).",
+        "unconfigured": "{missing} is missing on this environment, so the limits can be neither read nor changed.",
         "failure": {
           "forbidden": "Neon refused the key (HTTP {status}), so the limits can be neither read nor changed.",
           "busy": "Neon is working on another change to this project; reload the page in a minute.",
@@ -2107,31 +2109,24 @@
         "sizeUnknown": "unknown (Neon showed no read-write compute)",
         "quotaNone": "none",
         "quotaSet": "{hours} CU-hours per period",
-        "price": "At Launch's rate ({rate} $/CU-hour), at the maximum size: at most {perHour} $ an hour awake, {perMonth} $ a month if it never slept.",
         "usage": "This period: {used} CU-hours spent, {active} hours awake; the period ends on {end}.",
         "defaults": "A compute created again gets {min}–{max} CU by default (the project's setting).",
         "defaultsUnset": "The project has no default size for a new compute; saving gives it the one chosen below.",
         "manyComputes": "The project has {count} read-write computes: the largest size is shown, and saving changes them all.",
-        "quotaActive": "Limit in force: {used} of {hours} CU-hours spent; once reached, it stops the database until {end}.",
         "readOnly": "The Superadministrator changes the limits, because a wrong one can stop the site.",
         "maxCu": "The database's maximum size",
         "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load.",
         "choose": "— choose a size —",
         "option": "{cu} CU (≈ {ram} GB RAM) — at most {perHour} $/hour, {perMonth} $/month",
         "planCeiling": "The account's plan allows at most {max} CU, so the larger sizes are not offered.",
-        "warningTitle": "A monthly limit switches the site off",
-        "warning": "When the limit is reached, Neon SUSPENDS the database, and the site with it, until the next period ({end}).",
-        "recommend": "Recommended: a limit with room, {hours} CU-hours on this environment, plus the spending notification in Neon → Billing.",
-        "recommendConfirm": "On production, any change to the limit needs the confirmation box below ticked.",
         "quotaMode": "Monthly limit (CU-hours)",
         "quotaModeNone": "No limit",
-        "quotaModeLimit": "With a limit — the number below",
-        "quotaCuHours": "CU-hours per period, with a limit",
-        "quotaCuHoursHelp": "A new limit: at least {smallest}; ignored with “No limit”.",
-        "floor": "Spent this period: {used} CU-hours, so a new limit must be at least {smallest} CU-hours.",
+        "quotaModeLimit": "With a limit",
+        "quotaCuHours": "CU-hours per month",
+        "quotaCuHoursHelp": "When it is reached, Neon stops the database until the next period begins. Recommended: {hours}.",
+        "floor": "At least {smallest}: the {used} CU-hours already spent, plus a margin.",
         "confirmField": "Confirming the limit change",
-        "confirm": "I understand: with a limit, the site stops when it is reached, until {end}; with no limit, production has no cap.",
-        "writeNote": "Saving sends Neon only what differs, then the page reads Neon again.",
+        "confirm": "I understand the database stops when the limit is reached.",
         "save": "Save the limits",
         "saving": "Sending to Neon…",
         "saved": "The limits were sent to Neon; below is what Neon says now.",
@@ -2160,14 +2155,11 @@
         "introMore": "Everything here is read from Neon each time the page opens; after a save you see what Neon says, not what was sent.",
         "unconfiguredMore": "Set NEON_API_KEY and NEON_PROJECT_ID on the environment's Vercel project and redeploy.",
         "keyNeededMore": "Neon gives it Editor access to its one project (the organization's Settings → API keys → Create new → Project-scoped). The personal key of an organization Admin or of an Editor on the project works too. The personal key of a Viewer reads the figures and cannot change them.",
-        "priceMore": "The usual bill is the time awake: on average the database uses ≈ 0.25 CU.",
         "maxCuHelpMore": "The minimum size is the choice below (the smallest: {min} CU). Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
-        "warningMore": "It does not wake at the next connection: no registrations, no race-day desk, no emails. This page needs the database too, so a limit that has stopped it can only be lifted in the Neon console.",
-        "recommendMore": "SETUP.md §40. Production spent about 4 CU-hours a day even on days of heavy testing; the notification is the early warning.",
-        "floorMore": "That is the spend plus a margin of {margin}: a smaller one would stop the database the moment it is saved. The limit in force, left as it is, stays exactly as Neon holds it.",
-        "writeNoteMore": "The size goes to the database's compute and to the project's default, so a compute created again inherits it; the limit goes to the project. The key in NEON_API_KEY needs the right to modify the project, which a project-scoped key has.",
         "minCuHelpMore": "The database starts at this size on the first request. A larger one costs more for every hour awake.",
-        "suspendHelpMore": "“Never” keeps it on all the time: every hour of the month is billed at the minimum size ({rate} $ per CU-hour), even with no visitor at all."
+        "suspendHelpMore": "“Never” keeps it on all the time: every hour of the month is billed at the minimum size ({rate} $ per CU-hour), even with no visitor at all.",
+        "confirmLimit": "New limit: {hours} CU-hours.",
+        "confirmNone": "No monthly limit."
       },
       "filter": {
         "who": "Who",
@@ -2204,10 +2196,10 @@
       "items": {
         "approveLegalText": {
           "title": "Approve the legal text",
-          "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone. The procedure is docs/RUNBOOKS.md § Legal document version.",
+          "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone.",
           "done": "The club’s approved wording is published.",
           "how": [
-            "The short way (§132): /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → “Approve the three texts now”. Done: the notice, the terms and the declaration are in force, with the club's facts written in.",
+            "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → “Approve the three texts now”.",
             "To read first: under the box, “start from the platform's text” → open each, read, then press the button in the box.",
             "The long way, for a change: “New version” → text → save the draft → PDF → “Approve”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
@@ -2227,20 +2219,20 @@
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
-          "todo": "Monitors for the two scheduled jobs (email-outbox and registration-maintenance), with this environment’s JOB_SECRET — SETUP.md §26: every 15 minutes by day (07–23, Romania time) and hourly at night. Email goes out right after each registration anyway; the monitors expire held places and retry what failed. Missing or late",
+          "todo": "Monitors for the two scheduled jobs (email-outbox and registration-maintenance), with this environment’s JOB_SECRET: every 15 minutes by day (07–23) and hourly at night. Missing or late",
           "done": "Both jobs are running on time.",
           "how": [
             "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
             "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
-            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *). Night: Custom → every day, hours 23 and 0–6, minute 0 (0 0-6,23 * * *); the maintenance night job may skip 02:00 and 03:00 (0 0-1,4-6,23 * * *). A ping with nothing due answers without waking the database, so frequent pings cost nothing — the database wakes only when a job has work.",
+            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *). Night: Custom → every day, hours 23 and 0–6, minute 0 (0 0-6,23 * * *); the maintenance night job may skip 02:00 and 03:00 (0 0-1,4-6,23 * * *).",
             "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
             "On QA: the outbox every hour (0 * * * *) and maintenance every 2 hours (0 */2 * * *), and on this page → Costuri „Cât de des verifică platforma” = 2 hours: QA pays for its own database's awake hours too.",
-            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header — production once an hour at minute 2 (Custom → every day, every hour, minute 2; leaving out 02:00 and 03:00 is fine: 2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Not every 30 minutes: each check wakes the database for five minutes, and that is what Neon bills. Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
+            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header — production once an hour at minute 2 (2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Under Notifications tick “on failure” and “when the job gets disabled”."
           ]
         },
         "retentionSweep": {
           "title": "The automatic deletion of expired data is failing",
-          "todo": "The scheduled job runs on time, but the step that deletes data past its window has failed twice in a row. While it fails, the privacy notice's windows (the identity document and the health note seven days after the event, registrations after three years) no longer keep themselves. The cron-job.org monitors are fine — there is nothing to redo there",
+          "todo": "The scheduled job runs on time, but the step that deletes data past its window has failed twice in a row, so the privacy notice's windows no longer keep themselves. The cron-job.org monitors are fine — there is nothing to redo there",
           "done": "The automatic deletion of expired data runs without errors.",
           "how": [
             "Open /devs: the registration-maintenance row says “failing” and its last error names the steps that failed (for example retention:registrations-after-event). The step names are in src/modules/jobs/retention.ts.",
@@ -2254,33 +2246,33 @@
           "done": "The team has accounts.",
           "how": [
             "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events), Administrator (runs the club: registrations, legal texts, the team, this page) or Superadministrator (the platform settings too; only another Superadministrator can give this role).",
-            "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
+            "“Add” emails them the club's invitation. With the invitation key set (ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account, with a password link.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
         },
         "inviteKey": {
           "title": "The invitation key (Zitadel)",
-          "todo": "The key is missing (ZITADEL_MANAGEMENT_PAT). Without it, “Add” on Echipa puts the person on the list and sends our invitation, but creates no sign-in account — and the sign-in page has no “create an account”, so the person is stuck. The key is a Zitadel service user's token with the Org User Manager role, set on both Vercel projects (SETUP.md §37).",
-          "blind": "The key is set and authenticates, but can do nothing: asked which accounts it sees, Zitadel shows it not even yours — though you are signed in with it right now. The service user is not an “Org User Manager” of the organization. Every “Add” on Echipa writes the row and creates no account, and the colleague meets “User not found in the system” at sign-in (DECISIONS.md §288).",
+          "todo": "The key is missing (ZITADEL_MANAGEMENT_PAT). Without it, “Add” on Echipa creates no sign-in account and the person is stuck. The key is a service user's token with the Org User Manager role.",
+          "blind": "The key authenticates but cannot create accounts: the service user is not an “Org User Manager” of the organization. The colleague added meets “User not found in the system”.",
           "refused": "The key is set, but Zitadel refuses the account search every “Add” makes — usually the token was revoked, or the service user is not an “Org User Manager” of the organization. Zitadel's answer",
           "unreachable": "The key could not be checked: Zitadel did not answer. Not necessarily a problem with the key — reload the page in a few minutes. The answer",
           "done": "The key works: checked just now with a real search, it found your account. “Add” on Echipa creates the sign-in account and Zitadel sends the password link.",
           "how": [
             "Zitadel console → Users → Service Accounts → New: user name “brasovrunners-invites”, name “{club} — invitații”, access token type Bearer. Create.",
-            "Organization → Managers → + New: the service account, role Org User Manager (it may create users and send their invitation codes; nothing else). The dialog is called “Add an Administrator” and names the service user at the top; if it asks for a Loginname, that is “brasovrunners-invites”. Careful: “Role Assignments” is NOT this — that page grants roles inside a project and has nothing to do with managing users; a service account can sit there Active, looking configured, and still be unable to create anybody (DECISIONS.md §288).",
+            "Organization → Managers → + New: the service account, role Org User Manager. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is “brasovrunners-invites”. Not “Role Assignments”.",
             "On the service account → Personal Access Tokens → New. The console offers no expiry here and the token does not expire — it is a secret that has to be revoked by hand, on the same screen, when it is no longer wanted. Copy it (shown once) into the password manager and note there that it has no end date.",
             "Vercel → the production project → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = the token (Production). The same on the QA project. Redeploy both.",
             "Check: reload this page after the redeploy — the row turns green when the key finds your account, without inviting anybody. Then, on Echipa, “Add” creates the account and Zitadel sends the password link; whoever has not signed in yet has “Resend the invitation” on their row."
           ],
           "howBroken": [
-            "Zitadel console → Organization → Managers → + New: pick the key's service account (SETUP.md §37: “brasovrunners-invites”), role Org User Manager — it may create users and send their invitation codes, nothing else. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is the service account's name.",
-            "Not “Role Assignments”: that page grants roles inside a project and has nothing to do with managing users. A service account can sit there Active, looking perfectly configured, and still be unable to create anybody — exactly what happened on the club's own instance (DECISIONS.md §288).",
-            "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy (SETUP.md §37, steps 3–4).",
-            "Check: reload this page. The row turns green when the key finds your account — without inviting anybody. Then Echipa: every colleague marked “No sign-in account” was added while the key could not create accounts — ⋮ → “Revoke access”, then “Add” again with the same address; this time the account is created and Zitadel sends them the password link."
+            "Zitadel console → Organization → Managers → + New: the key's service account (“brasovrunners-invites”), role Org User Manager. The dialog is called “Add an Administrator”.",
+            "Not “Role Assignments”: that page grants roles inside a project and does not help create users.",
+            "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy.",
+            "Check: reload this page; the row turns green when the key finds your account. Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
           ],
           "howUnreachable": [
             "Reload the page in a few minutes: the check runs on every open, with a single request to Zitadel.",
-            "If it stays so, open the Zitadel console: if that does not open either, the provider has a problem and there is nothing to do here; if it does, check on the service account that the token exists and, on Vercel, that ZITADEL_MANAGEMENT_PAT and AUTH_ZITADEL_ISSUER are set on this project (SETUP.md §37)."
+            "If it stays so, open the Zitadel console. If it does not open, the provider has a problem; if it does, check ZITADEL_MANAGEMENT_PAT and AUTH_ZITADEL_ISSUER on Vercel."
           ]
         },
         "mediaStorage": {
@@ -2319,9 +2311,9 @@
         },
         "botCheck": {
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
-          "todo": "Done on 19 September 2026: the widget “brasovrunners-site” exists and both keys are on both Vercel projects — this row turns green on the next deployment. The registration form already has a trap field and a fill-time check, which stop the simple bots; Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest.",
+          "todo": "The widget “brasovrunners-site” exists and both keys are on both Vercel projects; this row turns green on the next deployment. Turnstile stops the bots the form's trap field does not catch.",
           "done": "The registration form has the anti-bot check on.",
-          "misconfigured": "Both keys are set, but Cloudflare says the secret key itself is wrong — mistyped, revoked, or belongs to another widget. Nobody is refused registration by this: a check that cannot run fails open (`DECISIONS.md` §205), which is exactly why nothing else on the platform noticed until this row existed. Fix the key below; until then the site's bot defence is silently down to the trap field and the fill-time check alone.",
+          "misconfigured": "Both keys are set, but Cloudflare says the secret key is wrong. Nobody is refused because of it, but the bot defence is weaker until you fix the key below.",
           "how": [
             "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
             "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
@@ -2336,17 +2328,17 @@
         },
         "declarationArchiveMail": {
           "title": "Signed declarations reach the club's archive automatically too",
-          "todo": "Every participant receives their signed declaration by email, and the club downloads all of an event's declarations as one PDF from the event page. Built: when the DECLARATIONS_ARCHIVE_TO variable is set, every signed declaration — electronic or on paper at the desk — also reaches the club's mailbox automatically, as an attachment; the archive builds itself. One more message per registration on the 100 a day.",
+          "todo": "When DECLARATIONS_ARCHIVE_TO is set, every signed declaration, online or on paper, also reaches the club's mailbox as an attachment. One more message per registration on the 100 a day.",
           "done": "Every signed declaration also reaches the club's archive mailbox automatically.",
           "how": [
-            "In Vercel → the production project → Settings → Environment Variables: DECLARATIONS_ARCHIVE_TO = brasovrunners@gmail.com (the club's mailbox, SETUP.md §35). Redeploy.",
+            "In Vercel → the production project → Settings → Environment Variables: DECLARATIONS_ARCHIVE_TO = the club's mailbox. Redeploy.",
             "On QA, the same variable only if you want to see the message in a rehearsal — otherwise leave it empty; QA sends only to the test list.",
             "Check: sign a declaration (or confirm one on paper at the desk) — the mailbox receives “Signed declaration: <name> — <event>” with the PDF. The row turns green. Test registrations send no copy."
           ]
         },
         "vercelUsage": {
           "title": "Vercel usage in figures, on /devs",
-          "todo": "Built, as far as Vercel allows: their public API does not expose bandwidth or invocations (those live only in the dashboard → Usage), but it does expose the list of deployments — from which /devs shows the month's deployments, today's out of 100 a day, and the build minutes out of the Hobby plan's 6,000 a month. On when a read token and the project id exist.",
+          "todo": "With a read token and the project id, /devs shows the month's deployments, today's out of 100 a day and the build minutes out of 6,000 a month. Traffic is only in Vercel → Usage.",
           "done": "/devs shows the month's deployments and build minutes, with a warning threshold.",
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
@@ -2363,12 +2355,12 @@
           "how": [
             "Renew for several years at the registrar; then update DOMAIN_RENEWAL_YEARS.",
             "DOMAIN_RENEWAL_YEARS is the total number of years paid since registration: the first year plus a 3-year renewal is 4. In Vercel → the production project (and QA) → Settings → Environment Variables; beside it DOMAIN_REGISTERED_ON = the day {apex} was registered, YYYY-MM-DD. Redeploy.",
-            "Check: this row shows the new expiry date and turns green when more than 90 days are left. Switching domains is in SETUP.md §26."
+            "Check: this row shows the new expiry date and turns green when more than 90 days are left."
           ]
         },
         "contactForm": {
           "title": "The contact form",
-          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the sending account has its address and app password, the page shows the club's address instead of the form; who receives the messages is written in the app, on /admin/emails.",
+          "todo": "Messages from “Write to us” reach the club's mailbox through Gmail, not Mailgun. Until the sending account has its address and app password, the page shows the club's address instead of the form.",
           "done": "The contact form sends to the club's mailbox.",
           "how": [
             "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
@@ -2381,18 +2373,18 @@
         },
         "neonLimits": {
           "title": "The database's monthly compute-time limit",
-          "todo": "No monthly limit is set on this environment (or it could not be read from Neon — the card says which), so nothing caps the Neon bill. Set one with room on the Costs tab → “The database's limits” — the card names the figure recommended for this environment (SETUP.md §40) — and keep the spending notification on Neon's Billing page. The limit is what suspends the database when it is reached, so leave room.",
+          "todo": "No monthly limit is set on this environment (or it could not be read from Neon), so nothing caps the Neon bill. Set one under Costs → “The database's limits”.",
           "broken": "This period has already spent 80% or more of the monthly limit. Neon suspends the whole database — every page, until the next billing period — the moment it is reached: raise the limit or wait for the reset, today rather than when it happens.",
           "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
           "how": [
-            "On the Costs tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon with the key /devs already uses (SETUP.md §33).",
+            "On the Costs tab, open “The database's limits”, choose “With a limit” and type the number recommended there.",
             "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits. If Neon refuses the write, the card says so and names the key that would do.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
           ]
         },
         "listStatesNotice": {
           "title": "Privacy notice: the stages on the public list",
-          "todo": "The notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. Those registered who have not confirmed yet and those on the waiting list do not appear, and nothing is written beside a name, until the club approves a notice that describes them.",
+          "todo": "The notice in force does not describe the stages of the public participant list yet, so the list shows only confirmed participants, until the club approves a notice that does.",
           "done": "The notice in force describes the stages: the public list shows beside each name whether the person is confirmed, registered awaiting confirmation, or on the waiting list.",
           "how": [
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes the stages.",
@@ -2422,7 +2414,7 @@
         },
         "translation": {
           "title": "Automatic translation from Romanian (DeepL, free)",
-          "todo": "Built: at the top of every editor (event, page, album, team card) there is the \"Copy and translate everything: RO → EN\" button, and \"Translate from Romanian\" beside every English box. It starts once DeepL's free key is on the server; until then the top button is grey and points here, and the English boxes are written by hand.",
+          "todo": "The “Copy and translate everything: RO → EN” and “Translate from Romanian” buttons start once DeepL's free key is on the server; until then, the English is written by hand.",
           "done": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press.",
           "how": [
             "Create a DeepL API Free account (the \"DeepL API\" page on DeepL's site → the Free plan): 500,000 characters a month, free. DeepL may ask for a card for verification only; the Free plan is not charged.",
@@ -2537,8 +2529,8 @@
             "closeMore": "At ${rate}/CU-hour and ${storageRate}/GB-month; the invoice is Neon's.",
             "more": "The monitors wake the database every 15 minutes by day and once an hour at night; a monitor every 5 minutes would keep it awake around the clock and turn sleeping hours into paid ones. At the December review, after real invoices, the club may choose Free again; check Free's limits at that time on both projects first."
           },
-          "monthlyMore": "Compute hours (CU) are on /devs. Monthly cost if we left Free, at this month's pace ({cu} CU-hours so far): about ${usd}/month on Launch (${rate}/CU-hour, ${storageRate}/GB, no subscription).",
-          "monthlyUnknownMore": "Compute hours (CU) are on /devs. Monthly cost on Launch: ${rate}/CU-hour + ${storageRate}/GB, no subscription; the exact pace appears once NEON_API_KEY is set.",
+          "monthly": "Compute hours (CU) are on /devs. Monthly cost if we left Free, at this month's pace ({cu} CU-hours so far): about ${usd}/month on Launch (${rate}/CU-hour, ${storageRate}/GB, no subscription).",
+          "monthlyUnknown": "Compute hours (CU) are on /devs. Monthly cost on Launch: ${rate}/CU-hour + ${storageRate}/GB, no subscription; the exact pace appears once NEON_API_KEY is set.",
           "more": "On the free plan the database goes to sleep when nobody is using it, so the first page after a quiet spell is slow to load. The next step up is paid by usage, not as a fixed subscription. The usage is worth a look in the Neon account before a race."
         },
         "zitadel": {
@@ -2548,7 +2540,7 @@
           "whenCrossed": "It is not crossed: who the administrator is and where the credentials are is written down.",
           "closeYes": "—",
           "closeNo": "The team signs in on the provider's address, as decided.",
-          "more": "Signing in happens on the provider's address, not the club's — decided, not pending: a login address of our own would cost 100 USD a month. The credentials: docs/RUNBOOKS.md § Staff sign-in."
+          "more": "Signing in happens on the provider's address, not the club's: a login address of our own would cost 100 USD a month."
         },
         "scheduler": {
           "name": "cron-job.org + GitHub (the automatic jobs)",
@@ -2586,7 +2578,7 @@
       },
       "olderPictures": {
         "title": "Older pictures, without phone sizes",
-        "intro": "Pictures uploaded before the platform kept every picture in several sizes have one large file, which a phone downloads whole. The button makes their smaller sizes from the stored file, at most {perPress} per press. The picture looks the same; pages load faster on a phone.",
+        "intro": "Old pictures have one large file, which a phone downloads whole. The button makes their small sizes, at most {perPress} per press.",
         "left": {
           "one": "{count} picture left without sizes.",
           "few": "{count} pictures left without sizes.",
@@ -2644,7 +2636,7 @@
           "immediateMore": "The scheduled queue only picks up what is left: a retry, or a message deferred until the daily allowance resets.",
           "scheduledMore": "The club's sending setting is on “scheduled”; the delay is up to as many minutes as the interval."
         },
-        "introMore": "The jobs are registration maintenance (holds that lapse, waiting-list offers, reminders, race numbers) and the email outbox. An external service calls them every 15 minutes by day and hourly at night. When they have nothing to do they answer from Vercel's cache without waking the database, and Neon bills every wake-up as at least 5 minutes of compute.",
+        "introMore": "The jobs are registration maintenance and the email outbox. With nothing to do they do not wake the database; every wake-up costs at least 5 minutes of compute.",
         "safeMore": "Every reading of the places counts the deadline at that moment, whether or not the scheduled job has run. An interval longer than an hour also replaces the hourly safety check: your setting wins.",
         "onTheHourMore": "With 2 hours, on the even hours. That way an idle hour costs at most one wake of the database rather than one per job. With an interval chosen, the checks also keep to its marks on the clock (:00 and :30, the hour, the even hours); getting there may make some checks up to a quarter of an hour late each.",
         "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do."
@@ -2669,12 +2661,12 @@
         "fieldHelp": "Between 0 (off) and {max}.",
         "save": "Save the budget",
         "saving": "Saving…",
-        "introMore": "The \"Copy and translate everything: RO → EN\" and \"Translate from Romanian\" buttons fill the English boxes through DeepL API Free, free up to 500,000 characters a month. The daily budget stops one afternoon of translating from using up the month.",
+        "introMore": "The translation buttons use DeepL API Free, free up to 500,000 characters a month; the daily budget stops one afternoon from using up the month.",
         "privacyMore": "Only the content boxes are translated, so the privacy notice does not change.",
         "fieldHelpMore": "A whole event translated is usually 5,000–15,000 characters."
       },
       "month": {
-        "title": "This month",
+        "title": "By provider",
         "intro": "What each provider has cost this month, and what it will cost by the end of it.",
         "aside": "~{amount} USD by month end",
         "estimated": "The database's amount is an estimate, not an invoice.",
@@ -2768,13 +2760,14 @@
           "r2": "It would cost money only above {free} GB stored: {price} USD per GB a month, for the excess."
         },
         "introMore": "The projection keeps the pace so far. Beside each amount are the usage behind it and the limit it meets.",
-        "total": {
-          "title": "This month's total",
-          "projectedLabel": "estimated by the end of the month",
-          "soFar": "So far: {amount}."
-        },
         "estimatedMore": "Neon is billed by usage, so the amount is worked out at the catalogue's price and the pace so far; the invoice is Neon's.",
-        "incompleteMore": "The provider could not be read just now, or the Mailgun plan is typed by hand with no price. Its row is marked “we don't know”."
+        "incompleteMore": "The provider could not be read just now, or the Mailgun plan is typed by hand with no price. Its row is marked “we don't know”.",
+        "eur": "{amount} €",
+        "eurPlusVat": "{amount} € + VAT",
+        "domainYear": "The .com domain: {amount} a year.",
+        "onlyNeon": "Neon is the only monthly cost; everything else is on a free plan.",
+        "totalMore": "The providers bill in USD; the total is converted at the ECB rate of {date}: 1 € = {rate} USD.",
+        "total": "This month: {soFar} so far · month-end estimate: {projected}"
       },
       "database": {
         "title": "The database — Neon",
@@ -2785,7 +2778,7 @@
     },
     "clubTodo": {
       "title": "To do",
-      "intro": "The club's list: what we have to do, typed and ticked by hand — unlike “Club”, which is read from the system. The whole team sees it; the Organizer, the Administrator and the Superadministrator write it.",
+      "intro": "The club's list, typed and ticked by hand. The whole team sees it; the Organizer, the Administrator and the Superadministrator write it.",
       "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for a change.",
       "counts": "Open: {open} · Done: {done}",
       "listLabel": "The club's list",
@@ -2852,7 +2845,7 @@
       "imageQualityNormal": "Medium (recommended)",
       "imageQualityHigh": "Large",
       "imageQualityOriginal": "Original (large file)",
-      "imageQualityHelp": "Medium suits photographs: it keeps up to {normalMax} px on the long side. Minimum keeps {lowMax} px, for a picture that only has to be seen (a sketch, a portrait beside the text), with the smallest file. Large keeps {highMax} px, for posters, graphics and pictures with text: the lettering stays sharp. Original keeps the file's own pixels, up to {originalMax} px, with the least loss; the file is the largest. Remembered until you close the tab; a picture pasted or dropped into the text and a film's poster use the same choice.",
+      "imageQualityHelp": "Medium ({normalMax} px) for photographs; Minimum ({lowMax} px) for a small picture; Large ({highMax} px) for posters with text; Original, up to {originalMax} px.",
       "imageChoose": "Choose the picture",
       "imageChosen": "The chosen file: {name}, {width} × {height} px, {size}.",
       "imageSent": "Sent smaller: {width} × {height} px, {size}.",
@@ -2905,7 +2898,7 @@
       "youtubePosterUseYoutube": "Use YouTube's own thumbnail",
       "youtubePosterFromGallery": "From the gallery",
       "youtubePosterCrop": "The thumbnail's crop — what shows before the film starts",
-      "youtubePosterCropHelp": "The film's frame is 16:9. Drag the rectangle over the thumbnail to choose the part that shows (another shape shows as much of it as fits in 16:9); the arrows move it, Shift with them makes it larger or smaller.",
+      "youtubePosterCropHelp": "The film's frame is 16:9: drag the rectangle over the picture to choose the part that shows. The arrows move it; Shift with them resizes it.",
       "youtubePosterCropReset": "The middle of the thumbnail",
       "youtubePosterCropWaiting": "YouTube's own thumbnail is kept at the first save; after that you can crop it here. You can also choose one from the gallery or upload another.",
       "imageAlign": "Where it sits in the text",
@@ -2914,7 +2907,7 @@
       "imageAlignRight": "Right",
       "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way.",
       "imageCrop": "Crop — what is shown of the photograph",
-      "imageCropHelp": "Choose a shape or drag a box over the photograph: that is exactly what the page shows. A shape keeps its proportions while you drag. Drag inside the box to move it; the arrows move it, and Shift with them resizes it.",
+      "imageCropHelp": "Choose a shape or drag a box over the photograph: that is exactly what the page shows. The arrows move it; Shift with them resizes it.",
       "imageCropReset": "No crop",
       "imageCropPosition": "{w}% × {h}% of the photograph, from the left {x}%, from the top {y}%",
       "imageShapes": "Shape",
@@ -3012,7 +3005,7 @@
     },
     "appearance": {
       "title": "Site appearance",
-      "intro": "The light colour the public pages sit on — the events list, the event pages, the calendar, the contact page. Choose a tint from the club's colours or type one; each shows the header, a card and the text on its colour below.",
+      "intro": "The light colour the public pages sit on. Choose a tint from the club's colours or type one.",
       "current": "Now: {tint}",
       "updatedAt": "Set {when}.",
       "legend": "The public pages' background",
@@ -3060,7 +3053,7 @@
     },
     "pictures": {
       "title": "Pictures",
-      "intro": "Every picture uploaded — from the text editor and from albums — with where each one is used. A picture used nowhere for 7 days deletes itself; one in use cannot be deleted here until you take it out of the page, the event or the album.",
+      "intro": "Every picture uploaded, with where each one is used. One unused for 7 days deletes itself; one in use cannot be deleted from here.",
       "linkFromGallery": "Pictures in texts, and where they are used →",
       "empty": "No picture has been uploaded.",
       "columnPicture": "Picture",
@@ -3087,7 +3080,7 @@
       "title": "Photo gallery",
       "create": "New album",
       "createHelp": "The album's details first, then the photos — uploaded on the album's page, straight from a phone.",
-      "intro": "The club's albums. Photos are shrunk on the phone before they are sent and kept in two sizes only, with no location data. An album is on the site once it is published and has at least one photo.",
+      "intro": "The club's albums. An album is on the site once it is published and has at least one photo.",
       "empty": "No album yet.",
       "backToList": "← All albums",
       "edit": "Open the album",
@@ -3105,7 +3098,7 @@
       "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
       "photos": "Photos ({count})",
       "upload": "Upload photos",
-      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are sent as they are; only one that is too large is shrunk on the device first. The first becomes the cover. Do not upload a portrait, or a photograph in which a child is the subject, without the person's written agreement or the parent's written request (keep the email). If someone asks to be taken down, delete the photo within a month.",
+      "uploadHelp": "JPEG, PNG or WebP; the first becomes the cover. Do not upload a portrait, or a photograph in which a child is the subject, without the person's written agreement or the parent's written request (keep the email). If someone asks to be taken down, delete the photo within a month.",
       "uploading": "Uploading {done} of {total}…",
       "uploaded": "{total} photos uploaded.",
       "uploadFailed": "Could not upload: {names}",
@@ -3118,7 +3111,7 @@
       "qualityNormal": "Medium (recommended)",
       "qualityHigh": "Large",
       "qualityOriginal": "Original (large file)",
-      "qualityHelp": "Medium suits photographs: it keeps up to {normalMax} px on the long side. Minimum keeps {lowMax} px, for a picture that only has to be seen (a sketch, a portrait beside the text), with the smallest file. Large keeps {highMax} px, for posters, graphics and pictures with text: the lettering stays sharp. Original keeps the file's own pixels, up to {originalMax} px, with the least loss; the file is the largest. Remembered until you close the tab.",
+      "qualityHelp": "Medium ({normalMax} px) for photographs; Minimum ({lowMax} px) for a small picture; Large ({highMax} px) for posters with text; Original, up to {originalMax} px.",
       "chosen": "The chosen photo: {name}, {width} × {height} px, {size}.",
       "sent": "Sent smaller: {width} × {height} px, {size}.",
       "lighter": "Sent lighter, at the same pixels: {size}.",
@@ -3176,7 +3169,7 @@
     },
     "thanks": {
       "title": "After the race",
-      "help": "A thank-you email to everyone marked present at the desk — once per event, sent by you, never automatically. You can add a link to the results or the photos. The message concerns only the event the person attended and promotes nothing else — it is not a commercial communication (Law 506/2004).",
+      "help": "A thank-you email to everyone marked present, once per event, sent by you. You can add a link to the results or the photos; promote nothing else.",
       "url": "Link (optional)",
       "urlHelp": "The results, the photos — an address starting with https://.",
       "send": "Send the thank-you",
@@ -3197,22 +3190,23 @@
       "backToEvent": "← Back to the event",
       "previewAlt": "Number {number} — {name}",
       "downloadOnePerPage": "One per page",
-      "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
-      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
+      "helpNone": "No number yet: every registration gets one when it is confirmed.",
+      "helpSome": "{total} numbers given.",
       "downloadAll": "Download every number ({count}) — a PDF to print",
       "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one.",
       "downloadSpares": "Reprint the free spares (PDF)",
       "sparesFree": "Reserved for the desk: {from}–{to}, {free} of {total} still free. The reprint carries only the free ones.",
       "sparesNone": "Reserved for the desk: {from}–{to}, all given. Print more if you need them.",
       "sparesTitle": "Spare bibs for on-the-spot entries",
-      "sparesHelp": "For people who register at the desk: numbers printed ahead with an empty name line — the name is written on in marker. The numbers are reserved when printed: nobody who registers online gets them, and at the desk the form suggests the next free one. Between 1 and {max} at a time.",
+      "sparesHelp": "Numbers printed ahead with an empty name line, for people who register at the desk; nobody online gets them. Between 1 and {max} at a time.",
       "sparesCount": "How many",
       "sparesPrint": "Print",
       "sparesNext": "The next print starts at {from}.",
       "sparesReadOnly": "Only an administrator reserves new numbers.",
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
-      "spareMark": "on-the-spot entry"
+      "spareMark": "on-the-spot entry",
+      "helpMore": "Numbers are given in order of registration and never change. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -3231,7 +3225,7 @@
     },
     "person": {
       "title": "Everything held about a person",
-      "intro": "For an access request, or before an erasure: everything the platform holds about one email address — every registration in every state with every field, the declarations, the consents and their versions, the messages sent, the “Tell me” requests and the audit rows. The address is matched by its canonical form, so “Ana.Pop+club@gmail.com” and “ana.pop@gmail.com” are the same person.",
+      "intro": "For an access request, or before an erasure: everything the platform holds about one email address, matched by its canonical form.",
       "email": "Email address",
       "lookUp": "Look up",
       "expired": "The lookup expired (after {minutes} minutes). Type the address again.",
@@ -3299,7 +3293,7 @@
       "checkedInAt": "Here since {time} · {who}",
       "bySelf": "themselves",
       "fastTrack": "This person is at the desk: I vouch for the address, and the declaration is signed on paper now.",
-      "fastTrackHelp": "The registration is confirmed on the spot, with no verification email and no declaration link. The participant still signs the declaration — on the printed copy — and you record that under your name. If the event is full, they join the waiting list like anyone else.",
+      "fastTrackHelp": "The registration is confirmed on the spot, with no email; the participant signs the paper declaration and you record it. If full, they join the waiting list.",
       "saved": {
         "registrationCreated": "Added — the person is listed below, in the state they landed in.",
         "registrationConfirmed": "Confirmed. You can give the number and mark them here.",
@@ -3426,7 +3420,7 @@
       "clubNotices": {
         "title": "The club's copies",
         "aside": "Addresses receiving copies: {count}",
-        "intro": "Who at the club receives a copy of a signed declaration, who is told when somebody confirms their registration, and who receives a hidden copy of the emails to participants. Club addresses, never a participant's.",
+        "intro": "The club's addresses that receive the declarations' copies, the notice of each confirmation and the hidden copies of the emails to participants.",
         "participantsInForce": "Hidden copy of the emails to participants: {bcc}.",
         "asideNames": "Addresses receiving copies: {count} — {addresses}",
         "confirmationsInForce": "The notice that somebody confirmed goes to: {to}.",
@@ -3445,18 +3439,19 @@
         "declarationsBccHelp": "Addresses separated by commas, spaces or line breaks. They appear nowhere in the message.",
         "bccWarning": "The declaration carries the participant's name and signature; in the club's copy the identity document's series and number are masked (for example “BV ••••56”). A hidden copy delivers that personal data to a mailbox nobody on the message can see. Use it only as a decision of the club.",
         "confirmationsTo": "Tell us when somebody confirms",
-        "confirmationsToHelp": "Addresses separated by commas, spaces or line breaks. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
+        "confirmationsToHelp": "Addresses separated by commas, spaces or line breaks; each gets a short message on every confirmation and spends one of the Mailgun allowance.",
         "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
-        "participantsBccHelp": "Addresses separated by commas, spaces or line breaks. Each receives, separately and without the participant knowing, a club copy of every email sent to a real participant — the declaration, the confirmation, the reminder, a number given by hand — with “[Club copy]” in the subject. Not of the address check or the link for another person, which go to an address nobody has confirmed yet; and of a message to everybody registered (the organizers' message, updated details), one copy per send, with how many received it and no names. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
+        "participantsBccHelp": "Each address gets a “[Club copy]” of the emails to participants and spends one more message of the Mailgun allowance.",
         "participantsBccWarning": "The club copy carries none of the participant's personal links (confirming the address, signing the declaration, “I can't make it any more”), no QR code and no attachment, so nobody can take a step in their place from that mailbox. It still carries their name, the event and the race number: a club mailbox only, as a decision of the club.",
         "save": "Save",
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
-        "saved": "Saved who receives the club's copies."
+        "saved": "Saved who receives the club's copies.",
+        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations."
       },
       "queue": {
         "title": "The sending queue",
-        "intro": "What has not left yet: the message type, the recipient, when it was queued, how many attempts it has had and what the provider last said. The message itself is stored nowhere — it is composed at sending time.",
+        "intro": "What has not left yet: the type, the recipient, when it was queued, how many attempts and the provider's last answer. The message is composed only at sending.",
         "count": "In the queue: {count} messages.",
         "facts": "Queued since {queued} · attempts: {attempts} · next attempt: {next}",
         "nextAny": "at the next send",
@@ -3477,7 +3472,7 @@
         "paragraphsHelp": "A blank line between paragraphs. **Bold** is written between two asterisks.",
         "legend": {
           "title": "The fields you can use",
-          "intro": "Write them exactly like this, braces and all — each is replaced when the message is sent, for every participant. A field this message does not have stays empty — or, where its row says so, its paragraph is not sent.",
+          "intro": "Write them exactly like this, braces and all; each is replaced for every participant when sent. A field this message does not have stays empty.",
           "missing": "The ones marked “may be missing” are not in every send: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The example beside a field is the value it gets in the preview above.",
           "usedMark": "used in the platform's text",
           "mayBeMissing": "may be missing",
@@ -3516,7 +3511,7 @@
         "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the platform's: they carry tokens and files, not words.",
         "samplesTitle": "The saved text holds sample values, not fields",
         "samplePairWhere": "“{value}” — {where}; in its place: {replacement}",
-        "samplesHelp": "Every participant would receive exactly these words, whatever their event. “Replace with the fields” puts the right field in place of each value and saves the text; the preview above shows the result.",
+        "samplesHelp": "Every participant would receive exactly these words. “Replace with the fields” puts the right field in place of each value and saves the text.",
         "samplePair": "“{value}” → {replacement}",
         "sampleWords": "“{words}”",
         "sampleWhere": {
@@ -3535,7 +3530,7 @@
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
-        "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on /admin/tasks, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",
+        "intro": "The Mailgun account's plan, which the platform cannot read; what can still go out today is worked out from it. Change it when you pay for or cancel a month.",
         "aside": {
           "day": "Plan {plan} · {sent} of {allowance} today",
           "month": "Plan {plan} · {sent} of {allowance} this month",
@@ -3573,7 +3568,7 @@
       },
       "transport": {
         "title": "How emails leave: Mailgun or the club's Gmail",
-        "intro": "Mailgun costs according to the plan. The club's Gmail is free, but Google blocks a personal account that sends a lot, in bursts or automatically. Here you choose, per group, what leaves through Gmail; the rest leaves through Mailgun. For Gmail you set a daily limit, a pause between messages and what happens at the limit below.",
+        "intro": "Choose, per group, what leaves through the club's Gmail (free, but Google blocks bulk sending); the rest leaves through Mailgun.",
         "aside": {
           "on": "Gmail: {sent} of {cap} recipients in the last day · {groups} of {total} groups through Gmail",
           "off": "Gmail is not configured here: everything leaves through Mailgun"
@@ -3598,7 +3593,7 @@
           },
           "announcements": {
             "label": "Organizers' announcements",
-            "help": "The event's update or cancellation, the organizer's message, “Registration is open”. Rare, and sent with a pause. They may leave through Gmail once the approved privacy notice says Gmail also sends messages to participants."
+            "help": "The event's update or cancellation, the organizer's message, “Registration is open”. Through Gmail only once the approved privacy notice says so."
           },
           "club": {
             "label": "Messages to the club",
@@ -3606,7 +3601,7 @@
           },
           "newsletter": {
             "label": "Newsletter",
-            "help": "The subscription's confirmation, the newsletter written in the “Newsletter” menu and the new-event announcement, to those who subscribed on the contact page. The newsletter and the announcement go last and, through Mailgun, only from what is left after the registrations' reserve. Recommended: Mailgun — one message to many addresses from a personal Gmail is the bulk pattern Google restricts."
+            "help": "The subscription's confirmation, the newsletter and the new-event announcement. Recommended: Mailgun; a personal Gmail sending to many addresses is restricted by Google."
           }
         },
         "messages": "Messages in this group: {names}",
@@ -3615,7 +3610,7 @@
           "gmail": "The club's Gmail"
         },
         "dailyCap": "Gmail limit per day (recipients)",
-        "dailyCapHelp": "At most {max}: that is what Google allows a personal account a day, counting every recipient, copies included. The same account is used by QA and production, by the contact form and by people, so the two environments' limits together must stay well under {max}.",
+        "dailyCapHelp": "At most {max}, what Google allows a personal account a day. QA, production and the contact form share the account, so together they stay well under {max}.",
         "pace": "Pause between two Gmail messages (seconds)",
         "paceHelp": "Between 0 and {max}. An account that sends in bursts looks like a robot. What does not fit in the pauses leaves at the queue's next run.",
         "atCap": "At Gmail's limit",
@@ -3642,7 +3637,7 @@
         "title": "Who receives the contact messages",
         "aside": "They currently reach: {to}",
         "asideNobody": "nobody",
-        "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another, “Hidden copy (Bcc)” get a copy without appearing in the message. Saved here, with no redeploy.",
+        "intro": "Who receives the messages from “Write to us”; they leave through the club's Gmail, not Mailgun. Saved here, with no redeploy.",
         "source": {
           "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
           "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}. Hidden copy: {bcc}.",
@@ -3654,7 +3649,7 @@
         "cc": "Copy – Cc (addresses separated by commas)",
         "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
         "bcc": "Hidden copy – Bcc (addresses separated by commas)",
-        "bccHelp": "They get a copy of every message the form sends without appearing in it: neither the visitor nor the people under “To” and “Cc” see them. An address also written under “To” or “Cc” receives one message only. Empty means no hidden copies.",
+        "bccHelp": "They get a copy of every message from the form without appearing in it. Empty means no hidden copies.",
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
@@ -3670,7 +3665,7 @@
       },
       "deadlines": {
         "title": "Deadlines",
-        "intro": "How long each deadline the platform gives a participant lasts. It applies from the save onwards: a link, a held place or an offer already given keeps the deadline it got. The numbers appear by themselves wherever they are written — in the emails, on the form and in the five steps, in the guide, on this page and in legal texts approved from the new template.",
+        "intro": "How long each deadline given to a participant lasts. It applies from the save onwards; the numbers appear by themselves in the emails, on the form and in new legal texts.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
         "bounds": "Recommended: {recommended}. Between {min} and {max}.",
@@ -3705,7 +3700,7 @@
       },
       "forecast": {
         "title": "Upcoming automatic emails",
-        "intro": "What the platform sends participants on its own in the coming days, event by event: when, which message, and how many people it reaches if it went now. A message goes at the job's first run after the moment shown. Not listed: what a staff member sends (the update notice, the cancellation, the thank-you after the race, the organizers' message), nor the answers to a runner's own click (the confirmation link, the confirmation, the waiting list), which go at once. Last, the newsletters and new-event announcements already queued for subscribers, with the moment they go.",
+        "intro": "What the platform sends participants on its own in the coming days: when, which message and how many it would reach now.",
         "aside": {
           "one": "1 send in the next {days} days",
           "few": "{count} sends in the next {days} days",
@@ -3746,12 +3741,13 @@
           "gmail": "through Gmail"
         },
         "held": "held for the registrations' reserve, goes then",
-        "newsletterUntitled": "(newsletter without a subject)"
+        "newsletterUntitled": "(newsletter without a subject)",
+        "introMore": "A message goes at the job's first run after the moment shown. Not listed: what the team sends, nor what goes at once on a runner's own click."
       },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
         "title": "Registrations per address (per event)",
-        "intro": "How many people may register with the same email address for one event — a family, for instance. The second registration is made only by confirming from the email sent to the address; at the limit, the email says so and carries no button. Each person signs their own declaration. Since BR-V1.94 the flow is on; until that release runs on an environment, it stays dormant.",
+        "intro": "How many people may register with the same email address for one event, a family for instance. Each person signs their own declaration.",
         "field": "Registrations per address (per event)",
         "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
         "value": "One address may register at most {people} for an event.",
@@ -3765,7 +3761,7 @@
       },
       "shownAddress": {
         "title": "Contact address shown",
-        "intro": "Which address people see on the site — the footer, the contact page, the race numbers, the legal texts started from the platform's text — and where a reply to any email the platform sends goes. Mailgun has a daily cap; Gmail does not.",
+        "intro": "The address people see on the site, and where a reply to any email the platform sends goes.",
         "aside": "On the site: {shown}",
         "preview": "On the site: {shown} · Replies to: {replyTo}",
         "legend": "Which address we show",
@@ -3791,7 +3787,7 @@
     },
     "guide": {
       "title": "How to use the platform",
-      "intro": "Every task has its own numbered steps. What is written «like this», in bold, is exactly what the button or the screen says — look for those words. Your role's sections come first and open; press a task to see its steps. If a button is missing, you do not have the role for it: ask an administrator for it, or ask someone who has that role.",
+      "intro": "Every task has its numbered steps; the words «like this», in bold, are exactly what the button says. If a button is missing, you do not have the role for it.",
       "sections": [
         {
           "title": "First steps",
@@ -4582,7 +4578,7 @@
         }
       ],
       "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'.",
-      "familyPending": "Not switched on yet: the database still keeps one registration per address per event, until BR-V1.94, the update that changes it. Until then, sending the form again for another person only re-sends the first registration's email.",
+      "familyPending": "Not switched on on this environment yet: the database keeps one registration per address per event. Until then, sending the form again for another person only re-sends the first registration's email.",
       "network": "A save fails on an office laptop?",
       "networkLink": "Check the network"
     },
@@ -4618,7 +4614,7 @@
       "link": "Send a message to participants",
       "title": "Send a message to participants",
       "event": "{event} · {date}",
-      "intro": "An email you write, in Romanian and English, to the people registered for this event — bad weather, a last-minute change or a cancellation, for instance. Each receives it in the language they registered in, with the other language below and with the link to the event's page. It goes through the email queue, like every other message.",
+      "intro": "An email you write, in Romanian and English, to the people registered for this event. Each receives it in the language they registered in.",
       "backToEvent": "← Back to the event",
       "compose": "New message",
       "audience": "Who receives it",
@@ -4651,7 +4647,7 @@
       "subject": "Subject",
       "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
       "body": "Message",
-      "bodyHelp": "In both languages, required, plain text, at most {max} characters each. A blank line starts a new paragraph. Fields filled in for each participant: {list} — the race number shows only for those who already have one. The event's date and place, the button to its page and the usual links come under the message by themselves.",
+      "bodyHelp": "Required in both languages, plain text, at most {max} characters each. Fields filled in for each participant: {list}.",
       "bodyScope": "Write only about this event: weather, place, time, safety, a change or a cancellation. No advertising, offers from sponsors or other businesses, and no other events: those would be commercial communications, or a purpose other than the one participants gave us their address for (Law no. 506/2004, art. 12; art. 5(1)(b) GDPR), and need each person's separate consent.",
       "preview": "How the email looks",
       "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
@@ -4765,7 +4761,7 @@
     },
     "team": {
       "title": "The «Team» page",
-      "intro": "The club's people, one card each: a photograph, a name, what they do for the club, a few words and, if they want, a link. The page is the platform's, like the contact page: here you publish it and write its introduction and cards. A new card stays hidden until an Administrator puts it on the site. Ask the person's consent before putting their name and photograph on the site.",
+      "intro": "The club's people, one card each. A new card stays hidden until an Administrator puts it on the site; ask the person's consent for their name and photograph.",
       "shownCount": "On the site: {count} of {total} cards.",
       "noneShown": "No card is on the site, so the page does not appear in the site's menu.",
       "viewPublic": "View the page",
@@ -4828,7 +4824,7 @@
       "introHelp": "Optional, in both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a film, a table. Empty, the page uses the platform's text.",
       "textEmpty": "(empty)",
       "links": "Links",
-      "linksHelp": "At most {max}: Strava, Instagram, Facebook, the person's own site or anything else. The address starts with https://. The label is optional, in both languages or in neither; without one, the card shows the network's name.",
+      "linksHelp": "At most {max}, each starting with https://. The label is optional, in both languages or neither; without one, the card shows the network's name.",
       "linkCount": "Links: {count}",
       "linkRows": {
         "kind": "What it is",
@@ -4941,7 +4937,7 @@
     "firstName": "First name",
     "lastName": "Last name",
     "displayName": "Public display name",
-    "displayNameHelp": "By default the participant list and the results show your full name. If you would rather they showed something else — “Ana P.”, for instance — write it here. To stay off the list entirely, use the option below.",
+    "displayNameHelp": "By default the list and the results show your full name; if you would rather show something else, such as “Ana P.”, write it here.",
     "birthDate": "Date of birth",
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
@@ -5097,14 +5093,14 @@
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",
     "instagramHandleHelp": "With or without the @.",
-    "guardianHelp": "A participant under 18 is registered by a parent or legal guardian, who also signs the declaration of own responsibility on their behalf and collects the kit. You fill in the child's details and give the choices below (public list, health information) on their behalf. The email and phone may be yours. For an adult, leave this empty.",
+    "guardianHelp": "Under 18, a parent or guardian registers: they sign the declaration, collect the kit and give the choices below for the child. The email and phone may be yours.",
     "guardianName": "Full name of the parent / guardian",
     "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
     "privacyBanner": "Nothing you write here appears on the site. The club uses it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (at most the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
     "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Without the tick, once you are confirmed you are only counted, as “Participant (name hidden)”. Nothing else is published: not your email, not your phone, not your date of birth. The club uses your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (at most the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
     "confidentialNote": "Confidential. Never published.",
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
-    "healthIntro": "Optional, and only if you want to. Write only what the race organizers should know if you need help — an allergy, a treatment, a condition. Only the organizers see it; it is deleted seven days after the event.",
+    "healthIntro": "Optional: only what the organizers should know if you need help. Only they see it, and it is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
     "clubMemberHint": "I have been to at least 3 group runs in the past year.",
     "rules": {
@@ -5166,7 +5162,7 @@
       "family": {
         "stepsLabel": "The declarations on this address",
         "stepTitle": "Declaration {step} of {total} — {name}",
-        "intro": "Several people are registered for this event on this address. The declarations are signed here, one after the other: one person per step, each with their own name and identity document (a parent for a minor). After each signature the page moves on to the next person, and each receives their own confirmation and the PDF of their declaration by email.",
+        "intro": "Several people are registered on this address. Sign the declarations here one after the other, each with their own name and document; each gets their PDF by email.",
         "lastSigned": "The declaration for {name} is signed. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
         "lastWaitlisted": "The place for {name} was no longer free: {name} is now on the waiting list.",
         "doneTitle": "The declarations on this address",
@@ -5207,7 +5203,7 @@
       "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
       "deadlinePassed": "The deadline, {deadline}, has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
-      "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (at most the first two and last two characters remain); we never keep a copy of the document.",
+      "idDocumentHelp": "Your identity card (e.g. “BV 123456”) or passport; the kit is collected against it. Deleted seven days after the event, masked in the club's copy; we keep no copy of the document.",
       "idDocumentPlaceholder": "BV 123456",
       "typedNameHelp": "Type the full name you registered with. It appears as a signature.",
       "nextTitle": "What happens next",
@@ -5265,7 +5261,7 @@
       "event": "For the event: {event}",
       "listed": "Your name appears on this event's public participant list.",
       "notListed": "Your name does not appear on this event's public participant list.",
-      "help": "The list shows the name (or the display name you chose) and the club, and only on events where the club publishes one; without your name, you are only counted, as “Participant (name hidden)”. The choice is yours and you can change it at any time: here, from the confirmation email or from \"My registrations\".",
+      "help": "The list shows the name (or the display name) and the club; without your name, you are only counted. You can change this any time, here or from “My registrations”.",
       "optOut": "Take me off the public list",
       "optIn": "Show my name on the public list",
       "changed": "Your choice has been saved.",
@@ -5311,7 +5307,7 @@
         "EXPIRED": "Expired"
       },
       "closedTitle": "Registrations that are over",
-      "closedHelp": "These registrations are no longer active, but they still hold details you gave us only because you agreed to. You can delete them here; the rest of the registration is kept for as long as the privacy notice says.",
+      "closedHelp": "These registrations are no longer active, but they hold details you gave on consent; you can delete them here.",
       "eventCancelledChip": "Event cancelled",
       "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
       "runner": "Registered: {name}",
@@ -5395,7 +5391,7 @@
       "decline": "I am not registering this person",
       "declinePending": "Deleting…",
       "declineTitle": "Not registering this person?",
-      "declineIntro": "The registration form for {event} was sent again from the address {email}, for the person below. If you do not want to register them, press the button: the details sent for them are deleted now, nobody is registered, and the link in the email can no longer be used.",
+      "declineIntro": "The form for {event} was sent again from {email}, for the person below. If you do not want to register them, press the button: their details are deleted now.",
       "declineBack": "I want to register them after all",
       "declinedTitle": "The person was not registered",
       "declined": "Done — we registered nobody; the details sent have been deleted.",
@@ -5788,7 +5784,7 @@
       "confirmBody": "The platform brakes by the new thresholds from the budget's next reading, within a minute."
     },
     "spentAllMore": "From then until the period ends the site shows its saved copies and the forms wait. Until then the scheduled jobs keep running, at the pace below.",
-    "sourceMore": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours. The larger of the first two is used; the old counter only when neither answered."
+    "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours. The larger of the first two is used; the old counter only when neither answered."
   },
   "Offline": {
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
@@ -6219,7 +6215,7 @@
     "button": "Translate from Romanian",
     "pending": "Translating…",
     "all": "Copy and translate everything: RO → EN",
-    "allHelp": "One button: every text written in Romanian goes into its English box, translated automatically (DeepL), with the same layout — headings, lists, pictures, links. Empty boxes are filled at once; if the English already has text, you choose «Replace everything» or «Only the empty ones». Read, correct, then press Save.",
+    "allHelp": "Every text written in Romanian is translated automatically (DeepL) into its English box, with the same layout. Read, correct, then press Save.",
     "off": "Automatic translation is not on yet: the server has no free DeepL key. It is set once, and then the button works in every editor.",
     "offAskAdmin": "Automatic translation is not on yet: the server has no free DeepL key. Ask an Administrator to set it (the steps are under Tasks → Club).",
     "offSteps": "See the steps",

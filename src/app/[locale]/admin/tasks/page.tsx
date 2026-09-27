@@ -660,8 +660,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           text,
           more:
             neon.ok && neonMonthly !== null
-              ? t("services.neon.monthlyMore", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2), ...neonRates })
-              : t("services.neon.monthlyUnknownMore", neonRates),
+              ? t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2), ...neonRates })
+              : t("services.neon.monthlyUnknown", neonRates),
         };
       }
       return { text, more: null };

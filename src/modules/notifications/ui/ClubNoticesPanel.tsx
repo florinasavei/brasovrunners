@@ -200,6 +200,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             defaultValue={formatAddressList(notices.participants.bcc)}
             size="small"
             helperText={t("emails.clubNotices.participantsBccHelp")}
+            helpMore={t("emails.clubNotices.participantsBccHelpMore")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>

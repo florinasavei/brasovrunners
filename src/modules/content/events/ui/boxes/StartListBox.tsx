@@ -39,7 +39,7 @@ export default async function StartListBox({ event, mayEditSettings, heading }: 
               <CheckboxField name="event.participantListVisibility" defaultChecked={event?.participantListVisibility === "NAMES"}>
                 {t("editor.participantList")}
               </CheckboxField>
-              <BoxNote>{t("editor.participantListHelp")}</BoxNote>
+              <BoxNote more={t("editor.participantListHelpMore")}>{t("editor.participantListHelp")}</BoxNote>
             </Box>
           </OnlyForMode>
           <OnlyForMode mode={["NONE", "EXTERNAL"]} initialMode={initialMode}>

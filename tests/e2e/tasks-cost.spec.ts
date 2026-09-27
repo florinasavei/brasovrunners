@@ -31,9 +31,12 @@ test.describe("BR-REQ-090-05 the cost half of the task board", () => {
      */
     const main = page.locator("#main");
 
-    // The month's total first, straight under the tabs (§NNN): one figure before every card that justifies it.
-    await expect(main.getByRole("heading", { name: "Totalul lunii" })).toBeVisible();
-    await expect(main.getByTestId("month-costs-total")).toContainText("estimat la sfârșitul lunii");
+    // The month's total first, straight under the tabs (§NNN): ONE line in the owner's words, in
+    // euro, before every card that justifies it; the provider rows folded closed under it (§336).
+    const total = main.getByRole("heading", { name: /^Luna aceasta: .* € până acum · estimare la sfârșitul lunii: .* €/ });
+    await expect(total).toBeVisible();
+    await expect(main.getByTestId("month-costs-domain-year")).toContainText("Domeniul .com:");
+    await expect(main.locator('details[data-testid="month-costs"]')).not.toHaveAttribute("open", /.*/);
     await expect(main.getByRole("heading", { name: "Cât costă" })).toBeVisible();
     // The verdict and the number, before the table that justifies them.
     await expect(main.getByText(/Astăzi clubul (nu plătește nimic|plătește)/)).toBeVisible();

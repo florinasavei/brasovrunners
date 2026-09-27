@@ -70,10 +70,18 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
   it("says the month so far and by its end first, then one line per provider — in Romanian", async () => {
     const html = await render("ro", facts());
     const words = text(html);
-    // Neon 1,18 so far, 3,65 at the end; the domain's renewal falls in October: 10,97 + TVA.
-    // The total is first (§NNN): one large figure, the month's end, above every provider's line.
-    expect(words).toContain("Totalul lunii ~14,62 USD + TVA estimat la sfârșitul lunii");
-    expect(words).toContain("Până acum: 1,18 USD.");
+    // Neon 1,18 USD so far, 3,65 at the end; the domain's renewal falls in October: 10,97 + TVA —
+    // 14,62 USD in all. The total is first (§NNN): ONE line in the owner's words, in euro at the
+    // dated ECB rate (1 € = 1,1403 USD): 1,18 → 1,03 €, 14,62 → 12,82 €.
+    expect(words).toContain("Luna aceasta: 1,03 € până acum · estimare la sfârșitul lunii: 12,82 € + TVA");
+    expect(html).toMatch(/<h2[^>]*id="costs-total-title"[^>]*>Luna aceasta: 1,03 €/);
+    expect(html).toContain("1 € = 1,1403 USD");
+    // The domain's year beside it, and the one line that is true here: Neon is the only monthly cost.
+    expect(words).toContain("Domeniul .com: 9,62 € + TVA pe an.");
+    expect(words).toContain("Neon este singurul cost lunar; restul sunt pe planurile gratuite.");
+    // The provider rows fold under the total, closed (§336).
+    expect(html).toMatch(/<details[^>]*data-testid="month-costs"/);
+    expect(html).not.toMatch(/<details[^>]*data-testid="month-costs"[^>]*open/);
     expect(html.indexOf('data-testid="costs-total"')).toBeGreaterThan(-1);
     expect(html.indexOf('data-testid="costs-total"')).toBeLessThan(html.indexOf('data-testid="month-costs"'));
     expect(html.indexOf('data-testid="month-costs-total"')).toBeLessThan(html.indexOf('data-testid="month-cost-domain"'));
@@ -106,10 +114,19 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(html).toContain("Se numără o singură variantă a fiecărei poze");
   });
 
+  it("says Neon is the only monthly cost only when it is true", async () => {
+    const paidMail = facts({ mailgun: { planName: "Basic", usdPerMonth: 15, sentThisMonth: 100, monthlyAllowance: 10_000, dailyAllowance: null } });
+    const words = text(await render("ro", paidMail));
+    expect(words).not.toContain("Neon este singurul cost lunar");
+    const neonFree = text(await render("ro", facts({ neon: { plan: "FREE", meter: { usedCuHours: 10, periodStart: OCTOBER.start, periodEnd: OCTOBER.end, quotaCuHours: null }, databaseBytes: GB } })));
+    expect(neonFree).not.toContain("Neon este singurul cost lunar");
+  });
+
   it("says last month beside it: the total, and each line's amount with what was counted", async () => {
     const words = text(await render("ro", facts()));
-    // Neon: 20 × 0,106 + 0,35 (a GB for the month) = 2,47, an estimate; the rest free.
-    expect(words).toContain("Luna trecută: 2,47 USD (estimare).");
+    // Neon: 20 × 0,106 + 0,35 (a GB for the month) = 2,47 USD, an estimate; the rest free.
+    // The total's last month in euro (2,17 €), each line's in the vendor's USD.
+    expect(words).toContain("Luna trecută: 2,17 € (estimare).");
     expect(words).toContain("2,47 USD (estimare) · 20 ore-CU");
     expect(words).toContain("0,00 USD · 500 e-mailuri");
   });
@@ -137,9 +154,10 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
 
   it("reads the same in English, with the same figures", async () => {
     const words = text(await render("en", facts()));
-    expect(words).toContain("This month's total ~14.62 USD + VAT estimated by the end of the month");
-    expect(words).toContain("So far: 1.18 USD.");
-    expect(words).toContain("Last month: 2.47 USD (estimate).");
+    expect(words).toContain("This month: 1.03 € so far · month-end estimate: 12.82 € + VAT");
+    expect(words).toContain("The .com domain: 9.62 € + VAT a year.");
+    expect(words).toContain("Neon is the only monthly cost; everything else is on a free plan.");
+    expect(words).toContain("Last month: 2.17 € (estimate).");
     expect(words).toContain("10 CU-hours so far, ~31 by the end.");
     expect(words).toContain("30, set by the club at Neon");
     expect(words).toContain("billing period:");

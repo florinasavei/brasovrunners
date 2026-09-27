@@ -9,7 +9,14 @@ import type { Locale } from "@/i18n/routing";
 import type { MonthCostLine, MonthTotals, MonthUsage } from "@/modules/diagnostics/domain/month-costs";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import type { MonthCostReasons } from "@/modules/diagnostics/month-costs-read";
-import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "@/modules/diagnostics/platform-plans";
+import {
+  DOMAIN_PRICE_USD_PER_YEAR,
+  R2_FREE_STORAGE_GB,
+  R2_USD_PER_GB_MONTH,
+  USD_PER_EUR,
+  USD_PER_EUR_CHECKED_ON,
+  usdToEur,
+} from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS } from "@/modules/notifications/domain/email-plan";
 import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
 import Panel from "@/shared/ui/Panel";
@@ -66,8 +73,9 @@ function Fact({ label, wide = false, testId, children }: { label: string; wide?:
  * it and the usage facts beside the money (Vercel's deployments, Neon's size) are each their own
  * fact, never one paragraph; what a fact needs explaining sits behind a «?» (`QuietHelp`).
  *
- * Every amount is in USD, the currency each of these vendors bills in and the cost table below
- * prints — a converted figure would be a second estimate on top of the first.
+ * Every provider's amount is in USD, the currency each of these vendors bills in and the cost
+ * table below prints. The total above them is in euro (§NNN, the owner's «X € până acum»), at the
+ * dated reference rate `USD_PER_EUR` its «?» names — the one conversion on the page.
  *
  * Read-only, and a Server Component: every figure comes from `monthCosts` (pure), and a line
  * whose reading failed says why rather than printing a zero (§1.2).
@@ -149,13 +157,18 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
   const r2Values = { free: format.number(R2_FREE_STORAGE_GB), price: format.number(R2_USD_PER_GB_MONTH, { maximumFractionDigits: 3 }) };
 
   /*
-    The top of Costuri (§479, and §NNN: the total first): what the month will have cost by its end,
-    as one large figure, with what has been spent so far and what last month cost under it. Every
-    other card on the page justifies this one figure, so it is the first thing a treasurer reads —
-    above «Luna aceasta»'s rows, above the database's settings and the year's cost table.
-
-    One sentence per line; why a figure is an estimate or short sits behind the «?» beside it.
+    The top of Costuri (§479, and §NNN: the total first; the owner, 2026-09-27: «vreau să văd un
+    total man!»): ONE line, the largest on the page — «Luna aceasta: X € până acum · estimare la
+    sfârșitul lunii: Y €» — every provider summed, in euro with two decimals, the domain's year
+    beside it. Under it one short line when it is true: Neon is the only monthly cost. Then last
+    month, and why a figure is an estimate or short, each behind its «?». The provider rows fold
+    under all of it, closed (§336).
   */
+  const eur = (valueUsd: number, plusVat: boolean) =>
+    t(plusVat && valueUsd > 0 ? "tasks.month.eurPlusVat" : "tasks.month.eur", { amount: usd(usdToEur(valueUsd)) });
+  const onlyNeonBills =
+    lines.some((line) => line.id === "neon" && line.billing !== "free") &&
+    lines.every((line) => line.id === "neon" || line.id === "domain" || line.billing === "free");
   const missingNames = totals.lastMonthMissing.map((id) => t(`tasks.month.name.${id}`)).join(", ");
   const total = (
     <Box
@@ -164,26 +177,29 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
       data-testid="costs-total"
       sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 2, py: { xs: 1.5, sm: 2 }, bgcolor: "background.paper" }}
     >
-      <Typography id="costs-total-title" component="h2" variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
-        {t("tasks.month.total.title")}
+      {/* The answer, the largest line on the page: so far and by the month's end, every provider in one currency. */}
+      <Typography
+        id="costs-total-title"
+        component="h2"
+        data-testid="month-costs-total"
+        sx={{ fontSize: { xs: "1.25rem", sm: "1.6rem" }, fontWeight: 700, lineHeight: 1.3 }}
+      >
+        {t("tasks.month.total", { soFar: eur(totals.soFarUsd, totals.soFarPlusVat), projected: eur(totals.projectedUsd, totals.projectedPlusVat) })}
+        <QuietHelp text={t("tasks.month.totalMore", { rate: format.number(USD_PER_EUR, { maximumFractionDigits: 4 }), date: formatCalendarDay(USD_PER_EUR_CHECKED_ON, { locale, style: "short", position: "inline" }) })} />
       </Typography>
-      {/* The answer, large: the month's end at the pace so far, every provider in one currency. */}
-      <Typography component="p" data-testid="month-costs-total" sx={{ mt: 0.5, lineHeight: 1.2 }}>
-        <Box component="strong" sx={{ fontSize: { xs: "1.75rem", sm: "2.125rem" }, fontWeight: 700 }}>
-          ~{money(totals.projectedUsd, totals.projectedPlusVat)}
-        </Box>{" "}
-        <Typography component="span" variant="body2" color="text.secondary">
-          {t("tasks.month.total.projectedLabel")}
+      <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="month-costs-domain-year">
+        {t("tasks.month.domainYear", { amount: eur(DOMAIN_PRICE_USD_PER_YEAR, true) })}
+      </Typography>
+      {onlyNeonBills && (
+        <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="month-costs-only-neon">
+          {t("tasks.month.onlyNeon")}
         </Typography>
-      </Typography>
-      <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="month-costs-so-far">
-        {t("tasks.month.total.soFar", { amount: money(totals.soFarUsd, totals.soFarPlusVat) })}
-      </Typography>
-      <Typography variant="body2" data-testid="month-costs-last">
+      )}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="month-costs-last">
         {totals.lastMonthUsd === null
           ? t("tasks.month.lastTotalUnknown", { lines: missingNames })
           : t("tasks.month.lastTotal", {
-              amount: money(totals.lastMonthUsd, totals.lastMonthPlusVat),
+              amount: eur(totals.lastMonthUsd, totals.lastMonthPlusVat),
               estimate: totals.lastMonthEstimated ? ` ${t("tasks.month.estimateWord")}` : "",
             })}
       </Typography>
@@ -205,7 +221,9 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
   return (
     <>
       {total}
+      {/* Each provider, folded closed under the total (§336): the figures that justify it, opened on demand. */}
       <Panel
+        collapsible
         title={t("tasks.month.title")}
         intro={t("tasks.month.intro")}
         introMore={t("tasks.month.introMore")}
