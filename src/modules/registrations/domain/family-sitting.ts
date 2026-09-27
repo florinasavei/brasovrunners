@@ -46,10 +46,6 @@ export const SITTING_NAMES_MAX = 10;
 export const SITTING_AT_ONCE_MINUTES = 30;
 
 /**
- * Until when this browser's half lives after a form or a «Da, încă o persoană» (§NNN): the club's
- * window from now — the instant the server's row is moved to as well — or, at 0, the at-once offer's.
- */
-/**
  * How long the browser keeps its half past the window's end (§NNN, the review of 2026-09-27): the open
  * screen presses «Gata» at that instant, and a slow phone must still send the cookie with the press.
  * The screen and the form read the window's end (`heldUntil`), never this; the server's `held_until`
@@ -62,6 +58,10 @@ export function sittingCookieMaxAgeSeconds(heldUntil: Date, now: Date): number {
   return Math.max(1, Math.ceil((heldUntil.getTime() - now.getTime()) / 1000) + SITTING_COOKIE_GRACE_MINUTES * 60);
 }
 
+/**
+ * Until when this browser's half lives after a form or a «Da, încă o persoană» (§NNN): the club's
+ * window from now — the instant the server's row is moved to as well — or, at 0, the at-once offer's.
+ */
 export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
   return new Date(now.getTime() + (windowMinutes > 0 ? windowMinutes : SITTING_AT_ONCE_MINUTES) * 60_000);
 }

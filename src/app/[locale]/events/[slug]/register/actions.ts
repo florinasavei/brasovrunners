@@ -6,7 +6,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findEventForRegistrationById, findPublishedEventBySlug } from "@/modules/events/repository";
-import { clearFormDraft, stashFormDraft, stashSubmittedFacts } from "@/modules/registrations/form-draft";
+import { clearFormDraft, readSubmittedFacts, stashFormDraft, stashSubmittedFacts } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
@@ -27,6 +27,7 @@ import {
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
   sittingCookieLive,
+  sittingCookieMaxAgeSeconds,
   sittingCookieUntil,
   sittingNames,
   sittingSharedValues,
@@ -205,13 +206,14 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     one uuid shorter would otherwise tell whoever typed a stranger's address which case it was.
     The server finds nothing under it, so «Gata» releases nothing and the next form opens its own.
   */
+  const heldUntil = sittingCookieUntil(now, minutes);
   await writeFamilySittingCookie(
     {
       sittingId: sittingId ?? randomUUID(),
       eventId: publicEvent.id,
       email: input.email.trim(),
       people: typedPerson.people,
-      heldUntil: sittingCookieUntil(now, minutes),
+      heldUntil,
       atOnce,
       windowMinutes: minutes,
       shared,
@@ -224,7 +226,12 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   // greets the person by first name while it does. Its own short-lived sealed cookie, never
   // the URL: nothing typed goes into one (§14.5).
   // At a window of 0 (§NNN) each person's email left on its own: the last screen must not promise one.
-  await stashSubmittedFacts({ email: input.email.trim(), firstName: input.firstName, names, atOnce }, path);
+  // It lives as long as the sitting's cookie (§NNN), so the screen keeps its facts when «Gata» fires by itself.
+  await stashSubmittedFacts(
+    { email: input.email.trim(), firstName: input.firstName, names, atOnce },
+    path,
+    sittingCookieMaxAgeSeconds(heldUntil, now),
+  );
   redirect(`${path}?submitted=1`);
 }
 
@@ -268,16 +275,28 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
   if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
     const deadlines = await currentDeadlines(db);
     if (!sitting.atOnce && sitting.sittingId) await continueFamilySitting(db, sitting.sittingId, familySittingHeldUntil(now, deadlines), now);
+    const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
     await writeFamilySittingCookie(
       {
         ...sitting,
-        heldUntil: sittingCookieUntil(now, deadlines.familySittingMinutes),
+        heldUntil,
+        // Read afresh with the window (§NNN): a «Termene» change mid-sitting leaves no stale flag.
+        atOnce: deadlines.familySittingMinutes <= 0,
         windowMinutes: deadlines.familySittingMinutes,
         sameBirthDate: null,
       },
       path,
       now,
     );
+    // The screen's facts live as long as the sitting, refreshed with it (§NNN).
+    const facts = await readSubmittedFacts();
+    if (facts?.email) {
+      await stashSubmittedFacts(
+        { email: facts.email, firstName: facts.firstName ?? "", names: facts.names, atOnce: deadlines.familySittingMinutes <= 0 },
+        path,
+        sittingCookieMaxAgeSeconds(heldUntil, now),
+      );
+    }
   }
   redirect(`${path}?${FAMILY_SITTING_PARAM}=1`);
 }

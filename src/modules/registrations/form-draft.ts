@@ -172,9 +172,19 @@ export function firstNameOf(typedFirstName: string | null | undefined): string |
   return first === "" ? null : first;
 }
 
+/**
+ * The facts cookie's life (§NNN, the review of 2026-09-27): while a family sitting is live it lives as
+ * long as the sitting's own cookie — the window plus the grace — so the screen still names the inbox
+ * when the automatic «Gata» fires; outside a sitting, the ten minutes it always had.
+ */
+export function submittedFactsMaxAgeSeconds(sittingCookieMaxAge: number | null): number {
+  return sittingCookieMaxAge !== null && sittingCookieMaxAge > 0 ? sittingCookieMaxAge : MAX_AGE_SECONDS;
+}
+
 export async function stashSubmittedFacts(
   facts: { email: string; firstName: string; names?: readonly string[]; atOnce?: boolean },
   path: string,
+  sittingCookieMaxAge: number | null = null,
 ): Promise<void> {
   const sealed = sealFormDraft({
     email: facts.email,
@@ -189,7 +199,7 @@ export async function stashSubmittedFacts(
     sameSite: "lax",
     secure: env.APP_BASE_URL.startsWith("https://"),
     path,
-    maxAge: MAX_AGE_SECONDS,
+    maxAge: submittedFactsMaxAgeSeconds(sittingCookieMaxAge),
   });
 }
 
