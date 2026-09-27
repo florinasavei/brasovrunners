@@ -96,7 +96,10 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
       const context = document.createElement("canvas").getContext("2d");
       if (!context) return { widest: 0, room: 0 };
       context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-      const widest = Math.max(...Array.from(select.options, (option) => context.measureText(option.text).width));
+      // The select draws its value capitalised (`textTransform: capitalize`), the catalogue's month
+      // is lower case: measure what the reader sees, «Septembrie», not «septembrie».
+      const drawn = (text: string) => text.charAt(0).toLocaleUpperCase() + text.slice(1);
+      const widest = Math.max(...Array.from(select.options, (option) => context.measureText(drawn(option.text)).width));
       const room = select.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
       return { widest, room };
     });

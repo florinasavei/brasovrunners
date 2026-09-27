@@ -18,7 +18,8 @@ import { cardFrameGeometry, imageFigureSx } from "./image-layout";
  *
  * ## The poster is this site's own copy, and the player carries a volume bar
  *
- * `VideoFacade` — shared with the event page's own film — shows `poster`, the club's stored
+ * `VideoFacade` — drawn only from here since §481 retired the event page's own film section, a
+ * film being a figure in a rich text — shows `poster`, the club's stored
  * copy of the thumbnail (`attrs.poster`, filled in by `attachYoutubePosters` at save time), so
  * nothing is fetched from Google until the reader presses play (§69, §110 still stand). The
  * editor's own thumbnail in the backoffice is a separate, organizer-facing request

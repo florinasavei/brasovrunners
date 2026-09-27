@@ -1684,7 +1684,8 @@ function wallDay(date: Date, zone: string): number {
  * rows shifted by the same days as when the date was made; a partner is the series' and
  * travels with it (§168); the featured flag, **the special mark** — the owner: "some dates can
  * be special events where we overlap with, say, Brașov Marathon on the same Wednesday" — the
- * rule, the publication state and a film are one date's own and never travel; the Strava and
+ * rule and the publication state are one date's own and never travel (a film is a figure in the
+ * description since §481, so it travels exactly when the description's words do); the Strava and
  * Facebook event links do travel since §300, because both platforms give a recurring event one
  * address for all its dates; a slug is a public address and never changes. Capacity is checked against each date's own places
  * taken, and one date too full refuses the whole save, naming its day. Every touched row takes

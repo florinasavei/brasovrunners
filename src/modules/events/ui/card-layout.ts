@@ -84,8 +84,10 @@ export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlig
 /**
  * **The whole card is one tap to the event's page, its own links kept** (§486, reversing what §366
  * refused and §113 rejected). The owner wanted a press anywhere on a card — its summary, its
- * rhythm, its pills, the room below the door — to open the page, as every other listing on a phone
- * does; §366 had made only the title the link, so a thumb on the card's words did nothing.
+ * pills, the room below the door — to open the page, as every other listing on a phone does; §366
+ * had made only the title the link, so a thumb on the card's words did nothing. The rhythm is not
+ * one of them: its repeat chip says the series' rule in a tooltip (§486), so it is lifted like
+ * every pill with a tooltip and a tap on «Săptămânal» shows the rule rather than opening the page.
  *
  * Still no card is an `<a>`: a link cannot hold the map link, the dates or the registration button
  * (§366's reason stands). The title's link is *stretched* instead — its `::after` covers the card
