@@ -661,10 +661,10 @@
       "breakpoints": true
     },
     {
-      "idx": 94,
+      "idx": 97,
       "version": "7",
       "when": 1790530231563,
-      "tag": "0097_newsletter_discounts_retired",
+      "tag": "0100_newsletter_discounts_retired",
       "breakpoints": true
     }
   ]
