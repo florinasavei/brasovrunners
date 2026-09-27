@@ -13,6 +13,7 @@ import { Link } from "@/i18n/navigation";
 import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { doneFamilySentence } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
 
 /**
@@ -78,6 +79,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
   const textLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
+  const familySentence = doneFamilySentence(facts);
+  const family = familySentence !== null;
 
   return (
     <Stack spacing={3}>
@@ -100,10 +103,20 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             <CelebrationIcon />
           </Box>
           <Typography component="h2" variant="h2" sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }}>
-            {facts?.firstName ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
+            {facts?.firstName && !family ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
           </Typography>
         </Box>
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
+        {/*
+          A family sitting (§NNN): one email for everybody it sent the form for, named as typed on this
+          browser — or, at a window of 0, where each person's email left on its own, the sentence that
+          says so (the review of 2026-09-27).
+        */}
+        {familySentence && (
+          <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 700 }} data-testid="check-email-family">
+            {familySentence === "family" ? t("done.family", { names: (facts?.names ?? []).join(", ") }) : t("done.familyEach")}
+          </Typography>
+        )}
         {/*
           The address it went to (§224): "check your email" is useless to somebody who typed
           `@gmail.con`, and reading their own address back is what catches it in the second

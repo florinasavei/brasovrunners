@@ -112,6 +112,15 @@ type FamilyFactsInput = {
   /** The club's limit of registrations per address, from «Termene»; absent, no line. */
   cap?: number;
 };
+/** A family sitting's facts (§NNN): the event, everybody joining now, who the address held before, the link's life, the limit. */
+type FamilySittingFactsInput = {
+  event?: string;
+  when?: string;
+  people: ReadonlyArray<{ name: string; birthDate: string }>;
+  registered: readonly string[];
+  hours: string;
+  cap?: number;
+};
 /** A fact's value as parts, the important ones bold — each on its own, never the joining words. */
 type FamilyFact = { label: string; value: ReadonlyArray<{ text: string; bold?: boolean }> };
 
@@ -133,6 +142,65 @@ function familyFactsPart(facts: readonly FamilyFact[]): EmailBodyPart {
   return {
     html: `<div data-email-part="family-facts" style="margin:0 0 18px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">${body}</div>`,
     text: [...facts.map((fact) => `${fact.label}: ${fact.value.map((part) => part.text).join("")}`), ""],
+  };
+}
+
+/** A family confirmation's words for its blocks (§NNN), one language's. */
+type FamilyConfirmedWords = { number: string; provisional: string; noNumber: string; code: string; qr: string };
+
+/**
+ * Names as one phrase in the email's language (§NNN, the owner's answer of 2026-09-27): commas, and
+ * «și» / "and" before the last — «Ana, Ion și Maria», "Ana, Ion and Maria" (no serial comma, as in
+ * Romanian; written out rather than `Intl.ListFormat`, whose English adds one). One name is itself.
+ */
+export function joinNames(locale: EmailLocale, names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} ${locale === "ro" ? "și" : "and"} ${names.at(-1)}`;
+}
+
+/** The family's greeting (§NNN): every confirmed person's first name, in the order the forms were sent. */
+function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>): string[] {
+  return people.map((person) => person.firstName?.trim() || person.name.trim().split(/\s+/)[0] || person.name);
+}
+
+/**
+ * A family's one confirmation (§NNN): one outlined block per person, headed by the name in bold —
+ * the race number, bold (§189: the number is what a runner reads at the desk), the desk code, and
+ * the QR the desk scans. The second half of the bilingual message repeats the words, not the pictures
+ * (`renderBilingual`), as for one person's QR. The plain-text half reads one line per fact.
+ */
+function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords): EmailBodyPart {
+  const numberText = (person: (typeof people)[number]) =>
+    person.raceNumber === null ? words.noNumber : person.provisional ? `${person.raceNumber} ${words.provisional}` : String(person.raceNumber);
+  const blocks = people.map((person) => {
+    const number =
+      person.raceNumber === null
+        ? escapeHtml(words.noNumber)
+        : `<strong style="font-size:20px">${person.raceNumber}</strong>${person.provisional ? ` ${escapeHtml(words.provisional)}` : ""}`;
+    return [
+      `<div data-email-part="family-person" style="margin:0 0 14px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">`,
+      `<p style="margin:0 0 8px;font-size:17px;line-height:1.4"><strong>${escapeHtml(person.name)}</strong></p>`,
+      `<p style="margin:0 0 6px;font-size:15px;line-height:1.5">${escapeHtml(words.number)}: ${number}</p>`,
+      ...(person.checkinCode
+        ? [`<p style="margin:0 0 8px;font-size:15px;line-height:1.5">${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong></p>`]
+        : []),
+      ...(person.qrUrl
+        ? [
+            `<p style="margin:0"><img src="${person.qrUrl}" alt="${escapeHtml(`${words.qr} ${person.checkinCode ?? ""}`)}" width="160" height="160" style="display:block;width:160px;height:160px"></p>`,
+          ]
+        : []),
+      "</div>",
+    ].join("");
+  });
+  return {
+    html: `<div data-email-part="family-confirmed">${blocks.join("")}</div>`,
+    text: people.flatMap((person) => [
+      person.name,
+      `${words.number}: ${numberText(person)}`,
+      ...(person.checkinCode ? [`${words.code}: ${person.checkinCode}`] : []),
+      ...(person.qrUrl ? [`${words.qr}: ${person.qrUrl}`] : []),
+      "",
+    ]),
   };
 }
 
@@ -359,6 +427,8 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
+    // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§NNN).
+    ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
     // The organizer's message (§364): its own subject and body in the second half's language.
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
@@ -661,6 +731,29 @@ export type TemplateData = {
    * one press deletes the kept form. Set only beside the button, from the one token minted for it.
    */
   familyDeclineUrl?: string;
+  /**
+   * A family sitting's one message (§NNN): everybody the sitting sent the form for and nobody
+   * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
+   * Set, the message is the family's: its subject, its facts box, its button and its words.
+   */
+  familySittingPeople?: ReadonlyArray<{ name: string; birthDate: string }>;
+  /** «Toate înscrierile mele» beside the family's button (§77, §NNN): the address's own page, its own token. */
+  familyMineUrl?: string;
+  /**
+   * A family's one confirmation (§NNN; the owner: «în mail trebuie să vină toate QR-urile pentru toată
+   * familia»): everybody confirmed by the family's one button, in the order the forms were sent — the
+   * name, the desk code and its QR (never on a club copy, §320), and the race number (`raceNumberOf`),
+   * provisional or not, or null while there is none. Set, the confirmation is the family's, and it
+   * greets everybody by `firstName` (the name's first word when absent), in that order (§NNN).
+   */
+  familyConfirmed?: ReadonlyArray<{
+    name: string;
+    firstName?: string;
+    checkinCode?: string;
+    qrUrl?: string;
+    raceNumber: number | null;
+    provisional: boolean;
+  }>;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
    * both (§446): one sentence says how to register somebody else. Only ever in the inbox.
@@ -1240,6 +1333,60 @@ const T = {
         ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
         : []),
     ],
+    /**
+     * A family sitting's one message (§NNN): everybody the forms of one sitting named, one button for
+     * all of them, and the address's own page beside it. The platform's words: the message's facts are
+     * the sitting's, and a club text for the single-person link would promise the wrong button.
+     */
+    familySitting: {
+      subject: (d: TemplateData) => `Înscriere de familie: ${peoplePhrase("ro", d.familySittingPeople?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
+      facts: (f: FamilySittingFactsInput): FamilyFact[] => [
+        ...(f.event ? [{ label: "Evenimentul", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
+        ...f.people.map((person, index) => ({
+          label: `Persoana ${index + 1} din ${f.people.length}`,
+          value: [
+            { text: person.name, bold: true },
+            ...(formatBirthDate(person.birthDate, "ro") ? [{ text: ", data nașterii " }, { text: formatBirthDate(person.birthDate, "ro"), bold: true }] : []),
+          ],
+        })),
+        ...(f.registered.length > 0 ? [{ label: "Înscriși deja cu această adresă", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
+        {
+          label: "Ce se întâmplă dacă apeși",
+          value: [
+            { text: "confirmi adresa și toate înscrierile deodată", bold: true },
+            { text: "; semnezi apoi declarațiile pe loc, una după alta, iar fiecare persoană primește propriul loc și propriul cod QR, pe această adresă" },
+          ],
+        },
+        { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
+        ...(f.cap !== undefined
+          ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
+          : []),
+      ],
+      body: (): string[] => [
+        "Formularul de înscriere a fost trimis de pe această adresă pentru persoanele de mai sus. Nu am înscris încă pe nimeni: un singur buton confirmă adresa și toată familia.",
+        "Cineva din listă nu trebuie înscris? Îl debifezi pe pagina care se deschide. Dacă nu tu ai trimis formularul, ignoră mesajul: nu se înscrie nimeni, iar datele se șterg singure când linkul expiră.",
+        "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
+      ],
+      action: (count: number) => `Confirm și semnez declarațiile (${count})`,
+      mine: "Toate înscrierile mele",
+    },
+    /** A family's one confirmation (§NNN): everybody's QR code, desk code and race number, one block each. */
+    familyConfirmed: {
+      subject: (d: TemplateData) => `Confirmat: ${peoplePhrase("ro", d.familyConfirmed?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
+      body: (d: TemplateData): string[] => [
+        `Înscrierile de mai jos la ${d.eventTitle ?? "eveniment"} sunt confirmate. Vă așteptăm!`,
+        "La masa de înscrieri, fiecare persoană arată codul QR de sub numele ei sau spune codul.",
+        ...(d.eventChecklist ? [`Ce să aduceți: ${d.eventChecklist}`] : []),
+      ],
+      words: {
+        number: "Număr de concurs",
+        provisional: "(provizoriu: se stabilește la închiderea înscrierilor)",
+        noNumber: "încă fără număr",
+        code: "Codul pentru masă",
+        qr: "Cod QR",
+      },
+      action: "Toate înscrierile mele",
+    },
     /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
@@ -1644,6 +1791,54 @@ const T = {
         ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
         : []),
     ],
+    familySitting: {
+      subject: (d: TemplateData) => `Family registration: ${peoplePhrase("en", d.familySittingPeople?.length ?? 1)} for ${d.eventTitle ?? "the event"}`,
+      facts: (f: FamilySittingFactsInput): FamilyFact[] => [
+        ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
+        ...f.people.map((person, index) => ({
+          label: `Person ${index + 1} of ${f.people.length}`,
+          value: [
+            { text: person.name, bold: true },
+            ...(formatBirthDate(person.birthDate, "en") ? [{ text: ", date of birth " }, { text: formatBirthDate(person.birthDate, "en"), bold: true }] : []),
+          ],
+        })),
+        ...(f.registered.length > 0 ? [{ label: "Already registered with this address", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
+        {
+          label: "What happens if you press",
+          value: [
+            { text: "you confirm the address and every registration at once", bold: true },
+            { text: "; you then sign the declarations right away, one after the other, and each person gets their own place and their own QR code, at this address" },
+          ],
+        },
+        { label: "Deadline", value: [{ text: "the link is valid for " }, { text: f.hours, bold: true }, { text: " and can be used once" }] },
+        ...(f.cap !== undefined
+          ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
+          : []),
+      ],
+      body: (): string[] => [
+        "The registration form was sent from this address for the people above. Nobody is registered yet: one button confirms the address and the whole family.",
+        "Someone on the list should not be registered? Untick them on the page that opens. If you did not send the form, ignore this message: nobody is registered, and the details are deleted by themselves when the link expires.",
+        "Only register someone with their consent, and tell them how we use their data: the privacy notice is at the link at the end of this message.",
+      ],
+      action: (count: number) => `Confirm and sign the declarations (${count})`,
+      mine: "All my registrations",
+    },
+    familyConfirmed: {
+      subject: (d: TemplateData) => `Confirmed: ${peoplePhrase("en", d.familyConfirmed?.length ?? 1)} for ${d.eventTitle ?? "the event"}`,
+      body: (d: TemplateData): string[] => [
+        `The registrations below for ${d.eventTitle ?? "the event"} are confirmed. See you there!`,
+        "At the registration desk, each person shows the QR code under their name or says the code.",
+        ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
+      ],
+      words: {
+        number: "Race number",
+        provisional: "(provisional: settled when registration closes)",
+        noNumber: "no number yet",
+        code: "Desk code",
+        qr: "QR code",
+      },
+      action: "All my registrations",
+    },
     familyDecline: "I am not registering this person",
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     sameBirthDateHint:
@@ -1846,7 +2041,22 @@ export function buildTemplateContent(
   const clubCopy = data.clubCopy === true;
   if (clubCopy) {
     // `thanksUrl` too: it is the thank-you's action, so its "the link below" sentence goes with the button (review nit).
-    data = { ...data, manageUrl: undefined, listConsentUrl: undefined, declarationPdfUrl: undefined, checkinCode: undefined, checkinQrUrl: undefined, thanksUrl: undefined };
+    data = {
+      ...data,
+      manageUrl: undefined,
+      listConsentUrl: undefined,
+      declarationPdfUrl: undefined,
+      checkinCode: undefined,
+      checkinQrUrl: undefined,
+      thanksUrl: undefined,
+      // A family's confirmation keeps the names and the numbers, never a code or a QR (§NNN).
+      familyConfirmed: data.familyConfirmed?.map((person) => ({
+        name: person.name,
+        firstName: person.firstName,
+        raceNumber: person.raceNumber,
+        provisional: person.provisional,
+      })),
+    };
     actionUrl = undefined;
   }
   // TypeScript can't see that every key but "hi"/"closing" shares this shape; the
@@ -1887,6 +2097,18 @@ export function buildTemplateContent(
   */
   const familyGone = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyEntryGone === true;
   /*
+    …and a family sitting's one message (§NNN): its facts, its button and its words are the sitting's
+    — everybody at once — and a club text written for one person's link would promise the wrong one.
+  */
+  const familySittingPeople = data.familySittingPeople ?? [];
+  const familySittingShape = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && familySittingPeople.length > 0;
+  /*
+    …and a family's one confirmation (§NNN): everybody's blocks, the family's subject and button — a
+    club text written for one runner's confirmation would say "your number" over three.
+  */
+  const familyConfirmedPeople = messageType === "REGISTRATION_CONFIRMED" ? (data.familyConfirmed ?? []) : [];
+  const familyConfirmedShape = familyConfirmedPeople.length > 0;
+  /*
     The freed place's offer with no deadline ahead (§419) — a resend after it lapsed — is the
     platform's sentence alone, which states the offer's length instead of a moment. The club's words
     name the moment (`{holdExpiresAtFormatted}`), and a sentence missing it would read "până la
@@ -1899,11 +2121,18 @@ export function buildTemplateContent(
     the address's state, like the limit above: the club's words for this message ask to confirm.
   */
   const newsletterState = messageType === "NEWSLETTER" || (messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready === true);
-  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || lapsedOffer || newsletterState ? null : copyFor(overrides, messageType, locale);
+  const written =
+    messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || familySittingShape || familyConfirmedShape || lapsedOffer || newsletterState
+      ? null
+      : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
-  const subject = written
+  const subject = familySittingShape
+    ? copy.familySitting.subject(data)
+    : familyConfirmedShape
+      ? copy.familyConfirmed.subject(data)
+      : written
     ? fill(written.subject)
     : typeof entry.subject === "function"
       ? entry.subject(data)
@@ -1954,13 +2183,20 @@ export function buildTemplateContent(
     registering somebody else, so it greets plainly ("Salut," / "Hello,", its own `greeting`)
     whoever the registration the address already holds is for, a minor included.
   */
-  const guardianName = data.guardianName && !entry.greeting && !bulkCopy && messageType !== "DECLARATION_SIGNED" ? data.guardianName : undefined;
+  /*
+    A family's one confirmation (§NNN, the owner's answer of 2026-09-27) greets everybody it confirms
+    by first name, in the order of the forms — «Salut, Ana, Ion și Maria,» — and so no parent's
+    greeting and no "whose registration this is" line: every name is already in the greeting.
+  */
+  const familyGreeting = familyConfirmedShape ? joinNames(locale, familyFirstNames(familyConfirmedPeople)) : undefined;
+  const guardianName =
+    data.guardianName && !entry.greeting && !bulkCopy && !familyGreeting && messageType !== "DECLARATION_SIGNED" ? data.guardianName : undefined;
 
   return {
     // Each half of a bilingual subject carries its own language's mark, so a mailbox filter on
     // either word finds every copy whichever language the runner chose (§96).
     subject: clubCopy ? `${copy.clubCopy.subject}${subject}` : subject,
-    greeting: entry.greeting ? entry.greeting(data) : bulkCopy ? copy.hello : copy.hi(guardianName ?? data.participantName),
+    greeting: entry.greeting ? entry.greeting(data) : bulkCopy ? copy.hello : copy.hi(familyGreeting ?? guardianName ?? data.participantName),
     facts: factsBlock ? undefined : entry.facts?.(data),
     /*
       The re-send says it is one (§235).
@@ -2005,7 +2241,22 @@ export function buildTemplateContent(
         outlined box, the values bold (§468; the owner: "trebuie să avem bold pe chestiile
         importante"), so the parent sees at a glance which event and which person the button is for.
       */
-      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyPersonName
+      // A family sitting's facts (§NNN): everybody joining now, each on a line of the one outlined box.
+      ...(familySittingShape
+        ? [
+            familyFactsPart(
+              copy.familySitting.facts({
+                event: data.eventTitle,
+                when: data.eventStartsAtFormatted,
+                people: familySittingPeople,
+                registered: data.familyRegistered ?? [],
+                hours: data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours),
+                cap: data.addressCap,
+              }),
+            ),
+          ]
+        : []),
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familySittingShape && data.familyPersonName
         ? [
             familyFactsPart(
               copy.familyFacts({
@@ -2033,7 +2284,11 @@ export function buildTemplateContent(
         ? emailBodyParts(writtenBody, data as unknown as Record<string, unknown>)
         : written
           ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
-          : entry.body(data)),
+          : familySittingShape
+            ? copy.familySitting.body()
+            : familyConfirmedShape
+              ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words)]
+              : entry.body(data)),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
         this registration and the text in force, like the provisional number (§237): on the request
@@ -2091,11 +2346,21 @@ export function buildTemplateContent(
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
       // In the facts box instead when the kept form is in hand (§468).
-      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && !data.familyPersonName && data.addressCap !== undefined
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && !familySittingShape && !data.familyPersonName && data.addressCap !== undefined
         ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],
-    action: entry.action && actionUrl ? { label: typeof entry.action === "function" ? entry.action(data) : entry.action, url: actionUrl } : undefined,
+    action: familySittingShape
+      ? actionUrl
+        ? { label: copy.familySitting.action(familySittingPeople.length), url: actionUrl }
+        : undefined
+      : familyConfirmedShape
+        ? actionUrl
+          ? { label: copy.familyConfirmed.action, url: actionUrl }
+          : undefined
+        : entry.action && actionUrl
+        ? { label: typeof entry.action === "function" ? entry.action(data) : entry.action, url: actionUrl }
+        : undefined,
     /*
       «Nu înscriu această persoană» (§468): the same single-use link's other answer, under the
       confirmation button and only beside it — never at the limit, never once the kept form is gone,
@@ -2109,6 +2374,8 @@ export function buildTemplateContent(
     eventFacts: factsBlock,
     links: (() => {
       const own = [
+        // «Toate înscrierile mele» first under a family's button (§NNN): each person's state, before and after the press.
+        ...(familySittingShape && data.familyMineUrl ? [{ label: copy.familySitting.mine, url: data.familyMineUrl }] : []),
         ...(entry.links?.(linkData) ?? []),
         // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.
         ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl

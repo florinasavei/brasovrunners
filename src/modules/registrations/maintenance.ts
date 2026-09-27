@@ -11,6 +11,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { settleBibNumbers, type SettledBib } from "./bibs";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { purgeLapsedFamilyEntries } from "./family-entries";
+import { purgeLapsedFamilySittings } from "./family-sitting";
 import { queueRegistrationOpenedMessages } from "./interest";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
@@ -82,6 +83,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   let familyPurgeFailed = false;
   try {
     familyEntriesPurged = await purgeLapsedFamilyEntries(db, now);
+    // …and the family sittings nobody can act on any more (§NNN): ids and instants only, no names.
+    await purgeLapsedFamilySittings(db, now);
   } catch {
     familyPurgeFailed = true;
   }

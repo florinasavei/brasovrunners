@@ -57,7 +57,11 @@ export type FamilyEntryLink =
       /** The club's limit per address now, for the sentence that states it. */
       registrationsPerAddress: number;
     }
-  | { ok: false };
+  /*
+    `throttled`: refused by the attempt budget before the token was read (§19.4) — the page then reads
+    nothing else under the same secret, a family's link (§NNN) included.
+  */
+  | { ok: false; throttled?: true };
 
 export async function readFamilyEntryLink<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -65,7 +69,7 @@ export async function readFamilyEntryLink<T extends Record<string, unknown>>(
   locale: Locale,
   now: Date,
 ): Promise<FamilyEntryLink> {
-  if (!(await tokenAttemptAllowed(db, secret, now))) return { ok: false };
+  if (!(await tokenAttemptAllowed(db, secret, now))) return { ok: false, throttled: true };
   const context = await readActionTokenContext(db, { secret, purpose: "REGISTER_ANOTHER_PERSON", now });
   if (!context.ok) return { ok: false };
   return inReadOnlyTransaction(db, async (tx) => {

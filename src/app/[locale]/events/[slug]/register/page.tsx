@@ -63,14 +63,18 @@ import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
-import { submitRegistrationAction } from "./actions";
+import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistrationAction } from "./actions";
+import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
+import { FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string; fields?: string; retry?: string; another?: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string; fields?: string; retry?: string; another?: string; family?: string; sent?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -162,7 +166,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   );
   if (state !== "OPEN") notFound();
 
-  const { submitted, error, fields, retry, another } = await searchParams;
+  const { submitted, error, fields, retry, another, family, sent } = await searchParams;
+  /*
+    The family sitting (§NNN): the browser's sealed half, when its email has not left yet. After the
+    form it is the screen that asks «Mai înscrii pe cineva cu aceeași adresă?»; with `?family=1` it is
+    the next form, the address fixed. Everything it shows was typed on this browser (§39).
+  */
+  const sittingCookie = resting ? null : await readFamilySittingCookie();
+  const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
+  const sittingScreen = Boolean(submitted) && sent !== "1" && sitting !== null;
+  const familyForm = !submitted && family === "1" && sitting !== null;
   /*
     A link from an email sent before §446, which opened this form for another person on the address
     (§389). Retired: the email now carries one confirmation of the person the form named
@@ -348,7 +361,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
   // While resting too (§447): a press the database refused left the answers in the draft cookie.
-  const draft = error || resting ? await readFormDraft() : null;
+  /*
+    The next form of a family sitting (§NNN) starts with the boxes the family shares — the city, the
+    citizenship, the guardian, the emergency contact, the emails' language — as this browser posted
+    them on the sitting's earlier forms; the person's own boxes start empty. A refusal's draft, which
+    holds everything typed, outranks them.
+  */
+  const draft = error || resting ? await readFormDraft() : familyForm && sitting?.shared ? sitting.shared : null;
   /*
   What was typed before a rejected submission (§142), by field name.
 
@@ -486,7 +505,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}
-      <RegistrationJourney current={submitted ? "confirm" : "details"} />
+      <RegistrationJourney current={submitted && !sittingScreen ? "confirm" : "details"} />
 
       {/* The five steps and the waiting list, folded: the journey above says where they are,
           this says the whole of it (`DECISIONS.md` §91). */}
@@ -496,7 +515,27 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         </Box>
       )}
 
-      {submitted ? (
+      {sittingScreen && sitting ? (
+        /*
+          «Mai înscrii pe cineva cu aceeași adresă?» (§NNN) — before anything is mailed: «Încă o
+          persoană» opens the form again with the address fixed, «Gata» sends the one email. The
+          same screen after every form, whatever the address holds (§39).
+        */
+        <FamilySittingNext
+          email={sitting.email}
+          names={sittingNames(sitting.people)}
+          sameBirthDate={sitting.sameBirthDate ?? null}
+          releaseInMs={sitting.heldUntil.getTime() - now.getTime()}
+          firstName={submittedFacts?.firstName ?? null}
+          eventTitle={event.title}
+          atOnce={sitting.atOnce === true}
+          windowMinutes={sitting.windowMinutes ?? null}
+          locale={locale}
+          slug={slug}
+          continueAction={continueFamilySittingAction}
+          releaseAction={releaseFamilySittingAction}
+        />
+      ) : submitted ? (
         /*
           "Aproape gata, Ana!" — the screen after the form, in `CheckYourEmail.tsx`. It carries
           every fact the receipt it replaced had: the address (§224), the wait in bold and once
@@ -683,6 +722,29 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
+          {/*
+            The next person of a family sitting (§NNN): who was sent so far, that nothing is mailed
+            yet, and the way back to «Gata» without filling this one in.
+          */}
+          {familyForm && sitting && (
+            <Alert severity="success" icon={false} sx={{ mb: 2 }} data-testid="family-sitting-intro">
+              <AlertTitle>{t("sitting.formTitle")}</AlertTitle>
+              <Typography variant="body2">{t("sitting.formSoFar", { names: sittingNames(sitting.people).join(", ") })}</Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {/*
+                  How long is left, on the server's clock at this render (§NNN): the email leaves by
+                  itself then unless this form is sent — sending it starts the window again. At a
+                  window of 0 nothing waits: this person's email leaves when the form is sent.
+                */}
+                {sitting.atOnce
+                  ? t("sitting.formAtOnce")
+                  : t("sitting.formLeft", { minutes: minutesPhrase(locale, Math.max(1, sittingMinutesLeft(sitting.heldUntil.getTime() - now.getTime()))) })}{" "}
+                <MuiLink href={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?submitted=1`} sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}>
+                  {t("sitting.formBack")}
+                </MuiLink>
+              </Typography>
+            </Alert>
+          )}
           <form action={submitRegistrationAction} id={REGISTRATION_FORM_ID}>
             {/*
               The try after a refusal (§282). The action reads this back and lets the submission
@@ -905,6 +967,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 messages to "…@gmail.con": one letter, and the confirmation link goes nowhere
                 while the screen says to check the inbox.
               */}
+              {/*
+                The next form of a family sitting (§NNN): the address is the sitting's, said back in
+                bold and not asked again — the server takes it from the browser's sealed half.
+              */}
+              {familyForm && sitting ? (
+                <Box data-testid="family-sitting-address">
+                  <input type="hidden" name={FAMILY_SITTING_FIELD} value="1" />
+                  <Typography variant="body2" color="text.secondary">
+                    {t("sitting.addressLabel")}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{sitting.email}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("sitting.addressHelp")}
+                  </Typography>
+                </Box>
+              ) : (
               <EmailTwice
                 name="email"
                 confirmName="emailConfirm"
@@ -924,6 +1002,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 error={invalid.has("email") || invalid.has("emailConfirm")}
                 helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
+              )}
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 invalidLabel={t("phoneInvalid")}

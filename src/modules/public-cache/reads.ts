@@ -525,7 +525,8 @@ export async function cachedDeadlines(): Promise<Deadlines> {
     // The club's own numbers from the last good copy before today's constants (§447): an outage
     // must not quietly rewrite "48 hours" to a default the club may have changed.
     const read = await readWithLastGood("settings:deadlines", () => publicRead(["settings.deadlines"], ["settings"], () => readDeadlines(getDb())));
-    return read.value.deadlines;
+    // Under today's defaults: a copy saved before a deadline existed (§NNN's sitting window) lacks it.
+    return { ...DEFAULT_DEADLINES, ...read.value.deadlines };
   } catch {
     return { ...DEFAULT_DEADLINES };
   }
