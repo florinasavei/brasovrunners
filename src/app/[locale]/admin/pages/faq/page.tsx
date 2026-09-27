@@ -30,6 +30,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
+import { CLUB_NAME } from "@/theme/brand";
 import { saveFaqPageAction, setFaqPagePublishedAction } from "./actions";
 
 type Props = {
@@ -86,6 +87,7 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
   const questionOf = (item: AdminFaqItem) => (locale === "en" ? item.questionEn : item.questionRo);
 
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
+  const publicWords = await getTranslations("Faq");
   // The refusal summary's words, by each card's own boxes, so a link names the question's number.
   const labels: Record<string, string> = { introRoBody: t("faq.introRo"), introEnBody: t("faq.introEn") };
   for (let index = 0; index <= items.length; index += 1) {
@@ -139,12 +141,16 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
             },
       );
     });
+    // The spare card asks only when a question is typed on it: an empty spare card saves nothing.
     confirm.push({
       title: t("faq.showTitle", { question: t("faq.newHeading") }),
       body: t("faq.showBody"),
       confirmLabel: t("faq.showConfirm"),
       cancelLabel: words.cancel,
-      when: [{ field: faqBoxName(items.length, "visible"), equals: "on" }],
+      when: [
+        { field: faqBoxName(items.length, "visible"), equals: "on" },
+        { field: faqBoxName(items.length, "questionRo"), notEquals: "" },
+      ],
     });
   }
 
@@ -219,6 +225,20 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
         <ActionForm action={saveFaqPageAction} messages={messages} confirm={confirm} data-testid="faq-page-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <RecallHidden name="expectedVersion" value={settings.version} />
+          {/*
+            The form's default button, first in tree order: Enter in a box presses the first submit
+            button, and without this one that was card 1's ↓ — a move nobody asked for. This one is
+            the plain save, out of sight, out of the tab order and nameless, so neither a reader nor a
+            finger meets it; «Salvează pagina» below is the one seen and named.
+          */}
+          <Box
+            component="button"
+            type="submit"
+            tabIndex={-1}
+            aria-hidden="true"
+            data-testid="faq-default-save"
+            sx={{ position: "absolute", width: 1, height: 1, p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", border: 0, pointerEvents: "none" }}
+          />
           <Stack spacing={2}>
             {/* «Copiază și tradu tot: RO → EN» (§464, §482): once, at the top — every English box of the page. */}
             <TranslateAllButton />
@@ -248,6 +268,10 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
               />
               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
                 {t("faq.introHelp", { max: String(FAQ_INTRO_MAX) })}
+              </Typography>
+              {/* The sentence the page opens with while the club has written no introduction. */}
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontStyle: "italic" }}>
+                {t("faq.introDefault", { lead: publicWords("lead", { club: CLUB_NAME }) })}
               </Typography>
             </Panel>
 
