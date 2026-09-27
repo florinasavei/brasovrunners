@@ -1,4 +1,6 @@
+import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import FemaleIcon from "@mui/icons-material/Female";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import MaleIcon from "@mui/icons-material/Male";
 import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
@@ -1375,7 +1377,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 repeating it above the submit button is the same words twice on one screen.
               */}
               {resting ? (
-                <Button variant="contained" size="large" fullWidth disabled data-testid="registration-submit-resting">
+                <Button variant="contained" size="large" fullWidth disabled data-testid="registration-submit-resting" sx={WITH_GLYPH_SX}>
+                  <DirectionsRunIcon aria-hidden="true" sx={glyphSx("large")} />
                   {t("submit")}
                 </Button>
               ) : (

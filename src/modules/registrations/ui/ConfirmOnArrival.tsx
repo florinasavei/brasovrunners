@@ -1,5 +1,6 @@
 "use client";
 
+import CheckIcon from "@mui/icons-material/Check";
 import { useEffect, useRef } from "react";
 import SubmitButton from "@/shared/ui/SubmitButton";
 
@@ -60,7 +61,9 @@ export default function ConfirmOnArrival({
   return (
     <>
       <span ref={anchor} hidden />
-      <SubmitButton label={label} pendingLabel={pendingLabel} />
+      <SubmitButton label={label} pendingLabel={pendingLabel}>
+        <CheckIcon />
+      </SubmitButton>
     </>
   );
 }

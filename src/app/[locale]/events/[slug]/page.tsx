@@ -53,7 +53,9 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
+import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
@@ -256,13 +258,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           the address under the place. */}
       <EventFacts event={event} now={now} stacked weather={weather} />
 
-      {/* Photographs are a legitimate-interest processing, so every event page — not only the
-          gallery — says how to object (§323; the photographs amendment's item 6). */}
-      <EventPhotosNotice />
-
-      {/* A group run's optional self-declaration (§393), under the route's pills at `#declaratie`:
-          only where the organizer offered it and the club has approved the text of its surface. */}
-      <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
+      {/* The photographs notice and the group run's self-declaration were here, under the facts;
+          since §NNN they sit in «Condiții de participare», with the rules, after the programme. */}
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />
@@ -344,15 +341,63 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
-      {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
-      {!isRichTextEmpty(readRichText(event.rulesJson)) && (
-        <Box component="section" id="rules" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("rules")}
-          </Typography>
-          <RichText body={event.rulesJson} />
+      {/*
+        «Condiții de participare» / "Conditions of participation" (§NNN; the owner, 2026-09-27):
+        the rules, a group run's self-declaration and the photographs notice, under one fold,
+        closed on arrival — the same order the editor's «Program, regulament și declarație» card
+        keeps (§481), right after the programme. Every event page has one: the photographs notice
+        is on all of them (§421), so the fold is never empty.
+
+        A native `<details>` in the start list's outlined shape (`StartList`), working without
+        JavaScript; its title is a real `h2` inside the `<summary>`, so it stays in a screen
+        reader's list of headings while the fold is shut (§336), and the three parts under it are
+        `h3`s. The emails, the calendar entry and the registration form link `#rules`, and a group
+        run's page is reached at `#declaratie`: a full navigation to either opens the fold through
+        the browser's own ancestor-details reveal, and `OpenFoldFromHash` (§336, the backoffice's
+        island, mounted here too) opens it for the browsers that do not and for the registration
+        form's client-side link, which never runs that algorithm.
+      */}
+      <Box component="section" aria-labelledby="conditions-title" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
+        <Box
+          component="details"
+          id="conditions"
+          data-testid="conditions-fold"
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 2,
+            px: 2,
+            "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+            ...DISCLOSURE_OPEN_ARROW,
+            "&[open]": { pb: 2 },
+          }}
+        >
+          <Box component="summary">
+            <Typography component="h2" id="conditions-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+              {t("conditions.heading")}
+            </Typography>
+          </Box>
+
+          {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
+          {!isRichTextEmpty(readRichText(event.rulesJson)) && (
+            <Box component="section" id="rules" aria-labelledby="rules-title" sx={{ mt: 1 }}>
+              <Typography component="h3" id="rules-title" variant="h3" sx={{ fontSize: "1.0625rem", mb: 1 }}>
+                {t("rules")}
+              </Typography>
+              <RichText body={event.rulesJson} />
+            </Box>
+          )}
+
+          {/* A group run's optional self-declaration (§393), at `#declaratie`: only where the
+              organizer offered it and the club has approved the text of its surface. */}
+          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
+
+          {/* Photographs are a legitimate-interest processing, so every event page — not only the
+              gallery — says how to object (§323; the photographs amendment's item 6). */}
+          <EventPhotosNotice />
         </Box>
-      )}
+        <OpenFoldFromHash />
+      </Box>
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       <StartList event={event} page={lista} />

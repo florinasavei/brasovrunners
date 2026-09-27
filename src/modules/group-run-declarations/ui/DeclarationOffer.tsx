@@ -1,3 +1,4 @@
+import DrawIcon from "@mui/icons-material/Draw";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -8,6 +9,7 @@ import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
@@ -17,9 +19,13 @@ import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
  * "for these group runs I should just have an optional 'semnează declarația pe propria răspundere'
  * button that just opens the signing flow").
  *
- * Under the route's pills, at `#declaratie`: one 44-pixel button to the signing page and one line
- * saying what happens — the copy by email, and how long the club keeps it — under a heading that
- * names the section. Nothing at all unless the organizer offered it on a group run of asphalt or
+ * At `#declaratie`, inside the page's closed «Condiții de participare» fold after the rules (§NNN;
+ * the owner, 2026-09-27, moving it from under the route's pills): one line saying what happens —
+ * the copy by email, and how long the club keeps it — and one small button to the signing page,
+ * «Semnează declarația» with a pen before it, under a level-3 heading that names the section.
+ * The heading no longer says «(opțional)»: the line under it already says «Dacă vrei», and the
+ * fold is the page's quiet corner. Small, but a thumb's 44 pixels tall (BR-REQ-041-01 criterion
+ * 6). Nothing at all unless the organizer offered it on a group run of asphalt or
  * trail, the club has an approved text of that kind in force, an approved privacy notice is in
  * force (the signature takes an address and an identity document, and the service refuses it
  * without one, as a registration is refused), and the run can still be signed for. The listing
@@ -61,15 +67,16 @@ export default async function DeclarationOffer({
       data-testid="group-run-declaration-offer"
       sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}
     >
-      <Typography variant="h2" id="declaratie-heading" sx={{ fontSize: "1.25rem", mb: 1 }}>
+      <Typography component="h3" variant="h3" id="declaratie-heading" sx={{ fontSize: "1.0625rem", mb: 0.5 }}>
         {t("groupRunDeclaration.heading")}
       </Typography>
-      <Button component="a" href={href} variant="outlined" sx={TAP_TARGET}>
-        {t("groupRunDeclaration.button")}
-      </Button>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
         {t("groupRunDeclaration.line", { days: durationPhrase(locale, GROUP_RUN_DECLARATION_RETENTION_DAYS, "days") })}
       </Typography>
+      <Button component="a" href={href} variant="outlined" size="small" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+        <DrawIcon aria-hidden="true" data-testid="declaration-offer-glyph" sx={glyphSx("small")} />
+        {t("groupRunDeclaration.button")}
+      </Button>
     </Box>
   );
 }

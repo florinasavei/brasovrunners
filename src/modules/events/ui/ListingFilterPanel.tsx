@@ -1,3 +1,4 @@
+import CheckIcon from "@mui/icons-material/Check";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -18,6 +19,7 @@ import {
   type FilterOffer,
   type ListingFilter,
 } from "@/modules/events/domain/listing-filter";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import ChipLink from "@/shared/ui/ChipLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -185,7 +187,8 @@ export default async function ListingFilterPanel({
             </Box>
           )}
           <Stack direction="row" sx={{ gridColumn: "1 / -1", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-            <Button type="submit" variant="contained" size="small" data-apply="true" sx={TAP_TARGET}>
+            <Button type="submit" variant="contained" size="small" data-apply="true" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+              <CheckIcon aria-hidden="true" sx={glyphSx("small")} />
               {t("filter.apply")}
             </Button>
             {count > 0 && <ChipLink href={hrefFor(NO_FILTER)} label={t("filter.clear")} keepScroll />}

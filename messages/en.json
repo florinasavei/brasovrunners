@@ -131,7 +131,10 @@
       "ics": ".ics file"
     },
     "rules": "Event rules",
-    "schedule": "Event programme",
+    "conditions": {
+      "heading": "Conditions of participation"
+    },
+    "schedule":"Event programme",
     "links": {
       "heading": "Links and files",
       "kinds": {
@@ -374,8 +377,8 @@
       "checklist": "What to bring"
     },
     "groupRunDeclaration": {
-      "heading": "Self-declaration (optional)",
-      "button": "Sign the self-declaration",
+      "heading": "Self-declaration",
+      "button": "Sign the declaration",
       "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
       "page": {
         "back": "Back to {event}",

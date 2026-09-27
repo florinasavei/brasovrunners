@@ -131,7 +131,10 @@
       "ics": "Fișier .ics"
     },
     "rules": "Regulamentul evenimentului",
-    "schedule": "Programul evenimentului",
+    "conditions": {
+      "heading": "Condiții de participare"
+    },
+    "schedule":"Programul evenimentului",
     "links": {
       "heading": "Linkuri și fișiere",
       "kinds": {
@@ -374,8 +377,8 @@
       "checklist": "Ce să aduci"
     },
     "groupRunDeclaration": {
-      "heading": "Declarație pe propria răspundere (opțional)",
-      "button": "Semnează declarația pe propria răspundere",
+      "heading": "Declarație pe propria răspundere",
+      "button": "Semnează declarația",
       "line": "Dacă vrei, semnează declarația pe propria răspundere pentru această alergare; o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
       "page": {
         "back": "Înapoi la {event}",
