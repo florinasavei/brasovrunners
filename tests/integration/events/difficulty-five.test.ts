@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createEvent, saveEventFields } from "@/modules/content/events/service";
-import { DIFFICULTY_LEVELS, type DifficultyLevel } from "@/modules/events/domain/difficulty";
+import { DIFFICULTY_BANDS as DIFFICULTY_LEVELS, type DifficultyBand as DifficultyLevel } from "@/modules/events/domain/difficulty";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**

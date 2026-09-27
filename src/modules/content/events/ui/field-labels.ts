@@ -76,6 +76,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
     "event.difficulty": inBox("course", t("editor.fields.difficulty")),
+    "event.difficultyStep": inBox("course", t("editor.fields.difficultyStep")),
     "event.costType": inBox("registration", t("editor.fields.costType")),
     // `costRule` (`content/events/fields.ts`) never names `costAmount` outside `PAID` nor
     // `costUrl` outside `DONATION`, so each name has exactly one meaning to the organizer who

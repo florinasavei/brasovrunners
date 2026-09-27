@@ -181,6 +181,8 @@
       "ics": "{label}: {times} — ia o frontală"
     },
     "difficulty": "Dificultate",
+    "difficultyStepSr": "Dificultate, treapta {step} din {steps}",
+    "difficultyWithStep": "{band}, treapta {step} din {steps}",
     "cost": "Cost",
     "registration": "Înscriere",
     "cancelled": "Anulat",
@@ -1047,6 +1049,7 @@
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
+        "difficultyStep": "Treapta",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
@@ -1141,6 +1144,13 @@
         "HARD": "Greu",
         "VERY_HARD": "Foarte greu"
       },
+      "difficultySteps": {
+        "step1": "Spre ușor",
+        "step2": "La mijloc",
+        "step3": "Spre greu"
+      },
+      "difficultySummary": "{band}, treapta {step}",
+      "difficultyStepHelp": "Trei trepte în fiecare nivel, 15 pe toată scara: de la «Foarte ușor», treapta 1, la «Foarte greu», treapta 3. Ce înseamnă fiecare nivel scrie în «Ghid».",
       "costValues": {
         "FREE": "Gratuit",
         "PAID": "Cu taxă",
@@ -4213,6 +4223,20 @@
               ]
             },
             {
+              "title": "Scara de dificultate a clubului",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Traseul»: alegi «Dificultate» (nivelul) și, sub el, «Treapta» — «Spre ușor», «La mijloc» sau «Spre greu».",
+                "Scara are 15 trepte: 5 niveluri × 3 trepte. Pe pagina evenimentului, cadranul arată nivelul, iar cele trei puncte de sub el, treapta.",
+                "«Foarte ușor» (treptele 1–3): până la 5 km, pe plat, în ritm de conversație — pentru oricine, și pentru un începător.",
+                "«Ușor» (4–6): 5–10 km pe asfalt sau pe potecă largă, sub 150 m de urcare.",
+                "«Mediu» (7–9): 10–15 km sau 150–500 m de urcare, potecă cu pietre și rădăcini — pentru cine aleargă regulat.",
+                "«Greu» (10–12): 15–25 km sau 500–1 000 m de urcare, potecă tehnică — pentru alergători antrenați.",
+                "«Foarte greu» (13–15): peste 25 km sau peste 1 000 m de urcare, teren tehnic, vreme de munte — doar cu experiență.",
+                "Treapta: «Spre ușor» când traseul e la capătul de jos al nivelului, «Spre greu» când e aproape de nivelul următor (mai lung, mai abrupt, noaptea, noroi). Nu știi? «La mijloc».",
+                "Filtrul de pe site bifează un nivel întreg: «Greu» arată toate cele trei trepte ale lui."
+              ]
+            },
+            {
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
@@ -4269,6 +4293,20 @@
                 "O dată dintr-o serie: la «Salvează pentru:» alege «Doar această dată», «Această dată și următoarele» sau «Toate datele seriei».",
                 "Apasă «Salvează». Apare imediat pe site, în ambele limbi.",
                 "Greșeala obișnuită: alegi «Doar această dată» când vrei să schimbi toată seria (sau invers) — verifică mesajul de sub «Salvează pentru:» înainte de a apăsa «Salvează»."
+              ]
+            },
+            {
+              "title": "Scara de dificultate a clubului",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Traseul»: alegi «Dificultate» (nivelul) și, sub el, «Treapta» — «Spre ușor», «La mijloc» sau «Spre greu».",
+                "Scara are 15 trepte: 5 niveluri × 3 trepte. Pe pagina evenimentului, cadranul arată nivelul, iar cele trei puncte de sub el, treapta.",
+                "«Foarte ușor» (treptele 1–3): până la 5 km, pe plat, în ritm de conversație — pentru oricine, și pentru un începător.",
+                "«Ușor» (4–6): 5–10 km pe asfalt sau pe potecă largă, sub 150 m de urcare.",
+                "«Mediu» (7–9): 10–15 km sau 150–500 m de urcare, potecă cu pietre și rădăcini — pentru cine aleargă regulat.",
+                "«Greu» (10–12): 15–25 km sau 500–1 000 m de urcare, potecă tehnică — pentru alergători antrenați.",
+                "«Foarte greu» (13–15): peste 25 km sau peste 1 000 m de urcare, teren tehnic, vreme de munte — doar cu experiență.",
+                "Treapta: «Spre ușor» când traseul e la capătul de jos al nivelului, «Spre greu» când e aproape de nivelul următor (mai lung, mai abrupt, noaptea, noroi). Nu știi? «La mijloc».",
+                "Filtrul de pe site bifează un nivel întreg: «Greu» arată toate cele trei trepte ale lui."
               ]
             },
             {

@@ -207,7 +207,7 @@ describe("§448 the first box holds the type and the status, and its line says b
       expect(foldsAround(html, id), key).toEqual([]);
       expect(html, key).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
     }
-    expect(drawn.course).toContain("Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu");
+    expect(drawn.course).toContain("Asfalt · Ușor, treapta 2 · 10 km · +120 m · de zi (automat) · traseu");
     expect(drawn.links).toContain("Strava · 1 link (Traseul (GPX))");
     const en = await boxes(EVENT, { locale: "en" });
     for (const name of ["The course", "Links and files"]) expect(`${en.course}${en.links}`).toMatch(new RegExp(`<h2[^>]*>${name}<span`));
@@ -259,7 +259,7 @@ describe("§358 a role that may only read the settings", () => {
     expect(summaryOf(drawn.kind)).toContain("Alergare de grup · Programat");
     expect(drawn.kind).not.toContain('id="box-status"');
     for (const [key, id, name, line] of [
-      ["course", "box-course", "Traseul", "Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu"],
+      ["course", "box-course", "Traseul", "Asfalt · Ușor, treapta 2 · 10 km · +120 m · de zi (automat) · traseu"],
       ["links", "box-links", "Linkuri și fișiere", "Strava · 1 link (Traseul (GPX))"],
     ] as const) {
       const html = drawn[key];

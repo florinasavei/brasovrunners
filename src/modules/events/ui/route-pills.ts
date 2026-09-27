@@ -1,7 +1,9 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
+import { DIFFICULTY_STEPS, difficultyBandOf, difficultyLevelOf, difficultyStepOf, type StoredDifficulty } from "../domain/difficulty";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
+import { difficultyLevelGlyph } from "./difficulty-glyphs";
 import type { GlyphName } from "./glyphs";
 
 /**
@@ -16,7 +18,18 @@ import type { GlyphName } from "./glyphs";
  * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
  * own text (visually hidden) rather than on the attribute.
  */
-export type Pill = { glyph: GlyphName; label: string; tooltip?: string; srSuffix?: string };
+export type Pill = {
+  glyph: GlyphName;
+  label: string;
+  tooltip?: string;
+  srSuffix?: string;
+  /**
+   * The pill's words where no glyph is drawn beside them (an email's facts, §392) and the glyph
+   * said something the word does not — the difficulty's step (§NNN): «Mediu, treapta 2 din 3».
+   * Absent, `label` is the whole of it.
+   */
+  plain?: string;
+};
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
  * route, the cost, and the start, its end, its programme, its zone and the night override (§394:
@@ -43,7 +56,10 @@ export type RouteFactsSource = Pick<
   | "latitude"
   | "longitude"
   | "locationToBeAnnounced"
->;
+> &
+  // The level on the club's scale of fifteen (§NNN), read with the band through `difficultyLevelOf`;
+  // optional like `StoredDifficulty`'s, for a cached row from before it.
+  Pick<StoredDifficulty, "difficultyLevel">;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
  * optional value map, which is how `next-intl`'s own translator is called everywhere else here.
@@ -100,16 +116,22 @@ export function routePillParts(
   const elevationPill: Pill | null = event.elevationGainMeters
     ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
     : null;
-  const difficultyPill: Pill | null = event.difficulty
-    ? {
-        glyph: `difficulty:${event.difficulty}`,
-        label: t(`difficultyValues.${event.difficulty}`),
-        // The visible word alone — «Mediu» — says a level without saying of what; a screen reader
-        // hears «Mediu — Dificultate» through the same `srSuffix` the external cost pill uses, the
-        // field's own catalogue label (`Event.difficulty`), never a string written here.
-        srSuffix: t("difficulty"),
-      }
-    : null;
+  const level = difficultyLevelOf(event);
+  const difficultyPill: Pill | null =
+    level !== null
+      ? {
+          // The gauge of the level (§NNN): the band's segments lit, the needle at the step, its dots.
+          glyph: difficultyLevelGlyph(level),
+          label: t(`difficultyValues.${difficultyBandOf(level)}`),
+          // The visible word alone — «Mediu» — says a band without saying of what or where in it; a
+          // screen reader hears «Mediu — Dificultate, treapta 2 din 3» through the same `srSuffix`
+          // the external cost pill uses — the catalogue's words (`Event.difficultyStepSr`), never a
+          // string written here. The eye reads the step off the gauge's dots.
+          srSuffix: t("difficultyStepSr", { step: difficultyStepOf(level), steps: DIFFICULTY_STEPS.length }),
+          // Where there is no gauge to read the step from — the emails' facts block (§392).
+          plain: t("difficultyWithStep", { band: t(`difficultyValues.${difficultyBandOf(level)}`), step: difficultyStepOf(level), steps: DIFFICULTY_STEPS.length }),
+        }
+      : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };
 }

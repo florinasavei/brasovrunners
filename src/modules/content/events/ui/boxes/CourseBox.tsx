@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
-import { DIFFICULTY_LEVELS } from "@/modules/events/domain/difficulty";
+import { DEFAULT_DIFFICULTY_STEP, DIFFICULTY_BANDS, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "@/modules/events/domain/difficulty";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
@@ -15,6 +15,7 @@ import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { savedDurationMinutes } from "../../duration";
 import { BLANK, courseSummary } from "../box-summaries";
+import DifficultyStepField from "../DifficultyStepField";
 import GlyphSelect from "../GlyphSelect";
 import NightEventField from "../NightEventField";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
@@ -61,6 +62,10 @@ export default async function CourseBox({
     const from = toWallTimeInput(new Date(row.startsAt), zone);
     return { date: from.slice(0, 10), time: from.slice(11, 16), endTime: row.endsAt ? toWallTimeInput(new Date(row.endsAt), zone).slice(11, 16) : "" };
   });
+  // The level on the club's scale of fifteen (§NNN), as the two controls show it: its band and its step.
+  const level = event ? difficultyLevelOf(event) : null;
+  const band = level === null ? null : difficultyBandOf(level);
+  const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const card = {
     id: "box-course",
     title: heading ?? t("editor.boxes.course.title"),
@@ -69,7 +74,7 @@ export default async function CourseBox({
       event,
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
-        difficulty: event?.difficulty ? t(`editor.difficultyValues.${event.difficulty}`) : null,
+        difficulty: band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null,
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
         night: event ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
@@ -113,14 +118,27 @@ export default async function CourseBox({
           <GlyphSelect
             name="event.difficulty"
             label={t("editor.fields.difficulty")}
-            defaultValue={event?.difficulty ?? ""}
+            defaultValue={band ?? ""}
             options={[
               { value: "", label: t("editor.notStated") },
-              ...DIFFICULTY_LEVELS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
+              ...DIFFICULTY_BANDS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
             ]}
             sx={{ flex: 1 }}
           />
         </Stack>
+        {/* The difficulty's second control (§NNN): where inside the band the event stands — the
+            band and the step are the level on the club's scale of fifteen, which «Ghid» explains. */}
+        <Box>
+          <DifficultyStepField
+            name="event.difficultyStep"
+            defaultStep={step}
+            words={{
+              label: t("editor.fields.difficultyStep"),
+              choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
+            }}
+          />
+          <BoxNote>{t("editor.difficultyStepHelp")}</BoxNote>
+        </Box>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <RecallField
             name="event.distanceMeters"

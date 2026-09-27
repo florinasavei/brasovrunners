@@ -72,7 +72,8 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
     expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
-    expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY", "distance", "elevation", "night", "cost:FREE"]);
+    // A row with a band and no level — one the data cache kept from before §NNN — is at the band's middle.
+    expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY-2", "distance", "elevation", "night", "cost:FREE"]);
   });
 
   it("builds the same order in English", async () => {
@@ -136,23 +137,29 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
   // screen reader is given — the chip's visible word, then the visually-hidden span — so a wrong
   // key or a missing locale in `routePillParts`'s `srSuffix` line fails here.
   it.each([
-    // Five levels since §412 (the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu").
-    ["ro", "VERY_EASY", "Foarte ușor", "Dificultate"],
-    ["ro", "EASY", "Ușor", "Dificultate"],
-    ["ro", "MODERATE", "Mediu", "Dificultate"],
-    ["ro", "HARD", "Greu", "Dificultate"],
-    ["ro", "VERY_HARD", "Foarte greu", "Dificultate"],
-    ["en", "VERY_EASY", "Very easy", "Difficulty"],
-    ["en", "EASY", "Easy", "Difficulty"],
-    ["en", "MODERATE", "Moderate", "Difficulty"],
-    ["en", "HARD", "Hard", "Difficulty"],
-    ["en", "VERY_HARD", "Very hard", "Difficulty"],
-  ] as const)("in %s, the %s pill reads «%s» and, hidden, «— %s»", async (locale, difficulty, word, field) => {
+    // Five bands since §412 (the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu"),
+    // three steps in each since §NNN — the step is heard after the field's name, and seen as dots.
+    ["ro", "VERY_EASY", 1, "Foarte ușor", "Dificultate, treapta 1 din 3"],
+    ["ro", "EASY", 5, "Ușor", "Dificultate, treapta 2 din 3"],
+    ["ro", "MODERATE", 9, "Mediu", "Dificultate, treapta 3 din 3"],
+    ["ro", "HARD", 10, "Greu", "Dificultate, treapta 1 din 3"],
+    ["ro", "VERY_HARD", 15, "Foarte greu", "Dificultate, treapta 3 din 3"],
+    ["en", "VERY_EASY", 2, "Very easy", "Difficulty, step 2 of 3"],
+    ["en", "EASY", 4, "Easy", "Difficulty, step 1 of 3"],
+    ["en", "MODERATE", 8, "Moderate", "Difficulty, step 2 of 3"],
+    ["en", "HARD", 12, "Hard", "Difficulty, step 3 of 3"],
+    ["en", "VERY_HARD", 13, "Very hard", "Difficulty, step 1 of 3"],
+  ] as const)("in %s, %s at level %i reads «%s» and, hidden, «— %s»", async (locale, difficulty, level, word, field) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty }, t, format).filter((pill) => pill.glyph === `difficulty:${difficulty}`);
+    const step = ((level - 1) % 3) + 1;
+    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty, difficultyLevel: level }, t, format).filter(
+      (pill) => pill.glyph === `difficulty:${difficulty}-${step}`,
+    );
     expect(pills).toHaveLength(1);
+    // Where no gauge is drawn (an email's facts, §392), the words say the step.
+    expect(pills[0]!.plain).toBe(locale === "ro" ? `${word}, treapta ${step} din 3` : `${word}, step ${step} of 3`);
     const html = renderToStaticMarkup(RoutePills({ pills }));
     const label = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[1] ?? "";
     // The word is the label's own text, shown; the field's name follows it in a span clipped to

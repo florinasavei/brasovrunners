@@ -687,6 +687,13 @@
       "when": 1790530231563,
       "tag": "0100_newsletter_discounts_retired",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1790541805744,
+      "tag": "0101_difficulty_level",
+      "breakpoints": true
     }
   ]
 }

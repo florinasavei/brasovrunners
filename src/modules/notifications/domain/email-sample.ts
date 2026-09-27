@@ -60,6 +60,8 @@ export const EMAIL_SAMPLE_EVENT = {
   ],
   surface: "TRAIL",
   difficulty: "MODERATE",
+  // «Mediu, treapta 2 din 3» — level 8 of the club's fifteen (§NNN).
+  difficultyLevel: 8,
   distanceMeters: 12_000,
   elevationGainMeters: 450,
   type: "RACE",

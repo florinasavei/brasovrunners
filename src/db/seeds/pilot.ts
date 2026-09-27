@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
+import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
 import { atBrasov, nextWeekday, todayInBrasov } from "./sample-dates";
 import { seedSampleLegalDocuments } from "./sample-legal-documents";
 import { seedSampleTeam } from "./sample-team";
@@ -115,8 +116,10 @@ async function seed() {
       startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
-      // The two ends of the five-level scale (§412), so a seeded listing shows the gauge at both.
+      // The two ends of the scale (§412), so a seeded listing shows the gauge at both — and since
+      // §NNN the very ends: level 1 of fifteen here, level 15 on the interval session.
       difficulty: "VERY_EASY" as const,
+      difficultyStep: 1 as const,
       costType: "FREE" as const,
       ro: {
         slug: "alergare-de-duminica-parcul-tractorul",
@@ -162,6 +165,7 @@ async function seed() {
       startsAt: atBrasov(nextWeekday(3, 1), 18, 30),
       locationName: "Stadionul Olimpia",
       difficulty: "VERY_HARD" as const,
+      difficultyStep: 3 as const,
       costType: "FREE" as const,
       ro: {
         slug: "antrenament-de-intervale-olimpia",
@@ -197,7 +201,8 @@ async function seed() {
         locationAddress: "locationAddress" in row ? row.locationAddress : undefined,
         latitude: "latitude" in row ? row.latitude : undefined,
         longitude: "longitude" in row ? row.longitude : undefined,
-        difficulty: row.difficulty,
+        // The level on the club's scale of fifteen and its band (§NNN); a row with no step is at its band's middle.
+        ...storedDifficulty(difficultyLevel(row.difficulty, "difficultyStep" in row ? row.difficultyStep : undefined)),
         costType: row.costType,
         /**
          * NONE, deliberately, for every seeded event.

@@ -1,4 +1,4 @@
-import { DIFFICULTY_LEVELS, type DifficultyLevel } from "./difficulty";
+import { DIFFICULTY_BANDS, type DifficultyBand, difficultyBandOf, difficultyLevelOf, type StoredDifficulty } from "./difficulty";
 import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_COST_TYPES, type EventCostType } from "./cost";
 import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "./event-type";
@@ -58,7 +58,9 @@ export type FilterFlag = (typeof FILTER_FLAGS)[number];
 type GroupValues = {
   type: EventType;
   surface: EventSurface;
-  difficulty: DifficultyLevel;
+  // A box per band, not per level (§NNN): fifteen boxes would be a list to read, and «Greu»
+  // ticked means every step of it — the address keeps §413's `?difficulty=HARD`.
+  difficulty: DifficultyBand;
   distance: DistanceBand;
   cost: EventCostType;
 };
@@ -66,7 +68,7 @@ type GroupValues = {
 const GROUP_VALUES: { [G in FilterGroup]: readonly GroupValues[G][] } = {
   type: EVENT_TYPES,
   surface: EVENT_SURFACES,
-  difficulty: DIFFICULTY_LEVELS,
+  difficulty: DIFFICULTY_BANDS,
   distance: DISTANCE_BANDS,
   cost: EVENT_COST_TYPES,
 };
@@ -91,10 +93,10 @@ export const NO_FILTER: ListingFilter = {
 export type FilterableEvent = {
   type: string;
   surface: string | null;
-  difficulty: string | null;
   distanceMeters: number | null;
   costType: string | null;
-} & CoHostSource;
+} & StoredDifficulty &
+  CoHostSource;
 
 /** The two answers a filter cannot give from the row alone — the caller's, per event (see the file's head). */
 export type FilterFacts<T> = {
@@ -220,8 +222,11 @@ function valueOf(event: FilterableEvent, group: FilterGroup): string | null {
       return event.type;
     case "surface":
       return event.surface;
-    case "difficulty":
-      return event.difficulty;
+    case "difficulty": {
+      // The band of the event's level (§NNN): every step of «Greu» is «Greu».
+      const level = difficultyLevelOf(event);
+      return level === null ? null : difficultyBandOf(level);
+    }
     case "distance":
       return distanceBand(event.distanceMeters);
     case "cost":

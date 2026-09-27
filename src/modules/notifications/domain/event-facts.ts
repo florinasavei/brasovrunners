@@ -58,6 +58,8 @@ export type EmailEventFacts = Pick<
   | "latitude"
   | "longitude"
 > & {
+  /** The level on the club's scale of fifteen (§NNN), read with the band by `difficultyLevelOf`. */
+  difficultyLevel?: number | null;
   startsAt: Date;
   timezone: string;
   /** The place's name in this language (§362); null while it is to be announced (§328). */
@@ -134,9 +136,10 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   const format = { number: (value: number, options?: { maximumFractionDigits?: number }) => new Intl.NumberFormat(intlLocale(locale), options).format(value) };
   // The night pill's sunset sentence rides on `tooltip` on the page and the card, where hovering
   // or focusing the chip opens it; an email has no chip to hover, so it goes in parentheses right
-  // after the word instead — the same sentence, never a second one written here.
+  // after the word instead — the same sentence, never a second one written here. The difficulty's
+  // step, which the page's gauge draws as dots, is in its words here (`plain`, §NNN).
   const pills = orderRoutePills(routePillParts(details, t, format)).map((pill) => ({
-    text: pill.tooltip ? `${pill.label} (${pill.tooltip})` : pill.label,
+    text: pill.tooltip ? `${pill.plain ?? pill.label} (${pill.tooltip})` : (pill.plain ?? pill.label),
   }));
   const routeLinks: Piece[] = [
     // With a route description the route link lives in the page's "Traseul" section (§387), which the Linkuri row points at.

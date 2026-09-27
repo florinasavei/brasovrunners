@@ -389,8 +389,22 @@ export const events = pgTable(
      * Null means the club has not said, and the page then omits the row rather than guessing —
      * an event with no stated cost is not thereby free, and one with no stated difficulty is
      * not thereby easy. That is why neither column has a default.
+     *
+     * Since §NNN `difficulty` is the *band* of `difficulty_level` below, written beside it by every
+     * save so the release before it (which reads only the band) still reads the right word; the
+     * level is the fact. Read both through `difficultyLevelOf` (`events/domain/difficulty.ts`),
+     * never one alone. The band leaves the schema in the release after the code stops reading it.
      */
     difficulty: eventDifficulty("difficulty"),
+    /**
+     * How hard the event is, on the club's scale of fifteen (§NNN): five bands — foarte ușor …
+     * foarte greu, the enum above — of three steps each, 1 the easiest step of «Foarte ușor» and 15
+     * the hardest of «Foarte greu». One column for the one fact, so a filter, an order or a
+     * comparison is one number. Null, like the band, means the club has not said. Migration `0101`
+     * set every stated band to its middle step (2, 5, 8, 11, 14), the one reading that neither
+     * rounds an event up nor down.
+     */
+    difficultyLevel: smallint("difficulty_level"),
     costType: eventCostType("cost_type"),
     /**
      * What a paid event costs, or what a donation suggests — free text (§343), because a price
@@ -636,6 +650,8 @@ export const events = pgTable(
     ),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    // The club's scale of fifteen (§NNN): five bands of three steps.
+    check("events_difficulty_level_in_scale", sql`${t.difficultyLevel} IS NULL OR ${t.difficultyLevel} BETWEEN 1 AND 15`),
     // «Coordonate» (§416): both or neither, each in its range — a pair the forecast can ask for. The
     // `IS NOT NULL`s are needed: half a pair makes the BETWEEN branch NULL, which a CHECK lets through.
     check(

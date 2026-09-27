@@ -1,7 +1,7 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
-import type { DifficultyLevel } from "./domain/difficulty";
+import { DIFFICULTY_STEPS, type DifficultyBand, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "./domain/difficulty";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -107,7 +107,9 @@ export type CalendarEvent = {
    */
   nightOverride?: boolean | null;
   surface?: EventSurface | null;
-  difficulty?: DifficultyLevel | null;
+  difficulty?: DifficultyBand | null;
+  /** The level on the club's scale of fifteen (§NNN), read with the band by `difficultyLevelOf`. */
+  difficultyLevel?: number | null;
   costType?: EventCostType | null;
   /** What a paid event costs, or what a donation suggests (§343); free text, the club's own. */
   costAmount?: string | null;
@@ -355,6 +357,17 @@ function htmlLine(line: Line): string {
  * empty group is dropped, so an event with none of the optional facts reads like it did
  * before.
  */
+/**
+ * The difficulty in the facts line, with its step (§NNN) — «Mediu, treapta 2 din 3»: a calendar
+ * entry has no gauge to read the step off, so the words say it, as the emails' facts do.
+ */
+function difficultyWords(event: CalendarEvent, t: CalendarLabels["t"]): string {
+  const level = difficultyLevelOf({ difficulty: event.difficulty ?? null, difficultyLevel: event.difficultyLevel ?? null });
+  if (level === null) return "";
+  const step = difficultyStepOf(level);
+  return t("difficultyWithStep", { band: t(`difficultyValues.${difficultyBandOf(level)}`), step, steps: DIFFICULTY_STEPS.length });
+}
+
 function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[][] {
   const { t } = labels;
   const locale = labels.locale ?? "ro";
@@ -423,7 +436,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
     event.elevationGainMeters ? `↗ ${t("elevationM", { m: new Intl.NumberFormat(intl).format(event.elevationGainMeters) })}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
-    event.difficulty ? t(`difficultyValues.${event.difficulty}`) : "",
+    difficultyWords(event, t),
     ...costFacts,
   ]
     .filter((part) => part.length > 0)
