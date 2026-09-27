@@ -1697,7 +1697,7 @@
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici.",
-        "minAgeHelp": "Împlinită în ziua alergării. Declarația e doar pentru adulți, așa că numai o vârstă peste 18 ani contează: atunci se vede în declarație, iar pagina de semnare cere data nașterii și refuză pe cine e mai tânăr. 18 sau mai puțin (și 0) nu schimbă nimic.",
+        "minAgeHelp": "Declarația alergării e oricum doar pentru adulți (18 ani împliniți), așa că orice număr de 18 sau mai mic — și cel cu care pornește căsuța, și 0 — nu schimbă nimic. Pune o vârstă mai mare, de exemplu 21, doar dacă alergarea o cere: atunci apare în declarație, iar pagina de semnare cere data nașterii și refuză pe cine nu are vârsta împlinită în ziua alergării.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
         "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}."
       },
@@ -3200,12 +3200,12 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc.",
+        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc, iar un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
-        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
+        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
@@ -3825,7 +3825,8 @@
               "steps": [
                 "Intră în backoffice (vezi „Primii pași”). Un Voluntar ajunge direct la masă; ceilalți apasă «Ziua cursei» în bara de sus.",
                 "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
-                "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei."
+                "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei.",
+                "Ia de la organizator două teancuri: numerele tipărite cu nume și numerele de rezervă, cu linia pentru nume goală, pentru cine se înscrie la masă. Pe cele de rezervă nu le primește nimeni înscris online."
               ]
             },
             {
@@ -3870,8 +3871,9 @@
                 "Completează numele, prenumele, data nașterii, telefonul și «Adresa de e-mail a participantului».",
                 "Bifa «Persoana este la masă…» e deja pusă — las-o așa.",
                 "Bifează «Confirm că această persoană mi-a cerut să o înscriu…».",
+                "În «Numărul dat acum» e deja scris următorul număr de rezervă. Ia BID-ul acela din teancul de rezervă și scrie-i numele cu markerul pe linia goală. Dai alt număr? Schimbă-l în căsuță. Nu mai sunt rezerve? Scrie numărul pe care i-l dai sau las-o goală, și platforma alege unul.",
                 "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
-                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și numărul.",
+                "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și îi dai BID-ul.",
                 "Evenimentul e plin? Intră pe lista de așteptare, ca oricine. «Dă-i un loc» merge doar dacă s-a eliberat unul."
               ]
             },
@@ -4006,7 +4008,8 @@
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
-                "Numerele se dau în ordinea înscrierii, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului."
+                "Numerele se dau în ordinea înscrierii, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
+                "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul."
               ]
             },
             {
@@ -4209,6 +4212,15 @@
                 "Apasă «Alocă numerele» și confirmă: fiecare înscriere confirmată fără număr primește următorul număr liber; numerele date rămân.",
                 "«Înscrieri» → alege cursa → «Filtrează». Pe aceeași pagină descarci numerele netipărite, le tipărești, apoi apeși butonul care le marchează ca printate.",
                 "Numerele pentru tipar sunt câte două A5 pe o foaie A4 (vezi „Descarcă și tipărește numerele de concurs” la Organizator)."
+              ]
+            },
+            {
+              "title": "Numere de rezervă pentru cine se înscrie la masă",
+              "steps": [
+                "«Evenimente» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
+                "La «Câte» scrie câte numere goale vrei, apoi apasă «Tipărește» și confirmă. Fereastra spune de la ce număr încep: de atunci nimeni înscris online nu le mai primește.",
+                "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
+                "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele."
               ]
             },
             {
@@ -6017,10 +6029,10 @@
       "title": "Rețeaua a blocat salvarea",
       "kept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Ce ai completat a rămas în formular. Formularul poate pleca și pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă.",
       "notKept": "Rețeaua pe care ești a oprit cererea sau răspunsul ei, așa că nu știm dacă salvarea a ajuns. Formularul poate pleca din nou pe calea simplă — ca un formular obișnuit, pe care rețelele de firmă îl lasă să treacă — cu ce era completat când ai apăsat.",
-      "already": "Dacă ai primit deja mesajul că s-a salvat, nu apăsa — verifică pagina.",
+      "already": "Salvarea poate să fi ajuns chiar dacă răspunsul ei s-a pierdut. Înainte să apeși, deschide pagina într-un tab nou și verifică: dacă schimbarea e acolo, nu apăsa — o anulare, o ștergere sau un mesaj trimis de două ori se face de două ori.",
       "send": "Trimite pe calea simplă",
       "sending": "Se trimite…",
-      "failed": "Nici calea simplă nu a putut fi folosită; nu s-a trimis nimic. Încearcă de pe telefon sau de pe altă rețea."
+      "failed": "Nici calea simplă nu a putut pleca. Verifică pagina înainte să încerci de pe telefon sau de pe altă rețea."
     },
     "page": {
       "title": "Verificarea rețelei",

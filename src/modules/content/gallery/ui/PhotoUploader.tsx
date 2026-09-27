@@ -109,9 +109,11 @@ export default function PhotoUploader({
     const list = Array.from(files);
     const failed: string[] = [];
     setProgress({ done: 0, total: list.length, failed });
-    setLastStored(null);
     setLastChosen(null);
     for (const [index, file] of list.entries()) {
+      // «Fotografia aleasă» and the stored line describe one photo (§NNN): cleared per file, so a
+      // last file that fails never sits under the facts of the one before it.
+      setLastStored(null);
       try {
         const body = new FormData();
         // The shrunk photo, named after the original so the server records the name it had.

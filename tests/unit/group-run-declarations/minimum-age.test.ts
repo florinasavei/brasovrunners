@@ -8,7 +8,7 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
 import { BLANK, dropsParagraph, mergeLegalBody, mergeTextSegments, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
-import { isUnderMinimumAge } from "@/modules/registrations/domain/age";
+import { isUnderMinimumAge, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 
@@ -159,6 +159,22 @@ describe("§440 the age gate: one rule, the race's", () => {
       }
       expect(page.fields.birthDate).toBeTruthy();
       expect(catalogue.Admin.editor.groupRunDeclaration.minAgeHelp).toBeTruthy();
+    }
+  });
+
+  /*
+    §NNN: the box starts at the club's minimum for a race, which binds nobody on an adults-only
+    declaration. The help leads with that — the number shown does nothing at 18 or below — and
+    names neither the starting number (a constant that may change) nor anything but 18, the
+    declaration's own age, and an example above it.
+  */
+  it("the editor's help says first that 18 or less changes nothing, the starting number included", () => {
+    const help = { ro: ro.Admin.editor.groupRunDeclaration.minAgeHelp, en: en.Admin.editor.groupRunDeclaration.minAgeHelp };
+    expect(help.ro).toMatch(/^Declarația alergării e oricum doar pentru adulți \(18 ani împliniți\), așa că orice număr de 18 sau mai mic/);
+    expect(help.en).toMatch(/^The run's declaration is for adults anyway \(18 or older\), so any number of 18 or less/);
+    for (const sentence of Object.values(help)) {
+      expect(sentence).not.toContain(String(MIN_PARTICIPANT_AGE));
+      expect(sentence).toContain("21");
     }
   });
 });
