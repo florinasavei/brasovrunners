@@ -35,6 +35,9 @@ export default function robots(): MetadataRoute.Robots {
           "/en/devs",
           "/ro/autentificare",
           "/en/sign-in",
+          // The members' zone (§524): behind the sign-in; «Beneficiile membrilor» stays open.
+          "/ro/zona-membri",
+          "/en/members-area",
           "/ro/inscriere",
           "/en/register",
           "/ro/declaratie",

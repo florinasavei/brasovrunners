@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { isBackofficeRole, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
  * BR-REQ-060-01 criterion 38 — the guide's «words» are the screen's words (§441).
@@ -147,7 +147,10 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
   it("names only roles that exist, and gives every role at least one section of its own", () => {
     const guide = guideOf(locales.ro);
     for (const section of guide.sections) for (const role of section.roles) expect(STAFF_ROLES).toContain(role);
-    for (const role of STAFF_ROLES) expect(guide.sections.some((section) => section.roles.includes(role)), role).toBe(true);
+    // Every staff role: a club member (§524) has no backoffice, so no guide to open.
+    for (const role of STAFF_ROLES.filter(isBackofficeRole)) {
+      expect(guide.sections.some((section) => section.roles.includes(role)), role).toBe(true);
+    }
   });
 
   /*
@@ -173,6 +176,20 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
       const clubJobs = tasks.filter((task) => task.steps.some((step) => club[locale].some((mark) => step.includes(mark))));
       expect(clubJobs.length, locale).toBeGreaterThanOrEqual(2);
       for (const job of clubJobs) expect(job.steps[0].startsWith(lead[locale]), `${locale}: ${job.title}`).toBe(false);
+    }
+  });
+
+  /*
+    The members' texts (§524): the guide said «Pagini» → «Membri», and «Membri» matched some other
+    label in the catalogue while no such entry was on the row. So the path is pinned to the
+    sub-navigation's own words, in their order: the main tab, the group's caption, the entry.
+  */
+  it("names the members' texts by the sub-navigation's own path (§524)", () => {
+    for (const catalogue of Object.values(locales)) {
+      const admin = catalogue.Admin as { nav: { pages: string }; pages: { groupStandard: string; tabMembers: string } };
+      const path = `«${admin.nav.pages}» → «${admin.pages.groupStandard}» → «${admin.pages.tabMembers}»`;
+      const steps = guideOf(catalogue).sections.flatMap((section) => section.tasks.flatMap((task) => task.steps));
+      expect(steps.some((step) => step.includes(path)), path).toBe(true);
     }
   });
 

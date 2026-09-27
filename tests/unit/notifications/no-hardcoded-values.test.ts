@@ -202,6 +202,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Admin.registrations.clubMemberLabel",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",
+          // «Beneficiile membrilor» without the club's words (§524).
+          "Members.lead",
           // The network check's report heading (§436).
           "Network.page.report.heading",
           "Registration.clubMemberDeclared",
@@ -218,8 +220,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "registrations.clubMemberLabel": 1,
       "pages.intro": 1,
       "page.report.heading": 1,
-      // «Echipa» (§459): the page and its description for search engines.
-      lead: 2,
+      // «Echipa» (§459) and «Beneficiile membrilor» (§524): each page and its description for search engines.
+      lead: 4,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {

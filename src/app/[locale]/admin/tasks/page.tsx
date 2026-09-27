@@ -7,11 +7,11 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-import { and, count, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
-import { staffUsers } from "@/db/schema/staff-users";
+import { countBackofficeStaff } from "@/modules/staff-identity/repository";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
@@ -319,8 +319,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
   const contactRecipients = await readContactRecipients(db);
   // One row is the Administrator inserted by hand; a second is somebody invited from
-  // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
-  const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
+  // `/admin/staff`. The count is the whole of what "the team is invited" can mean here — the team,
+  // so a club member's account (§524) is not a colleague and is not counted.
+  const staffCount = await countBackofficeStaff(db);
   /**
    * Whether the invitation key can create an account, asked of Zitadel with a real search
    * (§288) — the reader is signed in through it, so a key that cannot find them is a key that
@@ -419,7 +420,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       staleJobNames,
       failingJobNames,
       staffCount,
-      inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
+      inviteKey: {
+        kind: inviteKey.kind,
+        reason: "reason" in inviteKey ? inviteKey.reason : undefined,
+        capped: inviteKey.kind === "capped" || (inviteKey.kind === "ok" && !inviteKey.complete),
+      },
       publishedEventCount,
       raceDaySheetsDue,
       domainRenewal: domain,

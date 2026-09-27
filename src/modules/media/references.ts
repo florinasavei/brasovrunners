@@ -7,6 +7,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-settings";
 import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import { canEditEventFields, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -82,6 +83,12 @@ const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(
  */
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
+/**
+ * Whether the members' pages carry the asset (§524): «Beneficiile membrilor» and the members' zone,
+ * both languages of both in their one `platform_settings` row — read as its text, like the team's.
+ */
+const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
+
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
@@ -97,6 +104,8 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
   -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
+  -- A picture in the members' pages (§524), kept in their platform setting.
+  OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -185,7 +194,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro"; id: string; title: string | null };
+export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "membersPage"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -289,6 +298,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
+  // A picture in the members' pages (§524).
+  const inMembersPages = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .innerJoin(platformSettings, inMembersPage);
 
   const references = new Map<string, MediaReference[]>();
   const add = (assetId: string, reference: MediaReference) => {
@@ -313,6 +327,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamBios) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamIntros) add(row.assetId, { kind: "teamIntro", id: TEAM_PAGE_SETTING_KEY, title: null });
+  for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
 
   return assets.map((asset) => ({
     ...asset,

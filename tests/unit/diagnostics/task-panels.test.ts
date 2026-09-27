@@ -30,7 +30,8 @@ describe("§438 canOpenTasks — who may open /admin/tasks at all", () => {
 
   it("shuts out the volunteer, whose backoffice is the desk and the guide (§103)", () => {
     expect(canOpenTasks("CONTRIBUTOR")).toBe(false);
-    expect(STAFF_ROLES.filter((role) => !canOpenTasks(role))).toEqual(["CONTRIBUTOR"]);
+    // …and the club member (§524), who has no backoffice at all.
+    expect(STAFF_ROLES.filter((role) => !canOpenTasks(role))).toEqual(["MEMBER", "CONTRIBUTOR"]);
   });
 });
 

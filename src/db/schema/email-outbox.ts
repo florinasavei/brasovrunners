@@ -84,6 +84,9 @@ export const emailMessageType = pgEnum("email_message_type", [
   // "A new event is on the calendar": queued by the maintenance job once per event, the first run
   // after it is published, to the subscribers of its topics. The weekly group run never.
   "NEW_EVENT_ALERT",
+  // A club member added on Echipa (§524): who added them and where to sign in for the members'
+  // zone — never "the team that runs the site", which is the staff invitation's sentence. No token.
+  "MEMBER_INVITATION",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

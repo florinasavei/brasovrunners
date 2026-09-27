@@ -6,8 +6,9 @@ import { locale } from "./locale";
  * The three staff roles of AGENTS.md §10.2. A database enum, so a row with role `SUPERUSER`
  * cannot exist even if application code is bypassed (BR-REQ-060-01).
  */
-// `COPYWRITER` since §103; `CONTRIBUTOR` is the volunteer since the same decision.
-export const staffRole = pgEnum("staff_role", ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
+// `COPYWRITER` since §103; `CONTRIBUTOR` is the volunteer since the same decision. `MEMBER`
+// since §524: a club member with a sign-in and no backoffice, placed first (below the volunteer).
+export const staffRole = pgEnum("staff_role", ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
 
 /**
  * Staff users. AGENTS.md §12.1.
