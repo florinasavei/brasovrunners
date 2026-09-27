@@ -1699,7 +1699,7 @@
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here.",
-        "minAgeHelp": "Reached by the day of the run. The declaration is for adults, so only an age above 18 counts: it is then stated in the declaration, and the signing page asks for the birth date and refuses anyone younger. 18 or less (and 0) changes nothing.",
+        "minAgeHelp": "The run's declaration is for adults anyway (18 or older), so any number of 18 or less — the one the box starts with, and 0 — changes nothing. Set a higher age, for example 21, only if the run requires it: it then appears in the declaration, and the signing page asks for the birth date and refuses anyone who has not reached that age by the day of the run.",
         "surface": "Surface, from “The course” card: {surface}",
         "inForce": "The text in force for {surface}: “{document}”, v{version}."
       },
@@ -3199,12 +3199,12 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
+        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot, and an administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens. Or search by name or by race number.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name. If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
-        "Never registered at all: “Add somebody” — name and email; the “This person is at the desk” tick is already set. They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
+        "Never registered at all: “Add somebody” — name and email; the “This person is at the desk” tick is already set, and “Number given now” suggests the next spare number: hand them that bib and write their name on it in marker. They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
         "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in. If it says the number was printed, pull that bib out of the pile — numbers are never reused."
@@ -3824,7 +3824,8 @@
               "steps": [
                 "Sign in (see “First steps”). A Volunteer lands on the desk; everyone else presses «Race day» in the top bar.",
                 "Under «Event» pick today's race, then press «Search».",
-                "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures."
+                "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures.",
+                "Take two piles from the organizer: the numbers printed with names, and the spare numbers, with an empty name line, for people who register at the desk. Nobody who registered online gets a spare."
               ]
             },
             {
@@ -3869,8 +3870,9 @@
                 "Fill in the first name, the last name, the birth date, the phone and «Participant email address».",
                 "The «This person is at the desk…» tick is already set — leave it.",
                 "Tick «I confirm this person asked me to register them…».",
+                "«Number given now» already holds the next spare number. Take that bib from the spare pile and write their name on its empty line in marker. Handing out another number? Change it in the box. No spares left? Type the number you hand out, or leave the box empty and the platform picks one.",
                 "Press «Add the registration» and confirm in the window.",
-                "Give them the paper declaration to sign, then «Mark present» and the number.",
+                "Give them the paper declaration to sign, then «Mark present» and hand them the bib.",
                 "Event full? They join the waiting list, like anyone. «Give a place» works only once a place has freed up."
               ]
             },
@@ -4005,7 +4007,8 @@
                 "«See the bibs» to check them on screen.",
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
                 "Print at actual size (100%) and cut on the line.",
-                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's."
+                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
+                "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers."
               ]
             },
             {
@@ -4208,6 +4211,15 @@
                 "Press «Assign numbers» and confirm: every confirmed registration without a number gets the next free one; numbers already given stay.",
                 "«Registrations» → pick the race → «Filter». On the same page you download the unprinted numbers, print them, then press the button that marks them printed.",
                 "The numbers for printing are two A5 on each A4 sheet (see “Download and print the race numbers” under Organizer)."
+              ]
+            },
+            {
+              "title": "Spare numbers for people who register at the desk",
+              "steps": [
+                "«Events» → «Edit» → «Taking part and registration» → «Allocate and print» → «Spare bibs for on-the-spot entries».",
+                "In «How many» type how many blank numbers you want, then press «Print» and confirm. The window says which number they start from: from then on nobody who registers online gets them.",
+                "Press «Download the sheet» and print it. Each number has an empty name line; at the desk the name is written on in marker, and the form suggests the next free number.",
+                "Need them again? «Reprint the free spares (PDF)» puts only the numbers not yet given on the sheet and reserves no more."
               ]
             },
             {
@@ -6017,10 +6029,10 @@
       "title": "The network blocked the save",
       "kept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. What you typed is still in the form. The form can also go the simple way — as an ordinary form, which office networks let through.",
       "notKept": "The network you are on stopped the request or its answer, so we cannot tell whether the save arrived. The form can go again the simple way — as an ordinary form, which office networks let through — with what it held when you pressed.",
-      "already": "If you already got the message that it saved, do not press — check the page.",
+      "already": "The save may have arrived even though its answer was lost. Before you press, open the page in a new tab and check: if the change is there, do not press — a cancellation, an erasure or a message sent twice happens twice.",
       "send": "Send the simple way",
       "sending": "Sending…",
-      "failed": "The simple path could not be used either; nothing was sent. Try from your phone or another network."
+      "failed": "The simple way could not leave either. Check the page before you try from your phone or another network."
     },
     "page": {
       "title": "Network check",

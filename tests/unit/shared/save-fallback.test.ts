@@ -271,12 +271,41 @@ describe("§436 the words, in both languages", () => {
     const enBlocked = catalogues.en.Network.blocked as Record<string, string>;
     expect(roBlocked.send).toBe("Trimite pe calea simplă");
     expect(enBlocked.send).toBe("Send the simple way");
-    expect(roBlocked.already).toBe("Dacă ai primit deja mesajul că s-a salvat, nu apăsa — verifică pagina.");
-    expect(enBlocked.already).toBe("If you already got the message that it saved, do not press — check the page.");
-    // A transport failure does not prove nothing was saved: only the failed button says nothing left.
+    /*
+      §NNN: the sentence speaks to the case it exists for. A blocked save's confirmation never
+      arrives — the answer that carried it is what was lost — so «if you already got the message
+      that it saved» never applied. What can happen is a cancel, an erase or a message the server
+      ran before the proxy swallowed its answer: so the page is checked in a new tab first.
+    */
+    expect(roBlocked.already).toBe(
+      "Salvarea poate să fi ajuns chiar dacă răspunsul ei s-a pierdut. Înainte să apeși, deschide pagina într-un tab nou și verifică: dacă schimbarea e acolo, nu apăsa — o anulare, o ștergere sau un mesaj trimis de două ori se face de două ori.",
+    );
+    expect(enBlocked.already).toBe(
+      "The save may have arrived even though its answer was lost. Before you press, open the page in a new tab and check: if the change is there, do not press — a cancellation, an erasure or a message sent twice happens twice.",
+    );
+    for (const words of [roBlocked, enBlocked]) expect(words.already).not.toMatch(/ai primit deja mesajul|already got the message/);
+    // A transport failure does not prove nothing was saved — not even when the simple way could not
+    // leave either: the scripted call may have landed before its answer was lost.
     for (const words of [roBlocked, enBlocked]) {
-      for (const key of ["title", "kept", "notKept"]) expect(words[key]).not.toMatch(/Nu s-a salvat nimic|Nothing was saved/);
+      for (const key of ["title", "kept", "notKept", "failed"]) expect(words[key]).not.toMatch(/Nu s-a salvat nimic|Nothing was saved|nu s-a trimis nimic|nothing was sent/);
     }
+    expect(roBlocked.failed).toBe("Nici calea simplă nu a putut pleca. Verifică pagina înainte să încerci de pe telefon sau de pe altă rețea.");
+    expect(enBlocked.failed).toBe("The simple way could not leave either. Check the page before you try from your phone or another network.");
+  });
+
+  /*
+    §436: the line after the simple way is drawn by the admin layout, which a client navigation
+    never re-renders — so its `shown` stayed true on every page clicked to afterwards. It keeps the
+    path it first rendered on and is gone once the path differs, for good: coming back to that path
+    later (Back, a link) does not draw it again. No DOM runner here: the source says it.
+  */
+  it("the «tried the simple way» line belongs to the page the post landed on, not to the pages after it", () => {
+    const notice = read("src/shared/forms/SaveFallbackNotice.tsx");
+    expect(notice).toContain("const pathname = usePathname();");
+    expect(notice).toContain("const [landedOn] = useState(pathname);");
+    expect(notice).toContain("const [left, setLeft] = useState(false);");
+    expect(notice).toContain("if (!left && pathname !== landedOn) setLeft(true);");
+    expect(notice).toContain("if (!shown || dismissed || left || pathname !== landedOn) return null;");
   });
 
   it("names the host to allow through a placeholder, never a literal", () => {

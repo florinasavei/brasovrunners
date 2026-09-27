@@ -13,7 +13,7 @@ export type GuideSectionLike = { roles: StaffRole[] };
  * half, sections keep the catalogue's own order.
  *
  * Pure and framework-free so the partition itself — not just its rendering — has a test, for
- * every `StaffRole` including `ADMIN` (BR-REQ-060-01 criterion 34).
+ * every `StaffRole` including `ADMIN` (BR-REQ-060-01 criterion 38).
  */
 export function orderGuideSections<T extends GuideSectionLike>(sections: readonly T[], role: StaffRole): T[] {
   const mine = sections.filter((section) => section.roles.includes(role));
