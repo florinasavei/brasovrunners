@@ -1,7 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { getPathname } from "@/i18n/navigation";
-import { type Locale, routing } from "@/i18n/routing";import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
+import { type Locale, routing } from "@/i18n/routing";
+import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import {
   addressSummary,
@@ -30,6 +31,7 @@ import { type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
  */
 
 const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translation;
+
 /**
  * One strip of tabs, its marks computed from what is stored and then from what is typed.
  *

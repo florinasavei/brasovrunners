@@ -14,8 +14,31 @@ import { useTranslateAll } from "./use-translate-all";
 /** Read by assistive technology, out of sight: the sticky tab row keeps its one line (§NNN). */
 const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
-/** The button's place at the end of the tab row: pushed right, never squeezed, 44 px tall. */
-const BUTTON_SX = { minHeight: 44, flex: "none", textTransform: "none" } as const;
+/**
+ * The button at the end of the tab row: never squeezed, 44 px tall. Below `sm` it is the translate
+ * glyph alone in a 44-px square, so the sticky row stays one line on a phone (§480, §NNN); from `sm`
+ * up the glyph and the words. The words are then in the `aria-label` and the tooltip.
+ */
+const BUTTON_SX = {
+  minHeight: 44,
+  minWidth: { xs: 44, sm: 64 },
+  px: { xs: 0, sm: 1 },
+  flex: "none",
+  textTransform: "none",
+  "& .MuiButton-startIcon": { mr: { xs: 0, sm: 1 }, ml: { xs: 0, sm: -0.5 } },
+} as const;
+
+/** The wrapper that holds the tooltip (a disabled button fires no pointer events) and the row's right end. */
+const WRAPPER_SX = { ml: "auto", flex: "none", display: "inline-flex" } as const;
+
+/** The button's words: drawn from `sm` up, the glyph alone below it (the `aria-label` says them there). */
+function Words({ children }: { children: string }) {
+  return (
+    <Box component="span" data-translate-card-words="" sx={{ display: { xs: "none", sm: "inline" } }}>
+      {children}
+    </Box>
+  );
+}
 
 /**
  * «Tradu cardul: RO → EN» / "Translate this card: RO → EN" in a card's Română | English tab row
@@ -33,7 +56,10 @@ const BUTTON_SX = { minHeight: 44, flex: "none", textTransform: "none" } as cons
  *
  * **Always drawn for a role that writes the club's words** (§482, §497): with no DeepL key, or a
  * spent credit, it is greyed and says why — in a tooltip with the link to the steps or to Costuri,
- * and to assistive technology through `aria-describedby`. A role that writes no words, or a page
+ * and to assistive technology through `aria-describedby`. The tooltip's link is for the pointer
+ * only; a keyboard user reaches the same steps through the whole editor's «Copiază și tradu tot»
+ * strip right above the cards (§482), which draws that link in the page, so no focusable duplicate
+ * is added here. A role that writes no words, or a page
  * with no translation at all, sees nothing. The Server Action asks the role and the key again on
  * every press (BR-REQ-060-01).
  *
@@ -64,7 +90,7 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
       leaveTouchDelay={8000}
       title={
         <>
-          {sentence}
+          {t("card")} — {sentence}
           {href && (
             <>
               {" "}
@@ -80,13 +106,14 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
       <Box
         component="span"
         tabIndex={0}
+        aria-label={t("card")}
         aria-describedby={reasonId}
-        sx={{ ml: "auto", flex: "none", display: "inline-flex" }}
+        sx={WRAPPER_SX}
         data-testid="translate-card-off"
         data-reason={reason}
       >
-        <GlyphButton icon="translate" size="small" disabled sx={BUTTON_SX}>
-          {t("card")}
+        <GlyphButton icon="translate" size="small" disabled aria-label={t("card")} sx={BUTTON_SX}>
+          <Words>{t("card")}</Words>
         </GlyphButton>
         <Box component="span" id={reasonId} sx={VISUALLY_HIDDEN}>
           {sentence}
@@ -113,17 +140,23 @@ function TranslateCardButtonIsland({ onTranslated }: { onTranslated?: () => void
 
   return (
     <Box ref={anchor} sx={{ display: "contents" }} data-translate-card="">
-      <GlyphButton
-        icon="translate"
-        size="small"
-        onClick={press}
-        disabled={pending}
-        aria-busy={pending || undefined}
-        sx={{ ...BUTTON_SX, ml: "auto" }}
-        data-testid="translate-card"
-      >
-        {pending ? t("pending") : t("card")}
-      </GlyphButton>
+      <Tooltip title={t("card")} describeChild>
+        {/* The span keeps the tooltip alive while the press is pending and the button disabled. */}
+        <Box component="span" sx={WRAPPER_SX}>
+          <GlyphButton
+            icon="translate"
+            size="small"
+            onClick={press}
+            disabled={pending}
+            aria-busy={pending || undefined}
+            aria-label={t("card")}
+            sx={BUTTON_SX}
+            data-testid="translate-card"
+          >
+            <Words>{pending ? t("pending") : t("card")}</Words>
+          </GlyphButton>
+        </Box>
+      </Tooltip>
       <Box component="span" role="status" sx={VISUALLY_HIDDEN} data-testid="translate-card-status" data-tone={message?.tone}>
         {message?.text ?? ""}
       </Box>

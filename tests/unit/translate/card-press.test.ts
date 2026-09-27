@@ -161,6 +161,11 @@ describe("§NNN «Tradu cardul» reads and fills one card of the form", () => {
 const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
 function strip(offer: TranslateOffer | null, props: Partial<ComponentProps<typeof LocaleTabPanels>> = {}, messages: typeof ro = ro) {
+  return markup(rawStrip(offer, props, messages));
+}
+
+/** The strip's markup with Emotion's `<style>` tags kept, for the rules that hold the row on one line. */
+function rawStrip(offer: TranslateOffer | null, props: Partial<ComponentProps<typeof LocaleTabPanels>> = {}, messages: typeof ro = ro) {
   const tabs = createElement(LocaleTabPanels, {
     idPrefix: "title",
     panels: [
@@ -170,13 +175,11 @@ function strip(offer: TranslateOffer | null, props: Partial<ComponentProps<typeo
     translateCard: true,
     ...props,
   });
-  return markup(
-    renderToStaticMarkup(
-      createElement(
-        NextIntlClientProvider,
-        { locale: messages === ro ? "ro" : "en", messages } as unknown as ComponentProps<typeof NextIntlClientProvider>,
-        createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, tabs),
-      ),
+  return renderToStaticMarkup(
+    createElement(
+      NextIntlClientProvider,
+      { locale: messages === ro ? "ro" : "en", messages } as unknown as ComponentProps<typeof NextIntlClientProvider>,
+      createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, tabs),
     ),
   );
 }
@@ -233,6 +236,22 @@ describe("§NNN the button in the card's tab row", () => {
     expect(strip(WORKING, { translateCard: false })).not.toContain("translate-card");
     expect(strip(WORKING, { live: false })).not.toContain("translate-card");
     expect(strip(WORKING, { panels: [{ locale: "ro", label: "Română", content: "ro" }] })).not.toContain("translate-card");
+  });
+
+  it("keeps the sticky row one line at 320 px: no wrap, the glyph alone below `sm`, the words in its name", () => {
+    for (const offer of [WORKING, { action: null, setupHref: "/ro/admin/tasks#task-translation" }] as TranslateOffer[]) {
+      const raw = rawStrip(offer);
+      // The row never wraps: the tabs scroll, the button keeps its place at the end.
+      expect(raw).toContain("flex-wrap:nowrap");
+      expect(raw).not.toContain("flex-wrap:wrap");
+      const html = markup(raw);
+      // The button wears the translate glyph (an svg before its words) and is named by the full words.
+      expect(html).toMatch(/<button[^>]*aria-label="Tradu cardul: RO → EN"[^>]*>[\s\S]*?<svg[\s\S]*?data-translate-card-words=""/);
+      // The words are drawn only from `sm` up: `display:none` below it, `inline` above.
+      expect(raw).toMatch(/@media \(min-width:0px\)\{[^{}]*\{display:none;\}\}@media \(min-width:600px\)\{[^{}]*\{display:inline;\}\}/);
+      // Below `sm` the button is a 44-px square around its glyph.
+      expect(raw).toMatch(/@media \(min-width:0px\)\{[^{}]*\{min-width:44px;padding-left:0px;padding-right:0px;\}\}/);
+    }
   });
 
   it("has its words in both catalogues", () => {

@@ -350,8 +350,9 @@ export default function LocaleTabPanels({
     <Box ref={root} data-locale-tabs="">
       {/*
         The tab row: the tabs, and — on a strip whose words may be translated — «Tradu cardul:
-        RO → EN» at its end (§NNN). It wraps, so on a phone the button takes a line of its own under the tabs
-        rather than squeezing them into a scroll.
+        RO → EN» at its end (§NNN). One line at every width, 320 px included (§480's density pass):
+        below `sm` the button is its glyph alone, and the tabs, not the button, give way — they
+        scroll rather than push the button onto a second line of the sticky strip.
       */}
       <Box
         /*
@@ -369,7 +370,7 @@ export default function LocaleTabPanels({
           borderBottom: 1,
           borderColor: "divider",
           display: "flex",
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
           alignItems: "center",
           columnGap: 1,
         }}
