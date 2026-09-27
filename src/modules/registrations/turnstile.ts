@@ -11,10 +11,11 @@ import { env } from "@/shared/config/env";
  * loads from anybody else — and the token it puts in `cf-turnstile-response` is verified
  * server-side with the secret, once, against Cloudflare's siteverify. The visitor's address
  * goes to Cloudflare with the challenge, which is why the privacy notice names Turnstile.
+ *
+ * The script's address and the token's field name are in `domain/turnstile-widget.ts`: the
+ * widget is a client island, and this module's first import is the server's configuration (§NNN).
  */
-export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js";
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-export const TURNSTILE_FIELD = "cf-turnstile-response";
 
 /**
  * Siteverify's error codes that say the *server's* side is wrong — a missing or invalid secret, or

@@ -26,10 +26,6 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
 export const GROUP_RUN_DECLARATION_KEYS = ["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"] as const satisfies readonly LegalDocumentKey[];
 export type GroupRunDeclarationKey = (typeof GROUP_RUN_DECLARATION_KEYS)[number];
 
-export function isGroupRunDeclarationKey(key: string): key is GroupRunDeclarationKey {
-  return (GROUP_RUN_DECLARATION_KEYS as readonly string[]).includes(key);
-}
-
 /**
  * Which declaration a group run may offer, by what it is run on (§393): asphalt's or the trail's.
  * Anything else — a race, a hike, a mixed or unstated surface — has none: the risks the two texts

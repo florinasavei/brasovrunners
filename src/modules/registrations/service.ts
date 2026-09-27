@@ -1977,19 +1977,6 @@ async function enqueueClubConfirmationNotice<T extends Record<string, unknown>>(
 
 // --- §15.5 Self-unregistration, and offer decline (the same transition) ---------------------
 
-/** A confirmed registration made before codes existed gets one the first time it is needed. */
-export async function ensureCheckinCode<T extends Record<string, unknown>>(
-  db: Database<T>,
-  registrationId: string,
-): Promise<string> {
-  const current = await repo.findRegistrationById(db, registrationId);
-  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
-  if (current.checkinCode) return current.checkinCode;
-  const code = newCheckinCode();
-  await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, registrationId));
-  return code;
-}
-
 type StaffActor = { id: string };
 
 /**
