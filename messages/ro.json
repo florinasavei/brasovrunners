@@ -4635,7 +4635,7 @@
       "count": "Semnate: {count}",
       "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Platforma șterge declarațiile la {days} după alergare.",
       "none": "Nicio declarație semnată încă.",
-      "signedAt": "semnată {when}",
+      "signedAt": "semnată {when} (v{version})",
       "pdf": "PDF",
       "reason": "Motivul ștergerii",
       "reasonHelp": "Rămâne în jurnalul clubului, cu numele tău. Nu scrie numele persoanei.",

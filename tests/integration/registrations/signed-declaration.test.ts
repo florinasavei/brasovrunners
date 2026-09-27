@@ -21,6 +21,7 @@ import {
 } from "@/modules/registrations/signed-declaration";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
+import { listLatestDeclarationAcceptances } from "@/modules/registrations/admin-repository";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { BLANK, mergeLegalBody, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
@@ -277,6 +278,12 @@ describe("the club's declaration (§95)", () => {
 
     const all = await listSignedDeclarations(db, event.id);
     expect(all.map((s) => s.typedName)).toEqual(["Ana Popescu", "Ion Ionescu"]);
+    // The export's declaration columns (§NNN): each registration's latest acceptance, its version
+    // and moment; a registration with none is absent, which the file prints as two blanks.
+    const latest = await listLatestDeclarationAcceptances(db, [first.id, second.id, "00000000-0000-4000-8000-000000000000"]);
+    expect(latest.get(first.id)).toEqual({ version: 1, acceptedAt: NOW });
+    expect(latest.get(second.id)).toEqual({ version: 1, acceptedAt: new Date(NOW.getTime() + 60_000) });
+    expect(latest.size).toBe(2);
     // The bundle still carries whole identity documents, so every page's footer warns to delete
     // it within seven days (§418); labels carry the notice the way `declarationWords` does.
     const bundleLabels = { ...LABELS, idDocumentsNotice: declarationWords("ro", NOW).idDocumentsNotice };

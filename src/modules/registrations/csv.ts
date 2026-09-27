@@ -74,6 +74,12 @@ export type RegistrationCsvRow = {
    */
   termsVersion?: number | null;
   termsAcceptedAt?: string;
+  /**
+   * The declaration the registration's latest acceptance was signed against (§NNN): its version
+   * and the moment, online or recorded from paper at the desk (§67). Empty while nothing is signed.
+   */
+  declarationVersion?: number | null;
+  declarationSignedAt?: string;
 };
 
 const HEADER = [
@@ -104,6 +110,9 @@ const HEADER = [
   // Last (§425), so a script that reads the columns by position still finds every earlier one.
   "Terms version",
   "Terms accepted",
+  // After the terms (§NNN), last for the same reason: every earlier column keeps its position.
+  "Declaration version",
+  "Declaration signed",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -134,6 +143,8 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.emailBounced ? "Yes" : "",
         String(row.termsVersion ?? ""),
         row.termsAcceptedAt ?? "",
+        String(row.declarationVersion ?? ""),
+        row.declarationSignedAt ?? "",
       ]
         .map(csvCell)
         .join(","),

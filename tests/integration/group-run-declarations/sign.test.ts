@@ -15,7 +15,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
-import { findSignedGroupRunDeclaration } from "@/modules/group-run-declarations/repository";
+import { findSignedGroupRunDeclaration, listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
 import { eraseGroupRunDeclaration, type GroupRunSigningInput, signGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pdf";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
@@ -162,6 +162,8 @@ describe("§393 signing a group run's self-declaration", () => {
     expect(rows).toHaveLength(1);
     // The platform's text names no identity document (§418): whatever was posted, none is kept.
     expect(rows[0]).toMatchObject({ eventId: event.id, typedName: "Ana Popescu", idDocument: null, email: "ana@example.ro", locale: "ro", declarationVersion: 1 });
+    // The backoffice's list says which version each one signed (§NNN).
+    expect(await listGroupRunDeclarations(db, event.id)).toMatchObject([{ typedName: "Ana Popescu", version: 1 }]);
 
     const outbox = await db.select().from(emailOutbox);
     expect(outbox.map((row) => [row.messageType, row.recipientEmail]).sort()).toEqual([

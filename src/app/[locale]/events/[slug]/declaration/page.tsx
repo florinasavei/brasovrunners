@@ -12,6 +12,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -78,6 +79,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const t = await getTranslations("Event");
   const tDeclare = await getTranslations("Registrations");
   const formCopy = await getTranslations("Registration");
+  const legalCopy = await getTranslations("Legal");
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   const back = (
     <Typography variant="body2" sx={{ mb: 2 }}>
@@ -159,6 +161,13 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         {t("groupRunDeclaration.page.languageNote")}
       </Typography>
 
+      {/* Which approved text this is (§NNN): its version and the day it took effect, as the terms page says its own (§323). */}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
+        {legalCopy("inForce", {
+          version: document.version,
+          date: formatDay(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+        })}
+      </Typography>
       {/* The approved text, its blanks filled for this run and left dotted for the signer (§95, §225). */}
       <LegalDocumentBody
         body={document.body}

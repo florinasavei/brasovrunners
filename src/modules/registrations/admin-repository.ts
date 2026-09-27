@@ -760,6 +760,34 @@ export async function listWorkbookDetails<T extends Record<string, unknown>>(
   return new Map(rows.map((row) => [row.id, row]));
 }
 
+/** The declaration a registration's latest acceptance was signed against (§NNN): its version and when. */
+export type LatestDeclarationAcceptance = { version: number; acceptedAt: Date };
+
+/**
+ * The latest declaration acceptance of each exported registration (§NNN), for the export's two
+ * declaration columns: one query for the lot, newest first, the first per registration kept — the
+ * same "latest" the signed PDF is drawn from (`findSignedDeclaration`). A registration with no
+ * acceptance is absent from the map, which the file prints as two blank cells.
+ */
+export async function listLatestDeclarationAcceptances<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, LatestDeclarationAcceptance>> {
+  if (registrationIds.length === 0) return new Map();
+  const rows = await db
+    .select({
+      registrationId: declarationAcceptances.registrationId,
+      version: declarationAcceptances.declarationVersion,
+      acceptedAt: declarationAcceptances.acceptedAt,
+    })
+    .from(declarationAcceptances)
+    .where(inArray(declarationAcceptances.registrationId, [...registrationIds]))
+    .orderBy(desc(declarationAcceptances.acceptedAt));
+  const latest = new Map<string, LatestDeclarationAcceptance>();
+  for (const row of rows) if (!latest.has(row.registrationId)) latest.set(row.registrationId, { version: row.version, acceptedAt: row.acceptedAt });
+  return latest;
+}
+
 /**
  * What the desk sees (BR-REQ-037-08): one registration as a volunteer needs it to hand over a
  * number — name, status, number, check-in state — and nothing more. No address, no details.

@@ -132,6 +132,44 @@ const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
 /**
+ * Which version of which text a page carries (§NNN): "Versiunea 3 · sha256 0123456789abcdef…" — the
+ * version's number and the first sixteen characters of its hash, as the legal documents' own PDF
+ * prints them (§53). Under the title of every entry and in the footer of every page, so a page that
+ * travels alone — the second sheet of a printed form, one page of the event's bundle, the file a
+ * runner forwarded — still says which approved text it is, not only the signature block at its end.
+ * The full hash stays under the signature and in the file's metadata. Pure, for its test.
+ */
+export function declarationVersionLine(entry: Pick<DeclarationEntry, "version" | "contentSha256">, versionLabel: string): string {
+  return `${versionLabel} ${entry.version} · sha256 ${entry.contentSha256.slice(0, 16)}…`;
+}
+
+/**
+ * The footer's first line, left of the page count (§NNN): the club, the version of the text on
+ * that page, and when the file was drawn. A bundle holds many entries, possibly of different
+ * versions — a declaration signed before the club approved a new text keeps its own — so the
+ * version is the page's own entry's, never the file's first. A page with no entry (the empty
+ * bundle) says what it said before. Pure, for its test.
+ */
+export function declarationFooterLine(
+  entry: Pick<DeclarationEntry, "version" | "contentSha256"> | undefined,
+  labels: Pick<DeclarationPdfInput["labels"], "organization" | "version" | "generatedOn">,
+): string {
+  return [labels.organization, entry ? declarationVersionLine(entry, labels.version) : null, labels.generatedOn].filter(Boolean).join(" · ");
+}
+
+/**
+ * Which entry each page of the file belongs to (§NNN), from the number of pages the file had after
+ * each entry was drawn: `[2, 3]` is two pages of the first entry and one of the second. Pure, for its test.
+ */
+export function pageOwners<E>(entries: readonly E[], pagesAfterEach: readonly number[]): E[] {
+  const owners: E[] = [];
+  entries.forEach((entry, index) => {
+    while (owners.length < (pagesAfterEach[index] ?? owners.length)) owners.push(entry);
+  });
+  return owners;
+}
+
+/**
  * The footer's second line (§418), or nothing: only a file that still carries an identity document
  * the database has not cleared — a signed entry's, the declarant's or a minor's — says to delete it.
  * A blank form, or a bundle drawn after the seven-day sweep, has none to warn about. Pure, for its test.
@@ -179,7 +217,13 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
 
   // `openImage` is real and undeclared in `@types/pdfkit`; the object it returns is what `image()` reuses.
   const lockup = (doc as unknown as { openImage(src: Buffer): unknown }).openImage(LOGO);
-  for (const entry of input.entries) drawEntry(doc, entry, input.labels, lockup);
+  // How many pages the file has after each entry, so each page's footer names its own entry's version (§NNN).
+  const pagesAfterEach: number[] = [];
+  for (const entry of input.entries) {
+    drawEntry(doc, entry, input.labels, lockup);
+    pagesAfterEach.push(doc.bufferedPageRange().count);
+  }
+  const owners = pageOwners(input.entries, pagesAfterEach);
 
   // A bundle with nothing in it is still a valid file that says so, rather than an error.
   if (input.entries.length === 0) {
@@ -187,8 +231,9 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
     doc.font("body").fontSize(12).fillColor(COLOR.inkMuted).text("—", MARGIN.left, MARGIN.top);
   }
 
-  // Footers: the page count is what makes a missing page noticeable; the hash of each text
-  // is under its own signature block, where a printed copy is checked against the version.
+  // Footers: the page count is what makes a missing page noticeable; the version and the start of
+  // the hash of the text on that page (§NNN) are what make a loose page say what it is. The full
+  // hash is under each text's own signature block, where a printed copy is checked against it.
   const range = doc.bufferedPageRange();
   const idDocumentsNotice = idDocumentsNoticeFor(input);
   for (let i = range.start; i < range.start + range.count; i++) {
@@ -197,12 +242,13 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
     doc.page.margins.bottom = 0;
     const y = PAGE.height - MARGIN.bottom + DECLARATION_FOOTER.gap;
     doc.moveTo(MARGIN.left, y - 8).lineTo(PAGE.width - MARGIN.right, y - 8).strokeColor(COLOR.line).lineWidth(0.5).stroke();
+    const pageLabel = input.labels.page(i + 1, range.count);
+    // The left line ends where the page count begins, measured, whatever length the language gives the date.
+    const pageLabelWidth = doc.font("body").fontSize(DECLARATION_FOOTER.size).widthOfString(pageLabel);
     doc
-      .font("body")
-      .fontSize(DECLARATION_FOOTER.size)
       .fillColor(COLOR.inkMuted)
-      .text(`${input.labels.organization} · ${input.labels.generatedOn}`, MARGIN.left, y, { width: TEXT_WIDTH - 90, lineBreak: false })
-      .text(input.labels.page(i + 1, range.count), MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
+      .text(declarationFooterLine(owners[i - range.start], input.labels), MARGIN.left, y, { width: TEXT_WIDTH - pageLabelWidth - 8, lineBreak: false })
+      .text(pageLabel, MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
     if (idDocumentsNotice) {
       doc
         .font("bold")
@@ -226,6 +272,10 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   doc.font("bold").fontSize(14).fillColor(COLOR.ink).text(entry.title.toUpperCase(), MARGIN.left, doc.y, { width: TEXT_WIDTH, align: "center" });
   doc.moveDown(0.2);
   doc.font("body").fontSize(11).fillColor(COLOR.ink).text(entry.eventTitle, { width: TEXT_WIDTH, align: "center" });
+  // Which approved text this is, before a word of it is read (§NNN) — on the blank form the desk
+  // prints too, so a stack of paper says which version each sheet was printed from.
+  doc.moveDown(0.2);
+  doc.font("body").fontSize(8.5).fillColor(COLOR.inkMuted).text(declarationVersionLine(entry, labels.version), { width: TEXT_WIDTH, align: "center" });
   doc.moveDown(1.2);
 
   // The text. A heading is kept with its first paragraph; a paragraph that starts with a

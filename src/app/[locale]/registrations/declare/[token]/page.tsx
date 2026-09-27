@@ -13,7 +13,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
-import { formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
@@ -157,6 +157,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
+  // The version line the terms and the privacy notice carry (§323), over the text being signed (§NNN).
+  const legalCopy = await getTranslations("Legal");
 
   /*
     The hold had lapsed at the press and the place went on down the line, and the line was full
@@ -564,7 +566,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             until they are typed below — the form is where they are asked, the text is where they
             land when printed — except a guardian's on an adult's declaration, which is the em
             dash `{{guardian}}` reads too (§330). What is signed is the template, by id and hash.
+            Its version and the day it took effect over it (§NNN), as the terms page says its own
+            (§323) — the number the PDF, the email's copy and the registration's page repeat.
           */}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
+            {legalCopy("inForce", {
+              version: declaration.version,
+              date: formatDay(declaration.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+            })}
+          </Typography>
           <LegalDocumentBody
             body={declaration.body}
             /* The blanks, passed rather than pre-merged, so the filled-in parts render bold (§225). */
