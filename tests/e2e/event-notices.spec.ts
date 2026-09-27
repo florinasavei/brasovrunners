@@ -107,7 +107,9 @@ test.describe("§331 the participants hear about a change when the organizer ask
 
     // A new meeting point, in the Locul box — amber now, its sentence saying what a change does.
     const place = await openEditorBox(page, "Când și unde");
-    await expect(place.getByTestId("risk-line")).toContainText("Cei înscriși știu locul");
+    // Since §481 the card holds the date and the place together and says both risk sentences —
+    // the place's is the one this test is about.
+    await expect(place.getByTestId("risk-line").filter({ hasText: "Cei înscriși știu locul" })).toHaveCount(1);
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
     // The English box has a name of its own, so it keeps it until it is told (§362) — and says so,
     // under the box. The copy button never writes over a name that is there: it is off.
