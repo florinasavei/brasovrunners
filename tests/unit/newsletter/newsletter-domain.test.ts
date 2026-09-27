@@ -8,7 +8,7 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { alertDayOf, EVENT_ALERT_WINDOW_DAYS, eventAlertTopics, eventAlertWanted } from "@/modules/newsletter/domain/alerts";
 import { checkNewsletterWords, NEWSLETTER_BODY_MAX, readNewsletterWords } from "@/modules/newsletter/domain/message";
-import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
+import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, RETIRED_TOPICS, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
 import { newsletterMergeValues, topicsPhrase } from "@/modules/newsletter/topic-words";
 import { newsletterDialogOpen, parseNewsletterFields, parseNewsletterOutcome } from "@/modules/newsletter/ui/newsletter-box";
 import { BULK_MESSAGE_TYPES, bulkBudget, isBulkMessage } from "@/modules/notifications/domain/bulk";
@@ -24,8 +24,9 @@ const DAY = 24 * 60 * 60_000;
 
 /** §445 — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
 describe("§445 the newsletter's topics", () => {
-  it("offers the brief's eight, in its order, 'all the news' first, every name and hint in both languages", () => {
-    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "DISCOUNTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
+  it("offers the brief's topics but the retired discount codes (§NNN), in its order, 'all the news' first, every name and hint in both languages", () => {
+    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
+    expect(RETIRED_TOPICS).toEqual(["DISCOUNTS"]);
     expect(ro.Newsletter.topics).toMatchObject({
       ALL: "Toate noutățile",
       BIG_EVENTS: "Evenimente mari",
@@ -37,37 +38,45 @@ describe("§445 the newsletter's topics", () => {
       RESULTS_PHOTOS: "Rezultate și poze",
     });
     for (const catalogue of [ro, en]) {
-      for (const topic of newsletterTopic.enumValues) {
-        expect(catalogue.Newsletter.topics[topic], topic).toBeTruthy();
-        expect(catalogue.Newsletter.topicHints[topic], topic).toBeTruthy();
-      }
+      // Every value keeps its name — an old send's row may still say DISCOUNTS — and every offered one a hint.
+      for (const topic of newsletterTopic.enumValues) expect(catalogue.Newsletter.topics[topic], topic).toBeTruthy();
+      for (const topic of NEWSLETTER_TOPICS) expect(catalogue.Newsletter.topicHints[topic], topic).toBeTruthy();
+      expect(catalogue.Newsletter.topicHints).not.toHaveProperty("DISCOUNTS");
     }
     expect(SENDABLE_TOPICS).not.toContain("ALL");
     expect(isSendableTopic("ALL")).toBe(false);
-    expect(isSendableTopic("DISCOUNTS")).toBe(true);
+    expect(isSendableTopic("GEAR_TESTING")).toBe(true);
+    expect(isSendableTopic("DISCOUNTS")).toBe(false);
+    expect(SENDABLE_TOPICS).not.toContain("DISCOUNTS");
     expect(isSendableTopic("SPAM")).toBe(false);
   });
 
   it("reads the ticks in the catalogue's order, once each, 'everything' alone, nothing that is not a topic", () => {
-    expect(normalizeTopics(["WEEKLY_RUNS", "DISCOUNTS", "WEEKLY_RUNS", "x", 3])).toEqual(["DISCOUNTS", "WEEKLY_RUNS"]);
+    expect(normalizeTopics(["WEEKLY_RUNS", "GEAR_TESTING", "WEEKLY_RUNS", "x", 3])).toEqual(["GEAR_TESTING", "WEEKLY_RUNS"]);
+    // A retired topic posted by an old page is dropped like any word that is not a topic (§NNN).
+    expect(normalizeTopics(["DISCOUNTS", "VOLUNTEERING"])).toEqual(["VOLUNTEERING"]);
+    expect(normalizeTopics(["DISCOUNTS"])).toEqual([]);
     expect(normalizeTopics(["VOLUNTEERING", "ALL"])).toEqual(["ALL"]);
     expect(normalizeTopics([])).toEqual([]);
   });
 
   it("delivers a send to a subscriber of any of its topics, and to everything's", () => {
-    expect(receives(["ALL"], ["DISCOUNTS"])).toBe(true);
-    expect(receives(["DISCOUNTS"], ["DISCOUNTS"])).toBe(true);
+    expect(receives(["ALL"], ["GEAR_TESTING"])).toBe(true);
+    expect(receives(["GEAR_TESTING"], ["GEAR_TESTING"])).toBe(true);
     expect(receives(["VOLUNTEERING"], ["SPECIAL_EVENTS", "BIG_EVENTS"])).toBe(false);
     expect(receives(["BIG_EVENTS"], ["SPECIAL_EVENTS", "BIG_EVENTS"])).toBe(true);
     // An event no topic describes goes to "all the news" alone.
     expect(receives(["ALL"], ["ALL"])).toBe(true);
-    expect(receives(["DISCOUNTS", "WEEKLY_RUNS"], ["ALL"])).toBe(false);
+    expect(receives(["GEAR_TESTING", "WEEKLY_RUNS"], ["ALL"])).toBe(false);
   });
 
   it("names the topics as one quoted phrase in each language", () => {
-    expect(topicsPhrase("ro", ["BIG_EVENTS", "DISCOUNTS"])).toBe("„Evenimente mari” și „Coduri de reducere”");
+    expect(topicsPhrase("ro", ["BIG_EVENTS", "GEAR_TESTING"])).toBe("„Evenimente mari” și „Testări de încălțăminte”");
     expect(topicsPhrase("en", ["WEEKLY_RUNS"])).toBe("“The weekly runs”");
     expect(newsletterMergeValues("en").newsletterTopics).toContain("“All the news”");
+    // The privacy notice lists what a subscriber may choose — no longer the discount codes (§NNN).
+    expect(newsletterMergeValues("ro").newsletterTopics).not.toContain("Coduri de reducere");
+    expect(newsletterMergeValues("en").newsletterTopics).not.toContain("Discount codes");
   });
 });
 
@@ -206,8 +215,8 @@ describe("§445 the three messages", () => {
   it("confirms with the topics and the link's life, and never offers an unsubscribe link before there is a subscription", () => {
     const message = renderBilingual("NEWSLETTER_CONFIRM", "ro", emailSampleFor("NEWSLETTER_CONFIRM", "ro"), action);
     expect(message.subject).toContain("Confirmă abonarea");
-    expect(message.text).toContain("Primești noutățile clubului despre: „Evenimente mari” și „Coduri de reducere”.");
-    expect(message.text).toContain("You receive the club's news about: “Big events” and “Discount codes”.");
+    expect(message.text).toContain("Primești noutățile clubului despre: „Evenimente mari” și „Testări de încălțăminte”.");
+    expect(message.text).toContain("You receive the club's news about: “Big events” and “Shoe testing”.");
     expect(message.text).toContain("Linkul este valabil");
     expect(message.text).not.toContain("dezabonează-te");
     const already = renderBilingual("NEWSLETTER_CONFIRM", "ro", { ...emailSampleFor("NEWSLETTER_CONFIRM", "ro"), newsletterAlready: true }, action);
@@ -218,9 +227,9 @@ describe("§445 the three messages", () => {
 
   it("sends the club's words in the subscriber's language first, the way out under them, and the notice's line", () => {
     const message = renderBilingual("NEWSLETTER", "en", emailSampleFor("NEWSLETTER", "en"), undefined);
-    expect(message.subject).toBe("A discount code for running shoes / Cod de reducere la încălțăminte de alergare");
+    expect(message.subject).toBe("Running shoes to try at Saturday's run / Testare de încălțăminte de alergare la alergarea de sâmbătă");
     const [english, romanian] = message.text.split("— — —");
-    expect(english).toContain("Our partner offers subscribers 15% off");
+    expect(english).toContain("A partner shop brings running shoes to try");
     expect(english).toContain("Choose what you receive, or unsubscribe");
     expect(english).toContain("because you asked for the club's news");
     expect(romanian).toContain("Alege ce primești sau dezabonează-te");
