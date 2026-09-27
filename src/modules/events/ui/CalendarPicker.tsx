@@ -3,6 +3,7 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
+import { DENSITY } from "@/theme/density";
 
 /**
  * "Select per month, or per year" (`DECISIONS.md` §116): two native selects that go straight
@@ -51,9 +52,16 @@ export default function CalendarPicker({
   };
 
   const select = { select: { native: true }, inputLabel: { shrink: true } } as const;
+  /*
+    On a phone the two selects share one row with ‹ Azi › (§NNN): they take what the row leaves
+    and may shrink below their words' width rather than wrap the row, in a smaller type with a
+    narrower caret gutter; the height stays the 44-pixel target (BR-REQ-041-01 criterion 6).
+    From `sm` nothing changes.
+  */
+  const phoneSelect = { fontSize: { xs: "0.8125rem" }, pl: { xs: 1 }, pr: { xs: "24px !important" } } as const;
 
   return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+    <Stack direction="row" spacing={{ xs: DENSITY.gapXs, sm: 1 }} sx={{ alignItems: "center", flex: { xs: "1 1 auto", sm: "0 0 auto" }, minWidth: 0 }}>
       {view === "month" && (
         <TextField
           select
@@ -62,7 +70,7 @@ export default function CalendarPicker({
           value={month}
           onChange={(event) => go({ year, month: Number(event.target.value) })}
           slotProps={select}
-          sx={{ minWidth: { xs: 130, sm: 118 }, "& select": { minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
+          sx={{ flex: { xs: "3 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 118 }, "& select": { ...phoneSelect, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
         >
           {monthNames.map((name, index) => (
             <option key={name} value={index + 1}>
@@ -78,7 +86,7 @@ export default function CalendarPicker({
         value={year}
         onChange={(event) => go({ year: Number(event.target.value), month })}
         slotProps={select}
-        sx={{ minWidth: { xs: 100, sm: 88 }, "& select": { minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
+        sx={{ flex: { xs: "2 1 0", sm: "0 0 auto" }, minWidth: { xs: 0, sm: 88 }, "& select": { ...phoneSelect, minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
       >
         {years.map((candidate) => (
           <option key={candidate} value={candidate}>

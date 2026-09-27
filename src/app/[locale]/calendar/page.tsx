@@ -28,6 +28,7 @@ import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import Wordmark from "@/shared/ui/Wordmark";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -145,10 +146,18 @@ export default async function CalendarPage({ params, searchParams }: Props) {
           page's one `<h1>`; the font is the layout's, already loaded for every page. */}
       <Wordmark />
 
-      <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
-        {t("calendar.pageTitle")}
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
+      {/* On a phone the head is the H1 and a «?» (§NNN): the intro sentence moves into the «?»'s
+          tooltip and accessible name, so the month starts a paragraph higher. From `sm` the
+          sentence stands under the heading as before and the «?» is not drawn — never both. */}
+      <Box sx={{ display: "flex", alignItems: "baseline", mt: 1 }}>
+        <Typography variant="h1" gutterBottom sx={headingRule}>
+          {t("calendar.pageTitle")}
+        </Typography>
+        <Box component="span" data-testid="calendar-intro-help" sx={{ display: { xs: "inline-flex", sm: "none" } }}>
+          <QuietHelp text={t("calendar.pageIntro")} glyphSize={18} />
+        </Box>
+      </Box>
+      <Typography variant="body1" color="text.secondary" sx={{ display: { xs: "none", sm: "block" }, mb: { xs: DENSITY.gapSm, sm: 2 } }}>
         {t("calendar.pageIntro")}
       </Typography>
 
