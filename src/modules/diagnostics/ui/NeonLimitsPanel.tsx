@@ -33,6 +33,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 type Props = {
   locale: Locale;
@@ -133,10 +134,17 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   if (!reading.ok) {
     const { failure } = reading;
     return (
-      <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+      <Panel
+        level={level}
+        title={t("tasks.neonLimits.title")}
+        intro={t("tasks.neonLimits.intro")}
+        introMore={t("tasks.neonLimits.introMore")}
+        data-testid="neon-limits"
+      >
         {failure.kind === "unconfigured" ? (
           <Typography variant="body2" data-testid="neon-limits-unconfigured">
             {t("tasks.neonLimits.unconfigured", { missing: failure.missing.join(", ") })}
+            <QuietHelp text={t("tasks.neonLimits.unconfiguredMore")} />
           </Typography>
         ) : (
           <Typography variant="body2" data-testid="neon-limits-failed">
@@ -145,6 +153,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
         )}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           {t("tasks.neonLimits.keyNeeded")}
+          <QuietHelp text={t("tasks.neonLimits.keyNeededMore")} />
         </Typography>
       </Panel>
     );
@@ -196,7 +205,13 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   ];
 
   return (
-    <Panel level={level} title={t("tasks.neonLimits.title")} intro={t("tasks.neonLimits.intro")} data-testid="neon-limits">
+    <Panel
+      level={level}
+      title={t("tasks.neonLimits.title")}
+      intro={t("tasks.neonLimits.intro")}
+      introMore={t("tasks.neonLimits.introMore")}
+      data-testid="neon-limits"
+    >
       {/* What Neon holds now, in words: the ceiling and its memory, and the limit. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-readout">
         {t("tasks.neonLimits.readout", {
@@ -210,6 +225,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
       {model.price && (
         <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="neon-limits-price">
           {t("tasks.neonLimits.price", { rate: usdPerHour(rate), perHour: usdPerHour(model.price.usdPerHour), perMonth: usd(model.price.usdPerMonth) })}
+          <QuietHelp text={t("tasks.neonLimits.priceMore")} />
         </Typography>
       )}
       <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="neon-limits-usage">
@@ -219,8 +235,12 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
         {model.defaults.maxCu === null
           ? t("tasks.neonLimits.defaultsUnset")
           : t("tasks.neonLimits.defaults", { min: cu(model.defaults.minCu ?? NEON_MIN_CU), max: cu(model.defaults.maxCu) })}
-        {model.computeCount > 1 && ` ${t("tasks.neonLimits.manyComputes", { count: model.computeCount })}`}
       </Typography>
+      {model.computeCount > 1 && (
+        <Typography variant="caption" color="text.secondary" component="div">
+          {t("tasks.neonLimits.manyComputes", { count: model.computeCount })}
+        </Typography>
+      )}
       <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="neon-limits-compute">
         {t("tasks.neonLimits.computeReadout", {
           min: cu(currentMin),
@@ -264,7 +284,8 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 label={t("tasks.neonLimits.maxCu")}
                 defaultValue={currentIsOffered ? String(model.maxCu) : ""}
                 slotProps={{ select: { native: true } }}
-                helperText={t("tasks.neonLimits.maxCuHelp", { min: cu(NEON_MIN_CU) })}
+                helperText={t("tasks.neonLimits.maxCuHelp")}
+                helpMore={t("tasks.neonLimits.maxCuHelpMore", { min: cu(NEON_MIN_CU) })}
               >
                 {/* A ceiling Neon holds that is not one of the six is not silently replaced by the first. */}
                 {!currentIsOffered && <option value="">{t("tasks.neonLimits.choose")}</option>}
@@ -293,6 +314,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 defaultValue={minIsOffered ? String(currentMin) : ""}
                 slotProps={{ select: { native: true } }}
                 helperText={t("tasks.neonLimits.minCuHelp", { min: cu(NEON_MIN_CU) })}
+                helpMore={t("tasks.neonLimits.minCuHelpMore")}
               >
                 {!minIsOffered && <option value="">{t("tasks.neonLimits.choose")}</option>}
                 {ceilings.map((floor) => (
@@ -309,7 +331,8 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 label={t("tasks.neonLimits.suspendMode")}
                 defaultValue={model.suspendMode}
                 slotProps={{ select: { native: true } }}
-                helperText={t(alwaysOnAllowed ? "tasks.neonLimits.suspendHelp" : "tasks.neonLimits.suspendHelpFree", { rate: usdPerHour(rate) })}
+                helperText={t(alwaysOnAllowed ? "tasks.neonLimits.suspendHelp" : "tasks.neonLimits.suspendHelpFree")}
+                helpMore={alwaysOnAllowed ? t("tasks.neonLimits.suspendHelpMore", { rate: usdPerHour(rate) }) : undefined}
               >
                 {suspendModes.map((mode) => (
                   <option key={mode} value={mode}>
@@ -322,6 +345,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
               <Alert severity="error" data-testid="neon-limits-warning">
                 <AlertTitle>{t("tasks.neonLimits.warningTitle")}</AlertTitle>
                 {t("tasks.neonLimits.warning", { end: periodEnd })}
+                <QuietHelp text={t("tasks.neonLimits.warningMore")} />
               </Alert>
               {/*
                 The advice is a limit with room plus Neon's spending notification, on every
@@ -330,8 +354,13 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
               */}
               <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-recommendation">
                 {t("tasks.neonLimits.recommend", { hours: hours(recommendedNeonQuotaCuHours(appEnv)) })}
-                {production && ` ${t("tasks.neonLimits.recommendConfirm")}`}
+                <QuietHelp text={t("tasks.neonLimits.recommendMore")} />
               </Typography>
+              {production && (
+                <Typography variant="body2" data-testid="neon-limits-recommend-confirm">
+                  {t("tasks.neonLimits.recommendConfirm")}
+                </Typography>
+              )}
 
               <RecallField
                 select
@@ -357,8 +386,8 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 {t("tasks.neonLimits.floor", {
                   used: hours(model.usedCuHours),
                   smallest: hours(model.smallestQuotaCuHours),
-                  margin: NEON_QUOTA_MARGIN_CU_HOURS,
                 })}
+                <QuietHelp text={t("tasks.neonLimits.floorMore", { margin: NEON_QUOTA_MARGIN_CU_HOURS })} />
               </Typography>
               {production && (
                 <CheckboxField name="confirmSuspension">{t("tasks.neonLimits.confirm", { end: periodEnd })}</CheckboxField>
@@ -366,6 +395,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
 
               <Typography variant="caption" color="text.secondary">
                 {t("tasks.neonLimits.writeNote")}
+                <QuietHelp text={t("tasks.neonLimits.writeNoteMore")} />
               </Typography>
               <Box>
                 <GlyphSubmitButton label={t("tasks.neonLimits.save")} pendingLabel={t("tasks.neonLimits.saving")} icon="save" />

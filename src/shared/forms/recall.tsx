@@ -3,6 +3,7 @@
 import Box, { type BoxProps } from "@mui/material/Box";
 import TextField, { type TextFieldProps } from "@mui/material/TextField";
 import { createContext, type InputHTMLAttributes, type ReactNode, useContext } from "react";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import { fieldId } from "./outcome";
 
 /**
@@ -78,10 +79,23 @@ export function recalledJson(value: string | undefined, fallback: unknown): unkn
  * the recalled value rather than the one it opened with. A plain input would have followed its
  * `defaultValue` anyway; the key makes the two behave alike.
  */
-export default function RecallField({ name, ...props }: TextFieldProps & { name: string }) {
+export default function RecallField({
+  name,
+  helpMore,
+  ...props
+}: TextFieldProps & {
+  name: string;
+  /**
+   * What the help says beyond its one sentence (§NNN): the discreet «?» (`QuietHelp`) at the end of
+   * the helper line, its words the tooltip and the accessible name. A string, so a Server Component
+   * may pass it; the glyph is made here, on the client side of the boundary (§370).
+   */
+  helpMore?: string;
+}) {
   const recall = useRecall();
   const recalled = recall.value(name);
   const named = recall.named(name);
+  const help = named && recall.fieldError ? recall.fieldError : props.helperText;
   return (
     <TextField
       key={recall.generation}
@@ -90,7 +104,16 @@ export default function RecallField({ name, ...props }: TextFieldProps & { name:
       {...props}
       defaultValue={recalled ?? props.defaultValue}
       error={props.error || named}
-      helperText={named && recall.fieldError ? recall.fieldError : props.helperText}
+      helperText={
+        helpMore ? (
+          <>
+            {help}
+            <QuietHelp text={helpMore} />
+          </>
+        ) : (
+          help
+        )
+      }
     />
   );
 }

@@ -85,16 +85,18 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(html.match(/<option value="(0\.25|0\.5|1|2|4|8)"/g)).toHaveLength(12);
     expect(html).toMatch(/<option value="1" selected="">/);
     expect(html).toMatch(/<option value="none" selected="">/);
-    expect(words).toContain("O limită nouă trebuie să fie de cel puțin 17,4 ore-CU (consumul plus 5 de marjă)");
+    // One sentence on the card; the margin's arithmetic in its «?» (§NNN).
+    expect(words).toContain("o limită nouă trebuie să fie de cel puțin 17,4 ore-CU.");
+    expect(html).toContain("Adică consumul plus 5 de marjă");
     // The warning is on the page, not folded, and says the site stops.
     expect(html).toContain('data-testid="neon-limits-warning"');
     expect(words).toContain("Neon SUSPENDĂ baza de date");
     // QA: the recommendation is a limit with room, QA's own figure (SETUP.md §40), and no
     // confirmation box — that guard is production's.
     expect(html).toContain('data-testid="neon-limits-recommendation"');
-    expect(words).toContain("Recomandat: o limită lunară cu rezervă — 30 ore-CU pe acest mediu");
-    expect(words).toContain("notificarea de cheltuieli de pe pagina Billing din Neon");
-    expect(words).not.toContain("Pe producție, o limită nouă, schimbată sau scoasă cere bifa");
+    expect(words).toContain("Recomandat: o limită cu rezervă, 30 ore-CU pe acest mediu");
+    expect(words).toContain("notificarea de cheltuieli din Neon → Billing");
+    expect(words).not.toContain("Pe producție, orice schimbare a limitei cere bifa");
     expect(html).not.toContain('name="confirmSuspension"');
   });
 
@@ -103,10 +105,10 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     const words = text(html);
     // The owner capped production (2026-09-23): the advice is production's own 100 CU-hours plus
     // Neon's spending notification, and nothing on the card advises against a limit.
-    expect(words).toContain("Recomandat: o limită lunară cu rezervă — 100 ore-CU pe acest mediu");
+    expect(words).toContain("Recomandat: o limită cu rezervă, 100 ore-CU pe acest mediu");
     // Setting, changing and removing production's limit all ask for the one box (§327: never left uncapped by a click).
-    expect(words).toContain("Pe producție, o limită nouă, schimbată sau scoasă cere bifa de confirmare de mai jos");
-    expect(words).toContain("„Fără limită” lasă producția fără niciun plafon de cheltuieli");
+    expect(words).toContain("Pe producție, orice schimbare a limitei cere bifa de confirmare de mai jos");
+    expect(words).toContain("fără limită, producția nu are plafon");
     expect(words).not.toContain("fără limită pe producție");
     expect(html).toContain('name="confirmSuspension"');
     // A limit in force is said above the form, and chosen in it.
@@ -194,8 +196,7 @@ describe("§479 the compute's floor and scale to zero, and the money the confirm
     const format = createFormatter({ locale: "ro" });
     const numbers = { number: (value: number, options?: { minimumFractionDigits?: number; maximumFractionDigits?: number }) => format.number(value, options) };
     const now = { minCu: 0.25, maxCu: 1, suspendMode: "auto" as const };
-    const free =
-      "Pe planul Free schimbarea nu costă nimic până se consumă cele 100 ore-CU incluse în lună; o mărime mai mare le consumă mai repede, iar când se termină, Neon oprește baza până la perioada următoare.";
+    const free = "Pe planul Free schimbarea nu costă nimic până se consumă cele 100 ore-CU ale lunii, apoi Neon oprește baza; o mărime mai mare le consumă mai repede.";
 
     // Free: no USD figure at all, whatever the change.
     expect(moneySentence(t, numbers, now, { ...now, maxCu: 2 }, "FREE")).toBe(free);

@@ -2058,76 +2058,80 @@
       },
       "neonPlan": {
         "title": "Planul Neon (baza de date)",
-        "intro": "Platforma citește planul de la Neon: proiectul spune pe ce plan e contul care îl deține, la fiecare deschidere a paginii. Alegerea de mai jos e rezerva, folosită doar când cheia NEON_API_KEY lipsește sau Neon nu răspunde. De aici se iau cifrele de pe /devs și rândul Neon de mai jos: pe Free, plafonul de ore și spațiul, cu roșu de la 80%; pe Launch, costul estimat la tarifele planului, fără plafon.",
+        "intro": "Planul se citește de la Neon; alegerea de mai jos e doar rezerva.",
         "inForce": {
           "free": "Planul: Free — {of} ore-CU pe lună pe proiect, incluse; când se termină, baza de date se oprește până luna următoare.",
           "freeMeasured": "Planul: Free — {cu} din {of} ore-CU folosite în perioada aceasta ({percent}%); când se termină, baza de date se oprește până luna următoare.",
-          "launch": "Planul: Launch — plătit pe consum, {rate} $/oră-CU, fără plafon și fără oprire. Orele apar când NEON_API_KEY e setat.",
-          "launchMeasured": "Planul: Launch — plătit pe consum. Ore de calcul în perioada aceasta: {cu}; cost estimat: {usd} $ ({rate} $/oră-CU)."
+          "launch": "Planul: Launch — plătit pe consum, {rate} $/oră-CU, fără plafon; orele apar când NEON_API_KEY e setat.",
+          "launchMeasured": "Planul: Launch — {cu} ore-CU în perioada aceasta, cost estimat {usd} $ ({rate} $/oră-CU)."
         },
         "source": {
-          "neon": "Citit de la Neon acum: contul e pe planul {name}. Nu trebuie ales nimic mai jos.",
+          "neon": "Citit de la Neon acum: planul {name}, deci nu trebuie ales nimic mai jos.",
           "setting": "Neon nu a spus planul (cheia NEON_API_KEY lipsește sau Neon nu a răspuns), așa că se folosește planul ales mai jos."
         },
-        "estimate": "Cifrele sunt estimări din consumul citit de la Neon; factura o face Neon, cu spațiul și istoricul de restaurare în plus.",
-        "updatedAt": "Setat {when}. Notă: {note}",
+        "estimate": "Cifrele sunt estimări; factura o face Neon.",
+        "updatedAt": "Setat {when} · Notă: {note}",
         "field": "Planul de rezervă, când Neon nu răspunde",
-        "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
+        "fieldHelp": "Prețuri verificate {checkedOn}; se setează pe fiecare mediu în parte.",
         "option": {
           "FREE": "{name} — {cuHours} ore-CU și {storageMb} MB pe lună pe proiect, gratuit; peste, baza de date se oprește",
           "LAUNCH": "{name} — pe consum: {rate} $/oră-CU, {storageRate} $/GB-lună, fără abonament"
         },
         "note": "Notă (de ce, până când)",
-        "december": "Revizuirea din decembrie 2026: dacă facturile spun să reveniți la Free, alegi Free aici — fără deploy. Verifică înainte limitele Free din acel moment, pe amândouă proiectele.",
+        "december": "La revizuirea din decembrie 2026 se poate reveni la Free de aici, fără deploy.",
         "save": "Salvează planul Neon",
         "saving": "Se salvează…",
         "saved": "Planul Neon a fost salvat; cifrele de pe /devs și rândul Neon de mai jos îl folosesc de acum.",
-        "readOnly": "Planul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine."
+        "readOnly": "Planul îl schimbă Administratorul; cifrele de mai sus sunt la zi.",
+        "introMore": "Proiectul spune, la fiecare deschidere a paginii, pe ce plan e contul care îl deține. Rezerva se folosește doar când cheia NEON_API_KEY lipsește sau Neon nu răspunde. Din plan se iau cifrele de pe /devs și rândul Neon din tabel: pe Free plafonul de ore și spațiul, cu roșu de la 80%; pe Launch costul estimat, fără plafon.",
+        "estimateMore": "Sunt calculate din consumul citit de la Neon. Factura are în plus spațiul și istoricul de restaurare.",
+        "fieldHelpMore": "Tarifele și limitele vin din consola Neon și de pe neon.com/pricing. Contul are amândouă proiectele, QA și producția.",
+        "decemberMore": "Alege Free doar dacă facturile spun asta, și verifică înainte limitele Free din acel moment, pe amândouă proiectele."
       },
       "neonLimits": {
         "title": "Limitele bazei de date",
-        "intro": "Două frâne pentru factura Neon, puse direct în Neon: cât de mare poate crește baza de date și câte ore-CU poate consuma într-o perioadă de facturare. Tot ce scrie aici e citit de la Neon la fiecare deschidere a paginii; după salvare vezi ce spune Neon, nu ce s-a trimis.",
-        "unconfigured": "Lipsește {missing} pe acest mediu, așa că pagina nu poate citi limitele și nici nu le poate schimba. Pune NEON_API_KEY și NEON_PROJECT_ID pe proiectul Vercel al mediului (SETUP.md §33) și fă redeploy.",
+        "intro": "Două frâne pentru factura Neon, puse direct în Neon: mărimea bazei de date și orele-CU pe perioadă.",
+        "unconfigured": "Lipsește {missing} pe acest mediu, deci limitele nu pot fi citite sau schimbate (SETUP.md §33).",
         "failure": {
-          "forbidden": "Neon a refuzat cheia (HTTP {status}): cheia din NEON_API_KEY nu are voie să citească acest proiect. Limitele nu pot fi citite, deci nici schimbate.",
-          "busy": "Neon lucrează la altă schimbare pe acest proiect. Reîncarcă pagina peste un minut.",
-          "refused": "Neon a refuzat cererea (HTTP {status}). Verifică NEON_PROJECT_ID: trebuie să fie proiectul acestui mediu.",
-          "unavailable": "Neon are o problemă (HTTP {status}). Limitele nu pot fi citite acum; reîncarcă pagina mai târziu.",
-          "timeout": "Neon nu a răspuns în 5 secunde. Limitele nu pot fi citite acum, deci nici schimbate; reîncarcă pagina peste un minut.",
-          "network": "Neon nu a putut fi contactat (eroare de rețea). Reîncarcă pagina peste un minut.",
-          "unexpected": "Neon a răspuns ceva ce pagina nu știe să citească. Limitele nu pot fi arătate aici; verifică-le în consola Neon."
+          "forbidden": "Neon a refuzat cheia (HTTP {status}), deci limitele nu pot fi citite sau schimbate.",
+          "busy": "Neon lucrează la altă schimbare pe acest proiect; reîncarcă pagina peste un minut.",
+          "refused": "Neon a refuzat cererea (HTTP {status}); verifică dacă NEON_PROJECT_ID e proiectul acestui mediu.",
+          "unavailable": "Neon are o problemă (HTTP {status}); reîncarcă pagina mai târziu.",
+          "timeout": "Neon nu a răspuns în 5 secunde; reîncarcă pagina peste un minut.",
+          "network": "Neon nu a putut fi contactat; reîncarcă pagina peste un minut.",
+          "unexpected": "Neon a răspuns ceva ce pagina nu știe să citească; verifică limitele în consola Neon."
         },
-        "keyNeeded": "Aceeași cheie le și schimbă, dacă are voie să modifice proiectul. O cheie „Project-scoped” are întotdeauna — Neon îi dă acces de Editor pe proiectul ei (Settings al organizației → API keys → Create new → Project-scoped, pe proiectul acestui mediu) — și la fel cheia personală a unui Admin al organizației sau a unui Editor pe proiect. Cheia personală a cuiva cu rol Viewer citește cifrele, dar nu le poate schimba.",
+        "keyNeeded": "Cheia care le poate schimba e una „Project-scoped” pe proiectul acestui mediu.",
         "readout": "Mărimea maximă: {size} · Limită lunară: {quota}",
         "size": "{cu} CU (≈ {ram} GB RAM)",
         "sizeUnknown": "necunoscută (Neon nu a arătat niciun calcul read-write)",
         "quotaNone": "fără",
         "quotaSet": "{hours} ore-CU pe perioadă",
-        "price": "La tariful Launch ({rate} $/oră-CU), la mărimea maximă: cel mult {perHour} $ pe oră cât e trează, adică {perMonth} $ pe lună dacă ar sta trează la maxim tot timpul. Factura obișnuită o dă timpul cât e trează: în medie baza folosește ≈ 0,25 CU.",
+        "price": "La tariful Launch ({rate} $/oră-CU), la mărimea maximă: cel mult {perHour} $ pe oră trează, {perMonth} $ pe lună dacă n-ar dormi deloc.",
         "usage": "În perioada aceasta: {used} ore-CU consumate, {active} ore trează; perioada se încheie {end}.",
         "defaults": "Un calcul creat din nou primește implicit {min}–{max} CU (setarea proiectului).",
         "defaultsUnset": "Proiectul nu are o mărime implicită pentru un calcul nou; la salvare o primește pe cea aleasă mai jos.",
         "manyComputes": "Proiectul are {count} calcule read-write: se arată cea mai mare mărime, iar salvarea le schimbă pe toate.",
-        "quotaActive": "Limită activă: {hours} ore-CU, din care {used} consumate. Când e atinsă, Neon oprește baza de date până {end}.",
-        "readOnly": "Limitele le schimbă Superadministratorul: una greșită poate opri site-ul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "quotaActive": "Limită activă: {used} din {hours} ore-CU consumate; atinsă, oprește baza de date până {end}.",
+        "readOnly": "Limitele le schimbă Superadministratorul, pentru că una greșită poate opri site-ul.",
         "maxCu": "Mărimea maximă a bazei de date",
-        "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare. Mărimea minimă e alegerea de mai jos (cea mai mică: {min} CU). Lângă fiecare mărime, cel mai rău caz la prețul Launch: o oră trează la acea mărime și o lună întreagă trează.",
+        "maxCuHelp": "Site-ul folosește în medie ≈ 0,25 CU; mai mult ajută doar sub încărcare mare.",
         "choose": "— alege o mărime —",
         "option": "{cu} CU (≈ {ram} GB RAM) — cel mult {perHour} $/oră, {perMonth} $/lună",
         "planCeiling": "Planul contului permite cel mult {max} CU, așa că mărimile mai mari nu apar.",
         "warningTitle": "Limita lunară oprește site-ul",
-        "warning": "Când limita e atinsă, Neon SUSPENDĂ baza de date până la următoarea perioadă de facturare ({end}), iar ea nu repornește la următoarea conexiune. Până atunci site-ul nu mai funcționează: nici înscrierile, nici masa din ziua cursei, nici emailurile. Și pagina aceasta are nevoie de baza de date, așa că o limită care a oprit-o se ridică doar din consola Neon.",
-        "recommend": "Recomandat: o limită lunară cu rezervă — {hours} ore-CU pe acest mediu (SETUP.md §40; producția a consumat cam 4 ore-CU pe zi chiar și în zilele cu teste intense) — împreună cu notificarea de cheltuieli de pe pagina Billing din Neon, ca avertizare din timp.",
-        "recommendConfirm": "Pe producție, o limită nouă, schimbată sau scoasă cere bifa de confirmare de mai jos: atinsă, limita oprește site-ul; scoasă, producția rămâne fără plafon.",
+        "warning": "Când limita e atinsă, Neon SUSPENDĂ baza de date, și site-ul odată cu ea, până la perioada următoare ({end}).",
+        "recommend": "Recomandat: o limită cu rezervă, {hours} ore-CU pe acest mediu, plus notificarea de cheltuieli din Neon → Billing.",
+        "recommendConfirm": "Pe producție, orice schimbare a limitei cere bifa de confirmare de mai jos.",
         "quotaMode": "Limită lunară (ore-CU)",
         "quotaModeNone": "Fără limită",
         "quotaModeLimit": "Cu limită — numărul de mai jos",
         "quotaCuHours": "Ore-CU pe perioadă, dacă e cu limită",
-        "quotaCuHoursHelp": "O limită nouă: cel puțin {smallest}. Nu contează la „Fără limită”.",
-        "floor": "Consumate în perioada aceasta: {used} ore-CU. O limită nouă trebuie să fie de cel puțin {smallest} ore-CU (consumul plus {margin} de marjă): una mai mică ar opri baza de date chiar la salvare. Limita în vigoare, lăsată cum e, rămâne exact cum o ține Neon.",
+        "quotaCuHoursHelp": "O limită nouă: cel puțin {smallest}; nu contează la „Fără limită”.",
+        "floor": "Consumate în perioada aceasta: {used} ore-CU, deci o limită nouă trebuie să fie de cel puțin {smallest} ore-CU.",
         "confirmField": "Confirmarea schimbării limitei",
-        "confirm": "Înțeleg ce schimb la limita producției: cu o limită, baza de date se oprește când e atinsă și site-ul nu mai funcționează până {end}; „Fără limită” lasă producția fără niciun plafon de cheltuieli.",
-        "writeNote": "Salvarea trimite mărimea la calculul bazei de date și la setarea implicită a proiectului (ca un calcul creat din nou să o moștenească), iar limita la proiect — doar ce diferă de cifrele de la Neon — apoi pagina citește din nou de la Neon. Cheia din NEON_API_KEY trebuie să aibă drept de modificare pe proiect, pe care o cheie „Project-scoped” îl are.",
+        "confirm": "Înțeleg: cu o limită, site-ul se oprește când e atinsă, până {end}; fără limită, producția nu are plafon.",
+        "writeNote": "Salvarea trimite la Neon doar ce diferă, apoi pagina citește din nou de la Neon.",
         "save": "Salvează limitele",
         "saving": "Se trimite la Neon…",
         "saved": "Limitele au fost trimise la Neon; mai jos e ce spune Neon acum.",
@@ -2138,10 +2142,10 @@
           "never": "niciodată — baza e mereu pornită"
         },
         "minCu": "Mărimea minimă a bazei de date",
-        "minCuHelp": "De la ea pornește baza la prima cerere și sub ea nu coboară cât e trează. {min} CU e cea mai mică și de ajuns pentru site; una mai mare costă la fiecare oră trează.",
+        "minCuHelp": "Sub ea baza nu coboară cât e trează; {min} CU e de ajuns pentru site.",
         "minOption": "{cu} CU — cel puțin {perHour} $ pe oră trează",
         "suspendMode": "Oprirea bazei când nu e folosită",
-        "suspendHelp": "Implicit Neon oprește baza după 5 minute fără cereri și o trezește la următoarea. „Niciodată” o ține pornită tot timpul: fiecare oră a lunii se plătește la mărimea minimă ({rate} $ pe oră-CU), chiar fără niciun vizitator.",
+        "suspendHelp": "Implicit Neon oprește baza după 5 minute fără cereri și o trezește la următoarea.",
         "suspendHelpFree": "Pe planul Free, Neon oprește baza după 5 minute fără cereri și nu se poate schimba.",
         "money": {
           "ceilingUp": "{cu} CU în plus la mărimea maximă ≈ {usd} USD în plus pe lună la 100 % utilizare.",
@@ -2151,8 +2155,19 @@
           "alwaysOn": "Fără oprire, baza nu mai doarme: cel puțin {usd} USD pe lună la mărimea minimă de {min} CU, chiar fără niciun vizitator.",
           "sleepsAgain": "Cu oprirea înapoi, o lună fără vizitatori nu mai costă cei {usd} USD ai bazei mereu pornite.",
           "same": "Costul lunii nu se schimbă.",
-          "free": "Pe planul Free schimbarea nu costă nimic până se consumă cele {hours} ore-CU incluse în lună; o mărime mai mare le consumă mai repede, iar când se termină, Neon oprește baza până la perioada următoare."
-        }
+          "free": "Pe planul Free schimbarea nu costă nimic până se consumă cele {hours} ore-CU ale lunii, apoi Neon oprește baza; o mărime mai mare le consumă mai repede."
+        },
+        "introMore": "Tot ce scrie aici e citit de la Neon la fiecare deschidere a paginii; după salvare vezi ce spune Neon, nu ce s-a trimis.",
+        "unconfiguredMore": "Pune NEON_API_KEY și NEON_PROJECT_ID pe proiectul Vercel al mediului și fă redeploy.",
+        "keyNeededMore": "Neon îi dă acces de Editor pe proiectul ei (Settings al organizației → API keys → Create new → Project-scoped). Merge și cheia personală a unui Admin al organizației sau a unui Editor pe proiect. Cheia personală a cuiva cu rol Viewer citește cifrele, dar nu le poate schimba.",
+        "priceMore": "Factura obișnuită o dă timpul cât e trează: în medie baza folosește ≈ 0,25 CU.",
+        "maxCuHelpMore": "Mărimea minimă e alegerea de mai jos (cea mai mică: {min} CU). Lângă fiecare mărime, cel mai rău caz la prețul Launch: o oră trează la acea mărime și o lună întreagă trează.",
+        "warningMore": "Baza nu repornește la următoarea conexiune: nu mai merg nici înscrierile, nici masa din ziua cursei, nici emailurile. Și pagina aceasta are nevoie de baza de date, așa că o limită care a oprit-o se ridică doar din consola Neon.",
+        "recommendMore": "SETUP.md §40. Producția a consumat cam 4 ore-CU pe zi chiar și în zilele cu teste intense; notificarea avertizează din timp.",
+        "floorMore": "Adică consumul plus {margin} de marjă: una mai mică ar opri baza de date chiar la salvare. Limita în vigoare, lăsată cum e, rămâne exact cum o ține Neon.",
+        "writeNoteMore": "Mărimea merge la calculul bazei de date și la setarea implicită a proiectului, ca un calcul creat din nou să o moștenească; limita merge la proiect. Cheia din NEON_API_KEY trebuie să aibă drept de modificare pe proiect, pe care o cheie „Project-scoped” îl are.",
+        "minCuHelpMore": "De la ea pornește baza la prima cerere. Una mai mare costă mai mult la fiecare oră trează.",
+        "suspendHelpMore": "„Niciodată” o ține pornită tot timpul: fiecare oră a lunii se plătește la mărimea minimă ({rate} $ pe oră-CU), chiar fără niciun vizitator."
       },
       "filter": {
         "who": "Cine",
@@ -2419,13 +2434,16 @@
       },
       "freeVerdict": {
         "freeExceptDomain": "Da, în afară de domeniu: toate serviciile sunt pe planuri gratuite și nu se plătește nimic lunar.",
-        "paysForUsage": "Aproape: se plătesc domeniul și baza de date — Neon Launch, la consum, fără abonament, ales de club pe 22 septembrie 2026; restul serviciilor sunt pe planuri gratuite.",
-        "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat. Nu se pierde nimic — pleacă după miezul nopții. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
-        "notFree": "Atenție, dar nu neapărat o problemă. Este publicat un eveniment cu taxă. Planul gratuit al furnizorului nu se uită la faptul că suntem ONG — asta nu este o scutire. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
+        "paysForUsage": "Aproape: se plătesc domeniul și baza de date (Neon Launch, la consum), iar restul serviciilor sunt pe planuri gratuite.",
+        "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat, iar cele rămase pleacă după miezul nopții.",
+        "notFree": "Atenție: e publicat un eveniment cu taxă, iar planurile gratuite nu țin cont că suntem ONG.",
+        "paysForUsageMore": "Launch e fără abonament și a fost ales de club pe 22 septembrie 2026.",
+        "freeButAtALimitMore": "Nu se pierde nimic. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
+        "notFreeMore": "Nu e neapărat o problemă. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
       },
       "costTitle": "Cât costă",
       "costToday": {
-        "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite.",
+        "nothing": "Astăzi clubul nu plătește nimic: toate serviciile sunt pe planuri gratuite.",
         "total": "Astăzi clubul plătește {total} pe an.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + TVA",
@@ -2436,17 +2454,19 @@
         "estimated": "Din care baza de date e o estimare la ritmul lunii (× 12), nu o factură."
       },
       "nextSpend": {
-        "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}. Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
-        "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}. Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
+        "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
+        "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
+        "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
+        "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
       },
-      "currencyNote": "Sumele sunt scrise în moneda în care cere fiecare firmă, fără să le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Domeniul este facturat de firma de la care se cumpără, în moneda ei. TVA în România este {vat}%.",
+      "currencyNote": "Sumele sunt în moneda în care facturează fiecare firmă; TVA în România este {vat}%.",
       "freshness": {
-        "fresh": "Prețurile au fost verificate {checked}, acum {days} zile. Sunt destul de recente ca să te bazezi pe ele.",
-        "ageing": "Prețurile au fost verificate {checked}, acum {days} zile. Încep să fie vechi — întreabă din nou înainte să plătești ceva.",
-        "stale": "Prețurile au fost verificate {checked}, acum {days} zile. Sunt prea vechi ca să le mai crezi: cere-i dezvoltatorului să le verifice înainte de orice decizie."
+        "fresh": "Prețurile au fost verificate {checked}, acum {days} zile, deci te poți baza pe ele.",
+        "ageing": "Prețurile au fost verificate {checked}, acum {days} zile: întreabă din nou înainte să plătești ceva.",
+        "stale": "Prețurile au fost verificate {checked}, acum {days} zile: cere-i dezvoltatorului să le verifice înainte de orice decizie."
       },
       "servicesTitle": "Serviciile, pe rând",
-      "servicesIntro": "Câte un rând pentru fiecare serviciu de care depinde site-ul: pe ce plan suntem, cât costă azi, ce primim gratuit, care este limita pe care o vom atinge prima, cât de aproape suntem chiar acum, ce se întâmplă când o depășim și cât costă pasul următor.",
+      "servicesIntro": "Câte un rând pentru fiecare serviciu de care depinde site-ul.",
       "severity": {
         "ok": "în regulă",
         "unknown": "nu știm",
@@ -2469,67 +2489,75 @@
       "services": {
         "domain": {
           "name": "Adresa site-ului (domeniul .com)",
-          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește. Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA.",
+          "freeGives": "Nu există variantă gratuită: e singurul lucru de pe pagină pentru care se plătește.",
           "ceiling": "Nu are o limită: o factură pe an pentru .com, în lei.",
-          "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani; .ro nu se mai cumpără (o singură adresă pentru motoarele de căutare).",
+          "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani.",
           "closeYes": "Acest mediu răspunde pe domeniul clubului.",
-          "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie."
+          "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie.",
+          "more": "Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA. .ro nu se mai cumpără: o singură adresă pentru motoarele de căutare."
         },
         "mailgun": {
           "name": "Mailgun (trimiterea e-mailurilor)",
-          "freeGives": "Gratuit: 100 de e-mailuri pe zi — pe un singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Până când clubul are domeniul lui, e-mailurile pot pleca doar către cinci adrese de test.",
-          "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, pentru că o înscriere completă cere trei e-mailuri.",
-          "whenCrossed": "E-mailurile de peste limită nu se pierd: rămân la coadă și pleacă după miezul nopții. Dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă, așa că planul plătit se ia înainte de deschiderea înscrierilor, nu în timpul lor.",
-          "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri. Numărate din mesajele acestui mediu; limita e a unui singur cont Mailgun, împărțit cu celălalt mediu.",
-          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung.",
-          "closeMeasuredMonth": "Luna aceasta au plecat {used} din {of} e-mailuri (planul {plan}) — mai ajung pentru vreo {left} înscrieri. Numărate din mesajele acestui mediu; limita e a unui singur cont Mailgun, împărțit cu celălalt mediu.",
-          "closeNone": "Planul {plan}, fără limită de mesaje."
+          "freeGives": "Gratuit: 100 de e-mailuri pe zi, pe un singur cont folosit și de QA, și de producție.",
+          "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, câte trei e-mailuri fiecare.",
+          "whenCrossed": "E-mailurile de peste limită pleacă după miezul nopții, așa că planul plătit se ia înainte de deschiderea înscrierilor.",
+          "closeMeasured": "Azi au plecat {used} din {of} e-mailuri, deci mai ajung pentru vreo {left} înscrieri.",
+          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare, nu ca abonament.",
+          "closeMeasuredMonth": "Luna aceasta au plecat {used} din {of} e-mailuri (planul {plan}), deci mai ajung pentru vreo {left} înscrieri.",
+          "closeNone": "Planul {plan}, fără limită de mesaje.",
+          "more": "Ce trimite un mediu scade din ce mai poate trimite celălalt; cifrele de aici sunt numărate din mesajele acestui mediu. E-mailurile de peste limită nu se pierd, dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă."
         },
         "vercel": {
           "name": "Vercel (locul unde stă site-ul)",
           "freeGives": "Gratuit: destul trafic și destulă putere pentru un site de club, dar numai pentru folosire necomercială.",
-          "ceiling": "Prima limită: planul gratuit cere ca site-ul să nu fie folosit comercial. Clubul nu vinde nimic și nu încasează bani, deci suntem în regulă.",
-          "whenCrossed": "Un eveniment care cere o taxă obligatorie ar fi socotit comercial; o donație, nu — asta scrie chiar la ei. Mai este ceva ce nu ține de club: dacă cineva este plătit vreodată să lucreze la acest site, tot comercial se cheamă. Și încă un lucru de știut: dacă se depășește o limită a planului gratuit, funcția se oprește 30 de zile și nu poți plăti ca să o repornești — de aceea se urcă planul înainte de o cursă, nu în timpul ei.",
+          "ceiling": "Prima limită: site-ul nu are voie să fie folosit comercial, iar clubul nu vinde nimic, deci suntem în regulă.",
+          "whenCrossed": "O taxă obligatorie la un eveniment ar fi socotită comercială; o donație, nu.",
           "closeYes": "Este publicat un eveniment cu taxă — verifică cum este formulat.",
           "closeNo": "Niciun eveniment publicat nu cere bani.",
-          "bumpBack": "Nu se dă înapoi: nu este un vârf de trafic, este o schimbare a felului în care este folosit site-ul. Excepție: dacă a fost luat strict pentru trafic."
+          "bumpBack": "Nu se dă înapoi: e o schimbare a felului în care e folosit site-ul, nu un vârf de trafic.",
+          "more": "Tot comercial se cheamă dacă cineva e plătit vreodată să lucreze la acest site. Dacă se depășește o limită a planului gratuit, funcția se oprește 30 de zile și nu poți plăti ca să o repornești, de aceea se urcă planul înainte de o cursă, nu în timpul ei. Planul Pro luat strict pentru trafic se poate da înapoi."
         },
         "neon": {
           "name": "Neon (baza de date)",
           "freeGives": "Gratuit: o bază de date mică (o jumătate de gigabyte) și o cantitate de lucru inclusă în fiecare lună.",
           "ceiling": "Prima limită: spațiul și cantitatea de lucru incluse lunar.",
-          "whenCrossed": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Peste limită, site-ul devine lent și pot apărea erori. Pasul următor se plătește la consum, nu ca abonament fix.",
-          "closeMeasured": "Măsurat din baza de date: {used} MB din {of} MB ocupați. Orele de calcul (CU) se văd pe /devs.",
-          "monthly": "Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch ({rate} $/oră-CU, {storageRate} $/GB, fără abonament).",
-          "monthlyUnknown": "Cost lunar pe Launch: {rate} $/oră-CU + {storageRate} $/GB, fără abonament. Ritmul exact apare când NEON_API_KEY e setat.",
-          "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat. Se vede în contul Neon și merită privit înainte de o cursă.",
+          "whenCrossed": "Peste limită site-ul devine lent și poate da erori.",
+          "closeMeasured": "Măsurat din baza de date: {used} MB din {of} MB ocupați.",
+          "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat; se vede în contul Neon.",
           "closeYes": "—",
           "closeNo": "Fără plafon pe Launch: se plătește ce se consumă.",
           "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid.",
           "launch": {
-            "freeGives": "Launch: plătit pe consum, fără abonament — orele de calcul și spațiul se facturează la tarifele planului. Planul Free rămâne opțiunea de întoarcere, la revizuirea din decembrie.",
+            "freeGives": "Launch: plătit pe consum, fără abonament, la tarifele planului.",
             "ceiling": "Nu are plafon: nimic nu se oprește când crește consumul — crește factura.",
-            "whenCrossed": "Ce ține factura mică e același lucru care ținea Free-ul în viață: baza de date adoarme după cinci minute fără cereri, iar monitoarele o trezesc la 15 minute ziua și o dată pe oră noaptea. Un monitor la 5 minute ar ține-o trează non-stop și ar transforma orele adormite în ore plătite.",
-            "close": "Fără plafon. Luna aceasta, la ritmul de până acum ({cu} ore-CU, circa {perDay} ore-CU pe zi): circa {usd} $ pe lună ({rate} $/oră-CU, {storageRate} $/GB-lună) — estimare, factura o face Neon.",
-            "closeUnknown": "Fără plafon. Ritmul lunii apare când NEON_API_KEY e setat; până atunci, cifra e în consola Neon → Billing ({rate} $/oră-CU, {storageRate} $/GB-lună).",
-            "bumpBack": "Drumul înapoi e revizuirea din decembrie 2026: după facturile reale, clubul poate alege Free din nou — o singură alegere în „Planul Neon” de pe această pagină, fără deploy; înainte, verifică limitele Free de atunci pe amândouă proiectele."
-          }
+            "whenCrossed": "Factura rămâne mică doar cât baza de date adoarme după cinci minute fără cereri.",
+            "close": "Luna aceasta, la ritmul de până acum ({cu} ore-CU, circa {perDay} pe zi): circa {usd} $ pe lună, estimare.",
+            "closeUnknown": "Ritmul lunii apare când NEON_API_KEY e setat; până atunci, cifra e în consola Neon → Billing.",
+            "bumpBack": "Drumul înapoi e revizuirea din decembrie 2026: o alegere în „Planul Neon”, fără deploy.",
+            "closeMore": "La {rate} $/oră-CU și {storageRate} $/GB-lună; factura o face Neon.",
+            "more": "Monitoarele trezesc baza la 15 minute ziua și o dată pe oră noaptea; un monitor la 5 minute ar ține-o trează non-stop și ar transforma orele adormite în ore plătite. La revizuirea din decembrie, după facturile reale, clubul poate alege Free din nou; înainte, verifică limitele Free de atunci pe amândouă proiectele."
+          },
+          "monthlyMore": "Orele de calcul (CU) se văd pe /devs. Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch ({rate} $/oră-CU, {storageRate} $/GB, fără abonament).",
+          "monthlyUnknownMore": "Orele de calcul (CU) se văd pe /devs. Cost lunar pe Launch: {rate} $/oră-CU + {storageRate} $/GB, fără abonament; ritmul exact apare când NEON_API_KEY e setat.",
+          "more": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Pasul următor se plătește la consum, nu ca abonament fix. Consumul merită privit în contul Neon înainte de o cursă."
         },
         "zitadel": {
           "name": "Zitadel (contul cu care intră echipa)",
-          "freeGives": "Gratuit: până la 100 de autentificări pe zi și un singur administrator al contului Zitadel. Autentificarea se face pe adresa furnizorului, nu a clubului — hotărât, nu în așteptare: o adresă proprie de login ar costa 100 USD pe lună.",
-          "ceiling": "Singura limită care contează: un singur administrator al contului Zitadel. Dacă acea persoană nu mai e disponibilă, nimeni nu mai poate invita pe nimeni.",
-          "whenCrossed": "Nu se traversează — se notează cine este administratorul și unde sunt datele de acces (docs/RUNBOOKS.md § Staff sign-in).",
+          "freeGives": "Gratuit: până la 100 de autentificări pe zi și un singur administrator al contului Zitadel.",
+          "ceiling": "Singura limită care contează: un singur administrator, fără de care nimeni nu mai poate invita pe nimeni.",
+          "whenCrossed": "Nu se traversează: se notează cine este administratorul și unde sunt datele de acces.",
           "closeYes": "—",
-          "closeNo": "Echipa intră pe adresa furnizorului, așa cum s-a hotărât."
+          "closeNo": "Echipa intră pe adresa furnizorului, așa cum s-a hotărât.",
+          "more": "Autentificarea se face pe adresa furnizorului, nu a clubului — hotărât, nu în așteptare: o adresă proprie de login ar costa 100 USD pe lună. Datele de acces: docs/RUNBOOKS.md § Staff sign-in."
         },
         "scheduler": {
           "name": "cron-job.org + GitHub (sarcinile automate)",
-          "freeGives": "Gratuit amândouă: cron-job.org apelează cele două sarcini la 15 minute (emailurile pleacă oricum imediat după fiecare înscriere), iar GitHub Actions este plasa de siguranță când primul nu răspunde.",
-          "ceiling": "Aici limita nu sunt banii, ci ritmul: fără monitoarele de pe cron-job.org, sarcinile pornesc doar din plasa de siguranță, cam la două ore.",
-          "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui. Nu se strică nimic și nimeni nu-și pierde locul — dar confirmarea vine târziu, iar în ziua înscrierilor asta pare un site stricat.",
+          "freeGives": "Gratuit amândouă: cron-job.org apelează sarcinile la 15 minute, iar GitHub Actions e plasa de siguranță.",
+          "ceiling": "Aici limita e ritmul: fără monitoarele de pe cron-job.org, sarcinile pornesc doar din plasa de siguranță, cam la două ore.",
+          "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui.",
           "closeYes": "O sarcină automată nu a mai rulat de prea mult timp.",
-          "closeNo": "Sarcinile automate au rulat la timp."
+          "closeNo": "Sarcinile automate au rulat la timp.",
+          "more": "E-mailurile pleacă oricum imediat după fiecare înscriere. Nu se strică nimic și nimeni nu-și pierde locul, dar confirmarea vine târziu, iar în ziua înscrierilor asta pare un site stricat."
         }
       },
       "decisionsTitle": "Ce așteaptă o hotărâre",
@@ -2550,9 +2578,11 @@
         }
       },
       "registrationsLeft": {
-        "day": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
-        "month": "Luna aceasta au plecat {sent} din {allowance} mesaje (planul {plan}, fără limită zilnică). Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
-        "none": "Planul {plan} nu are o limită de mesaje. Astăzi au plecat {sent}."
+        "day": "Astăzi au plecat {sent} din {allowance} mesaje, deci mai ajung pentru cel puțin {count} înscrieri complete.",
+        "month": "Luna aceasta au plecat {sent} din {allowance} mesaje (planul {plan}), deci mai ajung pentru cel puțin {count} înscrieri complete.",
+        "none": "Planul {plan} nu are o limită de mesaje; astăzi au plecat {sent}.",
+        "dayMore": "E un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+        "monthMore": "Planul nu are limită zilnică. E un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje."
       },
       "olderPictures": {
         "title": "Imaginile vechi, fără mărimi pentru telefon",
@@ -2578,14 +2608,14 @@
       },
       "jobCadence": {
         "title": "Cât de des verifică platforma",
-        "intro": "Platforma are două lucrări programate: mentenanța înscrierilor (rezervări care expiră, oferte de pe lista de așteptare, reamintiri, numere de concurs) și coada de emailuri. Un serviciu extern le cheamă la 15 minute ziua și la o oră noaptea. Când nu au nimic de făcut, răspund din memoria Vercel fără să trezească baza de date — iar Neon facturează fiecare trezire cu cel puțin 5 minute de calcul. Aici alegi cât de des au voie, cel mult, să se uite în bază.",
+        "intro": "Cât de des au voie cele două lucrări programate să trezească baza de date.",
         "inForce": {
           "onDemand": "Setarea în vigoare: la nevoie (implicit) — doar când e ceva de făcut, și oricum cel puțin o dată la {cap} min.",
           "every": "Setarea în vigoare: cel mult o dată la {minutes} min, pentru fiecare lucrare."
         },
         "cost": "Ce costă un interval mai lung: o ofertă de pe lista de așteptare, o reamintire, un anunț sau un număr de concurs pot pleca cu până la atâtea minute mai târziu.",
-        "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp — fiecare citire a locurilor socotește termenul în clipa aceea, cu sau fără lucrarea programată. Un interval mai lung de o oră înlocuiește și verificarea de siguranță de o oră: setarea ta are întâietate.",
-        "onTheHour": "Verificarea de siguranță se face la ora fixă (la 2 ore, la orele pare), odată cu monitorul /api/health, așa că o oră fără nimic de făcut costă cel mult o trezire a bazei de date, nu câte una pentru fiecare lucrare. Cu un interval ales, verificările respectă și reperele lui de pe ceas (:00 și :30, ora fixă, orele pare); ca să ajungă acolo, unele verificări pot întârzia fiecare cu până la un sfert de oră.",
+        "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp.",
+        "onTheHour": "Verificarea de siguranță se face la ora fixă, odată cu monitorul /api/health.",
         "job": {
           "maintenance": "Mentenanța înscrierilor",
           "outbox": "Coada de emailuri"
@@ -2597,9 +2627,9 @@
         "lastPingRan": "ultimul ping: {when}, a rulat",
         "lastPingSkipped": "ultimul ping: {when}, sărit fără bază de date",
         "updatedAt": "Setat {when}.",
-        "readOnly": "Intervalul îl schimbă Superadministratorul: unul greșit întârzie toate joburile. Cifrele de mai sus sunt la zi și pentru tine.",
+        "readOnly": "Intervalul îl schimbă Superadministratorul, pentru că unul greșit întârzie toate lucrările.",
         "field": "Cel mult o dată la",
-        "fieldHelp": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut. „La nevoie” înseamnă doar regula „când e ceva de făcut” și verificarea de siguranță de {cap} min.",
+        "fieldHelp": "„La nevoie” înseamnă doar când e ceva de făcut, plus verificarea de siguranță de {cap} min.",
         "option": {
           "onDemand": "La nevoie (implicit) — când e ceva de făcut, cel puțin o dată la {cap} min",
           "every": "{minutes} min",
@@ -2607,18 +2637,24 @@
         },
         "save": "Salvează intervalul",
         "saving": "Se salvează…",
-        "saved": "Intervalul a fost salvat. Fiecare lucrare se uită din nou în bază la următorul ping și se planifică după el.",
+        "saved": "Intervalul a fost salvat și se aplică de la următorul ping.",
         "emails": {
-          "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
-          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii (setarea clubului pentru trimitere e pe „programat”), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
-        }
+          "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul.",
+          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii, așa că intervalul le întârzie și pe ele.",
+          "immediateMore": "Coada programată le reia doar pe cele rămase: o nouă încercare, sau un mesaj amânat până se reface limita zilnică.",
+          "scheduledMore": "Setarea clubului pentru trimitere e pe „programat”; întârzierea e de până la atâtea minute cât are intervalul."
+        },
+        "introMore": "Lucrările sunt mentenanța înscrierilor (rezervări care expiră, oferte de pe lista de așteptare, reamintiri, numere de concurs) și coada de emailuri. Un serviciu extern le cheamă la 15 minute ziua și la o oră noaptea. Când nu au nimic de făcut, răspund din memoria Vercel fără să trezească baza de date, iar Neon facturează fiecare trezire cu cel puțin 5 minute de calcul.",
+        "safeMore": "Fiecare citire a locurilor socotește termenul în clipa aceea, cu sau fără lucrarea programată. Un interval mai lung de o oră înlocuiește și verificarea de siguranță de o oră: setarea ta are întâietate.",
+        "onTheHourMore": "Cu 2 ore, la orele pare. Așa, o oră fără nimic de făcut costă cel mult o trezire a bazei de date, nu câte una pentru fiecare lucrare. Cu un interval ales, verificările respectă și reperele lui de pe ceas (:00 și :30, ora fixă, orele pare); ca să ajungă acolo, unele verificări pot întârzia fiecare cu până la un sfert de oră.",
+        "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut."
       },
       "budgetThresholds": {
         "saved": "Pragurile au fost salvate; bugetul lunii se citește după ele de acum."
       },
       "translationBudget": {
         "title": "Traducerea automată (DeepL)",
-        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "intro": "Câte caractere pot trimite pe zi la DeepL butoanele de traducere din editoare.",
         "inForce": {
           "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
           "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
@@ -2626,21 +2662,23 @@
         "today": "Azi s-au trimis {used} din {budget} caractere.",
         "configured": "Cheia DeepL e pusă pe acest server: butoanele apar pentru Redactor, Organizator și Administrator.",
         "notConfigured": "Cheia DeepL nu e pusă pe acest server: în editoare, „Copiază și tradu tot” e gri, cu un link spre pașii din Sarcini → Club.",
-        "privacy": "Pleacă la DeepL (UE) doar textele clubului din câmpurile de conținut — niciodată datele unui participant și niciodată textele legale. Nota de confidențialitate nu se schimbă.",
+        "privacy": "Pleacă la DeepL (UE) doar textele clubului, niciodată datele unui participant sau textele legale.",
         "updatedAt": "Ultima schimbare: {when}.",
         "readOnly": "Doar un Administrator poate schimba bugetul.",
         "field": "Caractere pe zi",
-        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
+        "fieldHelp": "Între 0 (oprit) și {max}.",
         "save": "Salvează bugetul",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "introMore": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” umplu câmpurile în engleză prin DeepL API Free, gratuit până la 500.000 de caractere pe lună. Bugetul pe zi oprește o după-amiază de traduceri să consume luna.",
+        "privacyMore": "Doar câmpurile de conținut se traduc, așa că nota de confidențialitate nu se schimbă.",
+        "fieldHelpMore": "Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere."
       },
       "month": {
         "title": "Luna aceasta",
-        "intro": "Ce a costat fiecare furnizor de la începutul lunii și cât va costa până la sfârșitul ei, dacă ritmul de până acum se păstrează. Lângă fiecare sumă, consumul care o face și limita pe care o întâlnește.",
+        "intro": "Ce a costat fiecare furnizor luna aceasta și cât va costa până la sfârșitul ei.",
         "aside": "~{amount} USD la final de lună",
-        "total": "Până acum, luna aceasta: {soFar}. Estimat până la sfârșitul lunii: {projected}.",
-        "estimated": "Baza de date se plătește la consum, așa că suma ei e o estimare la prețul din catalog și la ritmul de până acum, nu o factură.",
-        "incomplete": "Suma unui furnizor nu e cunoscută — nu a putut fi citit acum, sau e un plan Mailgun scris de mână, fără preț — așa că totalul e mai mic decât cel real; vezi rândul marcat „nu știm”.",
+        "estimated": "Suma bazei de date e o estimare, nu o factură.",
+        "incomplete": "Totalul e mai mic decât cel real: suma unui furnizor nu e cunoscută.",
         "listLabel": "Costurile lunii, pe furnizori",
         "notMeasured": "nemăsurat",
         "name": {
@@ -2656,7 +2694,10 @@
           "soFar": "Până acum",
           "projected": "La final de lună",
           "usage": "Consum",
-          "lastMonth": "Luna trecută"
+          "lastMonth": "Luna trecută",
+          "ceiling": "Limita",
+          "deployments": "Publicări",
+          "storage": "Spațiul bazei"
         },
         "planLine": "{plan} · {billing}",
         "billing": {
@@ -2671,17 +2712,19 @@
           "messages": "{used} e-mailuri trimise până acum, ~{projected} la final.",
           "buildMinutes": "{used} minute de build până acum, ~{projected} la final.",
           "characters": "{used} caractere traduse până acum, ~{projected} la final.",
-          "gigabytes": "{used} GB de poze stocate (cel puțin: se numără o singură variantă a fiecărei poze)."
+          "gigabytes": "{used} GB de poze stocate, cel puțin.",
+          "gigabytesMore": "Se numără o singură variantă a fiecărei poze, deci cifra reală e mai mare."
         },
         "ceiling": {
-          "plan": "Limita planului: {ceiling}.",
-          "quota": "Limita pusă de club la Neon: {ceiling}.",
-          "daily": "Planul Free: cel mult {daily} pe zi, numărate pe zi.",
-          "freeGb": "Gratuit până la {ceiling} GB."
+          "plan": "{ceiling}, a planului",
+          "quota": "{ceiling}, pusă de club la Neon",
+          "daily": "{daily} pe zi, pe planul Free",
+          "freeGb": "{ceiling} GB gratuit",
+          "none": "fără plafon"
         },
         "over": {
-          "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare — vezi «Bugetul lunii» mai jos.",
-          "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii; mesajele rămase așteaptă luna următoare.",
+          "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare.",
+          "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii, iar restul mesajelor așteaptă luna următoare.",
           "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
           "deepl": "La ritmul ăsta DeepL refuză traducerile înainte de sfârșitul lunii.",
           "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
@@ -2689,7 +2732,7 @@
         "domain": {
           "renews": "Se plătește o dată pe an; expiră {date}.",
           "thisMonth": "Expiră luna aceasta, {date}: reînnoirea intră în suma lunii.",
-          "unknown": "Data expirării nu e setată (DOMAIN_REGISTERED_ON), deci nu știm în ce lună vine reînnoirea."
+          "unknown": "Nu știm luna reînnoirii: DOMAIN_REGISTERED_ON nu e setat."
         },
         "unmeasured": {
           "neon": "Nu se măsoară fără NEON_API_KEY și NEON_PROJECT_ID pe acest mediu.",
@@ -2701,8 +2744,8 @@
         "periodNeon": "Perioada de facturare Neon: {span}.",
         "others": "Fără cost și fără consum urmărit aici: Zitadel (contul echipei), cron-job.org și GitHub (sarcinile automate) și Open-Meteo (vremea).",
         "detail": {
-          "deployments": "{count} publicări luna aceasta.",
-          "storageGb": "Baza ocupă {gb} GB."
+          "deployments": "{count} luna aceasta",
+          "storageGb": "{gb} GB"
         },
         "typedPlan": "Planul e scris de mână, fără preț înregistrat, deci suma lunii nu e cunoscută.",
         "unreadHere": "Nu s-a putut citi acum din baza de date a site-ului.",
@@ -2715,20 +2758,30 @@
           "cuHours": "· {hours} ore-CU"
         },
         "lastTotal": "Luna trecută: {amount}{estimate}.",
-        "lastTotalUnknown": "Luna trecută: — (nu se poate aduna: {lines} fără cifră).",
+        "lastTotalUnknown": "Luna trecută: — ({lines} fără cifră).",
         "trigger": {
           "domain": "Se plătește la reînnoire, o dată pe an.",
-          "mailgun": "Ar costa doar trecând la un plan plătit ({plan}, {price} USD pe lună) — o alegere a voastră în «E-mailuri», niciodată a platformei.",
-          "vercel": "Ar costa doar trecând la planul Pro; pe Hobby nu vine factură — la limită publicările noi se opresc până luna viitoare.",
-          "neon": "Pe Free nu vine factură: la {hours} ore-CU baza se oprește până la perioada următoare. Ar costa doar trecând pe Launch.",
-          "deepl": "Ar costa doar cu DeepL API Pro; pe Free, după {free} de caractere într-o lună traducerile se opresc până luna viitoare, fără factură.",
+          "mailgun": "Ar costa doar pe un plan plătit ({plan}, {price} USD pe lună), ales de voi în «E-mailuri».",
+          "vercel": "Ar costa doar pe planul Pro; pe Hobby, la limită, publicările noi se opresc până luna viitoare.",
+          "neon": "Pe Free nu vine factură: la {hours} ore-CU baza se oprește până la perioada următoare.",
+          "deepl": "Pe Free nu vine factură: după {free} de caractere într-o lună, traducerile se opresc până luna viitoare.",
           "r2": "Ar costa doar peste {free} GB stocați: {price} USD pe GB pe lună, pentru surplus."
-        }
+        },
+        "introMore": "Proiecția păstrează ritmul de până acum. Lângă fiecare sumă stau consumul care o face și limita pe care o întâlnește.",
+        "total": {
+          "title": "Totalul lunii",
+          "projectedLabel": "estimat la sfârșitul lunii",
+          "soFar": "Până acum: {amount}."
+        },
+        "estimatedMore": "Neon se plătește la consum, așa că suma e calculată la prețul din catalog și la ritmul de până acum; factura o face Neon.",
+        "incompleteMore": "Furnizorul nu a putut fi citit acum, sau planul Mailgun e scris de mână, fără preț. Rândul lui e marcat „nu știm”."
       },
       "database": {
         "title": "Baza de date — Neon",
-        "intro": "Tot ce ține de baza de date, într-un singur loc: planul pe care e contul, bugetul lunii și ce face platforma cu el, frânele de la Neon și cât de des o trezește platforma."
-      }
+        "intro": "Planul, bugetul lunii, frânele de la Neon și cât de des trezește platforma baza de date."
+      },
+      "currencyNoteMore": "Nu le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Domeniul e facturat de firma de la care se cumpără, în moneda ei.",
+      "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor."
     },
     "clubTodo": {
       "title": "De făcut",
@@ -5709,21 +5762,22 @@
     "effectLead": "Ce face platforma acum:",
     "effect": {
       "none": "nimic în plus — lucrările programate rulează când au ceva de făcut.",
-      "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
+      "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute.",
       "cache": "Paginile publice își păstrează datele de {factor} ori mai mult; o modificare făcută de club apare tot imediat.",
       "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
       "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal.",
-      "cacheOnly": "Vizitatorii nu mai trezesc baza de date: o pagină care nu e în memorie se arată din ultima copie salvată și se reîmprospătează în fundal cel mult o dată la {minutes} minute."
+      "cacheOnly": "Vizitatorii nu mai trezesc baza de date: o pagină care nu e în memorie se arată din ultima copie salvată.",
+      "floorMore": "Mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori.",
+      "cacheOnlyMore": "Copia se reîmprospătează în fundal cel mult o dată la {minutes} minute."
     },
     "source": {
       "metered": "Cifra e cea facturată de Neon (compute_unit_seconds).",
       "operations": "Cifra e calculată din jurnalul de operații Neon: timpul treaz înmulțit cu mărimea minimă a bazei de date.",
       "legacy": "Cifra e contorul vechi al proiectului, folosit doar pentru că niciuna dintre sursele vii nu a răspuns; nu se mai actualizează și poate fi mult sub cea reală."
     },
-    "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
     "notRead": "necitit",
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
-    "spentAll": "După această citire, limita e consumată. Neon oprește baza de date abia când propriul lui contor ajunge la limită; din acel moment și până la sfârșitul perioadei, site-ul arată copiile salvate, iar formularele așteaptă. Până atunci, lucrările programate merg în continuare, în ritmul de mai jos.",
+    "spentAll": "După această citire limita e consumată, dar Neon oprește baza abia când propriul lui contor ajunge la limită.",
     "thresholds": {
       "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
       "amber": "Galben de la (%)",
@@ -5732,7 +5786,9 @@
       "saving": "Se salvează…",
       "confirmTitle": "Salvezi pragurile?",
       "confirmBody": "Platforma se frânează după noile praguri de la următoarea citire a bugetului, în cel mult un minut."
-    }
+    },
+    "spentAllMore": "Din acel moment și până la sfârșitul perioadei, site-ul arată copiile salvate, iar formularele așteaptă. Până atunci, lucrările programate merg în continuare, în ritmul de mai jos.",
+    "sourceMore": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU. Se folosește cea mai mare dintre primele două; contorul vechi doar când niciuna nu a răspuns."
   },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",

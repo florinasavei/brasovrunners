@@ -15,6 +15,7 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 type Props = {
   locale: Locale;
@@ -54,7 +55,13 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   const when = (at: Date | null) => (at ? clock(at) : "—");
 
   return (
-    <Panel level={level} title={t("tasks.jobCadence.title")} intro={t("tasks.jobCadence.intro")} data-testid="job-cadence">
+    <Panel
+      level={level}
+      title={t("tasks.jobCadence.title")}
+      intro={t("tasks.jobCadence.intro")}
+      introMore={t("tasks.jobCadence.introMore")}
+      data-testid="job-cadence"
+    >
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="job-cadence-in-force">
         {cadence.minutes === 0
           ? t("tasks.jobCadence.inForce.onDemand", { cap: NEXT_DUE_CAP_MINUTES })
@@ -65,16 +72,19 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("tasks.jobCadence.safe")}
+        <QuietHelp text={t("tasks.jobCadence.safeMore")} />
       </Typography>
       {/* §355: why an idle hour costs one wake — the safety look shares the :00 call and the
           health monitor's check, whichever interval is chosen. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-on-the-hour">
         {t("tasks.jobCadence.onTheHour")}
+        <QuietHelp text={t("tasks.jobCadence.onTheHourMore")} />
       </Typography>
       {/* Email, as it is on this deployment (§221): untouched by the interval when it leaves
           after the request, delayed by it when the outbox job is the only sender. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-emails">
         {t(emailTiming === "scheduled" ? "tasks.jobCadence.emails.scheduled" : "tasks.jobCadence.emails.immediate")}
+        <QuietHelp text={t(emailTiming === "scheduled" ? "tasks.jobCadence.emails.scheduledMore" : "tasks.jobCadence.emails.immediateMore")} />
       </Typography>
 
       {/* The measured effect: what each job did last, and when it will look again at the latest. */}
@@ -130,6 +140,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
                 size="small"
                 slotProps={{ select: { native: true } }}
                 helperText={t("tasks.jobCadence.fieldHelp", { cap: NEXT_DUE_CAP_MINUTES })}
+                helpMore={t("tasks.jobCadence.fieldHelpMore")}
               >
                 {JOB_CADENCE_CHOICES.map((minutes) => (
                   <option key={minutes} value={String(minutes)}>
