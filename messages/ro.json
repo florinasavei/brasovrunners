@@ -1850,11 +1850,18 @@
       "membersTitle": "Adaugă mai mulți membri",
       "membersAside": "o adresă pe rând, rolul Membru",
       "membersRows": "Membrii, câte unul pe rând",
-      "membersRowsHelp": "Adresa, sau numele și adresa: „Ana Pop, ana@exemplu.ro”. Se pot lipi două coloane dintr-un tabel. Dacă un rând nu e o adresă, nu se adaugă nimeni.",
+      "membersRowsHelp": "Adresa, sau numele și adresa: „Ana Pop, ana@exemplu.ro”. Cel mult {max} de rânduri o dată. Un rând care nu e adresă oprește tot. Un membru deja adăugat primește doar contul, din nou.",
       "membersInvite": "Adaugă membrii",
       "membersInviting": "Se adaugă…",
       "membersInvited": "Membri adăugați: {count}. Invitațiile sunt pe drum.",
-      "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei furnizorul de autentificare a refuzat să creeze contul. Rândurile lor apar în tabel cu „Fără cont de autentificare”."
+      "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei contul de autentificare nu s-a putut face. Apasă din nou „Adaugă membrii” cu adresele lor ca să reîncerci.",
+      "membersRetried": "Erau deja membri: {retried} — li s-a reîncercat doar contul.",
+      "membersOutcome": {
+        "created": "cont creat, invitația trimisă",
+        "invited": "contul exista, invitația trimisă din nou",
+        "failed": "eșuat: {reason}",
+        "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+      }
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -2310,8 +2317,12 @@
             "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău. Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
           ],
           "howUnreachable": [
-            "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o singură cerere către Zitadel.",
+            "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
             "Dacă rămâne așa, deschide consola Zitadel. Dacă nu se deschide, e o problemă a furnizorului; dacă se deschide, verifică pe Vercel ZITADEL_MANAGEMENT_PAT și AUTH_ZITADEL_ISSUER."
+          ],
+          "capped": "Organizația are mai multe conturi decât citește verificarea (cel mult 2000, în pagini de câte 200). Cheia poate funcționa, dar Echipa nu mai poate spune despre niciun rând că nu are cont de autentificare.",
+          "howCapped": [
+            "Nu e nimic de reparat la cheie. Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din src/modules/staff-identity/zitadel-users.ts, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
           ]
         },
         "mediaStorage": {
@@ -3100,8 +3111,7 @@
       "groupStandard": "Pagini standard",
       "groupCustom": "Pagini personalizate",
       "tabContact": "Contact",
-      "tabBenefits": "Beneficii",
-      "tabMembersZone": "Zona membrilor"
+      "tabMembers": "Membri"
     },
     "appearance": {
       "title": "Aspectul site-ului",
@@ -4462,8 +4472,8 @@
               "title": "Membrii clubului și zona membrilor",
               "steps": [
                 "Un membru are cont, dar nu intră în backoffice: după «Autentificare» vede doar zona membrilor.",
-                "«Echipa» → «Adaugă o persoană», cu «Rol» «Membru». Apasă «Adaugă» și confirmă; membrul primește invitația pe email.",
-                "Textele: «Pagini» → «Membri». «Beneficiile membrilor» e pagina publică, cu butonul de autentificare; «Zona membrilor» e ce vede membrul după autentificare. Ambele în română și în engleză.",
+                "«Echipa» → «Adaugă o persoană», cu «Rol» «Membru», sau «Adaugă mai mulți membri» pentru o listă. Apasă «Adaugă» și confirmă; membrul primește invitația pe email.",
+                "Textele: «Pagini» → «Pagini standard» → «Membri». «Beneficiile membrilor» e pagina publică, cu butonul de autentificare; «Zona membrilor» e ce vede membrul după autentificare. Ambele în română și în engleză.",
                 "Pune pagina pe site: «Publică pagina» (doar Administratorul)."
               ]
             }

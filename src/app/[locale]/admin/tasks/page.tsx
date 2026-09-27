@@ -416,7 +416,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       staleJobNames,
       failingJobNames,
       staffCount,
-      inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
+      inviteKey: {
+        kind: inviteKey.kind,
+        reason: "reason" in inviteKey ? inviteKey.reason : undefined,
+        capped: inviteKey.kind === "capped" || (inviteKey.kind === "ok" && !inviteKey.complete),
+      },
       publishedEventCount,
       raceDaySheetsDue,
       domainRenewal: domain,

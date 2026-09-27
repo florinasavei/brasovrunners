@@ -131,14 +131,13 @@ export async function countBackofficeStaff<T extends Record<string, unknown>>(db
   return row?.count ?? 0;
 }
 
-/** Which of these addresses already have a row (§NNN) — the bulk invitation refuses them all at once, by name. */
-export async function findStaffEmailsAmong<T extends Record<string, unknown>>(db: Database<T>, emails: readonly string[]): Promise<string[]> {
+/** The rows behind these addresses (§NNN): a bulk press takes an address already a member again. */
+export async function findStaffUsersAmong<T extends Record<string, unknown>>(db: Database<T>, emails: readonly string[]): Promise<StaffUser[]> {
   if (emails.length === 0) return [];
-  const rows = await db
-    .select({ email: staffUsers.email })
+  return db
+    .select()
     .from(staffUsers)
     .where(inArray(staffUsers.email, emails.map(normalizeStaffEmail)));
-  return rows.map((row) => row.email);
 }
 
 /**

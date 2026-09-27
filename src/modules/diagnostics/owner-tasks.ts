@@ -131,8 +131,14 @@ export type OwnerTask = {
  * the verdict, and Zitadel's own words where it gave any.
  */
 export type InviteKeyState = {
-  kind: "inapplicable" | "unconfigured" | "ok" | "blind" | "refused" | "unreachable";
+  kind: "inapplicable" | "unconfigured" | "ok" | "blind" | "capped" | "refused" | "unreachable";
   reason?: string;
+  /**
+   * The accounts listing stopped at its ceiling (§NNN): the key may work, and Echipa cannot say
+   * of any row that its account is missing. Set with `ok` (the reader was found) and implied by
+   * `capped` (they were not, within the ceiling).
+   */
+  capped?: boolean;
 };
 
 export function isTaskOwner(value: string | undefined): value is TaskOwner {
@@ -409,11 +415,13 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   if (input.inviteKey.kind !== "inapplicable") {
     const key = input.inviteKey;
     const broken = key.kind === "blind" || key.kind === "refused";
+    // The listing's ceiling (§NNN): a warning, never a verdict on the key — open, with its own words.
+    const capped = key.kind === "capped" || (key.kind === "ok" && key.capped === true);
     push("inviteKey", {
       owner: "club",
-      state: key.kind === "ok" ? "done" : broken ? "broken" : "open",
-      text: key.kind === "ok" || key.kind === "unconfigured" ? undefined : key.kind,
-      steps: broken ? "howBroken" : key.kind === "unreachable" ? "howUnreachable" : undefined,
+      state: capped ? "open" : key.kind === "ok" ? "done" : broken ? "broken" : "open",
+      text: capped ? "capped" : key.kind === "ok" || key.kind === "unconfigured" ? undefined : key.kind,
+      steps: capped ? "howCapped" : broken ? "howBroken" : key.kind === "unreachable" ? "howUnreachable" : undefined,
       detail: key.reason,
     });
   }

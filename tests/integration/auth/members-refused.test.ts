@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTranslator } from "next-intl";
 import ro from "../../../messages/ro.json";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -160,5 +161,27 @@ describe("§NNN «Adaugă mai mulți membri» — the whole list or nobody", () 
     ]);
     const invitations = await db.select().from(emailOutbox);
     expect(invitations.map((row) => row.messageType)).toEqual(["MEMBER_INVITATION", "MEMBER_INVITATION"]);
+    // One audit row per press, counts and row ids only — never an address.
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "staff.members_invited"));
+    expect(audit.metadataJson).toMatchObject({ added: 2, existing: 0 });
+    expect(JSON.stringify(audit.metadataJson)).not.toContain("@");
+  });
+
+  it("takes an address that is already a member again, so a failed account is retried by pressing again", async () => {
+    await redirectedTo(inviteMembersAction(null, form({ uiLocale: "ro", preferredLocale: "ro", members: "ana@dev.test" })));
+    const to = await redirectedTo(inviteMembersAction(null, form({ uiLocale: "ro", preferredLocale: "ro", members: ["ANA@dev.test", "mihai@dev.test"].join("\n") })));
+    expect(to).toContain("count=1");
+    expect(to).toContain("retried=1");
+    expect((await members()).map((row) => row.email)).toEqual(["ana@dev.test", "mihai@dev.test"]);
+    // No second platform invitation for the member already there.
+    expect((await db.select().from(emailOutbox)).map((row) => row.recipientEmail).sort()).toEqual(["ana@dev.test", "mihai@dev.test"]);
+  });
+
+  it("refuses more than fifty rows in one press", async () => {
+    const rows = Array.from({ length: 51 }, (_, index) => `m${index}@dev.test`).join("\n");
+    const outcome = await inviteMembersAction(null, form({ uiLocale: "ro", preferredLocale: "ro", members: rows }));
+    expect(outcome?.error).toBe("TOO_MANY_ADDRESSES");
+    expect(outcome?.errorValues).toEqual({ max: "50" });
+    expect(await members()).toHaveLength(0);
   });
 });

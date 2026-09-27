@@ -10,8 +10,8 @@ import {
   countSuperadministrators,
   deleteStaffUser,
   findStaffUserByEmail,
-  findStaffEmailsAmong,
   findStaffUserById,
+  findStaffUsersAmong,
   insertStaffUser,
   listStaffUsers,
   normalizeStaffEmail,
@@ -134,9 +134,15 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
  * own invitation — the whole list or nobody.
  *
  * Every row is validated before any is inserted (§457's rule for a list of addresses): one row that
- * is not an address, one address already on the team, or more than `MEMBER_ROWS_MAX` rows, and the
- * press adds nobody. The refusal names the box, `members`; the action names the rows. The inserts
- * and the invitations are one transaction, so a failure half-way leaves no half of the list.
+ * is not an address, one address already on the team with a backoffice role, or more than
+ * `MEMBER_ROWS_MAX` rows, and the press adds nobody. The refusal names the box, `members`; the
+ * action names the rows. The inserts and the invitations are one transaction, so a failure half-way
+ * leaves no half of the list.
+ *
+ * An address that is already a **member** is not a refusal but `existing` (§NNN): pressing again
+ * with the addresses whose sign-in account the provider refused is how they are retried. Such a row
+ * gets no second row and no second platform invitation — only the account step the action runs
+ * after the transaction.
  *
  * The existing-address check is a courtesy, as in `inviteStaffUser`: the unique index is the
  * authority, and a colleague adding the same person at the same moment rolls the whole press back.
@@ -145,7 +151,7 @@ export async function inviteMembers<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
   input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en" },
-): Promise<StaffUser[]> {
+): Promise<{ added: StaffUser[]; existing: StaffUser[] }> {
   assertAdministrator(actor);
   assertMayAssign(actor, "MEMBER");
 
@@ -158,22 +164,28 @@ export async function inviteMembers<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "a member row is not an address", ["members"]);
   }
   const invites = parsed.map((result) => result.data as StaffInvite);
-  const onTeam = await findStaffEmailsAmong(
+  const known = await findStaffUsersAmong(
     db,
     invites.map((invite) => invite.email),
   );
-  if (onTeam.length > 0) throw new DomainError("CONFLICT", "some addresses are already on the team", ["members"]);
+  if (known.some((row) => isBackofficeRole(row.role))) {
+    throw new DomainError("CONFLICT", "some addresses are already on the team", ["members"]);
+  }
+  const existing = new Set(known.map((row) => row.email));
 
   const now = new Date();
-  return db.transaction(async (tx) => {
+  const added = await db.transaction(async (tx) => {
     const members: StaffUser[] = [];
     for (const invite of invites) {
-      const member = await insertStaffUser(tx, { ...invite, email: normalizeStaffEmail(invite.email) });
+      const email = normalizeStaffEmail(invite.email);
+      if (existing.has(email)) continue;
+      const member = await insertStaffUser(tx, { ...invite, email });
       await enqueueStaffInvitation(tx, actor, member, now);
       members.push(member);
     }
     return members;
   });
+  return { added, existing: known };
 }
 
 /** The invitation again (§123, §141): a new row with its own key — a resend is a new trigger. */

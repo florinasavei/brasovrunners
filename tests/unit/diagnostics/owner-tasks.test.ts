@@ -396,6 +396,18 @@ describe("the invitation key row (§288)", () => {
     }
   });
 
+  it("warns, open and with its own words, when the accounts listing reached its ceiling (§NNN)", () => {
+    for (const key of [{ kind: "ok", capped: true }, { kind: "capped" }] as const) {
+      expect(keyRow(key)).toMatchObject({ state: "open", text: "capped", steps: "howCapped" });
+    }
+    expect(keyRow({ kind: "ok", capped: false })?.state).toBe("done");
+    for (const catalogue of [ro, en]) {
+      const row = catalogue.Admin.tasks.items.inviteKey as Record<string, unknown>;
+      expect(typeof row.capped).toBe("string");
+      expect(Array.isArray(row.howCapped)).toBe(true);
+    }
+  });
+
   it("has no row at all where the development switcher is the provider", () => {
     expect(keyRow({ kind: "inapplicable" })).toBeUndefined();
   });

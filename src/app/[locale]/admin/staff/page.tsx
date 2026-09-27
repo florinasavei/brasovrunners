@@ -38,6 +38,11 @@ import {
 import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
 import { checkInviteKey, hasNoAccount } from "@/modules/diagnostics/invite-key";
 import { env } from "@/shared/config/env";
+import { findAuditEvent } from "@/modules/audit/repository";
+import { MEMBER_ROWS_MAX } from "@/modules/staff-identity/domain/member-rows";
+import type { MemberAccountLine } from "@/modules/staff-identity/member-accounts";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -78,7 +83,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const offered = assignableRoles(actor.role);
 
   const current = await searchParams;
-  const { error, saved, invite, reason, account, count, failed } = current;
+  const { error, saved, invite, reason, account, count, failed, retried, report } = current;
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
@@ -96,6 +101,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
    * accounts, and then nothing below claims anything about anybody.
    */
   const accounts = await checkInviteKey({ authMode: env.STAFF_AUTH_MODE, readerEmail: actor.email });
+  /**
+   * «Adaugă mai mulți membri» (§NNN): the press's report, read back from its own audit row — one
+   * line per member, by row id, named here from the list above. A row withdrawn since is left out.
+   */
+  const reportRow = saved === "membersInvited" && report && UUID.test(report) ? await findAuditEvent(getDb(), report, "staff.members_invited") : undefined;
+  const reportLines = ((reportRow?.metadataJson as { accounts?: MemberAccountLine[] } | undefined)?.accounts ?? []).flatMap((line) => {
+    const member = staff.find((row) => row.id === line.staffUserId);
+    return member ? [{ ...line, email: member.email }] : [];
+  });
 
   const query = parseListQuery(current, {
     // `listStaff` returns the club's whole team — a handful of accounts, in its own order.
@@ -184,12 +198,25 @@ export default async function StaffPage({ params, searchParams }: Props) {
           <Alert severity="warning">{t("staff.accountFailed", { reason: reason ?? "" })}</Alert>
         )}
         {/* «Adaugă mai mulți membri» (§NNN): how many, and how many accounts the provider refused. */}
-        {saved === "membersInvited" &&
-          (failed ? (
-            <Alert severity="warning">{t("staff.membersInviteFailed", { count: count ?? "0", failed })}</Alert>
-          ) : (
-            <Alert severity="success">{t("staff.membersInvited", { count: count ?? "0" })}</Alert>
-          ))}
+        {saved === "membersInvited" && (
+          <Alert severity={failed ? "warning" : "success"} data-testid="staff-members-report">
+            {failed ? t("staff.membersInviteFailed", { count: count ?? "0", failed }) : t("staff.membersInvited", { count: count ?? "0" })}
+            {retried && ` ${t("staff.membersRetried", { retried })}`}
+            {reportLines.length > 0 && (
+              <Box component="ul" sx={{ m: 0, mt: 1, pl: 2.5 }}>
+                {reportLines.map((line) => (
+                  <li key={line.staffUserId}>
+                    <Box component="span" sx={{ wordBreak: "break-all" }}>
+                      {line.email}
+                    </Box>
+                    {" — "}
+                    {t(`staff.membersOutcome.${line.outcome}`, { reason: line.reason ?? "" })}
+                  </li>
+                ))}
+              </Box>
+            )}
+          </Alert>
+        )}
         {saved && saved !== "invited" && saved !== "reinvited" && saved !== "membersInvited" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
@@ -306,7 +333,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             <RecallField
               name="members"
               label={t("staff.membersRows")}
-              helperText={t("staff.membersRowsHelp")}
+              helperText={t("staff.membersRowsHelp", { max: MEMBER_ROWS_MAX })}
               multiline
               minRows={4}
               required

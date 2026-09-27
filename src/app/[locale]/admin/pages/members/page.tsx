@@ -48,7 +48,7 @@ type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 const SUMMARY_GLYPH_SX = { fontSize: 20, verticalAlign: "text-bottom", mr: 0.75 } as const;
 
 /**
- * The members' pages in the backoffice (§NNN), «Beneficii» and «Zona membrilor» in the «Pagini standard» group of «Pagini»: «Beneficiile
+ * The members' pages in the backoffice (§NNN), «Membri» in the «Pagini standard» group of «Pagini»: «Beneficiile
  * membrilor» — whether it is on the site, and its words — and the members' zone's words.
  *
  * Read by whoever reads the club's content (§208); writing either text is the Redactor's and the

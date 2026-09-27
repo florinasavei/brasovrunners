@@ -14,13 +14,15 @@ import type { StaffAuthMode } from "@/shared/config/env-enums";
  * page is signed in through Zitadel, so their account exists.** A search that cannot find them
  * is a key that cannot see accounts, whatever status code it came back with.
  *
- * The six answers, and what each one means for the club:
+ * The seven answers, and what each one means for the club:
  *
  * - `inapplicable` — the development switcher is the provider; there is no Zitadel to ask.
  * - `unconfigured` — no key, or no issuer: the existing "not configured" state, `SETUP.md` §37.
  * - `ok` — the key found the reader; the listing comes along so Echipa can mark each row.
  * - `blind` — the key authenticates and cannot see the reader's own account: the membership is
  *   missing, exactly §288. `seen` says how many accounts it saw instead, usually none.
+ * - `capped` — the listing read its ceiling of accounts (§NNN) without meeting the reader: no
+ *   verdict on the key; `/admin/tasks` says the ceiling was reached.
  * - `refused` — Zitadel refused the search, in its own words (a revoked token: 401; a token
  *   with no permission on this instance's configuration: 403).
  * - `unreachable` — no answer within the timeout, or no network: not a verdict on the key.
@@ -32,8 +34,14 @@ import type { StaffAuthMode } from "@/shared/config/env-enums";
 export type InviteKeyCheck =
   | { kind: "inapplicable" }
   | { kind: "unconfigured" }
-  | { kind: "ok"; accounts: ReadonlySet<string> }
+  /**
+   * `complete` is false when the listing stopped at its ceiling (`ACCOUNTS_LISTING_MAX`, §NNN):
+   * the key works, and an address missing from the set may be one the listing never read.
+   */
+  | { kind: "ok"; accounts: ReadonlySet<string>; complete: boolean }
   | { kind: "blind"; seen: number }
+  /** The listing reached its ceiling without the reader in it: no verdict on the key (§NNN). */
+  | { kind: "capped"; seen: number }
   | { kind: "refused"; reason: string }
   | { kind: "unreachable"; reason: string };
 
@@ -43,19 +51,22 @@ export async function checkInviteKey(
     /** The signed-in staff member's address: an account Zitadel must be able to show. */
     readerEmail: string;
   },
-  deps: ZitadelDeps & { timeoutMs?: number } = {},
+  deps: ZitadelDeps & { pageSize?: number; max?: number } = {},
 ): Promise<InviteKeyCheck> {
   if (input.authMode !== "provider") return { kind: "inapplicable" };
   const listing = await listZitadelHumanAccounts(deps);
   if (listing.kind !== "listed") return listing;
-  if (!listing.accounts.has(input.readerEmail.toLowerCase())) return { kind: "blind", seen: listing.count };
-  return { kind: "ok", accounts: listing.accounts };
+  if (!listing.accounts.has(input.readerEmail.toLowerCase())) {
+    return listing.capped ? { kind: "capped", seen: listing.count } : { kind: "blind", seen: listing.count };
+  }
+  return { kind: "ok", accounts: listing.accounts, complete: !listing.capped };
 }
 
 /**
  * Whether Echipa can say of a row that its account does not exist: only after a check that
- * found the reader, never from a listing that may be the key's blindness rather than the truth.
+ * found the reader, never from a listing that may be the key's blindness rather than the truth —
+ * and never from one that stopped at its ceiling (§NNN), which may simply not have reached them.
  */
 export function hasNoAccount(check: InviteKeyCheck, email: string): boolean {
-  return check.kind === "ok" && !check.accounts.has(email.toLowerCase());
+  return check.kind === "ok" && check.complete && !check.accounts.has(email.toLowerCase());
 }

@@ -1,7 +1,6 @@
 import ArticleIcon from "@mui/icons-material/Article";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import GroupsIcon from "@mui/icons-material/Groups";
-import LockPersonIcon from "@mui/icons-material/LockPerson";
 import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
@@ -13,8 +12,9 @@ import SubNav from "@/shared/ui/SubNav";
  *
  * - **«Pagini standard»** — the pages the platform draws and the club fills: «Contact» (its
  *   settings live under «Setări», §516, and are one press from here), «Echipa» (the owner: "pagina
- *   de echipa nu e o pagina custom"), «Beneficii» and «Zona membrilor» — the two members' texts,
- *   both on `/admin/pages/members`, each entry landing on its own card.
+ *   de echipa nu e o pagina custom"), «Membri» — the two members' texts, «Beneficiile membrilor» and
+ *   «Zona membrilor», as two cards of one page, `/admin/pages/members`. One entry for one page: two
+ *   entries for two hashes of it could never both say which one is shown (review, §NNN).
  * - **«Pagini personalizate»** — the pages the club writes from nothing.
  *
  * A glyph per entry and a caption per group (`SubNavItem.glyph`, `.group`). «Aspect» (§488) was a
@@ -30,7 +30,6 @@ export default async function PagesSubNav({ locale, active }: { locale: Locale; 
   const t = await getTranslations("Admin");
   const standard = t("pages.groupStandard");
   const custom = t("pages.groupCustom");
-  const members = getPathname({ locale, href: "/admin/pages/members" });
 
   return (
     <SubNav
@@ -38,8 +37,7 @@ export default async function PagesSubNav({ locale, active }: { locale: Locale; 
       items={[
         { href: getPathname({ locale, href: "/admin/settings/contact" }), label: t("pages.tabContact"), group: standard, glyph: <MailOutlinedIcon /> },
         { href: getPathname({ locale, href: "/admin/pages/team" }), label: t("pages.tabTeam"), active: active === "team", group: standard, glyph: <GroupsIcon /> },
-        { href: `${members}#members-benefits`, label: t("pages.tabBenefits"), active: active === "members", group: standard, glyph: <CardMembershipIcon /> },
-        { href: `${members}#members-zone`, label: t("pages.tabMembersZone"), group: standard, glyph: <LockPersonIcon /> },
+        { href: getPathname({ locale, href: "/admin/pages/members" }), label: t("pages.tabMembers"), active: active === "members", group: standard, glyph: <CardMembershipIcon /> },
         { href: getPathname({ locale, href: "/admin/pages" }), label: t("pages.tabPages"), active: active === "pages", group: custom, glyph: <ArticleIcon /> },
       ]}
     />

@@ -1850,11 +1850,18 @@
       "membersTitle": "Add several members",
       "membersAside": "one address per row, the Member role",
       "membersRows": "The members, one per row",
-      "membersRowsHelp": "The address, or the name and the address: “Ana Pop, ana@example.com”. Two columns pasted from a spreadsheet work too. If one row is not an address, nobody is added.",
+      "membersRowsHelp": "The address, or the name and the address: “Ana Pop, ana@example.com”. At most {max} rows at a time. One row that is not an address stops them all. A member already added only gets their account again.",
       "membersInvite": "Add the members",
       "membersInviting": "Adding…",
       "membersInvited": "Members added: {count}. The invitations are on their way.",
-      "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in provider refused to create the account. Their rows show “No sign-in account” in the table."
+      "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
+      "membersRetried": "Already members: {retried} — only their account was tried again.",
+      "membersOutcome": {
+        "created": "account created, invitation sent",
+        "invited": "the account existed, invitation sent again",
+        "failed": "failed: {reason}",
+        "unconfigured": "no invitation key: the account is made in the Zitadel console"
+      }
     },
     "queue": {
       "title": "The registration queue",
@@ -2310,8 +2317,12 @@
             "Check: reload this page; the row turns green when the key finds your account. Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
           ],
           "howUnreachable": [
-            "Reload the page in a few minutes: the check runs on every open, with a single request to Zitadel.",
+            "Reload the page in a few minutes: the check runs on every open, with one search in Zitadel.",
             "If it stays so, open the Zitadel console. If it does not open, the provider has a problem; if it does, check ZITADEL_MANAGEMENT_PAT and AUTH_ZITADEL_ISSUER on Vercel."
+          ],
+          "capped": "The organization has more accounts than the check reads (at most 2000, in pages of 200). The key may well work, but Echipa can no longer say of any row that it has no sign-in account.",
+          "howCapped": [
+            "Nothing to fix on the key. A developer raises the ACCOUNTS_LISTING_MAX ceiling in src/modules/staff-identity/zitadel-users.ts, or deletes the accounts no longer used in the Zitadel console."
           ]
         },
         "mediaStorage": {
@@ -3100,8 +3111,7 @@
       "groupStandard": "Standard pages",
       "groupCustom": "Custom pages",
       "tabContact": "Contact",
-      "tabBenefits": "Benefits",
-      "tabMembersZone": "Members' area"
+      "tabMembers": "Members"
     },
     "appearance": {
       "title": "Site appearance",
@@ -4462,8 +4472,8 @@
               "title": "Club members and the members' area",
               "steps": [
                 "A member has an account but no backoffice: after «Sign in» they see the members' area alone.",
-                "«Staff» → «Add someone», «Role» «Membru». Press «Add» and confirm; the member gets the invitation by email.",
-                "The words: «Pages» → «Members». «Members' benefits» is the public page with the sign-in button; «The members' area» is what a member sees after signing in. Both in Romanian and English.",
+                "«Staff» → «Add someone», «Role» «Membru», or «Add several members» for a list. Press «Add» and confirm; the member gets the invitation by email.",
+                "The words: «Pages» → «Standard pages» → «Members». «Members' benefits» is the public page with the sign-in button; «The members' area» is what a member sees after signing in. Both in Romanian and English.",
                 "Put the page on the site: «Publish the page» (the Administrator only)."
               ]
             }

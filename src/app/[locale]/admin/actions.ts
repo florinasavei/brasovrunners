@@ -40,9 +40,11 @@ import {
 } from "@/modules/staff-identity/dev-switcher";
 import { landingFor, signInTargetOf } from "@/modules/staff-identity/domain/landing";
 import { MEMBER_ROWS_MAX, parseMemberRows } from "@/modules/staff-identity/domain/member-rows";
-import { findStaffEmailsAmong } from "@/modules/staff-identity/repository";
+import { findStaffUsersAmong } from "@/modules/staff-identity/repository";
+import { recordAuditEvent } from "@/modules/audit/repository";
+import { countAccountLines, createMemberAccounts, type MemberAccountLine } from "@/modules/staff-identity/member-accounts";
 import { invalidAddresses } from "@/modules/contact/domain/recipients";
-import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, isBackofficeRole, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
@@ -1061,10 +1063,14 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
  * «Adaugă mai mulți membri» (§NNN): one row per person, the role `MEMBER`, the whole list or nobody.
  *
  * A refusal names the rows (§457): the ones that are not addresses (`INVALID_ADDRESSES`), the ones
- * already on the team (`MEMBERS_ON_TEAM`), or the ceiling (`TOO_MANY_ADDRESSES`), and every row
- * comes back in the box as typed (§315). After the one transaction, the Zitadel accounts, one per
- * member, where the key is set (§123); an account the provider refuses leaves its row marked on the
- * list, as a single add does (§288), and the banner counts them.
+ * already on the team with a backoffice role (`MEMBERS_ON_TEAM`), or the ceiling of
+ * `MEMBER_ROWS_MAX` (`TOO_MANY_ADDRESSES`), and every row comes back in the box as typed (§315).
+ *
+ * After the one transaction, the Zitadel accounts where Zitadel is the provider (§123): a few at a
+ * time, every call bounded, every member one line of the report — created, invited, failed with the
+ * reason — written to one audit row whose id the result page reads back, so nothing is half-done
+ * silently. An address already a member is taken again rather than refused: pressing again with the
+ * failed addresses retries their accounts, with no second row and no second platform invitation.
  */
 export async function inviteMembersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -1075,17 +1081,31 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
   let toast: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageStaff);
-    const members = await inviteMembers(getDb(), actor, { rows, preferredLocale: toLocale(form.get("preferredLocale")) });
-    let failed = 0;
-    if (env.STAFF_AUTH_MODE === "provider") {
-      for (const member of members) {
-        const invite = await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale });
-        if (invite.kind === "failed") failed += 1;
-      }
-    }
-    outcome = { saved: "membersInvited", count: String(members.length), ...(failed > 0 ? { failed: String(failed) } : {}) };
-    // A green tick only when every account exists; otherwise the banner says how many did not.
-    toast = failed > 0 ? {} : outcome;
+    const { added, existing } = await inviteMembers(getDb(), actor, { rows, preferredLocale: toLocale(form.get("preferredLocale")) });
+    const lines: MemberAccountLine[] =
+      env.STAFF_AUTH_MODE === "provider"
+        ? await createMemberAccounts([...added, ...existing], (member) =>
+            inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale }),
+          )
+        : [];
+    const counts = countAccountLines(lines);
+    const report = await recordAuditEvent(getDb(), {
+      actorStaffUserId: actor.id,
+      action: "staff.members_invited",
+      entityType: "staff_user",
+      entityId: null,
+      metadata: { added: added.length, existing: existing.length, ...counts, accounts: lines },
+      now: new Date(),
+    });
+    outcome = {
+      saved: "membersInvited",
+      count: String(added.length),
+      ...(existing.length > 0 ? { retried: String(existing.length) } : {}),
+      ...(counts.failed > 0 ? { failed: String(counts.failed) } : {}),
+      ...(lines.length > 0 ? { report } : {}),
+    };
+    // A green tick only when every account exists; otherwise the banner and the report say which did not.
+    toast = counts.failed > 0 ? {} : outcome;
   } catch (error) {
     const refusal = refused(error, form);
     if (refusal.error === "VALIDATION_ERROR") {
@@ -1094,10 +1114,14 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
       if (rows.length > MEMBER_ROWS_MAX) return { ...refusal, error: "TOO_MANY_ADDRESSES", errorValues: { max: String(MEMBER_ROWS_MAX) } };
     }
     if (refusal.error === "CONFLICT") {
-      const onTeam = await findStaffEmailsAmong(
-        getDb(),
-        rows.map((row) => row.email),
-      );
+      const onTeam = (
+        await findStaffUsersAmong(
+          getDb(),
+          rows.map((row) => row.email),
+        )
+      )
+        .filter((row) => isBackofficeRole(row.role))
+        .map((row) => row.email);
       if (onTeam.length > 0) return { ...refusal, error: "MEMBERS_ON_TEAM", errorValues: { addresses: onTeam.join(", ") } };
     }
     return refusal;

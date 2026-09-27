@@ -179,6 +179,20 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
     }
   });
 
+  /*
+    The members' texts (§NNN): the guide said «Pagini» → «Membri», and «Membri» matched some other
+    label in the catalogue while no such entry was on the row. So the path is pinned to the
+    sub-navigation's own words, in their order: the main tab, the group's caption, the entry.
+  */
+  it("names the members' texts by the sub-navigation's own path (§NNN)", () => {
+    for (const catalogue of Object.values(locales)) {
+      const admin = catalogue.Admin as { nav: { pages: string }; pages: { groupStandard: string; tabMembers: string } };
+      const path = `«${admin.nav.pages}» → «${admin.pages.groupStandard}» → «${admin.pages.tabMembers}»`;
+      const steps = guideOf(catalogue).sections.flatMap((section) => section.tasks.flatMap((task) => task.steps));
+      expect(steps.some((step) => step.includes(path)), path).toBe(true);
+    }
+  });
+
   it("keeps the family section the page appends its pending line to (§389)", () => {
     for (const catalogue of Object.values(locales)) {
       expect(guideOf(catalogue).sections.filter((section) => section.key === "family")).toHaveLength(1);

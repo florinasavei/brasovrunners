@@ -15,8 +15,11 @@
 /** One person the rows name. `email` is as typed (trimmed); the service lowercases it. */
 export type MemberRow = { email: string; displayName: string };
 
-/** How many rows one press may add: a season's members, not a mailing list. */
-export const MEMBER_ROWS_MAX = 200;
+/**
+ * How many rows one press may add (§NNN): each is a sign-in account at the provider, made after the
+ * transaction inside the same request, so a longer list is pasted in several presses.
+ */
+export const MEMBER_ROWS_MAX = 50;
 
 const SEPARATORS = /[,;\t<>]+/;
 
