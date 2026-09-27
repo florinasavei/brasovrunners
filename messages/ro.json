@@ -6179,7 +6179,17 @@
         "other": "Gata: {count} de câmpuri traduse din română în engleză, dar unele texte au fost scurtate la limita câmpului — vezi mesajul de sub buton. Verifică textele și apasă Salvează."
       },
       "translatedOne": "Tradus. Verifică și apasă Salvează.",
-      "translateRefused": "Traducerea nu s-a făcut: vezi mesajul de sub buton."
+      "translateRefused": "Traducerea nu s-a făcut: vezi mesajul de sub buton.",
+      "translatedCard": {
+        "one": "Gata: {count} câmp tradus în „{card}”. Verifică textul în English și apasă Salvează.",
+        "few": "Gata: {count} câmpuri traduse în „{card}”. Verifică textele în English și apasă Salvează.",
+        "other": "Gata: {count} de câmpuri traduse în „{card}”. Verifică textele în English și apasă Salvează."
+      },
+      "translatedCardCut": {
+        "one": "Gata: {count} câmp tradus în „{card}”, dar textul a fost scurtat la limita câmpului. Verifică-l în English și apasă Salvează.",
+        "few": "Gata: {count} câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează.",
+        "other": "Gata: {count} de câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează."
+      }
     }
   },
   "Network": {
@@ -6358,6 +6368,7 @@
       },
       "allBody": "Cu text deja scris: {fields}. «Înlocuiește tot» le traduce din nou din română; «Doar cele goale», când apare, le lasă neatinse și completează restul. Nimic nu se salvează până nu apeși Salvează.",
       "bigTitle": "Traduci totul din română?",
+      "cardBigTitle": "Traduci cardul din română?",
       "bigBody": "Câmpurile în engleză se completează cu traducerea, cu aceeași așezare. Nimic nu se salvează până nu apeși Salvează.",
       "budget": "Se trimit ~{count} caractere din bugetul de azi.",
       "budgetEmpty": "Doar cele goale: ~{count} caractere.",
@@ -6379,6 +6390,7 @@
       "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",
       "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă.",
       "credit": "Traducerea aceasta cere mai mult decât a rămas din creditul DeepL (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată; un Administrator vede creditul în Sarcini → Costuri."
-    }
+    },
+    "card": "Tradu cardul: RO → EN"
   }
 }

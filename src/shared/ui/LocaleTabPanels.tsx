@@ -20,6 +20,7 @@ import {
 } from "react";
 import { countForm } from "@/i18n/count-form";
 import { missingForPublish, missingInLanguage, type PublishGapBox } from "@/modules/content/events/ui/publish-check";
+import TranslateCardButton from "@/modules/translate/ui/TranslateCardButton";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
@@ -102,6 +103,11 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  */
 export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
 
+/** The English panel's place in the strip, which a card's translate press brings forward (§NNN); -1 when none. */
+export function englishPanelIndex(panels: readonly { locale: string }[]): number {
+  return panels.findIndex((panel) => panel.locale === "en");
+}
+
 /** Panel `index` shown and every other one hidden, on the DOM itself (§371; see `bringForward`). */
 function showOnly(panels: readonly (HTMLElement | null)[], index: number) {
   panels.forEach((panel, other) => {
@@ -140,6 +146,7 @@ export default function LocaleTabPanels({
   identical,
   requiredCount,
   live = true,
+  translateCard = false,
 }: {
   /** The box this strip belongs to: every id on it starts with it. */
   idPrefix: string;
@@ -154,6 +161,14 @@ export default function LocaleTabPanels({
   identical?: IdenticalWatch;
   /** Whether anything here can be typed into; a read-only strip keeps the server's first answers. */
   live?: boolean;
+  /**
+   * «Tradu cardul: RO → EN» at the end of the tab row (§NNN): the card's English boxes from their
+   * Romanian twins, in one press, then the English tab on top. On every strip whose words may be
+   * translated — the event editor's cards, a standing page's and an album's tabs. Drawn only on a
+   * strip that can be typed into and has both languages, and only for a role that writes the club's
+   * words: greyed, saying why, where this deployment cannot translate (§482, §497).
+   */
+  translateCard?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
@@ -321,18 +336,25 @@ export default function LocaleTabPanels({
     return incomplete[index] && markWord ? markWord : null;
   };
 
+  const withCardButton = translateCard && live && panels.some((panel) => panel.locale === "ro") && panels.some((panel) => panel.locale === "en");
+  // After the card's press filled its English boxes (§NNN): the English tab on top, so the person
+  // reads what was written rather than the Romanian they were already looking at.
+  const showEnglish = () => {
+    const index = englishPanelIndex(panels);
+    if (index < 0) return;
+    showOnly(panelRefs.current, index);
+    setActive(index);
+  };
+
   return (
-    <Box ref={root}>
-      <Tabs
-        value={active}
-        onChange={(_, value: number) => {
-          // By hand first as well: a press on a tab while a refusal's transition is still pending
-          // may compute the `active` React already has, and then React rewrites no attribute (§371).
-          showOnly(panelRefs.current, value);
-          setActive(value);
-        }}
-        variant="scrollable"
-        scrollButtons={false}
+    <Box ref={root} data-locale-tabs="">
+      {/*
+        The tab row: the tabs, and — on a strip whose words may be translated — «Tradu cardul:
+        RO → EN» at its end (§NNN). One line at every width, 320 px included (§480's density pass):
+        below `sm` the button is its glyph alone, and the tabs, not the button, give way — they
+        scroll rather than push the button onto a second line of the sticky strip.
+      */}
+      <Box
         /*
           Sticky at the top of its own box while the language's text scrolls past (§170; the
           owner: "this part should be sticky"). The box is the containing block, so the strip
@@ -347,33 +369,50 @@ export default function LocaleTabPanels({
           mb: 2,
           borderBottom: 1,
           borderColor: "divider",
-          minHeight: 44,
+          display: "flex",
+          flexWrap: "nowrap",
+          alignItems: "center",
+          columnGap: 1,
         }}
       >
-        {panels.map((panel, index) => (
-          <Tab
-            key={panel.locale}
-            /*
-              The language in its own words, and a mark when it is not finished. "Conținut (EN)"
-              said which panel this was and nothing about whether anybody had filled it in — so
-              the missing language was found at the moment publication was refused, which is the
-              worst moment to find it.
-            */
-            label={[
-              panel.label,
-              stateOf(index),
-              // The copying language's tab — every one after the first — says it (§354).
-              same && identical && index > 0 ? identical.mark : null,
-            ]
-              .filter((part): part is string => Boolean(part))
-              .join(" · ")}
-            id={`${idPrefix}-tab-${panel.locale}`}
-            aria-controls={`${idPrefix}-panel-${panel.locale}`}
-            value={index}
-            sx={{ minHeight: 44, textTransform: "none" }}
-          />
-        ))}
-      </Tabs>
+        <Tabs
+          value={active}
+          onChange={(_, value: number) => {
+            // By hand first as well: a press on a tab while a refusal's transition is still pending
+            // may compute the `active` React already has, and then React rewrites no attribute (§371).
+            showOnly(panelRefs.current, value);
+            setActive(value);
+          }}
+          variant="scrollable"
+          scrollButtons={false}
+          sx={{ minHeight: 44, minWidth: 0, flex: "1 1 auto" }}
+        >
+          {panels.map((panel, index) => (
+            <Tab
+              key={panel.locale}
+              /*
+                The language in its own words, and a mark when it is not finished. "Conținut (EN)"
+                said which panel this was and nothing about whether anybody had filled it in — so
+                the missing language was found at the moment publication was refused, which is the
+                worst moment to find it.
+              */
+              label={[
+                panel.label,
+                stateOf(index),
+                // The copying language's tab — every one after the first — says it (§354).
+                same && identical && index > 0 ? identical.mark : null,
+              ]
+                .filter((part): part is string => Boolean(part))
+                .join(" · ")}
+              id={`${idPrefix}-tab-${panel.locale}`}
+              aria-controls={`${idPrefix}-panel-${panel.locale}`}
+              value={index}
+              sx={{ minHeight: 44, textTransform: "none" }}
+            />
+          ))}
+        </Tabs>
+        {withCardButton && <TranslateCardButton onTranslated={() => showEnglish()} />}
+      </Box>
 
       {/* The same words in both languages (§354): above the panels, so it reads whichever tab is on top. */}
       {same && identical && (

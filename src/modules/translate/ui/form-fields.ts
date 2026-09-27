@@ -97,10 +97,18 @@ export function fillBox(form: HTMLFormElement | null, name: string, value: BoxVa
  * Every English box of the form «Copiază și tradu tot» may fill: on the allowlist, not switched
  * off, not a visible box a hidden block made read-only (§350: what is hidden is not asked), and
  * with a Romanian twin that has words in it. In the form's own order, each once.
+ *
+ * `within`, set, narrows the press to one card of the form (§NNN, «Tradu cardul: RO → EN»): only the
+ * boxes inside it that post in this form, in the document's order. The Romanian twin is still
+ * looked up in the whole form — a card's pair is almost always inside it, and where it is not the
+ * form is where the save reads it from.
  */
-export function englishBoxesToTranslate(form: HTMLFormElement): string[] {
+export function englishBoxesToTranslate(form: HTMLFormElement, within?: ParentNode | null): string[] {
   const names: string[] = [];
-  for (const element of Array.from(form.elements)) {
+  const elements: unknown[] = within
+    ? Array.from(within.querySelectorAll("input[name], textarea[name]")).filter((element) => isBox(element) && element.form === form)
+    : Array.from(form.elements);
+  for (const element of elements) {
     if (!isBox(element) || !element.name || names.includes(element.name)) continue;
     if (!isTranslatableEnglishField(element.name) || element.disabled) continue;
     if (element.type !== "hidden" && element.readOnly) continue;
@@ -149,8 +157,8 @@ export function collectItems(form: HTMLFormElement | null, englishNames: readonl
  */
 export type TranslateAllPlan = { names: string[]; replaced: string[]; empty: string[]; characters: number; emptyCharacters: number };
 
-export function planTranslateAll(form: HTMLFormElement | null): TranslateAllPlan {
-  const names = form ? englishBoxesToTranslate(form) : [];
+export function planTranslateAll(form: HTMLFormElement | null, within?: ParentNode | null): TranslateAllPlan {
+  const names = form ? englishBoxesToTranslate(form, within) : [];
   const replaced = englishBoxesWithWords(form, names);
   const empty = names.filter((name) => !replaced.includes(name));
   return {
@@ -160,6 +168,38 @@ export function planTranslateAll(form: HTMLFormElement | null): TranslateAllPlan
     characters: charactersToSend(collectItems(form, names)),
     emptyCharacters: charactersToSend(collectItems(form, empty)),
   };
+}
+
+/**
+ * The card a «Tradu cardul: RO → EN» belongs to (§NNN): the nearest card of the editor around its
+ * tab row — a `Panel` is a `<details>` or a `<section>` — so the card's boxes outside its language
+ * tabs (the programme's timed rows) are translated with it. Nothing around it: the tab strip alone.
+ */
+export function cardOf(element: Element): Element {
+  return element.closest("details, section") ?? element;
+}
+
+/**
+ * The card's own name, for the toast «Gata: 3 câmpuri traduse în „Descrierea completă”» (§NNN): the
+ * text of the `Panel`'s heading — inside the `<summary>` of a fold, first in a `<section>` — without
+ * its closed line (`aside`, a `<span>` inside the heading). Null where the strip sits in no card (a
+ * standing page's or an album's one strip): the press then says the whole editor's sentence.
+ */
+export function cardTitleOf(card: Element): string | null {
+  const heading =
+    card.tagName === "DETAILS"
+      ? card.querySelector(":scope > summary h2, :scope > summary h3, :scope > summary h4")
+      : card.tagName === "SECTION"
+        ? card.querySelector(":scope > h2, :scope > h3, :scope > h4")
+        : null;
+  if (!heading) return null;
+  // The title is the heading's own text; the aside is an element inside it and is left out.
+  const own = Array.from(heading.childNodes)
+    .filter((node) => node.nodeType === 3)
+    .map((node) => node.textContent ?? "")
+    .join("")
+    .trim();
+  return own.length > 0 ? own : null;
 }
 
 export type TranslateBoxesResult =
