@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
 import { parseImageQuality } from "@/modules/media/ladder";
+import { parsePictureSource, PICKER_LIMIT, pictureUses, visiblePictures } from "@/modules/media/picker";
 import { listMediaAssetsForAdmin } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { isStorageConfigured } from "@/modules/media/storage";
+import { canEditEventFields, canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -68,31 +70,50 @@ export async function POST(request: Request): Promise<Response> {
 /**
  * The pictures already stored, newest first, for every «Din galerie» in the backoffice
  * (`DECISIONS.md` §73, §NNN: a text, a film's poster, a card of «Echipa», an album): the two
- * variant addresses and the size the image node needs, and
- * nothing about where a picture is used — that is the pictures page's question. Every staff
- * session, like the upload above.
+ * variant addresses, the stored size and weight the picker writes under each thumbnail, and the
+ * kinds of place a picture is used — the picker's «Folosită în» chips — never which page or who.
+ *
+ * Only the roles that may put a picture somewhere (BR-REQ-060-01): whoever writes an event's or
+ * a page's words, or sets an event's fields and albums. A volunteer's backoffice is the desk, and
+ * the club's stored pictures, with their file names, are not the desk's to read. The upload above
+ * stays every staff session's; this list is what a picker needs, and a volunteer has none.
+ *
+ * `?q=` (a name, accents and case ignored) and `?source=` (`event`, `album`, `page`, `team`) narrow
+ * the list here, before the cap, so an old picture is found by name however many came after it;
+ * a film's automatic poster (`yt-<id>`, §403) is left out unless `?posters=1` — the film's own
+ * poster picker asks for it, a text, a card and an album do not.
  */
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
+  let actor;
   try {
-    await requireStaff();
+    actor = await requireStaff();
   } catch (error) {
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
+  if (!canEditTexts(actor.role) && !canEditEventFields(actor.role)) {
+    return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  }
   if (!isStorageConfigured()) return NextResponse.json({ assets: [] });
 
-  const assets = await listMediaAssetsForAdmin(getDb(), "ro");
-  return NextResponse.json({
-    assets: assets.slice(0, 300).map((asset) => ({
-      id: asset.id,
-      src: asset.webUrl,
-      thumb: asset.thumbUrl,
-      width: asset.width,
-      height: asset.height,
-      name: asset.originalFilename,
-      // A film's automatic poster (`yt-<id>`, §403): the poster picker offers it, a text and an
-      // album do not — a body's picture must carry an uploaded picture's address (§72).
-      poster: asset.keyPrefix.startsWith("yt-"),
-    })),
+  const params = new URL(request.url).searchParams;
+  const withPosters = params.get("posters") === "1";
+  const assets = (await listMediaAssetsForAdmin(getDb(), "ro")).map((asset) => ({
+    id: asset.id,
+    src: asset.webUrl,
+    thumb: asset.thumbUrl,
+    width: asset.width,
+    height: asset.height,
+    bytes: asset.byteSize,
+    name: asset.originalFilename,
+    uses: pictureUses(asset.references.map((reference) => reference.kind)),
+    // A body's picture must carry an uploaded picture's address (§72).
+    poster: asset.keyPrefix.startsWith("yt-"),
+  }));
+  const shown = visiblePictures(assets, {
+    accept: (asset) => withPosters || !asset.poster,
+    needle: (params.get("q") ?? "").slice(0, 200),
+    source: parsePictureSource(params.get("source")),
   });
+  return NextResponse.json({ assets: shown.slice(0, PICKER_LIMIT) });
 }

@@ -155,6 +155,14 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageGalleryClose: rt("linkCancel"),
     imageGalleryFilter: rt("imageGalleryFilter"),
     imageGalleryNoMatch: rt("imageGalleryNoMatch"),
+    imageGallerySourceLegend: rt("imageGallerySourceLegend"),
+    imageGallerySources: {
+      all: rt("imageGallerySourceAll"),
+      event: rt("imageGallerySourceEvent"),
+      album: rt("imageGallerySourceAlbum"),
+      page: rt("imageGallerySourcePage"),
+      team: rt("imageGallerySourceTeam"),
+    },
     // Raw, with its placeholders: the island says the picture's name and size itself (§NNN).
     imageFromGalleryPicked: rt.raw("imageFromGalleryPicked") as string,
     youtube: rt("youtube"),

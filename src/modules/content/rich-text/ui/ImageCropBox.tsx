@@ -114,6 +114,7 @@ export default function ImageCropBox({
   onFocusChange,
   card = false,
   presets = CROP_PRESETS,
+  resting,
   labels,
   testId = "rich-text-crop",
 }: {
@@ -128,12 +129,14 @@ export default function ImageCropBox({
   onFocusChange?: (focus: ImageFocus | null) => void;
   /** A picture in the short description, which the listing card draws in its 16∶9 frame. */
   card?: boolean;
-  /**
-   * The shapes this picture may take (§NNN): all five for a picture in a text; one, 16∶9, for a
-   * film's poster, whose box has that shape whatever the photograph's — so the rectangle drawn is
-   * exactly what the box shows. The first is held when the stored crop is none of them.
-   */
+  /** The shapes this picture may take; all five unless a place narrows them. */
   presets?: readonly CropPreset[];
+  /**
+   * The shape held when nothing is stored and after «Fără decupaj» (§NNN): «Liber» by default,
+   * 16∶9 for a film's poster, whose box has that shape — the other shapes stay offered, and the
+   * page shows the largest 16∶9 part of whichever rectangle is drawn.
+   */
+  resting?: CropPreset;
   labels: ImageCropLabels;
   /** The photograph's own test id: two boxes can be on one screen (a picture's, a poster's). */
   testId?: string;
@@ -143,8 +146,8 @@ export default function ImageCropBox({
   /** The rectangle being dragged, before it is worth storing; `null` between gestures. */
   const [draft, setDraft] = useState<ImageCrop | null>(null);
   const [draftFocus, setDraftFocus] = useState<ImageFocus | null>(null);
-  /** The shape held after «Fără decupaj»: «Liber» where it is offered, else the one shape there is. */
-  const restingPreset: CropPreset = presets.includes("free") ? "free" : presets[0];
+  /** The shape held after «Fără decupaj»: the place's own, else «Liber» where it is offered, else the first. */
+  const restingPreset: CropPreset = resting && presets.includes(resting) ? resting : presets.includes("free") ? "free" : presets[0];
   /** The shape held while drawing: the one the stored crop was drawn with, or the resting one. */
   const [preset, setPreset] = useState<CropPreset>(() => {
     const stored = presetOf(crop, intrinsic);

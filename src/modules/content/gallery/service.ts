@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import {
   galleryAlbumTranslations,
   galleryAlbums,
@@ -348,7 +348,13 @@ export async function deletePhoto<T extends Record<string, unknown>>(
     await tx
       .update(galleryAlbums)
       .set({ coverMediaAssetId: first?.assetId ?? null })
-      .where(and(eq(galleryAlbums.id, item.albumId), eq(galleryAlbums.coverMediaAssetId, item.assetId)));
+      // Also an album with no cover at all, as before §NNN: any removal gives it the first photo.
+      .where(
+        and(
+          eq(galleryAlbums.id, item.albumId),
+          or(isNull(galleryAlbums.coverMediaAssetId), eq(galleryAlbums.coverMediaAssetId, item.assetId)),
+        ),
+      );
     return deleteAssetsNoLongerReferenced(tx, [item.assetId]);
   });
   revalidatePublicContent("gallery");

@@ -3,13 +3,18 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
+import { PICTURE_SOURCES, type PictureSource, type PictureUse, visiblePictures } from "../picker";
+import { formatBytes } from "./stored-facts";
 
 /**
  * One stored picture, as `GET /api/admin/media` lists it: the master's address in the shape a
- * body carries, the small file for the grid, the stored size, the file's own name, and whether
- * it is a film's automatic poster (`yt-<id>`, §403) rather than a picture somebody uploaded.
+ * body carries, the small file for the grid, the stored size and weight, the file's own name,
+ * the kinds of place it is used, and whether it is a film's automatic poster (`yt-<id>`, §403)
+ * rather than a picture somebody uploaded.
  */
 export type StoredPicture = {
   id: string;
@@ -17,7 +22,9 @@ export type StoredPicture = {
   thumb: string;
   width: number;
   height: number;
+  bytes: number;
   name: string;
+  uses: PictureUse[];
   poster?: boolean;
 };
 
@@ -27,8 +34,11 @@ export type GalleryPickerLabels = {
   close: string;
   /** The name box over the grid. */
   filter: string;
-  /** Nothing matches what was typed. */
+  /** Nothing matches what was typed or chosen. */
   noMatch: string;
+  /** The chips' legend, «Folosită în», and one word per chip, «toate» first. */
+  sourceLegend: string;
+  sources: Record<PictureSource, string>;
 };
 
 /**
@@ -37,28 +47,32 @@ export type GalleryPickerLabels = {
  *
  * The list is asked for when the picker opens and never before: a form is opened far more often
  * than a picture is reused, and the list is a request every editor would otherwise make on every
- * load (§73). The newest first, as the pictures page shows them; a name box narrows them, because
- * three hundred thumbnails are a wall.
+ * load (§73). The newest first, as the pictures page shows them. A name box (accents and case
+ * ignored) and a row of chips — «Folosită în»: toate, eveniment, album, pagină, echipă — narrow
+ * them, and the server narrows before its cap, so an old picture is found by its name however
+ * many came after it (`media/picker.ts`, the one filter both sides call).
  *
- * `accept` says which pictures the place can hold: a film's automatic poster is 480 pixels of
- * YouTube's thumbnail and belongs under a film, not in a text or an album, so those places leave
- * it out; the film's own poster picker takes it.
+ * `withPosters` says whether the place can hold a film's automatic poster: 480 pixels of
+ * YouTube's thumbnail belong under a film, not in a text, a card or an album, so those places
+ * leave it out; the film's own poster picker takes it.
  *
  * Each thumbnail is a plain button (88 px: a thumb-sized target, BR-REQ-041-01 criterion 6) whose
- * accessible name is the file's; `onMouseDown` keeps the editor's selection where it was, so a
- * picture chosen in a text lands where the caret stood.
+ * accessible name is the file's with its size and weight, and the size and weight are written
+ * under it — visible on a phone, where a hover title never shows. `onMouseDown` keeps the
+ * editor's selection where it was, so a picture chosen in a text lands where the caret stood.
  */
 export default function GalleryPicker({
   onPick,
   onClose,
-  accept = (picture) => !picture.poster,
+  withPosters = false,
   picked = [],
   labels,
   testId = "gallery-picker",
 }: {
   onPick: (picture: StoredPicture) => void;
   onClose: () => void;
-  accept?: (picture: StoredPicture) => boolean;
+  /** A film's automatic poster is offered too (the film's own poster picker). */
+  withPosters?: boolean;
   /** Pictures already chosen in this sitting, marked as such (an album taking several). */
   picked?: readonly string[];
   labels: GalleryPickerLabels;
@@ -66,10 +80,23 @@ export default function GalleryPicker({
 }) {
   const [pictures, setPictures] = useState<StoredPicture[] | null>(null);
   const [filter, setFilter] = useState("");
+  const [source, setSource] = useState<PictureSource>("all");
+  /** The typed name as sent: a moment after the last key rather than on every one. */
+  const [needle, setNeedle] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setNeedle(filter.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [filter]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/media")
+    const query = new URLSearchParams();
+    if (needle) query.set("q", needle);
+    if (source !== "all") query.set("source", source);
+    if (withPosters) query.set("posters", "1");
+    const search = query.toString();
+    fetch(`/api/admin/media${search ? `?${search}` : ""}`)
       .then(async (response) => {
         if (!response.ok) throw new Error(String(response.status));
         const { assets } = (await response.json()) as { assets: StoredPicture[] };
@@ -81,11 +108,17 @@ export default function GalleryPicker({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [needle, source, withPosters]);
 
-  const usable = (pictures ?? []).filter(accept);
-  const needle = filter.trim().toLocaleLowerCase();
-  const shown = needle ? usable.filter((picture) => picture.name.toLocaleLowerCase().includes(needle)) : usable;
+  // The server's filter again, on what came back: the place's rule is held here too, and what is
+  // typed narrows at once while the next answer is on its way.
+  const shown = visiblePictures(pictures ?? [], {
+    accept: (picture) => withPosters || !picture.poster,
+    needle: filter,
+    source,
+  });
+  const narrowed = filter.trim() !== "" || source !== "all" || needle !== "";
+  const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
 
   return (
     <Box sx={{ p: 1, borderBottom: 1, borderColor: "divider" }} data-testid={testId}>
@@ -93,58 +126,94 @@ export default function GalleryPicker({
         <Typography variant="body2" color="text.secondary">
           {labels.loading}
         </Typography>
-      ) : usable.length === 0 ? (
+      ) : shown.length === 0 && !narrowed ? (
         <Typography variant="body2" color="text.secondary">
           {labels.empty}
         </Typography>
       ) : (
         <>
-          {usable.length > 12 && (
-            <TextField
+          <TextField
+            size="small"
+            label={labels.filter}
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            onKeyDown={(event) => {
+              // Inside a form: Enter narrows the list, it never submits the page.
+              if (event.key === "Enter") event.preventDefault();
+            }}
+            sx={{ mb: 1, width: "100%", maxWidth: 320 }}
+          />
+          <Box sx={{ mb: 1 }}>
+            <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: 600, mb: 0.5 }}>
+              {labels.sourceLegend}
+            </Typography>
+            <ToggleButtonGroup
+              exclusive
               size="small"
-              label={labels.filter}
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              onKeyDown={(event) => {
-                // Inside a form: Enter narrows the list, it never submits the page.
-                if (event.key === "Enter") event.preventDefault();
+              value={source}
+              onChange={(_event, next: PictureSource | null) => {
+                if (next !== null) setSource(next);
               }}
-              sx={{ mb: 1, width: "100%", maxWidth: 320 }}
-            />
-          )}
+              aria-label={labels.sourceLegend}
+              data-testid={`${testId}-sources`}
+              sx={{ flexWrap: "wrap" }}
+            >
+              {PICTURE_SOURCES.map((value) => (
+                <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
+                  {labels.sources[value]}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
           {shown.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               {labels.noMatch}
             </Typography>
           ) : (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 260, overflowY: "auto" }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 320, overflowY: "auto" }}>
               {shown.map((picture) => {
                 const chosen = picked.includes(picture.id);
+                const weight = formatBytes(picture.bytes, lang);
+                const facts = `${picture.width} × ${picture.height} · ${weight}`;
                 return (
-                  <Box
-                    key={picture.id}
-                    component="button"
-                    type="button"
-                    aria-label={picture.name}
-                    aria-pressed={picked.length > 0 ? chosen : undefined}
-                    title={`${picture.name} · ${picture.width} × ${picture.height}`}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => onPick(picture)}
-                    data-testid="gallery-picker-item"
-                    sx={{
-                      p: 0,
-                      border: chosen ? 3 : 1,
-                      borderColor: chosen ? "primary.main" : "divider",
-                      borderRadius: 1,
-                      bgcolor: "transparent",
-                      cursor: "pointer",
-                      overflow: "hidden",
-                      width: 88,
-                      height: 88,
-                      flex: "0 0 auto",
-                    }}
-                  >
-                    <Box component="img" src={picture.thumb} alt="" width={88} height={88} loading="lazy" sx={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+                  <Box key={picture.id} sx={{ width: 88, flex: "0 0 auto" }}>
+                    <Box
+                      component="button"
+                      type="button"
+                      aria-label={`${picture.name}, ${facts}`}
+                      aria-pressed={picked.length > 0 ? chosen : undefined}
+                      title={`${picture.name} · ${facts}`}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => onPick(picture)}
+                      data-testid="gallery-picker-item"
+                      sx={{
+                        display: "block",
+                        p: 0,
+                        border: chosen ? 3 : 1,
+                        borderColor: chosen ? "primary.main" : "divider",
+                        borderRadius: 1,
+                        bgcolor: "transparent",
+                        cursor: "pointer",
+                        overflow: "hidden",
+                        width: 88,
+                        height: 88,
+                      }}
+                    >
+                      <Box component="img" src={picture.thumb} alt="" width={88} height={88} loading="lazy" sx={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+                    </Box>
+                    {/* The stored size and weight, read on a phone too (§NNN); the button already says them. */}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      component="p"
+                      aria-hidden
+                      data-testid="gallery-picker-item-facts"
+                      sx={{ lineHeight: 1.2, mt: 0.25, fontSize: 11, textAlign: "center" }}
+                    >
+                      {picture.width} × {picture.height}
+                      <br />
+                      {weight}
+                    </Typography>
                   </Box>
                 );
               })}

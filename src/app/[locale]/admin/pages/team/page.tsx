@@ -145,6 +145,14 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
       close: t("richText.linkCancel"),
       filter: t("richText.imageGalleryFilter"),
       noMatch: t("richText.imageGalleryNoMatch"),
+      sourceLegend: t("richText.imageGallerySourceLegend"),
+      sources: {
+        all: t("richText.imageGallerySourceAll"),
+        event: t("richText.imageGallerySourceEvent"),
+        album: t("richText.imageGallerySourceAlbum"),
+        page: t("richText.imageGallerySourcePage"),
+        team: t("richText.imageGallerySourceTeam"),
+      },
     },
     // The gallery's words for the same choice (§414), one set for every upload — four levels (§437).
     quality: {

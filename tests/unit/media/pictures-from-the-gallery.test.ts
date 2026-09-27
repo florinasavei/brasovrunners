@@ -22,6 +22,7 @@ const { presetCrop } = await import("@/modules/content/rich-text/domain/picture-
 const { cardFrameGeometry } = await import("@/modules/content/rich-text/ui/image-layout");
 const { default: RichTextVideo } = await import("@/modules/content/rich-text/ui/RichTextVideo");
 const { default: ImageCropBox } = await import("@/modules/content/rich-text/ui/ImageCropBox");
+const { foldForSearch, parsePictureSource, pictureUses, visiblePictures } = await import("@/modules/media/picker");
 
 const source = (...where: string[]) => readFileSync(path.join(process.cwd(), ...where), "utf8");
 
@@ -96,7 +97,7 @@ describe("§NNN the page draws the part the club chose", () => {
   });
 });
 
-describe("§NNN the crop box holds a poster to its box's one shape", () => {
+describe("§NNN the crop box offers a poster every shape, its box's first", () => {
   const labels = {
     title: "Decupaj",
     help: "",
@@ -113,22 +114,42 @@ describe("§NNN the crop box holds a poster to its box's one shape", () => {
     cardPreview: "",
   };
 
-  it("offers only 16:9, pressed, for a poster", () => {
+  it("offers all five shapes for a poster, 16:9 pressed while nothing is stored", () => {
     const html = renderToStaticMarkup(
       createElement(ImageCropBox, {
         src: YOUTUBE_POSTER,
         intrinsic: { width: 480, height: 360 },
         crop: presetCrop("16:9", { width: 480, height: 360 }),
         onChange: () => undefined,
-        presets: ["16:9"],
+        resting: "16:9",
         testId: "rich-text-poster-crop",
         labels,
       }),
     );
     expect(html).toContain('data-testid="rich-text-poster-crop"');
-    expect(html).not.toContain(">Liber<");
-    expect(html).not.toContain(">4:3<");
+    for (const name of ["Liber", "16:9", "4:3", "1:1", "4:5"]) expect(html).toContain(`>${name}<`);
     expect(html).toMatch(/aria-pressed="true"[^>]*>16:9</);
+    expect(html).not.toMatch(/aria-pressed="true"[^>]*>Liber</);
+  });
+
+  it("holds the shape a stored poster crop was drawn with, 1:1 included", () => {
+    const html = renderToStaticMarkup(
+      createElement(ImageCropBox, {
+        src: YOUTUBE_POSTER,
+        intrinsic: { width: 480, height: 360 },
+        crop: presetCrop("1:1", { width: 480, height: 360 }),
+        onChange: () => undefined,
+        resting: "16:9",
+        labels,
+      }),
+    );
+    expect(html).toMatch(/aria-pressed="true"[^>]*>1:1</);
+  });
+
+  it("gives the editor's poster box the default shapes and 16:9 at rest", () => {
+    const editor = source("src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx");
+    expect(editor).not.toContain("POSTER_PRESETS");
+    expect(editor).toContain('resting="16:9"');
   });
 
   it("still offers all five shapes to a picture in a text", () => {
@@ -175,10 +196,71 @@ describe("§NNN «Din galerie» wherever the backoffice takes a picture", () => 
     expect(editor).toMatch(/posterSource: null, posterWidth: null, posterHeight: null, posterCrop: null/);
   });
 
-  it("leaves a film's automatic poster out of a text and an album by default, and offers it to a poster", () => {
+  it("asks for a film's automatic poster only from the film's own poster picker", () => {
     const pickerSource = source("src", "modules", "media", "ui", "GalleryPicker.tsx");
-    expect(pickerSource).toContain("accept = (picture) => !picture.poster");
-    expect(source("src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx")).toContain("accept={() => true}");
-    expect(source("src", "app", "api", "admin", "media", "route.ts")).toContain('poster: asset.keyPrefix.startsWith("yt-")');
+    expect(pickerSource).toContain("withPosters = false");
+    expect(pickerSource).toContain('query.set("posters", "1")');
+    const editor = source("src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx");
+    expect(editor.match(/\bwithPosters\b/g)).toHaveLength(1);
+    expect(source("src", "modules", "content", "team", "ui", "TeamPhotoField.tsx")).not.toContain("withPosters");
+    expect(source("src", "modules", "content", "gallery", "ui", "PhotoUploader.tsx")).not.toContain("withPosters");
+  });
+});
+
+describe("§NNN the picker's query: order, rule, search and source", () => {
+  type P = { id: string; name: string; uses: ("event" | "album" | "page" | "team")[]; poster?: boolean };
+  // Newest first, as the route reads them.
+  const list: P[] = [
+    { id: "5", name: "Hartă traseu Tâmpa.png", uses: ["event"] },
+    { id: "4", name: "yt-dQw4w9WgXcQ", uses: ["event"], poster: true },
+    { id: "3", name: "afis-CROSUL.jpg", uses: ["album", "page"] },
+    { id: "2", name: "Amalia.jpg", uses: ["team"] },
+    { id: "1", name: "harta-veche.jpg", uses: [] },
+  ];
+  const ids = (pictures: readonly P[]) => pictures.map((picture) => picture.id);
+
+  it("keeps the list's own order, newest first, and every picture when nothing narrows it", () => {
+    expect(ids(visiblePictures(list))).toEqual(["5", "4", "3", "2", "1"]);
+  });
+
+  it("finds a name whatever its case and its diacritics", () => {
+    expect(ids(visiblePictures(list, { needle: "harta" }))).toEqual(["5", "1"]);
+    expect(ids(visiblePictures(list, { needle: "HARTĂ" }))).toEqual(["5", "1"]);
+    expect(ids(visiblePictures(list, { needle: "  tampa " }))).toEqual(["5"]);
+    expect(ids(visiblePictures(list, { needle: "crosul" }))).toEqual(["3"]);
+    expect(ids(visiblePictures(list, { needle: "nimic" }))).toEqual([]);
+    expect(foldForSearch("Șoseaua Țării")).toBe("soseaua tarii");
+  });
+
+  it("holds the place's rule: a film's automatic poster only where it is asked for", () => {
+    expect(ids(visiblePictures(list, { accept: (picture) => !picture.poster }))).toEqual(["5", "3", "2", "1"]);
+    expect(ids(visiblePictures(list, { accept: () => true }))).toContain("4");
+  });
+
+  it("narrows by where a picture is used, «toate» being no narrowing", () => {
+    expect(ids(visiblePictures(list, { source: "event" }))).toEqual(["5", "4"]);
+    expect(ids(visiblePictures(list, { source: "album" }))).toEqual(["3"]);
+    expect(ids(visiblePictures(list, { source: "page" }))).toEqual(["3"]);
+    expect(ids(visiblePictures(list, { source: "team" }))).toEqual(["2"]);
+    expect(ids(visiblePictures(list, { source: "all" }))).toHaveLength(5);
+    expect(ids(visiblePictures(list, { source: "event", needle: "harta", accept: (p) => !p.poster }))).toEqual(["5"]);
+  });
+
+  it("reads the source strictly and folds the team page's introduction into «Echipa»", () => {
+    expect(parsePictureSource("album")).toBe("album");
+    expect(parsePictureSource("ALBUM")).toBe("all");
+    expect(parsePictureSource("teamIntro")).toBe("all");
+    expect(parsePictureSource(null)).toBe("all");
+    expect(pictureUses(["teamIntro", "page", "team", "album", "page"])).toEqual(["album", "page", "team"]);
+    expect(pictureUses([])).toEqual([]);
+  });
+
+  it("has a word for every chip in both catalogues", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const messages = (await import(`../../../messages/${locale}.json`)).default as { Admin: { richText: Record<string, string> } };
+      for (const key of ["SourceLegend", "SourceAll", "SourceEvent", "SourceAlbum", "SourcePage", "SourceTeam"]) {
+        expect(messages.Admin.richText[`imageGallery${key}`], `${locale} imageGallery${key}`).toBeTruthy();
+      }
+    }
   });
 });

@@ -6,6 +6,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { teamMembers } from "@/db/schema/team";
 import { addPhoto, addStoredPhoto, createAlbum, deleteAlbum, deletePhoto } from "@/modules/content/gallery/service";
 import { createPage } from "@/modules/content/pages/service";
+import { createTeamMember } from "@/modules/content/team/service";
 import { deleteAssetsNoLongerReferenced, listMediaAssetsForAdmin } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { objectKey, readLocalObject } from "@/modules/media/storage";
@@ -139,6 +140,32 @@ describe("§NNN pictures from the gallery", () => {
     expect(await db.select().from(mediaAssets)).toEqual([]);
     expect(await readLocalObject(objectKey(asset.keyPrefix, "web"))).toBeNull();
     expect((await db.select().from(galleryAlbums).where(eq(galleryAlbums.id, album.id)))[0].coverMediaAssetId).toBeNull();
+  });
+
+  it("still gives an album with no cover its first photo when any photo leaves it", async () => {
+    const album = await createAlbum(db, { actor: editor, fields: FIELDS("a") });
+    const first = await addPhoto(db, { actor: editor, albumId: album.id, file: await photo("#111111"), originalFilename: "1.jpg" });
+    const second = await addPhoto(db, { actor: editor, albumId: album.id, file: await photo("#222222"), originalFilename: "2.jpg" });
+    await db.update(galleryAlbums).set({ coverMediaAssetId: null }).where(eq(galleryAlbums.id, album.id));
+
+    await deletePhoto(db, { actor: editor, itemId: second.itemId });
+    const [row] = await db.select().from(galleryAlbums).where(eq(galleryAlbums.id, album.id));
+    expect(row.coverMediaAssetId).toBe(first.assetId);
+  });
+
+  it("refuses a film's automatic poster as a card's photo on the server, not only in the picker", async () => {
+    const fixture = await sharp({ create: { width: 480, height: 360, channels: 3, background: "#224488" } }).jpeg().toBuffer();
+    await ensureYoutubePoster(db, "dQw4w9WgXcQ", { fetchImpl: (async () => new Response(new Uint8Array(fixture), { status: 200 })) as typeof fetch });
+    const [poster] = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, "yt-dQw4w9WgXcQ"));
+    const card = { name: "Ana", roleRo: "Antrenoare", roleEn: "Coach", bioRo: "", bioEn: "", photoAssetId: poster.id };
+
+    const refused = await createTeamMember(db, { actor: editor, fields: card }).catch((error: unknown) => error);
+    expect(isDomainError(refused) && { code: refused.code, fields: refused.fields }).toEqual({ code: "VALIDATION_ERROR", fields: ["photoAssetId"] });
+    expect(await db.select().from(teamMembers)).toEqual([]);
+
+    const stored = await uploadBodyImage(db, { actorId: editor.id, file: await photo(), originalFilename: "ana.jpg" });
+    await createTeamMember(db, { actor: editor, fields: { ...card, photoAssetId: stored.assetId } });
+    expect(await db.select().from(teamMembers)).toHaveLength(1);
   });
 
   it("answers the prefixes it deleted, and deletes nothing still used", async () => {

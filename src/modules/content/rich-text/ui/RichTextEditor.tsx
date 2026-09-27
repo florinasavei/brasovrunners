@@ -49,6 +49,7 @@ import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
 import { prepareImageUpload } from "@/modules/media/browser-shrink";
+import type { PictureSource } from "@/modules/media/picker";
 import GalleryPicker, { type StoredPicture } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, readRemembered, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
 import {
@@ -303,6 +304,9 @@ function RichTextEditorIsland({
     /** The picker's name box, and its "nothing matches" (§NNN). */
     imageGalleryFilter: string;
     imageGalleryNoMatch: string;
+    /** The picker's «Folosită în» chips (§NNN). */
+    imageGallerySourceLegend: string;
+    imageGallerySources: Record<PictureSource, string>;
     /** What a picture from the gallery became; raw, `{name}`, `{width}`, `{height}` substituted here (§NNN). */
     imageFromGalleryPicked: string;
     youtube: string;
@@ -1140,6 +1144,8 @@ function RichTextEditorIsland({
                 close: labels.imageGalleryClose,
                 filter: labels.imageGalleryFilter,
                 noMatch: labels.imageGalleryNoMatch,
+                sourceLegend: labels.imageGallerySourceLegend,
+                sources: labels.imageGallerySources,
               }}
               testId="rich-text-gallery-list"
             />
@@ -1759,13 +1765,15 @@ function RichTextEditorIsland({
                 onPick={pickPosterFromGallery}
                 onClose={() => setPosterGalleryOpen(false)}
                 // Every stored picture, a film's automatic poster included: it is a poster already.
-                accept={() => true}
+                withPosters
                 labels={{
                   loading: labels.imageGalleryLoading,
                   empty: labels.imageGalleryEmpty,
                   close: labels.imageGalleryClose,
                   filter: labels.imageGalleryFilter,
                   noMatch: labels.imageGalleryNoMatch,
+                  sourceLegend: labels.imageGallerySourceLegend,
+                  sources: labels.imageGallerySources,
                 }}
                 testId="rich-text-poster-gallery"
               />
@@ -1773,8 +1781,10 @@ function RichTextEditorIsland({
             {/*
               The poster's crop (§NNN): the part the film's 16∶9 box shows, over whichever poster
               the film has — the club's, one from the gallery, or YouTube's own once a save stored
-              it. One shape, the box's, so the rectangle is exactly what the page draws; without a
-              crop the box shows the middle, which is what the rectangle starts on.
+              it. Every shape a picture takes is offered, 16∶9 — the box's own, so the rectangle is
+              exactly what the page draws — pressed first; another shape shows its largest 16∶9 part,
+              the listing card's arithmetic (`cardFrameGeometry`). Without a crop the box shows the
+              middle, which is what the rectangle starts on.
             */}
             {selectedPosterSrc && posterIntrinsic ? (
               <ImageCropBox
@@ -1788,7 +1798,7 @@ function RichTextEditorIsland({
                     .updateAttributes("youtube", { posterCrop: crop, posterWidth: posterIntrinsic.width, posterHeight: posterIntrinsic.height })
                     .run()
                 }
-                presets={POSTER_PRESETS}
+                resting="16:9"
                 testId="rich-text-poster-crop"
                 labels={{
                   title: labels.youtubePosterCrop,
@@ -2065,9 +2075,6 @@ const YoutubeNode = Node.create({
     ];
   },
 });
-
-/** A film's poster takes one shape, its box's (§NNN). */
-const POSTER_PRESETS: readonly CropPreset[] = ["16:9"];
 
 /**
  * The shape a new picture goes in with (§454) — an upload's, and since §NNN a picture taken from
