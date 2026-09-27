@@ -240,6 +240,34 @@ tests/
 `AGENTS.md` §5 is the full structure and the dependency rules. The short version: domain code
 does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
 
+## Coding from the phone (Claude Code on the web)
+
+A cloud session starts from a fresh clone: no `node_modules`, no `.env.local`, no database. The
+SessionStart hook in [`.claude/settings.json`](../.claude/settings.json) runs
+[`.claude/hooks/session-start.sh`](../.claude/hooks/session-start.sh) there, and only there
+(`CLAUDE_CODE_REMOTE=true`; on your own machine it exits at once). It installs the dependencies,
+runs `yarn setup`, starts a local PostgreSQL 17, writes a `.env.local` with the local values,
+migrates and seeds. Every step skips what is already done, so a resumed session costs seconds.
+
+Three things differ from a laptop, all worked around by the hook:
+
+- The environment's network policy refuses `repo.yarnpkg.com`, so Corepack takes Yarn from the
+  npm registry (`COREPACK_NPM_REGISTRY`, written into the session's environment).
+- The image ships PostgreSQL 16 and no Docker daemon. 16 refuses the migrations run from
+  nothing — it will not let a transaction use an enum value added to a type created in that
+  transaction, which 17 allows — so the hook unpacks the npm registry's `@embedded-postgres`
+  build of 17.6 under `/opt/pg17`, the release `docker-compose.yml` pins.
+- Playwright's own browser download is refused, so the hook names the image's Chromium in
+  `PLAYWRIGHT_CHROMIUM_PATH`, which `playwright.config.ts` reads and every other machine leaves
+  unset. The container has no IPv6 either; `scripts/dev.mjs` falls back to IPv4 for its probe.
+
+The session is local in every sense: email in `capture`, sign-in through the development
+switcher, the throwaway database above. **No QA or production credential goes into the cloud
+environment's settings or into this repository** — it is public. Deploying and migrating the
+deployed databases stay where they are: the `qa → main` pull request and the gated `migrate`
+workflow. The weather and anything else outside the policy's allowlist stays silent, as it is
+built to.
+
 ## Things that will catch you out
 
 - **`middleware.ts` does not exist here.** Next 16 renamed it to `proxy.ts`, with the export
