@@ -64,7 +64,7 @@ export default function TurnstileWidget({
         return;
       }
       /*
-        Say so when the token arrives (§NNN). A send button held for the token also watches the
+        Say so when the token arrives (§502). A send button held for the token also watches the
         hidden field's `value` attribute, but that holds only while Cloudflare draws the field as
         `type="hidden"`; the success callback is its documented answer. It bubbles to the form from
         here, and the button reads the field on the next task — so a held press is sent the moment

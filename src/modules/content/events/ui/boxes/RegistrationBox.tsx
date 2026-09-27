@@ -63,7 +63,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * "Participare și înscrieri" (§350): how people register — here, with another organizer, or not at
  * all — and under which rules; on the page, who may enter and the button, under the cost row (§406:
  * the cost is its own card, `CostBox`, just above this one, where the page draws its row). Registration's rules are
- * in this one box, as named cards: the period (the minimum age and the declaration are under «Regulamentul», §NNN, §448), the confirmation
+ * in this one box, as named cards: the period (the minimum age and the declaration are under «Regulamentul», §505, §448), the confirmation
  * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
  * printing). The public list was the fifth card here (owner requirement 1 of §350); since §406 it is
  * its own card, last, because the page draws it last (`StartListBox`).
@@ -272,7 +272,7 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/* 8.2 — who may enter was a card here («Condiții de participare», §329). Since
-                      §NNN the minimum age is one box of «Regulamentul» for every type, and what a
+                      §505 the minimum age is one box of «Regulamentul» for every type, and what a
                       runner signs is chosen beside it since §448 (`DeclarationCard`): one line
                       says where both went. */}
                   <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>

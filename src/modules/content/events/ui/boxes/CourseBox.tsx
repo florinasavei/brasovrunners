@@ -178,7 +178,7 @@ export default async function CourseBox({
         </Box>
         {/* The group run's optional self-declaration (§393) is under «Regulamentul» since §448
             (`DeclarationCard`): it still follows the surface chosen here. */}
-        {/* A group run's minimum age had its own box here (§440); since §NNN it is the one
+        {/* A group run's minimum age had its own box here (§440); since §505 it is the one
             `event.minAge` of «Regulamentul», for every type (`RulesBox`). */}
         <RecallField
           name="event.routeUrl"

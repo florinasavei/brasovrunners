@@ -6,7 +6,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the minimum age is one box, `event.minAge`, in the editor's «Regulamentul», for every
+ * §505 — the minimum age is one box, `event.minAge`, in the editor's «Regulamentul», for every
  * event type. The editor's own Server Action is called with the form the editor posts (the
  * pattern of `group-run-declaration-flag.test.ts`), so the reader (`actions.ts#eventFieldsFrom`)
  * and the service are both on the path: a group run with no registration and a race registered
@@ -127,7 +127,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN the minimum age is saved for every type, through the editor's one box", () => {
+describe("§505 the minimum age is saved for every type, through the editor's one box", () => {
   it("a group run with no registration stores the number typed, and a later save changes it", async () => {
     const created = await createEvent(db, { actor: admin, fields: { ...GROUP_RUN, translations: translations("tura") }, now: NOW });
     await postSave(editorForm(await reload(created.id), "16"));

@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.11-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.12-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
@@ -11,7 +11,7 @@
  *      green, and merges it into `qa` — an already-merged batch PR is taken as done, and the run
  *      continues from step 3;
  *   3. waits for `qa`'s docs-check run on that merge, found by its commit, until its status says
- *      completed (§NNN). It is short when the batch PR's run tested the same tree: that run
+ *      completed (§504). It is short when the batch PR's run tested the same tree: that run
  *      recorded the tree, and this one skips its heavy jobs;
  *   4. only then opens the `qa → main` release PR, or takes the one already open — so the release
  *      PR's run finds `qa`'s tree recorded and skips too, rather than testing it a third time;
@@ -22,7 +22,7 @@
  *      it (`DECISIONS.md` §31) and waits for it to complete; if it changes none, waits for nothing;
  *   7. waits until production's `/api/health` reports the new baseline — the same answer `yarn smoke` reads.
  *
- * It measures itself (§NNN): each step's minutes and the total are printed at the end — and at a
+ * It measures itself (§504): each step's minutes and the total are printed at the end — and at a
  * stop, with the step it stopped in — and appended as one JSON line to `SHIP_TIMES_FILE`, by
  * default `brasovrunners-ship-times.jsonl` in the system's temporary directory.
  *
@@ -41,7 +41,7 @@ import { join } from "node:path";
 import process from "node:process";
 import { createClock, formatDuration, judgeChecks, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
 
-// Each step's time as it ends (m:ss), and the whole at the end or at a stop (§NNN).
+// Each step's time as it ends (m:ss), and the whole at the end or at a stop (§504).
 const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
 const [PR, NEW, PREV, TITLE] = process.argv.slice(2);
 if (!PR || !NEW || !PREV || !TITLE) {

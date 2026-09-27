@@ -6,7 +6,7 @@ import { type EventType, publicAgeRule } from "../domain/event-type";
 
 /**
  * Who may take part, by age, inside the event page's «Condiții de participare» fold (§498), after
- * the rules and before the photographs notice (§NNN). The minimum age is set in the editor's
+ * the rules and before the photographs notice (§505). The minimum age is set in the editor's
  * «Regulamentul» for every type, so the page says it where the rules are read — no longer as a
  * «Vârstă» row of the facts (§329, §410).
  *

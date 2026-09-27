@@ -121,7 +121,7 @@ function editorPath(locale: Locale, eventId: string): string {
 
 /**
  * The boxes a refusal of the event form names, as the form posts them (`form-names.ts`). The
- * minimum age is one box, `event.minAge` in «Regulamentul», for every type since §NNN — a group
+ * minimum age is one box, `event.minAge` in «Regulamentul», for every type since §505 — a group
  * run's own box in «Traseul» (§440, §495) is gone, so no type needs its own name any more.
  */
 const eventFormFieldNames = (error: DomainError) => error.fields.map((field) => eventFormFieldName(field));
@@ -281,7 +281,7 @@ function eventFieldsFrom(form: FormData) {
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`). One
-    // box in «Regulamentul» for every type since §NNN, a group run's included (§440's own box gone).
+    // box in «Regulamentul» for every type since §505, a group run's included (§440's own box gone).
     minAge: value("minAge"),
     // The event's own reminder lead (§377), only when the form carried its select: the empty
     // choice is "as usual" (null), and a form without the select is "not editing it".

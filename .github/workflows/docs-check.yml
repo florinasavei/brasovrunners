@@ -8,7 +8,7 @@ on:
   pull_request:
   push:
     branches: [qa, main]
-  # By hand, to test a tree again even though a run already passed on it (§NNN).
+  # By hand, to test a tree again even though a run already passed on it (§504).
   workflow_dispatch:
     inputs:
       full:
@@ -18,7 +18,7 @@ on:
 
 permissions:
   contents: read
-  # `tested-tree` reads the repository's artifact list and the run that uploaded one (§NNN).
+  # `tested-tree` reads the repository's artifact list and the run that uploaded one (§504).
   actions: read
 
 # A pull request's new push makes its previous run moot: that run is cancelled rather than
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # **One tree, tested once (§NNN).** A release used to test the same files four times: the batch
+  # **One tree, tested once (§504).** A release used to test the same files four times: the batch
   # pull request (its merge ref), the push to `qa` that merging it made, the `qa → main` release
   # pull request, and the push to `main` — about twelve minutes each, and `yarn ship` waited on
   # three of them in a row. The merge commit on `qa` has the same tree as the batch PR's merge
@@ -155,7 +155,7 @@ jobs:
   # Separate job because it needs a real PostgreSQL and a browser, which `docs-check` must
   # not require — that one gates every commit and has to run on a bare machine.
   #
-  # **Sharded (§431), eight on every run, both projects (§NNN).** §209 ran the desktop project
+  # **Sharded (§431), eight on every run, both projects (§504).** §209 ran the desktop project
   # alone on a pull request and both on a push, and §431 split that into four and eight shards.
   # Now the pull request is the one run that tests a tree — the push to `qa`, the release PR and
   # the push to `main` find it recorded and skip — so it runs the whole suite, both viewports,
@@ -239,7 +239,7 @@ jobs:
 
       - run: yarn db:seed
 
-      # Both projects, desktop and the 320-pixel phone, on every run (§NNN, replacing §209's
+      # Both projects, desktop and the 320-pixel phone, on every run (§504, replacing §209's
       # desktop-only pull request): the run that tests a tree is the only one, so it tests all of it.
       #
       # `--shard=i/n` takes the i-th of n equal slices of the tests (`fullyParallel` makes the
@@ -273,7 +273,7 @@ jobs:
           echo "tested before: ${{ needs.tested-tree.outputs.tested }}; shards: ${{ needs.e2e-shard.result }}"
           test "${{ needs.tested-tree.outputs.tested }}" = "true" || test "${{ needs.e2e-shard.result }}" = "success"
 
-  # The record `tested-tree` reads (§NNN): a one-line artifact named after the tree, uploaded only
+  # The record `tested-tree` reads (§504): a one-line artifact named after the tree, uploaded only
   # when `yarn check`, the build and every shard — both projects, and the concurrency suite on
   # shard 1 — passed on it. A failed upload is not a failed run: the next run of the same tree
   # simply tests it again.

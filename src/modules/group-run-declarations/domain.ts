@@ -11,7 +11,7 @@ export const SIGNING_GRACE_MINUTES = 60;
 /**
  * Whether a signature may still be taken (§393): a published event, not cancelled, whose start is
  * at most `SIGNING_GRACE_MINUTES` behind. After that the declaration would be about a run that has
- * happened; the signature already taken is kept until the signer asks for its deletion (§NNN).
+ * happened; the signature already taken is kept until the signer asks for its deletion (§503).
  */
 export function signingOpen(event: { editorialStatus: string; eventStatus: string; startsAt: Date }, now: Date): boolean {
   return (
@@ -65,8 +65,8 @@ export const ERASE_REASON_MAX = 500;
 
 /**
  * How many days after the run's start the platform clears an identity document from a group run's
- * self-declaration (§393, §NNN). The declaration itself is kept until the signer asks for its
- * deletion (§NNN) — the Administrator's erase, never a sweep — but a document typed under a text
+ * self-declaration (§393, §503). The declaration itself is kept until the signer asks for its
+ * deletion (§503) — the Administrator's erase, never a sweep — but a document typed under a text
  * approved before §418 took `{{idDocument}}` off has no business outliving the run, as the race's
  * does not (§95). One number for the sweep (`RETENTION.groupRunIdDocumentDaysAfterEvent` is this)
  * and the signing page's help line, said through `durationPhrase`, never as a word typed into a
@@ -77,7 +77,7 @@ export const GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS = 7;
 /**
  * Whether the event's backoffice page draws "Declarații semnate (alergare de grup)" (§393): when
  * the run offers the declaration now, or when some are still kept — from before the organizer
- * unticked it, or from any past run, since nothing sweeps them (§NNN) — never merely because the
+ * unticked it, or from any past run, since nothing sweeps them (§503) — never merely because the
  * run is on asphalt or trail.
  */
 export function showsGroupRunDeclarationsFold(offeredKey: string | null, signedCount: number): boolean {

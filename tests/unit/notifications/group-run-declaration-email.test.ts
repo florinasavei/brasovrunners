@@ -46,7 +46,7 @@ describe("§393 the group run's declaration messages", () => {
       expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la alergare`);
       expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the run`);
       expect(email.text).toContain("dacă alergătorul se opune");
-      // Kept while the runner comes to the runs, deleted when they ask (§NNN), never a number of days.
+      // Kept while the runner comes to the runs, deleted when they ask (§503), never a number of days.
       expect(email.text).toContain("cât timp alergătorul vine la alergări; când cere ștergerea ei");
       expect(email.text).toContain("while the runner keeps coming to the runs; when they ask for it to be deleted");
       expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);

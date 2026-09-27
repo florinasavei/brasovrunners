@@ -32,7 +32,7 @@ import { DECLARATION_FOOTER_Y, drawnRuns } from "../../helpers/pdf-drawn";
  * us". One row, never a registration; two messages through the outbox — the signer's PDF, whole,
  * and the club's archive copy with the identity document masked (§320); bound to the version read
  * (§57); erased by an Administrator with an audit row that never names the signer (§67, §88); kept
- * until the signer asks for its deletion (§NNN), only an identity document cleared at seven days.
+ * until the signer asks for its deletion (§503), only an identity document cleared at seven days.
  *
  * The PDF's inputs are watched rather than the drawn page, as `club-copy.test.ts` does: pdfkit
  * writes an embedded font's text as glyph ids, so the page cannot be searched for a number.
@@ -367,7 +367,7 @@ describe("§393 signing a group run's self-declaration", () => {
     // Edited: never — an approved version is history, and a signed one twice over.
     await expect(updateDraftVersion(db, superadmin, row.id, translations, later)).rejects.toMatchObject({ code: "CONFLICT" });
 
-    // The sweep, long after the run, keeps the signature (§NNN), and with it the reliance.
+    // The sweep, long after the run, keeps the signature (§503), and with it the reliance.
     const counts = await pruneExpiredRows(db, later);
     expect(counts.failures).toEqual([]);
     expect(await db.select().from(groupRunDeclarations)).toHaveLength(1);
@@ -447,7 +447,7 @@ describe("§393 erasing one (§67, §88)", () => {
   });
 });
 
-describe("§NNN retention: the declaration is kept until the signer asks", () => {
+describe("§503 retention: the declaration is kept until the signer asks", () => {
   it("keeps a declaration of a run a year gone, with its messages until their own window", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const old = await trailRun({ startsAt: new Date("2026-09-01T16:00:00.000Z") });

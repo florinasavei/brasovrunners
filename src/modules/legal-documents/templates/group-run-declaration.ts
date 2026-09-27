@@ -32,7 +32,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * interest in evidence (art. 6(1)(f)), and art. 9(2)(f) for the health statement — the privacy
  * notice's §3 says the same — so the rights list names objection and restriction, and the data
  * paragraph names the archive copy's three years beside the platform's keeping it until the
- * signer asks for its deletion (§NNN, reversing §393's seven days).
+ * signer asks for its deletion (§503, reversing §393's seven days).
  *
  * **Adults only, for now.** The signer declares for themselves: `{{participant}}` is the signer's
  * own name. A minor's signature beside a parent's
@@ -52,7 +52,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * named only by the four `<PLACEHOLDER>`s (§132): the legal name, the seat, the registration number
  * and the contact address. The platform's retention is no number of days — kept while the signer
  * takes part in the club's runs and deleted at their request (`jobs/retention.ts` sweeps no row,
- * §NNN) — the same for every run because the code makes it so.
+ * §503) — the same for every run because the code makes it so.
  */
 
 /** What both surfaces open with: who, which run, that it is optional and not a race. */

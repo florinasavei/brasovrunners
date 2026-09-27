@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createClock, formatDuration, waitForRun } from "../../../scripts/ship-checks.mjs";
 
 /**
- * §NNN — the release pipeline tests one tree once. `docs-check.yml` records a tree that passed
+ * §504 — the release pipeline tests one tree once. `docs-check.yml` records a tree that passed
  * everything and skips the heavy jobs on a run of the same tree; a pull request runs the whole
  * suite on eight shards; `yarn ship` waits on a run by its status and times its own steps.
  *
@@ -26,7 +26,7 @@ function job(name: string): string {
 
 const SKIP_WHEN_TESTED = "if: ${{ !cancelled() && needs.tested-tree.outputs.tested != 'true' }}";
 
-describe("§NNN docs-check: one tree, tested once", () => {
+describe("§504 docs-check: one tree, tested once", () => {
   it("always runs as a workflow — no path or branch filter on a pull request — and asks for no write", () => {
     expect(workflow).toMatch(/^on:\n {2}pull_request:\n {2}push:\n {4}branches: \[qa, main\]\n/m);
     expect(workflow).not.toMatch(/paths(-ignore)?:|branches-ignore:/);
@@ -98,7 +98,7 @@ describe("§NNN docs-check: one tree, tested once", () => {
   });
 });
 
-describe("§NNN ship: waiting on one run by its status", () => {
+describe("§504 ship: waiting on one run by its status", () => {
   const readings = (list: Array<{ status: string; conclusion?: string | null } | null>) => {
     let i = 0;
     const slept: number[] = [];
@@ -145,7 +145,7 @@ describe("§NNN ship: waiting on one run by its status", () => {
   });
 });
 
-describe("§NNN ship: the clock it keeps of itself", () => {
+describe("§504 ship: the clock it keeps of itself", () => {
   it("formats minutes and seconds without wrapping into hours", () => {
     expect(formatDuration(0)).toBe("0:00");
     expect(formatDuration(65_400)).toBe("1:05");

@@ -190,7 +190,7 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
  * declaration (§448) is the card after it, no longer inside it — the three are siblings, in the
  * order the page reads them.
  *
- * **The minimum age is here, one box for every type** (§NNN). It was two boxes — the race's in
+ * **The minimum age is here, one box for every type** (§505). It was two boxes — the race's in
  * «Participare și înscrieri» › «Condiții de participare» (§329), a group run's own in «Traseul»
  * (§440) — and neither was shown for a type that registers elsewhere or not at all. Now one
  * `event.minAge`, after the rules' tabs, on every event: who may take part is read with the rules.

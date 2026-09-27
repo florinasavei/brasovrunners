@@ -68,7 +68,7 @@ export type SummaryWords = {
   };
   window: { range: string; fromPublication: string; soon: string; untilStart: string };
   conditions: { noDeclaration: string };
-  /** The minimum age, in «Regulamentul»'s closed line (§NNN): "vârsta minimă {age}", or none. */
+  /** The minimum age, in «Regulamentul»'s closed line (§505): "vârsta minimă {age}", or none. */
   age: { from: string; none: string };
   /** A group run's optional self-declaration, under «Regulamentul» (§448). */
   declaration: { offered: string; offeredNoText: string; notOffered: string; notAsked: string };
@@ -391,7 +391,7 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
 }
 
 /**
- * The minimum age's part of «Regulamentul»'s closed line (§NNN — the box moved there from the
+ * The minimum age's part of «Regulamentul»'s closed line (§505 — the box moved there from the
  * registration card's «Condiții de participare», for every type): `vârsta minimă 16 ani`, or
  * `fără vârstă minimă` for zero — never "de la 0 ani". The number reads through `yearsPhrase`,
  * so twenty is «20 de ani».

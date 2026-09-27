@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from "@/shared/ui/held-press";
 
 /**
- * BR-REQ-041-01 — the registration form's send button; `DECISIONS.md` §285, §304 and §NNN.
+ * BR-REQ-041-01 — the registration form's send button; `DECISIONS.md` §285, §304 and §502.
  *
  * §285 made the button wait for Cloudflare's token and swallow a press made before it existed.
  * §304 is the defect that swallowing hid: with autofill the whole form is filled in a second and
@@ -15,7 +15,7 @@ import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from 
  * Source-level, like `boxed-disclosure.test.ts`: the unit suite runs in Node with no DOM, and
  * what has to stay true is a handful of lines in one component and two catalogue sentences.
  * The browser side is `registration-autofill.spec.ts`, which fills the form the way a password
- * manager does, and `registration-turnstile.spec.ts`, which runs the widget itself (§NNN).
+ * manager does, and `registration-turnstile.spec.ts`, which runs the widget itself (§502).
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -61,7 +61,7 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
 });
 
 /**
- * §NNN — the held press that was never sent after Turnstile said «Success!».
+ * §502 — the held press that was never sent after Turnstile said «Success!».
  *
  * §285's valve disconnected the token watch eight seconds after the page was drawn, while a
  * listener on the form's `input` went on setting "token missing" — so anybody who typed after the
@@ -70,7 +70,7 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
  * refusal's redirect does not reset. The browser side is `registration-turnstile.spec.ts`, against
  * a server that runs the widget with Cloudflare's own test keys.
  */
-describe("§NNN a held press is sent whenever the check answers, every time", () => {
+describe("§502 a held press is sent whenever the check answers, every time", () => {
   const source = read("src/shared/ui/SubmitButton.tsx");
   const widget = read("src/modules/registrations/ui/TurnstileWidget.tsx");
 
@@ -105,13 +105,13 @@ describe("§NNN a held press is sent whenever the check answers, every time", ()
 });
 
 /**
- * §NNN — two awaiting buttons in one form, one request.
+ * §502 — two awaiting buttons in one form, one request.
  *
  * The registration form has the main send button and, after a too-fast refusal, «Retrimite»
  * (§324), both waiting for the token. Each held its own press and each replayed it when the token
  * landed: two `requestSubmit` calls, two POSTs of one registration. The hold is the form's now.
  */
-describe("§NNN one held press per form, sent once from the button that was pressed", () => {
+describe("§502 one held press per form, sent once from the button that was pressed", () => {
   function fakeForm() {
     const submitters: unknown[] = [];
     const events: string[] = [];

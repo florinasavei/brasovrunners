@@ -159,7 +159,7 @@ describe("§347 one event form for five features, on both pages", () => {
   });
 });
 
-describe("§NNN the minimum age is one box in «Regulamentul» for every type", () => {
+describe("§505 the minimum age is one box in «Regulamentul» for every type", () => {
   it("the reader takes `minAge` once, from `event.minAge`, whatever the type", () => {
     expect(RETURNED.match(/\bminAge:/g)?.length ?? 0).toBe(1);
     const line = RETURNED.slice(RETURNED.indexOf("minAge:"), RETURNED.indexOf("\n", RETURNED.indexOf("minAge:")));

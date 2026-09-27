@@ -1015,7 +1015,7 @@ export default async function EventFacts({
   }
 
   /*
-    Who may enter (§329, §410) is no longer a row here: since §NNN the minimum age is set in the
+    Who may enter (§329, §410) is no longer a row here: since §505 the minimum age is set in the
     editor's «Regulamentul» for every type, and the page says it inside «Condiții de participare»,
     after the rules (`EventAgeRule`).
   */

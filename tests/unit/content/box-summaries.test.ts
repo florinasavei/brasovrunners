@@ -229,7 +229,7 @@ describe("§350 each box's summary, empty and filled", () => {
         "ro",
       ),
     ).toBe("Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59");
-    // §NNN: the minimum age is a box of «Regulamentul» for every type; its part of the closed
+    // §505: the minimum age is a box of «Regulamentul» for every type; its part of the closed
     // line counts in Romanian («20 de ani») and never says "de la 0 ani".
     expect(minAgeSummary(words, 14, "ro")).toBe("vârsta minimă 14 ani");
     expect(minAgeSummary(words, 20, "ro")).toBe("vârsta minimă 20 de ani");

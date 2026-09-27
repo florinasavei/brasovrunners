@@ -846,7 +846,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("50");
-    // The minimum age is a box of «Regulamentul», for every type (§NNN).
+    // The minimum age is a box of «Regulamentul», for every type (§505).
     await openEditorBox(page, "Regulamentul");
     // The box offers the club's fourteen until the organizer says otherwise.
     await expect(field("event.minAge")).toHaveValue("14");
@@ -877,7 +877,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
 
-      // The event's page says the same sentence in «Condiții de participare» (§NNN), and its structured data "16-".
+      // The event's page says the same sentence in «Condiții de participare» (§505), and its structured data "16-".
       await page.goto(`/ro/evenimente/${slug}`);
       await expect(page.locator("#main")).toContainText(
         "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",

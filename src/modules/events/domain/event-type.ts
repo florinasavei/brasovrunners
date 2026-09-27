@@ -100,7 +100,7 @@ export function hasAgeRule(event: { type: EventType; registrationMode: "NONE" | 
 }
 
 /**
- * The age sentence the event's page says, for every type (§NNN, amending §329's "only where the
+ * The age sentence the event's page says, for every type (§505, amending §329's "only where the
  * club counts it"): the minimum age is one box in the editor's «Regulamentul» for every event, so
  * the page states it for every event that has one.
  *

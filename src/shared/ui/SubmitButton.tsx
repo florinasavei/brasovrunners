@@ -39,7 +39,7 @@ function reach(event: MouseEvent<HTMLAnchorElement>, id: string) {
 
 /**
  * Whether Cloudflare's check has yet to answer on this form, read from the form as it stands
- * (§285, §NNN): a widget drawn with an empty token field has not; a widget not drawn at all is
+ * (§285, §502): a widget drawn with an empty token field has not; a widget not drawn at all is
  * still expected only while the page is younger than `graceMs` — after that its script is taken
  * for blocked, and waiting for it would be waiting for nothing.
  */
@@ -137,7 +137,7 @@ export type SubmitButtonProps = {
    * Pressing send before Turnstile has answered buys a refusal for no reason — the owner:
    * "butonul de trimitere nu ar trebui sa fie vizibil daca Cloudflare Turnstile nu a terminat".
    * A press while the token is missing is held — the button dimmed, saying why — and sent the
-   * moment the token lands, or `RELEASE_AFTER_MS` after that press (§304, §NNN); a widget never
+   * moment the token lands, or `RELEASE_AFTER_MS` after that press (§304, §502); a widget never
    * drawn at all holds nothing once the page is that old. §205 is not negotiable: people register
    * at all costs, and a check that never answers must not be the thing that stops them.
    */
@@ -273,7 +273,7 @@ export default function SubmitButton({
 
   /*
     The press held for Cloudflare's token (§285), sent — not dropped — when the wait is over (§304),
-    and now whenever that is (§NNN).
+    and now whenever that is (§502).
 
     Cloudflare writes its token into a hidden input inside the widget's own element, so the form is
     where it shows up and the DOM is what is read — the same shape `PhoneField` uses to watch the
@@ -377,7 +377,7 @@ export default function SubmitButton({
   }, [held]);
 
   /*
-    A press on this button while *another* button of the form holds its press (§NNN): swallowed,
+    A press on this button while *another* button of the form holds its press (§502): swallowed,
     and the same sentence said under this one too, until the held press is over — sent or dropped.
   */
   const [echoing, setEchoing] = useState(false);
@@ -537,14 +537,14 @@ export default function SubmitButton({
             return;
           }
           // A press already held on this form — by this button or by another one — is the press:
-          // it is sent once, by the button that holds it (§NNN). This one only says the same.
+          // it is sent once, by the button that holds it (§502). This one only says the same.
           const form = ref.current?.form;
           if (form && isPressHeld(form)) {
             event.preventDefault();
             if (!held) setEchoing(true);
             return;
           }
-          // Asked of the form now, not of a state from an earlier render (§NNN): the token that
+          // Asked of the form now, not of a state from an earlier render (§502): the token that
           // landed a moment ago counts, and one that was spent or reset since does not.
           if (awaitsBotCheck && form && botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) {
             // The check is still running: hold this press and say so, rather than spending it on

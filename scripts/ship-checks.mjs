@@ -10,7 +10,7 @@
  * Now nothing is judged until the same set of checks has been seen twice in a row with none of
  * them pending.
  *
- * Since §NNN it also holds how `ship` waits on one workflow run — by reading the run's status
+ * Since §504 it also holds how `ship` waits on one workflow run — by reading the run's status
  * until it says "completed", never by `gh run watch`, whose exit says nothing about the run —
  * and the clock `ship` keeps of its own steps.
  */
@@ -114,7 +114,7 @@ export async function waitForSettledChecks(read, { sleep, every = 30, polls = 18
 }
 
 /**
- * Waits for one workflow run to complete, reading its status every `every` seconds (§NNN).
+ * Waits for one workflow run to complete, reading its status every `every` seconds (§504).
  *
  * `ship` used `gh run watch`, then read the conclusion once. `watch` returns on its own errors (a
  * dropped connection, a rate limit) as readily as on the run's end, and a run just rerun reads
@@ -159,7 +159,7 @@ export function formatDuration(ms) {
 }
 
 /**
- * The clock `ship` keeps of itself (§NNN): each step from its start to the next one's, and the
+ * The clock `ship` keeps of itself (§504): each step from its start to the next one's, and the
  * whole. `report()` counts a step still open up to now, so a stop says where the time went too;
  * `onStepEnd` hears each step the moment it ends, so a long release shows its times as it goes.
  *

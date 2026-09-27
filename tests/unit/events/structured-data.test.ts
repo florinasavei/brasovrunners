@@ -322,7 +322,7 @@ describe("BR-REQ-052-02 who may enter (§329)", () => {
     expect("typicalAgeRange" in parsed(sportsEventJsonLd(race(run), URL, "Brașov Runners"))).toBe(false);
   });
 
-  // §NNN: the minimum age is one box for every type, and the page says it for every type — so
+  // §505: the minimum age is one box for every type, and the page says it for every type — so
   // does the structured data, registered elsewhere, not at all, or turned up to.
   it("states the minimum on every type and mode, as the page does", () => {
     for (const overrides of [{ registrationMode: "EXTERNAL" }, { registrationMode: "NONE" }, { type: "GROUP_RUN", registrationMode: "NONE" }] as const) {

@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 /**
  * The rows of a group run's optional self-declarations (§393). No update: a signature is what it
  * was when it was made (§57), apart from the identity document the retention sweep clears at seven
- * days. Rows are kept until the signer asks for their deletion (§NNN): they leave by the
+ * days. Rows are kept until the signer asks for their deletion (§503): they leave by the
  * Administrator's erase, or with their event.
  */
 

@@ -344,7 +344,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
-        rules, the minimum age (§NNN), the photographs notice and a group run's self-declaration, in that order, under one
+        rules, the minimum age (§505), the photographs notice and a group run's self-declaration, in that order, under one
         fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
         is on all of them (§421), so the fold is never empty.
 
@@ -388,7 +388,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             </Box>
           )}
 
-          {/* The minimum age (§NNN; §329, §410): set in the editor's «Regulamentul» for every type,
+          {/* The minimum age (§505; §329, §410): set in the editor's «Regulamentul» for every type,
               so it is read here with the rules rather than as a row of the facts. Nothing for no
               minimum where nobody registers here. */}
           <EventAgeRule event={event} />

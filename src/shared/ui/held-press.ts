@@ -1,5 +1,5 @@
 /**
- * One held press per form (§NNN).
+ * One held press per form (§502).
  *
  * The registration form carries two send buttons that wait for Cloudflare's token — the main one
  * and, after a too-fast refusal, «Retrimite» at the top (§324). Each used to hold its own press,

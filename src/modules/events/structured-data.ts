@@ -261,7 +261,7 @@ export function sportsEventJsonLd(
     sport: "Running",
     /*
       Who may enter (§329): schema.org's own spelling of an open-ended range, "14-". Wherever
-      the page states a minimum — every type since §NNN (`publicAgeRule`) — and only for a
+      the page states a minimum — every type since §505 (`publicAgeRule`) — and only for a
       minimum: zero is no minimum, and "0-" would state a rule nobody set.
     */
     ...(event.minAge > 0 ? { typicalAgeRange: `${event.minAge}-` } : {}),

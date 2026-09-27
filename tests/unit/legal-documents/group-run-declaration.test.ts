@@ -198,7 +198,7 @@ describe("§393 the two templates", () => {
 });
 
 describe("§393 the public offer line states the retention truthfully", () => {
-  it("says the club keeps it while the signer comes to the runs and deletes it when they ask (§NNN), with no number of days", () => {
+  it("says the club keeps it while the signer comes to the runs and deletes it when they ask (§503), with no number of days", () => {
     expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp vii la alergări și o șterge când îi ceri/);
     expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it while you keep coming to the runs and deletes it when you ask/);
     expect(ro.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|zile/);

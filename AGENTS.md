@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.11-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.12-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.11-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.12-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -582,7 +582,7 @@ Hooks need no dependency: husky and lint-staged are deliberately not installed (
 priority 4 and 6). `--no-verify` exists for emergencies and does not bypass CI. The one
 documented exception is the landing commit of a batch (`docs/DISPATCHER.md` § Land a batch):
 every branch in it already passed the hook, it runs `yarn docs:check` first, and CI runs the
-full `yarn check` on the batch pull request minutes later; every other commit keeps the hook (§NNN).
+full `yarn check` on the batch pull request minutes later; every other commit keeps the hook (§504).
 
 ### 6.4 Production promotion
 

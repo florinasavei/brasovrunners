@@ -18,7 +18,7 @@ import { locale } from "./locale";
  * **What it keeps, and for how long.** The name typed as the signature (§86, in a hand), the
  * identity document as it was typed — never a scan (§95) — the address the copy was sent to, and
  * the language of the PDF. The row is **kept while the signer takes part in the club's runs and
- * deleted at their request** (§NNN, reversing §393's seven days): it is the club's evidence for
+ * deleted at their request** (§503, reversing §393's seven days): it is the club's evidence for
  * the runs the signer keeps coming to, and the Administrator's erase — an
  * audit row naming who and why, never who was erased — is how it goes. Only the identity
  * document, which a text approved before §418 could still ask for, is cleared seven days after

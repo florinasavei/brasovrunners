@@ -8,7 +8,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (reversing §393's seven days) — a group run's self-declaration is kept until the signer
+ * §503 (reversing §393's seven days) — a group run's self-declaration is kept until the signer
  * asks for its deletion. Every sentence that says how long says that, and none says a number of
  * days: the run's page, the backoffice fold, both emails, the declaration's own text and the
  * privacy notice. Only an identity document (a text from before §418) still goes at seven days,
@@ -19,7 +19,7 @@ const DATA: TemplateData = { participantName: "Ana Popescu", eventTitle: "Tura p
 /** A number of days, spelled out or in digits, in either language. */
 const DAYS = /șapte zile|seven days|\b\d+ (de )?zile\b|\b\d+ days\b|\{days\}/i;
 
-describe("§NNN a group run's self-declaration is kept until the signer asks", () => {
+describe("§503 a group run's self-declaration is kept until the signer asks", () => {
   it("has no deleting window in the sweep: the step only clears an identity document, at the domain's number", () => {
     expect(RETENTION).not.toHaveProperty("groupRunDeclarationsDaysAfterEvent");
     expect(RETENTION.groupRunIdDocumentDaysAfterEvent).toBe(GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS);

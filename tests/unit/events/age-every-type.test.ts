@@ -10,7 +10,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — the minimum age is one box in the editor's «Regulamentul» for every event
+ * `DECISIONS.md` §505 — the minimum age is one box in the editor's «Regulamentul» for every event
  * type, and the event's page says it for every type, inside «Condiții de participare» (§498) after
  * the rules, no longer as a «Vârstă» row of the facts (amending §329's "only where the club counts
  * it"). Where the club takes the registrations, the form's own sentence (§410); anywhere else the
@@ -41,7 +41,7 @@ const ageOf = async (event: { type: (typeof EVENT_TYPES)[number]; registrationMo
   return element ? renderToStaticMarkup(element) : "";
 };
 
-describe("§NNN the page says the minimum age for every type", () => {
+describe("§505 the page says the minimum age for every type", () => {
   it("chooses the sentence by where the registrations are taken", () => {
     // The club's own door: the form's sentence, the parent's clause by the number (§329, §410).
     expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 14 })).toBe("minimumAndGuardian");
@@ -99,7 +99,7 @@ describe("§NNN the page says the minimum age for every type", () => {
   });
 });
 
-describe("§NNN the staff preview says the age as the page does", () => {
+describe("§505 the staff preview says the age as the page does", () => {
   const preview = readFileSync(path.join(process.cwd(), "src/app/[locale]/preview/events/[id]/page.tsx"), "utf8");
 
   it("renders EventAgeRule with the preview's event, after the rules", () => {
@@ -114,7 +114,7 @@ describe("§NNN the staff preview says the age as the page does", () => {
   });
 });
 
-describe("§NNN the editor's one box, for every type", () => {
+describe("§505 the editor's one box, for every type", () => {
   const languages: LanguageEntry[] = (["ro", "en"] as const).map((locale) => ({
     label: locale,
     mayEdit: true,
