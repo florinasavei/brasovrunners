@@ -84,9 +84,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "audit_logs_actor_idx": {
           "name": "audit_logs_actor_idx",
@@ -105,37 +105,37 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "audit_logs_actor_staff_user_id_staff_users_id_fk": {
           "name": "audit_logs_actor_staff_user_id_staff_users_id_fk",
           "tableFrom": "audit_logs",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "actor_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "audit_logs_participant_id_participants_id_fk": {
           "name": "audit_logs_participant_id_participants_id_fk",
           "tableFrom": "audit_logs",
+          "tableTo": "participants",
           "columnsFrom": [
             "participant_id"
           ],
-          "tableTo": "participants",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -256,50 +256,50 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "declaration_acceptances_registration_id_registrations_id_fk": {
           "name": "declaration_acceptances_registration_id_registrations_id_fk",
           "tableFrom": "declaration_acceptances",
+          "tableTo": "registrations",
           "columnsFrom": [
             "registration_id"
           ],
-          "tableTo": "registrations",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "declaration_acceptances_legal_document_id_legal_documents_id_fk": {
           "name": "declaration_acceptances_legal_document_id_legal_documents_id_fk",
           "tableFrom": "declaration_acceptances",
+          "tableTo": "legal_documents",
           "columnsFrom": [
             "legal_document_id"
           ],
-          "tableTo": "legal_documents",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "declaration_acceptances_attested_by_staff_user_id_staff_users_id_fk": {
           "name": "declaration_acceptances_attested_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "declaration_acceptances",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "attested_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -401,10 +401,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"registration_id\" IS NOT NULL AND \"purpose\" <> 'REGISTER_ANOTHER_PERSON'",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "email_action_tokens_one_active_per_participant_purpose": {
           "name": "email_action_tokens_one_active_per_participant_purpose",
@@ -423,10 +423,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"used_at\" IS NULL AND \"invalidated_at\" IS NULL AND \"registration_id\" IS NULL",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "email_action_tokens_participant_purpose_expiry_idx": {
           "name": "email_action_tokens_participant_purpose_expiry_idx",
@@ -451,9 +451,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "email_action_tokens_registration_purpose_expiry_idx": {
           "name": "email_action_tokens_registration_purpose_expiry_idx",
@@ -478,47 +478,47 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "email_action_tokens_participant_id_participants_id_fk": {
           "name": "email_action_tokens_participant_id_participants_id_fk",
           "tableFrom": "email_action_tokens",
+          "tableTo": "participants",
           "columnsFrom": [
             "participant_id"
           ],
-          "tableTo": "participants",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "email_action_tokens_registration_id_registrations_id_fk": {
           "name": "email_action_tokens_registration_id_registrations_id_fk",
           "tableFrom": "email_action_tokens",
+          "tableTo": "registrations",
           "columnsFrom": [
             "registration_id"
           ],
-          "tableTo": "registrations",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "email_action_tokens_token_hash_unique": {
           "name": "email_action_tokens_token_hash_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "token_hash"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -695,9 +695,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "email_outbox_registration_created_idx": {
           "name": "email_outbox_registration_created_idx",
@@ -716,9 +716,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "email_outbox_transport_sent_idx": {
           "name": "email_outbox_transport_sent_idx",
@@ -737,60 +737,60 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "email_outbox_participant_id_participants_id_fk": {
           "name": "email_outbox_participant_id_participants_id_fk",
           "tableFrom": "email_outbox",
+          "tableTo": "participants",
           "columnsFrom": [
             "participant_id"
           ],
-          "tableTo": "participants",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "email_outbox_registration_id_registrations_id_fk": {
           "name": "email_outbox_registration_id_registrations_id_fk",
           "tableFrom": "email_outbox",
+          "tableTo": "registrations",
           "columnsFrom": [
             "registration_id"
           ],
-          "tableTo": "registrations",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "email_outbox_requested_by_staff_user_id_staff_users_id_fk": {
           "name": "email_outbox_requested_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "email_outbox",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "requested_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "email_outbox_idempotency_key_unique": {
           "name": "email_outbox_idempotency_key_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "idempotency_key"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -953,60 +953,60 @@
         "event_translations_event_id_events_id_fk": {
           "name": "event_translations_event_id_events_id_fk",
           "tableFrom": "event_translations",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "event_translations_author_staff_user_id_staff_users_id_fk": {
           "name": "event_translations_author_staff_user_id_staff_users_id_fk",
           "tableFrom": "event_translations",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "author_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "event_translations_reviewed_by_staff_user_id_staff_users_id_fk": {
           "name": "event_translations_reviewed_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "event_translations",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "reviewed_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "event_translations_event_locale_unique": {
           "name": "event_translations_event_locale_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "event_id",
             "locale"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "event_translations_locale_slug_unique": {
           "name": "event_translations_locale_slug_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "locale",
             "slug"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1443,10 +1443,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"events\".\"featured\"",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "events_status_starts_at_idx": {
           "name": "events_status_starts_at_idx",
@@ -1465,9 +1465,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "events_editorial_status_starts_at_idx": {
           "name": "events_editorial_status_starts_at_idx",
@@ -1486,9 +1486,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "events_type_starts_at_idx": {
           "name": "events_type_starts_at_idx",
@@ -1507,9 +1507,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "events_registration_mode_starts_at_idx": {
           "name": "events_registration_mode_starts_at_idx",
@@ -1528,9 +1528,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "events_repeat_rule_idx": {
           "name": "events_repeat_rule_idx",
@@ -1543,10 +1543,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"events\".\"repeat_rule\" IS NOT NULL",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "events_repeat_of_starts_at_idx": {
           "name": "events_repeat_of_starts_at_idx",
@@ -1565,63 +1565,63 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "events_repeat_of_events_id_fk": {
           "name": "events_repeat_of_events_id_fk",
           "tableFrom": "events",
+          "tableTo": "events",
           "columnsFrom": [
             "repeat_of"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "events_declaration_document_id_legal_documents_id_fk": {
           "name": "events_declaration_document_id_legal_documents_id_fk",
           "tableFrom": "events",
+          "tableTo": "legal_documents",
           "columnsFrom": [
             "declaration_document_id"
           ],
-          "tableTo": "legal_documents",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "events_created_by_staff_user_id_staff_users_id_fk": {
           "name": "events_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "events",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "events_updated_by_staff_user_id_staff_users_id_fk": {
           "name": "events_updated_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "events",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "updated_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1731,6 +1731,186 @@
       },
       "isRLSEnabled": false
     },
+    "public.family_sittings": {
+      "name": "family_sittings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registration_id": {
+          "name": "registration_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registration_ids": {
+          "name": "registration_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "held_outbox_ids": {
+          "name": "held_outbox_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "action_token_id": {
+          "name": "action_token_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "held_until": {
+          "name": "held_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "released_at": {
+          "name": "released_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "family_sittings_action_token_unique": {
+          "name": "family_sittings_action_token_unique",
+          "columns": [
+            {
+              "expression": "action_token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "family_sittings_expires_at_idx": {
+          "name": "family_sittings_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "family_sittings_event_id_events_id_fk": {
+          "name": "family_sittings_event_id_events_id_fk",
+          "tableFrom": "family_sittings",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "family_sittings_participant_id_participants_id_fk": {
+          "name": "family_sittings_participant_id_participants_id_fk",
+          "tableFrom": "family_sittings",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "family_sittings_registration_id_registrations_id_fk": {
+          "name": "family_sittings_registration_id_registrations_id_fk",
+          "tableFrom": "family_sittings",
+          "tableTo": "registrations",
+          "columnsFrom": [
+            "registration_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "family_sittings_action_token_id_email_action_tokens_id_fk": {
+          "name": "family_sittings_action_token_id_email_action_tokens_id_fk",
+          "tableFrom": "family_sittings",
+          "tableTo": "email_action_tokens",
+          "columnsFrom": [
+            "action_token_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.pending_family_entries": {
       "name": "pending_family_entries",
       "schema": "",
@@ -1762,6 +1942,12 @@
         },
         "action_token_id": {
           "name": "action_token_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sitting_id": {
+          "name": "sitting_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
@@ -1805,9 +1991,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "pending_family_entries_expires_at_idx": {
           "name": "pending_family_entries_expires_at_idx",
@@ -1820,63 +2006,91 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
+        },
+        "pending_family_entries_sitting_idx": {
+          "name": "pending_family_entries_sitting_idx",
+          "columns": [
+            {
+              "expression": "sitting_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "pending_family_entries_event_id_events_id_fk": {
           "name": "pending_family_entries_event_id_events_id_fk",
           "tableFrom": "pending_family_entries",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "pending_family_entries_participant_id_participants_id_fk": {
           "name": "pending_family_entries_participant_id_participants_id_fk",
           "tableFrom": "pending_family_entries",
+          "tableTo": "participants",
           "columnsFrom": [
             "participant_id"
           ],
-          "tableTo": "participants",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "pending_family_entries_registration_id_registrations_id_fk": {
           "name": "pending_family_entries_registration_id_registrations_id_fk",
           "tableFrom": "pending_family_entries",
+          "tableTo": "registrations",
           "columnsFrom": [
             "registration_id"
           ],
-          "tableTo": "registrations",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "pending_family_entries_action_token_id_email_action_tokens_id_fk": {
           "name": "pending_family_entries_action_token_id_email_action_tokens_id_fk",
           "tableFrom": "pending_family_entries",
+          "tableTo": "email_action_tokens",
           "columnsFrom": [
             "action_token_id"
           ],
-          "tableTo": "email_action_tokens",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "pending_family_entries_sitting_id_family_sittings_id_fk": {
+          "name": "pending_family_entries_sitting_id_family_sittings_id_fk",
+          "tableFrom": "pending_family_entries",
+          "tableTo": "family_sittings",
+          "columnsFrom": [
+            "sitting_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1947,34 +2161,34 @@
         "gallery_album_translations_album_id_gallery_albums_id_fk": {
           "name": "gallery_album_translations_album_id_gallery_albums_id_fk",
           "tableFrom": "gallery_album_translations",
+          "tableTo": "gallery_albums",
           "columnsFrom": [
             "album_id"
           ],
-          "tableTo": "gallery_albums",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "gallery_album_translations_album_locale_unique": {
           "name": "gallery_album_translations_album_locale_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "album_id",
             "locale"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "gallery_album_translations_locale_slug_unique": {
           "name": "gallery_album_translations_locale_slug_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "locale",
             "slug"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2081,63 +2295,63 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "gallery_albums_event_id_events_id_fk": {
           "name": "gallery_albums_event_id_events_id_fk",
           "tableFrom": "gallery_albums",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "gallery_albums_cover_media_asset_id_media_assets_id_fk": {
           "name": "gallery_albums_cover_media_asset_id_media_assets_id_fk",
           "tableFrom": "gallery_albums",
+          "tableTo": "media_assets",
           "columnsFrom": [
             "cover_media_asset_id"
           ],
-          "tableTo": "media_assets",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "gallery_albums_created_by_staff_user_id_staff_users_id_fk": {
           "name": "gallery_albums_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "gallery_albums",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "gallery_albums_updated_by_staff_user_id_staff_users_id_fk": {
           "name": "gallery_albums_updated_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "gallery_albums",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "updated_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2210,48 +2424,48 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "gallery_items_album_id_gallery_albums_id_fk": {
           "name": "gallery_items_album_id_gallery_albums_id_fk",
           "tableFrom": "gallery_items",
+          "tableTo": "gallery_albums",
           "columnsFrom": [
             "album_id"
           ],
-          "tableTo": "gallery_albums",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "gallery_items_media_asset_id_media_assets_id_fk": {
           "name": "gallery_items_media_asset_id_media_assets_id_fk",
           "tableFrom": "gallery_items",
+          "tableTo": "media_assets",
           "columnsFrom": [
             "media_asset_id"
           ],
-          "tableTo": "media_assets",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "gallery_items_album_asset_unique": {
           "name": "gallery_items_album_asset_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "album_id",
             "media_asset_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2330,25 +2544,25 @@
         "media_assets_created_by_staff_user_id_staff_users_id_fk": {
           "name": "media_assets_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "media_assets",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "media_assets_key_prefix_unique": {
           "name": "media_assets_key_prefix_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "key_prefix"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2452,37 +2666,37 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "group_run_declarations_event_id_events_id_fk": {
           "name": "group_run_declarations_event_id_events_id_fk",
           "tableFrom": "group_run_declarations",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "group_run_declarations_legal_document_id_legal_documents_id_fk": {
           "name": "group_run_declarations_legal_document_id_legal_documents_id_fk",
           "tableFrom": "group_run_declarations",
+          "tableTo": "legal_documents",
           "columnsFrom": [
             "legal_document_id"
           ],
-          "tableTo": "legal_documents",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2568,9 +2782,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2676,26 +2890,26 @@
         "legal_document_translations_legal_document_id_legal_documents_id_fk": {
           "name": "legal_document_translations_legal_document_id_legal_documents_id_fk",
           "tableFrom": "legal_document_translations",
+          "tableTo": "legal_documents",
           "columnsFrom": [
             "legal_document_id"
           ],
-          "tableTo": "legal_documents",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "legal_document_translations_document_locale_unique": {
           "name": "legal_document_translations_document_locale_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "legal_document_id",
             "locale"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2782,52 +2996,52 @@
         "legal_documents_created_by_staff_user_id_staff_users_id_fk": {
           "name": "legal_documents_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "legal_documents",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "legal_documents_approved_by_staff_user_id_staff_users_id_fk": {
           "name": "legal_documents_approved_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "legal_documents",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "approved_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "legal_documents_withdrawn_by_staff_user_id_staff_users_id_fk": {
           "name": "legal_documents_withdrawn_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "legal_documents",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "withdrawn_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "legal_documents_key_version_unique": {
           "name": "legal_documents_key_version_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "key",
             "version"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2919,9 +3133,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "newsletter_sends_created_idx": {
           "name": "newsletter_sends_created_idx",
@@ -2934,37 +3148,37 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "newsletter_sends_event_id_events_id_fk": {
           "name": "newsletter_sends_event_id_events_id_fk",
           "tableFrom": "newsletter_sends",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "newsletter_sends_sent_by_staff_user_id_staff_users_id_fk": {
           "name": "newsletter_sends_sent_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "newsletter_sends",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "sent_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3060,9 +3274,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3070,10 +3284,10 @@
       "uniqueConstraints": {
         "newsletter_subscribers_canonical_email_unique": {
           "name": "newsletter_subscribers_canonical_email_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "canonical_email"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -3153,10 +3367,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"purpose\" = 'CONFIRM' AND \"used_at\" IS NULL AND \"invalidated_at\" IS NULL",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "newsletter_tokens_subscriber_purpose_expiry_idx": {
           "name": "newsletter_tokens_subscriber_purpose_expiry_idx",
@@ -3181,34 +3395,34 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "newsletter_tokens_subscriber_id_newsletter_subscribers_id_fk": {
           "name": "newsletter_tokens_subscriber_id_newsletter_subscribers_id_fk",
           "tableFrom": "newsletter_tokens",
+          "tableTo": "newsletter_subscribers",
           "columnsFrom": [
             "subscriber_id"
           ],
-          "tableTo": "newsletter_subscribers",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "newsletter_tokens_token_hash_unique": {
           "name": "newsletter_tokens_token_hash_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "token_hash"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -3311,47 +3525,47 @@
         "page_translations_page_id_pages_id_fk": {
           "name": "page_translations_page_id_pages_id_fk",
           "tableFrom": "page_translations",
+          "tableTo": "pages",
           "columnsFrom": [
             "page_id"
           ],
-          "tableTo": "pages",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "page_translations_author_staff_user_id_staff_users_id_fk": {
           "name": "page_translations_author_staff_user_id_staff_users_id_fk",
           "tableFrom": "page_translations",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "author_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "page_translations_page_locale_unique": {
           "name": "page_translations_page_locale_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "page_id",
             "locale"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "page_translations_locale_slug_unique": {
           "name": "page_translations_locale_slug_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "locale",
             "slug"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -3438,28 +3652,28 @@
         "pages_created_by_staff_user_id_staff_users_id_fk": {
           "name": "pages_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "pages",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "pages_updated_by_staff_user_id_staff_users_id_fk": {
           "name": "pages_updated_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "pages",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "updated_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3553,10 +3767,10 @@
       "uniqueConstraints": {
         "participants_canonical_email_unique": {
           "name": "participants_canonical_email_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "canonical_email"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -3598,15 +3812,15 @@
         "platform_settings_updated_by_staff_user_id_staff_users_id_fk": {
           "name": "platform_settings_updated_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "platform_settings",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "updated_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3722,26 +3936,26 @@
         "registration_interests_event_id_events_id_fk": {
           "name": "registration_interests_event_id_events_id_fk",
           "tableFrom": "registration_interests",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "registration_interests_event_canonical_email_unique": {
           "name": "registration_interests_event_canonical_email_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "event_id",
             "canonical_email"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -3855,6 +4069,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'RO'"
         },
         "city": {
           "name": "city",
@@ -4154,9 +4375,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "registrations_race_participant_active_unique": {
           "name": "registrations_race_participant_active_unique",
@@ -4175,10 +4396,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"registrations\".\"race_id\" IS NOT NULL AND \"registrations\".\"status\" IN ('PENDING_EMAIL_CONFIRMATION', 'PENDING_DECLARATION', 'WAITLISTED', 'WAITLIST_OFFERED', 'CONFIRMED')",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "registrations_event_status_idx": {
           "name": "registrations_event_status_idx",
@@ -4197,9 +4418,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "registrations_event_kind_idx": {
           "name": "registrations_event_kind_idx",
@@ -4218,9 +4439,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "registrations_participant_status_idx": {
           "name": "registrations_participant_status_idx",
@@ -4239,9 +4460,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "registrations_event_waitlisted_at_id_idx": {
           "name": "registrations_event_waitlisted_at_id_idx",
@@ -4266,9 +4487,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "registrations_event_hold_expires_at_idx": {
           "name": "registrations_event_hold_expires_at_idx",
@@ -4287,9 +4508,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "registrations_event_bib_number_unique": {
           "name": "registrations_event_bib_number_unique",
@@ -4308,10 +4529,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"registrations\".\"bib_number\" IS NOT NULL",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "registrations_event_provisional_bib_unique": {
           "name": "registrations_event_provisional_bib_unique",
@@ -4330,87 +4551,87 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"registrations\".\"provisional_bib_number\" IS NOT NULL",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "registrations_event_id_events_id_fk": {
           "name": "registrations_event_id_events_id_fk",
           "tableFrom": "registrations",
+          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
-          "tableTo": "events",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "registrations_participant_id_participants_id_fk": {
           "name": "registrations_participant_id_participants_id_fk",
           "tableFrom": "registrations",
+          "tableTo": "participants",
           "columnsFrom": [
             "participant_id"
           ],
-          "tableTo": "participants",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "registrations_created_by_staff_user_id_staff_users_id_fk": {
           "name": "registrations_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "registrations",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "registrations_checked_in_by_staff_user_id_staff_users_id_fk": {
           "name": "registrations_checked_in_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "registrations",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "checked_in_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "registrations_email_confirmed_by_staff_user_id_staff_users_id_fk": {
           "name": "registrations_email_confirmed_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "registrations",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "email_confirmed_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "registrations_checkin_code_unique": {
           "name": "registrations_checkin_code_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "checkin_code"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -4520,17 +4741,17 @@
       "uniqueConstraints": {
         "staff_users_zitadel_subject_unique": {
           "name": "staff_users_zitadel_subject_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "zitadel_subject"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "staff_users_email_unique": {
           "name": "staff_users_email_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -4682,50 +4903,50 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "team_members_photo_media_asset_id_media_assets_id_fk": {
           "name": "team_members_photo_media_asset_id_media_assets_id_fk",
           "tableFrom": "team_members",
+          "tableTo": "media_assets",
           "columnsFrom": [
             "photo_media_asset_id"
           ],
-          "tableTo": "media_assets",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "team_members_created_by_staff_user_id_staff_users_id_fk": {
           "name": "team_members_created_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "team_members",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         },
         "team_members_updated_by_staff_user_id_staff_users_id_fk": {
           "name": "team_members_updated_by_staff_user_id_staff_users_id_fk",
           "tableFrom": "team_members",
+          "tableTo": "staff_users",
           "columnsFrom": [
             "updated_by_staff_user_id"
           ],
-          "tableTo": "staff_users",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "set null"
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4905,7 +5126,8 @@
         "TERMS",
         "EVENT_DECLARATION",
         "GROUP_RUN_DECLARATION_ASPHALT",
-        "GROUP_RUN_DECLARATION_TRAIL"
+        "GROUP_RUN_DECLARATION_TRAIL",
+        "EVENT_DECLARATION_ROAD"
       ]
     },
     "public.locale": {
@@ -5029,10 +5251,10 @@
     }
   },
   "schemas": {},
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
