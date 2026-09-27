@@ -51,6 +51,19 @@ LOG="${TMPDIR:-/tmp}/brasovrunners-cloud-setup.log"
 
 # Corepack would otherwise stop and ask before downloading Yarn, and a hook has nobody to answer.
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+# The cloud network policy refuses repo.yarnpkg.com, Corepack's default source for Yarn; the same
+# release is published on the npm registry, which the policy allows (found in a cloud session, #222).
+export COREPACK_NPM_REGISTRY="${COREPACK_NPM_REGISTRY:-https://registry.npmjs.org}"
+# CLAUDE_ENV_FILE carries variables into the session's later commands, so every `yarn` the agent
+# runs resolves the same way. Playwright's own browser download is refused there too; the image's
+# Chromium is named for playwright.config.ts, which every other machine leaves unset.
+if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  {
+    echo "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
+    echo "export COREPACK_NPM_REGISTRY=${COREPACK_NPM_REGISTRY}"
+    if [ -x /opt/pw-browsers/chromium ]; then echo "export PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium"; fi
+  } >>"$CLAUDE_ENV_FILE"
+fi
 
 DONE=()
 say() { printf 'cloud-setup: %s\n' "$*"; }

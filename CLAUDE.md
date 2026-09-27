@@ -473,6 +473,11 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   are authorised ("approve / deploy prod for me").
 - Branch from `qa` with `--no-track`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.
 - Windows development machine, Linux CI. Anything with paths or line endings: test both.
+- The owner also works from a phone through Claude Code on the web. A cloud session prepares
+  itself (`scripts/cloud-setup.sh`, run by the `SessionStart` hook in `.claude/settings.json`:
+  dependencies, the image's PostgreSQL 16 migrated one transaction per migration and seeded,
+  local values only; §501); keep that script working when you change setup, the database
+  version or the dev server. `docs/DEVELOPMENT.md` § Coding from the phone.
 - Tests are named by the `BR-REQ-*` they cover, or by the `AGENTS.md` section for cross-cutting
   mechanisms (jobs, health). `WEEKEND.md` records the six that mattered for the original pilot.
 - No `BaseService`, barrels, dispatch tables, or wrappers around MUI. `AGENTS.md` §1.3.

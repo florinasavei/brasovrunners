@@ -232,12 +232,29 @@ when there is nothing to do:
 - migrates (one transaction per migration on PostgreSQL 16) and runs `yarn db:seed` only on an
   empty events table, refusing any database that is not on localhost.
 
+Every step skips what is already done, so a resumed session costs seconds. Three things differ
+from a laptop, all worked around by the script:
+
+- The environment's network policy refuses `repo.yarnpkg.com`, so Corepack takes Yarn from the
+  npm registry (`COREPACK_NPM_REGISTRY`, also written into the session's environment through
+  `CLAUDE_ENV_FILE`).
+- The image ships PostgreSQL 16 and no Docker daemon. drizzle-kit applies every pending
+  migration in one transaction, and 16 will not let a transaction use an enum value added to a
+  type created in that same transaction, which 17 (`docker-compose.yml`, CI) allows — so on 16
+  the script applies one transaction per migration, recording the same rows, and `yarn
+  db:migrate` carries on from there. `yarn db:reset:local` migrates in one transaction, so to
+  start over drop the database (`su postgres -c "dropdb brasov_runners"`) and run the script again.
+- Playwright's own browser download is refused, so the script names the image's Chromium in
+  `PLAYWRIGHT_CHROMIUM_PATH`, which `playwright.config.ts` reads and every other machine leaves
+  unset. The container has no IPv6 either; `scripts/dev.mjs` falls back to IPv4 for its probe.
+
 A cloud session therefore runs on **local values only**: email in `capture` mode, the
 `dev-switcher` staff sign-in, this machine's database. **No QA or production credential goes
 into the cloud environment's settings or into this repository** — it is public, and
 `yarn secrets:check` blocks the commit that tries. Deploys and production migrations do not
 change: a branch, a pull request into `qa`, the `qa → main` release PR, and the gated migration
-workflow (`DECISIONS.md` §31). To run the same setup on a Linux machine of your own,
+workflow (`DECISIONS.md` §31). The weather and anything else outside the policy's allowlist
+stays silent, as it is built to. To run the same setup on a Linux machine of your own,
 `bash scripts/cloud-setup.sh --force`.
 
 ## Where things live
