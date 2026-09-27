@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await teamOrNull(locale);
   return {
     title: t("title"),
-    // About 160 characters of the introduction, never the whole of it (§NNN).
+    // About 160 characters of the introduction, never the whole of it (§483).
     description: page?.introText ? teamMetaDescription(page.introText) : t("lead", { club: CLUB_NAME }),
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/team")),
     // An address with nobody on it is not for a search engine; the sitemap leaves it out too.

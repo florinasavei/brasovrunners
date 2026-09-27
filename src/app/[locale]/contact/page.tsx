@@ -124,7 +124,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
   const formAvailable = await cachedContactFormReaches();
-  // A thumb's 44 pixels that do not stretch the sentence's line (§NNN, the 360-px density pass).
+  // A thumb's 44 pixels that do not stretch the sentence's line (§480, the 360-px density pass).
   const inlineLink = INLINE_TAP_TARGET;
   // The first address reaches above its words; a second one («a sau b») may wrap to the line under
   // the first, where that reach would cover the first's lower half and win its press (it is painted
@@ -233,7 +233,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           </Typography>
 
           <form action={submitContactAction}>
-            {/* Outside the column (§NNN, the 360-px density pass): as its first children they made
+            {/* Outside the column (§480, the 360-px density pass): as its first children they made
                 the name box the column's second, and a column gives every item after its first the
                 column's gap — sixteen pixels above the first box on top of the legend's own margin. */}
             <input type="hidden" name="locale" value={locale} />
@@ -310,7 +310,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           {writeTo.length > 0 && error !== "DELIVERY" && (
             // 24 pixels over it at every width, not the phone's 16: the first address's reach
             // (21.6 pixels above its words, `INLINE_TAP_TARGET`) must stay in the gap, never over
-            // the send button's lower edge (§NNN).
+            // the send button's lower edge (§480).
             <Typography variant="body1" sx={{ mt: 3 }}>
               {t("direct")} {addressLinks}
             </Typography>

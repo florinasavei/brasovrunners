@@ -26,7 +26,7 @@ export type StoredPicture = {
   name: string;
   uses: PictureUse[];
   poster?: boolean;
-  /** Asked for from a place (`scope`): whether that very place already uses it (§NNN). */
+  /** Asked for from a place (`scope`): whether that very place already uses it (§485). */
   here?: boolean;
 };
 
@@ -43,14 +43,14 @@ export type GalleryPickerLabels = {
   sources: Record<Exclude<PictureSource, "here">, string>;
   /**
    * The first chip when the picker knows its place (`scope`): «Acest eveniment», «Acest album»,
-   * «Această pagină» — the caller picks the word for its own kind (§NNN).
+   * «Această pagină» — the caller picks the word for its own kind (§485).
    */
   here?: string;
 };
 
 /**
  * «Din galerie» — every picture the club already stored, to use again wherever the backoffice
- * takes a picture (§NNN): a picture in a text, a film's poster, a card of «Echipa», an album.
+ * takes a picture (§485): a picture in a text, a film's poster, a card of «Echipa», an album.
  *
  * The list is asked for when the picker opens and never before: a form is opened far more often
  * than a picture is reused, and the list is a request every editor would otherwise make on every
@@ -85,7 +85,7 @@ export default function GalleryPicker({
   /** Pictures already chosen in this sitting, marked as such (an album taking several). */
   picked?: readonly string[];
   /**
-   * The event, album or page whose editor the picker is in (§NNN). With it, the picker opens on
+   * The event, album or page whose editor the picker is in (§485). With it, the picker opens on
    * «Acest eveniment» (resp. album, page) — the pictures that place already uses, as the server
    * reads them from its references — with «Toate» and the kinds of place beside it. A place with
    * nothing yet opens on «Toate» instead of on an empty grid.
@@ -235,7 +235,7 @@ export default function GalleryPicker({
                     >
                       <Box component="img" src={picture.thumb} alt="" width={88} height={88} loading="lazy" sx={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
                     </Box>
-                    {/* The stored size and weight, read on a phone too (§NNN); the button already says them. */}
+                    {/* The stored size and weight, read on a phone too (§485); the button already says them. */}
                     <Typography
                       variant="caption"
                       color="text.secondary"

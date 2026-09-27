@@ -329,7 +329,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const gapLabels: PublishGapLabels = {
     boxes: {
       titleSummary: t("editor.boxes.titleSummary.title"),
-      // The meeting point is asked inside «Când și unde» since §NNN.
+      // The meeting point is asked inside «Când și unde» since §481.
       place: t("editor.boxes.whenWhere.title"),
       address: t("editor.boxes.address.title"),
     },
@@ -790,7 +790,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     gaps={storedGaps}
                   />
-                  {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): every English box of this form from its
+                  {/* «Copiază și tradu tot: RO → EN» (§464, §482): every English box of this form from its
                       Romanian twin, the layout kept, in one press — a question only when English
                       words already written would be replaced; nothing saved until Salvează. */}
                   <TranslateAllButton />

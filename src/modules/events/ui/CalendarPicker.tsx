@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { DENSITY } from "@/theme/density";
 
 /*
-  On a phone the two selects share one row with ‹ Azi › (§NNN): they take what the row leaves
+  On a phone the two selects share one row with ‹ Azi › (§487): they take what the row leaves
   and may shrink below their words' width rather than wrap the row, in a smaller type with a
   narrower caret gutter; the height stays the 44-pixel target (BR-REQ-041-01 criterion 6). The
   year, four digits, has a fixed narrow width and the month takes the rest, so its name stays

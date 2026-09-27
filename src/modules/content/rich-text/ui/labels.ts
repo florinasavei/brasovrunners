@@ -163,13 +163,13 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       page: rt("imageGallerySourcePage"),
       team: rt("imageGallerySourceTeam"),
     },
-    // The first chip, for the place the text belongs to (§NNN).
+    // The first chip, for the place the text belongs to (§485).
     imageGalleryHere: {
       event: rt("imageGalleryHereEvent"),
       album: rt("imageGalleryHereAlbum"),
       page: rt("imageGalleryHerePage"),
     },
-    // Raw, with its placeholders: the island says the picture's name and size itself (§NNN).
+    // Raw, with its placeholders: the island says the picture's name and size itself (§485).
     imageFromGalleryPicked: rt.raw("imageFromGalleryPicked") as string,
     youtube: rt("youtube"),
     youtubeShort: rt("youtubeShort"),

@@ -14,7 +14,7 @@ import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import TranslateProvider, { type TranslateAction, type TranslateOffer } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — «Copiază și tradu tot: RO → EN», one always-visible button per editor (the owner,
+ * §482 — «Copiază și tradu tot: RO → EN», one always-visible button per editor (the owner,
  * 2026-09-27: «I can't find or don't know how to use the AI translate … I just wanna copy all from
  * RO to English and auto-translate with a single button click»).
  *
@@ -33,7 +33,7 @@ function render(node: ReturnType<typeof createElement>, offer: TranslateOffer | 
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, node)));
 }
 
-describe("§NNN the whole-record button is always there for a role that writes words", () => {
+describe("§482 the whole-record button is always there for a role that writes words", () => {
   it("works, in the reader's language, where a translator is configured", () => {
     const html = render(createElement(TranslateAllButton), { action, setupHref: null });
     expect(html).toContain(ro.Translate.all);
@@ -86,7 +86,7 @@ describe("§NNN the whole-record button is always there for a role that writes w
   });
 });
 
-describe("§NNN «Echipa»'s words may be translated", () => {
+describe("§482 «Echipa»'s words may be translated", () => {
   it("allows the role, a link's label and the two rich texts, and knows the rich ones", () => {
     for (const name of ["roleEn", "links[0].labelEn", "links[11].labelEn", "bioEnBody", "introEnBody"]) {
       expect(isTranslatableEnglishField(name), name).toBe(true);
@@ -108,7 +108,7 @@ describe("§NNN «Echipa»'s words may be translated", () => {
   });
 });
 
-describe("§NNN a rich text fills only in the form that pressed", () => {
+describe("§482 a rich text fills only in the form that pressed", () => {
   const doc = { type: "doc", content: [] } as unknown as RichTextDoc;
   const cardA = {} as HTMLFormElement;
   const cardB = {} as HTMLFormElement;

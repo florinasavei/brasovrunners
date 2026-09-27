@@ -55,7 +55,7 @@ export default async function CalendarSection({
 }) {
   const t = await getTranslations("Events");
   const feed = `${env.APP_BASE_URL}/${locale}/events/calendar.ics`;
-  // The same two doors the page head's «?» carries on a phone (§NNN), built in one place.
+  // The same two doors the page head's «?» carries on a phone (§487), built in one place.
   const links = calendarFeedLinks(env.APP_BASE_URL, locale);
   const steps = calendarStepHrefs({ view, query, locale, pathname: "/calendar" });
 

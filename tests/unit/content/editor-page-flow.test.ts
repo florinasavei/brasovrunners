@@ -142,7 +142,7 @@ describe("§406 the closed card says what it lacks, with the warning glyph", () 
     const text = read("src/modules/content/events/ui/boxes/TextBoxes.tsx");
     expect(text).toContain('await requiredLine("titleSummary", null, languages)');
     expect(text).toContain('await requiredLine("address", null, languages)');
-    // The meeting point's line is on «Când și unde», the card that holds the place since §NNN.
+    // The meeting point's line is on «Când și unde», the card that holds the place since §481.
     expect(read("src/modules/content/events/ui/boxes/WhenBox.tsx")).toContain('await requiredLine("place", event, languages)');
     expect(read("src/modules/content/events/ui/boxes/PlaceBox.tsx")).not.toContain("requiredLine(");
   });
@@ -199,11 +199,11 @@ describe("§406 the cards' headings and the map", () => {
   it("heads each card «N · Nume — apare pe pagină / gol, nu apare pe pagină», in both catalogues", async () => {
     const flow = await pageFlow(saved());
     expect(flow.headings.kind).toBe("1 · Ce fel de eveniment — apare pe pagină");
-    // «Când și unde» holds the date and the place since §NNN: one card, one number.
+    // «Când și unde» holds the date and the place since §481: one card, one number.
     expect(flow.headings.when).toBe("4 · Când și unde — apare pe pagină");
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
     // The cost is asked inside card 1 since §466, the place and the rules inside their cards since
-    // §NNN: no heading of their own, the cards after them renumber. No film card at all.
+    // §481: no heading of their own, the cards after them renumber. No film card at all.
     for (const nested of ["cost", "place", "rules", "video"]) expect(nested in flow.headings, nested).toBe(false);
     expect(flow.headings.registration).toBe("6 · Participare și înscrieri — gol, nu apare pe pagină");
     expect(flow.headings.programme).toBe("9 · Program, regulament și declarație — gol, nu apare pe pagină");
@@ -220,7 +220,7 @@ describe("§406 the cards' headings and the map", () => {
     expect(en.headings.description).toBe("3 · Event description — empty, not on the page");
   });
 
-  it("heads a card holding two sections as drawn when either is (§NNN): the programme card from the rules alone", async () => {
+  it("heads a card holding two sections as drawn when either is (§481): the programme card from the rules alone", async () => {
     const withRules = saved();
     withRules.texts = [{ ...withRules.texts[0], rulesJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Reguli" }] }] } }];
     const flow = await pageFlow(withRules);
@@ -245,7 +245,7 @@ describe("§406 the cards' headings and the map", () => {
       "box-programme",
       "box-start-list",
     ]);
-    // No Cost chip (§466), no place or rules chip (§NNN): each is asked inside another card.
+    // No Cost chip (§466), no place or rules chip (§481): each is asked inside another card.
     for (const nested of ["cost", "place", "rules"]) expect(flow.entries.some((entry) => entry.id === nested), nested).toBe(false);
     expect(links[3][1]).toBe("4 · Când și unde — apare pe pagină");
     // «Când și unde» wears the meeting point's gap, as the place card's chip did (§406).

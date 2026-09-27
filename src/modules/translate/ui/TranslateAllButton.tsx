@@ -14,7 +14,7 @@ import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslatePress } from "./use-translate-press";
 
 /**
- * «Copiază și tradu tot: RO → EN» at the top of a record's editor (`DECISIONS.md` §464, §NNN; the
+ * «Copiază și tradu tot: RO → EN» at the top of a record's editor (`DECISIONS.md` §464, §482; the
  * owner, 2026-09-26: «I wanna override the descriptions and all from RO to EN so I have the same
  * layout and all», and 2026-09-27: «I can't find or don't know how to use the AI translate … I
  * just wanna copy all from RO to English and auto-translate with a single button click»).
@@ -26,13 +26,13 @@ import { useTranslatePress } from "./use-translate-press";
  * text keeping the Romanian's layout exactly (headings, lists, tables, pictures, films;
  * `domain/rich-text-html.ts`). One request; nothing saved until the ordinary save.
  *
- * **One press** (§NNN). Where every English box it fills is empty, the press translates at once.
+ * **One press** (§482). Where every English box it fills is empty, the press translates at once.
  * It asks first (§384) only when English words already written would be replaced — naming how
  * many and which, and offering «Înlocuiește tot» or «Doar cele goale», so the remaining empty boxes
  * are still one press — or when the press would send more than `ASK_ABOVE_CHARACTERS` of the
  * day's budget, naming the figure (`charactersToSend`, the service's own count).
  *
- * **Always there** (§NNN) for a role that writes the club's words: a deployment with no DeepL key
+ * **Always there** (§482) for a role that writes the club's words: a deployment with no DeepL key
  * draws it greyed, with the sentence saying why and, for a reader who may open the tasks page,
  * the link to the row with the steps — a missing button is one nobody can find. A role that
  * writes no words sees nothing.

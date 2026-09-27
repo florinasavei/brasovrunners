@@ -143,7 +143,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
   });
 
   describe("save → poster stored → read model, and the orphan sweep", () => {
-    // The column is unread since §NNN and stays only until its contract migration: migration 0092
+    // The column is unread since §485 and stays only until its contract migration: migration 0092
     // carried every stored poster into the description's youtube node, which is what the sweep
     // reads. A poster only the old column names is a picture no page draws, and goes like one.
     it("a poster only the event's old film column names is swept like any unreferenced picture", async () => {
@@ -289,7 +289,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
       externalRegistrationUrl: "",
     };
 
-    it("createEvent takes no film of the event's own any more (§NNN): a posted videoUrl is refused, and nothing is fetched", async () => {
+    it("createEvent takes no film of the event's own any more (§481): a posted videoUrl is refused, and nothing is fetched", async () => {
       const fetchImpl = fetchWithHqdefault(await JPEG());
       await expect(
         createEvent(db, {
@@ -451,7 +451,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
           expect(posterOf(row.excerptJson)).toBe(posterUrlFor("excpt-film1"));
           // A group run keeps no programme (§111); the film in it was still fetched, outside.
         }
-        // The event row holds no film of its own since §NNN: its old columns are written by nobody.
+        // The event row holds no film of its own since §481: its old columns are written by nobody.
         const [event] = await db.select().from(events).where(eq(events.id, eventId));
         expect(event).toMatchObject({ videoUrl: null, videoPosterUrl: null });
       }
@@ -489,7 +489,7 @@ describe("§403 the club's own copy of a YouTube poster", () => {
         await expectEveryTextPostered(result.event.id);
       });
 
-      it("saveEventFields: fetches nothing — the event row holds no film since §NNN, only the texts do", async () => {
+      it("saveEventFields: fetches nothing — the event row holds no film since §481, only the texts do", async () => {
         const { created } = await plainEvent("10");
         const calls = watchPosterFetches(await JPEG());
         const saved = await saveEventFields(db, {

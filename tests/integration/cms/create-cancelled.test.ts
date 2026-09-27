@@ -136,7 +136,7 @@ describe("BR-REQ-050-01 an event created cancelled or completed (§448)", () => 
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
   });
 
-  /* §NNN — the create-status rule per date: a series never copies its source's status. */
+  /* §483 — the create-status rule per date: a series never copies its source's status. */
   it("makes a cancelled series source's future dates scheduled, and only its own date cancelled", async () => {
     const result = await createEventAndPublish(db, {
       actor: admin,

@@ -121,7 +121,7 @@ export const GLYPHS = {
   featured: StarIcon,
   special: AutoAwesomeIcon,
   series: EventRepeatIcon,
-  // The repeat chip on a listing card (§NNN) — the single date of a series, the series card and
+  // The repeat chip on a listing card (§486) — the single date of a series, the series card and
   // the featured card alike: a wheel of arrows, «ca o rotiță» (the owner), not the calendar
   // `series` draws, which reads as one more date at 16–20 pixels.
   repeat: AutorenewIcon,

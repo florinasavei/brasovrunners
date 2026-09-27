@@ -13,7 +13,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  * `tests/unit/events/page-sections.test.ts` holds the two equal — so a number on a card, a chip
  * and the page's order are one thing.
  *
- * A card that holds more than one of the page's sections (§NNN: the date and the place, the
+ * A card that holds more than one of the page's sections (§481: the date and the place, the
  * programme and the rules; §466: the type and the cost) is one chip and one number, drawn when
  * any section it holds is drawn.
  *
@@ -30,13 +30,13 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   kind: "kind",
   title: "titleSummary",
   description: "description",
-  // «Când și unde» (§NNN): the date, the place and the time zone.
+  // «Când și unde» (§481): the date, the place and the time zone.
   when: "whenWhere",
   course: "course",
   registration: "registration",
   coHosts: "coHosts",
   links: "links",
-  // «Program, regulament și declarație» (§NNN): three cards in one.
+  // «Program, regulament și declarație» (§481): three cards in one.
   programme: "programmeRules",
   startList: "startList",
 };
@@ -69,7 +69,7 @@ export async function pageFlow(data: PageSectionData): Promise<PageFlow> {
   }
   return {
     headings,
-    // A section asked inside another card (the cost §466, the place and the rules §NNN) has no chip: the map lists the cards.
+    // A section asked inside another card (the cost §466, the place and the rules §481) has no chip: the map lists the cards.
     entries: cards.map((section) => ({
       id: section.id,
       number: section.number,

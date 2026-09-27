@@ -96,7 +96,7 @@ export default function GlyphChip({
     ) : (
       label
     );
-  // A chip with a tooltip says so, so a listing card lifts it above the title's cover (§NNN,
+  // A chip with a tooltip says so, so a listing card lifts it above the title's cover (§486,
   // `CARD_TAP_SX`): a tap on the night pill opens its sunset rather than the event's page.
   const marked = tooltip ? { "data-has-tooltip": "true" } : {};
   const chip = href ? (

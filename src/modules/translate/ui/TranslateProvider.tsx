@@ -7,7 +7,7 @@ import type { TranslateOutcome } from "../service";
 export type TranslateAction = (input: unknown) => Promise<TranslateOutcome>;
 
 /**
- * What the backoffice layout tells the buttons (`DECISIONS.md` §464, §NNN):
+ * What the backoffice layout tells the buttons (`DECISIONS.md` §464, §482):
  *
  * - `null` — the reader's role writes none of the club's words, so no button anywhere;
  * - `action` set — a translator is configured and the role may use it: every button works;

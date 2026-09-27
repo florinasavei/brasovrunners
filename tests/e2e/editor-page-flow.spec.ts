@@ -28,7 +28,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
     // The map: ten cards and the share links (the cost is inside card 1, §466; the place inside
-    // «Când și unde» and the rules inside «Program, regulament și declarație», §NNN), in the page's
+    // «Când și unde» and the rules inside «Program, regulament și declarație», §481), in the page's
     // order, the share links named as automatic.
     const map = page.getByTestId("section-map");
     await expect(map).toBeVisible();
@@ -66,7 +66,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(titleLine).toHaveText("lipsesc: Titlu (RO, EN) · Rezumat (RO, EN)");
     await expect(chip(page, /^2 · Titlul/).getByTestId("section-map-missing")).toBeVisible();
     await expect(languageTab(page, "title", "ro")).toHaveText("Română · 2 obligatorii lipsă");
-    // The meeting point's gap is on «Când și unde», and on its chip (§NNN).
+    // The meeting point's gap is on «Când și unde», and on its chip (§481).
     await expect(editorBox(page, "Când și unde").getByTestId("required-place")).toHaveText("lipsesc: Punct de întâlnire (RO, EN)");
     await expect(chip(page, /^4 · Când și unde/).getByTestId("section-map-missing")).toBeVisible();
 
@@ -157,13 +157,13 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
-    // No film card (§NNN): a film is a figure in the description.
+    // No film card (§481): a film is a figure in the description.
     await expect(page.locator("#box-video")).toHaveCount(0);
     await expect(page.getByRole("heading", { name: /Filmul/ })).toHaveCount(0);
     const list = await openEditorBox(page, "Lista publică a participanților");
     // A group run takes no registration here, so there is nobody to list: the sentence stands in.
     await expect(list).toContainText("Lista publică există doar la înscrierile pe site");
-    // The date, the place and the time zone in one card, in that order (§NNN).
+    // The date, the place and the time zone in one card, in that order (§481).
     const when = await openEditorBox(page, "Când și unde");
     await expect(when.locator("#box-place")).toHaveCount(1);
     await expect(when.locator("#box-timezone")).toHaveCount(1);

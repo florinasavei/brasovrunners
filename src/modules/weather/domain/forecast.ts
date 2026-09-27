@@ -66,7 +66,7 @@ export type EventForecast = {
   start: WeatherReading;
   hours: WeatherReading[];
   /**
-   * The hours the event page's line and the reminder's speak for (§NNN): from the start's hour to
+   * The hours the event page's line and the reminder's speak for (§484): from the start's hour to
    * the end's, at most `WEATHER_SPAN_MAX_HOURS` after the start (`pickSpan`) — the start's alone
    * when the event names no end. Never empty: the start is its first.
    */
@@ -220,14 +220,14 @@ export function pickHours(forecast: HourlyForecast, startAt: Date, count: number
 }
 
 /**
- * The longest stretch the weather line names, in hours after the start's (§NNN): six — a long
+ * The longest stretch the weather line names, in hours after the start's (§484): six — a long
  * trail race's morning. A longer event (a camp, a day on the ridge) is read for its first six
  * hours, and the line says exactly which hours those are, so it never claims more than it read.
  */
 export const WEATHER_SPAN_MAX_HOURS = 6;
 
 /**
- * The hours an event is out, as the forecast has them (§NNN; the owner: the weather line should say
+ * The hours an event is out, as the forecast has them (§484; the owner: the weather line should say
  * where and for which hours): the start's hour by `pickHour`'s rule, then every hour up to the
  * end's nearest hour, capped at `WEATHER_SPAN_MAX_HOURS` after the start. No end, or an end at or
  * before the start's hour, is the start's hour alone. An hour the answer lacks is left out; empty
@@ -252,7 +252,7 @@ export function pickSpan(
 }
 
 /**
- * What a span of hours says as one line (§NNN): the first and last hour read, the coldest and the
+ * What a span of hours says as one line (§484): the first and last hour read, the coldest and the
  * warmest degrees among them (null when no hour has one), and whether rain is likely in any hour of
  * it (`rainLikely`) — with the highest chance among those hours, null when none of them names one.
  *
@@ -344,7 +344,7 @@ export function weatherInstant(event: { startsAt: Date; raceStartsAt?: Date | nu
 }
 
 /**
- * Which place the weather line names (§NNN): the club's locality when the forecast was read at the
+ * Which place the weather line names (§484): the club's locality when the forecast was read at the
  * club's own coordinates (`club` — no pin, no typed pair, or a place still to be announced), since
  * that is where the numbers are for, whatever the meeting point is called; else the meeting point's
  * name in the reader's language — null when the event names none, and the words say "the event's

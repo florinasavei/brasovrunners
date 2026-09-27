@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { parseRichText } from "@/modules/content/rich-text/domain/schema";
 
 /**
- * Migration `0092_film_into_description` (§NNN; the owner, 2026-09-27: «Cardul cu filmul poate să
+ * Migration `0092_film_into_description` (§481; the owner, 2026-09-27: «Cardul cu filmul poate să
  * dispară pentru că putem pune YouTube direct în descrierea completă»), proven on real PostgreSQL
  * (PGlite): the database is built up to the migration before it, events are written the way the
  * film section stored them, and then the rest of the migrations run over them — as
@@ -106,7 +106,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("§NNN migration 0092_film_into_description — the film section's links move into the descriptions", () => {
+describe("§481 migration 0092_film_into_description — the film section's links move into the descriptions", () => {
   it("appends the film to the END of each language's description, with the stored poster, as the schema parses it", async () => {
     const ro = await translation("race", "ro");
     expect(ro.body_json).toEqual(doc(paragraph("Crosul Tâmpei"), FILM_NODE("dQw4w9WgXcQ", POSTER)));

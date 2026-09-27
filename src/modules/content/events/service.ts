@@ -410,7 +410,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
-    // No `video_url` (§NNN): a film is a figure in the description (§266), and the column is
+    // No `video_url` (§481): a film is a figure in the description (§266), and the column is
     // written by nobody until a later contract migration drops it.
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
@@ -2241,7 +2241,7 @@ function readCreateStatus(actor: Actor, status: EditableEvent["eventStatus"], st
 
 /**
  * The status a new date of a series is made with — the create-status rule of §448 applied per
- * date, not copied from the source (§NNN; the review of §448: a weekly run created «Anulat» made
+ * date, not copied from the source (§483; the review of §448: a weekly run created «Anulat» made
  * every future Monday «Anulat» too, and one created «Încheiat» made future dates «over»).
  *
  * - `CANCELLED` is one date's news, asked with its own reason in both languages: never inherited.
@@ -2254,7 +2254,7 @@ export function seriesDateStatus(sourceStatus: EditableEvent["eventStatus"], sta
 
 /**
  * Everything a create needs from outside the database — parsing, the two rules-based checks, and
- * every YouTube poster fetch (any film in a body — the only home of a film since §NNN) — run once,
+ * every YouTube poster fetch (any film in a body — the only home of a film since §481) — run once,
  * before any transaction opens.
  *
  * Split out of `createEvent` (found by re-review, `DECISIONS.md` §403): `createEventAndPublish`
@@ -2565,7 +2565,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // A *repeat* is different — a recurring Strava club event and a Facebook event with several
     // dates keep one address for every occurrence — so `repeatEvent` and the job put the source's
     // two links back on top of this (§300). The co-host is carried by both: a series held with a
-    // partner is held with them every time. (A film is a figure in the description since §NNN and
+    // partner is held with them every time. (A film is a figure in the description since §481 and
     // travels with the words; `video_url` is written by nobody.)
     stravaEventUrl: null,
     facebookEventUrl: null,
@@ -2815,7 +2815,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
           updatedByStaffUserId: by,
           repeatOf: source.id,
           startsAt: occurrence.startsAt,
-          // The date's own status, never the source's cancellation or completion (§NNN).
+          // The date's own status, never the source's cancellation or completion (§483).
           eventStatus: seriesDateStatus(source.eventStatus, occurrence.startsAt, now),
           endsAt: shift(source.endsAt, occurrence),
           raceStartsAt: shift(source.raceStartsAt, occurrence),

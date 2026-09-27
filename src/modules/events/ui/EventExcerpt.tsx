@@ -20,7 +20,7 @@ export type ExcerptPlace = "page" | "card";
 
 /**
  * The excerpt as the page renders it: the body's own type, the column's width. On a phone its
- * last paragraph keeps `DENSITY.gapSm` under it rather than sixteen (§NNN, the 360-px density
+ * last paragraph keeps `DENSITY.gapSm` under it rather than sixteen (§480, the 360-px density
  * pass): that margin collapses through the box into the divider's, so it, not the divider, was
  * what held the facts sixteen pixels down.
  */

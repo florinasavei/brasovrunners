@@ -173,7 +173,7 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
 
 /**
  * A stored picture's key prefix, or `null` when the id names none — the save refuses one that
- * does not, and one whose prefix says it is a film's automatic poster (`yt-<id>`, §403, §NNN).
+ * does not, and one whose prefix says it is a film's automatic poster (`yt-<id>`, §403, §485).
  */
 export async function mediaAssetKeyPrefix<T extends Record<string, unknown>>(db: Database<T>, assetId: string): Promise<string | null> {
   const [row] = await db.select({ keyPrefix: mediaAssets.keyPrefix }).from(mediaAssets).where(eq(mediaAssets.id, assetId)).limit(1);

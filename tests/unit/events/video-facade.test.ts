@@ -96,7 +96,7 @@ describe("§403 VideoFacade — a native disclosure, server-rendered", () => {
     expect(html).toContain('allow="autoplay; encrypted-media; picture-in-picture"');
   });
 
-  it("a film in the description — its one home since §NNN retired the page's film section — is the same facade: the stored poster, the no-cookie embed asking for HD, the quiet mute control", async () => {
+  it("a film in the description — its one home since §481 retired the page's film section — is the same facade: the stored poster, the no-cookie embed asking for HD, the quiet mute control", async () => {
     const element = await RichTextVideo({ videoId: "dQw4w9WgXcQ", caption: "", poster: "https://media.example.test/yt-dQw4w9WgXcQ/web.webp" });
     const html = renderToStaticMarkup(element as Parameters<typeof renderToStaticMarkup>[0]);
     expect(html).not.toContain("i.ytimg.com");

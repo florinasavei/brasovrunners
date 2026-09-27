@@ -19,7 +19,7 @@ const action: TranslateAction = async () => ({ ok: false, reason: "notConfigured
 
 function render(node: ReturnType<typeof createElement>, withAction: boolean) {
   const intl = { locale: "ro", messages: { Translate: ro.Translate } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
-  // No action: the role may not translate (§NNN draws the whole-record button greyed only for a
+  // No action: the role may not translate (§482 draws the whole-record button greyed only for a
   // role that may, on a deployment without a key — `one-button.test.ts`).
   const provider = { offer: withAction ? { action, setupHref: null } : null } as ComponentProps<typeof TranslateProvider>;
   return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, provider, node)));

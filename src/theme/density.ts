@@ -17,7 +17,7 @@
  *   they apply at every width — and §366's title, the door and the fold measure their 44-pixel
  *   tap targets against those two numbers exactly (10px reach above a title, 8px below). Moving
  *   them would silently break a proven tap-target height, not just add whitespace. What the
- *   360-px density pass (§NNN) moved onto this scale is only what no reach is measured against:
+ *   360-px density pass (§480) moved onto this scale is only what no reach is measured against:
  *   the gap above a card's facts (`gapSm`, eight — the title's reach below its words, exactly,
  *   when there is no summary), the gap between two facts (`gapXs`, six — the pills then ten under
  *   a tight place link, its reach exactly) and the gap between two route pills (`gapXs`).
@@ -46,7 +46,7 @@ export const DENSITY = {
   cardPadTop: 1.5,
   /**
    * Between two cards in the listing's grid, on a phone. Was 1.5 (12px), then 1 (8px) until the
-   * 360-px density pass (§NNN): six pixels, the outlined cards' own borders marking where one ends.
+   * 360-px density pass (§480): six pixels, the outlined cards' own borders marking where one ends.
    * The featured event's own padding step, `heroPad`, went with the hero (§470): the lead is a
    * card, with a card's padding.
    */
@@ -66,7 +66,7 @@ export const DENSITY = {
    */
   gapSm: 1,
   /** A section's own separation from what precedes it — an alert, a divider, a filter row — on
-   * a phone. Was 3 (24px). On an event page, since the 360-px density pass's third round (§NNN),
+   * a phone. Was 3 (24px). On an event page, since the 360-px density pass's third round (§480),
    * the sections under the facts — the route, "Linkuri și fișiere", the programme, the rules, the
    * start list — take this step rather than `sectionGapLg`, and what used to take this one there
    * (the divider over the facts, the partners, the registration door, the film, the notices) takes

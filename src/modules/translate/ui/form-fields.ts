@@ -82,7 +82,7 @@ export function writePlainBox(box: Box, text: string): void {
  */
 export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): boolean {
   if (value.kind === "rich") {
-    // In this form only: «Echipa» has a `bioEnBody` in every card's form (§NNN).
+    // In this form only: «Echipa» has a `bioEnBody` in every card's form (§482).
     fillRichText(name, value.doc, form);
     return false;
   }
@@ -113,7 +113,7 @@ export function englishBoxesToTranslate(form: HTMLFormElement): string[] {
 
 /**
  * The English boxes among `names` that already hold words — the ones «Copiază și tradu tot» would
- * replace, and so the only reason it asks before it runs (§464, §NNN). Empty boxes are simply
+ * replace, and so the only reason it asks before it runs (§464, §482). Empty boxes are simply
  * filled: one press, no question.
  */
 export function englishBoxesWithWords(form: HTMLFormElement | null, names: readonly string[]): string[] {
@@ -142,7 +142,7 @@ export function collectItems(form: HTMLFormElement | null, englishNames: readonl
 }
 
 /**
- * «Copiază și tradu tot», read before it runs (§NNN): every English box it may fill, the ones among
+ * «Copiază și tradu tot», read before it runs (§482): every English box it may fill, the ones among
  * them that already hold words, and the characters the whole press and the empty boxes alone
  * would send (`charactersToSend`, the service's own count). The button asks when `replaced` is not
  * empty or `characters` passes `ASK_ABOVE_CHARACTERS`; otherwise one press does it.

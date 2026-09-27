@@ -44,7 +44,7 @@ export default async function RichTextVideo({
   /** A club poster's stored size (§414): with it, the poster is drawn from its ladder. */
   posterWidth?: number | null;
   posterHeight?: number | null;
-  /** The part of the poster the club chose for the 16∶9 box (§NNN), as §241's fractions. */
+  /** The part of the poster the club chose for the 16∶9 box (§485), as §241's fractions. */
   posterCrop?: ImageCrop | null;
   /** The column the body is drawn in, as `RichText` says it (`media/ladder.ts`). */
   pictures?: PictureColumn;
@@ -65,7 +65,7 @@ export default async function RichTextVideo({
   */
   const posterSrcSet = poster ? pictureSrcSet(poster, posterWidth) : undefined;
   /*
-    The part of the poster the club chose for the 16∶9 box (§NNN): the listing card's own frame
+    The part of the poster the club chose for the 16∶9 box (§485): the listing card's own frame
     arithmetic, since the film's box is the card's shape — the largest 16∶9 rectangle inside the
     crop, drawn as §241's window. Without a crop, or without the poster's size, the poster covers
     the box, centred, as it always did.

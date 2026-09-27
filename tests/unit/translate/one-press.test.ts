@@ -14,7 +14,7 @@ import {
 import type { TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — one press of «Copiază și tradu tot: RO → EN», read and run the way the button runs it.
+ * §482 — one press of «Copiază și tradu tot: RO → EN», read and run the way the button runs it.
  *
  * The suite runs in Node, with no browser (and no DOM library: the platform over a dependency), so
  * the few DOM shapes `form-fields.ts` touches are stood in for here — an input and a textarea with
@@ -146,7 +146,7 @@ function captureFills() {
 
 const valueOf = (form: FakeForm, name: string) => form.elements.namedItem(name)?.current;
 
-describe("§NNN «Copiază și tradu tot» reads the form before it runs", () => {
+describe("§482 «Copiază și tradu tot» reads the form before it runs", () => {
   it("lists every English box whose Romanian has words, in the form's order, and the filled ones apart", () => {
     const form = eventForm();
     const names = englishBoxesToTranslate(asForm(form));
@@ -186,7 +186,7 @@ describe("§NNN «Copiază și tradu tot» reads the form before it runs", () =>
   });
 });
 
-describe("§NNN one press fills the English and submits nothing", () => {
+describe("§482 one press fills the English and submits nothing", () => {
   it("«Doar cele goale»: fills the empty boxes, leaves the written title, posts one request", async () => {
     const form = eventForm();
     const { action, calls } = fakeAction();
@@ -232,7 +232,7 @@ describe("§NNN one press fills the English and submits nothing", () => {
   });
 });
 
-describe("§NNN «Echipa»: the press works on its own card", () => {
+describe("§482 «Echipa»: the press works on its own card", () => {
   function card(role: string, bio: string, roleLabel: string) {
     return new FakeForm([
       new FakeInput("roleRo", role),

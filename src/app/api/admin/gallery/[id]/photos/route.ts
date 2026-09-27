@@ -15,7 +15,7 @@ export const maxDuration = 60;
 /**
  * One photo into an album (BR-REQ-054-01). `POST` multipart with a `file`; the uploader sends
  * one request per photo. Or with an `assetId` instead: a picture already stored, chosen from the
- * gallery (§NNN), added as it is. Editorial roles only. The bytes are checked by `processUploadedImage`
+ * gallery (§485), added as it is. Editorial roles only. The bytes are checked by `processUploadedImage`
  * whatever the client claimed, and nothing is written anywhere until they pass.
  */
 export async function POST(
@@ -40,7 +40,7 @@ export async function POST(
   if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const form = await request.formData();
 
-  // A picture the club already stored (§NNN, «Din galerie»): its id, no file, nothing encoded.
+  // A picture the club already stored (§485, «Din galerie»): its id, no file, nothing encoded.
   const assetId = form.get("assetId");
   if (typeof assetId === "string" && assetId !== "") {
     if (!isUuid(assetId)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });

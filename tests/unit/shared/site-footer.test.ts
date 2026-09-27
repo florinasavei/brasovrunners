@@ -366,7 +366,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const containerClass = /data-testid="footer-about-panel"[^>]*>\s*<div[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)/.exec(markup);
     expect(containerClass, "the panel's one container").not.toBeNull();
     const container = rulesOf(css, containerClass![1]!);
-    // §NNN, amending §385: the lines set on purpose, touching.
+    // §480, amending §385: the lines set on purpose, touching.
     expect(container).toMatch(/flex-direction:column;/);
     // The fold's line on every link (`FOLD_LINE`, `footer-target.ts`): 24px at every phone width,
     // 44px from `sm` (BR-REQ-041-01 criterion 6); no pseudo-element hit area overlapping a
@@ -391,7 +391,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(linksRule).toMatch(/(^|[;{])column-gap:8px;/);
     expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*column-gap:16px;/);
     // The last line: Open-Meteo's credit, then the stamp, at the panel's 14 pixels — no caption
-    // size of its own (the second round of §NNN: 12 was under the floor for words a person reads).
+    // size of its own (the second round of §480: 12 was under the floor for words a person reads).
     const metaStart = panel.indexOf('data-testid="footer-panel-meta"');
     expect(metaStart, "the credit's line").toBeGreaterThan(panel.indexOf('data-testid="footer-contact"'));
     const metaLine = panel.slice(metaStart);
@@ -400,7 +400,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const metaRule = rulesOf(css, /data-testid="footer-panel-meta"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-meta"/.exec(markup)!.slice(1).find(Boolean)!);
     expect(metaRule).not.toMatch(/font-size/);
     // From `sm` the panel is §385's one wrapping row again, desktop unchanged by the phone's lines
-    // (§NNN, the owner's "footer is too tall on mobile" round): both groups give their items to it.
+    // (§480, the owner's "footer is too tall on mobile" round): both groups give their items to it.
     expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*flex-direction:row;[^}]*flex-wrap:wrap;/);
     expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:contents;/);
     expect(metaRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:contents;/);
@@ -462,7 +462,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
       expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
       // The box a long press is aimed at: 44px on the bar's corner (BR-REQ-041-01 criterion 6);
       // in the fold, the fold's 24-pixel line on a phone with twenty more pixels of reach above it,
-      // given back as a negative margin so the line stays 24, and a plain 44 from `sm` (§NNN, the
+      // given back as a negative margin so the line stays 24, and a plain 44 from `sm` (§480, the
       // 360-px density pass, amending §385).
       const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
       if (testId === "footer-build-badge-pinned") expect(box).toMatch(/(^|[;{])min-height:44px;/);

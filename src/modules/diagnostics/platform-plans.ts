@@ -154,7 +154,7 @@ export type ServiceRow = {
  * Bank's rate on the day, which is why the page calls this the registry price and not the
  * invoice. The owner bought the `.com` on 2026-09-16 (`DECISIONS.md` §55). The `.ro` that §55
  * planned a year later was dropped on 2026-09-26 (one address for search engines, §435), so the
- * row has no "next plan": the next step is renewing the `.com`, which `/admin/tasks` carries (§NNN).
+ * row has no "next plan": the next step is renewing the `.com`, which `/admin/tasks` carries (§483).
  *
  * Romania's standard VAT has been 21% since 2025-08-01. The page prints the amount with "+ VAT"
  * and the rate beside it rather than one blended number, because those are two facts with two
@@ -264,7 +264,7 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       headroom: { kind: "derived", reached: input.clubDomainBound },
       severity: "ok",
       // No next plan: the `.ro` of §55 is dropped (2026-09-26), and renewing the `.com` for
-      // several years is the catalogue's `whenCrossed` sentence and the renewal row (§435, §NNN).
+      // several years is the catalogue's `whenCrossed` sentence and the renewal row (§435, §483).
       nextPlan: null,
       nextCost: null,
       bump: null,

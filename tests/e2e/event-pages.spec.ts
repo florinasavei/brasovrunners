@@ -48,7 +48,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(main.getByRole("table")).toBeVisible();
   });
 
-  // §NNN: the calendar page's head on a phone — the H1 and a «?» fold in place of the intro
+  // §487: the calendar page's head on a phone — the H1 and a «?» fold in place of the intro
   // paragraph, the selects and ‹ Azi › on one row, the two chip pairs on the next.
   test("keeps the calendar's head compact on a phone", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the compact head is the phone's; from sm the head is unchanged");

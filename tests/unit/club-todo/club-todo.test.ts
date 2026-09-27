@@ -95,7 +95,7 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
     expect(readClubTodoValue({ items })).toEqual(items);
   });
 
-  it("offers the roles as «pentru cine», never a colleague's first name (§NNN)", () => {
+  it("offers the roles as «pentru cine», never a colleague's first name (§483)", () => {
     expect(CLUB_TODO_OWNER_SUGGESTIONS).toEqual(["Administrator", "Organizator"]);
   });
 });

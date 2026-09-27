@@ -226,7 +226,7 @@ describe("the calendar file", () => {
     expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Moderate · Free");
     expect(english).toContain("Registration is open — ");
     expect(english).toContain("Event page: ");
-    // No film line (§NNN): a film is a figure in the description, reached through the page.
+    // No film line (§481): a film is a figure in the description, reached through the page.
     expect(english).not.toContain("film");
     expect(calendarDescription({ ...full, distanceMeters: 14_500 }, labelsRo)).toContain("🏃 14,5 km");
     // Nothing set, nothing said: neither the line nor its label.

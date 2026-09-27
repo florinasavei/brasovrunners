@@ -25,9 +25,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const inBox = (box: string, label: string) => `${t(`editor.boxes.${box}.title`)} › ${label}`;
   // The status is a card inside the first box since §448: its fields are named by both.
   const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
-  // «Când și unde» holds the date, the place and the time zone since §NNN: one card, its fields named by it.
+  // «Când și unde» holds the date, the place and the time zone since §481: one card, its fields named by it.
   const inWhenWhere = (label: string) => inBox("whenWhere", label);
-  // «Program, regulament și declarație» holds three cards since §NNN: a field is named by the card and its card.
+  // «Program, regulament și declarație» holds three cards since §481: a field is named by the card and its card.
   const inProgrammeRules = (card: "programme" | "rules" | "declaration", label: string) =>
     inBox("programmeRules", `${t(`editor.boxes.${card}.title`)} › ${label}`);
 
@@ -36,7 +36,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.surface": inBox("course", t("editor.surface")),
     // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§448).
     // The card's title once, then the sentence: «Ce fel de eveniment › Starea evenimentului: Încheiat
-    // se poate alege doar…» — the status is not named twice (§NNN).
+    // se poate alege doar…» — the status is not named twice (§483).
     "event.eventStatus": inBox("kind", `${t("editor.boxes.status.title")}: ${t("editor.boxes.status.completedRefused")}`),
     "event.timezone": inWhenWhere(t("editor.timezone")),
     "event.startsAtDate": inWhenWhere(t("editor.startsAt")),
@@ -194,7 +194,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);
     for (const [field, [box, label]] of Object.entries(perLanguage)) {
-      // The programme's and the rules' texts are cards inside «Program, regulament și declarație» (§NNN).
+      // The programme's and the rules' texts are cards inside «Program, regulament și declarație» (§481).
       labels[`translations.${locale}.${field}`] =
         box === "programme" || box === "rules" ? inProgrammeRules(box, `${language} › ${label}`) : inBox(box, `${language} › ${label}`);
     }

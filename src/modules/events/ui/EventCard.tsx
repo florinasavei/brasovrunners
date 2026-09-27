@@ -38,12 +38,12 @@ import { repeatTooltip, rhythmLabel } from "./series-sentence";
  * do on the series card and the page. The lift under a pointer went with the whole-card link: it
  * said "all of this is one press", which is no longer true, and the series card never had it.
  *
- * **One press anywhere, all the same** (§NNN): the title's link is stretched over the card
+ * **One press anywhere, all the same** (§486): the title's link is stretched over the card
  * (`CARD_TAP_SX`, `CARD_TITLE_SX`), so a thumb on the summary, the pills or the room under the door
  * opens the page, while the map, the door and the registration button stay links of their own —
  * the whole-card tap without the `<a>` around it that took the map link away.
  *
- * **A date of a repeated event says so** (§NNN): when the listing's filters or the lead (§470) leave
+ * **A date of a repeated event says so** (§486): when the listing's filters or the lead (§470) leave
  * one date of a series alone on this card, it wears the series card's repeat chip with its rhythm
  * — «Săptămânal» — so a weekly run does not read as a one-off. `seriesDates` is the whole series,
  * read by the page before any filter.
@@ -92,7 +92,7 @@ export default async function EventCard({
   const week = featured ? raceWeek(event, now, featured) : null;
   const tEvents = featured ? await getTranslations("Events") : null;
   const rhythm = seriesDates && seriesDates.length > 1 ? await rhythmLabel(seriesDates, event.timezone, locale) : null;
-  // The rule behind the word, on hover, on a tap and to a screen reader (§NNN): «Se repetă în fiecare marți, la 18:30».
+  // The rule behind the word, on hover, on a tap and to a screen reader (§486): «Se repetă în fiecare marți, la 18:30».
   const repeats = seriesDates && seriesDates.length > 1 ? await repeatTooltip(seriesDates, event.timezone, locale) : undefined;
   return (
     <Card
@@ -118,7 +118,7 @@ export default async function EventCard({
           {/* What it is, with its glyph (§112). What it is run on is a pill with the facts below,
               said once on the card (§366). */}
           <EventKindChips type={event.type} surface={null} />
-          {/* One date of a repeated event, alone on its card (§NNN): the series card's repeat chip,
+          {/* One date of a repeated event, alone on its card (§486): the series card's repeat chip,
               in the same place, so the rhythm is read the same way on both cards. */}
           {rhythm && <GlyphChip glyph="repeat" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />}
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
@@ -176,7 +176,7 @@ export default async function EventCard({
             it to `tests/e2e/weather-place.spec.ts` or `tests/e2e/listing-cards.spec.ts`, the way
             other breakpoints in this module are measured and pasted (`EventFacts.tsx`'s own
             comments). */}
-        {/* A group's gap above the facts, the density scale's short step on a phone (§NNN): eight,
+        {/* A group's gap above the facts, the density scale's short step on a phone (§480): eight,
             no nearer than the title's reach below its words when there is no summary (§366). */}
         <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           <EventFacts event={event} now={now} variant="compact" cardWeather={weather} raceWeek={week !== null} />

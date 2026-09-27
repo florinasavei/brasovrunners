@@ -132,7 +132,7 @@ export default function ImageCropBox({
   /** The shapes this picture may take; all five unless a place narrows them. */
   presets?: readonly CropPreset[];
   /**
-   * The shape held when nothing is stored and after «Fără decupaj» (§NNN): «Liber» by default,
+   * The shape held when nothing is stored and after «Fără decupaj» (§485): «Liber» by default,
    * 16∶9 for a film's poster, whose box has that shape — the other shapes stay offered, and the
    * page shows the largest 16∶9 part of whichever rectangle is drawn.
    */

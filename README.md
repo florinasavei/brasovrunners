@@ -1,8 +1,14 @@
-<!-- PROJECT_BASELINE: BR-V2.07-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.08-2026-09-27 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V2.07-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.08-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+
+> **Write code once, run forever, always vibe.**
+>
+> Built by [Claude Code](https://claude.com/claude-code) — Anthropic's coding agent — with the club's owner steering: the
+> application, its documents and the dispatcher that lands every release were written this way, in one weekend and the
+> week after it.
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.

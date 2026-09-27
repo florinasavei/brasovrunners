@@ -19,7 +19,7 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * The height of the bar from `sm` up, and of the fold's links and stamp from `sm` up. 44px is what
  * BR-REQ-041-01 asks of a control; the bar is one line of them. On a phone the bar's items are the
  * bar's own target instead (`footerTargetSx`, §372): 24px below 360, 28px up to `sm`; and since
- * §NNN (the 360-px density pass) the fold's lines are 24px at every phone width (`foldLineSx`).
+ * §480 (the 360-px density pass) the fold's lines are 24px at every phone width (`foldLineSx`).
  */
 const BAR_HEIGHT = 44;
 
@@ -57,7 +57,7 @@ const BAR_HEIGHT = 44;
  * Every item is a target of the bar's size (`footer-target.ts`): 24 pixels below 360, which is
  * WCAG 2.2 SC 2.5.8's AA floor, 28 from 360, and 44 from `sm`, where nothing changed — a square,
  * except the summary and the word, which are as wide as their words. The rule is decoration, not
- * a target. It is a footer-only exception to criterion 6: since §NNN (the 360-px density pass) the
+ * a target. It is a footer-only exception to criterion 6: since §480 (the 360-px density pass) the
  * fold's lines are 24 on a phone too (`FOLD_LINE`), and 44 from `sm`.
  *
  * ## The gap, measured (§378, §385)
@@ -294,7 +294,7 @@ export default async function SiteFooter() {
               when it does not. The stamp is last.
 
               Measured on the built listing at 360 pixels, in Romanian, the open panel was 188
-              pixels tall and 136 after §385. §NNN (the 360-px density pass) replaced the 44-pixel
+              pixels tall and 136 after §385. §480 (the 360-px density pass) replaced the 44-pixel
               row with the lines below: 146 with the stamp's 44-pixel box, 130 with the stamp at
               the bar's target too — four lines of 28 and three gaps of 6 — and, in its second
               round, 96: four lines of 24 (`FOLD_LINE`), abutting, the stamp's 44-pixel long-press
@@ -322,7 +322,7 @@ export default async function SiteFooter() {
                 // before: the widest switch, a scrollbar and a margin, capped at 40rem.
                 width: { xs: "calc(100vw - 60px)", sm: "min(40rem, calc(100vw - 80px))" },
                 [PHONE_WIDE]: { width: "calc(100vw - 68px)" },
-                // §NNN, amending §385 (the owner, 2026-09-26: "Informațiile din footer sunt mult
+                // §480, amending §385 (the owner, 2026-09-26: "Informațiile din footer sunt mult
                 // prea spațiate"): the lines set on purpose — the terms and "my registrations",
                 // "Scrie-ne" with the address, then the weather credit and the stamp, every word at
                 // the panel's 14 pixels (the second round: the credit's 12 was under the site's
@@ -332,7 +332,7 @@ export default async function SiteFooter() {
                 // (BR-REQ-041-01 criterion 6), and from `sm` the panel is §385's one wrapping row
                 // again, unchanged: the two groups below give their items to it (`display:
                 // contents`), sixteen pixels apart, as many to a line as fit — the lines above are
-                // the phone's (§NNN, the owner's "footer is too tall on mobile" round).
+                // the phone's (§480, the owner's "footer is too tall on mobile" round).
                 display: "flex",
                 flexDirection: { xs: "column", sm: "row" },
                 flexWrap: { sm: "wrap" },
@@ -385,7 +385,7 @@ export default async function SiteFooter() {
                   </Box>
                 ))}
               </Box>
-              {/* The last line (§NNN, amending §385): Open-Meteo's credit and the stamp, side by side
+              {/* The last line (§480, amending §385): Open-Meteo's credit and the stamp, side by side
                   from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box
                 data-testid="footer-panel-meta"

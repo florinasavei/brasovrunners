@@ -87,7 +87,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${names(sql`${pageTranslations.bodyJson}::text`)})
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
-  -- No events.video_poster_url any more (§NNN): a film is a figure in the description, whose
+  -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
   -- poster the event translation's own body names above (migration 0092 carried every stored
   -- poster there). The column is unread and unwritten until its contract migration drops it.
   -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
@@ -154,7 +154,7 @@ export async function sweepOrphanAssets<T extends Record<string, unknown>>(
  *
  * For a removal that takes away one place a picture was used — an album's photo, a whole album —
  * now that a picture can be in an album and in a text, on a card of «Echipa» or in another album
- * at once (§NNN, «Din galerie»). Before, taking a photo out of an album deleted the picture
+ * at once (§485, «Din galerie»). Before, taking a photo out of an album deleted the picture
  * outright, and a page that had chosen it from the gallery was left with a broken image.
  */
 export async function deleteAssetsNoLongerReferenced<T extends Record<string, unknown>>(

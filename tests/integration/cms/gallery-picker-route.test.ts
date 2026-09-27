@@ -6,7 +6,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-03, BR-REQ-060-01, `DECISIONS.md` §NNN — the list every «Din galerie» reads,
+ * BR-REQ-050-03, BR-REQ-060-01, `DECISIONS.md` §485 — the list every «Din galerie» reads,
  * through the route a browser asks: newest first; narrowed by name (accents and case ignored)
  * and by where a picture is used before the cap; a film's automatic poster only when asked for;
  * the stored size and weight for the caption under each thumbnail; and only for the roles that
@@ -38,7 +38,7 @@ async function list(query = ""): Promise<{ status: number; assets: Listed[] }> {
 
 const photo = (color: string) => sharp({ create: { width: 1200, height: 800, channels: 3, background: color } }).jpeg().toBuffer();
 
-describe("§NNN GET /api/admin/media — what «Din galerie» lists", () => {
+describe("§485 GET /api/admin/media — what «Din galerie» lists", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let editor: StaffUser;
@@ -118,7 +118,7 @@ describe("§NNN GET /api/admin/media — what «Din galerie» lists", () => {
     expect((await list("?source=nowhere")).assets).toHaveLength(3);
   });
 
-  it("narrows to THIS page's own pictures with ?for=page:<id>&source=here, from its references (§NNN)", async () => {
+  it("narrows to THIS page's own pictures with ?for=page:<id>&source=here, from its references (§485)", async () => {
     const { old, page } = await seed();
     const here = await list(`?for=page:${page.id}&source=here`);
     expect(here.assets.map((asset) => asset.id)).toEqual([old.assetId]);

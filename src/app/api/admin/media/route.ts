@@ -69,7 +69,7 @@ export async function POST(request: Request): Promise<Response> {
 
 /**
  * The pictures already stored, newest first, for every «Din galerie» in the backoffice
- * (`DECISIONS.md` §73, §NNN: a text, a film's poster, a card of «Echipa», an album): the two
+ * (`DECISIONS.md` §73, §485: a text, a film's poster, a card of «Echipa», an album): the two
  * variant addresses, the stored size and weight the picker writes under each thumbnail, and the
  * kinds of place a picture is used — the picker's «Folosită în» chips — never which page or who.
  *
@@ -81,7 +81,7 @@ export async function POST(request: Request): Promise<Response> {
  * `?q=` (a name, accents and case ignored) and `?source=` (`event`, `album`, `page`, `team`) narrow
  * the list here, before the cap, so an old picture is found by name however many came after it;
  * `?for=event:<uuid>` (or `album:`, `page:`) names the editor the picker is in, and `?source=here`
- * then keeps only the pictures that place already uses — «Acest eveniment» (§NNN);
+ * then keeps only the pictures that place already uses — «Acest eveniment» (§485);
  * a film's automatic poster (`yt-<id>`, §403) is left out unless `?posters=1` — the film's own
  * poster picker asks for it, a text, a card and an album do not.
  */
@@ -100,7 +100,7 @@ export async function GET(request: Request): Promise<Response> {
 
   const params = new URL(request.url).searchParams;
   const withPosters = params.get("posters") === "1";
-  // The editor the picker was opened from (§NNN), when it is one event, album or page: each
+  // The editor the picker was opened from (§485), when it is one event, album or page: each
   // picture then says whether THAT place already uses it, from its references, here — the browser
   // never filters the whole list for «Acest eveniment».
   const scope = parsePickerScope(params.get("for"));

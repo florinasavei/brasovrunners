@@ -10,7 +10,7 @@ import type { RichTextDoc } from "../domain/schema";
  * through `setContent` (the hidden value and the tab marks follow as for typing), the unmounted
  * fold by posting it and mounting from it. Nothing is saved by the event.
  *
- * **In the form that pressed** (§NNN). «Echipa» is one form per card, and every card posts its
+ * **In the form that pressed** (§482). «Echipa» is one form per card, and every card posts its
  * English words as `bioEnBody`: a name alone would fill every card's English with one person's
  * translation. The event carries the form the button sits in, and a box in another form ignores it.
  */

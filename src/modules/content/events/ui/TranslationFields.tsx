@@ -105,7 +105,7 @@ function box(field: TranslationFieldName) {
 const named = (translation: TranslationDraft) => (field: string) => `translations.${translation.locale}.${field}`;
 
 /**
- * The event a stored translation belongs to, as the gallery picker's place (§NNN): «Din galerie»
+ * The event a stored translation belongs to, as the gallery picker's place (§485): «Din galerie»
  * in any of its texts opens on «Acest eveniment». The create form's blank rows have none.
  */
 const pictureScopeOf = (translation: TranslationDraft): PickerScope | undefined =>

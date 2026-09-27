@@ -15,7 +15,7 @@ import { LanguageTabs } from "./TextBoxes";
 
 /**
  * "Programul zilei și ce să aduci" (§350), the first of the three cards of «Program, regulament și
- * declarație» since §NNN (`ProgrammeRulesBox`; `#box-schedule`, after the page's own `#schedule`):
+ * declarație» since §481 (`ProgrammeRulesBox`; `#box-schedule`, after the page's own `#schedule`):
  * the timed rows first (§117) — one list for both
  * languages, one calendar entry each, repeated in the reminder, with "Ce (română)" and "Ce
  * (engleză)" side by side in the row, never in tabs — then, in Română | English tabs, the notes

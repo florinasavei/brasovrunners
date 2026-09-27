@@ -816,7 +816,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             <Box
               component="li"
               key={task.id}
-              // An address for the row: the editors' grey «Copiază și tradu tot» links `#task-translation` (§NNN).
+              // An address for the row: the editors' grey «Copiază și tradu tot» links `#task-translation` (§482).
               id={`task-${task.id}`}
               sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, scrollMarginTop: 16 }}
             >

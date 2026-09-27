@@ -89,12 +89,12 @@ describe("§406 the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 10 in that order, and gives the automatic share links and the nested sections none (§466, §NNN)", () => {
+  it("numbers the cards 1 to 10 in that order, and gives the automatic share links and the nested sections none (§466, §481)", () => {
     const numbered = numberedPageSections();
     expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 10 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
     expect(numbered.find((section) => section.id === "cost")).toMatchObject({ card: "box-cost", nestedIn: "kind", number: null });
-    // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§NNN).
+    // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481).
     expect(numbered.find((section) => section.id === "place")).toMatchObject({ card: "box-place", nestedIn: "when", number: null });
     expect(numbered.find((section) => section.id === "rules")).toMatchObject({ card: "box-rules", nestedIn: "programme", number: null });
     expect(pageSectionNumber("kind")).toBe(1);
@@ -108,7 +108,7 @@ describe("§406 the page's sections, one list", () => {
     expect(pageSectionNumber("startList")).toBe(10);
   });
 
-  it("has no film section: a film is a figure in the description (§NNN)", () => {
+  it("has no film section: a film is a figure in the description (§481)", () => {
     expect(ids as string[]).not.toContain("video");
     expect(PAGE).not.toContain("EventVideo");
   });
@@ -139,7 +139,7 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<StartListBox ", "startList"],
 ];
 
-/** The sections asked inside another card (§466, §NNN): no card of their own on either page. */
+/** The sections asked inside another card (§466, §481): no card of their own on either page. */
 const NESTED: readonly PageSectionId[] = PAGE_SECTIONS.filter((section) => section.nestedIn).map((section) => section.id);
 
 describe("§406 the editor lays its cards out in the page's order, on both pages", () => {
@@ -155,7 +155,7 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
         return { index, id };
       });
       // The cost's card is inside the first box since §466, the place inside «Când și unde» and the
-      // rules inside «Program, regulament și declarație» since §NNN: the page still draws each in its place.
+      // rules inside «Program, regulament și declarație» since §481: the page still draws each in its place.
       expect(NESTED).toEqual(["place", "cost", "rules"]);
       expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => !NESTED.includes(id)));
       for (const gone of ["<CostBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<VideoBox", "flow.headings.cost", "flow.headings.place", "flow.headings.rules", "flow.headings.video"]) {
@@ -276,7 +276,7 @@ describe("§406 whether the page draws each section", () => {
     expect(drawn(data)).toMatchObject({ startList: false });
   });
 
-  it("draws a card holding two sections when either is drawn (§NNN): the programme card from the rules alone", () => {
+  it("draws a card holding two sections when either is drawn (§481): the programme card from the rules alone", () => {
     const cards = (data: PageSectionData) => Object.fromEntries(cardStates(data).map((card) => [card.id, card.isDrawn]));
     expect(cards(bare())).toMatchObject({ when: true, programme: false });
     const withRules = bare();

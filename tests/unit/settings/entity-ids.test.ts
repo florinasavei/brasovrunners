@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { CLUB_TODO_ENTITY_ID } from "@/modules/club-todo/domain/club-todo";
 
 /**
- * `DECISIONS.md` §NNN — every club setting names itself in `audit_logs.entity_id` by a fixed id of
+ * `DECISIONS.md` §483 — every club setting names itself in `audit_logs.entity_id` by a fixed id of
  * its own (`…e001`, `…e002`, …; `email-plan.ts` started the convention, §100). Three pairs of
  * settings built on the same day took the same id — the job cadence and the Neon limits (`…e007`),
  * the club's notices and the delivery timing (`…e003`), the checklist and the budget thresholds
@@ -34,7 +34,7 @@ const declared = sourceFiles(SRC).flatMap((file) =>
   })),
 );
 
-describe("§NNN every setting's audit id is its own", () => {
+describe("§483 every setting's audit id is its own", () => {
   it("finds the settings' ids in the source", () => {
     // A floor, not a count: the walk must be finding them, and the checklist's is one of them.
     expect(declared.length).toBeGreaterThanOrEqual(15);

@@ -1,5 +1,5 @@
 /**
- * «Din galerie» — which stored pictures the picker shows (§NNN). Pure, with no database and no
+ * «Din galerie» — which stored pictures the picker shows (§485). Pure, with no database and no
  * browser in it: `GET /api/admin/media` narrows the list with it before the cap, so an old
  * picture is found by its name however many came after it, and the picker applies its place's
  * own rule (`accept`) with it on what came back. A test reads it without either.
@@ -14,7 +14,7 @@
 export const PICTURE_SOURCES = ["all", "event", "album", "page", "team"] as const;
 /**
  * A chip: «toate», a kind of place, or «here» — THIS event, album or page, the one whose editor
- * the picker was opened from (§NNN: «Acest eveniment» / «This event»). «here» exists only where
+ * the picker was opened from (§485: «Acest eveniment» / «This event»). «here» exists only where
  * the picker knows its place (`PickerScope`).
  */
 export type PictureSource = (typeof PICTURE_SOURCES)[number] | "here";

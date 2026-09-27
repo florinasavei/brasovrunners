@@ -88,7 +88,7 @@ export async function recurrenceSentence(
 /**
  * The repeat chip's word (§113): how often, not how many — «Săptămânal», «La două săptămâni» —
  * and the count only for a set of dates with no rhythm, «3 date» (§341). The owner: "8 dates here
- * is redundant, just show weekly". One function for the series card and, since §NNN, the one-date
+ * is redundant, just show weekly". One function for the series card and, since §486, the one-date
  * card of a repeated event (a filter or the lead left one of its dates alone on its card).
  */
 export async function rhythmLabel(members: readonly { startsAt: Date }[], timeZone: string, locale: string): Promise<string> {
@@ -100,7 +100,7 @@ export async function rhythmLabel(members: readonly { startsAt: Date }[], timeZo
 }
 
 /**
- * What the repeat chip says on hover, on a tap and to a screen reader (§NNN): the series' rule as a
+ * What the repeat chip says on hover, on a tap and to a screen reader (§486): the series' rule as a
  * sentence — «Se repetă în fiecare marți, la 18:30» / «Repeats every Tuesday at 18:30» — so the
  * chip's short word («Săptămânal») is never the whole story; a set of dates with no weekly or
  * fortnightly rhythm is «Eveniment recurent» / «Recurring event». Both cards wear it.

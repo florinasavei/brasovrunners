@@ -68,7 +68,7 @@ export default function EventDescription({
       {showsSummary && <EventExcerpt excerptJson={excerptJson} excerpt={excerpt} />}
       {showsBody && (
         // On a phone the body's last block gives up its own margin, which would otherwise collapse
-        // through this box and hold the divider sixteen pixels down whatever the box says (§NNN).
+        // through this box and hold the divider sixteen pixels down whatever the box says (§480).
         <Box sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, [PHONE_ONLY]: { "& > :last-child": { mb: 0 } } }}>
           <RichText body={bodyJson} />
         </Box>

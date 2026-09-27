@@ -77,7 +77,7 @@ export default async function AdminLayout({ children, params }: Props) {
   }
 
   const messages = await getMessages({ locale });
-  // Who translates, and whether this deployment can (§464, §NNN). Without a key the steps are
+  // Who translates, and whether this deployment can (§464, §482). Without a key the steps are
   // on «Sarcini» → «Club», linked only for a role that may open that panel.
   const translateOffer: TranslateOffer | null = canTranslateTexts(staffUser.role)
     ? {
@@ -110,7 +110,7 @@ export default async function AdminLayout({ children, params }: Props) {
           <SaveFallbackNotice shown={savedTheSimpleWay} />
           {/* «Tradu din română» (§464): for a role that writes the club's words; working where a
               translator is configured, and otherwise the editors' one «Copiază și tradu tot»
-              says why it is grey and where the steps are (§NNN). The action asks both again. */}
+              says why it is grey and where the steps are (§482). The action asks both again. */}
           <TranslateProvider offer={translateOffer}>
             <PickerProvider>{children}</PickerProvider>
           </TranslateProvider>

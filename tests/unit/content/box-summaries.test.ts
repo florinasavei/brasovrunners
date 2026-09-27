@@ -375,7 +375,7 @@ describe("§448 the declaration card under «Regulamentul» says what a runner s
     expect(declarationSummary(wordsEn, { registrationMode: "NONE", offersGroupRunDeclaration: true }, groupRun)).toBe("declaration for Trail");
   });
 
-  it("says a ticked group run has no text in force when its surface's text is withdrawn or was never approved (§NNN)", () => {
+  it("says a ticked group run has no text in force when its surface's text is withdrawn or was never approved (§483)", () => {
     const ticked = { registrationMode: "NONE", offersGroupRunDeclaration: true } as const;
     expect(declarationSummary(words, ticked, { ...groupRun, groupRunTextInForce: false })).toBe(
       "declarație pentru Trail — niciun text aprobat în vigoare, butonul nu apare",

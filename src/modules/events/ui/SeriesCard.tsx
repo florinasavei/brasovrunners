@@ -50,7 +50,7 @@ export default async function SeriesCard({
   // The chip says how often, not how many (`rhythmLabel`); every date is shown in the fold — "2
   // more in the calendar" meant nothing to the owner.
   const rhythm = await rhythmLabel(members, next.timezone, locale);
-  // The rule behind the word (§NNN), the same on the one-date card of a repeated event.
+  // The rule behind the word (§486), the same on the one-date card of a repeated event.
   const repeats = await repeatTooltip(members, next.timezone, locale);
   const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
@@ -110,7 +110,7 @@ export default async function SeriesCard({
 
         {/* The next date's facts: "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" on one line — the
             label used to be a line of its own above them — then the place, its map link, and the
-            pills. A group's gap above them, the density scale's short step on a phone (§NNN). */}
+            pills. A group's gap above them, the density scale's short step on a phone (§480). */}
         <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
           {/* The next date's weather at its start (§416) is the last pill of its route's row, the
               umbrella when rain is likely (§429). */}

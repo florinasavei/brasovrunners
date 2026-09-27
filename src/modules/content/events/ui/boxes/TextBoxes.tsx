@@ -177,7 +177,7 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
 
 /**
  * "Regulamentul" (`#box-rules`), the second of the three cards of «Program, regulament și
- * declarație» since §NNN (`ProgrammeRulesBox`): the rules in each language, on their own tabs. The
+ * declarație» since §481 (`ProgrammeRulesBox`): the rules in each language, on their own tabs. The
  * declaration (§448) is the card after it, no longer inside it — the three are siblings, in the
  * order the page reads them.
  */

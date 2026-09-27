@@ -58,7 +58,7 @@ describe("the create page is the editor's page", () => {
       "<KindBox",
       "<TitleSummaryBox",
       "<DescriptionBox",
-      // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§NNN).
+      // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481).
       "<WhenBox",
       "<CourseBox",
       "<RegistrationBox",
@@ -78,7 +78,7 @@ describe("the create page is the editor's page", () => {
       }
       // No box holds another any more: the first box is the type alone (§406, undoing §358's nesting).
       expect(page).not.toContain("</KindBox>");
-      // No film card, and no card of its own for the place or the rules (§NNN).
+      // No film card, and no card of its own for the place or the rules (§481).
       for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox "]) expect(page, gone).not.toContain(gone);
     }
   });
@@ -160,7 +160,7 @@ describe("no film box", () => {
     }
   });
 
-  it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§NNN)", () => {
+  it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
     // The column stays in the schema until its contract migration (AGENTS.md §7.6) — read and written by nobody.
     expect(read("src/db/schema/events.ts")).toContain('videoUrl: text("video_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
@@ -206,7 +206,7 @@ describe("the time is a typed box, shown and posted on the 24-hour clock", () =>
 });
 
 describe("the place's name in each language (§362)", () => {
-  it("is asked once per language in the place's part of «Când și unde» (§NNN), beside each other — hidden with the map link while to be announced", () => {
+  it("is asked once per language in the place's part of «Când și unde» (§481), beside each other — hidden with the map link while to be announced", () => {
     const place = read("src/modules/content/events/ui/boxes/PlaceBox.tsx");
     const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");
     // No tabs and no second, shared box: the island holds the two names and the map link.

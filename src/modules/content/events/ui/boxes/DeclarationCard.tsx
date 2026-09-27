@@ -32,7 +32,7 @@ export async function declarationLine(
   const chosen = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const surface = event?.surface ? tEvent(`surface.${event.surface}`) : null;
   const registers = takesRegistrations(type);
-  // A group run ticked for a surface whose text was withdrawn, or never approved (§NNN): the
+  // A group run ticked for a surface whose text was withdrawn, or never approved (§483): the
   // `groupRunDeclarations` given are the versions in force — approved and not withdrawn (§393).
   const offered = !registers && event?.offersGroupRunDeclaration === true && event.surface !== null;
   const textInForce =
@@ -52,7 +52,7 @@ export async function declarationLine(
 }
 
 /**
- * «Declarația pe propria răspundere» (§448) — since §NNN the third card of «Program, regulament și
+ * «Declarația pe propria răspundere» (§448) — since §481 the third card of «Program, regulament și
  * declarație», right after «Regulamentul» (it was inside it: the owner, 2026-09-27, "Programul,
  * regulamentul și declarația la fel pe același card"), the one place in
  * the editor where an organizer chooses what a runner signs (the owner, 2026-09-26: "declarația la

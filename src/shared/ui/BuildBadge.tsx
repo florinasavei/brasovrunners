@@ -8,7 +8,7 @@ import { env } from "@/shared/config/env";
 import BuildBadgeLink from "./BuildBadgeLink";
 import { FOLD_LINE, foldLineSx } from "./footer-target";
 
-/** The stamp's long-press reach above its line in the phone's fold: 44 less the fold's 24-pixel line (§NNN). */
+/** The stamp's long-press reach above its line in the phone's fold: 44 less the fold's 24-pixel line (§480). */
 const FOLD_REACH = 44 - FOLD_LINE.xs;
 
 /**
@@ -66,7 +66,7 @@ export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?
    * aimed at it (BR-REQ-041-01 criterion 6). The chip is the 24 pixels you see; this box is the
    * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§385).
    *
-   * `phoneTarget` — the fold's copy (§NNN, the 360-px density pass, amending §385): on a phone
+   * `phoneTarget` — the fold's copy (§480, the 360-px density pass, amending §385): on a phone
    * every line of the fold is 24 pixels (`FOLD_LINE`, `footer-target.ts`), and a 44-pixel box here
    * was the one line the fold could not lose. So the box still reaches 44 — a long press is aimed
    * at it — but the twenty pixels above its line are padding given back as an equal negative

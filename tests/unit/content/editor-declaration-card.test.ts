@@ -76,8 +76,8 @@ async function rules(event: EditableEvent | null, options: { mayEditSettings?: b
   return markup(renderToStaticMarkup(element as ReactElement));
 }
 
-describe("§448 the declaration card sits with «Regulamentul» (in one card since §NNN)", () => {
-  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Program, regulament și declarație» (§NNN)", async () => {
+describe("§448 the declaration card sits with «Regulamentul» (in one card since §481)", () => {
+  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Program, regulament și declarație» (§481)", async () => {
     for (const event of [TRAIL_RUN, RACE, null]) {
       const html = await rules(event);
       expect(namedFolds(html)).toEqual(["box-declaration"]);
@@ -111,7 +111,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
     expect((await declarationLine(null, DECLARATIONS, WORDS)).missing).toBe(false);
   });
 
-  it("reads the texts in force for a ticked group run: none for its surface is a gap, never «declarație pentru Trail» (§NNN)", async () => {
+  it("reads the texts in force for a ticked group run: none for its surface is a gap, never «declarație pentru Trail» (§483)", async () => {
     const withdrawn = await declarationLine(TRAIL_RUN, DECLARATIONS, WORDS, { ASPHALT: { version: 1 }, TRAIL: null });
     expect(withdrawn).toEqual({ text: "declarație pentru Trail — niciun text aprobat în vigoare, butonul nu apare", missing: true });
     expect(await declarationLine(TRAIL_RUN, DECLARATIONS, WORDS, { ASPHALT: null, TRAIL: { version: 2 } })).toEqual({

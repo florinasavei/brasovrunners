@@ -80,7 +80,7 @@ const PUBLIC_COLUMNS = {
   longitude: unlessToBeAnnounced<number | null>(events.longitude),
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
-  // No `video_url` / `video_poster_url` (§NNN): a film is a figure in the description, where
+  // No `video_url` / `video_poster_url` (§481): a film is a figure in the description, where
   // migration `0092` moved every stored link (BR-REQ-011-01 criterion 9); the two columns are left
   // unread until a later contract migration drops them (AGENTS.md §7.6).
   // The club's Strava group event for this occurrence (criterion 10).

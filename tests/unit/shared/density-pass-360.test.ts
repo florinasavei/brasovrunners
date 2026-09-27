@@ -5,7 +5,7 @@ import { BOXED_DISCLOSURE_SX, DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/sha
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * §NNN — the 360-px density pass over the public pages. Two defects measured in the browser, not
+ * §480 — the 360-px density pass over the public pages. Two defects measured in the browser, not
  * spacing values: `tests/unit/theme/density.test.ts` holds the values it moved onto the scale.
  *
  * 1. A public fold's `<summary>` was 64 pixels tall where it claimed 44: slotted into its
@@ -19,7 +19,7 @@ import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 const ROOT = join(__dirname, "..", "..", "..");
 const source = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
-describe("§NNN a public fold is the 44 pixels it claims", () => {
+describe("§480 a public fold is the 44 pixels it claims", () => {
   it("counts the summary's padding inside its 44 (border-box)", () => {
     expect(DISCLOSURE_SUMMARY_SX.boxSizing).toBe("border-box");
     expect(DISCLOSURE_SUMMARY_SX.minHeight).toBe(TAP_TARGET.minHeight);
@@ -34,7 +34,7 @@ describe("§NNN a public fold is the 44 pixels it claims", () => {
   });
 });
 
-describe("§NNN a link inside a sentence keeps 44 pixels without stretching its line", () => {
+describe("§480 a link inside a sentence keeps 44 pixels without stretching its line", () => {
   it("reaches above its words and gives the reach back as a negative margin", () => {
     expect(INLINE_TAP_TARGET.display).toBe("inline-flex");
     // In `em`, which every browser knows — `lh` is unknown to Safari before 16.4 and Firefox
@@ -73,7 +73,7 @@ describe("§NNN a link inside a sentence keeps 44 pixels without stretching its 
   });
 });
 
-describe("§NNN the contact form's first box is one gap under the legend, not two", () => {
+describe("§480 the contact form's first box is one gap under the legend, not two", () => {
   it("keeps the hidden inputs out of the column, so the name box is its first item", () => {
     const contact = source("src/app/[locale]/contact/page.tsx");
     const form = contact.slice(contact.indexOf("<form action={submitContactAction}>"));

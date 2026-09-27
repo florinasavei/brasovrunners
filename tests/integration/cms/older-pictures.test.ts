@@ -168,7 +168,7 @@ describe("§430 the pictures from before §414 get their ladder, a batch per pre
     expect(await giveOlderPicturesTheirLadder(db, admin, { now: T0 })).toEqual({ converted: 0, failed: 0, left: 0 });
   });
 
-  it("rewrites «Echipa»'s texts too — a person's words and the page's introduction (§NNN)", async () => {
+  it("rewrites «Echipa»'s texts too — a person's words and the page's introduction (§483)", async () => {
     const older = await olderPicture(db, "echipa.jpg", T0, { width: 800 });
     const oldPrefix = older.row.keyPrefix;
     const doc = JSON.parse(bodyWith(older.src, 800));

@@ -172,7 +172,7 @@ test.describe("the build badge", () => {
     await expect(badge).toHaveAttribute("title", /BR-V\d+\.\d+|dev/);
     // The chip is the 24px you see; the box around it is the 44px a long press is aimed at, on
     // the bar's corner (criterion 6) and in the phone's fold alike — there its line is the fold's
-    // 24px and the rest of the 44 reaches up over the line above (§NNN, amending §385).
+    // 24px and the rest of the 44 reaches up over the line above (§480, amending §385).
     const box = await badge.boundingBox();
     const drawn = await chip.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(43.5);

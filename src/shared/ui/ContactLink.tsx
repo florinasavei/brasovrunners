@@ -9,7 +9,7 @@ import { INLINE_TAP_TARGET } from "./tap-target";
  *
  * As tall as a thumb (BR-REQ-041-01 criterion 6) while staying in the line: 44 pixels of reach
  * above its words, given back as a negative margin so the line keeps its height (`INLINE_TAP_TARGET`,
- * §NNN), the same shape the contact page gives its own inline links.
+ * §480), the same shape the contact page gives its own inline links.
  */
 export default function ContactLink({ children }: { children: ReactNode }) {
   return (

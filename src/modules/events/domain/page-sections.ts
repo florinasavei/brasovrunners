@@ -13,7 +13,7 @@ import { readScheduleItems } from "./schedule";
  * **The page's own order, as a list.** `app/[locale]/events/[slug]/page.tsx` draws the overline,
  * the title, the description, the facts (when, where, the route, the cost, who may enter, the
  * partners), the registration button, the share links, then `#route`, `#links`, `#schedule`,
- * `#rules` and the start list — a film is a figure in the description since §NNN, the page's own
+ * `#rules` and the start list — a film is a figure in the description since §481, the page's own
  * film section (§69) gone and its stored links moved into the descriptions (migration `0092`). A section's place here is where the page first draws
  * something its card holds. The page does not import this list — it is drawn by hand, no table of
  * elements (`AGENTS.md` §1.3) — so `tests/unit/events/page-sections.test.ts` reads the page as
@@ -129,7 +129,7 @@ export type PageSection = {
   /** Whether the page draws it for this event. */
   drawn: (data: PageSectionData) => boolean;
   /**
-   * The section whose editor card holds this one's card (§466, §NNN): the page draws it in its own
+   * The section whose editor card holds this one's card (§466, §481): the page draws it in its own
    * place, but the editor asks it inside another card, so it has no number and no chip on the map —
    * the cost inside «Ce fel de eveniment», the place inside «Când și unde», the rules inside
    * «Program, regulament și declarație». The holding card is drawn when either is (`cardStates`).
@@ -148,11 +148,11 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: "title", card: "box-title", anchor: null, glyph: "title", automatic: false, drawn: (data) => inSomeLanguage(data, (text) => written(text.title)) },
   // The long description; with none, the page shows the summary in its place (`EventDescription`).
   { id: "description", card: "box-description", anchor: null, glyph: "description", automatic: false, drawn: (data) => inSomeLanguage(data, (text) => hasDoc(text.bodyJson)) },
-  // "Când" — every event has a date. The editor's «Când și unde» (§NNN; the owner, 2026-09-27: "date
+  // "Când" — every event has a date. The editor's «Când și unde» (§481; the owner, 2026-09-27: "date
   // and location can be on the same card") asks the date, the place and the time zone in one card.
   { id: "when", card: "box-when", anchor: null, glyph: "when", automatic: false, drawn: () => true },
   // "Unde": the place, its address and its map — or "to be announced" (§328), which is drawn too.
-  // Asked inside «Când și unde» since §NNN: `#box-place` is the place's part of that card.
+  // Asked inside «Când și unde» since §481: `#box-place` is the place's part of that card.
   {
     id: "place",
     card: "box-place",
@@ -225,7 +225,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     drawn: ({ event }) => readEventLinks(event.links).length > 0 || written(event.stravaEventUrl) || written(event.facebookEventUrl),
   },
   // The programme (`#schedule`, §96, §117): the timed rows, or the text. The editor's «Program,
-  // regulament și declarație» (§NNN; the owner, 2026-09-27: "Programul, regulamentul și declarația
+  // regulament și declarație» (§481; the owner, 2026-09-27: "Programul, regulamentul și declarația
   // la fel pe același card") holds the programme, the rules and the declaration as three cards.
   {
     id: "programme",
@@ -235,7 +235,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     automatic: false,
     drawn: (data) => readScheduleItems(data.event.scheduleItems).length > 0 || inSomeLanguage(data, (text) => hasDoc(text.scheduleJson)),
   },
-  // The rules (`#rules`), a card inside «Program, regulament și declarație» since §NNN.
+  // The rules (`#rules`), a card inside «Program, regulament și declarație» since §481.
   {
     id: "rules",
     card: "box-rules",
@@ -277,7 +277,7 @@ export function pageSectionStates(data: PageSectionData): Array<NumberedPageSect
 
 /**
  * Each editor card — every section not nested in another's card — with whether the page draws
- * anything it holds (§NNN): «Când și unde» is drawn when the date or the place is, «Program,
+ * anything it holds (§481): «Când și unde» is drawn when the date or the place is, «Program,
  * regulament și declarație» when the programme or the rules are. The card's heading and its chip on
  * the map read this; a nested section's own `isDrawn` stays in `pageSectionStates`.
  */

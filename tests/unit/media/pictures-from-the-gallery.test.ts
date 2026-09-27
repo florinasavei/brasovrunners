@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-050-03, `DECISIONS.md` §NNN — «Din galerie» wherever the backoffice takes a picture, the
+ * BR-REQ-050-03, `DECISIONS.md` §485 — «Din galerie» wherever the backoffice takes a picture, the
  * same shapes and crop box as an upload, and a film's poster the club can replace from the gallery
  * and crop to the part its 16∶9 box shows.
  */
@@ -39,7 +39,7 @@ const film = (attrs: Record<string, unknown>) => ({
 const render = async (props: Parameters<typeof RichTextVideo>[0]) =>
   renderToStaticMarkup((await RichTextVideo(props)) as Parameters<typeof renderToStaticMarkup>[0]);
 
-describe("§NNN the film's poster crop, stored on the node", () => {
+describe("§485 the film's poster crop, stored on the node", () => {
   it("keeps a film stored before exactly as it was: no posterCrop key appears", () => {
     const doc = parseRichText(film({ poster: YOUTUBE_POSTER, posterSource: "youtube" }));
     expect("posterCrop" in (doc.content![0] as { attrs: object }).attrs).toBe(false);
@@ -59,7 +59,7 @@ describe("§NNN the film's poster crop, stored on the node", () => {
   });
 });
 
-describe("§NNN the page draws the part the club chose", () => {
+describe("§485 the page draws the part the club chose", () => {
   it("draws a cropped poster in the card frame's own window, not covered", async () => {
     // YouTube's 4∶3 thumbnail with its letterbox bars: the club keeps the middle band.
     const crop = presetCrop("16:9", { width: 480, height: 360 })!;
@@ -99,7 +99,7 @@ describe("§NNN the page draws the part the club chose", () => {
   });
 });
 
-describe("§NNN the crop box offers a poster every shape, its box's first", () => {
+describe("§485 the crop box offers a poster every shape, its box's first", () => {
   const labels = {
     title: "Decupaj",
     help: "",
@@ -163,7 +163,7 @@ describe("§NNN the crop box offers a poster every shape, its box's first", () =
   });
 });
 
-describe("§NNN «Din galerie» wherever the backoffice takes a picture", () => {
+describe("§485 «Din galerie» wherever the backoffice takes a picture", () => {
   const picker = "@/modules/media/ui/GalleryPicker";
   const places = {
     "a picture in a text, and a film's poster": ["src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx"],
@@ -209,7 +209,7 @@ describe("§NNN «Din galerie» wherever the backoffice takes a picture", () => 
   });
 });
 
-describe("§NNN the picker's query: order, rule, search and source", () => {
+describe("§485 the picker's query: order, rule, search and source", () => {
   type P = { id: string; name: string; uses: ("event" | "album" | "page" | "team")[]; poster?: boolean };
   // Newest first, as the route reads them.
   const list: P[] = [
@@ -267,7 +267,7 @@ describe("§NNN the picker's query: order, rule, search and source", () => {
   });
 });
 
-describe("§NNN «Acest eveniment»: the picker opens on the place it was opened from", () => {
+describe("§485 «Acest eveniment»: the picker opens on the place it was opened from", () => {
   const EVENT = "3f2a1b4c-0000-4abc-8def-000000000001";
 
   it("reads the place strictly: three kinds and a UUID, else none", () => {
@@ -330,7 +330,7 @@ describe("§NNN «Acest eveniment»: the picker opens on the place it was opened
   });
 });
 
-describe("§NNN the event's card picture (§454) takes «Din galerie» like an upload", () => {
+describe("§485 the event's card picture (§454) takes «Din galerie» like an upload", () => {
   const editor = source("src", "modules", "content", "rich-text", "ui", "RichTextEditor.tsx");
   const fields = source("src", "modules", "content", "events", "ui", "TranslationFields.tsx");
 
@@ -355,7 +355,7 @@ describe("§NNN the event's card picture (§454) takes «Din galerie» like an u
   });
 });
 
-describe("§NNN the same action looks the same everywhere", () => {
+describe("§485 the same action looks the same everywhere", () => {
   it("the team card's «Din galerie» wears the gallery glyph through GlyphButton", () => {
     const team = source("src", "modules", "content", "team", "ui", "TeamPhotoField.tsx");
     expect(team).toContain('from "@/shared/ui/GlyphButton"');

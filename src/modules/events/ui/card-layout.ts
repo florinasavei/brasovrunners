@@ -12,7 +12,7 @@
  *    a black heading; the series card's title was a blue link. A link cannot hold another link, so
  *    the single card's place could not be its map link. Now neither card is a link: on both the
  *    title is the link, in one blue style (`CARD_TITLE_SX`), and the place is free to be the map.
- *    Since §NNN that title link is stretched over the card (`CARD_TAP_SX`), so the whole card is one
+ *    Since §486 that title link is stretched over the card (`CARD_TAP_SX`), so the whole card is one
  *    tap to the page while the map, the dates and the doors stay links of their own.
  * 2. **Holes inside the cards.** A row of cards is as tall as its tallest (§275), and the door to
  *    the page was pushed to the foot of every card, so a short card beside a series card had a
@@ -82,7 +82,7 @@ export const CARD_BODY_SX = {
 export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
 
 /**
- * **The whole card is one tap to the event's page, its own links kept** (§NNN, reversing what §366
+ * **The whole card is one tap to the event's page, its own links kept** (§486, reversing what §366
  * refused and §113 rejected). The owner wanted a press anywhere on a card — its summary, its
  * rhythm, its pills, the room below the door — to open the page, as every other listing on a phone
  * does; §366 had made only the title the link, so a thumb on the card's words did nothing.
@@ -103,12 +103,12 @@ export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlig
  *   own single-class rule sets `position: absolute` (a film's play overlay, were one ever in the
  *   excerpt) ties with the lift and wins only by coming later in Emotion's sheet — which a child's
  *   rule does, being inserted after the card's; mind that before lifting anything else here.
- * - **A film is lifted whole** (§NNN): a card's summary may hold a YouTube film (§417), and the
+ * - **A film is lifted whole** (§486): a card's summary may hold a YouTube film (§417), and the
  *   lift of its `summary` alone let the play press through, then left the player, its own controls
  *   and the volume glyph (§478) under the cover. `VideoFacade` marks its root `data-lifted`, which
  *   this rule lifts like a control, so every press on the film is the film's; a press beside it
  *   still opens the page. Anything else that must keep its presses on a card wears the same mark.
- * - **The focus ring is the card's** (§NNN): the title's link now targets the whole card, so while
+ * - **The focus ring is the card's** (§486): the title's link now targets the whole card, so while
  *   the keyboard is on that link the card wears the ring (`:has(h2 a:focus-visible)`) and the title
  *   keeps only its underline. A focused map link, date or door keeps its own ring. A browser without
  *   `:has` keeps the title's own ring (`CARD_TITLE_SX` removes it only under `@supports selector(:has(a))`).
@@ -165,7 +165,7 @@ export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, ali
  * had asked to be tighter. Nothing overlapped, so the edge presses passed; the browser measure of
  * the heading against its words is what found it.
  *
- * **The link's cover** (§NNN): its `::after` is laid over the whole card (`CARD_TAP_SX` makes the
+ * **The link's cover** (§486): its `::after` is laid over the whole card (`CARD_TAP_SX` makes the
  * card its box), so a press anywhere on the card that is not one of its own controls is a press on
  * this link. The link itself stays `static`, or the cover would measure the title alone.
  */
@@ -189,7 +189,7 @@ export const CARD_TITLE_SX = {
     borderRadius: 1,
     "&:visited": { color: "primary.main" },
     "&:hover": { textDecoration: "underline" },
-    // The ring is the card's (`CARD_TAP_SX`, §NNN): the link's target is the whole card now. Only
+    // The ring is the card's (`CARD_TAP_SX`, §486): the link's target is the whole card now. Only
     // where the card can draw it — a browser without `:has` keeps the link's own ring.
     "&:focus-visible": {
       textDecoration: "underline",

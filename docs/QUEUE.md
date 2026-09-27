@@ -20,14 +20,14 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.07` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.08` |
 
 ## Next, queued
 
 | Item | Waits for |
 | --- | --- |
 | The review leftovers of 2026-09-26 (the handoff's queue): the governor's red-mode edge cases, the proxy notice wording, the older-pictures test, the Costuri «.ro» label, the guide criterion numbering | BR-V2.04 |
-| «Echipa»: up to twelve links per person (the V2.07 cleanup's item 5) — `MAX_TEAM_LINKS` 6 → 12 and the CHECK `team_members_links_is_a_short_array_of_https_links` dropped and re-added with `<= 12`, a generated expand-only migration; the save already reads twelve rows (§NNN). The cap stays six in `BR-V2.08` | a rebuilt drizzle snapshot chain, so `drizzle-kit generate` runs again |
+| «Echipa»: up to twelve links per person (the V2.07 cleanup's item 5) — `MAX_TEAM_LINKS` 6 → 12 and the CHECK `team_members_links_is_a_short_array_of_https_links` dropped and re-added with `<= 12`, a generated expand-only migration; the save already reads twelve rows (§483). The cap stays six in `BR-V2.08` | a rebuilt drizzle snapshot chain, so `drizzle-kit generate` runs again |
 
 ## Waiting on the owner
 
@@ -54,6 +54,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.08` | the measured density pass at 360 px — the «Despre club» fold 180 → 96 px, true 44-px folds, inline links that keep their line, the cards and the event page tightened on the scale (§480) · the editor's cards regrouped — «Când și unde» and «Program, regulament și declarație» as one card each, the film card gone and every film a node in the description; migration `0092` (§481) · «Copiază și tradu tot: RO → EN» at the top of every editor, always visible, one press fills every English box through DeepL (§482) · the nits of V2.03–V2.07 — no colleague's name in the public repository's source, one audit id per setting, the .ro row gone, Echipa's bounds, the editor's leftovers (§483) · the weather line names its place and its hours — «Vremea la <loc>, <zi> HH:MM–HH:MM: …» — on the page and in the reminder (§484) · «Din galerie» beside every picture upload, the same crop box and shapes after the choice, the film's poster a gallery picture the club replaces and crops (§485) · the whole listing card is one tap to the event page, its inner links kept, and a recurring event wears a repeat glyph with its rhythm (§486) · the calendar page's head on a phone — a «?» in place of the intro, small month/year selects on one row with ‹ Azi ›, the chip pairs small (§487) |
 | `BR-V2.07` | the film's volume is a quiet corner glyph with the slider on demand, and the film asks YouTube for HD first (§478) · «Costuri» is the club's money page — the month so far per provider at the published price, a projection to month end, the database's configuration in one card (§479) |
 | `BR-V2.06` | a discreet «?» after the event page's weather line — an indicative forecast, data from Open-Meteo (§473) · «Echipa» grows up: a rich-text introduction and bios, several typed links per person; migration `0091` (§474) · the calendar's month view swipes between months on a phone, like Google Calendar (§475) · the «Înscrieri» badge says what it counts, per upcoming event, in a tooltip (§476) · the image-quality end-to-end spec runs on both projects again, lighter (§477) |
 | `BR-V2.05` | the phone-prefix and citizenship pickers take a typed search — accents and case ignored, +40 / 40 / 0040 find România — over the native select that still posts (§463) · «Tradu din română» — one press fills an event's, a page's or an album's English boxes from the Romanian through DeepL's free API, the layout kept, nothing saved by the press, a daily character budget on Costuri (§464) · the listing's past-events help line is gone (§465) · the editor's Cost card folds into «Ce fel de eveniment» (§466) · the typed birth date is echoed in words under its box with the age on race day, and the city is required, right after it (§467) · the family-link email is a bold facts block with a second, single-use action «Nu înscriu această persoană» that deletes the pending entry (§468) · fix/event-page-minimal-weather-back-arrow-edit-glyph (§469) · feat/one-event-card-hero-and-list (§470) · several people on one address sign their declarations in one wizard — «Declarația n din N», one PDF each, «Semnez mai târziu» to skip (§471) · the card's registration line bolds only the closing date with its hour and the free places (§472) |

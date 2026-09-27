@@ -248,7 +248,7 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
 
 /*
   `resolveEventVideoPoster`, which kept `events.video_poster_url` in step with `events.video_url`,
-  is gone with the film section (§NNN): a film lives only in a description, and migration `0092`
+  is gone with the film section (§481): a film lives only in a description, and migration `0092`
   moved each stored link — with its stored poster — into the descriptions as a `youtube` node. A
   node that arrived without a poster gets one from `attachYoutubePosters` on the event's next save,
   before any transaction opens, like any film pasted there (§403).

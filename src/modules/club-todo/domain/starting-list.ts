@@ -19,7 +19,7 @@ import type { ClubTodoItem } from "./club-todo";
 
 /**
  * What «pentru cine» offers before anybody types one; any other name is kept as typed. Roles, not
- * first names: the repository is public (§NNN), and a list is the Administrator's or the Organizer's
+ * first names: the repository is public (§483), and a list is the Administrator's or the Organizer's
  * whoever holds the role this year.
  */
 export const CLUB_TODO_OWNER_SUGGESTIONS: readonly string[] = ["Administrator", "Organizator"];

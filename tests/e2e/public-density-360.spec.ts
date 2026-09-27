@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
- * §NNN — the 360-px density pass over the public pages (BR-REQ-041-01), measured on the built
+ * §480 — the 360-px density pass over the public pages (BR-REQ-041-01), measured on the built
  * pages rather than trusted from the markup (`tests/unit/shared/density-pass-360.test.ts` holds
  * the rules, `tests/unit/theme/density.test.ts` the values).
  *
@@ -70,7 +70,7 @@ async function expectInlineTarget(page: Page, paragraph: Locator, link: Locator,
   expect(Math.abs(lines - Math.round(lines)), `${what}: its paragraph is ${lines.toFixed(2)} lines — no line stretched`).toBeLessThan(0.1);
 }
 
-test.describe("§NNN the public pages at 360 px", () => {
+test.describe("§480 the public pages at 360 px", () => {
   test("the listing's cards, facts, pills and filter row stand on the scale's tighter steps", async ({ page }) => {
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     const cards = page.getByTestId("listing-cards").locator(":scope > li");

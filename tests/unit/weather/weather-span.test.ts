@@ -11,7 +11,7 @@ import {
 import { weatherSpanWords } from "@/modules/weather/words";
 
 /**
- * BR-REQ-041-01 (§NNN): the weather line says where and for which hours — the hours from the
+ * BR-REQ-041-01 (§484): the weather line says where and for which hours — the hours from the
  * start's to the end's (at most six after the start), the degrees over them, rain likely in any of
  * them, and the place the forecast was read at (the club's locality for the club's own point).
  */
@@ -42,7 +42,7 @@ function forecast(overrides: { temperature?: number[]; chance?: number[]; code?:
 const words = (span: WeatherReading[], locale: "ro" | "en", place: string | null) =>
   weatherSpanWords({ start: span[0], span }, locale, { place, timeZone: ZONE });
 
-describe("pickSpan: the hours the event is out (§NNN)", () => {
+describe("pickSpan: the hours the event is out (§484)", () => {
   it("is the start's hour alone when the event names no end", () => {
     const span = pickSpan(forecast(), START, null);
     expect(span.map((hour) => hour.hourAt)).toEqual([START.getTime()]);
@@ -95,7 +95,7 @@ describe("summarizeSpan", () => {
   });
 });
 
-describe("weatherSpanWords: the sentence with where and when (§NNN)", () => {
+describe("weatherSpanWords: the sentence with where and when (§484)", () => {
   it("one hour: «Vremea la <loc>, <zi> <HH:MM>: …» in Romanian, «Weather at <place>, <day> <HH:MM>: …» in English, no dash", () => {
     const span = pickSpan(forecast(), START, null);
     expect(words(span, "ro", "Parcul Tractorul").sentence).toBe("Vremea la Parcul Tractorul, sâmbătă, 26 sept. 18:00: Parțial noros, 14 °C");

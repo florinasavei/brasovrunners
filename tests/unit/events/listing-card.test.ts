@@ -231,11 +231,11 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // No anchor opens before the one before it has closed, and none holds the heading.
     expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
     expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<h2\b/);
-    // The card itself is the list item, not a link: the whole-card tap is the title's cover (§NNN).
+    // The card itself is the list item, not a link: the whole-card tap is the title's cover (§486).
     expect(html).toMatch(/^<li\b/);
   });
 
-  it("is one tap to the page all the same: the title's link covers the card, and the card's own controls sit above the cover (§NNN)", async () => {
+  it("is one tap to the page all the same: the title's link covers the card, and the card's own controls sit above the cover (§486)", async () => {
     for (const html of [await single(), await repeated()]) {
       const title = rulesFor(html, titleClass(html));
       // The cover: the title link's `::after`, laid over its nearest positioned box…
@@ -249,16 +249,16 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
       // Every control of the card's own — the map, the dates, the fold, the door, a registration
       // button, a pill with a tooltip — above the cover, so a press on it is still a press on it.
       expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip], [data-lifted]){position:relative;z-index:2;}");
-      // The keyboard's ring is the card's, since the title's link targets the whole card (§NNN)…
+      // The keyboard's ring is the card's, since the title's link targets the whole card (§486)…
       expect(rules).toMatch(new RegExp(`:has\\(h2 a:focus-visible\\)\\{outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\\}`));
       // …and the title keeps only its underline, no second ring around its words — where the card
-      // can draw the ring. A browser without `:has` keeps the title's own ring (§NNN).
+      // can draw the ring. A browser without `:has` keeps the title's own ring (§486).
       expect(title).toMatch(new RegExp(` a:focus-visible\{[^}]*;text-decoration:underline;outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\}`));
       expect(html).toContain(`@supports selector(:has(a)){.${titleClass(html)} a:focus-visible{outline:none;}}`);
     }
   });
 
-  it("lifts a film in the summary whole above the cover — the play button, the player and the volume glyph take their own presses (§NNN)", async () => {
+  it("lifts a film in the summary whole above the cover — the play button, the player and the volume glyph take their own presses (§486)", async () => {
     const { default: VideoFacade } = await import("@/shared/ui/VideoFacade");
     const film = withoutStyles(
       renderToStaticMarkup(
@@ -277,7 +277,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(CARD_TAP_SX["& :where(a, button, summary, [data-has-tooltip], [data-lifted])"]).toEqual({ position: "relative", zIndex: 2 });
   });
 
-  it("marks a pill with a tooltip so the card lifts it above the cover — the night pill's sunset still opens on a tap (§NNN)", async () => {
+  it("marks a pill with a tooltip so the card lifts it above the cover — the night pill's sunset still opens on a tap (§486)", async () => {
     const { default: GlyphChip } = await import("@/modules/events/ui/GlyphChip");
     const withTip = renderToStaticMarkup(createElement(GlyphChip, { glyph: "night", label: "Noapte", tooltip: "Soarele apune la 19:00" }));
     const plain = renderToStaticMarkup(createElement(GlyphChip, { glyph: "night", label: "Noapte" }));
@@ -285,7 +285,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(plain).not.toContain("data-has-tooltip");
   });
 
-  it("wears the series card's repeat chip and rhythm when it is one date of a repeated event, and none on its own (§NNN)", async () => {
+  it("wears the series card's repeat chip and rhythm when it is one date of a repeated event, and none on its own (§486)", async () => {
     const mondays = series();
     const one = await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays }));
     expect(chipLabels(one).slice(0, 2)).toEqual(["Alergare de grup", "Săptămânal"]);
@@ -314,7 +314,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(chipLabels(dates)).toContain("3 dates");
   });
 
-  it("says the series' rule on the repeat chip — hover, tap and screen reader — on both cards, in both languages (§NNN)", async () => {
+  it("says the series' rule on the repeat chip — hover, tap and screen reader — on both cards, in both languages (§486)", async () => {
     const mondays = series();
     const repeatChip = (html: string) => /<div\b[^>]*data-has-tooltip="true"[^>]*>(?:(?!<\/div>)[\s\S])*?data-testid="AutorenewIcon"[\s\S]*?<\/div>/.exec(withoutStyles(html))?.[0] ?? "";
     for (const html of [await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays })), await repeated()]) {
@@ -366,7 +366,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(CARD_EXCERPT_SX.mt).toBe(LINE_GAP);
     const html = await single({ excerptJson: null, excerpt: null });
     // With no summary the facts follow, a group's gap below: twelve from `sm`, and on a phone the
-    // density scale's short step (§NNN, the 360-px density pass) — eight, the title's reach below
+    // density scale's short step (§480, the 360-px density pass) — eight, the title's reach below
     // its words exactly, so still nothing nearer.
     const markup = withoutStyles(html);
     const after = markup.slice(markup.indexOf("</h2>") + "</h2>".length);

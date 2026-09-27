@@ -414,7 +414,7 @@ export function declarationSummary(
     /**
      * Whether an approved, not withdrawn text of the run's surface is in force (§393). Ticked with
      * none, the public button does not show, so the line says so rather than «declarație pentru
-     * Trail» (§NNN). Absent means "not known here" and reads as in force, as before.
+     * Trail» (§483). Absent means "not known here" and reads as in force, as before.
      */
     groupRunTextInForce?: boolean;
   },

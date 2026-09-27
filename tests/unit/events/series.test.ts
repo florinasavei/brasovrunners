@@ -34,7 +34,7 @@ describe("a series is the same title and type again", () => {
   });
 });
 
-describe("§NNN a date left alone on its card still knows its series", () => {
+describe("§486 a date left alone on its card still knows its series", () => {
   it("answers the whole series, soonest first, for any of its dates, and nothing for a one-off", () => {
     const rows = [
       run("Crosul", "2026-10-11T09:00", "RACE"),

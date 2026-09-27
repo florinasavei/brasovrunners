@@ -51,7 +51,7 @@ async function assertPhotoExists<T extends Record<string, unknown>>(db: Database
   if (keyPrefix === null) {
     throw new DomainError("VALIDATION_ERROR", "the photo is not a stored picture", ["photoAssetId"]);
   }
-  // A film's automatic poster is YouTube's 480-pixel thumbnail, not a person's photo (§NNN) — the
+  // A film's automatic poster is YouTube's 480-pixel thumbnail, not a person's photo (§485) — the
   // same refusal an album gives it (`addStoredPhoto`), held here and not only in the picker.
   if (keyPrefix.startsWith("yt-")) {
     throw new DomainError("VALIDATION_ERROR", "a film's poster is not a card's photo", ["photoAssetId"]);

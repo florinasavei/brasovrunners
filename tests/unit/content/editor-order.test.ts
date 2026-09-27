@@ -12,8 +12,8 @@ import { describe, expect, it } from "vitest";
  * boxes go:
  *
  *   Pagina evenimentului, de sus în jos — the type, title and summary, description, when and where
- *   (§NNN), the course, the cost, registration, partners, (the share links, automatic), links and
- *   files, programme, rules and declaration (§NNN), the public list: the page's sections in `PAGE_SECTIONS`' order,
+ *   (§481), the course, the cost, registration, partners, (the share links, automatic), links and
+ *   files, programme, rules and declaration (§481), the public list: the page's sections in `PAGE_SECTIONS`' order,
  *   which `events/page-sections.test.ts` holds both the page and these pages to;
  *   Nu apar pe pagină — the status, promotion, page address;
  *   then Salvare, always open.
@@ -40,14 +40,14 @@ const EDITOR_ORDER = [
   "<KindBox",
   "<TitleSummaryBox",
   "<DescriptionBox",
-  // «Când și unde»: the date and the place in one card (§NNN).
+  // «Când și unde»: the date and the place in one card (§481).
   "<WhenBox",
   "<CourseBox",
   "<RegistrationBox",
   "<CoHostsBox",
   "<AutomaticSection",
   "<LinksBox",
-  // «Program, regulament și declarație»: three cards in one (§NNN).
+  // «Program, regulament și declarație»: three cards in one (§481).
   "<ProgrammeRulesBox",
   "<StartListBox",
   't("editor.groups.offPage")',
@@ -79,7 +79,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       for (const card of ["<CourseBox", "<LinksBox", "<StartListBox", "<WhenBox", "<ProgrammeRulesBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
-      // No film card (§NNN); the place and the rules are drawn by the cards that hold them.
+      // No film card (§481); the place and the rules are drawn by the cards that hold them.
       for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox "]) expect(source, `${page}: ${gone}`).not.toContain(gone);
     }
     // The status: a level-3 card inside the first box, with the id it always had (§448).
@@ -142,7 +142,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
   });
 
   it("marks the five boxes a change reaches — date, place, programme, registration, status — and no other", () => {
-    // The date and the place are one card since §NNN, «Când și unde»; the programme is inside
+    // The date and the place are one card since §481, «Când și unde»; the programme is inside
     // «Program, regulament și declarație», which wears the mark for it.
     for (const box of ["<WhenBox", "<ProgrammeRulesBox", "<RegistrationBox", "<KindBox"]) {
       const start = at(EDIT, box);

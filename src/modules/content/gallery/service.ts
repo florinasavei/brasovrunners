@@ -271,7 +271,7 @@ export async function addPhoto<T extends Record<string, unknown>>(
 }
 
 /**
- * A picture the club already stored, into an album (§NNN, «Din galerie»): one `gallery_items`
+ * A picture the club already stored, into an album (§485, «Din galerie»): one `gallery_items`
  * row pointing at the existing `media_assets` row — no bytes, no new objects, the same picture
  * wherever else it is used. The first photo of an album becomes its cover, as an upload does.
  *
@@ -317,7 +317,7 @@ export async function addStoredPhoto<T extends Record<string, unknown>>(
 
 /**
  * Remove one photo from its album: its item, then the picture itself only when nothing else
- * uses it (§NNN) — a picture chosen from the gallery for this album may be in a text, on a card
+ * uses it (§485) — a picture chosen from the gallery for this album may be in a text, on a card
  * of «Echipa» or in another album, and taking it out of here must not take it from there. A
  * cover that was this photo moves on to the first remaining one.
  */
@@ -348,7 +348,7 @@ export async function deletePhoto<T extends Record<string, unknown>>(
     await tx
       .update(galleryAlbums)
       .set({ coverMediaAssetId: first?.assetId ?? null })
-      // Also an album with no cover at all, as before §NNN: any removal gives it the first photo.
+      // Also an album with no cover at all, as before §485: any removal gives it the first photo.
       .where(
         and(
           eq(galleryAlbums.id, item.albumId),
@@ -380,7 +380,7 @@ export async function setCover<T extends Record<string, unknown>>(
 
 /**
  * The album, its translations, its items, and every picture of it nothing else uses — with
- * their objects. A picture that is also in a text, on a card or in another album stays (§NNN).
+ * their objects. A picture that is also in a text, on a card or in another album stays (§485).
  */
 export async function deleteAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -395,7 +395,7 @@ export async function deleteAlbum<T extends Record<string, unknown>>(
       .from(galleryItems)
       .where(eq(galleryItems.albumId, input.albumId));
     // The album and its items (cascade) first; then each of its pictures that nothing else uses
-    // any more (§NNN) — one chosen from the gallery stays wherever else it is.
+    // any more (§485) — one chosen from the gallery stays wherever else it is.
     const [deleted] = await tx.delete(galleryAlbums).where(eq(galleryAlbums.id, input.albumId)).returning();
     if (!deleted) throw new DomainError("NOT_FOUND", "no such album");
     return deleteAssetsNoLongerReferenced(tx, items.map((item) => item.assetId));

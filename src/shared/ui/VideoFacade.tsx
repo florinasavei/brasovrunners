@@ -6,7 +6,7 @@ import VideoVolumeBar from "./VideoVolumeBar";
 /**
  * A YouTube film: the club's own poster before the click, the player and a volume bar after it
  * (`DECISIONS.md` §403). Drawn by `RichTextVideo`: a film is a figure in an editorial body, its
- * one home since §NNN retired the event page's own film section (`EventVideo`).
+ * one home since §481 retired the event page's own film section (`EventVideo`).
  *
  * ## A Server Component (found by re-review, `DECISIONS.md` §403)
  *
@@ -62,7 +62,7 @@ export default function VideoFacade({
   posterSrcSet?: string;
   posterSizes?: string;
   /**
-   * The part of the poster the club chose (§NNN), as the window arithmetic the caller computed:
+   * The part of the poster the club chose (§485), as the window arithmetic the caller computed:
    * the poster drawn `width` wide and pulled to `left` / `top` inside the 16∶9 box. Absent, the
    * poster covers the box, centred, as it always has. Plain strings, never an element.
    */
@@ -76,7 +76,7 @@ export default function VideoFacade({
 
   return (
     // `data-lifted`: on a listing card, the film sits above the title's stretched cover, so the
-    // player, its controls and the volume glyph take their own presses (`CARD_TAP_SX`, §NNN).
+    // player, its controls and the volume glyph take their own presses (`CARD_TAP_SX`, §486).
     <Box data-lifted="true">
       <Box
         component="details"

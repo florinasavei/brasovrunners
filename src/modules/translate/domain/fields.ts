@@ -14,7 +14,7 @@
  * - an event's meeting place in English, a partner's description and its links' labels, a
  *   "Linkuri și fișiere" row's label, a programme row's words;
  * - the organizer's note on an update, the cancellation's reason, a message to the participants;
- * - «Echipa» (§474, §NNN): a card's role, its words about the person and its links' labels, and
+ * - «Echipa» (§474, §482): a card's role, its words about the person and its links' labels, and
  *   the page's introduction — one form per card, each posting the same names.
  *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under

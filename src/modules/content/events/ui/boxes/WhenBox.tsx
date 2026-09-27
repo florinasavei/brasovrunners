@@ -41,7 +41,7 @@ function PartHeading({ id, children }: { id: string; children: string }) {
 }
 
 /**
- * «Când și unde» (§NNN; the owner, 2026-09-27: "The back-office event creator/editor needs to be
+ * «Când și unde» (§481; the owner, 2026-09-27: "The back-office event creator/editor needs to be
  * more grouped: date and location can be on the same card"). §350's box 4 «Data și ora» and box 5
  * «Locul» are one card now, as the page draws them — «Când», then «Unde», one under the other in
  * the facts — in this order:
@@ -151,7 +151,7 @@ export default async function WhenBox({
               {t("editor.durationHelp")}
             </Typography>
           </Stack>
-          {/* «Unde» (§NNN): the place's own part, where "Publică" scrolls for a missing meeting point. */}
+          {/* «Unde» (§481): the place's own part, where "Publică" scrolls for a missing meeting point. */}
           <Stack component="section" id="box-place" aria-labelledby="box-place-heading" spacing={2} sx={{ scrollMarginTop: 16 }}>
             <PartHeading id="box-place-heading">{t("editor.boxes.place.title")}</PartHeading>
             <PlaceFields event={event} mayEditSettings languages={languages} />

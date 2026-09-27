@@ -241,7 +241,7 @@ async function ListingLead({
           ticked, it does not render, and nothing on the listing moves for that.
 
           The gap around it is `DENSITY.gapXs` (§458, tightening §401's `sectionGap` — the owner: "in
-          general prea mult padding între carduri și restul" — and again in §NNN, the 360-px density
+          general prea mult padding între carduri și restul" — and again in §480, the 360-px density
           pass, 8px to 6): 6px on a phone and 12px from `sm`, above and below alike, the intro's
           own margin above it the same six. */}
       {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
@@ -362,7 +362,7 @@ async function PastEvents({
   const tEvent = await getTranslations("Event");
   // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
   const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
-  // A date left alone on its card by the filter or the cut still wears its series' rhythm (§NNN):
+  // A date left alone on its card by the filter or the cut still wears its series' rhythm (§486):
   // the series is read off every past row the page holds, before either.
   const seriesOf = seriesLookup(rows);
   const onlyOneType = sourceType !== undefined && activeFilterCount(filter) === 1;
@@ -428,7 +428,7 @@ async function ListingBody({
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
   // The series each date belongs to, read off the whole list before the filters and the lead
-  // (§NNN): a weekly run's one matching date, or the lead that is one of a series' dates, is still
+  // (§486): a weekly run's one matching date, or the lead that is one of a series' dates, is still
   // a repeated event, and its card says so with the series card's repeat chip and rhythm.
   const seriesOf = seriesLookup(events);
 

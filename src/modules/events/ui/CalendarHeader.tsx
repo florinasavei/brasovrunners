@@ -54,7 +54,7 @@ export function calendarStepHrefs({
 }
 
 /**
- * The period's heading, hidden from sight on a phone only (§NNN): there the month and year selects
+ * The period's heading, hidden from sight on a phone only (§487): there the month and year selects
  * right under it already say it, and a line of its own pushed the grid a row down. It is still the
  * section's name (`aria-labelledby="calendar-title"`) and still read by a screen reader; from `sm`
  * it is drawn as before.
@@ -109,14 +109,14 @@ export default async function CalendarHeader({
 
   return (
     <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: { xs: DENSITY.gapSm, sm: 1.5 } }}>
-      {/* On a phone the selects already say the month and the year (§NNN), so the heading is
+      {/* On a phone the selects already say the month and the year (§487), so the heading is
           there for assistive technology and for the section's name, not drawn a second time. */}
       <Typography id="calendar-title" component="h2" variant="h2" sx={{ fontSize: "1.25rem", textTransform: "capitalize", ...TITLE_ON_A_PHONE_SX }}>
         {title}
       </Typography>
       <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1, rowGap: { xs: 0, sm: 1 }, width: { xs: "100%", sm: "auto" } }}>
         {/* Month or year, by select (§116) — the arrows step one at a time, "today" resets.
-            One row that never wraps (§NNN): on a phone the selects give up their width to the
+            One row that never wraps (§487): on a phone the selects give up their width to the
             arrows and «Azi», which keep their 44-pixel targets. */}
         <Box data-testid="calendar-period-row" sx={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: 0.5, width: { xs: "100%", sm: "auto" }, minWidth: 0 }}>
         <CalendarPicker
@@ -137,7 +137,7 @@ export default async function CalendarHeader({
           <CalendarStepLink href={nextHref} label={view.kind === "month" ? t("calendar.next") : t("calendar.nextYear")} direction="next" />
         </Stack>
         </Box>
-        {/* The two chip pairs on one row of their own on a phone (§NNN), the rule between them. */}
+        {/* The two chip pairs on one row of their own on a phone (§487), the rule between them. */}
         <Box data-testid="calendar-chip-row" sx={{ display: "flex", alignItems: "center", flexWrap: "nowrap", columnGap: 1 }}>
         {/* The view: one month, or the whole year — small pills in 44px links (§158). */}
         <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.viewMonth")} / ${t("calendar.viewYear")}`}>
@@ -147,7 +147,7 @@ export default async function CalendarHeader({
         {/* The layout, for a month (§137): the grid, or the list a phone used to get by default.
             A rule between the two groups (§175; the owner: "I need a separator here"): "month
             or year" and "grid or list" are two questions, and four pills in a row read as one
-            set of four answers. The two pairs share a row on a phone too now (§NNN), so the rule
+            set of four answers. The two pairs share a row on a phone too now (§487), so the rule
             stays on every width. */}
         {view.kind === "month" && (
           <Box aria-hidden="true" sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.5 }} />

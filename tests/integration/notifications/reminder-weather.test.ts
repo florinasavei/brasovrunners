@@ -172,7 +172,7 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     expect(own.searchParams.get("longitude")).toBe("25.368");
   });
 
-  it("says where and for which hours (§NNN): the meeting point once read at its own pair, and the hours to the end", async () => {
+  it("says where and for which hours (§484): the meeting point once read at its own pair, and the hours to the end", async () => {
     await db.update(events).set({ latitude: 45.51234, longitude: 25.36789, endsAt: new Date("2026-09-26T07:00:00.000Z") });
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r6"), db, NOW);
     expect(message.text).toContain("Vremea la Parcul Tractorul, sâmbătă, 26 sept. 08:00–10:00: Ploaie, 6 °C, ploaie probabilă 80 %");

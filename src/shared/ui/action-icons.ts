@@ -125,7 +125,7 @@ export type ActionIconName =
   // Looking and finding.
   | "preview"
   | "picture"
-  // «Din galerie» (§NNN): a picture the club already stored, chosen again — the stack of photos,
+  // «Din galerie» (§485): a picture the club already stored, chosen again — the stack of photos,
   // never the single picture, which is looking at one.
   | "gallery"
   | "filter"

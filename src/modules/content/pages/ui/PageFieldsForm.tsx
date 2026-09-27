@@ -55,7 +55,7 @@ export default async function PageFieldsForm({
   translations: readonly EditablePageTranslation[];
   /** AGENTS.md §11.5: a published page's address is stable. */
   slugLocked: boolean;
-  /** The stored page (§NNN): «Din galerie» in its text opens on «Această pagină». None on create. */
+  /** The stored page (§485): «Din galerie» in its text opens on «Această pagină». None on create. */
   pageId?: string;
 }) {
   const t = await getTranslations("Admin.pages");
@@ -75,7 +75,7 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
-      {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): every English box from its Romanian twin, in one press. */}
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482): every English box from its Romanian twin, in one press. */}
       <TranslateAllButton />
 
       <LocaleTabPanels

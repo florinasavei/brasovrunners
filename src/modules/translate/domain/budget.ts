@@ -59,7 +59,7 @@ export function budgetAllows(usedToday: number, asked: number, budget: Translati
  * The characters a press sends, counted exactly as the service counts them against the budget
  * (§464): a rich text's lines as the HTML that travels, tags included; a plain box's words with
  * its `{placeholders}` as the numbered markers that travel; a blank box nothing. The service and
- * «Copiază și tradu tot» both read this one function (§NNN), so the figure the question names
+ * «Copiază și tradu tot» both read this one function (§482), so the figure the question names
  * before the press is the figure the budget is charged after it.
  */
 export function charactersToSend(items: readonly ({ kind: "text"; text: string } | { kind: "rich"; doc: RichTextDoc })[]): number {
@@ -75,7 +75,7 @@ export function charactersToSend(items: readonly ({ kind: "text"; text: string }
 }
 
 /**
- * Above this many characters «Copiază și tradu tot» always asks first, naming the figure (§NNN):
+ * Above this many characters «Copiază și tradu tot» always asks first, naming the figure (§482):
  * two fifths of the default day (50 000), so one press of a long race page never spends most of
  * the day's allowance without the person seeing the number.
  */

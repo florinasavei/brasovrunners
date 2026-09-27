@@ -210,7 +210,7 @@ function RichTextEditorIsland({
    */
   cardPictures?: boolean;
   /**
-   * The event, album or page this text belongs to, when it is stored already (§NNN): every
+   * The event, album or page this text belongs to, when it is stored already (§485): every
    * «Din galerie» in it then opens on «Acest eveniment» (resp. album, page) — the pictures that
    * place already uses. Plain data, never an element: a Server Component hands it over.
    */
@@ -308,15 +308,15 @@ function RichTextEditorIsland({
     imageGalleryLoading: string;
     imageGalleryEmpty: string;
     imageGalleryClose: string;
-    /** The picker's name box, and its "nothing matches" (§NNN). */
+    /** The picker's name box, and its "nothing matches" (§485). */
     imageGalleryFilter: string;
     imageGalleryNoMatch: string;
-    /** The picker's «Folosită în» chips (§NNN). */
+    /** The picker's «Folosită în» chips (§485). */
     imageGallerySourceLegend: string;
     imageGallerySources: Record<Exclude<PictureSource, "here">, string>;
-    /** The picker's first chip for the place the text belongs to (§NNN), one word per kind. */
+    /** The picker's first chip for the place the text belongs to (§485), one word per kind. */
     imageGalleryHere: Record<PickerScopeKind, string>;
-    /** What a picture from the gallery became; raw, `{name}`, `{width}`, `{height}` substituted here (§NNN). */
+    /** What a picture from the gallery became; raw, `{name}`, `{width}`, `{height}` substituted here (§485). */
     imageFromGalleryPicked: string;
     youtube: string;
     youtubeShort: string;
@@ -330,7 +330,7 @@ function RichTextEditorIsland({
     youtubePosterUploading: string;
     youtubePosterFailed: string;
     youtubePosterUseYoutube: string;
-    /** A poster from the gallery, and its crop (§NNN): the button, the box's name, how, "the middle", and before a poster exists. */
+    /** A poster from the gallery, and its crop (§485): the button, the box's name, how, "the middle", and before a poster exists. */
     youtubePosterFromGallery: string;
     youtubePosterCrop: string;
     youtubePosterCropHelp: string;
@@ -415,12 +415,12 @@ function RichTextEditorIsland({
   /** «Din galerie» for a picture in the text: open or shut; the picker asks for the list itself. */
   const [galleryOpen, setGalleryOpen] = useState(false);
   /**
-   * The picture last taken from the gallery, said like an upload's stored facts (§NNN): its name,
+   * The picture last taken from the gallery, said like an upload's stored facts (§485): its name,
    * its size and the shape it went in with — so a choice from the gallery is told what it became
    * exactly as an upload is.
    */
   const [picked, setPicked] = useState<{ name: string; width: number; height: number; shape: CropPreset } | null>(null);
-  /** «Din galerie» for the selected film's poster (§NNN). */
+  /** «Din galerie» for the selected film's poster (§485). */
   const [posterGalleryOpen, setPosterGalleryOpen] = useState(false);
   /**
    * A poster's own size, measured in this browser when the node does not carry it — YouTube's
@@ -693,7 +693,7 @@ function RichTextEditorIsland({
   };
 
   /**
-   * A poster from the gallery (§NNN): any picture the club stored — an upload, or a film's own
+   * A poster from the gallery (§485): any picture the club stored — an upload, or a film's own
    * automatic poster — written to the selected film exactly as an uploaded poster is, `club`
    * included, so the automatic fetch never replaces it. Uncropped, like an upload; the crop box
    * under it is where the club picks the part the box shows.
@@ -748,7 +748,7 @@ function RichTextEditorIsland({
 
   /**
    * "Choose one already uploaded" (§73): the same list the pictures page shows, asked for by the
-   * picker when it opens and never before. Since §NNN it goes in exactly as an upload does — in
+   * picker when it opens and never before. Since §485 it goes in exactly as an upload does — in
    * the shape chosen in the bar, as a crop of the stored photograph (§454), with the same crop box
    * in its panel afterwards — and the line under the toolbar says what it became.
    */
@@ -768,7 +768,7 @@ function RichTextEditorIsland({
   };
 
   /*
-    The selected film's poster size, when its node does not say (§NNN): measured once per address
+    The selected film's poster size, when its node does not say (§485): measured once per address
     from the stored master itself, which is what the crop box needs and what the page will draw.
   */
   const selectedPosterSrc = typeof videoAttrs?.poster === "string" && videoAttrs.poster ? videoAttrs.poster : null;
@@ -1118,7 +1118,7 @@ function RichTextEditorIsland({
           </Typography>
         )}
 
-        {/* A picture taken from the gallery (§NNN), said like an upload: its size and its shape. */}
+        {/* A picture taken from the gallery (§485), said like an upload: its size and its shape. */}
         {imageState === "idle" && picked && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-picked">
             {labels.imageFromGalleryPicked
@@ -1130,7 +1130,7 @@ function RichTextEditorIsland({
         )}
 
         {/*
-          «Din galerie» (§73, §NNN): the shape first — the same choice, the same state, as the
+          «Din galerie» (§73, §485): the shape first — the same choice, the same state, as the
           upload bar's — then every stored picture. A film's automatic poster is left out: a
           picture in a text carries an uploaded picture's address (§72).
         */}
@@ -1743,7 +1743,7 @@ function RichTextEditorIsland({
               >
                 {posterState === "uploading" ? labels.youtubePosterUploading : labels.youtubePoster}
               </Button>
-              {/* A picture the club already stored, as the poster (§NNN): the gallery every other picture comes from. */}
+              {/* A picture the club already stored, as the poster (§485): the gallery every other picture comes from. */}
               <Button
                 size="small"
                 startIcon={<PhotoLibraryIcon fontSize="small" />}
@@ -1792,7 +1792,7 @@ function RichTextEditorIsland({
               />
             )}
             {/*
-              The poster's crop (§NNN): the part the film's 16∶9 box shows, over whichever poster
+              The poster's crop (§485): the part the film's 16∶9 box shows, over whichever poster
               the film has — the club's, one from the gallery, or YouTube's own once a save stored
               it. Every shape a picture takes is offered, 16∶9 — the box's own, so the rectangle is
               exactly what the page draws — pressed first; another shape shows its largest 16∶9 part,
@@ -2039,7 +2039,7 @@ const YoutubeNode = Node.create({
       // A club poster's size (§414), for the page's `srcset`; null for YouTube's own thumbnail.
       posterWidth: { default: null },
       posterHeight: { default: null },
-      // The part of the poster the box shows (§NNN), drawn here as the page draws it.
+      // The part of the poster the box shows (§485), drawn here as the page draws it.
       posterCrop: { default: null },
     };
   },
@@ -2054,7 +2054,7 @@ const YoutubeNode = Node.create({
     // placing the film, not YouTube's own thumbnail underneath it.
     const posterSrc = typeof node.attrs.poster === "string" && node.attrs.poster ? node.attrs.poster : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
     /*
-      A cropped poster (§NNN) in the page's own 16∶9 window: the card frame's arithmetic, as
+      A cropped poster (§485) in the page's own 16∶9 window: the card frame's arithmetic, as
       `RichTextVideo` draws it, written as the inline CSS this DOM accepts. Without a crop — or a
       size to shape it from — the poster is drawn whole, as before.
     */
@@ -2090,7 +2090,7 @@ const YoutubeNode = Node.create({
 });
 
 /**
- * The shape a new picture goes in with (§454) — an upload's, and since §NNN a picture taken from
+ * The shape a new picture goes in with (§454) — an upload's, and since §485 a picture taken from
  * the gallery too, one state for both so the choice made in one is the choice in the other. A
  * crop of the stored photograph, never its pixels. 44 pixels tall: a thumb presses these.
  */

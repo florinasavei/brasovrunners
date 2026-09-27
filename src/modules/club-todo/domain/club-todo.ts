@@ -21,7 +21,7 @@ import { canReadContent, type StaffRole } from "@/modules/staff-identity/domain/
 export const CLUB_TODO_SETTING_KEY = "clubTodo";
 /**
  * One fixed id per setting for the audit row (`jobs/cadence.ts`'s convention). It was `…e00b`
- * until §NNN, which the budget thresholds had taken the same afternoon: the audit rows written
+ * until §483, which the budget thresholds had taken the same afternoon: the audit rows written
  * before keep that id and are told apart by their `action`. `tests/unit/settings/entity-ids.test.ts`
  * holds every setting's id unique.
  */

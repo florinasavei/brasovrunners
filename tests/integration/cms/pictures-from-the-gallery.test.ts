@@ -15,12 +15,12 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-054-01, BR-REQ-050-03, `DECISIONS.md` §NNN — a picture the club already stored, chosen
+ * BR-REQ-054-01, BR-REQ-050-03, `DECISIONS.md` §485 — a picture the club already stored, chosen
  * from the gallery into an album (and, through the same id, onto a card of «Echipa»), is one
  * picture used in several places: taking it out of one place never takes it from another, and the
  * last place to let go of it deletes it, objects and row, as before.
  */
-describe("§NNN pictures from the gallery", () => {
+describe("§485 pictures from the gallery", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let editor: StaffUser;

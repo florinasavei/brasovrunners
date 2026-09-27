@@ -166,7 +166,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
   });
 
   it("is on both pages, and the create button's gap follows it", () => {
-    // One «Când și unde» card for the editor and the create page (§303, §350), holding the place (§NNN).
+    // One «Când și unde» card for the editor and the create page (§303, §350), holding the place (§481).
     expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain("<WhenBox");
     expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("<WhenBox");
     expect(read("src/modules/content/events/ui/boxes/WhenBox.tsx")).toContain("<PlaceFields event={event} mayEditSettings languages={languages} />");

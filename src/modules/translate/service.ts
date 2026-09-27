@@ -105,7 +105,7 @@ export async function translateClubTexts<T extends Record<string, unknown>>(
     return [{ item: index, segment: { format: "text" as const, text: guarded.text } }];
   });
   if (pieces.length === 0) return { ok: false, reason: "nothing" };
-  // The one count (`domain/budget.ts`), which «Copiază și tradu tot» names before the press (§NNN).
+  // The one count (`domain/budget.ts`), which «Copiază și tradu tot» names before the press (§482).
   const characters = charactersToSend(items);
 
   const throttle = await consumeRateLimit(db, "content-translate", actor.id, deps.now);

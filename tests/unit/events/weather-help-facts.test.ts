@@ -106,7 +106,7 @@ describe("the weather row's help glyph (§473)", () => {
     expect(helpButton(html)).toContain('aria-label="An indicative forecast; it may change before the start. Data from Open-Meteo."');
   });
 
-  it("opens with where and when and ends with the «?» (§NNN): the meeting point for a typed pair, the club's locality for the club's point", async () => {
+  it("opens with where and when and ends with the «?» (§484): the meeting point for a typed pair, the club's locality for the club's point", async () => {
     const start = new Date("2026-09-26T05:00:00Z").getTime();
     const first = reading({ hourAt: start, temperatureC: 11 });
     const span = [first, reading({ hourAt: start + 3_600_000, temperatureC: 13 })];

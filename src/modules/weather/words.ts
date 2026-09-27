@@ -93,7 +93,7 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
 }
 
 /**
- * The event page's «Vremea» line and the reminder's, for the hours the event is out (§NNN; the
+ * The event page's «Vremea» line and the reminder's, for the hours the event is out (§484; the
  * owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul»). One sentence, where and when
  * first, then what: «Vremea la Parcul Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie, 12–15 °C,
  * ploaie probabilă 70 %» / «Weather at Tractorul Park, Saturday, 26 Sept 18:00–20:00: Rain, 12–15 °C,

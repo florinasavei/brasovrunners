@@ -510,7 +510,7 @@ export type TemplateData = {
   eventLinksUrl?: string;
   /**
    * The forecast for the start (§402), on the reminder only: the start's hour, the hours the event
-   * is out and which place it was read at (§NNN), which each half of the bilingual message words in
+   * is out and which place it was read at (§484), which each half of the bilingual message words in
    * its own language (`weatherSpanWords`). Absent beyond seven days and whenever Open-Meteo did not
    * answer — the facts block's «Vremea» row is then simply not there.
    */
@@ -1914,7 +1914,7 @@ export function buildTemplateContent(
     event page's «Vremea» row says. Only on the reminder, the message a runner opens the day
     before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
   */
-  // Where and for which hours (§NNN): this half's name for the place — or the club's locality when
+  // Where and for which hours (§484): this half's name for the place — or the club's locality when
   // the forecast is the club's — and the event's own clock. The row's label is the sentence's head,
   // «Vremea la <loc>, <zi> 08:00–10:00», so the text reads it whole, a colon, the sky.
   const weatherWordsForRow =

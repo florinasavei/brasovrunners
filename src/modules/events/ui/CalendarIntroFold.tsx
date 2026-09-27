@@ -24,7 +24,7 @@ const LINK_SX = {
 } as const;
 
 /**
- * The calendar page's «?» on a phone (§NNN): the intro sentence under the heading moved into a
+ * The calendar page's «?» on a phone (§487): the intro sentence under the heading moved into a
  * fold beside the H1, so the month starts a paragraph higher. A native `<details>`, rendered on
  * the server — it opens with scripts off, and it holds what a tooltip cannot: the two links the
  * sentence promises (Google Calendar's add link and the `webcal://` feed, §107), so "you can

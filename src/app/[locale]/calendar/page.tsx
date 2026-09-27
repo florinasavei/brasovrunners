@@ -146,7 +146,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
           page's one `<h1>`; the font is the layout's, already loaded for every page. */}
       <Wordmark />
 
-      {/* On a phone the head is the H1 and a «?» (§NNN): the intro sentence moves into the «?»'s
+      {/* On a phone the head is the H1 and a «?» (§487): the intro sentence moves into the «?»'s
           fold, with the two calendar links it promises, so the month starts a paragraph higher.
           The fold's panel is anchored to this row (`position: relative`). From `sm` the sentence
           stands under the heading as before and the «?» is not drawn — never both. */}

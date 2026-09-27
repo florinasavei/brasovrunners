@@ -1,4 +1,4 @@
--- expand: data only (§NNN) — nothing is dropped, renamed or tightened. `events.video_url`, `events.video_poster_url` and their check stay, unread and unwritten, until a later contract migration drops them (AGENTS.md §7.6).
+-- expand: data only (§481) — nothing is dropped, renamed or tightened. `events.video_url`, `events.video_poster_url` and their check stay, unread and unwritten, until a later contract migration drops them (AGENTS.md §7.6).
 --
 -- The event page's own film section (§69, «Filmul» in the editor since §406) is retired: a film is
 -- a figure in the description (§266). Every event whose `video_url` carries a YouTube video id gets

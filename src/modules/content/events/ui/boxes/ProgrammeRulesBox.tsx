@@ -10,7 +10,7 @@ import type { DeclarationOption } from "./RegistrationBox";
 import { RulesBox } from "./TextBoxes";
 
 /**
- * «Program, regulament și declarație» (§NNN; the owner, 2026-09-27: "Programul, regulamentul și
+ * «Program, regulament și declarație» (§481; the owner, 2026-09-27: "Programul, regulamentul și
  * declarația la fel pe același card"): one card for what a runner reads the night before and signs
  * — the page's `#schedule` and `#rules`, one under the other — holding three named cards, in the
  * page's order:

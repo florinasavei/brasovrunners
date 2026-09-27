@@ -57,7 +57,7 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await footer.locator("summary").click();
     const inFooter = footer.getByRole("link", { name: "Scrie-ne" });
     await expect(inFooter).toBeVisible();
-    // The fold's links are one fold line each since §NNN amended §385 (the compact fold,
+    // The fold's links are one fold line each since §480 amended §385 (the compact fold,
     // `footer-target.ts`'s `FOLD_LINE`): 24 pixels on every phone width, 44 from `sm` as before.
     const width = page.viewportSize()?.width ?? 1280;
     const target = width >= 600 ? FOLD_LINE.sm : FOLD_LINE.xs;

@@ -38,7 +38,7 @@ const FIELD_BOXES = [
   "KindBox",
   "TitleSummaryBox",
   "DescriptionBox",
-  // The date and the place in one card, the programme, rules and declaration in another (§NNN).
+  // The date and the place in one card, the programme, rules and declaration in another (§481).
   "WhenBox",
   "ProgrammeRulesBox",
   "RegistrationBox",

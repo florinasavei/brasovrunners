@@ -52,7 +52,7 @@ export default function PhotoUploader({
   labels,
 }: {
   uploadUrl: string;
-  /** The album (§NNN): its picker offers «Acest album» beside «Toate». */
+  /** The album (§485): its picker offers «Acest album» beside «Toate». */
   albumId: string;
   labels: {
     choose: string;
@@ -63,7 +63,7 @@ export default function PhotoUploader({
     chosen: ChosenFactsLabels;
     stored: StoredFactsLabels;
     /**
-     * «Din galerie» (§NNN): the button, the picker's words, and what each press did — raw, with
+     * «Din galerie» (§485): the button, the picker's words, and what each press did — raw, with
      * `{name}`, substituted here.
      */
     fromGallery: string;

@@ -110,7 +110,7 @@ const RACE_ROW_GAP = 0.5;
 // The weather row is one line since §469; the hours strip, details and place line went with it.
 
 /**
- * The weather line's pieces with where and when before the first one (§NNN): the row's label and
+ * The weather line's pieces with where and when before the first one (§484): the row's label and
  * the scope read as one sentence — «Vremea | la Brașov, sâmbătă, 26 sept. 18:00–20:00: Ploaie · …» —
  * the scope in the same flow item as the sky's word, so no middle dot stands after the colon, and
  * the «?» (§473) in the last item, last.
@@ -601,7 +601,7 @@ export default async function EventFacts({
       query has already withheld the name, the address and the map.
 
       Tight both ways only when the pills follow it, a group's gap (twelve pixels; ten on a phone
-      since §NNN, the facts' six and the pills' four) under the line, never less than the ten the
+      since §480, the facts' six and the pills' four) under the line, never less than the ten the
       link reaches below its words. Anything else after it is nearer — the state of registration
       a line's gap (eight; six on a phone) under it, or, when the place is the card's last
       fact, the door four pixels under the facts and a series card's fold right on them — and
@@ -642,7 +642,7 @@ export default async function EventFacts({
     );
 
     return (
-      /* A line's gap between two facts — the density scale's tightest step on a phone (§NNN, the
+      /* A line's gap between two facts — the density scale's tightest step on a phone (§480, the
          360-px density pass: 8px to 6), `LINE_GAP` from `sm`. The pills keep their own four above
          that, so on a phone they sit ten under the place: exactly the place link's reach below
          its words, never nearer (the comment on `reach`, above). */
@@ -1059,7 +1059,7 @@ export default async function EventFacts({
     details, the hours strip and the place line are gone; the reminder keeps its own line.
   */
   /*
-    Since §NNN (the owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul») the line
+    Since §484 (the owner, 2026-09-27: «La vreme vreau să zic și locația și intervalul») the line
     reads the hours the event is out — from the start's hour to the end's, at most six (`pickSpan`) —
     and opens with where and when, so the label and the line are one sentence: «Vremea | la Parcul
     Tractorul, sâmbătă, 26 sept. 18:00–20:00: Ploaie · 12–15 °C · ☂ ploaie probabilă 70 % ?». The sky's

@@ -290,7 +290,7 @@ async function publishWithPicture(page: Page, created: Created): Promise<{ ro: s
   await fillTimeField(page, "Ora", "18:30");
   await field("event.locationName").fill("Parcul Titulescu");
   await field("event.locationNameEn").fill("Titulescu Park");
-  // A map link, so the whole-card tap (§NNN) can check the place stays its own link.
+  // A map link, so the whole-card tap (§486) can check the place stays its own link.
   await field("event.mapUrl").fill("https://maps.example.test/parcul-titulescu");
   await field("translations.ro.title").fill(title);
   await field("translations.ro.slug").fill(`tura-cu-poza-${suffix}`);
@@ -363,13 +363,13 @@ async function removeCreated(page: Page, created: Created, quiet: boolean): Prom
 
 test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
   /**
-   * §NNN — the owner: "I should be able to press anywhere on the card". A one-off with a picture in
+   * §486 — the owner: "I should be able to press anywhere on the card". A one-off with a picture in
    * its summary and a map link (`publishWithPicture`), so the picture, the date's line and the room
    * under the door are each pressed and land on the event's page, while the place stays its map
    * link. A one-off, never a series card: the middle of a series card's rows can fall on a date,
    * which is a link of its own and rightly lifted above the cover.
    */
-  test("are one tap to the page (§NNN): the picture, the date's line and the room under the door open the page, the place stays its map", async ({ page }) => {
+  test("are one tap to the page (§486): the picture, the date's line and the room under the door open the page, the place stays its map", async ({ page }) => {
     test.setTimeout(test.info().timeout + 60_000);
     const created: Created = [];
     let passed = false;

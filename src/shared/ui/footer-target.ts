@@ -60,7 +60,7 @@ export const SM_UP = "@media (min-width:600px)";
 
 /**
  * The height of one line of the "Despre club" fold's panel: 24 pixels on every phone, 44 from `sm`
- * (§NNN, the 360-px density pass, second round). 24 is the bar's own smallest target (WCAG 2.2 SC
+ * (§480, the 360-px density pass, second round). 24 is the bar's own smallest target (WCAG 2.2 SC
  * 2.5.8's AA floor) — not the bar's 28 from 360: the panel is four lines of links (the terms and
  * "my registrations"; "Scrie-ne" with the address; Open-Meteo's credit; the build stamp), abutting,
  * never overlapping, and four lines of 28 are 112 pixels where the owner asked for the fold to be

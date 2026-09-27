@@ -23,7 +23,7 @@ import { type ClubNotices, clubNoticesSchema, DEFAULT_CLUB_NOTICES } from "./dom
 export const CLUB_NOTICES_SETTING_KEY = "clubNotices";
 /**
  * `audit_logs.entity_id` is a UUID and a setting has a key, so each setting names itself by a
- * fixed id of its own. It was `…e003` until §NNN, which the delivery timing had taken the same
+ * fixed id of its own. It was `…e003` until §483, which the delivery timing had taken the same
  * morning: the audit rows written before keep that id and are told apart by their `action`.
  * `tests/unit/settings/entity-ids.test.ts` holds every setting's id unique.
  */

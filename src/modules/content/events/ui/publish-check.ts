@@ -74,7 +74,7 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
  */
 export const PUBLISH_GAP_CARD: Readonly<Record<PublishGapBox, `box-${string}`>> = {
   titleSummary: "box-title",
-  // The place's own part of «Când și unde» since §NNN: the fold around it opens (`openFoldsAround`).
+  // The place's own part of «Când și unde» since §481: the fold around it opens (`openFoldsAround`).
   place: "box-place",
   address: "box-address",
 };

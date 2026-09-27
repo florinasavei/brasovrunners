@@ -11,7 +11,7 @@ import PlaceToBeAnnounced from "../PlaceToBeAnnounced";
 import { type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 
 /**
- * The place's part of «Când și unde» (§NNN, which folded §350's box 5 «Locul» into the date's
+ * The place's part of «Când și unde» (§481, which folded §350's box 5 «Locul» into the date's
  * card; the owner, 2026-09-27: "date and location can be on the same card"): whether the place is
  * announced at all (§328), then the meeting point once per language — "Punct de întâlnire", Română
  * and English side by side (§362; the owner, of the shared field and the per-language name that

@@ -243,7 +243,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       }
 
       // Never a second line: the closed bar is one target tall, plus its border — the whole
-      // resting footer, measured on the built listing (§NNN, the owner's "footer is too tall on
+      // resting footer, measured on the built listing (§480, the owner's "footer is too tall on
       // mobile" round): 25px at 320, 29 at 360 and 390, 45 from `sm`. No padding of its own.
       const bar = await boxOf(footer, "the footer");
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(target + 2);
@@ -331,7 +331,7 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             const terms = fold.getByRole("link", { name: /termeni|racing tos/i });
             await terms.click({ trial: true });
 
-            // Condensed (§385), then compact (§NNN, amending §385): every line of the panel is 24px
+            // Condensed (§385), then compact (§480, amending §385): every line of the panel is 24px
             // on a phone (`FOLD_LINE`), 44px from `sm`, every word 14px, no two links overlapping,
             // and the stamp's long-press box 44px tall without adding a line; "Scrie-ne" once.
             const line = width >= SM ? 44 : 24;
@@ -369,7 +369,7 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             expect(await landsOn(credit.x + credit.width / 2, credit.y + credit.height - 2), `the credit keeps its own press at ${width}px`).toBe("credit");
             // The terms and "my registrations" share the first line.
             expect(Math.abs(boxes[0]!.y - boxes[1]!.y), `the first two links share a line at ${width}px`).toBeLessThanOrEqual(1);
-            // Measured, not derived (§NNN): four lines of 24 on a phone — the two links, "Scrie-ne"
+            // Measured, not derived (§480): four lines of 24 on a phone — the two links, "Scrie-ne"
             // with the address, the credit, the stamp — 96px at 320, 360, 390 and 412. At 320 a
             // stamp carrying its environment ("local · ", "test · ") is wider than the panel and
             // its chip wraps onto a second line: 111px there, production's one-line chip 96.
@@ -378,7 +378,7 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
               const bound = width >= 360 ? 100 : wrappedChip ? 112 : 104;
               expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}`).toBeLessThanOrEqual(bound);
             } else {
-              // From `sm` §385's one wrapping row, unchanged by the phone's lines (§NNN): 92px at
+              // From `sm` §385's one wrapping row, unchanged by the phone's lines (§480): 92px at
               // 768 on qa before this pass and after it, two 44-pixel lines and the 4 under them.
               expect(panel.height, `the panel's height at ${width}px`).toBeLessThanOrEqual(96);
             }

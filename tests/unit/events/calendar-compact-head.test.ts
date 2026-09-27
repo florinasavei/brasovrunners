@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the calendar page's head on a phone: the H1 and a «?» fold with the intro sentence and the two calendar links,
+ * §487 — the calendar page's head on a phone: the H1 and a «?» fold with the intro sentence and the two calendar links,
  * one row of the two small selects with ‹ Azi ›, and one row of the two chip pairs with the rule
  * between them. From `sm` the sentence and the period's heading are drawn as before.
  *
@@ -72,7 +72,7 @@ const en = (await import("../../../messages/en.json")).default;
 
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-describe("the calendar's compact head on a phone (§NNN)", () => {
+describe("the calendar's compact head on a phone (§487)", () => {
   it("puts the selects and ‹ Azi › in one row that never wraps", async () => {
     const html = withoutStyles(renderToStaticMarkup(await CalendarHeader({ view: month, now: NOW })));
     const row = inside(html, 'data-testid="calendar-period-row"');
@@ -123,7 +123,7 @@ describe("the calendar's compact head on a phone (§NNN)", () => {
   });
 });
 
-describe("the calendar page's intro behind a «?» fold on a phone (§NNN)", () => {
+describe("the calendar page's intro behind a «?» fold on a phone (§487)", () => {
   it.each(["ro", "en"] as const)("holds the sentence and both calendar links in a native fold (%s)", async (locale) => {
     currentLocale = locale;
     const { default: CalendarIntroFold } = await import("@/modules/events/ui/CalendarIntroFold");
@@ -141,7 +141,7 @@ describe("the calendar page's intro behind a «?» fold on a phone (§NNN)", () 
   });
 });
 
-describe("the period selects on a desktop (§NNN)", () => {
+describe("the period selects on a desktop (§487)", () => {
   it("gives every phone-only select rule an sm value, so nothing reaches the desktop", async () => {
     const { PHONE_SELECT_SX } = await vi.importActual<typeof import("@/modules/events/ui/CalendarPicker")>("@/modules/events/ui/CalendarPicker");
     for (const [key, value] of Object.entries(PHONE_SELECT_SX)) {

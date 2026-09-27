@@ -138,7 +138,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
     failed: t("team.photoFailed"),
     none: t("team.photoNone"),
     help: t("team.photoHelp"),
-    // A picture the club already stored (§NNN), in the editor's own picker words.
+    // A picture the club already stored (§485), in the editor's own picker words.
     fromGallery: t("team.photoFromGallery"),
     gallery: {
       loading: t("richText.imageGalleryLoading"),
@@ -332,7 +332,7 @@ function PageCard({
               <input type="hidden" name="uiLocale" value={locale} />
               {/* The page's own column, so the whole toolbar: a picture, a film, a table (§474). */}
               <Stack spacing={1.5}>
-                {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): the introduction's English from its Romanian. */}
+                {/* «Copiază și tradu tot: RO → EN» (§464, §482): the introduction's English from its Romanian. */}
                 <TranslateAllButton />
                 <LazyRichTextEditor
                   name="introRoBody"
@@ -537,7 +537,7 @@ function MemberFields({
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
   return (
     <Stack spacing={2}>
-      {/* «Copiază și tradu tot: RO → EN» (§464, §NNN): this card's role, words and link labels in
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this card's role, words and link labels in
           English from the Romanian, in this card's form alone — every card posts the same names. */}
       <TranslateAllButton />
       <RecallField

@@ -197,7 +197,7 @@ describe("§354 the note's and the reason's boxes in the refusal summary", () =>
     expect(english["cancel.reasonEn"]).toContain("Why the event is cancelled (English): required in both languages, at most 500 characters");
   });
 
-  it("names the status once when «Încheiat» is refused (§NNN)", async () => {
+  it("names the status once when «Încheiat» is refused (§483)", async () => {
     catalogue = ro;
     locale = "ro";
     const label = (await eventFormFieldLabels())["event.eventStatus"];

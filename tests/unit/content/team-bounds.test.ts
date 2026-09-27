@@ -3,7 +3,7 @@ import { MAX_TEAM_LINK_ROWS, teamLinkRowsOf } from "@/modules/content/team/links
 import { TEAM_META_DESCRIPTION_MAX, teamMetaDescription } from "@/modules/content/team/meta-description";
 
 /**
- * `DECISIONS.md` §NNN — the review nits of «Echipa» (§459, §474): the links' row index a save reads
+ * `DECISIONS.md` §483 — the review nits of «Echipa» (§459, §474): the links' row index a save reads
  * is bounded, and the page's meta description is about 160 characters of the introduction, never
  * the whole of it.
  */
@@ -13,7 +13,7 @@ function form(entries: Array<[string, string]>): FormData {
   return data;
 }
 
-describe("§NNN «Echipa»'s links: the row index a save reads is bounded", () => {
+describe("§483 «Echipa»'s links: the row index a save reads is bounded", () => {
   it("gathers the editor's rows by index, a hole as the spare line", () => {
     const rows = teamLinkRowsOf(
       form([
@@ -46,7 +46,7 @@ describe("§NNN «Echipa»'s links: the row index a save reads is bounded", () =
   });
 });
 
-describe("§NNN «Echipa»'s meta description is a search result's length", () => {
+describe("§483 «Echipa»'s meta description is a search result's length", () => {
   it("keeps a short introduction whole, whitespace folded", () => {
     expect(teamMetaDescription("  Suntem clubul\n de alergare  din Brașov. ")).toBe("Suntem clubul de alergare din Brașov.");
   });

@@ -33,7 +33,7 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  *
  * **A second answer**, rarely (`alternative`): a question with two ways forward and a way back —
  * «Copiază și tradu tot» asks whether to replace the English already written or fill only the
- * empty boxes (§NNN). It sits between cancel and confirm, outlined, and Enter never picks it.
+ * empty boxes (§482). It sits between cancel and confirm, outlined, and Enter never picks it.
  */
 export default function ConfirmDialog({
   spec,

@@ -23,7 +23,7 @@ export type TeamPhotoLabels = {
   help: string;
   /** «Calitate: Minimă / Medie / Mare / Originală» beside the upload (§414), the gallery's words. */
   quality: ImageQualityLabels;
-  /** «Din galerie» and its picker's words (§NNN). */
+  /** «Din galerie» and its picker's words (§485). */
   fromGallery: string;
   gallery: GalleryPickerLabels;
 };
@@ -44,7 +44,7 @@ type Props = {
  * the form is — the picture waits in the store and is swept after a week if the card never keeps
  * it (§73).
  *
- * Or a picture the club already stored (§NNN): «Din galerie» opens the same picker every other
+ * Or a picture the club already stored (§485): «Din galerie» opens the same picker every other
  * picture comes from, and the card keeps that picture's id exactly as it would an upload's — the
  * picture stays where else it is used, and the orphan sweep counts the card as one more place.
  *
@@ -123,7 +123,7 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           {state === "uploading" ? labels.uploading : photo.id ? labels.replace : labels.choose}
           <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onChoose} />
         </Button>
-        {/* The same glyph as the album's and the film poster's «Din galerie» (§NNN): one action, one look. */}
+        {/* The same glyph as the album's and the film poster's «Din galerie» (§485): one action, one look. */}
         <GlyphButton
           icon="gallery"
           variant="outlined"
