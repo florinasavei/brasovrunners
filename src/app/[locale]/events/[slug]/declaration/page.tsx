@@ -32,7 +32,7 @@ import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-error
 import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import IdDocumentFields, { ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import LegalLink from "@/shared/ui/LegalLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -297,7 +297,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {/* Cloudflare Turnstile, when the club switched it on (§97). */}
           {siteKey && (
             <Box id="captcha">
-              <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+              <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
               {refused.includes("captcha") && (
                 <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                   {t("groupRunDeclaration.page.captcha")}

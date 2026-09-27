@@ -151,6 +151,9 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     const pressedAt = Date.now();
     await sendButton(page).click();
     await expect(heldSentence(page)).toBeVisible();
+    // The button carries the check's state (§NNN): «Se verifică…», and busy while held.
+    await expect(page.getByTestId("held-press-hint")).toHaveText(/^Se verifică…/);
+    await expect(sendButton(page)).toHaveAttribute("aria-busy", "true");
     // Held, not sent: no request, no confirmation page.
     await page.waitForTimeout(1_000);
     await expect(page).not.toHaveURL(/submitted=/);
@@ -284,8 +287,17 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     const pressedAt = Date.now();
     await sendButton(page).click();
     await expect(heldSentence(page)).toBeVisible();
-    // Nobody answers. The valve opens eight seconds after the press, the form goes without a token,
-    // and the server takes a missing token for the check not running, not for a robot (§216).
+    // Nobody answers. Before the valve sends, the button says so (§NNN) — and the sentence is on
+    // screen before the request leaves, so it can be read.
+    const posted = formPost(page);
+    await expect(page.getByTestId("held-press-hint")).toHaveText("Trimitem fără verificare automată…", { timeout: 10_000 });
+    const saidAt = Date.now();
+    // The valve opens eight seconds after the press, the form goes without a token, and the server
+    // takes a missing token for the check not running, not for a robot (§216).
+    const request = await posted;
+    expect(Date.now() - saidAt, "said a beat before it went").toBeGreaterThanOrEqual(500);
+    // The valve's send names itself with the form (§NNN), as the submitter's word.
+    expect(request.postData() ?? "").toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 30_000 });
     expect(Date.now() - pressedAt).toBeGreaterThanOrEqual(7_500);
   });
@@ -315,6 +327,208 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     // The widget arrives a few seconds after the press and answers at once; the valve, eight
     // seconds after the press, would post its token too — so the answer must have come first.
     expect(Date.now() - pressedAt, "sent by the widget's answer, not by the valve").toBeLessThan(RELEASE_AFTER_MS - 1_000);
+    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+  });
+});
+
+/**
+ * §NNN — every state of the check said under the widget and on the send button, and a way out of
+ * each one a person can be stuck in. The widget's line is `BotCheck.<state>`; «Reîncearcă
+ * verificarea» is its retry; the button's held sentence (`held-press-hint`) says the same state.
+ */
+const botCheckLine = (page: Page) => page.getByTestId("bot-check-status");
+const heldHint = (page: Page) => page.getByTestId("held-press-hint");
+const retryButton = (page: Page) => page.getByRole("button", { name: "Reîncearcă verificarea", exact: true });
+/** The owner's fail-open sentence, wherever the check gave up. */
+const GAVE_UP = /Nu am putut verifica automat; trimitem oricum, iar clubul confirmă/;
+/** The stand-in's failure, its box to tick, its lapse and its timeout (`FAKE_TURNSTILE_SCRIPT`). */
+const standIn = (page: Page, name: "__failTurnstile" | "__askTurnstile" | "__expireTurnstile" | "__timeoutTurnstile") =>
+  page.evaluate((fn) => (window as unknown as Record<string, () => void>)[fn](), name);
+const fail = (page: Page) => standIn(page, "__failTurnstile");
+const askForTick = (page: Page) => standIn(page, "__askTurnstile");
+/** The form's own POST, token or not: the Server Action posts to the page it is on. */
+const formPost = (page: Page) =>
+  page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === registerPath);
+
+test.describe("§NNN the anti-bot check says every state and never strands a press", () => {
+  test.afterAll(async ({}, testInfo) => cancelRegistrationsByEmailPrefix(addressPrefix(testInfo.project.name)));
+
+  test("thinking, a box to tick, and a pass: each said under the widget and on the held button", async ({ page }) => {
+    test.setTimeout(60_000);
+    const openedAt = await openWithStandIn(page);
+    await expect(botCheckLine(page)).toHaveText(/^Se verifică…/);
+    await expect(retryButton(page)).toHaveCount(0);
+    await fillRequired(page, address());
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+
+    // A press while it thinks: held, and the button says so.
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    await expect(heldHint(page)).toHaveText(/^Se verifică…/);
+
+    // A box to tick: said under the widget, and the button's sentence follows.
+    await askForTick(page);
+    await expect(botCheckLine(page)).toHaveText(/Bifează căsuța de mai sus/);
+    await expect(heldHint(page)).toHaveText(/^Bifează căsuța de mai sus/);
+
+    await answerAndExpectOnePromptSend(page, pressedAt);
+  });
+
+  test("one failure: said with «Reîncearcă verificarea», a press is held; the second failure sends it at once (§216)", async ({ page }) => {
+    test.setTimeout(60_000);
+    const openedAt = await openWithStandIn(page);
+    await fillRequired(page, address());
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+
+    await fail(page);
+    await expect(botCheckLine(page)).toHaveText(/nu a mers; se reface singură/);
+    await expect(retryButton(page)).toBeVisible();
+    // A thumb's target (BR-REQ-041-01 criterion 6).
+    expect((await retryButton(page).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
+
+    // Cloudflare is still retrying: the press is held, not spent on a refusal.
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    await expect(heldSentence(page)).toBeVisible();
+
+    // The second failure gives up: the owner's sentence, and the held press goes now, not at the valve.
+    const posted = formPost(page);
+    await fail(page);
+    await expect(botCheckLine(page)).toHaveText(GAVE_UP);
+    await posted;
+    expect(Date.now() - pressedAt, "sent by the second failure, before the valve").toBeLessThan(RELEASE_AFTER_MS - 1_000);
+    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+  });
+
+  test("two failures before the press: the press goes straight through and is accepted (§216)", async ({ page }) => {
+    test.setTimeout(60_000);
+    const openedAt = await openWithStandIn(page);
+    await fillRequired(page, address());
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+    await fail(page);
+    await fail(page);
+    await expect(botCheckLine(page)).toHaveText(GAVE_UP);
+
+    const posted = formPost(page);
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    await posted;
+    expect(Date.now() - pressedAt, "sent by the press, not held for a check that gave up").toBeLessThan(PROMPTLY_MS);
+    await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+  });
+
+  test("«Reîncearcă verificarea» after a failure: a fresh check, and a held press is sent when it answers", async ({ page }) => {
+    test.setTimeout(60_000);
+    await openWithStandIn(page);
+    await fillRequired(page, address());
+    await fail(page);
+    await expect(retryButton(page)).toBeVisible();
+
+    await retryButton(page).click();
+    await expect(botCheckLine(page)).toHaveText(/^Se verifică…/);
+    await expect(retryButton(page)).toHaveCount(0);
+
+    // Thinking again: a press is held, as before any failure, and sent by the answer.
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    await expect(heldSentence(page)).toBeVisible();
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await answerAndExpectOnePromptSend(page, pressedAt);
+  });
+
+  test("a token that lapsed: said, the stale token never sent, the press held and sent on the new answer", async ({ page }) => {
+    test.setTimeout(60_000);
+    const openedAt = await openWithStandIn(page);
+    await fillRequired(page, address());
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+    await answer(page);
+    await expect(botCheckLine(page)).toHaveText(/Verificare reușită/);
+
+    // Five minutes later, in Cloudflare's time: the token lapses, and stays in the field.
+    await standIn(page, "__expireTurnstile");
+    await expect(botCheckLine(page)).toHaveText(/Verificarea a expirat — se reface/);
+    await expect(retryButton(page)).toBeVisible();
+    await expect(tokenField(page)).toHaveValue(CLOUDFLARE_DUMMY_TOKEN);
+
+    // A press now is held — the lapsed token would buy a refusal — and says why.
+    const sent = tokenPosts(page);
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    await expect(heldHint(page)).toHaveText(/^Verificarea a expirat — se reface/);
+    await page.waitForTimeout(1_000);
+    expect(sent, "the lapsed token was not sent").toHaveLength(0);
+    await expect(page).not.toHaveURL(/submitted=/);
+
+    // The refresh answers (Cloudflare's `refresh-expired: auto`): the held press goes with it, once.
+    await answerAndExpectOnePromptSend(page, pressedAt);
+  });
+
+  test("a box that waited too long: said, a press held with «Bifează», sent when it is ticked", async ({ page }) => {
+    test.setTimeout(60_000);
+    const openedAt = await openWithStandIn(page);
+    await fillRequired(page, address());
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+    await askForTick(page);
+    await standIn(page, "__timeoutTurnstile");
+    await expect(botCheckLine(page)).toHaveText(/s-a redesenat/);
+    await expect(retryButton(page)).toBeVisible();
+
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    await expect(heldHint(page)).toHaveText(/^Bifează căsuța de mai sus/);
+    await answerAndExpectOnePromptSend(page, pressedAt);
+  });
+
+  test("after a refused attempt the widget still says its state: the callbacks reach the new attempt (review blocker)", async ({ page }) => {
+    test.setTimeout(90_000);
+    // A field no observer sees: the callbacks are the only way the widget and the button can know.
+    const openedAt = await openWithStandIn(page, { blindField: true });
+    const widgetElement = page.locator("[data-bot-check]");
+    const email = address();
+    await fillRequired(page, email, `other-${email}`);
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+
+    // First attempt, answered and refused by the server (§206): the form re-renders with a new attempt.
+    await answer(page);
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "passed");
+    await sendButton(page).click();
+    await expect(page.locator("#registration-errors")).toBeVisible({ timeout: 20_000 });
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "checking");
+    await expect(botCheckLine(page)).toHaveText(/^Se verifică…/);
+
+    // Cloudflare calls back through the callbacks it was given at the first draw.
+    await askForTick(page);
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "interactive");
+    await expect(botCheckLine(page)).toHaveText(/Bifează căsuța de mai sus/);
+    await answer(page, "call-then-write");
+    await expect(widgetElement).toHaveAttribute("data-bot-check", "passed");
+    await expect(botCheckLine(page)).toHaveText(/^Verificare reușită/);
+  });
+
+  test("Cloudflare's script blocked: said with the owner's sentence and «Reîncearcă verificarea», and a press goes straight through", async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.route(TURNSTILE_SCRIPT_PATTERN, (route) => route.abort("blockedbyclient"));
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+    const openedAt = Date.now();
+
+    await expect(botCheckLine(page)).toHaveText(/nu s-a încărcat/);
+    await expect(botCheckLine(page)).toHaveText(GAVE_UP);
+    await expect(retryButton(page)).toBeVisible();
+    await expect(tokenField(page)).toHaveCount(0);
+
+    await fillRequired(page, address());
+    await page.waitForTimeout(Math.max(0, HUMAN_PAUSE_MS - (Date.now() - openedAt)));
+    const posted = formPost(page);
+    const pressedAt = Date.now();
+    await sendButton(page).click();
+    const request = await posted;
+    expect(Date.now() - pressedAt, "not held for a script that will not come").toBeLessThan(PROMPTLY_MS);
+    // The failure rides with the form, for the register action to count (§NNN): no request of its own.
+    expect(request.postData() ?? "").toContain("widget-failed");
+    expect(request.postData() ?? "").not.toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
   });
 });

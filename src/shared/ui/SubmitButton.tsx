@@ -8,7 +8,15 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import { type ComponentType, type MouseEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { TURNSTILE_FIELD, TURNSTILE_TOKEN_EVENT } from "@/modules/registrations/domain/turnstile-widget";
+import {
+  BOT_CHECK_GAVE_UP_ATTRIBUTE,
+  BOT_CHECK_SIGNAL_FIELD,
+  BOT_CHECK_STATE_ATTRIBUTE,
+  botCheckHeldHint,
+  botCheckUnansweredFrom,
+  TURNSTILE_FIELD,
+  TURNSTILE_TOKEN_EVENT,
+} from "@/modules/registrations/domain/turnstile-widget";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from "./held-press";
 import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
@@ -41,12 +49,25 @@ function reach(event: MouseEvent<HTMLAnchorElement>, id: string) {
  * Whether Cloudflare's check has yet to answer on this form, read from the form as it stands
  * (§285, §502): a widget drawn with an empty token field has not; a widget not drawn at all is
  * still expected only while the page is younger than `graceMs` — after that its script is taken
- * for blocked, and waiting for it would be waiting for nothing.
+ * for blocked, and waiting for it would be waiting for nothing. A widget that says its state
+ * (§NNN) is read by the state table `botCheckUnansweredFrom`: gave up — its script refused, a
+ * second failure, a browser it cannot run in — is not waited for at all; a lapsed or unticked
+ * check is waited for whatever its field still holds, so a stale token is never sent.
  */
 function botCheckUnanswered(form: HTMLFormElement, drawnAt: number, graceMs: number): boolean {
+  const widget = form.querySelector(`[${BOT_CHECK_STATE_ATTRIBUTE}]`);
   const field = form.querySelector(`[name="${TURNSTILE_FIELD}"]`);
-  if (field instanceof HTMLInputElement) return field.value === "";
+  const value = field instanceof HTMLInputElement ? field.value : null;
+  if (widget) {
+    return botCheckUnansweredFrom(widget.getAttribute(BOT_CHECK_STATE_ATTRIBUTE), widget.hasAttribute(BOT_CHECK_GAVE_UP_ATTRIBUTE), value);
+  }
+  if (value !== null) return value === "";
   return performance.now() - drawnAt < graceMs;
+}
+
+/** The widget's state as the form shows it, for the held sentence (§NNN); `null` with no widget. */
+function botCheckStateOf(form: HTMLFormElement | null | undefined): string | null {
+  return form?.querySelector(`[${BOT_CHECK_STATE_ATTRIBUTE}]`)?.getAttribute(BOT_CHECK_STATE_ATTRIBUTE) ?? null;
 }
 
 export type SubmitButtonProps = {
@@ -138,12 +159,25 @@ export type SubmitButtonProps = {
    * "butonul de trimitere nu ar trebui sa fie vizibil daca Cloudflare Turnstile nu a terminat".
    * A press while the token is missing is held — the button dimmed, saying why — and sent the
    * moment the token lands, or `RELEASE_AFTER_MS` after that press (§304, §502); a widget never
-   * drawn at all holds nothing once the page is that old. §205 is not negotiable: people register
+   * drawn at all holds nothing once the page is that old, and a widget that says it gave up — its
+   * script blocked, a failure, an unsupported browser (`TurnstileWidget`'s `data-bot-check`, §NNN) —
+   * holds nothing at all, and lets a held press go at once. §205 is not negotiable: people register
    * at all costs, and a check that never answers must not be the thing that stops them.
    */
   awaitsBotCheck?: boolean;
-  /** What the button says while it waits for that token. */
+  /**
+   * What the button says while it waits for that token and the check is thinking — «Se verifică…».
+   * The button carries the check's state in words (§NNN): the next two replace it when the widget
+   * wants a tick or its token lapsed, and the last is said when the valve sends the press anyway.
+   * Each falls back to this one.
+   */
   botCheckHint?: string;
+  /** While the widget wants a tick (`interactive`, `timeout`): «Bifează căsuța de mai sus». */
+  botCheckTickHint?: string;
+  /** While the widget's token has lapsed and is being redone (`expired`). */
+  botCheckExpiredHint?: string;
+  /** When the valve sends a press the check never answered: «Trimitem fără verificare automată…». */
+  botCheckValveHint?: string;
   /**
    * The accessible name, when the visible label cannot be one — an arrow in a row of pages is
    * "↓" to everybody who can see which row it is in, and nothing at all to anybody who cannot.
@@ -199,6 +233,9 @@ export default function SubmitButton({
   missingNames,
   awaitsBotCheck,
   botCheckHint,
+  botCheckTickHint,
+  botCheckExpiredHint,
+  botCheckValveHint,
   slowHint,
   color = "primary",
   variant = "contained",
@@ -315,6 +352,8 @@ export default function SubmitButton({
     each replaying its own press on the token was two POSTs of one registration.
   */
   const RELEASE_AFTER_MS = 8000;
+  // How long the valve's sentence is on screen before the valve sends (§NNN).
+  const VALVE_NOTICE_MS = 1500;
   // When the button was drawn, for the grace a widget not drawn at all is given (§285).
   const mountedAt = useRef(0);
   useEffect(() => {
@@ -327,28 +366,59 @@ export default function SubmitButton({
   }, [pending]);
 
   const [held, setHeld] = useState(false);
+  // The widget's state while a press is held, for the sentence the button says (§NNN).
+  const [checkState, setCheckState] = useState<string | null>(null);
+  // The valve has spoken (§NNN): «Trimitem fără verificare automată…» is on screen, and stays
+  // through the request it sends, so the person reads why the form left without the check.
+  const [valved, setValved] = useState(false);
   useEffect(() => {
     if (!held) return;
     const button = ref.current;
     const form = button?.form;
     if (!button || !form) return;
     let over = false;
-    const send = () => {
+    const send = (byValve: boolean) => {
       if (over) return;
       over = true;
       setHeld(false);
+      if (!byValve) setValved(false);
       // The form's one held press (`held-press.ts`): only the button that was pressed owns it, so
       // a second awaiting button in the same form never replays a press of its own. A request
       // already in flight owns the form; a second one would only queue behind it.
-      releaseHeldPress(form, button, !pendingNow.current);
+      //
+      // A press the valve sends says so with the form (§NNN): the button is the submitter, and a
+      // submitter's name and value are posted with it — `bot-check-signal=held-press-valve`, which
+      // the register action counts for `/api/health`. Set only around this one send: the form's
+      // data is read while `requestSubmit` dispatches, and a press of the finger afterwards posts
+      // no such word.
+      if (byValve) {
+        button.name = BOT_CHECK_SIGNAL_FIELD;
+        button.value = "held-press-valve";
+      }
+      try {
+        releaseHeldPress(form, button, !pendingNow.current);
+      } finally {
+        if (byValve) {
+          button.removeAttribute("name");
+          button.removeAttribute("value");
+        }
+      }
     };
     const check = () => {
-      if (!botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) send();
+      setCheckState(botCheckStateOf(form));
+      if (!botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) send(false);
     };
     // The field drawn or replaced, or its `value` attribute written — which, on Cloudflare's hidden
     // field, is its `.value =` (see above). A field of another type would be seen only by `onToken`.
+    // And the widget's own state (§NNN): a check that gives up while a press is held sends it now,
+    // and every other state changes the sentence.
     const observer = new MutationObserver(check);
-    observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
+    observer.observe(form, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["value", BOT_CHECK_STATE_ATTRIBUTE, BOT_CHECK_GAVE_UP_ATTRIBUTE],
+    });
     form.addEventListener("input", check);
     // The widget's success callback. Read on the next task, not inside Cloudflare's callback: a
     // script that called back before writing the field would otherwise be read as still empty,
@@ -361,8 +431,12 @@ export default function SubmitButton({
     form.addEventListener(TURNSTILE_TOKEN_EVENT, onToken);
     // The token may have landed between the press and this effect, with nothing yet listening.
     const late = setTimeout(check, 0);
-    // The valve, per press (§285, §205): a check that never answers sends the form anyway.
-    const valve = setTimeout(send, RELEASE_AFTER_MS);
+    // The valve, per press (§285, §205): a check that never answers sends the form anyway — said
+    // first (§NNN), `VALVE_NOTICE_MS` before it goes, so the person reads why it left without the
+    // check; the send itself stays at eight seconds after the press. A token that lands in between
+    // still sends it at once, and takes the sentence back.
+    const notice = setTimeout(() => setValved(true), RELEASE_AFTER_MS - VALVE_NOTICE_MS);
+    const valve = setTimeout(() => send(true), RELEASE_AFTER_MS);
     return () => {
       over = true;
       // Unmounted while still held: the hold goes with the button, sending nothing.
@@ -372,9 +446,18 @@ export default function SubmitButton({
       form.removeEventListener(TURNSTILE_TOKEN_EVENT, onToken);
       clearTimeout(afterToken);
       clearTimeout(late);
+      clearTimeout(notice);
       clearTimeout(valve);
     };
   }, [held]);
+
+  // The valve's sentence goes when the request it sent is over (or never started: an invalid form
+  // stops `requestSubmit` at the browser's own bubble, and the next press starts afresh).
+  useEffect(() => {
+    if (!valved || pending || held) return;
+    const clear = setTimeout(() => setValved(false), VALVE_NOTICE_MS);
+    return () => clearTimeout(clear);
+  }, [valved, pending, held]);
 
   /*
     A press on this button while *another* button of the form holds its press (§502): swallowed,
@@ -420,11 +503,17 @@ export default function SubmitButton({
   const dimmed = (watches && !complete && !pending) || holding;
   // The list, where one is asked for, says what the sentence beneath would have said — only better.
   const showList = lists && !complete && !pending && missing.length > 0;
-  const hint = holding ? (botCheckHint ?? incompleteSentence) : showList ? undefined : incompleteSentence;
+  // The held press says the check's state (§NNN): thinking, a box to tick, a lapsed token — and,
+  // once the valve has spoken, that the form goes without the check, through the request it sends.
+  const heldHints = { checking: botCheckHint, tick: botCheckTickHint, expired: botCheckExpiredHint };
+  const heldHint = (valved ? botCheckValveHint : heldHints[botCheckHeldHint(checkState)]) ?? botCheckHint;
+  const saysValve = valved && Boolean(botCheckValveHint) && (holding || pending);
+  const hint = saysValve ? botCheckValveHint : holding ? (heldHint ?? incompleteSentence) : showList ? undefined : incompleteSentence;
   // One id per button: a page with two forms has two buttons that may both be waiting (§315).
   const hintId = useId();
   const listId = useId();
-  const describedBy = [showList ? listId : null, dimmed && hint ? hintId : null].filter(Boolean).join(" ") || undefined;
+  const saysHint = Boolean(hint) && (dimmed || saysValve);
+  const describedBy = [showList ? listId : null, saysHint ? hintId : null].filter(Boolean).join(" ") || undefined;
   const Glyph = glyph ?? (runner ? DirectionsRunIcon : null);
 
   return (
@@ -490,7 +579,9 @@ export default function SubmitButton({
         // The dimming and the sentence beneath are the signal; the browser's own validation,
         // on press, is the explanation.
         aria-disabled={pending}
-        aria-busy={pending}
+        // Busy while a press is held for the check as well (§NNN): the press has been taken and
+        // something is being waited for — the held sentence says what.
+        aria-busy={pending || holding}
         aria-describedby={describedBy}
         /*
           No ink under the finger (§371): the press answers with "Se salvează…" and the runner in
@@ -519,9 +610,11 @@ export default function SubmitButton({
         // `aria-busy` is set, so the figure is the third way of saying it rather than the
         // only one. Under `prefers-reduced-motion` it stands still and the words carry it.
         // At rest the verb's own glyph, if it has one (§318) — on the public send buttons that
-        // is the same runner, standing, so a press is the figure setting off.
+        // is the same runner, standing, so a press is the figure setting off. A press held for the
+        // anti-bot check (§NNN) runs as well: the press has been taken, and «Se verifică…» under
+        // the button says what it is waiting for — a standing figure read as a press that missed.
         startIcon={
-          pending ? (
+          pending || holding ? (
             <RunnerLoader size={GLYPH_PX[size]} color="inherit" />
           ) : Glyph ? (
             <Glyph fontSize="small" />
@@ -551,7 +644,11 @@ export default function SubmitButton({
             // a refusal the person did nothing to earn. The effect above sends it the moment the
             // check answers or eight seconds after this press (§304) — the person does not press twice.
             event.preventDefault();
-            if (holdPress(form, ref.current as HTMLButtonElement)) setHeld(true);
+            if (holdPress(form, ref.current as HTMLButtonElement)) {
+              setCheckState(botCheckStateOf(form));
+              setValved(false);
+              setHeld(true);
+            }
           }
         }}
       >
@@ -567,8 +664,8 @@ export default function SubmitButton({
         was measured on, and each one's missing glyph is deliberate where it is written.
       */}
       <RunnerLoaderStyles size={GLYPH_PX[size]} color="inherit" />
-      {dimmed && hint && (
-        <Typography id={hintId} variant="body2" color="text.secondary" role="status">
+      {saysHint && (
+        <Typography id={hintId} variant="body2" color="text.secondary" role="status" data-testid={holding || saysValve ? "held-press-hint" : undefined}>
           {hint}
         </Typography>
       )}

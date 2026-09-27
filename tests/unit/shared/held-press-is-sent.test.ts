@@ -26,7 +26,7 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
   it("replays the held press with the button as the submitter once the wait is over", () => {
     // The whole fix is this call: the browser's own submit, from this button, so validation and
     // the Server Action run exactly as for a fresh press — and never while a request is in flight.
-    expect(source).toMatch(/releaseHeldPress\(form, button, !pendingNow\.current\);/);
+    expect(source).toMatch(/releaseHeldPress\(form, button, !pendingNow\.current\)/);
     expect(read("src/shared/ui/held-press.ts")).toMatch(/if \(submit\) form\.requestSubmit\(button\);/);
     // Once per held press: `send` closes the wait before it submits, so the watchers that fire
     // after it (the field, the form's input, the widget's callback) find it over.
@@ -35,7 +35,7 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
 
   it("keeps the eight-second valve, so a blocked check still ends in a submission", () => {
     expect(source).toMatch(/RELEASE_AFTER_MS = 8000/);
-    expect(source).toMatch(/const valve = setTimeout\(send, RELEASE_AFTER_MS\);/);
+    expect(source).toMatch(/const valve = setTimeout\(\(\) => send\(true\), RELEASE_AFTER_MS\);/);
   });
 
   it("says so when a submit takes too long, and forbids the second press", () => {
@@ -82,7 +82,7 @@ describe("§502 a held press is sent whenever the check answers, every time", ()
   it("counts the valve from each held press and keeps no once-per-mount latch", () => {
     // The valve lives in the effect that a held press starts, so every press gets its own.
     expect(source).toMatch(
-      /useEffect\(\(\) => \{\s*\r?\n\s*if \(!held\) return;[\s\S]*?const valve = setTimeout\(send, RELEASE_AFTER_MS\);[\s\S]*?\}, \[held\]\);/,
+      /useEffect\(\(\) => \{\s*\r?\n\s*if \(!held\) return;[\s\S]*?const valve = setTimeout\(\(\) => send\(true\), RELEASE_AFTER_MS\);[\s\S]*?\}, \[held\]\);/,
     );
     expect(source).not.toMatch(/replayed\.current/);
   });
@@ -90,7 +90,7 @@ describe("§502 a held press is sent whenever the check answers, every time", ()
   it("watches the field, the form's input and the widget's success callback while a press is held", () => {
     // The hidden field's `value` attribute, which is its `.value` on `type="hidden"`.
     expect(source).toMatch(/new MutationObserver\(check\)/);
-    expect(source).toMatch(/attributeFilter: \["value"\]/);
+    expect(source).toMatch(/attributeFilter: \["value", BOT_CHECK_STATE_ATTRIBUTE, BOT_CHECK_GAVE_UP_ATTRIBUTE\]/);
     expect(source).toMatch(/form\.addEventListener\("input", check\);/);
     // The callback, whatever the field is — read on the next task, not inside the callback, so a
     // script that called back before writing the field does not leave the press to the valve.
@@ -98,9 +98,14 @@ describe("§502 a held press is sent whenever the check answers, every time", ()
     expect(source).toMatch(/const onToken = \(\) => \{[\s\S]*?afterToken = setTimeout\(check, 0\);/);
     expect(source).toMatch(/clearTimeout\(afterToken\);\s*\r?\n\s*clearTimeout\(late\);/);
     // …and the widget says so, bubbling from its own element into the form.
-    expect(widget).toMatch(/callback: \(\) => element\.dispatchEvent\(new Event\(TURNSTILE_TOKEN_EVENT, \{ bubbles: true \}\)\)/);
-    // Never Cloudflare's error callback: handing it one changes how the widget retries.
-    expect(widget).not.toMatch(/"error-callback"\s*:/);
+    // The success callback (`botCheckCallbacks`, since the review of §NNN) calls `onToken` after
+    // saying «passed»; the widget's `onToken` is that dispatch.
+    expect(widget).toMatch(/onToken: \(\) => element\.dispatchEvent\(new Event\(TURNSTILE_TOKEN_EVENT, \{ bubbles: true \}\)\),/);
+    const domain = read("src/modules/registrations/domain/turnstile-widget.ts");
+    expect(domain).toMatch(/callback: \(\) => \{\s*\r?\n\s*say\("passed"\);\s*\r?\n\s*onToken\(\);/);
+    // Cloudflare's error callback names a state now (§NNN), and answers `false`: the documented
+    // "let Turnstile handle the retry", so its own automatic retry is kept.
+    expect(domain).toMatch(/"error-callback": \(\) => \{\s*\r?\n\s*say\("error"\);\s*\r?\n\s*return false;/);
   });
 });
 
@@ -157,7 +162,7 @@ describe("§502 one held press per form, sent once from the button that was pres
   it("the button swallows any press while its form holds one, and claims the hold before holding", () => {
     const source = read("src/shared/ui/SubmitButton.tsx");
     expect(source).toMatch(/if \(form && isPressHeld\(form\)\) \{\s*\r?\n\s*event\.preventDefault\(\);/);
-    expect(source).toMatch(/if \(holdPress\(form, ref\.current as HTMLButtonElement\)\) setHeld\(true\);/);
+    expect(source).toMatch(/if \(holdPress\(form, ref\.current as HTMLButtonElement\)\) \{[\s\S]{0,160}?setHeld\(true\);/);
     expect(source).toMatch(/releaseHeldPress\(form, button, false\);/);
   });
 });

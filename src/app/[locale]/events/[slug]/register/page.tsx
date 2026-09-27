@@ -62,7 +62,7 @@ import SexField from "@/modules/registrations/ui/SexField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
-import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { submitRegistrationAction } from "./actions";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -718,6 +718,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   runner
                   awaitsBotCheck={Boolean(siteKey)}
                   botCheckHint={t("botCheckWait")}
+                  botCheckTickHint={t("botCheckTick")}
+                  botCheckExpiredHint={t("botCheckExpired")}
+                  botCheckValveHint={t("botCheckValve")}
                   slowHint={t("submitSlow")}
                   size="medium"
                 />
@@ -1373,7 +1376,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                  {/* The one form whose send button holds a press for the check (§NNN). */}
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} heldPress />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
@@ -1432,6 +1436,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 */
                 awaitsBotCheck={Boolean(siteKey)}
                 botCheckHint={t("botCheckWait")}
+                botCheckTickHint={t("botCheckTick")}
+                botCheckExpiredHint={t("botCheckExpired")}
+                botCheckValveHint={t("botCheckValve")}
                 slowHint={t("submitSlow")}
                 size="large"
                 fullWidth
