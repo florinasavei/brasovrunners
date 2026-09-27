@@ -32,7 +32,8 @@ test.describe("§265 the configuration panels", () => {
     await page.goto("/ro/admin/settings");
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/emails$/);
     const settingsNav = main.getByRole("navigation", { name: "Setări" });
-    await expect(settingsNav.getByRole("link")).toHaveText(["Emailuri", "Termene", "Contact", "Aspect", "Costuri", "Platformă"]);
+    // Seven for an Administrator: the six tabs of /admin/settings and «Configurație» (/devs) last.
+    await expect(settingsNav.getByRole("link")).toHaveText(["Emailuri", "Termene", "Contact", "Aspect", "Costuri", "Platformă", "Configurație"]);
     await expect(settingsNav.getByRole("link", { name: "Emailuri" })).toHaveAttribute("aria-current", "page");
 
     // The switch, one press away.
