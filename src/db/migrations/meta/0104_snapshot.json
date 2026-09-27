@@ -1,6 +1,6 @@
 {
   "id": "2c31c80f-9116-44b6-9ae9-c3fbbb302663",
-  "prevId": "9e48ba7f-22d4-4757-af06-c09c1be87a28",
+  "prevId": "71f1c552-0a5f-4ae0-9e4c-6dbb12e6c270",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -5106,7 +5106,8 @@
         "REGISTER_ANOTHER_PERSON",
         "NEWSLETTER_CONFIRM",
         "NEWSLETTER",
-        "NEW_EVENT_ALERT"
+        "NEW_EVENT_ALERT",
+        "MEMBER_INVITATION"
       ]
     },
     "public.email_outbox_status": {
@@ -5322,6 +5323,7 @@
       "name": "staff_role",
       "schema": "public",
       "values": [
+        "MEMBER",
         "CONTRIBUTOR",
         "COPYWRITER",
         "MODERATOR",

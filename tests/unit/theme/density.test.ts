@@ -155,6 +155,13 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/team/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 }, // the lead, or the club's introduction in its place (§474)
   { file: "src/app/[locale]/team/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  // The members' pages (§524), born on the scale — «Echipa»'s spacing: the page, the lead or the
+  // club's words, the sign-in card; the zone's greeting, its words or the sentence in their place.
+  { file: "src/app/[locale]/members/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/members/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
+  { file: "src/app/[locale]/members/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2 },
+  { file: "src/app/[locale]/members-area/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/members-area/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 4 },
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/legal/terms/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/gallery/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

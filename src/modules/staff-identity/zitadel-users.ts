@@ -34,19 +34,35 @@ export type ZitadelDeps = {
   fetch?: typeof fetch;
   issuer?: string;
   token?: string;
+  /** Each call's own bound; `ZITADEL_CALL_TIMEOUT_MS` unless a caller needs a shorter one. */
+  timeoutMs?: number;
 };
 
 type Deps = ZitadelDeps;
 
-/** The issuer and the key, or nothing — every call below starts here. */
+/**
+ * How long one call to Zitadel may take (§524). A bulk invitation makes two calls per member after
+ * the transaction committed, inside a request; a provider that hangs must end one member's attempt
+ * as `failed`, never the whole press.
+ */
+export const ZITADEL_CALL_TIMEOUT_MS = 10_000;
+
+/**
+ * The issuer and the key, or nothing — every call below starts here. The `call` it hands out is
+ * bounded: every request carries `AbortSignal.timeout` unless the caller gave its own signal.
+ */
 function connection(deps: Deps): { issuer: string; headers: Record<string, string>; call: typeof fetch } | null {
   const issuer = (deps.issuer ?? env.AUTH_ZITADEL_ISSUER ?? "").replace(/\/$/, "");
   const token = deps.token ?? env.ZITADEL_MANAGEMENT_PAT;
   if (!issuer || !token) return null;
+  const base = deps.fetch ?? fetch;
+  const timeoutMs = deps.timeoutMs ?? ZITADEL_CALL_TIMEOUT_MS;
+  const call = ((input: Parameters<typeof fetch>[0], init?: RequestInit) =>
+    base(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(timeoutMs) })) as typeof fetch;
   return {
     issuer,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
-    call: deps.fetch ?? fetch,
+    call,
   };
 }
 
@@ -57,6 +73,19 @@ export function isZitadelInviteConfigured(): boolean {
 export async function inviteZitadelUser(
   person: { email: string; displayName: string; locale: Locale },
   deps: Deps = {},
+): Promise<InviteOutcome> {
+  // A network failure or the timeout is this person's `failed`, in the platform's words (§524):
+  // the bulk invitation reports it per address and moves on to the next.
+  try {
+    return await createAndInvite(person, deps);
+  } catch (error) {
+    return { kind: "failed", reason: describeFailure(error) };
+  }
+}
+
+async function createAndInvite(
+  person: { email: string; displayName: string; locale: Locale },
+  deps: Deps,
 ): Promise<InviteOutcome> {
   const connected = connection(deps);
   if (!connected) return { kind: "unconfigured" };
@@ -153,16 +182,20 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
   if (!connected) return { kind: "unconfigured" };
   const { issuer, headers, call } = connected;
 
-  const userId = await findZitadelUserId(email, deps);
-  if (!userId) return { kind: "failed", reason: NO_ACCOUNT };
+  try {
+    const userId = await findZitadelUserId(email, deps);
+    if (!userId) return { kind: "failed", reason: NO_ACCOUNT };
 
-  const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ sendCode: { applicationName: CLUB_NAME } }),
-  });
-  if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
-  return { kind: "invited" };
+    const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ sendCode: { applicationName: CLUB_NAME } }),
+    });
+    if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
+    return { kind: "invited" };
+  } catch (error) {
+    return { kind: "failed", reason: describeFailure(error) };
+  }
 }
 
 /**
@@ -233,7 +266,8 @@ export async function setZitadelUserActive(
  */
 export type AccountsListing =
   | { kind: "unconfigured" }
-  | { kind: "listed"; accounts: ReadonlySet<string>; count: number }
+  /** `capped`: the listing stopped at `ACCOUNTS_LISTING_MAX` and may not hold every account (§524). */
+  | { kind: "listed"; accounts: ReadonlySet<string>; count: number; capped: boolean }
   | { kind: "refused"; reason: string }
   | { kind: "unreachable"; reason: string };
 
@@ -244,10 +278,17 @@ export type AccountsListing =
 export const ACCOUNTS_LISTING_TIMEOUT_MS = 4_000;
 
 /**
- * Far above the club's dozen staff; a search page Zitadel would truncate is not a concern at
- * this size, and the limit is here so the request is one page rather than an open-ended one.
+ * One page of Zitadel's user search. Since the members' zone (§524) every club member is a human
+ * account too, so the organization outgrows one page: the listing pages through with `offset`
+ * until a short page, and stops at `ACCOUNTS_LISTING_MAX` — ten pages, each bounded by the timeout.
  */
-const ACCOUNTS_LISTING_LIMIT = 200;
+export const ACCOUNTS_LISTING_PAGE = 200;
+
+/**
+ * The most accounts one listing reads (§524). Past it the listing says `capped`: Echipa claims
+ * "no account" for nobody, and `/admin/tasks` shows the row that says the ceiling was reached.
+ */
+export const ACCOUNTS_LISTING_MAX = 2_000;
 
 /**
  * Every human account the key can see, by every name it answers to (`DECISIONS.md` §288).
@@ -262,28 +303,13 @@ const ACCOUNTS_LISTING_LIMIT = 200;
  * missing membership, not an empty organization.
  */
 export async function listZitadelHumanAccounts(
-  deps: Deps & { timeoutMs?: number } = {},
+  deps: Deps & { pageSize?: number; max?: number } = {},
 ): Promise<AccountsListing> {
   const connected = connection(deps);
   if (!connected) return { kind: "unconfigured" };
   const { issuer, headers, call } = connected;
-
-  let found: Response;
-  try {
-    found = await call(`${issuer}/v2/users`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: { limit: ACCOUNTS_LISTING_LIMIT },
-        queries: [{ typeQuery: { type: "TYPE_HUMAN" } }],
-      }),
-      signal: AbortSignal.timeout(deps.timeoutMs ?? ACCOUNTS_LISTING_TIMEOUT_MS),
-      cache: "no-store",
-    });
-  } catch (error) {
-    return { kind: "unreachable", reason: describeFailure(error) };
-  }
-  if (!found.ok) return { kind: "refused", reason: await reasonOf(found) };
+  const pageSize = deps.pageSize ?? ACCOUNTS_LISTING_PAGE;
+  const max = deps.max ?? ACCOUNTS_LISTING_MAX;
 
   type ListedUser = {
     username?: string;
@@ -291,23 +317,51 @@ export async function listZitadelHumanAccounts(
     loginNames?: string[];
     human?: { email?: { email?: string } };
   };
-  let result: ListedUser[];
-  try {
-    result = ((await found.json()) as { result?: ListedUser[] }).result ?? [];
-  } catch (error) {
-    return { kind: "unreachable", reason: describeFailure(error) };
-  }
 
   // Address first, because that is what Echipa stores; the login names too, because a login
   // name is not an address — Zitadel scopes it to the organization's domain (§170) — and a
   // service account or a person created by hand may answer to nothing else.
   const accounts = new Set<string>();
-  for (const user of result) {
-    for (const name of [user.human?.email?.email, user.username, user.preferredLoginName, ...(user.loginNames ?? [])]) {
-      if (name) accounts.add(name.toLowerCase());
+  let count = 0;
+  // Page by page, in a stable order, until a page comes back short (§524). Every page is its own
+  // bounded call; a failure on any page is the listing's failure, never a silently short set.
+  for (let offset = 0; offset < max; offset += pageSize) {
+    const limit = Math.min(pageSize, max - offset);
+    let found: Response;
+    try {
+      found = await call(`${issuer}/v2/users`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          query: { offset, limit, asc: true },
+          sortingColumn: "USER_FIELD_NAME_CREATION_DATE",
+          queries: [{ typeQuery: { type: "TYPE_HUMAN" } }],
+        }),
+        signal: AbortSignal.timeout(deps.timeoutMs ?? ACCOUNTS_LISTING_TIMEOUT_MS),
+        cache: "no-store",
+      });
+    } catch (error) {
+      return { kind: "unreachable", reason: describeFailure(error) };
     }
+    if (!found.ok) return { kind: "refused", reason: await reasonOf(found) };
+
+    let result: ListedUser[];
+    try {
+      result = ((await found.json()) as { result?: ListedUser[] }).result ?? [];
+    } catch (error) {
+      return { kind: "unreachable", reason: describeFailure(error) };
+    }
+
+    for (const user of result) {
+      for (const name of [user.human?.email?.email, user.username, user.preferredLoginName, ...(user.loginNames ?? [])]) {
+        if (name) accounts.add(name.toLowerCase());
+      }
+    }
+    count += result.length;
+    if (result.length < limit) return { kind: "listed", accounts, count, capped: false };
   }
-  return { kind: "listed", accounts, count: result.length };
+  // Every page was full up to the ceiling: there may be more than were read.
+  return { kind: "listed", accounts, count, capped: true };
 }
 
 /** The platform's own words for a call that never answered: `TimeoutError`, `TypeError: fetch failed`. */

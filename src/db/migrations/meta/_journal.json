@@ -698,6 +698,13 @@
     {
       "idx": 99,
       "version": "7",
+      "when": 1790538433315,
+      "tag": "0102_members_zone",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
       "when": 1790541805744,
       "tag": "0104_difficulty_level",
       "breakpoints": true

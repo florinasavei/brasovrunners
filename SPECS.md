@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.14-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.15-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.14-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.15-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2294,6 +2294,10 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 83. No string the backoffice shows says «platforma» / "the platform" or hedges with «de obicei», «în general», "usually", "generally" — it names what acts and says the fact; a numbered step may carry such a word only inside a quote naming the screen or the button to open; held by `tests/unit/i18n/plain-words.test.ts` in both catalogues (2026-09-27, `DECISIONS.md` §522).
 84. No string under `Admin.*` or `Devs.*` names a §-number, a repository file or folder, or a release number (2026-09-27, `DECISIONS.md` §522).
 85. The backoffice fold of a group run's signed self-declarations lists the whole series' signatures on every date's page, each PDF link addressed under the date its row hangs on, and the PDF route still refuses a declaration under another event's address (tests/integration/group-run-declarations/sign.test.ts).
+86. The sign-in accounts check behind Echipa and /admin/tasks pages through the provider's user search 200 at a time until a short page, stops at 2000 accounts and says so. A listing that reached the limit marks no row as having no account, reports a reader not found within it as capped rather than blind, and shows the invitation-key row on /admin/tasks as open with its own sentence (2026-09-27, `DECISIONS.md` §524).
+87. «Adaugă mai mulți membri» takes at most 50 rows in one press. It adds every row as `MEMBER` with its own invitation, or nobody when one row is not an address or one address is on the team with a backoffice role, and the refusal names those rows (2026-09-27, `DECISIONS.md` §524).
+88. After the press, each member's sign-in account is created three at a time, each provider call bounded at 10 seconds. Every member gets one line (created, invited, failed with the reason, or unconfigured), shown on the result page and kept in one `staff.members_invited` audit row by staff row id, never an address. An address already a member is taken again, so pressing again retries a failed account with no second row and no second invitation email (2026-09-27, `DECISIONS.md` §524).
+89. The guide names the members' texts by the sub-navigation's own path, «Pagini» → «Pagini standard» → «Membri», in both languages, pinned by the guide-words test. The sub-navigation has one «Membri» entry for the one page that holds both texts (2026-09-27, `DECISIONS.md` §524).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

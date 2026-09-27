@@ -17,6 +17,7 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FlagIcon from "@mui/icons-material/Flag";
 import GavelIcon from "@mui/icons-material/Gavel";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
@@ -127,6 +128,7 @@ export const PANEL_GLYPHS = {
   // The club and the platform.
   legal: GavelIcon,
   invite: PersonAddIcon,
+  members: GroupAddIcon,
   appearance: PaletteIcon,
   costs: PaidIcon,
   database: StorageIcon,
