@@ -160,16 +160,22 @@ export function formatDuration(ms) {
 
 /**
  * The clock `ship` keeps of itself (§NNN): each step from its start to the next one's, and the
- * whole. `report()` counts a step still open up to now, so a stop says where the time went too.
+ * whole. `report()` counts a step still open up to now, so a stop says where the time went too;
+ * `onStepEnd` hears each step the moment it ends, so a long release shows its times as it goes.
  *
  * @param {() => number} [now]
+ * @param {(step: { name: string, ms: number }) => void} [onStepEnd]
  */
-export function createClock(now = Date.now) {
+export function createClock(now = Date.now, onStepEnd) {
   const started = now();
   const done = [];
   let open = null;
   const close = () => {
-    if (open) done.push({ name: open.name, ms: now() - open.at });
+    if (open) {
+      const step = { name: open.name, ms: now() - open.at };
+      done.push(step);
+      onStepEnd?.(step);
+    }
     open = null;
   };
   const summary = () => {

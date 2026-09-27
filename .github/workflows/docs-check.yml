@@ -40,7 +40,9 @@ jobs:
   # and this job asks first whether this exact tree was recorded. If it was, the heavy jobs are
   # skipped by their `if:` — and a job skipped by a condition reports "Success" to a required
   # check, while a skipped *workflow* would stay "Pending" for ever; that is why the whole
-  # workflow always runs and only its jobs skip. A different tree — `qa` moved, a conflict
+  # workflow always runs and only its jobs skip (GitHub's own words, "Handling skipped but required
+  # checks": https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks).
+  # A different tree — `qa` moved, a conflict
   # resolved, one byte anywhere, this file included — finds no record and runs everything.
   #
   # A record counts only when its run is this workflow, on a branch of this repository: a pull
@@ -48,6 +50,9 @@ jobs:
   # A branch of this repository also runs its own copy, and could record a tree it never tested;
   # that is trusted because pushing a branch here already needs write access, which could change
   # this file on `qa` anyway. This check keeps strangers out; it does not police collaborators.
+  # A record is trusted for twenty-four hours at most: the end-to-end seed builds its events
+  # relative to today, so a tree tested days ago has not been tested against today's dates. A
+  # release ships a tree tested the same day; an older one is tested again.
   # Anything that goes wrong here answers "not tested", so the failure mode is a full run — and
   # `continue-on-error` keeps a failure of this job (checkout, a runner) from turning an
   # otherwise green run red, which would stop `yarn ship` on a tree that passed.
@@ -72,7 +77,7 @@ jobs:
             echo "tested=false" >> "$GITHUB_OUTPUT"; echo "asked to run everything"; exit 0
           fi
           runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=tested-tree-$tree&per_page=30" \
-            --jq '.artifacts[] | select(.expired == false and .workflow_run.id != null and .workflow_run.repository_id != null and .workflow_run.head_repository_id == .workflow_run.repository_id) | .workflow_run.id' \
+            --jq '.artifacts[] | select(.expired == false and (.created_at | fromdateiso8601) > (now - 86400) and .workflow_run.id != null and .workflow_run.repository_id != null and .workflow_run.head_repository_id == .workflow_run.repository_id) | .workflow_run.id' \
             2>/dev/null) || runs=""
           for id in $runs; do
             path=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" \
@@ -283,5 +288,6 @@ jobs:
         with:
           name: tested-tree-${{ needs.tested-tree.outputs.tree }}
           path: tested-tree.txt
-          retention-days: 14
+          # The shortest GitHub keeps an artifact; `tested-tree` trusts it 24 hours by `created_at`.
+          retention-days: 1
           overwrite: true

@@ -50,6 +50,8 @@ describe("§NNN docs-check: one tree, tested once", () => {
     expect(gate).toContain("tree=$(git rev-parse 'HEAD^{tree}')");
     expect(gate).toContain("actions/artifacts?name=tested-tree-$tree");
     expect(gate).toContain(".expired == false");
+    // Trusted for 24 hours at most: the e2e seed builds its events relative to today.
+    expect(gate).toContain("(.created_at | fromdateiso8601) > (now - 86400)");
     expect(gate).toContain(".workflow_run.head_repository_id == .workflow_run.repository_id");
     expect(gate).toContain("select(.head_repository.id == .repository.id) | .path");
     expect(gate).toMatch(/\.github\/workflows\/docs-check\.yml\|\.github\/workflows\/docs-check\.yml@\*\)/);
@@ -80,6 +82,9 @@ describe("§NNN docs-check: one tree, tested once", () => {
     expect(record).toContain("needs.e2e-shard.result == 'success'");
     expect(record).toContain("name: tested-tree-${{ needs.tested-tree.outputs.tree }}");
     expect(record).toMatch(/uses: actions\/upload-artifact@v4\n\s+continue-on-error: true\n/);
+    // The record expires after a day, the shortest GitHub keeps one; never the old fortnight.
+    expect(record).toMatch(/^\s+retention-days: 1$/m);
+    expect(workflow.match(/retention-days: (\d+)/g)).toEqual(["retention-days: 7", "retention-days: 1"]);
   });
 
   it("runs the whole suite, both projects, on eight shards on every run — a pull request included", () => {
@@ -165,6 +170,22 @@ describe("§NNN ship: the clock it keeps of itself", () => {
       totalMs: 12 * 60_000 + 95_000,
     });
     expect(clock.report()).toEqual(["  batch PR #1   12:00", "  qa run         1:30", "  total         13:35"]);
+  });
+
+  it("says each step's time the moment it ends, not only at the end", () => {
+    let t = 0;
+    const said: string[] = [];
+    const clock = createClock(() => t, (s) => said.push(`${s.name} ${formatDuration(s.ms)}`));
+    clock.step("batch PR #1");
+    t += 60_000;
+    expect(said).toEqual([]);
+    clock.step("qa run");
+    expect(said).toEqual(["batch PR #1 1:00"]);
+    t += 9 * 60_000 + 10_000;
+    clock.end();
+    expect(said).toEqual(["batch PR #1 1:00", "qa run 9:10"]);
+    clock.end();
+    expect(said).toHaveLength(2);
   });
 
   it("counts a step still open at a stop, and says it stopped there", () => {

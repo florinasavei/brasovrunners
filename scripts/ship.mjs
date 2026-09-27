@@ -39,9 +39,10 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { createClock, judgeChecks, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
+import { createClock, formatDuration, judgeChecks, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
 
-const clock = createClock();
+// Each step's time as it ends (m:ss), and the whole at the end or at a stop (§NNN).
+const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
 const [PR, NEW, PREV, TITLE] = process.argv.slice(2);
 if (!PR || !NEW || !PREV || !TITLE) {
   console.error('Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<title>"');

@@ -166,7 +166,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   `yarn check`, which took about ten minutes of every release (§NNN). CI runs the full
   `yarn check` on the batch PR minutes later, and every merged branch already passed the hook.
   The risk is a red batch PR instead of a red hook; a fix round fixes it. The hook still runs
-  for every other commit.
+  for every other commit — this is the one exception `AGENTS.md` §6.3 and `SETUP.md` § Contributing name.
 - **Model:** the dispatcher, or Haiku with the manifest and the dry run's output.
 
 ### Ship
