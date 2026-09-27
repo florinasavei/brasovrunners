@@ -24,6 +24,9 @@
 # Usage: bash scripts/cloud-setup.sh [--force]
 # Exit code 0 = ready (or nothing to do), 1 = a step failed; the log's last lines are printed.
 
+# No `-e`, on purpose: the probes below (listening, db_value, as_superuser inside `$( )`) are
+# meant to fail quietly and be compared, and every step that must succeed ends in `|| fail`,
+# which names the step and prints the log. A new step belongs behind `quiet … || fail "…"` too.
 set -uo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ] && [ "${1:-}" != "--force" ]; then
