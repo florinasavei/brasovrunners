@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * BR-REQ-041-01 — the registration form's send button; `DECISIONS.md` §285 and §304.
+ * BR-REQ-041-01 — the registration form's send button; `DECISIONS.md` §285, §304 and §NNN.
  *
  * §285 made the button wait for Cloudflare's token and swallow a press made before it existed.
  * §304 is the defect that swallowing hid: with autofill the whole form is filled in a second and
@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
  * Source-level, like `boxed-disclosure.test.ts`: the unit suite runs in Node with no DOM, and
  * what has to stay true is a handful of lines in one component and two catalogue sentences.
  * The browser side is `registration-autofill.spec.ts`, which fills the form the way a password
- * manager does.
+ * manager does, and `registration-turnstile.spec.ts`, which runs the widget itself (§NNN).
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -24,18 +24,16 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
 
   it("replays the held press with the button as the submitter once the wait is over", () => {
     // The whole fix is this call: the browser's own submit, from this button, so validation and
-    // the Server Action run exactly as for a fresh press.
-    expect(source).toMatch(/form\.requestSubmit\(button\)/);
-    // Fired by the state that ends the wait — the token arrived or the eight-second valve opened —
-    // and never while a request is already in flight.
-    expect(source).toMatch(/if \(!pressedEarly \|\| waiting \|\| pending \|\| replayed\.current\) return;/);
-    // Once. A second replay would be a second request behind the first.
-    expect(source).toMatch(/replayed\.current = true;\s*\r?\n\s*form\.requestSubmit\(button\)/);
+    // the Server Action run exactly as for a fresh press — and never while a request is in flight.
+    expect(source).toMatch(/if \(!pendingNow\.current\) form\.requestSubmit\(button\);/);
+    // Once per held press: `send` closes the wait before it submits, so the watchers that fire
+    // after it (the field, the form's input, the widget's callback) find it over.
+    expect(source).toMatch(/if \(over\) return;\s*\r?\n\s*over = true;\s*\r?\n\s*setHeld\(false\);/);
   });
 
   it("keeps the eight-second valve, so a blocked check still ends in a submission", () => {
     expect(source).toMatch(/RELEASE_AFTER_MS = 8000/);
-    expect(source).toMatch(/setTokenMissing\(false\);/);
+    expect(source).toMatch(/const valve = setTimeout\(send, RELEASE_AFTER_MS\);/);
   });
 
   it("says so when a submit takes too long, and forbids the second press", () => {
@@ -57,5 +55,43 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
     // no longer expected to press again.
     expect(read("messages/ro.json")).toMatch(/"botCheckWait": "[^"]*trimitem noi/);
     expect(read("messages/en.json")).toMatch(/"botCheckWait": "[^"]*we send the form ourselves/);
+  });
+});
+
+/**
+ * §NNN — the held press that was never sent after Turnstile said «Success!».
+ *
+ * §285's valve disconnected the token watch eight seconds after the page was drawn, while a
+ * listener on the form's `input` went on setting "token missing" — so anybody who typed after the
+ * eighth second while the widget had no token (still thinking, a challenge to tick, a reset after
+ * a refusal) was left with a press held for good. And §304's replay ran once per mount, which the
+ * refusal's redirect does not reset. The browser side is `registration-turnstile.spec.ts`, against
+ * a server that runs the widget with Cloudflare's own test keys.
+ */
+describe("§NNN a held press is sent whenever the check answers, every time", () => {
+  const source = read("src/shared/ui/SubmitButton.tsx");
+  const widget = read("src/modules/registrations/ui/TurnstileWidget.tsx");
+
+  it("reads the token from the form at the press, never from a state an earlier render left", () => {
+    expect(source).toMatch(/awaitsBotCheck && form && botCheckUnanswered\(form, mountedAt\.current, RELEASE_AFTER_MS\)/);
+    expect(source).not.toMatch(/setTokenMissing/);
+  });
+
+  it("counts the valve from each held press and keeps no once-per-mount latch", () => {
+    // The valve lives in the effect that a held press starts, so every press gets its own.
+    expect(source).toMatch(
+      /useEffect\(\(\) => \{\s*\r?\n\s*if \(!held\) return;[\s\S]*?const valve = setTimeout\(send, RELEASE_AFTER_MS\);[\s\S]*?\}, \[held\]\);/,
+    );
+    expect(source).not.toMatch(/replayed\.current/);
+  });
+
+  it("watches the field, the form's input and the widget's success callback while a press is held", () => {
+    expect(source).toMatch(/new MutationObserver\(check\)/);
+    expect(source).toMatch(/form\.addEventListener\("input", check\);/);
+    expect(source).toMatch(/form\.addEventListener\(TURNSTILE_TOKEN_EVENT, check\);/);
+    // …and the widget says so, bubbling from its own element into the form.
+    expect(widget).toMatch(/callback: \(\) => element\.dispatchEvent\(new Event\(TURNSTILE_TOKEN_EVENT, \{ bubbles: true \}\)\)/);
+    // Never Cloudflare's error callback: handing it one changes how the widget retries.
+    expect(widget).not.toMatch(/"error-callback"\s*:/);
   });
 });

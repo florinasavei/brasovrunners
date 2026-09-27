@@ -8,6 +8,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import { type ComponentType, type MouseEvent, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { TURNSTILE_FIELD, TURNSTILE_TOKEN_EVENT } from "@/modules/registrations/domain/turnstile-widget";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
 import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
@@ -33,6 +34,18 @@ function reach(event: MouseEvent<HTMLAnchorElement>, id: string) {
   for (let fold = control.closest("details"); fold; fold = fold.parentElement?.closest("details") ?? null) fold.open = true;
   control.scrollIntoView({ block: "center" });
   control.focus({ preventScroll: true });
+}
+
+/**
+ * Whether Cloudflare's check has yet to answer on this form, read from the form as it stands
+ * (§285, §NNN): a widget drawn with an empty token field has not; a widget not drawn at all is
+ * still expected only while the page is younger than `graceMs` — after that its script is taken
+ * for blocked, and waiting for it would be waiting for nothing.
+ */
+function botCheckUnanswered(form: HTMLFormElement, drawnAt: number, graceMs: number): boolean {
+  const field = form.querySelector(`[name="${TURNSTILE_FIELD}"]`);
+  if (field instanceof HTMLInputElement) return field.value === "";
+  return performance.now() - drawnAt < graceMs;
 }
 
 export type SubmitButtonProps = {
@@ -113,9 +126,10 @@ export type SubmitButtonProps = {
    *
    * Pressing send before Turnstile has answered buys a refusal for no reason — the owner:
    * "butonul de trimitere nu ar trebui sa fie vizibil daca Cloudflare Turnstile nu a terminat".
-   * While the token is missing the button is dimmed and says why; after `RELEASE_AFTER_MS`, or
-   * if the widget never draws at all, it is released, because §205 is not negotiable: people
-   * register at all costs, and a check that never answers must not be the thing that stops them.
+   * A press while the token is missing is held — the button dimmed, saying why — and sent the
+   * moment the token lands, or `RELEASE_AFTER_MS` after that press (§304, §NNN); a widget never
+   * drawn at all holds nothing once the page is that old. §205 is not negotiable: people register
+   * at all costs, and a check that never answers must not be the thing that stops them.
    */
   awaitsBotCheck?: boolean;
   /** What the button says while it waits for that token. */
@@ -247,84 +261,83 @@ export default function SubmitButton({
     incompleteHintNamed && firstMissing ? incompleteHintNamed.replace("{field}", firstMissing) : incompleteHint;
 
   /*
-    Cloudflare writes its token into a hidden input inside the widget's own element, so the form
-    is where it shows up and the DOM is what this watches — the same shape `PhoneField` uses to
-    watch the other telephone (§231), rather than lifting a third party's element into React.
+    The press held for Cloudflare's token (§285), sent — not dropped — when the wait is over (§304),
+    and now whenever that is (§NNN).
+
+    Cloudflare writes its token into a hidden input inside the widget's own element, so the form is
+    where it shows up and the DOM is what is read — the same shape `PhoneField` uses to watch the
+    other telephone (§231), rather than lifting a third party's element into React.
+
+    **What went wrong.** §285 kept a `tokenMissing` state, fed by a MutationObserver, and an
+    eight-second valve counted from when the button was drawn. The valve disconnected the observer
+    for good, but a listener on the form's `input` went on measuring: anybody who typed after those
+    eight seconds while the widget had no token — still thinking, a challenge to tick, a reset after
+    a refusal, a token being refreshed — set `tokenMissing` back to true with nothing left to set it
+    false again. The next press was held, the widget answered «Success!», nothing noticed, and the
+    valve had been spent at the eighth second of the page: the sentence promising that we send the
+    form ourselves stayed on the screen for good (the owner, 2026-09-27: «Am rămas în acest state!»).
+    A second latch did the same after a refusal: the replay ran once per mount, and the button
+    survives the redirect that shows the refusal.
+
+    **Now.** The press asks the form itself, at the moment of the press, whether the token is there
+    — no state that can go stale. A press without it is held, and from that press on the form is
+    watched — the hidden field, the form's own input, and the widget's success callback
+    (`TURNSTILE_TOKEN_EVENT`) — until the token is there or eight seconds have passed since *that
+    press*, whichever is first; then the form is submitted with this button as the submitter, exactly
+    as if the finger had landed now. `requestSubmit` runs the browser's own validation first, so an
+    invalid form still gets its bubble rather than a request. Nothing is said until somebody
+    presses (§285, amended: a warning at page load was a flicker about a problem nobody had yet),
+    and the sentence goes with the held press. Every held press is its own: nothing is spent at
+    the first one. A widget never drawn at all — a blocked script — is waited for only
+    in the page's first eight seconds (§285); after that a press goes straight through, and the
+    server accepts a missing token as the check not running (§216).
   */
   const RELEASE_AFTER_MS = 8000;
-  const [tokenMissing, setTokenMissing] = useState(false);
-
+  // When the button was drawn, for the grace a widget not drawn at all is given (§285).
+  const mountedAt = useRef(0);
   useEffect(() => {
-    if (!awaitsBotCheck) return;
-    const form = ref.current?.form;
-    if (!form) return;
-
-    const token = () => {
-      const input = form.querySelector('[name="cf-turnstile-response"]');
-      return input instanceof HTMLInputElement ? input.value : "";
-    };
-    // Nothing drawn yet is also "waiting": the widget appears a moment after the page does.
-    const measure = () => setTokenMissing(token() === "");
-    measure();
-
-    const observer = new MutationObserver(measure);
-    observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
-    form.addEventListener("input", measure);
-    // The valve. A blocked script, an offline moment, a bad minute at Cloudflare — none of them
-    // may end with somebody unable to press send (§205).
-    const release = setTimeout(() => {
-      observer.disconnect();
-      setTokenMissing(false);
-    }, RELEASE_AFTER_MS);
-
-    return () => {
-      observer.disconnect();
-      form.removeEventListener("input", measure);
-      clearTimeout(release);
-    };
-  }, [awaitsBotCheck]);
-
-  /*
-    Nothing is said until somebody presses (§285, amended; the owner: "nici macar nu am facut
-    submit inca si apare asta").
-
-    The first version dimmed the button and explained itself the moment the page loaded, which
-    is a warning about a problem nobody has yet had — and for the half-second Turnstile usually
-    takes, it is a flicker of "you cannot do this yet" in front of somebody who was doing
-    nothing. So the press is what asks the question: if the token is not there yet, that press
-    is swallowed, the sentence appears, and it goes away by itself when the token arrives.
-  */
-  const [pressedEarly, setPressedEarly] = useState(false);
-  const waiting = Boolean(awaitsBotCheck) && tokenMissing && !pending;
-
-  /*
-    **A held press is sent, not dropped (§304).**
-
-    §285 swallowed a press made before Cloudflare's token existed and showed a sentence; the
-    sentence went away when the token landed, and that was all — the person had to press again,
-    and nothing told them so. With autofill the whole form is filled in a second and the press
-    comes in the same second, so the swallowed press was the *normal* press. The Administrator, from her
-    laptop, 2026-09-23: "nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe
-    lista" — QA's database has no row and no outbox entry for that minute: the submit never left
-    her browser.
-
-    So the press is kept and replayed: the moment `waiting` turns false — the token arrived, or
-    the valve above opened after eight seconds — the form is submitted with this button as the
-    submitter, exactly as if the finger had landed now. `requestSubmit` runs the browser's own
-    validation first, so an invalid form still gets its bubble rather than a request. Once, and
-    only while nothing is in flight; a page that navigates afterwards resets all of this anyway.
-  */
-  // A ref, not state: "already replayed" is bookkeeping for the effect, never something the
-  // screen shows, and a render for it would be a render for nothing.
-  const replayed = useRef(false);
+    mountedAt.current = performance.now();
+  }, []);
+  // What `pending` says now, for a send decided in a callback rather than a render.
+  const pendingNow = useRef(pending);
   useEffect(() => {
-    if (!pressedEarly || waiting || pending || replayed.current) return;
+    pendingNow.current = pending;
+  }, [pending]);
+
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    if (!held) return;
     const button = ref.current;
     const form = button?.form;
-    if (!form) return;
-    replayed.current = true;
-    form.requestSubmit(button);
-  }, [pressedEarly, waiting, pending]);
+    if (!button || !form) return;
+    let over = false;
+    const send = () => {
+      if (over) return;
+      over = true;
+      setHeld(false);
+      // A request already in flight owns the form; a second one would only queue behind it.
+      if (!pendingNow.current) form.requestSubmit(button);
+    };
+    const check = () => {
+      if (!botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) send();
+    };
+    const observer = new MutationObserver(check);
+    observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
+    form.addEventListener("input", check);
+    form.addEventListener(TURNSTILE_TOKEN_EVENT, check);
+    // The token may have landed between the press and this effect, with nothing yet listening.
+    const late = setTimeout(check, 0);
+    // The valve, per press (§285, §205): a check that never answers sends the form anyway.
+    const valve = setTimeout(send, RELEASE_AFTER_MS);
+    return () => {
+      over = true;
+      observer.disconnect();
+      form.removeEventListener("input", check);
+      form.removeEventListener(TURNSTILE_TOKEN_EVENT, check);
+      clearTimeout(late);
+      clearTimeout(valve);
+    };
+  }, [held]);
 
   /*
     A submit that takes too long says so (§304). `pending` comes from the form's own status and
@@ -347,10 +360,12 @@ export default function SubmitButton({
     };
   }, [pending]);
 
-  const dimmed = (watches && !complete && !pending) || (waiting && pressedEarly);
+  // A held press is always one nobody has sent yet: `send` clears it before the request starts.
+  const holding = held && !pending;
+  const dimmed = (watches && !complete && !pending) || holding;
   // The list, where one is asked for, says what the sentence beneath would have said — only better.
   const showList = lists && !complete && !pending && missing.length > 0;
-  const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : showList ? undefined : incompleteSentence;
+  const hint = holding ? (botCheckHint ?? incompleteSentence) : showList ? undefined : incompleteSentence;
   // One id per button: a page with two forms has two buttons that may both be waiting (§315).
   const hintId = useId();
   const listId = useId();
@@ -460,13 +475,20 @@ export default function SubmitButton({
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.
-          if (pending) event.preventDefault();
-          if (waiting) {
+          // A press already held is the same press: it is sent once, by the effect above.
+          if (pending || held) {
+            event.preventDefault();
+            return;
+          }
+          // Asked of the form now, not of a state from an earlier render (§NNN): the token that
+          // landed a moment ago counts, and one that was spent or reset since does not.
+          const form = ref.current?.form;
+          if (awaitsBotCheck && form && botCheckUnanswered(form, mountedAt.current, RELEASE_AFTER_MS)) {
             // The check is still running: hold this press and say so, rather than spending it on
             // a refusal the person did nothing to earn. The effect above sends it the moment the
-            // check answers or the valve opens (§304) — the person does not press twice.
+            // check answers or eight seconds after this press (§304) — the person does not press twice.
             event.preventDefault();
-            setPressedEarly(true);
+            setHeld(true);
           }
         }}
       >
