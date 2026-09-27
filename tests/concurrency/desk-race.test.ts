@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -11,6 +12,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { createRegistrationByStaff } from "@/modules/registrations/admin-service";
+import { ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -30,6 +32,12 @@ import { isDomainError } from "@/shared/errors/domain-error";
  * entry — whose pre-check therefore finds nothing — queues behind it. PostgreSQL grants a row's
  * waiters in the order they queued, so when the holder lets go the public submission writes first
  * and the staff entry meets that row under the lock: exactly the gap, every run.
+ *
+ * Since §493 the desk decides by the name (`decideSubmission`, via `staff`): the guard this suite
+ * proves is the *same runner* entered at the desk while the form writes him — refused under the
+ * lock, confirming nobody. Another person on that address is a family member (§389, §446), and the
+ * race gives her a row of her own, confirmed on her own paper, the form's runner untouched — the
+ * same two cases `tests/integration/registrations/lifecycle-audit.test.ts` shows on one connection.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -79,6 +87,8 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     if (registrationIds.length > 0) {
       await db.delete(emailOutbox).where(inArray(emailOutbox.registrationId, registrationIds));
       await db.delete(auditLogs).where(inArray(auditLogs.entityId, registrationIds));
+      // A paper acceptance (a desk confirmation) references its registration with no cascade.
+      await db.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, registrationIds));
     }
     if (createdEventIds.length > 0) {
       await db.delete(registrations).where(inArray(registrations.eventId, createdEventIds));
@@ -153,10 +163,11 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     throw new Error(`expected ${count} requests queued on the event's lock`);
   }
 
-  it("the public submission writes first; the staff entry is refused under the lock and confirms nobody", async () => {
-    const event = await createEvent();
-    const email = `desk.race.${Date.now()}@example.ro`;
-
+  /**
+   * Ion on the public form, queued first; `deskFirstName` at the desk with a paper, whose pre-check
+   * finds the address empty, queued second. Both answers, settled.
+   */
+  async function race(event: EventForRegistration, email: string, deskFirstName: string) {
     // A third connection holds the event row, so both requests queue on it in a known order.
     const holder = await pool.connect();
     let publicAnswer: Promise<unknown> = Promise.resolve();
@@ -165,16 +176,14 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
       await holder.query("BEGIN");
       await holder.query("SELECT id FROM events WHERE id = $1 FOR UPDATE", [event.id]);
 
-      // Ion, on the public form: queued first.
       publicAnswer = submitRegistration(db, event, submission(email, "Ion"), NOW);
       await queuedOnEvent(1);
-      // Maria, at the desk with her paper: the pre-check finds the address empty, then she queues.
       staffAnswer = createRegistrationByStaff(
         db,
         { id: staffId as string, role: "ADMIN" },
         {
           eventId: event.id,
-          firstName: "Maria",
+          firstName: deskFirstName,
           lastName: "Pop",
           email,
           locale: "ro",
@@ -189,14 +198,21 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
       await holder.query("COMMIT");
       holder.release();
     }
+    return Promise.allSettled([publicAnswer, staffAnswer]);
+  }
 
-    const [publicResult, staffResult] = await Promise.allSettled([publicAnswer, staffAnswer]);
+  it("the same runner: the public submission writes first; the desk's entry is refused under the lock and confirms nobody", async () => {
+    const event = await createEvent();
+    const email = `desk.race.${Date.now()}@example.ro`;
+
+    // Ion on the form, and Ion again at the desk (§493: the name decides there).
+    const [publicResult, staffResult] = await race(event, email, "Ion");
     expect(publicResult.status).toBe("fulfilled");
     expect(staffResult.status).toBe("rejected");
     const reason = (staffResult as PromiseRejectedResult).reason;
     expect(isDomainError(reason) ? { code: reason.code, fields: [...reason.fields] } : reason).toEqual({
       code: "VALIDATION_ERROR",
-      fields: ["email"],
+      fields: ["email", ALREADY_ON_ADDRESS],
     });
 
     // Ion is exactly as the public form left him: waiting for his own link, confirmed by nobody.
@@ -210,5 +226,36 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     expect(actions).not.toContain("registration.confirmed_by_staff");
     expect(actions).not.toContain("registration.resubmitted");
     expect(await db.select().from(auditLogs).where(eq(auditLogs.actorStaffUserId, staffId as string))).toHaveLength(0);
+  });
+
+  it("another person: Maria at the desk gets a row of her own, confirmed on her own paper; Ion is untouched", async () => {
+    const event = await createEvent();
+    const email = `desk.race.maria.${Date.now()}@example.ro`;
+
+    // §493: another name at the desk on a registered address is a family member, within the club's limit.
+    const [publicResult, staffResult] = await race(event, email, "Maria");
+    expect(publicResult.status).toBe("fulfilled");
+    expect(staffResult.status).toBe("fulfilled");
+
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(rows.map((row) => [row.registeredName, row.status]).sort()).toEqual([
+      ["Ion Pop", "PENDING_EMAIL_CONFIRMATION"],
+      ["Maria Pop", "CONFIRMED"],
+    ]);
+    expect(new Set(rows.map((row) => row.participantId)).size).toBe(1);
+
+    // The one paper acceptance is Maria's; nothing was confirmed or re-sent in Ion's name.
+    const ion = rows.find((row) => row.registeredName === "Ion Pop");
+    const maria = rows.find((row) => row.registeredName === "Maria Pop");
+    const accepted = await db
+      .select({ registrationId: declarationAcceptances.registrationId })
+      .from(declarationAcceptances)
+      .where(inArray(declarationAcceptances.registrationId, rows.map((row) => row.id)));
+    expect(accepted).toEqual([{ registrationId: maria?.id }]);
+    const ionActions = (
+      await db.select({ action: auditLogs.action }).from(auditLogs).where(eq(auditLogs.entityId, ion?.id as string))
+    ).map((row) => row.action);
+    expect(ionActions).not.toContain("registration.confirmed_by_staff");
+    expect(ionActions).not.toContain("registration.resubmitted");
   });
 });
