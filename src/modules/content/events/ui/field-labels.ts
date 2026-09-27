@@ -25,28 +25,33 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const inBox = (box: string, label: string) => `${t(`editor.boxes.${box}.title`)} › ${label}`;
   // The status is a card inside the first box since §448: its fields are named by both.
   const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
+  // «Când și unde» holds the date, the place and the time zone since §NNN: one card, its fields named by it.
+  const inWhenWhere = (label: string) => inBox("whenWhere", label);
+  // «Program, regulament și declarație» holds three cards since §NNN: a field is named by the card and its card.
+  const inProgrammeRules = (card: "programme" | "rules" | "declaration", label: string) =>
+    inBox("programmeRules", `${t(`editor.boxes.${card}.title`)} › ${label}`);
 
   const labels: Record<string, string> = {
     "event.type": inBox("kind", t("editor.type")),
     "event.surface": inBox("course", t("editor.surface")),
     // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§448).
     "event.eventStatus": inStatus(t("editor.boxes.status.completedRefused")),
-    "event.timezone": inBox("when", t("editor.timezone")),
-    "event.startsAtDate": inBox("when", t("editor.startsAt")),
-    "event.startsAtTime": inBox("when", t("editor.startsAt")),
-    "event.endsAtDate": inBox("when", t("editor.endsAt")),
-    "event.endsAtTime": inBox("when", t("editor.endsAt")),
-    "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
-    "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
+    "event.timezone": inWhenWhere(t("editor.timezone")),
+    "event.startsAtDate": inWhenWhere(t("editor.startsAt")),
+    "event.startsAtTime": inWhenWhere(t("editor.startsAt")),
+    "event.endsAtDate": inWhenWhere(t("editor.endsAt")),
+    "event.endsAtTime": inWhenWhere(t("editor.endsAt")),
+    "event.raceStartsAtDate": inWhenWhere(t("editor.raceStartsAt")),
+    "event.raceStartsAtTime": inWhenWhere(t("editor.raceStartsAt")),
     // «Durata» as hours and minutes (§433); a refusal of the total names the hours box.
-    "event.durationHours": inBox("when", `${t("editor.duration")} › ${t("editor.durationHours")}`),
-    "event.durationMinutesPart": inBox("when", `${t("editor.duration")} › ${t("editor.durationMinutesPart")}`),
+    "event.durationHours": inWhenWhere(`${t("editor.duration")} › ${t("editor.durationHours")}`),
+    "event.durationMinutesPart": inWhenWhere(`${t("editor.duration")} › ${t("editor.durationMinutesPart")}`),
     // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.
-    "event.locationName": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
-    "event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
-    "event.locationToBeAnnounced": inBox("place", t("editor.placeToBeAnnounced")),
-    "event.mapUrl": inBox("place", t("editor.mapUrl")),
-    "event.coordinates": inBox("place", t("editor.coordinates")),
+    "event.locationName": inWhenWhere(`${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
+    "event.locationNameEn": inWhenWhere(`${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
+    "event.locationToBeAnnounced": inWhenWhere(t("editor.placeToBeAnnounced")),
+    "event.mapUrl": inWhenWhere(t("editor.mapUrl")),
+    "event.coordinates": inWhenWhere(t("editor.coordinates")),
     "event.registrationMode": inBox("registration", t("editor.registrationMode")),
     "event.capacity": inBox("registration", t("editor.capacity")),
     "event.waitlistCapacity": inBox("registration", t("editor.waitlistCapacity")),
@@ -62,7 +67,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.bibStartNumber": inBox("bibs", t("editor.bibStartNumber")),
     "event.bibColour": inBox("bibs", t("editor.bibColour")),
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
-    "event.declarationDocumentId": inBox("rules", `${t("editor.boxes.declaration.title")} › ${t("editor.declarationDocument")}`),
+    "event.declarationDocumentId": inProgrammeRules("declaration", t("editor.declarationDocument")),
     "event.participantListVisibility": inBox("startList", t("editor.participantList")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
@@ -77,17 +82,17 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
     "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
     "event.nightOverride": inBox("course", t("editor.night.label")),
-    "event.offersGroupRunDeclaration": inBox("rules", `${t("editor.boxes.declaration.title")} › ${t("editor.groupRunDeclaration.label")}`),
+    "event.offersGroupRunDeclaration": inProgrammeRules("declaration", t("editor.groupRunDeclaration.label")),
     "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
     "event.featured": inBox("promotion", t("editor.featured")),
     "event.isSpecial": inBox("promotion", t("editor.special")),
-    "event.schedule[].date": inBox("programme", t("editor.programmeRows.date")),
-    "event.schedule[].time": inBox("programme", t("editor.programmeRows.time")),
-    "event.schedule[].endTime": inBox("programme", t("editor.programmeRows.endTime")),
-    "event.schedule[].ro": inBox("programme", t("editor.programmeRows.ro")),
-    "event.schedule[].en": inBox("programme", t("editor.programmeRows.en")),
-    "event.schedule[].place": inBox("programme", t("editor.programmeRows.place")),
+    "event.schedule[].date": inProgrammeRules("programme", t("editor.programmeRows.date")),
+    "event.schedule[].time": inProgrammeRules("programme", t("editor.programmeRows.time")),
+    "event.schedule[].endTime": inProgrammeRules("programme", t("editor.programmeRows.endTime")),
+    "event.schedule[].ro": inProgrammeRules("programme", t("editor.programmeRows.ro")),
+    "event.schedule[].en": inProgrammeRules("programme", t("editor.programmeRows.en")),
+    "event.schedule[].place": inProgrammeRules("programme", t("editor.programmeRows.place")),
     /*
       In the Salvare box (§331): what changed; in the status box: why the event is cancelled — one
       box per language (§354, bilingual everywhere), each named with its language and what it
@@ -187,7 +192,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);
     for (const [field, [box, label]] of Object.entries(perLanguage)) {
-      labels[`translations.${locale}.${field}`] = inBox(box, `${language} › ${label}`);
+      // The programme's and the rules' texts are cards inside «Program, regulament și declarație» (§NNN).
+      labels[`translations.${locale}.${field}`] =
+        box === "programme" || box === "rules" ? inProgrammeRules(box, `${language} › ${label}`) : inBox(box, `${language} › ${label}`);
     }
   }
 

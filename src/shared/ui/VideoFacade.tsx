@@ -5,8 +5,8 @@ import VideoVolumeBar from "./VideoVolumeBar";
 
 /**
  * A YouTube film: the club's own poster before the click, the player and a volume bar after it
- * (`DECISIONS.md` §403). Shared by `EventVideo` and `RichTextVideo` — one component, so the
- * event page and an editorial body behave identically and carry the same words.
+ * (`DECISIONS.md` §403). Drawn by `RichTextVideo`: a film is a figure in an editorial body, its
+ * one home since §NNN retired the event page's own film section (`EventVideo`).
  *
  * ## A Server Component (found by re-review, `DECISIONS.md` §403)
  *

@@ -341,7 +341,6 @@
     "openRoute": "View the route",
     "routeJump": "About the route",
     "video": {
-      "open": "Watch the event film",
       "title": "Event film (YouTube)",
       "notice": "The player is YouTube's and loads only when you open it.",
       "play": "Play the film",
@@ -1081,7 +1080,7 @@
         "autoLine": "Automatic: on {day}, starts at {start}, sunset at {sunset} — {verdict}",
         "autoLineDawn": "Automatic: on {day}, starts at {start}, before sunrise at {sunrise} — {verdict}",
         "autoLineNoTime": "Automatic: on {day}, sunset at {sunset} — pick the start time",
-        "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
+        "autoLineNoDate": "Automatic: pick the start's date and time under “When and where”, and the answer shows here.",
         "verdictNight": "a night event",
         "verdictDay": "not a night event",
         "endLine": "The start is before dusk, but the run lasts until {end} and reaches the dark — still a night event.",
@@ -1435,6 +1434,9 @@
         "description": {
           "title": "Event description"
         },
+        "whenWhere": {
+          "title": "When and where"
+        },
         "when": {
           "title": "Date and time",
           "timezone": "Time zone",
@@ -1443,6 +1445,10 @@
         },
         "place": {
           "title": "The place"
+        },
+        "programmeRules": {
+          "title": "Programme, rules and declaration",
+          "rulesLine": "rules: {state}"
         },
         "programme": {
           "title": "The day's programme and what to bring"
@@ -1463,7 +1469,7 @@
         "conditions": {
           "title": "Who may enter",
           "legalLink": "Legal documents — where a new version of the declaration is approved",
-          "declarationUnderRules": "The declaration a participant signs is chosen under “Rules” → “Self-declaration”."
+          "declarationUnderRules": "The declaration a participant signs is chosen under “Programme, rules and declaration” → “Self-declaration”."
         },
         "reminder": {
           "title": "The reminder before the start"
@@ -1666,14 +1672,6 @@
             "notAsked": "not asked"
           }
         },
-        "video": {
-          "title": "The film",
-          "stored": "a film, from an older link",
-          "none": "no separate film",
-          "storedHelp": "The page shows this film under the rules, behind one press. It is a link saved before the editor had its YouTube button, and it is kept on every save. A new film goes in the description.",
-          "noneHelp": "A film goes in the description, with the text editor's YouTube button, like a picture. The page has no other section for a film.",
-          "toDescription": "Go to the description"
-        },
         "declaration": {
           "title": "Self-declaration",
           "newest": "Newest approved version: v{version} · {title}. The participant signs it when confirming the registration.",
@@ -1708,7 +1706,7 @@
           "kind": "Type",
           "title": "Title",
           "description": "Description",
-          "when": "When",
+          "when": "When and where",
           "place": "Where",
           "course": "The course",
           "cost": "Cost",
@@ -1716,9 +1714,8 @@
           "coHosts": "Together with",
           "share": "Share",
           "links": "Links and files",
-          "programme": "Programme",
+          "programme": "Programme and rules",
           "rules": "Rules",
-          "video": "The film",
           "startList": "Participant list"
         }
       },
@@ -3834,7 +3831,7 @@
               "title": "Correct an event's text",
               "steps": [
                 "«Events» → «Edit» on the event's row.",
-                "Open the card with the text: «Title and summary», «Event description», «The day's programme and what to bring» or «Rules».",
+                "Open the card with the text: «Title and summary», «Event description» or «Programme, rules and declaration» (then «The day's programme and what to bring» or «Rules»).",
                 "Write in the «Română» tab and in the «English» tab.",
                 "At the bottom, on a published event, tick «I understand that I am editing published content.».",
                 "Press «Save». It is on the site at once, in both languages."
@@ -3976,7 +3973,7 @@
               "title": "Change a setting of the event",
               "steps": [
                 "«Events» → «Edit».",
-                "Open the card: «Date and time», «The place», «The course», «Cost» or «Taking part and registration». Change what is needed.",
+                "Open the card: «When and where», «The course», «Cost» or «Taking part and registration». Change what is needed.",
                 "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
                 "Must the participants know? Tick «Tell participants about the change» and write the note in both languages.",
                 "Press «Save». The texts (the title, the description) are not yours to save: tell the Administrator what is wrong."
@@ -4013,8 +4010,8 @@
                 "Each card is a part of the public page, in the site's order. The map at the top, «The page, top to bottom», takes you to each card.",
                 "«What kind of event» → «Event type» (Race, Group run and the others).",
                 "«Title and summary»: «Title» and «Summary», in the «Română» tab and in the «English» tab.",
-                "«Date and time», then «The place»: the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
-                "The other cards as needed: «Event description», «The course», «Cost», «Taking part and registration», «The day's programme and what to bring», «Rules».",
+                "«When and where»: the date and time, then the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
+                "The other cards as needed: «Event description» (a YouTube film goes here, with the «YouTube» button), «The course», «Cost», «Taking part and registration», «Programme, rules and declaration».",
                 "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
                 "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
                 "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."
@@ -4072,7 +4069,7 @@
                 "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
-                "«Who may enter»: «Declaration a participant signs» and «Minimum age (years)» (14 unless you change it, 0 for none).",
+                "«Who may enter»: «Minimum age (years)» (14 unless you change it, 0 for none). The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
                 "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
                 "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
               ]

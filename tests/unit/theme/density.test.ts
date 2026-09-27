@@ -210,7 +210,6 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §NNN: one step tighter on a phone, the event page
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §NNN: one step tighter on a phone, the event page
-  { file: "src/modules/events/ui/EventVideo.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3 }, // §NNN: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3, count: 6 }, // §NNN: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §NNN: one step tighter on a phone, the event page
   // The filter panel (§424, a fix round on §413/§424's small-chip button — the owner: "Butonul

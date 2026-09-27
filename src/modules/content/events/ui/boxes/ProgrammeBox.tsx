@@ -14,7 +14,9 @@ import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * Box 6, "Programul zilei și ce să aduci" (§350): the timed rows first (§117) — one list for both
+ * "Programul zilei și ce să aduci" (§350), the first of the three cards of «Program, regulament și
+ * declarație» since §NNN (`ProgrammeRulesBox`; `#box-schedule`, after the page's own `#schedule`):
+ * the timed rows first (§117) — one list for both
  * languages, one calendar entry each, repeated in the reminder, with "Ce (română)" and "Ce
  * (engleză)" side by side in the row, never in tabs — then, in Română | English tabs, the notes
  * under them and what to bring. The rows and their notes used to live in two panels far apart
@@ -24,7 +26,7 @@ import { LanguageTabs } from "./TextBoxes";
  * A group run has no programme (§111): the sentence replaces the rows and the notes, hidden and
  * never removed, and only "Ce să aduci" remains — every type has something to bring.
  */
-export default async function ProgrammeBox({ event, mayEditSettings, risk, languages, heading }: BoxProps & { languages: readonly LanguageEntry[] }) {
+export default async function ProgrammeBox({ event, mayEditSettings, risk, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = languages[0]?.translation.locale ?? "ro";
@@ -45,8 +47,9 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
   return (
     <Panel
       collapsible
-      id="box-programme"
-      title={heading ?? t("editor.boxes.programme.title")}
+      level={3}
+      id="box-schedule"
+      title={t("editor.boxes.programme.title")}
       aside={programmeSummary(words, event, hasProgramme(initialType), languages.map((entry) => entry.translation), locale)}
       tone={risk ? "risk" : "default"}
     >
