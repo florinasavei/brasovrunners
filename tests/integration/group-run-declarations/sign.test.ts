@@ -31,8 +31,8 @@ import { DECLARATION_FOOTER_Y, drawnRuns } from "../../helpers/pdf-drawn";
  * especially for the trail one; this is optional but people should be able to sign and email it to
  * us". One row, never a registration; two messages through the outbox — the signer's PDF, whole,
  * and the club's archive copy with the identity document masked (§320); bound to the version read
- * (§57); erased by an Administrator with an audit row that never names the signer (§67, §88); gone
- * seven days after the run.
+ * (§57); erased by an Administrator with an audit row that never names the signer (§67, §88); kept
+ * until the signer asks for its deletion (§503), only an identity document cleared at seven days.
  *
  * The PDF's inputs are watched rather than the drawn page, as `club-copy.test.ts` does: pdfkit
  * writes an embedded font's text as glyph ids, so the page cannot be searched for a number.
@@ -345,7 +345,7 @@ describe("§393 signing a group run's self-declaration", () => {
     expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
   });
 
-  it("counts a signature as reliance on the version: it cannot be edited or deleted under it, and can once the sweep took the signature", async () => {
+  it("counts a signature as reliance on the version: it cannot be edited or deleted under it, the sweep never frees it, and the erase does", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun();
     await signGroupRunDeclaration(db, await input(event.id), NOW);
@@ -367,9 +367,14 @@ describe("§393 signing a group run's self-declaration", () => {
     // Edited: never — an approved version is history, and a signed one twice over.
     await expect(updateDraftVersion(db, superadmin, row.id, translations, later)).rejects.toMatchObject({ code: "CONFLICT" });
 
-    // Seven days after the run the sweep takes the signature, and with it the only reliance.
+    // The sweep, long after the run, keeps the signature (§503), and with it the reliance.
     const counts = await pruneExpiredRows(db, later);
-    expect(counts.groupRunDeclarations).toBe(1);
+    expect(counts.failures).toEqual([]);
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(1);
+    await expect(remove()).rejects.toMatchObject({ code: "CONFLICT" });
+    // The signer asks; the Administrator erases; the version is unused again.
+    const [signature] = await db.select().from(groupRunDeclarations);
+    await eraseGroupRunDeclaration(db, await admin(), { id: signature.id, reason: "a cerut ștergerea" }, later);
     await expect(remove()).resolves.toEqual({ key: "GROUP_RUN_DECLARATION_TRAIL", version: 1 });
   });
 });
@@ -442,22 +447,45 @@ describe("§393 erasing one (§67, §88)", () => {
   });
 });
 
-describe("§393 retention: the declaration goes seven days after the run", () => {
-  it("sweeps a declaration of a run eight days gone with its messages, and keeps one six days gone", async () => {
+describe("§503 retention: the declaration is kept until the signer asks", () => {
+  it("keeps a declaration of a run a year gone, with its messages until their own window", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const old = await trailRun({ startsAt: new Date("2026-09-01T16:00:00.000Z") });
+    await signGroupRunDeclaration(db, await input(old.id), new Date("2026-09-01T10:00:00.000Z"));
+    // The signer's copy (no archive mailbox is set here).
+    expect(await db.select().from(emailOutbox)).toHaveLength(1);
+
+    // Eight days after the run — the old window: the row and its (unsent) message stay.
+    const early = await pruneExpiredRows(db, new Date("2026-09-09T17:00:00.000Z"));
+    expect(early.failures).toEqual([]);
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(1);
+    expect(await db.select().from(emailOutbox)).toHaveLength(1);
+
+    // A year on, the declaration is still there; the message, about no registration, went at its ninety days.
+    const late = await pruneExpiredRows(db, new Date("2027-09-02T17:00:00.000Z"));
+    expect(late.failures).toEqual([]);
+    const left = await db.select().from(groupRunDeclarations);
+    expect(left.map((row) => row.eventId)).toEqual([old.id]);
+    expect(left[0].email).toBe("ana@example.ro");
+    expect(await db.select().from(emailOutbox)).toHaveLength(0);
+  });
+
+  it("clears an identity document seven days after the run, and keeps the declaration", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const old = await trailRun({ startsAt: new Date("2026-09-01T16:00:00.000Z") });
     const recent = await trailRun({ startsAt: new Date("2026-09-03T16:00:00.000Z") });
     await signGroupRunDeclaration(db, await input(old.id), new Date("2026-09-01T10:00:00.000Z"));
     await signGroupRunDeclaration(db, await input(recent.id, { email: "ion@example.ro" }), new Date("2026-09-03T10:00:00.000Z"));
-    expect(await db.select().from(emailOutbox)).toHaveLength(2);
+    // A text from before §418 asked for a document: set one on both, as such a signature would have.
+    await db.update(groupRunDeclarations).set({ idDocument: "Carte de identitate BV 123456" });
 
     const counts = await pruneExpiredRows(db, new Date("2026-09-09T17:00:00.000Z"));
     expect(counts.failures).toEqual([]);
-    expect(counts.groupRunDeclarations).toBe(1);
-    const left = await db.select().from(groupRunDeclarations);
-    expect(left.map((row) => row.eventId)).toEqual([recent.id]);
-    const outbox = await db.select().from(emailOutbox);
-    expect(outbox.map((row) => row.recipientEmail)).toEqual(["ion@example.ro"]);
+    expect(counts.groupRunIdDocuments).toBe(1);
+    const rows = await db.select().from(groupRunDeclarations);
+    expect(rows).toHaveLength(2);
+    expect(rows.find((row) => row.eventId === old.id)?.idDocument).toBeNull();
+    expect(rows.find((row) => row.eventId === recent.id)?.idDocument).toBe("Carte de identitate BV 123456");
   });
 });
 

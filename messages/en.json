@@ -384,7 +384,7 @@
     "groupRunDeclaration": {
       "heading": "Self-declaration",
       "button": "Sign the declaration",
-      "line": "Sign the self-declaration for this run: you get it by email, and the club's platform deletes it {days} after the run.",
+      "line": "Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.",
       "page": {
         "back": "Back to {event}",
         "title": "Self-declaration",
@@ -1290,7 +1290,7 @@
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
-      "minAge": "Minimum age (years)",
+      "minAge": "Minimum age to take part",
       "reminder": {
         "label": "The reminder before the start",
         "usual": "As usual ({lead})",
@@ -1299,7 +1299,8 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "Reached by the day of the event. Under 18, a parent or legal guardian registers the runner, with their consent. 0 means no minimum age.",
+      "minAgeHelp": "{default} by default; put 0 for no limit. Under 18, a parent registers the runner.",
+      "minAgeReadOnly": "{age}. Changed by whoever may change the event's settings.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -1485,9 +1486,8 @@
           "earlierClose": "An earlier close stops only new registrations."
         },
         "conditions": {
-          "title": "Who may enter",
           "legalLink": "Legal documents — where a new version of the declaration is approved",
-          "declarationUnderRules": "The declaration a participant signs is chosen under “Programme, rules and declaration” → “Self-declaration”."
+          "declarationUnderRules": "The minimum age and the declaration a participant signs are chosen under “Programme, rules and declaration”: the age in “Rules”, the declaration in “Self-declaration”."
         },
         "reminder": {
           "title": "The reminder before the start"
@@ -1609,7 +1609,6 @@
               "other": "{count} places"
             },
             "unlimited": "unlimited places",
-            "minAge": "from {age}",
             "declaration": "declaration v{version}",
             "noDeclaration": "declaration missing",
             "listHidden": "list hidden",
@@ -1625,6 +1624,10 @@
           },
           "conditions": {
             "noDeclaration": "Declaration missing — required for registration on the site"
+          },
+          "age": {
+            "from": "minimum age {age}",
+            "none": "no minimum age"
           },
           "confirmation": {
             "sentence": "Asked {opens} days before, due {due} days before",
@@ -4225,7 +4228,7 @@
                 "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
-                "«Who may enter»: «Minimum age (years)» (14 unless you change it, 0 for none). The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
+                "«Programme, rules and declaration» → «Rules»: «Minimum age to take part» (14 unless you change it, 0 for none), on every type of event. The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
                 "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
                 "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
               ]
@@ -4431,7 +4434,7 @@
               "title": "Minors and the minimum age",
               "steps": [
                 "A participant under 18 is registered by a parent or guardian, who writes their name in the form's section for minors; the desk and the export show “Minor — parent/guardian”.",
-                "The minimum age is each event's own: «Minimum age (years)», under «Taking part and registration». It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff."
+                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Programme, rules and declaration» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff."
               ]
             },
             {
@@ -4702,7 +4705,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform deletes the declarations {days} after the run.",
+      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The club keeps a declaration while the signer keeps coming to the runs and deletes it when they ask: then erase it here, with the reason.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when} (v{version})",
       "pdf": "PDF",
@@ -4966,6 +4969,7 @@
     "birthDateEcho": "{date} · {age} on the event day",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
+      "minimumAndConsent": "Minimum age: {age}. Under 18, a parent's consent is needed to take part.",
       "minimumOnly": "Minimum age: {age}.",
       "guardianOnly": "Under 18, a parent or legal guardian registers the runner, with their consent."
     },
@@ -5152,7 +5156,7 @@
     "emailHelp": "This is where the confirmation link goes. Type it carefully.",
     "phoneTooShort": "Keep going — a number has at least 4 digits.",
     "phoneValid": "Looks right. We will store it as",
-    "botCheckWait": "One second while we check you are not a robot — we send the form ourselves as soon as it answers; no need to press again.",
+    "botCheckWait": "One second while we check you are not a robot — if a box to tick appears, tick it; we send the form ourselves as soon as it answers; no need to press again.",
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
     "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {

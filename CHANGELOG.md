@@ -8,6 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.12-2026-09-27
+
+- **A registration press held for the anti-bot check is now always sent when Cloudflare answers:** it no longer stays stuck under «trimitem noi înscrierea…» after the widget says «Success!», including after a refusal or a late or interactive check. §506.
+- **A group run's self-declaration is kept until the signer asks for its deletion**, not purged at seven days. Only a pre-§418 identity document is still cleared at seven days. The run's page, the backoffice fold, both emails, the declaration templates and the privacy-notice template all say so §507.
+- **A release tests its code once, not three times.** CI records each tree that passes everything, and a later run of the same files (the push to qa, the release PR, the push to main) skips the heavy jobs. Pull requests run the whole end-to-end suite, both viewports, on eight shards. `yarn ship` waits on runs by their status, opens the release only after qa is green, waits for a migration only when there is one, and prints how long each step took. A release should take about 25 minutes instead of about 60. §508.
+- **The minimum age is one box in «Regulamentul», for every event type, and the event page says it for every type:** «Vârsta minimă: 16 ani.» on a group run or an event registered elsewhere, and the parent's sentence only where the club takes the registrations. §509.
+- **A registration press held for the anti-bot check is now always sent when Cloudflare answers:** it no longer stays stuck under «trimitem noi înscrierea…» after the widget says «Success!», including after a refusal or a late or interactive check. §502.
+- **A group run's self-declaration is kept until the signer asks for its deletion**, not purged at seven days. Only a pre-§418 identity document is still cleared at seven days. The run's page, the backoffice fold, both emails, the declaration templates and the privacy-notice template all say so §503.
+- **A release tests its code once, not three times.** CI records each tree that passes everything, and a later run of the same files (the push to qa, the release PR, the push to main) skips the heavy jobs. Pull requests run the whole end-to-end suite, both viewports, on eight shards. `yarn ship` waits on runs by their status, opens the release only after qa is green, waits for a migration only when there is one, and prints how long each step took. A release should take about 25 minutes instead of about 60. §504.
+- **The minimum age is one box in «Regulamentul», for every event type, and the event page says it for every type:** «Vârsta minimă: 16 ani.» on a group run or an event registered elsewhere, and the parent's sentence only where the club takes the registrations. §505.
 ## BR-V2.11-2026-09-27
 
 - **The film's old columns leave the database** — contract migration 0095 drops `events.video_url`, `events.video_poster_url` and their HTTPS check, which BR-V2.10 already stopped declaring; from here a rollback can reach BR-V2.10 but nothing older. §494.

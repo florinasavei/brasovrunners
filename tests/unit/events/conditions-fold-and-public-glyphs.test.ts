@@ -66,9 +66,9 @@ describe("§498 «Condiții de participare»", () => {
 
   it("asks for the declaration without calling it optional: no «Dacă vrei», no \"If you wish\"", () => {
     expect(ro.Event.groupRunDeclaration.line).toBe(
-      "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
+      "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
     );
-    expect(en.Event.groupRunDeclaration.line).toBe("Sign the self-declaration for this run: you get it by email, and the club's platform deletes it {days} after the run.");
+    expect(en.Event.groupRunDeclaration.line).toBe("Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.");
     for (const line of [ro.Event.groupRunDeclaration.line, en.Event.groupRunDeclaration.line]) {
       expect(line).not.toMatch(/Dacă vrei|If you wish/i);
     }
