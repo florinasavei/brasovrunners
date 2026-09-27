@@ -1,7 +1,8 @@
 import { createTranslator } from "next-intl";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { rainLikely as isRainLikely, type WeatherReading } from "./domain/forecast";
+import { formatTime } from "@/i18n/dates";
+import { rainLikely as isRainLikely, summarizeSpan, type WeatherReading } from "./domain/forecast";
 
 /**
  * A forecast in words, in one language (§402) — the page's row and the reminder's row say the
@@ -88,6 +89,74 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     rainLikely: t("rainLikely"),
     rainLikelyChance,
     line: [summary, ...(temperature !== null ? [temperature] : []), ...(rainLikelyChance !== null ? [rainLikelyChance] : [])].join(", "),
+  };
+}
+
+/**
+ * The event page's «Vremea» line and the reminder's, for the hours the event is out (§NNN; the
+ * owner: the weather line should say where and for which hours). The start's sky, the degrees over
+ * the span — «14 °C», or «12–15 °C» when the hours differ — and «ploaie probabilă 60 %» when rain is
+ * likely in any hour of it, then, in brackets, the place the numbers are for and the hours:
+ * «Parțial noros, 12–15 °C (Parcul Tractorul, 18:00–20:00)», «Ploaie, 6 °C (Brașov, la 08:00)».
+ *
+ * `place` is `forecastPlaceName`'s answer — the club's locality when the forecast is the club's,
+ * else the meeting point in this language — and null reads «locul evenimentului». The hours are on
+ * the event's own clock (`timeZone`), through the one date helper (§349, §439).
+ */
+export type WeatherSpanWords = {
+  label: string;
+  summary: string;
+  /** «14 °C» or «12–15 °C»; null when no hour of the span has a temperature. */
+  temperature: string | null;
+  /** «ploaie probabilă 60 %» when rain is likely in the span (the chance only when one is named), else null. */
+  rainLikelyChance: string | null;
+  /** Where and when, without brackets: «Parcul Tractorul, 18:00–20:00». */
+  scope: string;
+  /** The whole line, the scope in brackets at its end — the reminder's row says exactly this. */
+  line: string;
+  credit: string;
+  help: string;
+};
+
+export function weatherSpanWords(
+  forecast: { start: WeatherReading; span: readonly WeatherReading[] },
+  locale: "ro" | "en",
+  where: { place: string | null; timeZone: string },
+): WeatherSpanWords {
+  const t = weatherCatalogue(locale);
+  const number = new Intl.NumberFormat(locale === "ro" ? "ro-RO" : "en-GB", { maximumFractionDigits: 0 });
+  const whole = (value: number) => {
+    const rounded = Math.round(value);
+    return number.format(rounded === 0 ? 0 : rounded);
+  };
+  const span = forecast.span.length > 0 ? forecast.span : [forecast.start];
+  const summed = summarizeSpan(span);
+  const summary = t(`codes.${forecast.start.kind}`);
+  const temperature =
+    summed.minC === null || summed.maxC === null
+      ? null
+      : whole(summed.minC) === whole(summed.maxC)
+        ? t("temperature", { degrees: whole(summed.maxC) })
+        : t("temperatureRange", { from: whole(summed.minC), to: whole(summed.maxC) });
+  const rainLikelyChance = !summed.rainLikely
+    ? null
+    : summed.rainChance !== null
+      ? t("rainLikelyChance", { percent: whole(summed.rainChance) })
+      : t("rainLikely");
+  const time = (at: number) => formatTime(new Date(at), { locale, timeZone: where.timeZone });
+  const hours =
+    summed.toHour > summed.fromHour ? t("hourRange", { from: time(summed.fromHour), to: time(summed.toHour) }) : t("atHour", { time: time(summed.fromHour) });
+  const scope = t("scope", { place: where.place ?? t("eventPlace"), hours });
+  const values = [summary, ...(temperature !== null ? [temperature] : []), ...(rainLikelyChance !== null ? [rainLikelyChance] : [])].join(", ");
+  return {
+    label: t("label"),
+    summary,
+    temperature,
+    rainLikelyChance,
+    scope,
+    line: `${values} (${scope})`,
+    credit: t("credit", { source: t("source") }),
+    help: t("help", { source: t("source") }),
   };
 }
 

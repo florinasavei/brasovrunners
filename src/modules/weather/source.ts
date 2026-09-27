@@ -8,6 +8,7 @@ import {
   parseOpenMeteo,
   pickHour,
   pickHours,
+  pickSpan,
   WEATHER_FORECAST_DAYS,
   type WeatherReading,
   weatherInstant,
@@ -332,7 +333,7 @@ export function freshReading(forecast: HourlyForecast, at: Date, now: number): W
 }
 
 /** What an event carries that the forecast reads: its start, its status, and its place (`PlaceColumns`). */
-export type ForecastEvent = { startsAt: Date; raceStartsAt?: Date | null; eventStatus?: string | null } & PlaceColumns;
+export type ForecastEvent = { startsAt: Date; raceStartsAt?: Date | null; endsAt?: Date | null; eventStatus?: string | null } & PlaceColumns;
 
 /**
  * The forecast for an event, or null — the one call the page, the listing and the reminder make.
@@ -351,7 +352,7 @@ export async function forecastForEvent(event: ForecastEvent, now: Date, deps: Fo
   if (!read.ok) return null;
   const start = freshReading(read.forecast, at, now.getTime());
   if (!start) return null;
-  return { start, hours: pickHours(read.forecast, at), place: place.source };
+  return { start, hours: pickHours(read.forecast, at), span: pickSpan(read.forecast, at, event.endsAt), place: place.source };
 }
 
 /**
@@ -389,7 +390,7 @@ export async function forecastsForEvents(
       const answer = await read;
       if (!answer.ok) return;
       const start = freshReading(answer.forecast, at, now.getTime());
-      if (start) found.set(event.id, { start, hours: pickHours(answer.forecast, at), place: place.source });
+      if (start) found.set(event.id, { start, hours: pickHours(answer.forecast, at), span: pickSpan(answer.forecast, at, event.endsAt), place: place.source });
     }),
   );
   return found;

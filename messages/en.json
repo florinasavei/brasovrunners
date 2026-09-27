@@ -5665,6 +5665,11 @@
     "humidity": "humidity {percent}%",
     "uv": "UV index {index}",
     "rainShort": "{percent}% rain",
+    "temperatureRange": "{from}–{to} °C",
+    "atHour": "at {time}",
+    "hourRange": "{from}–{to}",
+    "scope": "{place}, {hours}",
+    "eventPlace": "the event’s place",
     "atStart": "Weather at the start",
     "codes": {
       "clear": "Clear",

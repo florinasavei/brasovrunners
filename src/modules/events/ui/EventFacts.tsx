@@ -14,16 +14,17 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import { rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
+import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
 import WeatherHelp from "@/modules/weather/ui/WeatherHelp";
-import { weatherWords } from "@/modules/weather/words";
+import { weatherSpanWords, weatherWords } from "@/modules/weather/words";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
 import { hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
+import { CLUB_LOCALITY } from "../domain/place";
 import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEvent } from "../repository";
@@ -107,6 +108,25 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 const RACE_ROW_GAP = 0.5;
 
 // The weather row is one line since §469; the hours strip, details and place line went with it.
+
+/**
+ * The weather line's pieces with where and when after the last one (§NNN): in the same flow item,
+ * so no middle dot stands before the bracket — it qualifies the line, it is not one more fact — and
+ * the «?» (§473) after it, last.
+ */
+function withScope(pieces: ReactNode[], words: { scope: string; help: string }): ReactNode[] {
+  const last = pieces.at(-1);
+  return [
+    ...pieces.slice(0, -1),
+    <Fragment key="scoped">
+      {last}{" "}
+      <Box component="span" data-testid="event-weather-scope" sx={{ color: "text.secondary", fontSize: "0.875em" }}>
+        ({words.scope})
+      </Box>
+      <WeatherHelp text={words.help} />
+    </Fragment>,
+  ];
+}
 
 /**
  * The facts of an event, grouped by the question they answer.
@@ -1026,9 +1046,20 @@ export default async function EventFacts({
     with «ploaie probabilă» only when rain is likely. No wind, no chance of rain on a dry hour; the
     details, the hours strip and the place line are gone; the reminder keeps its own line.
   */
+  /*
+    Since §NNN (the owner: the weather line should say where and for which hours) the line reads the
+    hours the event is out — from the start's hour to the end's, at most six (`pickSpan`) — the
+    degrees as a range when they differ and the umbrella when rain is likely in any of them, and it
+    ends with the place the numbers are for and those hours, in the smaller grey type, the «?» last:
+    «Parțial noros · 12–15 °C (Parcul Tractorul, 18:00–20:00)». The place is the club's locality when
+    the forecast is the club's (`forecastPlaceName`), never a meeting point it was not read at.
+  */
   if (weather) {
-    const words = weatherWords(weather.start, locale);
-    const umbrella = rainLikely(weather.start) ? (
+    const words = weatherSpanWords(weather, locale, {
+      place: forecastPlaceName(weather.place, event.locationName, CLUB_LOCALITY),
+      timeZone: event.timezone,
+    });
+    const umbrella = words.rainLikelyChance !== null ? (
       <Box key="rain-likely" component="span" data-testid="weather-rain-likely" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
         <UmbrellaIcon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
         {words.rainLikelyChance}
@@ -1040,8 +1071,7 @@ export default async function EventFacts({
       icon: WEATHER_GLYPH[weather.start.glyph],
       value: (
         <Box data-testid="event-weather">
-          {flow([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])])}
-          <WeatherHelp text={words.help} />
+          {flow(withScope([words.summary, ...(words.temperature !== null ? [words.temperature] : []), ...(umbrella ? [umbrella] : [])], words))}
         </Box>
       ),
     });
