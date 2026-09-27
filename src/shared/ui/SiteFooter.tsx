@@ -3,6 +3,7 @@ import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { faqOnSite } from "@/modules/content/faq/on-site";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
 import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
@@ -177,6 +178,8 @@ export default async function SiteFooter() {
   const locale = (await getLocale()) as "ro" | "en";
   const weatherCredit = weatherListWords(locale).credit;
   const contacts = await cachedShownContactAddresses();
+  // «Întrebări frecvente» in the fold (§NNN) while the page is on the site — the header's own rule.
+  const showFaq = await faqOnSite(locale);
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
     { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
@@ -362,6 +365,7 @@ export default async function SiteFooter() {
                 <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
                 {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
                 <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+                {showFaq && <Link href="/faq">{footer("faq")}</Link>}
               </Box>
               {/* "Scrie-ne" once (BR-REQ-070-04): the form, and — when the club's mailbox is
                   configured (§8; nothing here invents an address) — the address beside it as the

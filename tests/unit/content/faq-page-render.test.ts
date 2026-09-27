@@ -7,14 +7,17 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 /**
  * §NNN — «Întrebări frecvente» as the server sends it: the menu offers the page only when the
  * header says so (`showFaq`), the page is a 404 while a DRAFT, a published page with no question
- * answers a sentence and asks not to be indexed, and a page with questions draws each as a native
- * fold — working with JavaScript off — with the same questions as an `FAQPage` in JSON-LD.
+ * answers a sentence and asks not to be indexed, and a page with questions draws the club's
+ * introduction, then each question as a native fold with its glyph — working with JavaScript off —
+ * grouped under its category, with the same questions as an `FAQPage` in JSON-LD and an Open
+ * Graph card.
  *
  * The catalogue is the real Romanian one; the public cache and Next's navigation are stubbed.
  */
-let page: PublicFaqPage = { published: false, items: [] };
+const EMPTY: PublicFaqPage = { published: false, intro: null, introText: null, items: [] };
+let page: PublicFaqPage = EMPTY;
 
-vi.mock("@/modules/public-cache/reads", () => ({ cachedFaqPage: async () => page }));
+vi.mock("@/modules/public-cache/reads", () => ({ cachedFaqPage: async () => page, cachedShownContactAddresses: async () => [] }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const messages = (await import("../../../messages/ro.json")).default;
@@ -31,7 +34,8 @@ vi.mock("next/navigation", () => ({
   },
   unstable_rethrow: () => undefined,
   useSelectedLayoutSegments: () => ["faq"],
-  usePathname: () => "/ro/intrebari-frecvente",
+  usePathname: () => "/ro/intrebari",
+  useRouter: () => ({ push: () => undefined }),
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string | { pathname: string }; children: ReactNode }) =>
@@ -44,6 +48,7 @@ const { NextIntlClientProvider } = await import("next-intl");
 const messages = (await import("../../../messages/ro.json")).default;
 const { default: SiteNav } = await import("@/shared/ui/SiteNav");
 const { default: FaqPage, generateMetadata } = await import("@/app/[locale]/faq/page");
+const { default: SiteFooter } = await import("@/shared/ui/SiteFooter");
 
 async function html(element: ReactElement): Promise<string> {
   const stream = await renderToReadableStream(
@@ -55,11 +60,17 @@ async function html(element: ReactElement): Promise<string> {
 
 const params = Promise.resolve({ locale: "ro" });
 const doc = (text: string): RichTextDoc => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
-const item = (id: string, question: string, answer: string): PublicFaqItem => ({ id, question, answer: doc(answer), answerText: answer });
+const item = (id: string, question: string, answer: string, category: string | null = null): PublicFaqItem => ({
+  id,
+  question,
+  category,
+  answer: doc(answer),
+  answerText: answer,
+});
 
 describe("§NNN the FAQ page and its menu entry", () => {
   beforeEach(() => {
-    page = { published: false, items: [] };
+    page = EMPTY;
   });
 
   it("offers «Întrebări» in the menu only when the header says the page is on the site", async () => {
@@ -75,7 +86,7 @@ describe("§NNN the FAQ page and its menu entry", () => {
   });
 
   it("answers a sentence, no JSON-LD, and asks not to be indexed while published with no question on it", async () => {
-    page = { published: true, items: [] };
+    page = { ...EMPTY, published: true };
     const markup = await html((await FaqPage({ params })) as ReactElement);
     expect(markup).toContain(messages.Faq.empty);
     expect(markup).not.toContain("application/ld+json");
@@ -84,6 +95,7 @@ describe("§NNN the FAQ page and its menu entry", () => {
 
   it("draws each question as a closed native fold over its answer, and the same questions as an FAQPage", async () => {
     page = {
+      ...EMPTY,
       published: true,
       items: [item("11111111-aaaa", "Cum mă înscriu?", "Din pagina evenimentului."), item("22222222-bbbb", "Ce aduc?", "Apă și o frontală.")],
     };
@@ -95,6 +107,9 @@ describe("§NNN the FAQ page and its menu entry", () => {
     expect(markup).toContain('id="q-11111111"');
     expect(markup).toMatch(/<summary[^>]*>[\s\S]*?Cum mă înscriu\?[\s\S]*?<\/summary>/);
     expect(markup).toContain("Din pagina evenimentului.");
+    // Every fold header wears its glyph, hidden from assistive technology.
+    expect(markup.match(/data-testid="faq-glyph"/g) ?? []).toHaveLength(2);
+    expect(markup).toMatch(/<summary[^>]*><svg[^>]*aria-hidden="true"/);
     // The fold's summary is a 44-pixel target (BR-REQ-041-01 criterion 6).
     expect(markup).toMatch(/min-height:44px/);
 
@@ -104,6 +119,47 @@ describe("§NNN the FAQ page and its menu entry", () => {
     expect(data["@type"]).toBe("FAQPage");
     expect(data.mainEntity.map((entry: { name: string }) => entry.name)).toEqual(["Cum mă înscriu?", "Ce aduc?"]);
     expect(data.mainEntity[1].acceptedAnswer).toEqual({ "@type": "Answer", text: "Apă și o frontală." });
-    expect((await generateMetadata({ params })).robots).toBeUndefined();
+    const metadata = await generateMetadata({ params });
+    expect(metadata.robots).toBeUndefined();
+    // The card a shared link draws (§90): the page's own title, description and address.
+    expect(metadata.openGraph).toMatchObject({ title: messages.Faq.title, locale: "ro_RO", type: "website" });
+    // The navigation is stubbed here (`/ro` + the route); the address itself is `staticRouteUrl`'s.
+    expect(String((metadata.openGraph as { url?: string }).url)).toMatch(/\/ro\/faq$/);
+  });
+
+  it("opens on the club's introduction instead of the platform's sentence, and describes the page with it", async () => {
+    page = { ...EMPTY, published: true, intro: doc("Bine ai venit la club."), introText: "Bine ai venit la club.", items: [item("11111111-aaaa", "Cum mă înscriu?", "Din pagină.")] };
+    const markup = await html((await FaqPage({ params })) as ReactElement);
+    expect(markup).toContain('data-testid="faq-intro"');
+    expect(markup).toContain("Bine ai venit la club.");
+    expect((await generateMetadata({ params })).description).toBe("Bine ai venit la club.");
+  });
+
+  it("groups the questions under their category headings, the ones with none first under no heading", async () => {
+    page = {
+      ...EMPTY,
+      published: true,
+      items: [
+        item("11111111-aaaa", "Cum mă înscriu?", "Din pagină.", "Înscriere"),
+        item("22222222-bbbb", "Unde ne vedem?", "La Bastionul Țesătorilor."),
+        item("33333333-cccc", "Pot plăti la fața locului?", "Nu.", "Înscriere"),
+      ],
+    };
+    const markup = await html((await FaqPage({ params })) as ReactElement);
+    expect(markup.match(/data-testid="faq-group"/g) ?? []).toHaveLength(2);
+    const headings = [...markup.matchAll(/<h2[^>]*>([^<]*)<\/h2>/g)].map((match) => match[1]);
+    expect(headings).toEqual(["Înscriere"]);
+    // Read from the end: the JSON-LD above the title names the questions too.
+    const order = ["Unde ne vedem?", "Înscriere", "Cum mă înscriu?", "Pot plăti la fața locului?"].map((text) => markup.lastIndexOf(text));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  it("links the page from the footer's «Despre club» fold only while a question is on the site", async () => {
+    page = { ...EMPTY, published: true };
+    expect(await html((await SiteFooter()) as ReactElement)).not.toContain('href="/ro/faq"');
+    page = { ...EMPTY, published: true, items: [item("11111111-aaaa", "Cum mă înscriu?", "Din pagină.")] };
+    const footer = await html((await SiteFooter()) as ReactElement);
+    expect(footer).toContain('href="/ro/faq"');
+    expect(footer).toContain(`>${messages.Footer.faq}<`);
   });
 });

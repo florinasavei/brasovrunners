@@ -131,10 +131,10 @@ export const routing = defineRouting({
     "/team": { ro: "/echipa", en: "/team" },
     /**
      * «Întrebări frecvente» / "FAQ" (§NNN): the club's questions and answers, in folds. A platform
-     * page like «Echipa», so a standing page the club once called `intrebari-frecvente` keeps its
-     * own address under `/pagini/`.
+     * page like «Echipa», so a standing page the club once called `intrebari` keeps its own
+     * address under `/pagini/`.
      */
-    "/faq": { ro: "/intrebari-frecvente", en: "/faq" },
+    "/faq": { ro: "/intrebari", en: "/faq" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },

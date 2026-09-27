@@ -1,3 +1,6 @@
+import GroupsIcon from "@mui/icons-material/Groups";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
+import MailOutlineIcon from "@mui/icons-material/MailOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -16,6 +19,8 @@ import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/rep
 import { readTeamPageSettings } from "@/modules/content/team/page-settings";
 import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
+import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules/public-cache/reads";
+import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -67,36 +72,60 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const current = await searchParams;
   const { saved, error } = current;
   const db = getDb();
-  const [rows, teamSettings, teamMembers, faqSettings, faqItems] = await Promise.all([
+  const [rows, teamSettings, teamMembers, faqSettings, faqItems, contactFormReaches, contactAddresses] = await Promise.all([
     listPagesForAdmin(db, locale),
     readTeamPageSettings(db),
     listTeamMembersForAdmin(db),
     readFaqPageSettings(db),
     listFaqItemsForAdmin(db),
+    cachedContactFormReaches(),
+    cachedShownContactAddresses(),
   ]);
   const t = await getTranslations("Admin");
   /*
     The standard pages (§NNN): the platform's own, whose address and title the club does not
-    choose and whose contents it keeps on their own screens — «Echipa» (§459) and «Întrebări
-    frecvente». Each says whether it is published and how much of it is on the site, so the list
-    answers "what is live" for every page the club has, standard and custom alike.
+    choose and whose contents it keeps on their own screens — «Contact» (§442, §461), «Echipa»
+    (§459) and «Întrebări frecvente». Each wears its glyph and says whether it is on the site and
+    what of it is, so the list answers "what is live" for every page the club has, standard and
+    custom alike. «Contact» is always on the site; its row says what the page offers, and opens
+    the settings behind it for a role that may read them.
   */
+  const contactLine = [
+    contactFormReaches ? t("pages.contactForm") : t("pages.contactNoForm"),
+    contactAddresses.length > 0 ? t("pages.contactAddress", { address: contactAddresses.join(", ") }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const standard = [
     {
+      key: "contact",
+      icon: <MailOutlineIcon aria-hidden fontSize="small" color="action" />,
+      href: canOpenSettingsTab(actor.role, "contact") ? ("/admin/settings/contact" as const) : null,
+      title: t("pages.tabContact"),
+      published: true,
+      line: contactLine,
+    },
+    {
       key: "team",
+      icon: <GroupsIcon aria-hidden fontSize="small" color="action" />,
       href: "/admin/pages/team" as const,
       title: t("pages.tabTeam"),
       published: teamSettings.status === "PUBLISHED",
-      shown: teamMembers.filter((member) => member.visible).length,
-      total: teamMembers.length,
+      line: t("pages.standardShown", {
+        shown: String(teamMembers.filter((member) => member.visible).length),
+        total: String(teamMembers.length),
+      }),
     },
     {
       key: "faq",
+      icon: <HelpOutlineIcon aria-hidden fontSize="small" color="action" />,
       href: "/admin/pages/faq" as const,
       title: t("pages.tabFaq"),
       published: faqSettings.status === "PUBLISHED",
-      shown: faqItems.filter((item) => item.visible).length,
-      total: faqItems.length,
+      line: t("pages.standardShown", {
+        shown: String(faqItems.filter((item) => item.visible).length),
+        total: String(faqItems.length),
+      }),
     },
   ];
   const words = await confirmWords();
@@ -150,7 +179,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* The club's own pages, and the platform's standard ones: «Echipa» (§459), «Întrebări frecvente» (§NNN). */}
+      {/* The club's own pages, and the platform's standard ones: «Contact», «Echipa» (§459), «Întrebări frecvente» (§NNN). */}
       <PagesSubNav locale={locale} active="pages" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
@@ -167,9 +196,10 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         </Typography>
         <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {standard.map((page) => (
-            <Paper component="li" key={page.key} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Paper component="li" key={page.key} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }} data-testid={`pages-standard-${page.key}`}>
               <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
                 <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, minWidth: 0 }}>
+                  {page.icon}
                   <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
                     {page.title}
                   </Typography>
@@ -179,12 +209,14 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                     label={EDITORIAL_STATUS_LABEL[page.published ? "PUBLISHED" : "DRAFT"]}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {t("pages.standardShown", { shown: String(page.shown), total: String(page.total) })}
+                    {page.line}
                   </Typography>
                 </Stack>
-                <GlyphButtonLink href={page.href} icon="edit" variant="outlined" sx={{ minHeight: 44 }}>
-                  {t("pages.standardOpen")}
-                </GlyphButtonLink>
+                {page.href && (
+                  <GlyphButtonLink href={page.href} icon="edit" variant="outlined" sx={{ minHeight: 44 }}>
+                    {t("pages.standardOpen")}
+                  </GlyphButtonLink>
+                )}
               </Stack>
             </Paper>
           ))}

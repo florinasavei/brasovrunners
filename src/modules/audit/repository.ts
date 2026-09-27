@@ -254,15 +254,11 @@ export type AuditAction =
   | "team_page.unpublished"
   | "team_page.intro_saved"
   /**
-   * «Întrebări frecvente» (§NNN): a question added, written, shown or taken off, moved, or
-   * deleted, and the page published or taken off. The question's id, never its words (§12.12).
+   * «Întrebări frecvente» (§NNN): the page saved as one — its introduction and every question,
+   * the ids added, deleted, shown and taken off in the metadata, never the words (§12.12) — and
+   * the page published or taken off.
    */
-  | "faq_item.created"
-  | "faq_item.saved"
-  | "faq_item.shown"
-  | "faq_item.hidden"
-  | "faq_item.moved"
-  | "faq_item.deleted"
+  | "faq_page.saved"
   | "faq_page.published"
   | "faq_page.unpublished"
   /**
@@ -294,8 +290,6 @@ export type RecordAuditInput = {
     | "media_asset"
     | "newsletter"
     | "team_member"
-    // `faq_item` for a question of «Întrebări frecvente» (§NNN).
-    | "faq_item"
     | "content";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;

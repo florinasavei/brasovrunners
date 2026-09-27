@@ -1,5 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import MuiLink from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
@@ -10,9 +11,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
-import { FAQ_ANSWER_MAX, FAQ_QUESTION_MAX } from "@/modules/content/faq/fields";
-import { readFaqPageSettings } from "@/modules/content/faq/page-settings";
+import { routing } from "@/i18n/routing";
+import { FAQ_ANSWER_MAX, FAQ_CATEGORY_MAX, FAQ_INTRO_MAX, FAQ_QUESTION_MAX, faqBoxName } from "@/modules/content/faq/fields";
+import { faqIntroDocs, readFaqPageSettings } from "@/modules/content/faq/page-settings";
 import { type AdminFaqItem, listFaqItemsForAdmin } from "@/modules/content/faq/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
@@ -21,21 +22,15 @@ import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import { canEditFaqPage, canReadContent, canShowFaqItem } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
-import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
-import RecallField, { RecallHidden } from "@/shared/forms/recall";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField, { RecallCheckbox, RecallHidden } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
-import {
-  createFaqItemAction,
-  deleteFaqItemAction,
-  moveFaqItemAction,
-  saveFaqItemAction,
-  setFaqItemVisibleAction,
-  setFaqPagePublishedAction,
-} from "./actions";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
+import Panel from "@/shared/ui/Panel";
+import { saveFaqPageAction, setFaqPagePublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -44,19 +39,30 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
+type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+type RichLabels = ReturnType<typeof richTextEditorLabels>;
+
+/** A card's two languages, as the tabs draw them. */
+const LANGUAGES = [
+  { locale: "ro", suffix: "Ro", label: "langRo" },
+  { locale: "en", suffix: "En", label: "langEn" },
+] as const;
+
 /**
- * «Întrebări frecvente» in the backoffice (§NNN): «Echipa»'s screen (§459) for questions — the page
- * first, DRAFT until an Administrator publishes it (both languages at once, asked first, §384),
- * then every question in the page's own order, each with whether it is on the site and its verbs.
+ * «Întrebări frecvente» in the backoffice (§NNN): the page first — DRAFT until an Administrator
+ * publishes it, both languages at once, asked first (§384) — then the page's **one form** (§28):
+ * «Copiază și tradu tot: RO → EN» at the top (§482), the introduction, and every question as a
+ * card in the page's own order, the last card a spare for a new question, and one save.
  *
- * Read by whoever reads the club's content (§208); every control is offered only to the role its
- * action asserts, and the action asserts it again (BR-REQ-060-01): writing a question is the
- * Redactor's and the Administrator's, showing one the Administrator's alone (§201).
+ * Each card is a fold (§336) holding a Română | English strip with «Tradu cardul» in its tab row
+ * (§514): the question, its optional «Categorie» and the answer in the rich-text editor — words,
+ * links and pictures (§72, §414), no table. Under the strip the card's arrows (the save's own
+ * buttons, so a move keeps every word typed), «Pe site» for the Administrator, and «Șterge la
+ * salvare». A save that puts a question on the site, takes one off or deletes one asks first,
+ * naming the question (§384); a save that changes nothing outward asks nothing.
  *
- * A question is written in a fold on its own row — closed, with the question on the line, until
- * somebody opens it (§336) — its answer in the rich-text editor, one fold per language that mounts
- * the editor only when opened (§96), words only: no picture, film or table (the save refuses them).
- * Each form carries a scope, so the ids the refusal summary links to are never shared.
+ * Read by whoever reads the club's content (§208); the form is offered only to the roles the
+ * service lets write (BR-REQ-060-01), which asserts every role again.
  */
 export default async function AdminFaqPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -77,14 +83,72 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
   const published = settings.status === "PUBLISHED";
   const ro = getPathname({ locale: "ro", href: "/faq" });
   const en = getPathname({ locale: "en", href: "/faq" });
+  const questionOf = (item: AdminFaqItem) => (locale === "en" ? item.questionEn : item.questionRo);
 
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
-  const messages = await refusalMessages({
-    questionRo: t("faq.questionRo"),
-    questionEn: t("faq.questionEn"),
-    answerRoBody: t("faq.answerRo"),
-    answerEnBody: t("faq.answerEn"),
+  // The refusal summary's words, by each card's own boxes, so a link names the question's number.
+  const labels: Record<string, string> = { introRoBody: t("faq.introRo"), introEnBody: t("faq.introEn") };
+  for (let index = 0; index <= items.length; index += 1) {
+    const n = ` · ${index + 1}`;
+    for (const box of ["questionRo", "questionEn", "categoryRo", "categoryEn"] as const) labels[faqBoxName(index, box)] = `${t(`faq.${box}`)}${n}`;
+    labels[faqBoxName(index, "answerRoBody")] = `${t("faq.answerRo")}${n}`;
+    labels[faqBoxName(index, "answerEnBody")] = `${t("faq.answerEn")}${n}`;
+  }
+  const messages = await refusalMessages(labels);
+
+  // Ask first for what reaches the site (§384): a deletion, a question taken off, one put on.
+  const confirm: ConfirmSpec[] = [];
+  items.forEach((item, index) => {
+    const question = questionOf(item);
+    if (!item.visible || mayShow) {
+      confirm.push({
+        title: t("faq.deleteTitle", { question }),
+        body: t("faq.deleteBody"),
+        confirmLabel: t("faq.deleteConfirm"),
+        cancelLabel: words.cancel,
+        destructive: true,
+        when: [{ field: faqBoxName(index, "remove"), equals: "on" }],
+      });
+    }
   });
+  if (mayShow) {
+    items.forEach((item, index) => {
+      const question = questionOf(item);
+      confirm.push(
+        item.visible
+          ? {
+              title: t("faq.hideTitle", { question }),
+              body: t("faq.hideBody"),
+              confirmLabel: t("faq.hideConfirm"),
+              cancelLabel: words.cancel,
+              destructive: true,
+              when: [
+                { field: faqBoxName(index, "visible"), notEquals: "on" },
+                { field: faqBoxName(index, "remove"), notEquals: "on" },
+              ],
+            }
+          : {
+              title: t("faq.showTitle", { question }),
+              body: t("faq.showBody"),
+              confirmLabel: t("faq.showConfirm"),
+              cancelLabel: words.cancel,
+              when: [
+                { field: faqBoxName(index, "visible"), equals: "on" },
+                { field: faqBoxName(index, "remove"), notEquals: "on" },
+              ],
+            },
+      );
+    });
+    confirm.push({
+      title: t("faq.showTitle", { question: t("faq.newHeading") }),
+      body: t("faq.showBody"),
+      confirmLabel: t("faq.showConfirm"),
+      cancelLabel: words.cancel,
+      when: [{ field: faqBoxName(items.length, "visible"), equals: "on" }],
+    });
+  }
+
+  const intro = faqIntroDocs(settings);
 
   return (
     <Stack spacing={3}>
@@ -151,37 +215,84 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
         </Stack>
       </Paper>
 
-      {mayEdit && (
-        <Box component="details" id="faq-new" sx={BOXED_DISCLOSURE_SX}>
-          <summary>{t("faq.add")}</summary>
-          <ActionForm action={createFaqItemAction} messages={messages} scope="new" data-testid="faq-create-form">
-            <input type="hidden" name="uiLocale" value={locale} />
-            <ItemFields item={null} words={t} rich={rich} />
-            <Box sx={{ mt: 2 }}>
-              <GlyphSubmitButton label={t("faq.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
-            </Box>
-          </ActionForm>
-        </Box>
-      )}
+      {mayEdit ? (
+        <ActionForm action={saveFaqPageAction} messages={messages} confirm={confirm} data-testid="faq-page-form">
+          <input type="hidden" name="uiLocale" value={locale} />
+          <RecallHidden name="expectedVersion" value={settings.version} />
+          <Stack spacing={2}>
+            {/* «Copiază și tradu tot: RO → EN» (§464, §482): once, at the top — every English box of the page. */}
+            <TranslateAllButton />
 
-      {items.length === 0 ? (
+            <Panel collapsible level={3} title={t("faq.introHeading")} id="faq-intro" data-testid="faq-intro-card">
+              <LocaleTabPanels
+                idPrefix="faq-intro"
+                translateCard
+                panels={LANGUAGES.map((language) => ({
+                  locale: language.locale,
+                  label: t(`faq.${language.label}`),
+                  content: (
+                    <Box sx={{ pt: 2 }}>
+                      <LazyRichTextEditor
+                        name={`intro${language.suffix}Body`}
+                        label={t(`faq.intro${language.suffix}`)}
+                        summary={t(`faq.intro${language.suffix}`)}
+                        emptyHint={t("faq.textEmpty")}
+                        initialBody={language.locale === "ro" ? intro.ro : intro.en}
+                        accessibleSuffix={language.suffix.toUpperCase()}
+                        features={{ media: true, tables: true }}
+                        labels={rich}
+                      />
+                    </Box>
+                  ),
+                }))}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                {t("faq.introHelp", { max: String(FAQ_INTRO_MAX) })}
+              </Typography>
+            </Panel>
+
+            <Stack spacing={1} id="faq-questions" sx={{ scrollMarginTop: 16 }}>
+              <Typography variant="h3" sx={{ fontSize: "1.1rem", fontWeight: 700 }}>
+                {t("faq.questionsHeading")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t("faq.questionsHelp")}
+              </Typography>
+            </Stack>
+
+            <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("faq.listLabel")}>
+              {items.map((item, index) => (
+                <Box component="li" key={item.id}>
+                  <QuestionCard
+                    item={item}
+                    index={index}
+                    count={items.length}
+                    title={`${index + 1}. ${questionOf(item)}`}
+                    words={t}
+                    rich={rich}
+                    mayShow={mayShow}
+                  />
+                </Box>
+              ))}
+              <Box component="li">
+                <QuestionCard item={null} index={items.length} count={items.length} title={t("faq.newHeading")} words={t} rich={rich} mayShow={mayShow} />
+              </Box>
+            </Stack>
+
+            <Box>
+              <GlyphSubmitButton label={t("faq.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
+            </Box>
+          </Stack>
+        </ActionForm>
+      ) : items.length === 0 ? (
         <Typography variant="body1">{t("faq.empty")}</Typography>
       ) : (
-        <Stack component="ol" spacing={2} sx={{ listStyle: "none", m: 0, p: 0 }} aria-label={t("faq.listLabel")}>
-          {items.map((item, index) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              first={index === 0}
-              last={index === items.length - 1}
-              locale={locale}
-              words={t}
-              cancel={words.cancel}
-              messages={messages}
-              rich={rich}
-              mayEdit={mayEdit}
-              mayShow={mayShow}
-            />
+        <Stack component="ol" spacing={1} sx={{ m: 0, pl: 3 }} aria-label={t("faq.listLabel")}>
+          {items.map((item) => (
+            <Typography component="li" key={item.id} variant="body1">
+              {questionOf(item)}{" "}
+              <Chip size="small" color={item.visible ? "success" : "default"} label={item.visible ? t("faq.visible") : t("faq.hidden")} />
+            </Typography>
           ))}
         </Stack>
       )}
@@ -189,178 +300,107 @@ export default async function AdminFaqPage({ params, searchParams }: Props) {
   );
 }
 
-type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
-type RichLabels = ReturnType<typeof richTextEditorLabels>;
-
-/** One question on the screen: its line, its verbs, and its words in a fold. */
-function ItemCard({
+/**
+ * One question's card — or, with no `item`, the spare card a new question is written on: a fold
+ * with the question's number and words on its line and whether it is on the site, a Română |
+ * English strip with «Tradu cardul», and the card's own controls under it.
+ */
+function QuestionCard({
   item,
-  first,
-  last,
-  locale,
+  index,
+  count,
+  title,
   words: t,
-  cancel,
-  messages,
   rich,
-  mayEdit,
   mayShow,
 }: {
-  item: AdminFaqItem;
-  first: boolean;
-  last: boolean;
-  locale: Locale;
+  item: AdminFaqItem | null;
+  index: number;
+  count: number;
+  title: string;
   words: Words;
-  cancel: string;
-  messages: RefusalMessages;
   rich: RichLabels;
-  mayEdit: boolean;
   mayShow: boolean;
 }) {
-  const question = locale === "en" ? item.questionEn : item.questionRo;
-  const scope = `q${item.id.slice(0, 8)}`;
-  const mayDelete = mayEdit && (!item.visible || mayShow);
-  const hidden = (
-    <>
-      <input type="hidden" name="uiLocale" value={locale} />
-      <input type="hidden" name="itemId" value={item.id} />
-    </>
-  );
+  const name = (box: Parameters<typeof faqBoxName>[1]) => faqBoxName(index, box);
+  const mayRemove = item !== null && (!item.visible || mayShow);
+  const aside = item ? (item.visible ? t("faq.visible") : t("faq.hidden")) : t("faq.newHelp");
 
   return (
-    <Paper component="li" variant="outlined" id={`faq-${item.id}`} sx={{ p: { xs: 1.5, sm: 2 }, scrollMarginTop: 16 }}>
-      <Typography variant="subtitle1" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
-        {question}
-      </Typography>
-      <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap", gap: 0.5 }}>
-        <Chip size="small" color={item.visible ? "success" : "default"} label={item.visible ? t("faq.visible") : t("faq.hidden")} />
-      </Stack>
+    <Panel collapsible level={3} title={title} aside={aside} id={item ? `faq-${item.id}` : "faq-new"} data-testid={item ? "faq-card" : "faq-new-card"}>
+      {item && <input type="hidden" name={name("id")} value={item.id} />}
+      <LocaleTabPanels
+        idPrefix={`faq-q${index}`}
+        // «Tradu cardul: RO → EN» in the tab row (§514): this question's English from its Romanian.
+        translateCard
+        panels={LANGUAGES.map((language) => {
+          const field = <B extends "question" | "category">(box: B) => `${box}${language.suffix}` as `${B}${"Ro" | "En"}`;
+          return {
+            locale: language.locale,
+            label: t(`faq.${language.label}`),
+            content: (
+              <Stack spacing={2} sx={{ pt: 2 }}>
+                <RecallField
+                  name={name(field("question"))}
+                  label={t(`faq.${field("question")}`)}
+                  fullWidth
+                  defaultValue={item ? (language.locale === "ro" ? item.questionRo : item.questionEn) : ""}
+                  helperText={t("faq.questionHelp")}
+                  slotProps={{ htmlInput: { maxLength: FAQ_QUESTION_MAX, lang: language.locale } }}
+                />
+                <RecallField
+                  name={name(field("category"))}
+                  label={t(`faq.${field("category")}`)}
+                  fullWidth
+                  defaultValue={item ? ((language.locale === "ro" ? item.categoryRo : item.categoryEn) ?? "") : ""}
+                  helperText={t("faq.categoryHelp")}
+                  slotProps={{ htmlInput: { maxLength: FAQ_CATEGORY_MAX, lang: language.locale } }}
+                />
+                <LazyRichTextEditor
+                  name={name(language.locale === "ro" ? "answerRoBody" : "answerEnBody")}
+                  label={t(`faq.answer${language.suffix}`)}
+                  summary={t(`faq.answer${language.suffix}`)}
+                  emptyHint={t("faq.textEmpty")}
+                  initialBody={item ? (language.locale === "ro" ? item.answerRo : item.answerEn) : null}
+                  accessibleSuffix={`${language.suffix.toUpperCase()} ${index + 1}`}
+                  features={{ media: true, tables: false }}
+                  labels={rich}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+                  {t("faq.answerHelp", { max: String(FAQ_ANSWER_MAX) })}
+                </Typography>
+              </Stack>
+            ),
+          };
+        })}
+      />
 
-      <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
-        {mayEdit && !first && (
-          <Box component="form" action={moveFaqItemAction}>
-            {hidden}
-            <input type="hidden" name="direction" value="up" />
-            <SubmitButton label="↑" pendingLabel="↑" variant="outlined" ariaLabel={t("faq.moveUpNamed", { question })} />
-          </Box>
+      <Stack direction="row" sx={{ mt: 1.5, flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+        {/* The arrows are the save itself, with the move (`parseFaqMove`): nothing typed is lost. */}
+        {item && index > 0 && (
+          <Button type="submit" name="move" value={`${index}:up`} variant="outlined" sx={{ minHeight: 44, minWidth: 44 }} aria-label={t("faq.moveUpNamed", { question: title })}>
+            ↑
+          </Button>
         )}
-        {mayEdit && !last && (
-          <Box component="form" action={moveFaqItemAction}>
-            {hidden}
-            <input type="hidden" name="direction" value="down" />
-            <SubmitButton label="↓" pendingLabel="↓" variant="outlined" ariaLabel={t("faq.moveDownNamed", { question })} />
-          </Box>
+        {item && index < count - 1 && (
+          <Button type="submit" name="move" value={`${index}:down`} variant="outlined" sx={{ minHeight: 44, minWidth: 44 }} aria-label={t("faq.moveDownNamed", { question: title })}>
+            ↓
+          </Button>
         )}
         {mayShow && (
-          // Putting a question on the site, or taking it off, asks first (§384).
-          <ActionForm
-            action={setFaqItemVisibleAction}
-            confirm={
-              item.visible
-                ? { title: t("faq.hideTitle", { question }), body: t("faq.hideBody"), confirmLabel: t("faq.hide"), cancelLabel: cancel, destructive: true }
-                : { title: t("faq.showTitle", { question }), body: t("faq.showBody"), confirmLabel: t("faq.show"), cancelLabel: cancel }
-            }
-          >
-            {hidden}
-            <input type="hidden" name="expectedVersion" value={item.version} />
-            <input type="hidden" name="visible" value={item.visible ? "false" : "true"} />
-            <GlyphButton
-              icon={item.visible ? "unpublish" : "publish"}
-              type="submit"
-              variant="outlined"
-              color={item.visible ? "warning" : "primary"}
-              sx={{ minHeight: 44 }}
-            >
-              {item.visible ? t("faq.hide") : t("faq.show")}
-            </GlyphButton>
-          </ActionForm>
+          <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, cursor: "pointer" }}>
+            <RecallCheckbox name={name("visible")} defaultChecked={item?.visible ?? false} data-testid="faq-visible" />
+            {t("faq.onSite")}
+          </Box>
         )}
-        {mayDelete && (
-          <ActionForm
-            action={deleteFaqItemAction}
-            confirm={{ title: t("faq.deleteTitle", { question }), body: t("faq.deleteBody"), confirmLabel: t("faq.delete"), cancelLabel: cancel, destructive: true }}
-          >
-            {hidden}
-            <GlyphButton icon="delete" type="submit" variant="outlined" color="error" sx={{ minHeight: 44 }}>
-              {t("faq.delete")}
-            </GlyphButton>
-          </ActionForm>
+        {mayRemove && (
+          <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, cursor: "pointer", color: "error.main" }}>
+            <RecallCheckbox name={name("remove")} data-testid="faq-remove" />
+            {t("faq.remove")}
+          </Box>
         )}
       </Stack>
-
-      {mayEdit && (
-        <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1.5 }}>
-          <summary>{t("faq.edit")}</summary>
-          <ActionForm action={saveFaqItemAction} messages={messages} scope={scope} data-testid={`faq-save-${item.id}`}>
-            {hidden}
-            <RecallHidden name="expectedVersion" value={item.version} />
-            <ItemFields item={item} words={t} rich={rich} />
-            <Box sx={{ mt: 2 }}>
-              <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
-            </Box>
-          </ActionForm>
-        </Box>
-      )}
-    </Paper>
+    </Panel>
   );
 }
 
-/**
- * The boxes of a question, for adding one and for writing one: the question Română and English
- * side by side from `sm` — both required — then the answer in the rich-text editor, one fold per
- * language (§96), words only.
- */
-function ItemFields({ item, words: t, rich }: { item: AdminFaqItem | null; words: Words; rich: RichLabels }) {
-  const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
-  return (
-    <Stack spacing={2}>
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482): this question's English from its Romanian,
-          in this form alone — every question's form posts the same names. */}
-      <TranslateAllButton />
-      <Box sx={pairSx}>
-        <RecallField
-          name="questionRo"
-          label={t("faq.questionRo")}
-          required
-          fullWidth
-          defaultValue={item?.questionRo ?? ""}
-          helperText={t("faq.questionHelp")}
-          slotProps={{ htmlInput: { maxLength: FAQ_QUESTION_MAX, lang: "ro" } }}
-        />
-        <RecallField
-          name="questionEn"
-          label={t("faq.questionEn")}
-          required
-          fullWidth
-          defaultValue={item?.questionEn ?? ""}
-          helperText={t("faq.bothRequired")}
-          slotProps={{ htmlInput: { maxLength: FAQ_QUESTION_MAX, lang: "en" } }}
-        />
-      </Box>
-      <Stack spacing={1.5}>
-        <LazyRichTextEditor
-          name="answerRoBody"
-          label={t("faq.answerRo")}
-          summary={t("faq.answerRo")}
-          emptyHint={t("faq.textEmpty")}
-          initialBody={item?.answerRo ?? null}
-          accessibleSuffix="RO"
-          features={{ media: false, tables: false }}
-          labels={rich}
-        />
-        <LazyRichTextEditor
-          name="answerEnBody"
-          label={t("faq.answerEn")}
-          summary={t("faq.answerEn")}
-          emptyHint={t("faq.textEmpty")}
-          initialBody={item?.answerEn ?? null}
-          accessibleSuffix="EN"
-          features={{ media: false, tables: false }}
-          labels={rich}
-        />
-        <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-          {t("faq.answerHelp", { max: String(FAQ_ANSWER_MAX) })}
-        </Typography>
-      </Stack>
-    </Stack>
-  );
-}

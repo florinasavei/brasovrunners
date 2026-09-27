@@ -1,5 +1,5 @@
 {
-  "id": "af55c6ad-4d20-4f0d-8ace-3a5b726efa0e",
+  "id": "9ccb62be-59f9-4955-b048-0a1b3184003f",
   "prevId": "35d067ea-b32a-4f28-80d3-2819620ba2e3",
   "version": "7",
   "dialect": "postgresql",
@@ -2099,8 +2099,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.faq_items": {
-      "name": "faq_items",
+    "public.faq_questions": {
+      "name": "faq_questions",
       "schema": "",
       "columns": {
         "id": {
@@ -2121,6 +2121,18 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "category_ro": {
+          "name": "category_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category_en": {
+          "name": "category_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "answer_ro_json": {
           "name": "answer_ro_json",
@@ -2194,8 +2206,8 @@
         }
       },
       "indexes": {
-        "faq_items_visible_position_idx": {
-          "name": "faq_items_visible_position_idx",
+        "faq_questions_visible_position_idx": {
+          "name": "faq_questions_visible_position_idx",
           "columns": [
             {
               "expression": "visible",
@@ -2217,9 +2229,9 @@
         }
       },
       "foreignKeys": {
-        "faq_items_created_by_staff_user_id_staff_users_id_fk": {
-          "name": "faq_items_created_by_staff_user_id_staff_users_id_fk",
-          "tableFrom": "faq_items",
+        "faq_questions_created_by_staff_user_id_staff_users_id_fk": {
+          "name": "faq_questions_created_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "faq_questions",
           "tableTo": "staff_users",
           "columnsFrom": [
             "created_by_staff_user_id"
@@ -2230,9 +2242,9 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "faq_items_updated_by_staff_user_id_staff_users_id_fk": {
-          "name": "faq_items_updated_by_staff_user_id_staff_users_id_fk",
-          "tableFrom": "faq_items",
+        "faq_questions_updated_by_staff_user_id_staff_users_id_fk": {
+          "name": "faq_questions_updated_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "faq_questions",
           "tableTo": "staff_users",
           "columnsFrom": [
             "updated_by_staff_user_id"
@@ -2248,17 +2260,21 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "faq_items_questions_present": {
-          "name": "faq_items_questions_present",
-          "value": "length(btrim(\"faq_items\".\"question_ro\")) > 0 AND length(btrim(\"faq_items\".\"question_en\")) > 0"
+        "faq_questions_questions_present": {
+          "name": "faq_questions_questions_present",
+          "value": "length(btrim(\"faq_questions\".\"question_ro\")) > 0 AND length(btrim(\"faq_questions\".\"question_en\")) > 0"
         },
-        "faq_items_position_positive": {
-          "name": "faq_items_position_positive",
-          "value": "\"faq_items\".\"position\" >= 1"
+        "faq_questions_category_pair": {
+          "name": "faq_questions_category_pair",
+          "value": "(\"faq_questions\".\"category_ro\" IS NULL) = (\"faq_questions\".\"category_en\" IS NULL)"
         },
-        "faq_items_version_positive": {
-          "name": "faq_items_version_positive",
-          "value": "\"faq_items\".\"version\" >= 1"
+        "faq_questions_position_positive": {
+          "name": "faq_questions_position_positive",
+          "value": "\"faq_questions\".\"position\" >= 1"
+        },
+        "faq_questions_version_positive": {
+          "name": "faq_questions_version_positive",
+          "value": "\"faq_questions\".\"version\" >= 1"
         }
       },
       "isRLSEnabled": false
