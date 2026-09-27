@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * kind at once.
  *
  * `next/cache` is replaced by a small in-memory stand-in with the same contract the real one has
- * for this module: JSON in, JSON out, keyed by the key parts, tagged.
+ * for this module: JSON in, JSON out, keyed as Next keys it — the callback's source text and the
+ * key parts (`unstable-cache.js`: `${cb.toString()}-${keyParts}`), so a lookup made with another
+ * function than the one that filled the entry misses here as it does in Next — tagged.
  */
 const cacheState = vi.hoisted(() => ({
   entries: new Map<string, string>(),
@@ -22,7 +24,7 @@ vi.mock("next/cache", () => ({
     (fn: () => Promise<unknown>, keyParts: string[], options: { tags?: string[]; revalidate?: number | false }) => {
       cacheState.options.push({ keyParts, ...options });
       return async () => {
-        const key = keyParts.join("|");
+        const key = `${fn.toString()}-${keyParts.join(",")}`;
         const hit = cacheState.entries.get(key);
         if (hit !== undefined) return JSON.parse(hit);
         const result = await fn();
@@ -40,8 +42,8 @@ vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.
 
 const { revalidateTag, unstable_cache } = await import("next/cache");
 const { publicRead, revalidatePublicContent, PUBLIC_CACHE_CEILING_SECONDS } = await import("@/modules/public-cache/cache");
-const { forgetLastGood } = await import("@/modules/resilience/last-good");
-const { forgetMissRefreshes, pendingMissRefreshes } = await import("@/modules/public-cache/miss-refresh");
+const { forgetLastGood, readWithLastGood } = await import("@/modules/resilience/last-good");
+const { forgetMissRefreshes, pendingMissRefreshes, READ_AFTER_WRITE_MS } = await import("@/modules/public-cache/miss-refresh");
 const { ColdMissError } = await import("@/modules/resilience/breaker");
 
 /** Run what `after()` was handed, as Next does once the response is out. */
@@ -138,9 +140,10 @@ describe("§333 publicRead", () => {
       for (const [level, factor] of [["green", 1], ["amber", 2], ["red", 4]] as const) {
         budget.level = level;
         cacheState.options.length = 0;
-        // At red a miss is not read in the request (below); the entry it asks for carries the ceiling all the same.
+        // At red a miss is not read in the request (below); the entry its background refresh files carries the ceiling all the same.
         await publicRead(["events.upcoming", level], ["events"], async () => []).catch(() => undefined);
-        expect(cacheState.options[0].revalidate).toBe(PUBLIC_CACHE_CEILING_SECONDS * factor);
+        await afterTheResponse();
+        expect(cacheState.options.at(-1)?.revalidate).toBe(PUBLIC_CACHE_CEILING_SECONDS * factor);
       }
       budget.level = "unknown";
     });
@@ -223,11 +226,92 @@ describe("§447 publicRead while the month's budget is red", () => {
     expect(second).not.toHaveBeenCalled();
     expect(pendingMissRefreshes()).toBe(1);
 
-    // A write woke the compute already: the next miss starts a wave, and the queued read goes with it.
+    // A write woke the compute already (§493): the next miss is read in the request, and the queued read rides the same wake.
     revalidatePublicContent("events");
-    await expect(publicRead(["c"], ["events"], async () => 3)).rejects.toThrow();
+    const third = vi.fn(async () => 3);
+    expect(await publicRead(["c"], ["events"], third)).toBe(3);
+    expect(third).toHaveBeenCalledTimes(1);
     await afterTheResponse();
     expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  /*
+    §493 — the red month's nits: the organizer's own page after a save, a saved copy that says so,
+    and a stale hit that no longer "revalidates" by throwing.
+  */
+  it("reads a miss in the request for a moment after a write on this instance, then goes back to the cache alone", async () => {
+    vi.useFakeTimers({ now: new Date("2026-10-20T10:00:00.000Z"), toFake: ["Date"] });
+    try {
+      budget.level = "red";
+      revalidatePublicContent("events");
+      const cancelled = vi.fn(async () => ({ status: "CANCELLED" }));
+      // The organizer opens the page they just saved: the database answers, never the copy from before the save.
+      expect(await publicRead(["events.by-slug", "ro", "crosul"], ["events"], cancelled)).toEqual({ status: "CANCELLED" });
+      expect(cancelled).toHaveBeenCalledTimes(1);
+
+      vi.setSystemTime(new Date(Date.now() + READ_AFTER_WRITE_MS + 1));
+      const later = vi.fn(async () => "rows");
+      await expect(publicRead(["events.upcoming", "ro", "w9"], ["events"], later)).rejects.toBeInstanceOf(ColdMissError);
+      expect(later).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("tells the page it shows a saved copy, and from when, when a miss is answered from one", async () => {
+    const takenAt = new Date("2026-10-20T08:00:00.000Z");
+    vi.useFakeTimers({ now: takenAt, toFake: ["Date"] });
+    try {
+      await publicRead(["events.by-slug", "ro", "crosul"], ["events"], async () => ({ status: "SCHEDULED" }));
+      cacheState.entries.clear();
+      vi.setSystemTime(new Date(takenAt.getTime() + 60 * 60_000));
+      budget.level = "red";
+
+      const read = await readWithLastGood("event:ro:crosul", () => publicRead(["events.by-slug", "ro", "crosul"], ["events"], async () => ({ status: "CANCELLED" })));
+      expect(read.value).toEqual({ status: "SCHEDULED" });
+      expect(read.freshness).toBe("saved");
+      expect(read.takenAt.getTime()).toBe(takenAt.getTime());
+
+      // Once the background refresh has filed the row, the cache answers: live, and the page says nothing.
+      await afterTheResponse();
+      const hit = await readWithLastGood("event:ro:crosul", () => publicRead(["events.by-slug", "ro", "crosul"], ["events"], async () => ({ status: "CANCELLED" })));
+      expect(hit.value).toEqual({ status: "CANCELLED" });
+      expect(hit.freshness).toBe("live");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("looks a key up as never stale by age, so a stale hit starts no background revalidation that could only throw", async () => {
+    budget.level = "red";
+    await expect(publicRead(["events.upcoming", "ro", "w1"], ["events"], async () => [])).rejects.toBeInstanceOf(ColdMissError);
+    const [lookup] = cacheState.options;
+    expect(lookup.revalidate).toBe(365 * 24 * 60 * 60);
+  });
+
+  it("finds at red the entry a read below red filed: one callback on every path, as Next keys by its text (§447)", async () => {
+    const load = vi.fn(async () => ({ status: "SCHEDULED" }));
+    await publicRead(["events.by-slug", "ro", "crosul"], ["events"], load);
+    expect(load).toHaveBeenCalledTimes(1);
+
+    budget.level = "red";
+    const read = await readWithLastGood("event:ro:crosul", () => publicRead(["events.by-slug", "ro", "crosul"], ["events"], load));
+    expect(read.value).toEqual({ status: "SCHEDULED" });
+    // A hit: live, no saved-copy notice, nothing queued, the database not asked.
+    expect(read.freshness).toBe("live");
+    expect(pendingMissRefreshes()).toBe(0);
+    await afterTheResponse();
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it("finds at red the entry the background refresh filed", async () => {
+    budget.level = "red";
+    const load = vi.fn(async () => ["crosul"]);
+    await expect(publicRead(["events.upcoming", "ro", "w2"], ["events"], load)).rejects.toBeInstanceOf(ColdMissError);
+    await afterTheResponse();
+    expect(await publicRead(["events.upcoming", "ro", "w2"], ["events"], load)).toEqual(["crosul"]);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(new Set(vi.mocked(unstable_cache).mock.calls.map(([fn]) => fn.toString())).size).toBe(1);
   });
 
   it("reads through as ever below red", async () => {

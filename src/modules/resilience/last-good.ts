@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { headers } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
@@ -48,10 +49,16 @@ import {
  * keep the count live and let that one piece fail on its own (§281).
  */
 
-type Freshness = "live" | "stale";
+/**
+ * `saved` (§493): the database answered nothing because a red month's cache miss was answered from
+ * a saved copy (`public-cache/cache.ts`) — nothing failed, but the page is the copy of `takenAt`,
+ * possibly from before a write the club just made, and it says so.
+ */
+type Freshness = "live" | "stale" | "saved";
 export type Resilient<T> = {
   value: T;
   freshness: Freshness;
+  /** When the answer was read — or, when it is not live, when the oldest copy in it was taken. */
   takenAt: Date;
   /**
    * When the copy is served because Neon has suspended the project for the rest of its billing
@@ -60,6 +67,24 @@ export type Resilient<T> = {
    */
   restingUntil: Date | null;
 };
+
+/**
+ * Which saved copies one `readWithLastGood` load was answered with (§493). A red month answers a
+ * cache miss from the read's saved copy without asking the database (`public-cache/cache.ts`), and
+ * that answer looks live to whoever awaits it — so the page said nothing about showing the copy of
+ * an hour ago, possibly from before the organizer's own save. The public cache notes each copy it
+ * serves here; the load around it reads the note. Scoped by `AsyncLocalStorage` rather than by the
+ * request, so the header's copy never marks the event page's own read, and two reads awaited side
+ * by side each hear only their own.
+ */
+type SavedCopiesSeen = { oldest: Date | null };
+const savedCopies = new AsyncLocalStorage<SavedCopiesSeen>();
+
+/** A saved copy taken at `takenAt` answered a read in place of the database (§493). Outside any `readWithLastGood`, nothing to tell. */
+export function noteSavedCopyServed(takenAt: Date): void {
+  const seen = savedCopies.getStore();
+  if (seen && (seen.oldest === null || takenAt < seen.oldest)) seen.oldest = takenAt;
+}
 
 /** Long enough that a busy page writes rarely, short enough that a copy is never much behind. */
 const WRITE_EVERY_MS = 10 * 60_000;
@@ -140,7 +165,17 @@ export async function readWithLastGood<T>(
   // to survive (the public cache's `prerenderingAtBuild` says the same of the data cache).
   if (process.env.NEXT_PHASE === "phase-production-build") return { value: await load(), freshness: "live", takenAt: now, restingUntil: null };
   try {
-    const value = await load();
+    const seen: SavedCopiesSeen = { oldest: null };
+    const value = await savedCopies.run(seen, load);
+    if (seen.oldest) {
+      /*
+        Part of the answer is a saved copy a red month served instead of the database (§493): the
+        page says so, naming the oldest copy's time, and whoever wraps this read hears it too. Not
+        kept as this key's copy: it is not a newer truth than the copies it was made of.
+      */
+      noteSavedCopyServed(seen.oldest);
+      return { value, freshness: "saved", takenAt: seen.oldest, restingUntil: null };
+    }
     const envelope = { takenAt: now, value };
     remember(key, envelope);
     return { value, freshness: "live", takenAt: now, restingUntil: null };

@@ -1,6 +1,7 @@
 import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
+import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { plannedCadenceMinutes } from "@/modules/jobs/schedule-cache";
@@ -61,8 +62,12 @@ export type EmailHealth = {
    * and its last failure. Reported beside the counts, never a status of its own: a Gmail failure
    * falls back to Mailgun or is retried by the outbox, whose own counts above turn a real stall
    * into the 503 (§98), unchanged.
+   *
+   * `deferred` and `resumesAt` are the rows waiting out Gmail's cap because the club chose to wait
+   * (§493): counted here, and not in `deferred` above — the club's own choice working, like the
+   * newsletter's reserve, not the plan's limit the monitor exists to report.
    */
-  gmail: GmailHealth;
+  gmail: GmailHealth & { deferred: number; resumesAt: string | null };
 };
 
 /**
@@ -104,7 +109,16 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     It still counts as waiting, and a transactional message that stalls still says so.
   */
   const pending = and(eq(emailOutbox.status, "PENDING"), not(inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES])));
-  const deferredWhere = and(pending, gt(emailOutbox.nextAttemptAt, deferredFrom));
+  /*
+    A row waiting out Gmail's rolling day because the club chose "wait at the cap" (§443) is not a
+    stall either (§493): the club set the cap and the choice on `/admin/emails`, the row goes when the
+    oldest send leaves the day, and a monitor that alarmed on it would alarm every busy day for a
+    choice nobody has to undo. It is counted in the Gmail block instead, with when it resumes. Only
+    while it waits: once its turn is overdue, the overdue count below says so as for any row.
+  */
+  const gmailCapWait = sql`${emailOutbox.lastError} = ${GMAIL_CAP_DEFERRED_ERROR}`;
+  const gmailDeferredWhere = and(pending, gt(emailOutbox.nextAttemptAt, deferredFrom), gmailCapWait);
+  const deferredWhere = and(pending, gt(emailOutbox.nextAttemptAt, deferredFrom), sql`${emailOutbox.lastError} IS DISTINCT FROM ${GMAIL_CAP_DEFERRED_ERROR}`);
   // A row the worker never touched has no `next_attempt_at`; its turn was its creation.
   const overdueWhere = and(
     pending,
@@ -122,6 +136,8 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
       overdue: count(sql`case when ${overdueWhere} then 1 end`),
       failed: count(sql`case when ${failedWhere} then 1 end`),
       resumesAt: sql<Date | null>`min(case when ${deferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
+      gmailDeferred: count(sql`case when ${gmailDeferredWhere} then 1 end`),
+      gmailResumesAt: sql<Date | null>`min(case when ${gmailDeferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
     })
     .from(emailOutbox);
 
@@ -141,6 +157,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   }
 
   const resumesAt = row.resumesAt ? new Date(row.resumesAt) : null;
+  const gmailResumesAt = row.gmailResumesAt ? new Date(row.gmailResumesAt) : null;
   return {
     status: stalled ? "stalled" : "ok",
     waiting: row.waiting,
@@ -149,7 +166,11 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     failed: row.failed,
     resumesAt: resumesAt ? resumesAt.toISOString() : null,
     lastError,
-    gmail: await checkGmailHealth(db, now),
+    gmail: {
+      ...(await checkGmailHealth(db, now)),
+      deferred: row.gmailDeferred,
+      resumesAt: gmailResumesAt ? gmailResumesAt.toISOString() : null,
+    },
   };
 }
 

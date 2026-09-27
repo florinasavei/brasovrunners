@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { mediaAssets } from "@/db/schema/gallery";
@@ -11,6 +11,7 @@ import {
   setTeamPagePublished,
   TEAM_PAGE_SETTING_ENTITY_ID,
 } from "@/modules/content/team/page-settings";
+import { MAX_TEAM_LINKS } from "@/modules/content/team/links";
 import { listTeamMembersForAdmin, listVisibleTeamMembers, readPublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
 import {
   createTeamMember,
@@ -363,12 +364,22 @@ describe("§459 the team page's cards", () => {
       expect(admin.links).toEqual([{ kind: "INSTAGRAM", url: "https://instagram.com/elena", labelRo: null, labelEn: null }]);
     });
 
-    it("refuses a stored link that is not https, or a seventh, at the database too", async () => {
+    it("refuses a stored link that is not https, or a thirteenth, at the database too — and takes twelve (§491, migration 0094)", async () => {
       await expect(
         db.insert(teamMembers).values({ name: "X", position: 1, links: [{ kind: "OTHER", url: "http://example.org" }] }),
       ).rejects.toThrow();
-      const seven = Array.from({ length: 7 }, (_, index) => ({ kind: "OTHER", url: `https://example.org/${index}` }));
-      await expect(db.insert(teamMembers).values({ name: "X", position: 1, links: seven })).rejects.toThrow();
+      const links = (count: number) => Array.from({ length: count }, (_, index) => ({ kind: "OTHER", url: `https://example.org/${index}` }));
+      expect(MAX_TEAM_LINKS).toBe(12);
+      await expect(db.insert(teamMembers).values({ name: "X", position: 1, links: links(MAX_TEAM_LINKS + 1) })).rejects.toThrow();
+      const [twelve] = await db.insert(teamMembers).values({ name: "Doisprezece", position: 1, links: links(MAX_TEAM_LINKS) }).returning();
+      expect(twelve.links).toHaveLength(MAX_TEAM_LINKS);
+      // One check by that name: 0093 dropped the six-link one and 0094 added this one.
+      const result = await db.execute(
+        sql`SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conname = 'team_members_links_is_a_short_array_of_https_links'`,
+      );
+      const rows = (result as unknown as { rows: { definition: string }[] }).rows;
+      expect(rows).toHaveLength(1);
+      expect(rows[0].definition).toContain(`<= ${MAX_TEAM_LINKS}`);
       await expect(db.insert(teamMembers).values({ name: "X", position: 1, links: { url: "https://example.org" } })).rejects.toThrow();
     });
 

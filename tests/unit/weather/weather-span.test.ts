@@ -11,7 +11,8 @@ import {
 import { weatherSpanWords } from "@/modules/weather/words";
 
 /**
- * BR-REQ-041-01 (§484): the weather line says where and for which hours — the hours from the
+ * BR-REQ-011-01 (§484; the requirement §469's weather criteria are numbered under): the weather
+ * line says where and for which hours — the hours from the
  * start's to the end's (at most six after the start), the degrees over them, rain likely in any of
  * them, and the place the forecast was read at (the club's locality for the club's own point).
  */

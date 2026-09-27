@@ -23,6 +23,7 @@ import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { MIN_PARTICIPANT_AGE, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
+import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -280,8 +281,15 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       summary names the birth date alone, under its label.
     */
     const refusal = refused(error, form, {
-      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE),
+      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE && name !== ALREADY_ON_ADDRESS && name !== ADDRESS_AT_CAP),
     });
+    /*
+      Another person on a registered address is entered here since §493; the two refusals it can meet
+      are said as sentences — this person is on the address already, or the address is at the club's
+      limit — with the address box named, rather than "check what you entered" over a correct form.
+    */
+    if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
+    if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
     /*
       No place and the waiting list full (§348), for a staff entry and the desk's walk-in alike: no
       bypass (`AGENTS.md` §15.11), and a sentence that says so rather than "check what you entered"

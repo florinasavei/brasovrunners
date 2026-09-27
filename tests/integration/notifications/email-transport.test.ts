@@ -82,6 +82,36 @@ describe("§443 email transport setting and the outbox's road", () => {
     ...extra,
   });
 
+  /*
+    §493 — the batch lets go of the Gmail road's one connection when it ends, however it ends, and a
+    Gmail refusal of the address itself is the bounce it is: BOUNCED, never Mailgun's to try.
+  */
+  it("closes the sender once at the batch's end, and marks an address Gmail refused for good BOUNCED", async () => {
+    await db.insert(emailOutbox).values([row(1), row(2)]);
+    let closed = 0;
+    const sender = {
+      ...roadSender((message) =>
+        message.to === "club1@example.com"
+          ? { outcome: "permanent_failure", error: "gmail: smtp EENVELOPE 5.1.1" }
+          : { outcome: "sent", providerMessageId: "gm:2", transport: "gmail" },
+      ),
+      close: () => {
+        closed += 1;
+      },
+    };
+    const summary = await processOutboxBatch(db, { sender, render, now: NOW });
+    expect(summary).toMatchObject({ claimed: 2, sent: 1, bounced: 1 });
+    expect(closed).toBe(1);
+    const [bounced] = await db.select().from(emailOutbox).where(eq(emailOutbox.idempotencyKey, "row:1"));
+    expect(bounced).toMatchObject({ status: "BOUNCED", lastError: "gmail: smtp EENVELOPE 5.1.1", nextAttemptAt: null });
+
+    // A batch whose sender throws is closed all the same.
+    await db.insert(emailOutbox).values(row(3));
+    const failing = { send: async () => Promise.reject(new Error("boom")), close: () => (closed += 1) };
+    await processOutboxBatch(db, { sender: failing, render, now: NOW });
+    expect(closed).toBe(2);
+  });
+
   it("is the default until an Administrator changes it, audited, and refused to anybody else", async () => {
     // Not production: the smaller share of the one Gmail account production also uses.
     expect(await readEmailTransport(db)).toMatchObject({ ...DEFAULT_EMAIL_TRANSPORT, gmailDailyCap: NON_PRODUCTION_GMAIL_DAILY_CAP, updatedAt: null });

@@ -975,7 +975,9 @@
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment (dat, rezervat sau al unei înscrieri șterse). Alege alt număr din cutie și încearcă din nou.",
-      "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă."
+      "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă.",
+      "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
+      "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1715,15 +1717,12 @@
           "title": "Titlul",
           "description": "Descrierea",
           "when": "Când și unde",
-          "place": "Unde",
           "course": "Traseul",
-          "cost": "Costul",
           "registration": "Înscrierea",
           "coHosts": "Împreună cu",
           "share": "Distribuie",
           "links": "Linkuri și fișiere",
           "programme": "Program și regulament",
-          "rules": "Regulamentul",
           "startList": "Lista participanților"
         }
       },
@@ -3929,7 +3928,7 @@
             {
               "title": "Pune un film de pe YouTube",
               "steps": [
-                "În editor apasă «YouTube».",
+                "În bara editorului apasă «Adaugă un film de pe YouTube».",
                 "Lipește adresa în «Adresa filmului (YouTube)» și apasă «Adaugă filmul».",
                 "Apasă pe film ca să-i scrii «Legendă (sub film)».",
                 "Apasă «Salvează». Pe pagină filmul se încarcă doar când cititorul apasă pe el."
@@ -4052,7 +4051,7 @@
               "title": "Schimbă o setare a evenimentului",
               "steps": [
                 "«Evenimente» → «Editează».",
-                "Deschide cardul: «Când și unde», «Traseul», «Cost» sau «Participare și înscrieri». Schimbă ce trebuie.",
+                "Deschide cardul: «Când și unde», «Traseul», «Ce fel de eveniment» (costul e în el) sau «Participare și înscrieri». Schimbă ce trebuie.",
                 "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
                 "Participanții trebuie să afle? Bifează «Anunță participanții despre schimbare» și scrie nota în ambele limbi.",
                 "Apasă «Salvează». Textele (titlul, descrierea) nu le poți salva: spune-i Administratorului ce e greșit."
@@ -4062,7 +4061,7 @@
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
-                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp pe care îl poți modifica ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
                 "Citește engleza și corectează ce sună greșit.",
                 "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
@@ -4099,7 +4098,7 @@
                 "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
                 "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
                 "«Când și unde»: data și ora, apoi punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
-                "Restul cardurilor după nevoie: «Descrierea evenimentului» (un film de pe YouTube se pune aici, cu butonul «YouTube»), «Traseul», «Cost», «Participare și înscrieri», «Program, regulament și declarație».",
+                "Restul cardurilor după nevoie: «Descrierea evenimentului» (un film de pe YouTube se pune aici, cu butonul «Adaugă un film de pe YouTube»), «Traseul», «Participare și înscrieri», «Program, regulament și declarație».",
                 "«Creează evenimentul» îl salvează ca ciornă (nu apare pe site). «Creează și publică» îl pune direct pe site.",
                 "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou.",
                 "Greșeala obișnuită: tabul «English» necompletat lasă evenimentul fără engleză; sau apeși «Creează evenimentul» crezând că a intrat pe site — rămâne ciornă, nu «Creează și publică»."
@@ -5724,7 +5723,7 @@
     "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
     "notRead": "necitit",
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
-    "spentAll": "Limita e consumată: Neon oprește baza de date până la sfârșitul perioadei, iar site-ul arată copiile salvate.",
+    "spentAll": "După această citire, limita e consumată. Neon oprește baza de date abia când propriul lui contor ajunge la limită; din acel moment și până la sfârșitul perioadei, site-ul arată copiile salvate, iar formularele așteaptă. Până atunci, lucrările programate merg în continuare, în ritmul de mai jos.",
     "thresholds": {
       "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
       "amber": "Galben de la (%)",
@@ -5737,6 +5736,7 @@
   },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
+    "saved": "Îți arătăm copia salvată a paginii, din {when}; o actualizăm în câteva minute, așa că o schimbare foarte recentă poate să nu apară încă.",
     "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou",

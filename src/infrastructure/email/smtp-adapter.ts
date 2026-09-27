@@ -87,9 +87,25 @@ export function describeSmtpFailure(error: unknown): string {
 /**
  * The connection every SMTP send here opens — the contact form's and, since §443, the outbox's
  * Gmail road (`gmail-adapter.ts`) — so both keep the same TLS rule and the same bounded waits.
+ *
+ * `pooled` is the outbox's (§493): one batch sends several Gmail messages a few seconds apart, and
+ * without a pool each of them paid its own TCP, TLS and login handshake — three round trips to
+ * Google and one more "new sign-in" per message on an account Google watches for automated use.
+ * Pooled, a batch keeps one connection (`maxConnections: 1`) and closes it when it ends
+ * (`close()`); an idle one closes by itself after the socket wait below. A message whose connection
+ * dropped while it was being sent is never re-sent by the pool (`maxRequeues: 0`): it may already
+ * have been accepted, and the outbox decides what happens to it (`gmail-adapter.ts`), not Nodemailer.
+ * The contact form sends one message per request and keeps its own connection.
  */
-export function createSmtpConnection(config: SmtpConfig) {
-  return nodemailer.createTransport({
+export function createSmtpConnection(config: SmtpConfig, options: { pooled?: boolean } = {}) {
+  const base = smtpOptions(config);
+  return options.pooled
+    ? nodemailer.createTransport({ ...base, pool: true, maxConnections: 1, maxRequeues: 0 })
+    : nodemailer.createTransport(base);
+}
+
+function smtpOptions(config: SmtpConfig) {
+  return {
     host: config.host,
     port: config.port,
     // Implicit TLS on 465 (Gmail's submission port); STARTTLS otherwise, required, never
@@ -102,7 +118,7 @@ export function createSmtpConnection(config: SmtpConfig) {
     connectionTimeout: CONNECTION_TIMEOUT_MS,
     greetingTimeout: GREETING_TIMEOUT_MS,
     socketTimeout: SOCKET_TIMEOUT_MS,
-  });
+  };
 }
 
 export function createSmtpTransport(config: SmtpConfig): SmtpTransport {

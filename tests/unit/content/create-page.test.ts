@@ -161,8 +161,10 @@ describe("no film box", () => {
   });
 
   it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
-    // The column stays in the schema until its contract migration (AGENTS.md §7.6) — read and written by nobody.
-    expect(read("src/db/schema/events.ts")).toContain('videoUrl: text("video_url")');
+    // The columns left the Drizzle schema in BR-V2.10; the database keeps them until BR-V2.11's
+    // contract migration, because BR-V2.09 still declared them (AGENTS.md §7.6, §491).
+    expect(read("src/db/schema/events.ts")).not.toContain('text("video_url")');
+    expect(read("src/db/schema/events.ts")).not.toContain('text("video_poster_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
     expect(SERVICE).not.toContain("videoUrl");
     expect(read("src/modules/events/repository.ts")).not.toContain("videoUrl");
@@ -179,6 +181,11 @@ describe("no film box", () => {
     const index = journal.entries.findIndex((entry) => entry.tag === "0092_film_into_description");
     expect(index).toBeGreaterThan(0);
     expect(journal.entries[index].when).toBeGreaterThan(journal.entries[index - 1].when);
+    // And no migration of this release drops them: that is the release after's contract.
+    for (const entry of journal.entries.slice(index + 1)) {
+      const sql = read(`src/db/migrations/${entry.tag}.sql`).replace(/--[^\n]*/g, "");
+      expect(sql, entry.tag).not.toMatch(/video_(poster_)?url/);
+    }
   });
 });
 

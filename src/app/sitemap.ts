@@ -3,6 +3,7 @@ import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import { cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { teamPageOnSite } from "@/modules/content/team/repository";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
@@ -171,7 +172,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * crawler what to index.
    */
   for (const key of ["TERMS", "PRIVACY_NOTICE"] as const) {
-    const inForce = await legalDocumentsInForce(key, now);
+    // Left out for this answer while the database cannot say (§447) — away, or a red month's miss with no copy (§493) — never a 500.
+    const inForce = await readOrWhileAway(() => legalDocumentsInForce(key, now), {});
     const locales = routing.locales.filter((candidate) => inForce[candidate]);
     if (locales.length === 0) continue;
     const urls = staticRouteUrls(env.APP_BASE_URL, LEGAL_PAGE_ROUTE[key], locales);

@@ -7,6 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
@@ -40,10 +41,15 @@ export default async function DeclarationOffer({
   const key = offeredGroupRunDeclarationKey(event);
   // The page reads a published event: the editorial state is the page's own guarantee.
   if (!key || !signingOpen({ ...event, editorialStatus: "PUBLISHED" }, now)) return null;
-  const [declaration, privacyNotice] = await Promise.all([
-    cachedCurrentApprovedDocument(key, locale, now),
-    cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now),
-  ]);
+  /*
+    An optional part of the page (§447): while the database cannot say which texts are in force — away,
+    or a red month's miss with no copy (§493) — the offer is left out rather than taking the event
+    page down with it. Signing needs the database anyway.
+  */
+  const [declaration, privacyNotice] = await readOrWhileAway(
+    () => Promise.all([cachedCurrentApprovedDocument(key, locale, now), cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)]),
+    [undefined, undefined],
+  );
   if (!declaration || !privacyNotice) return null;
   const t = await getTranslations("Event");
   const href = getPathname({ locale, href: { pathname: "/events/[slug]/declaration", params: { slug } } });

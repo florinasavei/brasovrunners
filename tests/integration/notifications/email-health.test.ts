@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { checkEmailHealth, EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 import { MAX_SEND_ATTEMPTS } from "@/modules/notifications/domain/retry";
+import { GMAIL_CAP_DEFERRED_ERROR } from "@/modules/notifications/domain/email-transport";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -92,6 +93,33 @@ describe("email health", () => {
     // Eight days on, the same row is history, not an alarm.
     const later = new Date(NOW.getTime() + EMAIL_HEALTH_THRESHOLDS.FAILED_WINDOW_MS + 24 * HOUR);
     expect((await checkEmailHealth(db, later)).status).toBe("ok");
+  });
+
+  /*
+    §493 — a row waiting out Gmail's cap because the club chose to wait (§443) is the club's choice
+    working, not a stall: counted in the Gmail block with when it resumes, never the 503. A Mailgun
+    deferral beside it still is one, and so is the same row once its turn is overdue.
+  */
+  it("reports a wait at Gmail's cap in the Gmail block, not as a stall", async () => {
+    const resumesAt = new Date(NOW.getTime() + 5 * HOUR);
+    await db.insert(emailOutbox).values(
+      row({ messageType: "CLUB_CONFIRMATION_NOTICE", status: "PENDING", attemptCount: 1, nextAttemptAt: resumesAt, lastError: GMAIL_CAP_DEFERRED_ERROR }, "g1"),
+    );
+    const health = await checkEmailHealth(db, NOW);
+    expect(health.status).toBe("ok");
+    expect(health.deferred).toBe(0);
+    expect(health.gmail).toMatchObject({ deferred: 1, resumesAt: resumesAt.toISOString() });
+    expect(health.waiting).toBe(1);
+
+    await db.insert(emailOutbox).values(row({ status: "PENDING", attemptCount: 1, nextAttemptAt: resumesAt, lastError: "throttled: daily limit" }, "m1"));
+    const both = await checkEmailHealth(db, NOW);
+    expect(both.status).toBe("stalled");
+    expect(both.deferred).toBe(1);
+    expect(both.lastError).toBe("throttled: daily limit");
+
+    // Its turn came and went with nothing draining it: overdue, like any row.
+    const muchLater = new Date(resumesAt.getTime() + EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS + 60_000);
+    expect((await checkEmailHealth(db, muchLater)).overdue).toBeGreaterThanOrEqual(1);
   });
 
   it("does not count a bounce: that is one address, shown on its registration", async () => {

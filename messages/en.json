@@ -975,7 +975,9 @@
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
       "BIB_NUMBER_TAKEN": "That number is already somebody's at this event (given, held, or worn by an erased registration). Pick another number from the box and try again.",
-      "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number."
+      "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number.",
+      "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
+      "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1715,15 +1717,12 @@
           "title": "Title",
           "description": "Description",
           "when": "When and where",
-          "place": "Where",
           "course": "The course",
-          "cost": "Cost",
           "registration": "Registration",
           "coHosts": "Together with",
           "share": "Share",
           "links": "Links and files",
           "programme": "Programme and rules",
-          "rules": "Rules",
           "startList": "Participant list"
         }
       },
@@ -3929,7 +3928,7 @@
             {
               "title": "Add a YouTube film",
               "steps": [
-                "In the editor press «YouTube».",
+                "In the editor's toolbar press «Add a YouTube film».",
                 "Paste the address into «The film's address (YouTube)» and press «Add the film».",
                 "Press the film to write its «Caption (under the film)».",
                 "Press «Save». On the page the film loads only when the reader presses it."
@@ -4052,7 +4051,7 @@
               "title": "Change a setting of the event",
               "steps": [
                 "«Events» → «Edit».",
-                "Open the card: «When and where», «The course», «Cost» or «Taking part and registration». Change what is needed.",
+                "Open the card: «When and where», «The course», «What kind of event» (the cost is inside it) or «Taking part and registration». Change what is needed.",
                 "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
                 "Must the participants know? Tick «Tell participants about the change» and write the note in both languages.",
                 "Press «Save». The texts (the title, the description) are not yours to save: tell the Administrator what is wrong."
@@ -4062,7 +4061,7 @@
               "title": "The English in one press",
               "steps": [
                 "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
-                "At the top of the editor press «Copy and translate everything: RO → EN». Every box goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
+                "At the top of the editor press «Copy and translate everything: RO → EN». Every box you may edit goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no free DeepL key yet: ask an Administrator to set it (the steps are under Tasks → Club).",
                 "Read the English and correct what reads wrong.",
                 "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
               ]
@@ -4099,7 +4098,7 @@
                 "«What kind of event» → «Event type» (Race, Group run and the others).",
                 "«Title and summary»: «Title» and «Summary», in the «Română» tab and in the «English» tab.",
                 "«When and where»: the date and time, then the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
-                "The other cards as needed: «Event description» (a YouTube film goes here, with the «YouTube» button), «The course», «Cost», «Taking part and registration», «Programme, rules and declaration».",
+                "The other cards as needed: «Event description» (a YouTube film goes here, with the «Add a YouTube film» button), «The course», «Taking part and registration», «Programme, rules and declaration».",
                 "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
                 "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
                 "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."
@@ -5724,7 +5723,7 @@
     "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours; the larger of the first two is used, the old counter only when neither answered.",
     "notRead": "not read",
     "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it.",
-    "spentAll": "The limit is spent: Neon stops the database until the period ends, and the site shows its saved copies.",
+    "spentAll": "By this reading the limit is used up. Neon stops the database only when its own meter reaches the limit; from then until the period ends the site shows its saved copies and the forms wait. Until then the scheduled jobs keep running, at the pace below.",
     "thresholds": {
       "intro": "The thresholds, as percents of the monthly limit: amber from the first, red from the second (red raises the alarm on /api/health).",
       "amber": "Amber from (%)",
@@ -5737,6 +5736,7 @@
   },
   "Offline": {
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
+    "saved": "This is the saved copy of the page, from {when}; it is being brought up to date within a few minutes, so a very recent change may not show yet.",
     "resting": "The site is showing a saved copy of this page, from {when}: registration and the forms are paused until {until}. Thank you for your patience!",
     "capacityUnknown": "We cannot check how many places are left right now.",
     "capacityRetry": "Try again",
