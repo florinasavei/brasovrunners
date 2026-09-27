@@ -4,11 +4,13 @@ import type { Database } from "@/db/types";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canAssignRole, canManageMember, canManageStaff, isBackofficeRole, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
+import { MEMBER_ROWS_MAX, type MemberRow } from "./domain/member-rows";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
   countSuperadministrators,
   deleteStaffUser,
   findStaffUserByEmail,
+  findStaffEmailsAmong,
   findStaffUserById,
   insertStaffUser,
   listStaffUsers,
@@ -124,6 +126,53 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
     const member = await insertStaffUser(tx, { ...parsed.data, email: normalizeStaffEmail(parsed.data.email) });
     await enqueueStaffInvitation(tx, actor, member, now);
     return member;
+  });
+}
+
+/**
+ * «Adaugă mai mulți membri» (§NNN): several club members in one press, each a `MEMBER` row with its
+ * own invitation — the whole list or nobody.
+ *
+ * Every row is validated before any is inserted (§457's rule for a list of addresses): one row that
+ * is not an address, one address already on the team, or more than `MEMBER_ROWS_MAX` rows, and the
+ * press adds nobody. The refusal names the box, `members`; the action names the rows. The inserts
+ * and the invitations are one transaction, so a failure half-way leaves no half of the list.
+ *
+ * The existing-address check is a courtesy, as in `inviteStaffUser`: the unique index is the
+ * authority, and a colleague adding the same person at the same moment rolls the whole press back.
+ */
+export async function inviteMembers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: StaffUser,
+  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en" },
+): Promise<StaffUser[]> {
+  assertAdministrator(actor);
+  assertMayAssign(actor, "MEMBER");
+
+  if (input.rows.length === 0) throw new DomainError("VALIDATION_ERROR", "no member rows", ["members"]);
+  if (input.rows.length > MEMBER_ROWS_MAX) throw new DomainError("VALIDATION_ERROR", `more than ${MEMBER_ROWS_MAX} member rows`, ["members"]);
+  const parsed = input.rows.map((row) =>
+    staffInviteSchema.safeParse({ email: row.email, displayName: row.displayName, role: "MEMBER", preferredLocale: input.preferredLocale }),
+  );
+  if (parsed.some((result) => !result.success)) {
+    throw new DomainError("VALIDATION_ERROR", "a member row is not an address", ["members"]);
+  }
+  const invites = parsed.map((result) => result.data as StaffInvite);
+  const onTeam = await findStaffEmailsAmong(
+    db,
+    invites.map((invite) => invite.email),
+  );
+  if (onTeam.length > 0) throw new DomainError("CONFLICT", "some addresses are already on the team", ["members"]);
+
+  const now = new Date();
+  return db.transaction(async (tx) => {
+    const members: StaffUser[] = [];
+    for (const invite of invites) {
+      const member = await insertStaffUser(tx, { ...invite, email: normalizeStaffEmail(invite.email) });
+      await enqueueStaffInvitation(tx, actor, member, now);
+      members.push(member);
+    }
+    return members;
   });
 }
 

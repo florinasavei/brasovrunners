@@ -28,6 +28,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   changeStaffRoleAction,
+  inviteMembersAction,
   inviteStaffAction,
   resendStaffInviteAction,
   revokeStaffAction,
@@ -77,7 +78,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const offered = assignableRoles(actor.role);
 
   const current = await searchParams;
-  const { error, saved, invite, reason, account } = current;
+  const { error, saved, invite, reason, account, count, failed } = current;
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
@@ -182,7 +183,14 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {accountVerb && account === "failed" && (
           <Alert severity="warning">{t("staff.accountFailed", { reason: reason ?? "" })}</Alert>
         )}
-        {saved && saved !== "invited" && saved !== "reinvited" && <Alert severity="success">{t("saved")}</Alert>}
+        {/* «Adaugă mai mulți membri» (§NNN): how many, and how many accounts the provider refused. */}
+        {saved === "membersInvited" &&
+          (failed ? (
+            <Alert severity="warning">{t("staff.membersInviteFailed", { count: count ?? "0", failed })}</Alert>
+          ) : (
+            <Alert severity="success">{t("staff.membersInvited", { count: count ?? "0" })}</Alert>
+          ))}
+        {saved && saved !== "invited" && saved !== "reinvited" && saved !== "membersInvited" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
       {/*
@@ -278,6 +286,49 @@ export default async function StaffPage({ params, searchParams }: Props) {
             {t("staff.inviteKeyMissing")}
           </Alert>
         )}
+      </Panel>
+
+      {/*
+        «Adaugă mai mulți membri» (§NNN): the club's members, one per row, all as «Membru» — a list
+        pasted from the club's own records rather than nine fields per person. The whole list or
+        nobody (§457): a row that is not an address, or an address already on the team, adds no one
+        and names the rows. A fold of its own, closed like every fold (§336).
+      */}
+      <Panel title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible id="staff-members" data-testid="staff-members">
+        <ActionForm
+          action={inviteMembersAction}
+          messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale") })}
+          confirm={{ title: t("confirm.inviteMembersTitle"), body: t("confirm.inviteMembersBody"), confirmLabel: t("staff.membersInvite"), cancelLabel: words.cancel }}
+          data-testid="staff-members-form"
+        >
+          <input type="hidden" name="uiLocale" value={locale} />
+          <Stack spacing={2}>
+            <RecallField
+              name="members"
+              label={t("staff.membersRows")}
+              helperText={t("staff.membersRowsHelp")}
+              multiline
+              minRows={4}
+              required
+            />
+            <RecallField name="preferredLocale" label={t("staff.preferredLocale")} defaultValue="ro" select>
+              {routing.locales.map((value) => (
+                <MenuItem key={value} value={value}>
+                  {value.toUpperCase()}
+                </MenuItem>
+              ))}
+            </RecallField>
+            <Box>
+              <GlyphSubmitButton
+                label={t("staff.membersInvite")}
+                pendingLabel={t("staff.membersInviting")}
+                icon="addPerson"
+                incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
+                size="medium"
+              />
+            </Box>
+          </Stack>
+        </ActionForm>
       </Panel>
 
       {/*

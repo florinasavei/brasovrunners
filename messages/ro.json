@@ -909,7 +909,7 @@
       "interestWithdrawTitle": "Retragi adresa?",
       "interestWithdrawBody": "Adresa scrisă este ștearsă de la „Anunță-mă” și nu mai primește anunțul deschiderii înscrierilor.",
       "inviteStaffTitle": "Adaugi persoana în echipă?",
-      "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra în backoffice de îndată ce își pune parola.",
+      "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra de îndată ce își pune parola: în backoffice, sau — ca Membru — doar în zona membrilor de pe site.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
       "approvePlatformTitle": "Aprobi textele platformei care lipsesc ({count} din {total})?",
@@ -952,7 +952,9 @@
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
-      "deliveryTimingBody": "Se aplică de acum fiecărui email al platformei, și celor aflate deja în coadă. Niciun mesaj nu se pierde."
+      "deliveryTimingBody": "Se aplică de acum fiecărui email al platformei, și celor aflate deja în coadă. Niciun mesaj nu se pierde.",
+      "inviteMembersTitle": "Adaugi membrii?",
+      "inviteMembersBody": "Fiecare adresă din listă primește rolul Membru și, pe email, invitația de intrare. După ce își pune parola, un membru intră doar în zona membrilor de pe site — niciodată în backoffice."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -990,7 +992,8 @@
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment (dat, rezervat sau al unei înscrieri șterse). Alege alt număr din cutie și încearcă din nou.",
       "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
-      "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană."
+      "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
+      "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1843,7 +1846,15 @@
       "inviting": "Se adaugă…",
       "inviteAsideSends": "contul și invitația, într-un pas",
       "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
-      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator."
+      "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator.",
+      "membersTitle": "Adaugă mai mulți membri",
+      "membersAside": "o adresă pe rând, rolul Membru",
+      "membersRows": "Membrii, câte unul pe rând",
+      "membersRowsHelp": "Adresa, sau numele și adresa: „Ana Pop, ana@exemplu.ro”. Se pot lipi două coloane dintr-un tabel. Dacă un rând nu e o adresă, nu se adaugă nimeni.",
+      "membersInvite": "Adaugă membrii",
+      "membersInviting": "Se adaugă…",
+      "membersInvited": "Membri adăugați: {count}. Invitațiile sunt pe drum.",
+      "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei furnizorul de autentificare a refuzat să creeze contul. Rândurile lor apar în tabel cu „Fără cont de autentificare”."
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -2447,7 +2458,8 @@
           "how": [
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „pornește de la textul platformei”. Secțiunea 4 descrie pagina Echipa.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
-            "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”."
+            "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”.",
+            "Aceeași notă nouă descrie, în secțiunea 12, și conturile membrilor clubului (zona membrilor): aprob-o înainte să inviți primii membri din Echipa → „Adaugă mai mulți membri”."
           ]
         },
         "translation": {
@@ -2593,8 +2605,8 @@
           "more": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Pasul următor se plătește la consum, nu ca abonament fix. Consumul merită privit în contul Neon înainte de o cursă."
         },
         "zitadel": {
-          "name": "Zitadel (contul cu care intră echipa)",
-          "freeGives": "Gratuit: până la 100 de autentificări pe zi și un singur administrator al contului Zitadel.",
+          "name": "Zitadel (contul cu care intră echipa și membrii)",
+          "freeGives": "Gratuit (verificat pe 27.09.2026): până la 100 de utilizatori activi pe zi, oricâți utilizatori stocați — membrii clubului încap —, organizații nelimitate, 3 furnizori de identitate și fluxurile personalizate (actions) incluse, fără un număr lunar publicat.",
           "ceiling": "Singura limită care contează: un singur administrator, fără de care nimeni nu mai poate invita pe nimeni.",
           "whenCrossed": "Nu se traversează: se notează cine este administratorul și unde sunt datele de acces.",
           "closeYes": "—",
@@ -3084,8 +3096,12 @@
       "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
       "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
       "tabPages": "Paginile clubului",
-      "tabTeam": "Pagina Echipa",
-      "tabMembers": "Membri"
+      "tabTeam": "Echipa",
+      "groupStandard": "Pagini standard",
+      "groupCustom": "Pagini personalizate",
+      "tabContact": "Contact",
+      "tabBenefits": "Beneficii",
+      "tabMembersZone": "Zona membrilor"
     },
     "appearance": {
       "title": "Aspectul site-ului",
@@ -6341,7 +6357,12 @@
       },
       "membersTextSaved": "Textul paginilor membrilor a fost salvat.",
       "membersPagePublished": "Pagina Beneficiile membrilor este pe site, în ambele limbi.",
-      "membersPageUnpublished": "Pagina Beneficiile membrilor a fost retrasă de pe site."
+      "membersPageUnpublished": "Pagina Beneficiile membrilor a fost retrasă de pe site.",
+      "membersInvited": {
+        "one": "Adăugat: {count} membru.",
+        "few": "Adăugați: {count} membri.",
+        "other": "Adăugați: {count} de membri."
+      }
     }
   },
   "Network": {
@@ -6570,7 +6591,7 @@
     "doorTitle": "Zona membrilor",
     "doorHelp": "Ești membru și ai primit invitația pe email? Intră cu adresa ta.",
     "doorSignedIn": "Ești autentificat.",
-    "signIn": "Intră în cont",
+    "signIn": "Intră în zona membrilor",
     "openZone": "Intră în zona membrilor",
     "signInUnavailable": "Autentificarea nu este încă disponibilă pe acest site.",
     "noAccount": "Nu ai cont? Conturile de membru le face clubul. <contact>Scrie-ne</contact>.",
@@ -6579,6 +6600,9 @@
     "zoneEmpty": "Clubul pune aici, în curând, ce e doar pentru membri.",
     "zoneAway": "Baza de date a site-ului se odihnește acum. Revino în câteva minute.",
     "openBackoffice": "Deschide backoffice-ul",
-    "signOut": "Ieși din cont"
+    "signOut": "Ieși din cont",
+    "upcomingTitle": "Următoarele alergări",
+    "upcomingEmpty": "Nicio alergare anunțată acum.",
+    "upcomingAll": "Toate evenimentele"
   }
 }

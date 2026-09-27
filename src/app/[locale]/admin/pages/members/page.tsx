@@ -1,3 +1,5 @@
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
+import LockPersonIcon from "@mui/icons-material/LockPerson";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -42,8 +44,11 @@ export const dynamic = "force-dynamic";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
+/** A fold summary's glyph: the words' size, on their line. */
+const SUMMARY_GLYPH_SX = { fontSize: 20, verticalAlign: "text-bottom", mr: 0.75 } as const;
+
 /**
- * The members' pages in the backoffice (§NNN), beside «Echipa» under «Pagini»: «Beneficiile
+ * The members' pages in the backoffice (§NNN), «Beneficii» and «Zona membrilor» in the «Pagini standard» group of «Pagini»: «Beneficiile
  * membrilor» — whether it is on the site, and its words — and the members' zone's words.
  *
  * Read by whoever reads the club's content (§208); writing either text is the Redactor's and the
@@ -216,7 +221,15 @@ function TextCard({
         </Typography>
         {mayEdit && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
-            <summary>{t(`members.${text}Fold`)}</summary>
+            <summary>
+              {/* The glyph the «Pagini» row gives this text (§NNN): the benefits' card, the zone's lock. */}
+              {text === "benefits" ? (
+                <CardMembershipIcon aria-hidden="true" sx={SUMMARY_GLYPH_SX} />
+              ) : (
+                <LockPersonIcon aria-hidden="true" sx={SUMMARY_GLYPH_SX} />
+              )}
+              {t(`members.${text}Fold`)}
+            </summary>
             <ActionForm action={saveMembersTextAction} messages={messages} scope={text} data-testid={`members-${text}-form`}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="text" value={text} />

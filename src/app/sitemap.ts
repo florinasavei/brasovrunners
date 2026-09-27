@@ -4,6 +4,7 @@ import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documen
 import { cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { offersMembersEntry } from "@/modules/content/members/page-settings";
 import { teamPageOnSite } from "@/modules/content/team/repository";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
@@ -123,9 +124,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // «Beneficiile membrilor» (§NNN), once per locale, while it is published — a DRAFT page is a 404.
-  // Never the members' zone: it is behind the sign-in, and `robots.txt` names it.
-  if ((await readWithLastGood("sitemap:members", async () => (await cachedMembersPage(routing.defaultLocale)).published, now)).value) {
+  // «Beneficiile membrilor» (§NNN), once per locale, while the menu offers it (`offersMembersEntry`:
+  // published, with its words) — a DRAFT page is a 404. Never the members' zone: it is behind the
+  // sign-in, and `robots.txt` names it.
+  if ((await readWithLastGood("sitemap:members", async () => offersMembersEntry(await cachedMembersPage(routing.defaultLocale)), now)).value) {
     for (const locale of routing.locales) {
       entries.push({
         url: staticRouteUrl(env.APP_BASE_URL, "/members", locale),

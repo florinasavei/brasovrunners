@@ -149,6 +149,17 @@ export function membersTextFor(locale: string, settings: MembersPageSettings, te
 /** What a visitor may read of the members' pages: whether the public page is on, and its benefits. Never the zone. */
 export type PublicMembersPage = { published: boolean; benefits: RichTextDoc | null; benefitsText: string | null };
 
+/**
+ * Whether «Membri» is in the menu and the sitemap (§NNN): the page published **and** its benefits
+ * written — both languages, since `benefits` is null for a text written in one (§352). A published
+ * page with no words would put the platform's placeholder sentence in every visitor's menu; the
+ * address itself still answers, for the link the club has already shared. «Echipa»'s rule (§459):
+ * in the menu only while there is something to read.
+ */
+export function offersMembersEntry(page: Pick<PublicMembersPage, "published" | "benefits">): boolean {
+  return page.published && page.benefits !== null;
+}
+
 export async function readPublicMembersPage<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<PublicMembersPage> {
   const settings = await readMembersPageSettings(db);
   if (settings.status !== "PUBLISHED") return { published: false, benefits: null, benefitsText: null };

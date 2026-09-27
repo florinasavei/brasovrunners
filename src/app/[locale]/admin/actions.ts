@@ -39,6 +39,9 @@ import {
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
 import { landingFor, signInTargetOf } from "@/modules/staff-identity/domain/landing";
+import { MEMBER_ROWS_MAX, parseMemberRows } from "@/modules/staff-identity/domain/member-rows";
+import { findStaffEmailsAmong } from "@/modules/staff-identity/repository";
+import { invalidAddresses } from "@/modules/contact/domain/recipients";
 import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -51,6 +54,7 @@ import {
 import {
   assertMayManageAccount,
   changeStaffRole,
+  inviteMembers,
   inviteStaffUser,
   resendStaffInvitation,
   revokeStaffUser,
@@ -1048,6 +1052,55 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
     toast = env.STAFF_AUTH_MODE === "provider" ? outcome : { saved: "invited" };
   } catch (error) {
     return refused(error, form);
+  }
+
+  return backTo(path, outcome, toast);
+}
+
+/**
+ * «Adaugă mai mulți membri» (§NNN): one row per person, the role `MEMBER`, the whole list or nobody.
+ *
+ * A refusal names the rows (§457): the ones that are not addresses (`INVALID_ADDRESSES`), the ones
+ * already on the team (`MEMBERS_ON_TEAM`), or the ceiling (`TOO_MANY_ADDRESSES`), and every row
+ * comes back in the box as typed (§315). After the one transaction, the Zitadel accounts, one per
+ * member, where the key is set (§123); an account the provider refuses leaves its row marked on the
+ * list, as a single add does (§288), and the banner counts them.
+ */
+export async function inviteMembersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  const rows = parseMemberRows(text(form, "members"));
+
+  let outcome: Record<string, string | undefined>;
+  let toast: Record<string, string | undefined>;
+  try {
+    const actor = await requireStaffCapability(canManageStaff);
+    const members = await inviteMembers(getDb(), actor, { rows, preferredLocale: toLocale(form.get("preferredLocale")) });
+    let failed = 0;
+    if (env.STAFF_AUTH_MODE === "provider") {
+      for (const member of members) {
+        const invite = await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale });
+        if (invite.kind === "failed") failed += 1;
+      }
+    }
+    outcome = { saved: "membersInvited", count: String(members.length), ...(failed > 0 ? { failed: String(failed) } : {}) };
+    // A green tick only when every account exists; otherwise the banner says how many did not.
+    toast = failed > 0 ? {} : outcome;
+  } catch (error) {
+    const refusal = refused(error, form);
+    if (refusal.error === "VALIDATION_ERROR") {
+      const invalid = invalidAddresses(rows.map((row) => row.email));
+      if (invalid.length > 0) return { ...refusal, error: "INVALID_ADDRESSES", errorValues: { addresses: invalid.join(", ") } };
+      if (rows.length > MEMBER_ROWS_MAX) return { ...refusal, error: "TOO_MANY_ADDRESSES", errorValues: { max: String(MEMBER_ROWS_MAX) } };
+    }
+    if (refusal.error === "CONFLICT") {
+      const onTeam = await findStaffEmailsAmong(
+        getDb(),
+        rows.map((row) => row.email),
+      );
+      if (onTeam.length > 0) return { ...refusal, error: "MEMBERS_ON_TEAM", errorValues: { addresses: onTeam.join(", ") } };
+    }
+    return refusal;
   }
 
   return backTo(path, outcome, toast);

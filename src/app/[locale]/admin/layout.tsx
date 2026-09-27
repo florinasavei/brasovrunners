@@ -77,7 +77,9 @@ export default async function AdminLayout({ children, params }: Props) {
   if (!staffUser) {
     if (env.STAFF_AUTH_MODE === "disabled") notFound();
     // A club member is signed in and is no staff (§NNN): the members' zone is theirs, and the
-    // sign-in page would only send them back here.
+    // sign-in page would only send them back here. A redirect rather than a 404: the member knows
+    // the backoffice exists (the sign-in page is shared), and a dead end would read as a broken
+    // account. Every page, action and route under it still refuses them on its own (requireStaff).
     if (await getCurrentAccount()) redirect(getPathname({ locale, href: "/members-area" }));
     redirect(getPathname({ locale, href: "/sign-in" }));
   }

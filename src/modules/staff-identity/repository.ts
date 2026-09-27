@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, inArray, ne, sql } from "drizzle-orm";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { StaffRole } from "./domain/roles";
@@ -116,6 +116,29 @@ export async function countMembers<T extends Record<string, unknown>>(db: Databa
     .from(staffUsers)
     .where(eq(staffUsers.role, "MEMBER"));
   return row?.count ?? 0;
+}
+
+/**
+ * How many people run the club's site (§NNN): every account but a club member's, who signs in and
+ * is no staff. `/admin/tasks` asks it for "the team is invited"; the role line is the repository's,
+ * so no page compares a role by hand.
+ */
+export async function countBackofficeStaff<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(staffUsers)
+    .where(ne(staffUsers.role, "MEMBER"));
+  return row?.count ?? 0;
+}
+
+/** Which of these addresses already have a row (§NNN) — the bulk invitation refuses them all at once, by name. */
+export async function findStaffEmailsAmong<T extends Record<string, unknown>>(db: Database<T>, emails: readonly string[]): Promise<string[]> {
+  if (emails.length === 0) return [];
+  const rows = await db
+    .select({ email: staffUsers.email })
+    .from(staffUsers)
+    .where(inArray(staffUsers.email, emails.map(normalizeStaffEmail)));
+  return rows.map((row) => row.email);
 }
 
 /**

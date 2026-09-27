@@ -112,6 +112,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setMembersPagePublishedAction: [],
   // The team.
   inviteStaffAction: [],
+  // «Adaugă mai mulți membri» (§NNN): several accounts and invitations in one press.
+  inviteMembersAction: [],
   changeStaffRoleAction: [],
   resendStaffInviteAction: [],
   sendStaffPasswordResetAction: [],

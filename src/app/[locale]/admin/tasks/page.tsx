@@ -6,11 +6,11 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-import { and, count, eq, gte, lte, ne } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
-import { staffUsers } from "@/db/schema/staff-users";
+import { countBackofficeStaff } from "@/modules/staff-identity/repository";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
@@ -319,7 +319,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here — the team,
   // so a club member's account (§NNN) is not a colleague and is not counted.
-  const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers).where(ne(staffUsers.role, "MEMBER"));
+  const staffCount = await countBackofficeStaff(db);
   /**
    * Whether the invitation key can create an account, asked of Zitadel with a real search
    * (§288) — the reader is signed in through it, so a key that cannot find them is a key that

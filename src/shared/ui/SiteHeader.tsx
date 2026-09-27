@@ -12,6 +12,7 @@ import {
   cachedTeamPage,
   cachedMembersPage,
 } from "@/modules/public-cache/reads";
+import { offersMembersEntry } from "@/modules/content/members/page-settings";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
@@ -83,10 +84,10 @@ async function hasVisibleTeam(locale: Locale) {
   }
 }
 
-/** Whether «Membri» is offered (§NNN): «Beneficiile membrilor» published, or nothing. */
+/** Whether «Membri» is offered (§NNN): «Beneficiile membrilor» published with its words (`offersMembersEntry`), or nothing. */
 async function hasMembersPage(locale: Locale) {
   try {
-    return (await readWithLastGood(`nav:members:${locale}`, async () => (await cachedMembersPage(locale)).published)).value;
+    return (await readWithLastGood(`nav:members:${locale}`, async () => offersMembersEntry(await cachedMembersPage(locale)))).value;
   } catch {
     return false;
   }

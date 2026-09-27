@@ -4,6 +4,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -11,11 +12,13 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
+import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { readMembersZone } from "@/modules/content/members/page-settings";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { canOpenMembersZone, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
@@ -50,6 +53,25 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
   }
 }
 
+/** How many of the next runs the zone lists; the listing, one press away, has the rest. */
+const UPCOMING_SHOWN = 5;
+
+/**
+ * «Următoarele alergări» (§NNN): the next published events, soonest first — the public listing's own
+ * cached read (§333), so the zone costs the database nothing the listing has not already paid, and
+ * shows nothing a stranger could not see. Empty while the database is away.
+ */
+async function upcomingOrNone(locale: Locale, now: Date) {
+  try {
+    const events = await cachedUpcomingEvents(locale, now);
+    return [...events].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime()).slice(0, UPCOMING_SHOWN);
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    return [];
+  }
+}
+
 /**
  * The members' zone (§NNN): one page of the club's words for its members alone, behind the sign-in.
  *
@@ -64,6 +86,17 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
  *
  * A colleague sees the way to the backoffice as well; a member sees only the zone and the sign-out,
  * which lands on «Beneficiile membrilor».
+ *
+ * **Why here and not under `/admin` (§NNN).** The zone is a public-tree route with the site's own
+ * header and footer, not a page inside the backoffice's shell: everything under `/admin` sits
+ * behind `requireStaff` in its layout, loads the backoffice's client islands and words, and is the
+ * area a member must never be let into — putting the member's page there would mean a hole in the
+ * one line `getCurrentStaffUser` draws. Here the door is the account (`getCurrentAccount`), the
+ * page is `force-dynamic`, `noindex`, listed in `private-paths.ts` (a `no-store`, `noindex` header)
+ * and `robots.txt`. A member who types `/admin` is redirected here by the backoffice's layout.
+ *
+ * Under the club's words, «Următoarele alergări»: the next published events, from the listing's
+ * own cached read (§333) — nothing a stranger could not see, and no query of its own.
  */
 export default async function MembersAreaPage({ params }: Props) {
   const { locale } = await params;
@@ -83,7 +116,7 @@ export default async function MembersAreaPage({ params }: Props) {
   if (!canOpenMembersZone(account.role)) notFound();
 
   const t = await getTranslations("Members");
-  const zone = await zoneOrAway(locale);
+  const [zone, upcoming] = await Promise.all([zoneOrAway(locale), upcomingOrNone(locale, new Date())]);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -108,6 +141,37 @@ export default async function MembersAreaPage({ params }: Props) {
           {t("zoneEmpty")}
         </Typography>
       )}
+
+      <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">
+        <Typography id="members-upcoming-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("upcomingTitle")}
+        </Typography>
+        {upcoming.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            {t("upcomingEmpty")}
+          </Typography>
+        ) : (
+          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+            {upcoming.map((event) => (
+              <Box component="li" key={event.id} sx={{ mb: 0.5 }}>
+                <MuiLink
+                  href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}
+                  sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontWeight: 600 }}
+                >
+                  {event.title}
+                </MuiLink>
+                <Typography component="span" variant="body2" color="text.secondary">
+                  {" · "}
+                  {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+        <MuiLink href={getPathname({ locale, href: "/events" })} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+          {t("upcomingAll")}
+        </MuiLink>
+      </Box>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
         {/* A colleague is a member too, and their backoffice is one press away (§NNN). */}

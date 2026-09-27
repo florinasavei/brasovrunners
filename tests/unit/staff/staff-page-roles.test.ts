@@ -46,6 +46,7 @@ vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () =>
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),
   inviteStaffAction: vi.fn(),
+  inviteMembersAction: vi.fn(),
   resendStaffInviteAction: vi.fn(),
   revokeStaffAction: vi.fn(),
   sendStaffPasswordResetAction: vi.fn(),

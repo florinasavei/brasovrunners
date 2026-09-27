@@ -30,7 +30,8 @@ const SECTIONS = [
   // «Echipa» (§459): a page this application ships, like the gallery, so it sits with the
   // sections and not with the club's pages — offered while a card is on the site (`showTeam`).
   { segment: "team", href: "/team" },
-  // «Membri» (§NNN): «Beneficiile membrilor» and its sign-in — offered while the page is published.
+  // «Membri» (§NNN): «Beneficiile membrilor» and its sign-in — offered while the page is published
+  // with its words (`offersMembersEntry`, `showMembers`).
   { segment: "members", href: "/members" },
   { segment: "contact", href: "/contact" },
 ] as const;

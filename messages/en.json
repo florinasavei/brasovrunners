@@ -909,7 +909,7 @@
       "interestWithdrawTitle": "Withdraw the address?",
       "interestWithdrawBody": "The address typed is removed from “Notify me” and no longer receives the announcement that registration opened.",
       "inviteStaffTitle": "Add the person to the team?",
-      "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter the backoffice as soon as they set a password.",
+      "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter as soon as they set a password: the backoffice, or — as a Member — only the members' area on the site.",
       "changeRoleTitle": "Change the role?",
       "changeRoleBody": "{name} gets the chosen role from the next page they open.",
       "approvePlatformTitle": "Approve the platform's missing texts ({count} of {total})?",
@@ -952,7 +952,9 @@
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
       "deliveryTimingTitle": "Change when emails leave?",
-      "deliveryTimingBody": "It applies from now on to every email the platform sends, including those already in the queue. No message is lost."
+      "deliveryTimingBody": "It applies from now on to every email the platform sends, including those already in the queue. No message is lost.",
+      "inviteMembersTitle": "Add the members?",
+      "inviteMembersBody": "Every address on the list gets the Member role and the sign-in invitation by email. Once they set a password, a member enters only the members' area on the site — never the backoffice."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -990,7 +992,8 @@
       "BIB_NUMBER_TAKEN": "That number is already somebody's at this event (given, held, or worn by an erased registration). Pick another number from the box and try again.",
       "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number.",
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
-      "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person."
+      "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
+      "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1843,7 +1846,15 @@
       "inviting": "Adding…",
       "inviteAsideSends": "the account and the invitation, in one step",
       "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
-      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access."
+      "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access.",
+      "membersTitle": "Add several members",
+      "membersAside": "one address per row, the Member role",
+      "membersRows": "The members, one per row",
+      "membersRowsHelp": "The address, or the name and the address: “Ana Pop, ana@example.com”. Two columns pasted from a spreadsheet work too. If one row is not an address, nobody is added.",
+      "membersInvite": "Add the members",
+      "membersInviting": "Adding…",
+      "membersInvited": "Members added: {count}. The invitations are on their way.",
+      "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in provider refused to create the account. Their rows show “No sign-in account” in the table."
     },
     "queue": {
       "title": "The registration queue",
@@ -2447,7 +2458,8 @@
           "how": [
             "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. Section 4 describes the team page.",
             "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
-            "Only then publish the page, from /admin/pages/team → “Publish the page”."
+            "Only then publish the page, from /admin/pages/team → “Publish the page”.",
+            "The same new notice also describes, in section 12, the club members' accounts (the members' area): approve it before inviting the first members from Team → “Add several members”."
           ]
         },
         "translation": {
@@ -2593,8 +2605,8 @@
           "more": "On the free plan the database goes to sleep when nobody is using it, so the first page after a quiet spell is slow to load. The next step up is paid by usage, not as a fixed subscription. The usage is worth a look in the Neon account before a race."
         },
         "zitadel": {
-          "name": "Zitadel (how the team signs in)",
-          "freeGives": "Free: up to 100 sign-ins a day and a single administrator of the Zitadel account.",
+          "name": "Zitadel (how the team and the members sign in)",
+          "freeGives": "Free (checked on 27 Sept 2026): up to 100 daily active users, any number of stored users — the club's members fit —, unlimited organizations, 3 identity providers and custom workflows (actions) included, with no monthly number published.",
           "ceiling": "The one limit that matters: a single administrator, without whom nobody can invite anybody.",
           "whenCrossed": "It is not crossed: who the administrator is and where the credentials are is written down.",
           "closeYes": "—",
@@ -3084,8 +3096,12 @@
       "seoHelp": "Optional, for search engines — in both languages or neither.",
       "bothOrNeither": "write it in both languages or neither",
       "tabPages": "The club's pages",
-      "tabTeam": "The team page",
-      "tabMembers": "Members"
+      "tabTeam": "The team",
+      "groupStandard": "Standard pages",
+      "groupCustom": "Custom pages",
+      "tabContact": "Contact",
+      "tabBenefits": "Benefits",
+      "tabMembersZone": "Members' area"
     },
     "appearance": {
       "title": "Site appearance",
@@ -6341,7 +6357,12 @@
       },
       "membersTextSaved": "The members' pages text was saved.",
       "membersPagePublished": "The members' benefits page is on the site, in both languages.",
-      "membersPageUnpublished": "The members' benefits page was taken off the site."
+      "membersPageUnpublished": "The members' benefits page was taken off the site.",
+      "membersInvited": {
+        "one": "Added: {count} member.",
+        "few": "Added: {count} members.",
+        "other": "Added: {count} members."
+      }
     }
   },
   "Network": {
@@ -6570,8 +6591,8 @@
     "doorTitle": "The members' area",
     "doorHelp": "A member who got the invitation by email? Sign in with your address.",
     "doorSignedIn": "You are signed in.",
-    "signIn": "Sign in",
-    "openZone": "Open the members' area",
+    "signIn": "Enter the members' area",
+    "openZone": "Enter the members' area",
     "signInUnavailable": "Signing in is not available on this site yet.",
     "noAccount": "No account? The club makes the member accounts. <contact>Write to us</contact>.",
     "zoneTitle": "The members' area",
@@ -6579,6 +6600,9 @@
     "zoneEmpty": "The club will soon put here what is for members only.",
     "zoneAway": "The site's database is resting right now. Come back in a few minutes.",
     "openBackoffice": "Open the backoffice",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "upcomingTitle": "The next runs",
+    "upcomingEmpty": "No run is announced right now.",
+    "upcomingAll": "Every event"
   }
 }
