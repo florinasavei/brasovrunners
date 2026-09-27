@@ -61,7 +61,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
   return (
-    <Panel level={level} id="neon-plan" title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
+    <Panel glyph="plan" level={level} id="neon-plan" title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
       {/* The plan in force, and what this month looks like on it — the figures a wrong answer would expose. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-plan-in-force">
         {block.plan === "LAUNCH"

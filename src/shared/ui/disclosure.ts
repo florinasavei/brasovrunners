@@ -77,6 +77,25 @@ export const DISCLOSURE_SUMMARY_SX = {
 export const DISCLOSURE_SX = { "& > summary": DISCLOSURE_SUMMARY_SX, ...DISCLOSURE_OPEN_ARROW } as const;
 
 /**
+ * The glyph a fold's header wears after its arrow (§521; the owner, 2026-09-27: a glyph on every
+ * button and every fold header). The arrow says "this opens"; the glyph says what is inside, so a
+ * column of closed folds is read by picture as well as by words.
+ *
+ * Sized in `em`, so one rule serves a `body2` fold on the registration form and an `h2` card in
+ * the backoffice: the glyph is a fifth larger than the words beside it, as MUI's start-icon slot
+ * is beside a button's label. Always `aria-hidden` at the call site — the header's words are its
+ * name.
+ *
+ * Two shapes, because a header is one of two things. `FOLD_GLYPH_SX` is for a glyph that is a
+ * child of the flex `<summary>` itself (`DISCLOSURE_SUMMARY_SX`), where the summary's own `gap`
+ * spaces it. `FOLD_GLYPH_INLINE_SX` is for a glyph inside the words' own element — a heading
+ * drawn inline, a static card's `h2` — where it sits on the text's line and carries its own gap.
+ */
+export const FOLD_GLYPH_SX = { fontSize: "1.2em", flexShrink: 0 } as const;
+
+export const FOLD_GLYPH_INLINE_SX = { fontSize: "1.2em", flexShrink: 0, verticalAlign: "-0.2em", mr: 0.75 } as const;
+
+/**
  * The backoffice fold, as a box (`DECISIONS.md` §269 and its follow-up; the owner, looking at
  * the bib-design panel and the event editor: "toate aceste acordeoane din zona de backoffice
  * trebuie sa fie mai 'boxed'").

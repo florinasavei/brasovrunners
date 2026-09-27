@@ -1,5 +1,6 @@
 "use client";
 
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import { useTranslations } from "next-intl";
@@ -67,7 +68,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
   return (
     <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
       <SaveBlockedNotice kept={false} onSend={sendSimple} />
-      <Button variant="outlined" onClick={reset} sx={TAP_TARGET}>
+      <Button variant="outlined" onClick={reset} startIcon={<RefreshIcon fontSize="small" />} sx={TAP_TARGET}>
         {t("retry")}
       </Button>
     </Stack>

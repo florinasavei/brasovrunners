@@ -81,14 +81,24 @@ describe("§336 the emails participants receive: one card of cards", () => {
 
   it("titles each inner card with the message's name and when it goes out, as an h3 under the card's h2", () => {
     const html = render([card("EVENT_REMINDER")]);
-    expect(html).toMatch(/<summary[^>]*><h2[^>]*>Emailurile trimise participanților<span[^>]*>1 mesaje · Română<\/span><\/h2><\/summary>/);
+    expect(html).toMatch(/<summary[^>]*><h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Emailurile trimise participanților<span[^>]*>1 mesaje · Română<\/span><\/h2><\/summary>/);
     expect(html).toMatch(
-      /<summary[^>]*><h3[^>]*>Reminderul dinaintea startului<span[^>]*>cu 2 zile înainte de start<\/span><\/h3><\/summary>/,
+      /<summary[^>]*><h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Reminderul dinaintea startului<span[^>]*>cu 2 zile înainte de start<\/span><\/h3><\/summary>/,
     );
     // The body: the full sentence, the subject, the preview.
     expect(html).toContain(filled(ro.Admin.emails.when.EVENT_REMINDER));
     expect(html).toContain("Subiect: EVENT_REMINDER");
     expect(html).toMatch(/<iframe[^>]*sandbox=""[^>]*title="Reminderul dinaintea startului"/);
+  });
+
+  it("keeps what a short «când» line leaves out behind its «?», and draws none where it says it all (§522)", () => {
+    const withMore = { ...card("COMPLETE_DECLARATION"), whenMore: filled(ro.Admin.emails.whenMore.COMPLETE_DECLARATION) };
+    const html = render([withMore]);
+    expect(html).toContain(filled(ro.Admin.emails.when.COMPLETE_DECLARATION));
+    expect(html).toContain(`aria-label="${filled(ro.Admin.emails.whenMore.COMPLETE_DECLARATION)}"`);
+    // The hold the short line dropped is back, in the club's own number.
+    expect(html).toContain("30 de minute");
+    expect(render([card("EVENT_REMINDER")])).not.toContain("quiet-help");
   });
 
   it("puts the language switch inside the card, first, under the line that says what it switches", () => {
@@ -135,7 +145,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
     for (const type of ["EVENT_UPDATE_NOTICE", "EVENT_CANCELLED"] as const) {
       expect(html).toContain(`id="email-${type}"`);
       expect(html).toMatch(
-        new RegExp(`<h3[^>]*>${escape(ro.Admin.emails.types[type])}<span[^>]*>${escape(ro.Admin.emails.whenShort[type])}</span></h3>`),
+        new RegExp(`<h3[^>]*>(?:<svg[\\s\\S]*?</svg>)?${escape(ro.Admin.emails.types[type])}<span[^>]*>${escape(ro.Admin.emails.whenShort[type])}</span></h3>`),
       );
       expect(html).toContain(filled(ro.Admin.emails.when[type]));
       expect(html).toContain(`Subiect: ${type}`);
@@ -191,7 +201,8 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
     // Through `cards`, which is `types` with each message's preview and saved words (§359).
     expect(page).toMatch(/const cards = types\.map\(/);
-    expect(page).toMatch(/messages=\{cards\.map\(/);
+    // `flatMap` since §520: «Înscriere confirmată» is followed by the family's confirmation, a second card of its type.
+    expect(page).toMatch(/messages=\{cards\.flatMap\(/);
     expect(page).toMatch(/languages=\{routing\.locales\.map\(/);
     // No preview or switch is drawn on the page outside the card any more.
     expect(page).not.toContain('component="details"');

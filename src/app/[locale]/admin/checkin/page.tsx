@@ -1,3 +1,4 @@
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -26,7 +27,7 @@ import DeskRow from "@/modules/registrations/ui/DeskRow";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
@@ -106,6 +107,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
       {/* The whole process, on the page, folded: what happens before, at the table, and after. */}
       <Box component="details" sx={BOXED_DISCLOSURE_SX}>
         <Typography component="summary" variant="subtitle2">
+          <HelpOutlineIcon aria-hidden sx={FOLD_GLYPH_SX} />
           {t("desk.howTitle")}
         </Typography>
         <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>

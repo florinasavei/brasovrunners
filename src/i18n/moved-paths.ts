@@ -8,7 +8,8 @@ import { routing } from "@/i18n/routing";
  * or a line in `SETUP.md` still names the old address, so each one answers a **308** — permanent,
  * and a POST stays a POST — to its new one, with the query kept (a `?saved=` or `?lang=` still
  * means what it meant). A fragment is the browser's: it rides along on its own, so an old
- * `#email-plan` still opens its card.
+ * `#email-plan` still opens its card — when the card is still on that page. The three that left
+ * the email page for a tab of their own are `MOVED_FRAGMENTS` below.
  *
  * Pure and table-driven, so the proxy asks one function and a unit test walks every row. The
  * `/admin` part of a path is the same in both locales (§9.2), so the table is written once; the
@@ -45,4 +46,35 @@ export function resolveMovedBackofficePath(pathname: string, search: string): { 
   if (moved.panel !== undefined) query.delete("panel");
   const kept = query.toString();
   return { pathname: `${prefix}${moved.to}`, search: kept ? `?${kept}` : "" };
+}
+
+/**
+ * Cards that left a page for another tab of «Setări» (§520), by the `id` their fold carries: the
+ * old `/admin/emails#contact-recipients` is 308'd to `/admin/settings/emails#contact-recipients`,
+ * where no such card is any more — the server never sees a fragment, so it cannot send the reader on.
+ * `MovedFragmentHop` on that page reads this table in the browser and replaces the address with the
+ * card's new tab, the fragment kept, so the card opens there (`OpenFoldFromHash`, §336).
+ */
+type MovedFragment = { page: string; hash: string; to: string };
+
+export const MOVED_FRAGMENTS: readonly MovedFragment[] = [
+  { page: "/admin/settings/emails", hash: "contact-recipients", to: "/admin/settings/contact" },
+  { page: "/admin/settings/emails", hash: "shown-contact-address", to: "/admin/settings/contact" },
+  { page: "/admin/settings/emails", hash: "deadlines", to: "/admin/settings/deadlines" },
+];
+
+/**
+ * Where the browser should go for a `#fragment` naming a card that now lives on another tab — the
+ * path with its locale segment kept and the fragment — or `null` when the card is on this page (or
+ * the fragment names nothing that moved).
+ */
+export function resolveMovedFragment(pathname: string, hash: string): string | null {
+  const id = decodeURIComponent(hash.replace(/^#/, ""));
+  if (!id) return null;
+  const segments = pathname.split("/").filter(Boolean);
+  const hasLocale = segments.length > 0 && (routing.locales as readonly string[]).includes(segments[0]);
+  const prefix = hasLocale ? `/${segments[0]}` : "";
+  const rest = `/${(hasLocale ? segments.slice(1) : segments).join("/")}`;
+  const moved = MOVED_FRAGMENTS.find((entry) => entry.page === rest && entry.hash === id);
+  return moved ? `${prefix}${moved.to}#${moved.hash}` : null;
 }

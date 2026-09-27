@@ -620,7 +620,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   is not an edit, and it carries only the event's version. */}
               {/* The state and the version are the chips under the page's heading, once: a second
                   copy here was two answers to one question on a phone's first screen. */}
-              <Panel collapsible openWhen={{ primary: true }} id="box-publication" title={t("editor.publicationSection")}>
+              <Panel glyph="publication" collapsible openWhen={{ primary: true }} id="box-publication" title={t("editor.publicationSection")}>
                 <Stack spacing={1.5}>
                   {live && <Alert severity="warning">{t("editor.liveWarning")}</Alert>}
                   {gapLines.length > 0 && (
@@ -705,7 +705,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   actions={{ setRepeatPublish: setRepeatPublishAction, stopRepeat: stopRepeatAction }}
                 />
               ) : (
-                <Panel collapsible id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={t("editor.boxes.recurrence.none")}>
+                <Panel glyph="recurrence" collapsible id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={t("editor.boxes.recurrence.none")}>
                   <Stack spacing={1.5}>
                     {mayChangeSeries ? (
                       /* A refused rule — an end before the event — comes back as it was chosen (§315). */
@@ -741,7 +741,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         {t("editor.repeatAdminOnly")}
                       </Typography>
                     )}
-                    <Panel collapsible level={3} title={t("editor.repeatHelpSummary")}>
+                    <Panel glyph="help" collapsible level={3} title={t("editor.repeatHelpSummary")}>
                       <Typography variant="body2" color="text.secondary">
                         {t("editor.repeatHelp", { horizon: daysPhrase(locale, deadlines.seriesHorizonDays) })}
                       </Typography>
@@ -753,7 +753,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               {/* S3 — the page, top to bottom (§408): a chip per section, each opening its card —
                   and under it, once, how many are registered (§408): the amber outline on a card
                   says a change there reaches them; the number is said here, not on every card. */}
-              <Panel static id="box-map" title={flow.label}>
+              <Panel glyph="map" static id="box-map" title={flow.label}>
                 <Stack spacing={1.5}>
                   <SectionMap entries={flow.entries} words={flow.words} label={flow.label} />
                   <RegisteredLine
@@ -841,7 +841,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   {/* 15 — always open: which dates, who is told, the live tick, and the one button.
                       A required tick in a closed box would be a Save that silently does nothing. */}
                   {maySaveAnything && (
-                    <Panel static id="box-save" title={t("editor.boxes.save.title")}>
+                    <Panel glyph="save" static id="box-save" title={t("editor.boxes.save.title")}>
                       <Stack spacing={2}>
                         {/* What this save covers, for the role whose save covers half the form. */}
                         {maySaveSettings && !mayEditSomeText && (
@@ -917,7 +917,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               {canReadRegistrations(staffUser.role) && internal && (
                 <>
                   <EditorGroup label={t("editor.immediateActions")} />
-                  <Panel
+                  <Panel glyph="registrations"
                     collapsible
                     id="box-received"
                     title={t("editor.boxes.received.title")}
@@ -976,7 +976,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       </Stack>
 
                       {/* 16.1 — the queue as the allocator sees it, and the waiting list in its order (§92). */}
-                      <Panel collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>
+                      <Panel glyph="queue" collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>
                         <QueuePanel
                           db={db}
                           event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone }}
@@ -1014,7 +1014,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
                       {/* 16.2 — the thank-you after the race (§82): once, by hand, after the start. */}
                       {thanksDue && (
-                        <Panel collapsible level={3} id="box-thanks" title={t("editor.boxes.thanks.title")} openWhen={{ attention: !event.thanksSentAt }}>
+                        <Panel glyph="thanks" collapsible level={3} id="box-thanks" title={t("editor.boxes.thanks.title")} openWhen={{ attention: !event.thanksSentAt }}>
                           {event.thanksSentAt ? (
                             <Typography variant="body2" color="text.secondary">
                               {t("thanks.sentOn", { date: formatDay(event.thanksSentAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) })}
@@ -1055,7 +1055,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
                       {/* 16.3 — test registrations: Administrator, never in production (§30). */}
                       {mayFillTheQueue && (
-                        <Panel collapsible level={3} id="box-test-registrations" title={t("editor.boxes.testRegs.title")} aside={registered.test > 0 ? String(registered.test) : undefined}>
+                        <Panel glyph="test" collapsible level={3} id="box-test-registrations" title={t("editor.boxes.testRegs.title")} aside={registered.test > 0 ? String(registered.test) : undefined}>
                           <Alert severity="info" sx={{ mb: 2 }}>
                             {t("testRegistrations.explanation")}
                           </Alert>
@@ -1101,7 +1101,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
               {/* 17 — commands, not edits: their own forms, outside the save; Administrator and up. */}
               {(mayChangeSeries || canDeleteEvent(staffUser.role)) && (
-                <Panel collapsible tone="danger" id="box-copy-delete" title={t("editor.boxes.copyDelete.title")} aside={t("editor.boxes.copyDelete.summary")}>
+                <Panel glyph="copy" collapsible tone="danger" id="box-copy-delete" title={t("editor.boxes.copyDelete.title")} aside={t("editor.boxes.copyDelete.summary")}>
                   <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
                     {mayChangeSeries && (
                       <ActionForm

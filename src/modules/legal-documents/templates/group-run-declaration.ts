@@ -31,8 +31,10 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * for a document only when the text names one, asks for none. The basis is the club's legitimate
  * interest in evidence (art. 6(1)(f)), and art. 9(2)(f) for the health statement — the privacy
  * notice's §3 says the same — so the rights list names objection and restriction, and the data
- * paragraph names the archive copy's three years beside the platform's keeping it until the
- * signer asks for its deletion (§503, reversing §393's seven days).
+ * paragraph names the platform's keeping it until the signer asks for its deletion (§503, reversing
+ * §393's seven days) and the archive copy's three years from the signing — not "from the run",
+ * which a declaration covering every date of a weekly run no longer names (§523); the platform's
+ * copy, which a PDF can be drawn from again, is the one that lasts while the signer keeps coming.
  *
  * **One age rule, on `{{minimumAge}}` (§515).** The signer declares for themselves: `{{participant}}`
  * is the signer's own name, and the text says it is signed personally. Until the owner's review of
@@ -54,20 +56,58 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * §503) — the same for every run because the code makes it so.
  */
 
-/** What both surfaces open with: who, which run, that it is optional and not a race. */
+/**
+ * What both surfaces open with: who, which run — every date of it, from the one signed on (§523) —
+ * that it is optional and not a race.
+ *
+ * **A series sentence and a one-off sentence (§523).** A group run is mostly a weekly one (§113: one
+ * line, many dates), and the owner's rule of 2026-09-27 is that a returning runner signs once. But one
+ * approved text serves a one-off run too, and «every date of the run» is untrue of a run that has one.
+ * So the text says what it covers in one of two paragraphs, and the renderer keeps the one that fits
+ * (`dropsParagraph`, `SERIES_MERGE_FIELDS`): the **series sentence** names `{{series}}`,
+ * `{{seriesRhythm}}` and `{{seriesPlace}}` — every run of the series from the signing on, with no end
+ * date, a date that differs read on its own page, valid until the signer asks for its deletion, and a
+ * new version asked for again —; the **one-off sentence** names `{{event}}`, `{{eventDate}}` and
+ * `{{eventLocation}}` — that one run. The opening names neither, so it reads right under both. The
+ * service keeps one signature per person, series and version (`signGroupRunDeclaration`), which is
+ * what the series sentence promises.
+ *
+ * The series sentence comes in two shapes, with «cu plecare de obicei din {{seriesPlace}}» and
+ * without it, for a run whose place is not written in that language (`isPlacelessSeriesSentence`):
+ * the renderer keeps exactly one of them, so a series never loses its sentence to an empty place.
+ */
+const SERIES_TAIL_RO =
+  "la care particip de la semnare, fără termen de încetare: nu o semnez din nou la fiecare alergare. Dacă o dată diferă de celelalte — locul, ora sau traseul —, aflu acest lucru de pe pagina acelei date, iar declarația se aplică și ei. Rămâne valabilă până când cer ștergerea ei; dacă organizatorul aprobă o versiune nouă a textului, mi se cere să o semnez din nou.";
+const SERIES_TAIL_EN =
+  "that I take part in from the moment I sign it, with no end date: I do not sign it again for each run. If a date differs from the others — the place, the time or the route — I learn it from that date's page, and the declaration applies to that date too. It stays valid until I ask for its deletion; if the organiser approves a new version of the text, I am asked to sign it again.";
+
 const openingRo = [
-  "Subsemnatul/a {{participant}}, declar pe propria răspundere că particip la alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
+  "Subsemnatul/a {{participant}}, declar pe propria răspundere că particip la alergarea de grup descrisă mai jos și că înainte de fiecare alergare îi citesc detaliile pe pagina ei de pe site-ul clubului.",
   // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §515): the
-  // one age the text states.
-  "Declar că am cel puțin {{minimumAge}} împliniți la data alergării.",
+  // one age the text states — on the day of each run, true of one run and of a series alike.
+  "Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.",
+  // The series sentence (§523): kept for a run that is one of a series, dropped for a one-off.
+  `Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}}, cu plecare de obicei din {{seriesPlace}} — ${SERIES_TAIL_RO}`,
+  // The same sentence without its place clause (`isPlacelessSeriesSentence`, §523): kept only for a
+  // series whose place is not written, when the one above is dropped — never both, never neither.
+  `Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}} — ${SERIES_TAIL_RO}`,
+  // The one-off sentence (§523): kept for a run of one date, dropped for a series.
+  "Declarația este pentru alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",
 ];
 
 const openingEn = [
-  "I, {{participant}}, declare on my own responsibility that I take part in the group run {{event}}, on {{eventDate}}, starting from {{eventLocation}}, and that I have read its details on the event's page on the club's website.",
+  "I, {{participant}}, declare on my own responsibility that I take part in the group run described below, and that before each run I read its details on its page on the club's website.",
   // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §515): the
-  // one age the text states.
-  "I declare that I am at least {{minimumAge}} old on the day of the run.",
+  // one age the text states — on the day of each run, true of one run and of a series alike.
+  "I declare that I am at least {{minimumAge}} old on the day of each run I take part in.",
+  // The series sentence (§523): kept for a run that is one of a series, dropped for a one-off.
+  `This declaration is valid for every run of the series {{series}} — {{seriesRhythm}}, usually starting from {{seriesPlace}} — ${SERIES_TAIL_EN}`,
+  // The same sentence without its place clause (`isPlacelessSeriesSentence`, §523): kept only for a
+  // series whose place is not written, when the one above is dropped — never both, never neither.
+  `This declaration is valid for every run of the series {{series}} — {{seriesRhythm}} — ${SERIES_TAIL_EN}`,
+  // The one-off sentence (§523): kept for a run of one date, dropped for a series.
+  "This declaration is for the group run {{event}} on {{eventDate}}, starting from {{eventLocation}}.",
   "I know that a group run is neither a competition nor a guided tour: it has no registration, no timing and no safety crew on the course, and the organiser* announces the time, the place and the route and runs together with the participants. Signing this declaration is optional and is not a condition of running with the group.",
 ];
 
@@ -75,7 +115,7 @@ const openingEn = [
 const closingRo = [
   "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
   "Această declarație arată că am fost informat/ă despre riscurile de mai sus și că le accept, împreună cu obligațiile mele; acceptarea riscurilor nu înseamnă, prin ea însăși, că renunț la dreptul de a fi despăgubit (art. 1355 alin. (4) din Codul civil) și nu mă lipsește de niciun drept pe care mi-l dă legea. Organizatorul răspunde, potrivit legii, pentru prejudiciile care îi sunt imputabile; nu poate fi tras la răspundere, în limitele permise de lege, pentru cele care nu îi sunt imputabile, cum sunt urmările propriilor mele alegeri pe traseu, iar fapta mea poate reduce sau înlătura răspunderea lui, potrivit legii (art. 1371 din Codul civil).",
-  "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestei alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului; copia din arhiva clubului se păstrează trei ani de la alergare (termenul general de prescripție, art. 2517 din Codul civil), apoi se șterge. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
+  "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestor alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului; copia din arhiva clubului se păstrează trei ani de la semnare (termenul general de prescripție, art. 2517 din Codul civil), apoi se șterge. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
   "Semnez această declarație personal, doar pentru mine. Este semnată electronic: numele scris mai jos, bifa de acceptare, momentul semnării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună (semnătură electronică simplă, în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea).",
   "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>.",
 ];
@@ -83,7 +123,7 @@ const closingRo = [
 const closingEn = [
   "I take responsibility for my own safety, my equipment and the decisions I make on the course.",
   "This declaration shows that I have been informed of the risks above and that I accept them, together with my own obligations; accepting the risks is not, by itself, a waiver of my right to compensation (art. 1355(4) of the Romanian Civil Code), and it does not take away any right the law gives me. The organiser is liable, under the law, for harm attributable to it; it cannot be held liable, to the extent the law allows, for harm not attributable to it, such as the consequences of my own choices on the course, and my own conduct may reduce or remove its liability, under the law (art. 1371 of the Civil Code).",
-  "I am informed that the data in this declaration — my name and my email address — is processed by the organiser*, under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, as evidence that I was informed of this run's risks and accepted them, on the basis of the organiser's legitimate interest (art. 6(1)(f) GDPR), and the statement about my health only for the establishment or defence of legal claims (art. 9(2)(f) GDPR). A copy is sent to the email address I gave, and one to the club's archive. The club's platform keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address; the copy in the club's archive is kept for three years from the run (the general limitation period, art. 2517 of the Romanian Civil Code), then deleted. I have the rights of access, rectification, erasure, restriction and objection, and the right to complain to the Romanian supervisory authority (ANSPDCP); for them I write to <CONTACT EMAIL>.",
+  "I am informed that the data in this declaration — my name and my email address — is processed by the organiser*, under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, as evidence that I was informed of the risks of these runs and accepted them, on the basis of the organiser's legitimate interest (art. 6(1)(f) GDPR), and the statement about my health only for the establishment or defence of legal claims (art. 9(2)(f) GDPR). A copy is sent to the email address I gave, and one to the club's archive. The club's platform keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address; the copy in the club's archive is kept for three years from the signing (the general limitation period, art. 2517 of the Romanian Civil Code), then deleted. I have the rights of access, rectification, erasure, restriction and objection, and the right to complain to the Romanian supervisory authority (ANSPDCP); for them I write to <CONTACT EMAIL>.",
   "I sign this declaration personally, for myself only. It is signed electronically: the name written below, the acceptance tick, the moment of signing ({{signedAt}}) and the fingerprint of the text read are recorded together (a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them).",
   "*Organiser means <THE CLUB'S FULL LEGAL NAME>, with its registered seat at <REGISTERED ADDRESS>, <REGISTRATION NUMBER>.",
 ];

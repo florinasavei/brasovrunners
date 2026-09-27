@@ -98,7 +98,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
     <ActionForm
       action={updateEmailCopyAction}
       /*
-        "Revino la textul platformei" loses the club's own words for this message: it asks, in red,
+        "Revino la textul implicit" loses the club's own words for this message: it asks, in red,
         chosen by the button pressed (`reset=1`, §384). Saving the wording is an editorial save,
         like a page's or an event's, and says it worked with a toast — no question in front of the
         page's first press (§371, `press-adds-no-style.spec.ts`).

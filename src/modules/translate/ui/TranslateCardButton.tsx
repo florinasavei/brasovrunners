@@ -110,7 +110,11 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
         </>
       }
     >
-      {/* A disabled button fires no pointer events: the wrapper holds the tooltip and the focus. */}
+      {/*
+        A disabled button fires no pointer events: the wrapper holds the tooltip and the focus, and
+        the name — once (§520): the inner button carries no `aria-label` of its own, or a screen
+        reader walking the page reads «Tradu cardul» twice.
+      */}
       <Box
         component="span"
         tabIndex={0}
@@ -120,7 +124,7 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
         data-testid="translate-card-off"
         data-reason={reason}
       >
-        <GlyphButton icon="translate" size="small" disabled aria-label={t("card")} sx={BUTTON_SX}>
+        <GlyphButton icon="translate" size="small" disabled sx={BUTTON_SX}>
           <Words>{t("card")}</Words>
         </GlyphButton>
         <Box component="span" id={reasonId} sx={VISUALLY_HIDDEN}>

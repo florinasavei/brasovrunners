@@ -77,7 +77,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
   const horizon = daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays);
 
   return (
-    <Panel collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
+    <Panel glyph="recurrence" collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
       <Stack spacing={1.5}>
         <Box>
           <Typography variant="subtitle2" component="p" sx={{ fontWeight: 600 }}>
@@ -206,7 +206,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
             </Typography>
           ))}
 
-        <Panel collapsible level={3} title={t("editor.repeatHelpSummary")}>
+        <Panel glyph="help" collapsible level={3} title={t("editor.repeatHelpSummary")}>
           <Typography variant="body2" color="text.secondary">
             {t("editor.repeatHelp", { horizon })}
           </Typography>

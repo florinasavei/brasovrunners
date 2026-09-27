@@ -48,7 +48,7 @@ test.describe("the fields of an email's words, as a legend", () => {
     const terms = legend.locator("dt");
     await expect(terms).toHaveCount(16);
     await expect(terms.nth(0)).toContainText("{eventTitle}");
-    await expect(terms.nth(0)).toContainText("folosit în textul platformei");
+    await expect(terms.nth(0)).toContainText("folosit în textul implicit");
     // The example is the preview's: the sample's title, in italics beside what the field is.
     await expect(legend.locator("dd").nth(0)).toContainText("Titlul evenimentului, în limba acestui text — Crosul de toamnă");
     // The invitation's two fields, last and dimmed — by colour, never by opacity (AGENTS.md §18.2).
@@ -115,7 +115,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     await expect(legend).toContainText("16 câmpuri · 3 câmpuri folosite aici");
     await openFold(legend);
     await expect(legend.locator("dt").first()).toContainText("{participantName}");
-    await expect(legend.locator("dt").first()).toContainText("folosit în textul platformei");
+    await expect(legend.locator("dt").first()).toContainText("folosit în textul implicit");
 
     const subject = editor.getByLabel("Subiect");
     await hydrated(page);

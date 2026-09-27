@@ -36,7 +36,7 @@ export default async function CoHostsBox({ event, mayEditSettings, locale, headi
     links: host.links.map((link) => ({ kind: link.kind, url: link.url, labelRo: link.labelRo ?? "", labelEn: link.labelEn ?? "" })),
   }));
   return (
-    <Panel collapsible id="box-cohosts" title={heading ?? t("editor.boxes.coHosts.title")} aside={coHostsSummary(words, event, locale)}>
+    <Panel glyph="partners" collapsible id="box-cohosts" title={heading ?? t("editor.boxes.coHosts.title")} aside={coHostsSummary(words, event, locale)}>
       {mayEditSettings ? (
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">

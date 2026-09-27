@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -18,6 +17,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { lookUpPersonAction } from "./actions";
 import { actionKeyOf } from "@/shared/forms/action-key";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -101,9 +101,9 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
               <TextField name="email" type="email" label={t("person.email")} required autoComplete="off" sx={{ flex: 1 }} />
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
+              <GlyphButton icon="search" type="submit" variant="contained" sx={{ minHeight: 44 }}>
                 {t("person.lookUp")}
-              </Button>
+              </GlyphButton>
             </Stack>
           </form>
         </Stack>
@@ -117,17 +117,12 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
           </Stack>
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
             {/* A GET for a file, like the registrations export; the lookup travels sealed. */}
-            <Button
-              component="a"
-              href={`/api/admin/registrations/person?q=${encodeURIComponent(q ?? "")}`}
-              variant="outlined"
-              sx={{ minHeight: 44 }}
-            >
+            <GlyphButton icon="download" href={`/api/admin/registrations/person?q=${encodeURIComponent(q ?? "")}`} variant="outlined" sx={{ minHeight: 44 }}>
               {t("person.downloadJson")}
-            </Button>
-            <Button component="a" href={pagePath} variant="text" sx={{ minHeight: 44 }}>
+            </GlyphButton>
+            <GlyphButton icon="search" href={pagePath} variant="text" sx={{ minHeight: 44 }}>
               {t("person.newSearch")}
-            </Button>
+            </GlyphButton>
           </Stack>
 
           {!data.participant && data.announcementRequests.length === 0 ? (

@@ -45,7 +45,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
   const turnUpTypes = EVENT_TYPES.filter((type) => !hasProgramme(type));
 
   return (
-    <Panel
+    <Panel glyph="programme"
       collapsible
       level={3}
       id="box-schedule"

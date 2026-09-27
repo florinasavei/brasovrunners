@@ -15,10 +15,20 @@ function sections(page: Page) {
   return page.locator("#main details").filter({ has: page.getByTestId("guide-task") });
 }
 
+/**
+ * A section's title: the summary's own words, its first text node. Since §521 the summary opens
+ * with the subject's glyph (an `aria-hidden` `<svg>`), and the role line after the title is a
+ * `<span>` of its own, so neither is read.
+ */
 async function sectionTitles(page: Page): Promise<string[]> {
   return sections(page)
     .locator(":scope > summary")
-    .evaluateAll((summaries) => summaries.map((summary) => (summary.firstChild?.textContent ?? "").trim()));
+    .evaluateAll((summaries) =>
+      summaries.map((summary) => {
+        const title = [...summary.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && (node.textContent ?? "").trim() !== "");
+        return (title?.textContent ?? "").trim();
+      }),
+    );
 }
 
 test.describe("BR-REQ-060-01 criteria 8 and 34 the guide, task by task", () => {

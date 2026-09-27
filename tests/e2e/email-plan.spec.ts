@@ -31,7 +31,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // The default: Free, counted by the day.
     await expect(main.getByText(/Planul Free: \d+ din 100 mesaje trimise azi/)).toBeVisible();
     // Criterion 8: and the figure says whose allowance it is — one account, two deployments.
-    await expect(main.getByText(/unui singur cont Mailgun/)).toBeVisible();
+    await expect(main.getByText(/unui cont Mailgun folosit de QA și de producție/)).toBeVisible();
 
     await main.getByLabel("Planul pe care e contul Mailgun").selectOption("BASIC");
     await main.getByLabel("Notă (de ce, până când)").fill("Basic pentru cursa din octombrie");
@@ -268,6 +268,8 @@ test.describe("§336 the emails participants receive, as a card of cards", () =>
     for (let index = 0; index < count; index += 1) await expect(messages.nth(index)).not.toHaveAttribute("open");
     await expect(card.locator("#email-EVENT_UPDATE_NOTICE > summary")).toContainText("doar când un organizator anunță o schimbare");
     await expect(card.locator("#email-EVENT_CANCELLED > summary")).toContainText("la anularea evenimentului, dacă e bifat");
+    // The family's one confirmation (§520) has its card too.
+    await expect(card.locator("#email-REGISTRATION_CONFIRMED-family > summary")).toContainText("după ultima declarație a unei familii");
     // A type nothing queues any more says so before it is opened, and is listed after the rest.
     await expect(card.locator("#email-WAITLIST_OFFER_EXPIRED > summary")).toContainText("nu se mai trimite");
     await expect(card.locator("#email-EVENT_REMINDER > summary")).not.toContainText("nu se mai trimite");

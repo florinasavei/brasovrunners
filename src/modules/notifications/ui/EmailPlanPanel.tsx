@@ -71,7 +71,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
     that asks for something to be done (a plan changed, or a wait until tomorrow).
   */
   return (
-    <Panel
+    <Panel glyph="plan"
       title={t("emails.plan.title")}
       intro={t("emails.plan.intro")}
       aside={t(`emails.plan.aside.${volume.period}`, {

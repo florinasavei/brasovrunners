@@ -61,7 +61,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
   };
 
   return (
-    <Panel
+    <Panel glyph="transport"
       title={t("emails.transport.title")}
       intro={t("emails.transport.intro")}
       aside={
