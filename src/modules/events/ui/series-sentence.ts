@@ -85,6 +85,20 @@ export async function recurrenceSentence(
   return recurrence.time ? t("series.atTime", { sentence, time: recurrence.time }) : sentence;
 }
 
+/**
+ * The repeat chip's word (§113): how often, not how many — «Săptămânal», «La două săptămâni» —
+ * and the count only for a set of dates with no rhythm, «3 date» (§341). The owner: "8 dates here
+ * is redundant, just show weekly". One function for the series card and, since §NNN, the one-date
+ * card of a repeated event (a filter or the lead left one of its dates alone on its card).
+ */
+export async function rhythmLabel(members: readonly { startsAt: Date }[], timeZone: string, locale: string): Promise<string> {
+  const t = await getTranslations("Event");
+  const recurrence = recurrenceOf(members, timeZone);
+  if (recurrence.kind === "weekly") return t("series.weeklyChip");
+  if (recurrence.kind === "fortnightly") return t("series.fortnightlyChip");
+  return t(`series.count.${countForm(members.length, locale)}`, { count: members.length });
+}
+
 /** The words on a date's mark (§122), from the catalogue, or null for a date like the others. */
 export async function editionNote(difference: EditionDifference): Promise<EditionNote | null> {
   if (!difference) return null;

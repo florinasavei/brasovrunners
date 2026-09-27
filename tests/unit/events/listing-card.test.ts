@@ -223,7 +223,7 @@ describe("BR-REQ-041-01 a web address on a card is its host (§366)", () => {
 });
 
 describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)", () => {
-  it("is no whole-card link: the title, the place and the door are three links side by side, none inside another", async () => {
+  it("is no <a> around the card: the title, the place and the door are three links side by side, none inside another", async () => {
     const html = withoutStyles(await single());
     const links = anchors(html);
     expect(links.map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Descrierea completă a evenimentului"]);
@@ -231,9 +231,57 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // No anchor opens before the one before it has closed, and none holds the heading.
     expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
     expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<h2\b/);
-    // The card itself is the list item, not a link, and nothing is stretched over it.
+    // The card itself is the list item, not a link: the whole-card tap is the title's cover (§NNN).
     expect(html).toMatch(/^<li\b/);
-    expect(await single()).not.toMatch(/::after\{[^}]*position:absolute/);
+  });
+
+  it("is one tap to the page all the same: the title's link covers the card, and the card's own controls sit above the cover (§NNN)", async () => {
+    for (const html of [await single(), await repeated()]) {
+      const title = rulesFor(html, titleClass(html));
+      // The cover: the title link's `::after`, laid over its nearest positioned box…
+      expect(title).toMatch(/ a::after\{content:"";position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;\}/);
+      // …which is the card, never the link itself.
+      expect(title).toMatch(/ a\{[^}]*position:static/);
+      const card = /^<li\b[^>]*class="[^"]*\b(css-[\w-]+-MuiPaper-root-MuiCard-root)"/.exec(withoutStyles(html))?.[1] ?? "";
+      expect(card).not.toBe("");
+      const rules = rulesFor(html, card);
+      expect(rules).toMatch(/^\{[^}]*position:relative;isolation:isolate/m);
+      // Every control of the card's own — the map, the dates, the fold, the door, a registration
+      // button, a pill with a tooltip — above the cover, so a press on it is still a press on it.
+      expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip]){position:relative;z-index:2;}");
+    }
+  });
+
+  it("marks a pill with a tooltip so the card lifts it above the cover — the night pill's sunset still opens on a tap (§NNN)", async () => {
+    const { default: GlyphChip } = await import("@/modules/events/ui/GlyphChip");
+    const withTip = renderToStaticMarkup(createElement(GlyphChip, { glyph: "night", label: "Noapte", tooltip: "Soarele apune la 19:00" }));
+    const plain = renderToStaticMarkup(createElement(GlyphChip, { glyph: "night", label: "Noapte" }));
+    expect(withoutStyles(withTip)).toMatch(/<div\b[^>]*data-has-tooltip="true"/);
+    expect(plain).not.toContain("data-has-tooltip");
+  });
+
+  it("wears the series card's repeat chip and rhythm when it is one date of a repeated event, and none on its own (§NNN)", async () => {
+    const mondays = series();
+    const one = await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays }));
+    expect(chipLabels(one).slice(0, 2)).toEqual(["Alergare de grup", "Săptămânal"]);
+    expect(withoutStyles(one)).toContain('data-testid="EventRepeatIcon"');
+    expect(withoutStyles(one)).toMatch(/^<li\b[^>]*data-series="true"/);
+    // The same chip, class for class, the series card wears.
+    const chipOf = (html: string) => /<div class="([^"]*)"[^>]*><svg\b[^>]*data-testid="EventRepeatIcon"/.exec(withoutStyles(html))?.[1];
+    expect(chipOf(one)).toBe(chipOf(await repeated()));
+    // A one-off, or a "series" of one date, wears none.
+    for (const html of [await single(), await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: [mondays[0]] }))]) {
+      expect(withoutStyles(html)).not.toContain("EventRepeatIcon");
+      expect(withoutStyles(html)).not.toContain("data-series");
+    }
+    // In English, the catalogue's own word; and a set of dates with no rhythm keeps the count.
+    currentLocale = "en";
+    const english = await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: mondays }));
+    expect(chipLabels(english)).toContain("Weekly");
+    // Mondays a week, then two weeks apart: neither weekly nor fortnightly.
+    const scattered = [mondays[0], mondays[1], row({ ...mondays[2], startsAt: new Date("2026-10-19T15:30:00Z") })];
+    const dates = await markup(createElement(EventCard, { event: scattered[0], index: 0, now: NOW, seriesDates: scattered }));
+    expect(chipLabels(dates)).toContain("3 dates");
   });
 
   it("makes the title the link, in the heading, in the theme's blue visited or not, underlined only under a pointer or the keyboard", async () => {

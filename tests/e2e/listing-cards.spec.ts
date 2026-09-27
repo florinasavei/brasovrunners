@@ -360,7 +360,28 @@ async function removeCreated(page: Page, created: Created, quiet: boolean): Prom
 }
 
 test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
-  test("are no whole-card link: the title is the card's link, the heading holds it, nothing is a link inside a link", async ({ page }) => {
+  test("are one tap to the page (§NNN): a press on a card's words, off its own links, is a press on its title's link", async ({ page }) => {
+    const list = await cards(page);
+    const card = list.first();
+    const href = await card.locator("h2 a").getAttribute("href");
+    expect(href).toMatch(/^\/ro\/evenimente\/[^/]+$/);
+    // The date's line: words, not a link — under the title's cover, which covers the whole card.
+    const when = card.locator('[data-fact="when"]');
+    await when.scrollIntoViewIfNeeded();
+    const hit = await when.evaluate((line) => {
+      const box = line.getBoundingClientRect();
+      const element = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      return element?.closest("a")?.getAttribute("href") ?? null;
+    });
+    expect(hit).toBe(href);
+    // By the pointer at that spot, not `when.click()`: Playwright refuses a click on an element
+    // whose spot another one takes — which is exactly the point here.
+    const box = (await when.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page).toHaveURL(new RegExp(`${href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`));
+  });
+
+  test("are no <a> around the card: the title is the card's link, the heading holds it, nothing is a link inside a link", async ({ page }) => {
     const list = await cards(page);
     const count = await list.count();
     expect(count).toBeGreaterThan(0);

@@ -12,6 +12,8 @@
  *    a black heading; the series card's title was a blue link. A link cannot hold another link, so
  *    the single card's place could not be its map link. Now neither card is a link: on both the
  *    title is the link, in one blue style (`CARD_TITLE_SX`), and the place is free to be the map.
+ *    Since §NNN that title link is stretched over the card (`CARD_TAP_SX`), so the whole card is one
+ *    tap to the page while the map, the dates and the doors stay links of their own.
  * 2. **Holes inside the cards.** A row of cards is as tall as its tallest (§275), and the door to
  *    the page was pushed to the foot of every card, so a short card beside a series card had a
  *    hundred and fifty pixels of nothing between its facts and its own link. Now the door follows
@@ -79,6 +81,37 @@ export const CARD_BODY_SX = {
  */
 export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
 
+/**
+ * **The whole card is one tap to the event's page, its own links kept** (§NNN, reversing what §366
+ * refused and §113 rejected). The owner wanted a press anywhere on a card — its summary, its
+ * rhythm, its pills, the room below the door — to open the page, as every other listing on a phone
+ * does; §366 had made only the title the link, so a thumb on the card's words did nothing.
+ *
+ * Still no card is an `<a>`: a link cannot hold the map link, the dates or the registration button
+ * (§366's reason stands). The title's link is *stretched* instead — its `::after` covers the card
+ * (`CARD_TITLE_SX`) — and every control of the card's own is lifted above that cover here, so a
+ * press on the map, a date, the fold, the door, the registration button or a pill with a tooltip
+ * (the night pill's sunset, §415 — `GlyphChip` marks it `data-has-tooltip`) still reaches it. A
+ * screen reader and the keyboard meet exactly the links they met before: the cover is the title's
+ * link, not a new one.
+ *
+ * - `position: relative` makes the card the cover's box; MUI's `Card` already clips to its border.
+ * - `isolation: isolate` keeps the cover's `z-index` inside the card, never above the header.
+ * - The lift is `:where(…)`, weightless, so the title's own rule (`position: static`) wins on the
+ *   title's link and its cover measures the card rather than the title.
+ * - Anything else positioned on the card (the weather pill, a picture's frame) stays under the
+ *   cover: the cover's `z-index` is 1, not `auto`, so a positioned element later in the card does
+ *   not take the press by painting over it.
+ *
+ * Paid for: the words on a card can no longer be selected with a drag (the event page has them
+ * all). Plain objects, as everything here (see the head of this file).
+ */
+export const CARD_TAP_SX = {
+  position: "relative",
+  isolation: "isolate",
+  "& :where(a, button, summary, [data-has-tooltip])": { position: "relative", zIndex: 2 },
+} as const;
+
 /** The chips at the top of a card: one wrapping row, six pixels apart. */
 export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" } as const;
 
@@ -117,6 +150,10 @@ export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, ali
  * more pixels between the title and the line under it than the gap says — on a listing the owner
  * had asked to be tighter. Nothing overlapped, so the edge presses passed; the browser measure of
  * the heading against its words is what found it.
+ *
+ * **The link's cover** (§NNN): its `::after` is laid over the whole card (`CARD_TAP_SX` makes the
+ * card its box), so a press anywhere on the card that is not one of its own controls is a press on
+ * this link. The link itself stays `static`, or the cover would measure the title alone.
  */
 export const CARD_TITLE_SX = {
   mt: GROUP_GAP,
@@ -139,6 +176,8 @@ export const CARD_TITLE_SX = {
     "&:visited": { color: "primary.main" },
     "&:hover": { textDecoration: "underline" },
     "&:focus-visible": { textDecoration: "underline", outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+    position: "static",
+    "&::after": { content: '""', position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 1 },
   },
 } as const;
 

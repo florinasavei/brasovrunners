@@ -7,12 +7,11 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
-import { countForm } from "@/i18n/count-form";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TITLE_SX, GROUP_GAP, LINE_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP, LINE_GAP } from "./card-layout";
 import type { Locale } from "@/i18n/routing";
 import { riseIn } from "@/theme/motion";
-import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
+import { editionDifference, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
@@ -20,7 +19,7 @@ import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 import SeriesDates from "./SeriesDates";
-import { editionNote, recurrenceSentence } from "./series-sentence";
+import { editionNote, recurrenceSentence, rhythmLabel } from "./series-sentence";
 
 /** How many dates the card lists before pointing at the month view for the rest. */
 
@@ -47,17 +46,9 @@ export default async function SeriesCard({
   const locale = (await getLocale()) as Locale;
   const next = members[0];
   const sentence = await recurrenceSentence(members, next.timezone, locale);
-  // The chip says how often, not how many (the owner: "8 dates here is redundant, just show
-  // weekly"); a set of dates with no rhythm keeps the count. Every date is shown — "2 more in
-  // the calendar" meant nothing to him.
-  const recurrence = recurrenceOf(members, next.timezone);
-  const rhythm =
-    recurrence.kind === "weekly"
-      ? t("series.weeklyChip")
-      : recurrence.kind === "fortnightly"
-        ? t("series.fortnightlyChip")
-        // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
-        : t(`series.count.${countForm(members.length, locale)}`, { count: members.length });
+  // The chip says how often, not how many (`rhythmLabel`); every date is shown in the fold — "2
+  // more in the calendar" meant nothing to the owner.
+  const rhythm = await rhythmLabel(members, next.timezone, locale);
   const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).
@@ -78,7 +69,7 @@ export default async function SeriesCard({
     the door — each a group's gap from the one before it and nothing else.
   */
   return (
-    <Card component="li" variant="outlined" sx={{ ...(special ? specialCard : {}), ...riseIn(index) }}>
+    <Card component="li" variant="outlined" sx={{ ...CARD_TAP_SX, ...(special ? specialCard : {}), ...riseIn(index) }}>
       <Box sx={CARD_BODY_SX}>
         <Box sx={CARD_CHIPS_SX}>
           {/* The type; the surface is a pill with the facts below, said once (§366). */}
