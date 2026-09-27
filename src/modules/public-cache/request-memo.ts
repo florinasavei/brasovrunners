@@ -1,7 +1,7 @@
 import { cache } from "react";
 
 /**
- * The public reads one request has already asked for, by key (§NNN) — so a read that several parts
+ * The public reads one request has already asked for, by key (§489) — so a read that several parts
  * of one page need is asked of the data cache once, and on a miss of the database once.
  *
  * ## Why

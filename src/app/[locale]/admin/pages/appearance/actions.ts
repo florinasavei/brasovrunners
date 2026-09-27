@@ -21,7 +21,7 @@ function localeOf(form: FormData): Locale {
 }
 
 /**
- * «Aspectul site-ului» (§NNN): the public pages' background tint, a preset or «Personalizat». A club
+ * «Aspectul site-ului» (§488): the public pages' background tint, a preset or «Personalizat». A club
  * setting (§450) — the Administrator's at the door, and the service asserts it again. Asked first
  * (§384): every visitor sees the new colour from the next page view.
  */

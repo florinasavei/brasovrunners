@@ -172,7 +172,7 @@ export async function publicRead<T>(
 
   if (effects.publicMissRefreshMinutes === 0) {
     /*
-      Asked once per request however many parts of the page need it (§NNN, `request-memo.ts`).
+      Asked once per request however many parts of the page need it (§489, `request-memo.ts`).
       The request keeps the stored form, and each caller is handed its own copy by `untagDates`,
       so no caller can change what another one reads. A failure is forgotten, so a later reader
       in the same request asks again, as it did before.

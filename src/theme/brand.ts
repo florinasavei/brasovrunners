@@ -83,7 +83,7 @@ export const COLOR_DARK = {
 } as const;
 
 /**
- * The public pages' background tints the club may choose from (§NNN, «Aspectul site-ului» under
+ * The public pages' background tints the club may choose from (§488, «Aspectul site-ului» under
  * Pagini → «Aspect»). Light scheme only: after dark the page stays `COLOR_DARK.paper`.
  *
  * The owner asked for "a slight shade of blue (club colours)": white, the club's blue laid over

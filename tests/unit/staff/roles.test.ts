@@ -583,7 +583,7 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
     expect(source("src/modules/contact/shown-address.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
   });
 
-  it("«Fundalul site-ului» (§NNN) is a club setting: the Administrator's, form included", () => {
+  it("«Fundalul site-ului» (§488) is a club setting: the Administrator's, form included", () => {
     expect(action("src/app/[locale]/admin/pages/appearance/actions.ts", "updateSiteTintAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/appearance/site-tint.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
     expect(source("src/app/[locale]/admin/pages/appearance/page.tsx")).toMatch(/<SiteTintPanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.08-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.09-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.08-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.09-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -18956,3 +18956,88 @@ Baseline `BR-V2.08-2026-09-27`.
 **The phone spacing.** The header's bottom margin and the gap between the two selects are on the phone density scale (§380). Three literals are on the allowlist, each with its reason: zero row gap, zero spacing between the arrows, and the select's text inset.
 
 Baseline `BR-V2.08-2026-09-27`.
+
+## 488. «Aspectul site-ului»: the public pages' light background — a preset from the club's colours or a checked custom colour
+
+**The owner:** a setting for the site's light background, "a slight shade of blue (club colours)".
+
+**Where it lives.** Pagini → «Aspect» is a third secondary tab (§360), beside the club's pages and «Echipa» (§459). Whoever reads content can read it; only the Administrator can change it (`canManageClubSettings`, §450). That is asserted at the page, the action and the service (BR-REQ-060-01). The save asks first through §384's `ConfirmDialog`. It writes an audit row `site_tint.changed` with `{from, to}` in the same transaction as the upsert, and a toast plus the `?saved=` alert follow it.
+
+**The choices.** There are four presets in `SITE_TINT` (`theme/brand.ts`, the only file allowed to name a colour):
+- «Alb»: the platform's `COLOR.paper`, and the default.
+- «Albastru abia vizibil»: the club's blue at 4 % over white, `#f5f5ff`.
+- «Albastru deschis»: the club's blue at 8 % over white, `#ebebff`.
+- «Gri albăstrui»: `#eef1f5`.
+
+The fifth choice is «Personalizat», a colour typed as `#rrggbb` (a missing `#` is forgiven), with the browser's colour picker beside the box.
+
+**Two rules hold every colour.** They live in one pure module, `modules/appearance/domain/tint-contrast.ts`:
+- **Readable:** body text and muted text must reach WCAG AA, 4.5 : 1 or more, on the colour.
+- **Light enough:** a white card must stay within 1.2 : 1 of the page. Past that the page reads as a coloured wash, and a dark tint would be a dark theme by the back door. The dark scheme has its own colours (§93).
+
+`brand.test.ts` holds every preset to both rules. The service refuses a custom colour that breaks either one, and the refusal says the rule in words: `SITE_TINT_UNREADABLE` or `SITE_TINT_TOO_DARK`, not "check what you entered". The backoffice island shows the same verdict live, from the same functions. A stored custom colour that would be refused today is read as the default.
+
+**The preview.** Every option shows a public page in miniature on its colour: the header strip, a card, and a line of body and muted text. It is drawn in the light scheme's colours whatever scheme the backoffice is in. The presets' previews are server-rendered. The custom option is one small client island, redrawn as the colour is typed, with strings only in its props (§370).
+
+**Storage and reading.** It is one `platform_settings` row, key `siteTint`, value `{tint}` or `{tint:'custom', hex}`. No migration is needed. The locale layout reads it through the public cache (`publicRead(['settings.site-tint'], ['settings'])`, §333) with the last good copy behind it (§447). A save expires the `settings` tag, so no page view wakes the database for a colour.
+
+**How it reaches the page.** The layout draws one unlayered `<style>` on the server. It sets MUI's own page-colour variable, `--mui-palette-background-default`, and its `Channel` twin under `:root:not([data-dark]) body:not(:has([data-backoffice]))`. The first paint is already tinted, and no client code runs.
+
+We chose MUI's variable over a variable of our own (`--br-page-bg`) that the theme would read. MUI's variable is already the one the page is painted with in both schemes. A second variable would need the light scheme's theme to read `var(--br-page-bg, …)` while the dark one did not, which is a change to the theme for one consumer. A unit test pins the variable's name against `theme.vars`, so a rename in MUI fails a test rather than silently dropping the tint. Nothing in `src/` but `CssBaseline`'s body reads `background.default`, and the header and footer keep `background.paper`.
+
+**What it does not touch:**
+- **The dark scheme.** Its own tint is out of scope. After dark the page stays `COLOR_DARK.paper`.
+- **The backoffice.** Its shell and its resting notice carry `data-backoffice`, so staff always work on the neutral paper.
+- **An existing database.** The default draws no rule at all, so a database without a row renders exactly as before.
+- **The `<style>` text.** Only a preset's colour or a custom colour checked as `#` plus six hex digits (lower-cased) is ever written into it.
+
+The tint's rule is `:root:not([data-dark]) body:not(:has([data-backoffice]))`. A browser without `:has()` drops the whole rule and shows the platform's plain paper. This is accepted: the page stays readable and only the chosen colour is missing. A `:has`-free selector would need the public pages and the backoffice to render different body markers from the one locale layout. The setting's audit rows carry the fixed entity id `…e011`, the next free id after BR-V2.08 renumbered the settings' ids. `tests/unit/settings/entity-ids.test.ts` holds it apart from the others.
+
+Baseline `BR-V2.09-2026-09-27`.
+
+## 489. The public pages, measured: a lighter Turnstile island, one read per request, statement counts pinned
+
+**Measured** on a production build (`next build && next start`) against a private seeded database with every statement logged, before and after. Only wins that were measured are kept.
+
+- **The contact page shipped 83 KB gzipped of JavaScript it never ran.** `TurnstileWidget`, a client island, imported the script's address from `registrations/turnstile.ts`. That file's first import is `shared/config/env.ts`, and with it comes the whole of Zod. The two constants the browser needs now live in an import-free module, `registrations/domain/turnstile-widget.ts`, and every importer was moved over, including the server actions and `form-draft.ts`. The contact page's JavaScript went from 380 to 292 KB gzipped. The registration form, the group-run declaration and the newsletter pop-up carry the same island and gain the same.
+- **One request asks for a public read once** (`public-cache/request-memo.ts`). React's per-request `cache` sits in front of the data cache, keyed by `publicRead`'s unique keyParts. Before, several parts of a page each asked for the same read:
+  - the event page and its metadata both read the event;
+  - the listing's two sections both read the endings;
+  - the header and the footer both read the shown address;
+  - the contact page read the privacy notice's dates twice.
+
+Cold statements over 17 public URLs went from 55 to 47, and a warm visit makes one data-cache lookup fewer per duplicate. The memo is scoped to one render, so a write is never hidden from another request. Each caller gets its own copy through `untagDates`, a failure is forgotten so a later reader asks again, and the red-budget path (§447) is untouched. Outside a render, in an action, a route handler or a test, nothing is remembered.
+- **The event page keeps its reads in turn.** The translations, the signed-in staff member and the weather are still awaited one after another. Asking them together gave no measured gain and coincided with a +1.1 KB gzipped wire change. The memo alone takes the page from three statements to two. The header's four reads and the listing's weather and deadlines are asked together. The verification build keeps those only if it shows no wire or time regression, and otherwise reverts them as unmeasured.
+- **Pinned.**
+  - `tests/integration/public-cache/query-counts.test.ts` counts the statements behind every public read. The counts must be the same over three events and over nine, so no read scales with the calendar. The file also pins per-page totals within one simulated request: the listing with a race costs 8, and an event page with its metadata costs 2. It also covers the memo's sharing, copies, forgetting a failure and per-request scope.
+  - `tests/unit/shared/public-islands-weight.test.ts` refuses a public client island that imports `env.ts` or Zod, with one known exception listed.
+- **Dead code.** Ten exports that nothing referenced were removed. The sweep is repeatable: `node scripts/unused-exports.mjs` is a grep walk with no dependency (no knip) and is not a gate. It lists exports under `src/` that no other file names and their own file does not use. `--types` adds types and `--local` adds exports only their own file uses. An allowlist keeps the difficulty guard and the `*_CHECKED_ON` dates. `src/modules/content/**` was left alone because other chains edit it today. Its two dead table exports, `TABLE_BORDER_COLOUR_VALUES` and `TABLE_HEADER_FILL_VALUES`, stay listed by the script for a later pass.
+
+Nothing a visitor reads changes. No dependency, no migration, no message.
+
+**Round 2: only what was measured stays.** Round 1 had also made independent reads run together with `Promise.all`: the header's four (navigation, gallery, «Echipa», contact) and the listing's weather beside the race-week deadline. Both are back to `qa`'s sequential awaits. The measurement had one 'before' build of `qa` and one 'after' build carrying every change at once, so no figure isolates either change. The brief takes only measured wins. The event page's three reads had already gone back to sequential in the first review round. What remains is the Turnstile island split, the per-request memo, and the dead-code removal.
+
+**The measurement.** It comes from one production build of `qa`'s merge base and one of the branch after round 1, both with `yarn build && yarn start` on a private seeded database. The HTML and JS columns are gzip KB on the wire. JS is the total of every `<script>` the page loads. The cold column counts statements for one URL, logged with `log_statement = 'all'` on a freshly started server, with the URLs visited in the order shown. A later URL can therefore find the data cache already filled by an earlier one, which is why the gallery, the filtered listing and the privacy notice show 0.
+
+| URL group | HTML gz KB before → after | JS gz KB before → after | Cold statements before → after | Warm statements | Median warm render ms before → after |
+| --- | --- | --- | --- | --- | --- |
+| Listing `/ro/evenimente` | 34.1 → 34.0 | 299.3 → 299.3 | 9 → 8 | — | 120.6 → 84.3 |
+| Listing `/en/events` | 33.6 → 33.5 | 299.3 → 299.3 | 7 → 6 | — | 114.9 → 82.8 |
+| Listing, filtered (`?type=RACE`) | 31.7 → 31.7 | 299.3 → 299.3 | 0 → 0 | — | 81.8 → 56.0 |
+| Calendar `/ro/calendar` | 35.4 → 35.5 | 304.2 → 304.2 | 1 → 1 | — | 99.4 → 78.5 |
+| Event page, the race, ro | 30.5 → 31.6 | 318.8 → 318.8 | 3 → 2 | — | 74.0 → 55.1 |
+| Event page, the race, en | 30.0 → 31.2 | 318.8 → 318.8 | 2 → 1 | — | 70.7 → 52.5 |
+| Event page, intervals | 30.2 → 31.3 | 318.8 → 318.8 | 3 → 2 | — | 78.1 → 47.0 |
+| Event page, Tâmpa | 30.5 → 31.6 | 318.8 → 318.8 | 3 → 2 | — | 75.7 → 52.3 |
+| Contact | 31.8 → 31.7 | 380.0 → 292.0 | 6 → 5 | — | 72.2 → 45.0 |
+| Gallery | 22.8 → 22.8 | 273.3 → 273.3 | 0 → 0 | — | 50.2 → 36.3 |
+| Team `/ro/echipa` (404 on the seed: no card) | — | — | — | — | — |
+| Terms | 32.1 → 32.1 | 271.2 → 271.2 | 4 → 3 | — | 51.8 → 45.3 |
+| Privacy notice | 42.4 → 42.4 | 271.2 → 271.2 | 0 → 0 | — | 61.0 → 43.3 |
+| All 17 URLs (the registration form answered 404 on the seed) | | | 55 → 47 | | |
+
+- **Warm statements were counted per pass, not per URL.** A warm pass over all 18 URLs made 2 and then 4 statements before, and 2 and 2 after. Every one came from the registration form reading its event directly, as §447 intends.
+- **The event pages' extra gzip bytes are not new content.** The uncompressed HTML is the same size (186.5 KB before and after). A single gzip of that body is 30.4 KB, so the extra ~1.1 KB comes from the server flushing the stream in more pieces.
+- **Render times are not claimed as a win.** The machine is shared, and renders also got faster on URLs the branch does not touch: the `.ics` feeds 11.5 → 7.8 and 26.2 → 16.3 ms, the sitemap 6.8 → 5.3 ms, the 404 page 38.4 → 26.4 ms. The machine's load changed between the two runs.
+
+Baseline `BR-V2.09-2026-09-27`.

@@ -191,7 +191,7 @@ describe("BR-REQ-070-02 the gradients are readable at both ends", () => {
 });
 
 /**
- * §NNN — «Aspectul site-ului»: every preset the club may put under the public pages is a page
+ * §488 — «Aspectul site-ului»: every preset the club may put under the public pages is a page
  * colour like `COLOR.paper`, so every text colour that sits on the page has to clear AA on it,
  * and the white cards have to stay a step away from it without the page turning into a wash.
  */

@@ -25,7 +25,7 @@ type Props = {
 };
 
 /**
- * «Aspectul site-ului» (§NNN): the public pages' light background — one of the presets drawn from
+ * «Aspectul site-ului» (§488): the public pages' light background — one of the presets drawn from
  * the club's colours (`SITE_TINT` in `theme/brand.ts`) or «Personalizat», a colour typed as
  * `#rrggbb` and refused unless text stays readable on it and it stays light.
  *

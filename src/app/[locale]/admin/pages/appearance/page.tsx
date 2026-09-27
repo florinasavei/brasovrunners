@@ -20,7 +20,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * Pagini → «Aspect» (§NNN): how the public pages look. Today one setting, the site's light
+ * Pagini → «Aspect» (§488): how the public pages look. Today one setting, the site's light
  * background tint. Read by whoever reads the club's content, like «Echipa» beside it (§459);
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).

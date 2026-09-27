@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — a client island on a public page never carries the server's configuration, nor Zod.
+ * §489 — a client island on a public page never carries the server's configuration, nor Zod.
  *
  * Measured on a production build: the contact page shipped 83 KB of gzipped JavaScript it never
  * ran, the whole of Zod with every one of its languages, because `TurnstileWidget` (a client
@@ -138,7 +138,7 @@ const KNOWN: Record<string, string> = {
   "src/modules/registrations/ui/ReadAndAgree.tsx": "the legal text's renderer, on the registration form",
 };
 
-describe("§NNN a public page's client islands carry no server code", () => {
+describe("§489 a public page's client islands carry no server code", () => {
   it("finds the islands: the walk reaches the header's and the contact page's", () => {
     expect(PUBLIC_ISLANDS).toContain("src/shared/ui/SiteNav.tsx");
     expect(PUBLIC_ISLANDS).toContain("src/modules/registrations/ui/TurnstileWidget.tsx");

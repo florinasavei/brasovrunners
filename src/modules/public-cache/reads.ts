@@ -447,7 +447,7 @@ export async function cachedShownContactAddresses(): Promise<string[]> {
 }
 
 /**
- * «Aspectul site-ului» (§NNN): the tint every public page is drawn in, read by the locale layout —
+ * «Aspectul site-ului» (§488): the tint every public page is drawn in, read by the locale layout —
  * so it is cached, or every page view of the site would wake the database for a colour. A save
  * expires it (`updateSiteTint`). When the database cannot answer, the last good copy (§447), then
  * the platform's own paper: never a page that fails over its background.

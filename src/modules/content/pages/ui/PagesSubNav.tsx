@@ -7,7 +7,7 @@ import SubNav from "@/shared/ui/SubNav";
  * The parts of the Pagini tab (§459): the pages the club writes from nothing, and «Echipa»,
  * the platform's team page whose cards the club keeps. The owner: "pagina de echipa nu e o
  * pagina custom" — so it is not a row in the pages list, and it is one press away from it.
- * «Aspect» (§NNN): how the public pages look — the site's background tint — beside what they say.
+ * «Aspect» (§488): how the public pages look — the site's background tint — beside what they say.
  *
  * The shared `SubNav` (§360), hrefs resolved here on the server because `SubNav` takes strings.
  */

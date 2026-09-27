@@ -17,7 +17,7 @@ const cache = vi.hoisted(() => ({ revalidatePublicContent: vi.fn() }));
 vi.mock("@/modules/public-cache/cache", () => cache);
 
 /**
- * §NNN — «Aspectul site-ului» under Pagini → «Aspect»: one `platform_settings` row, the
+ * §488 — «Aspectul site-ului» under Pagini → «Aspect»: one `platform_settings` row, the
  * Administrator's (§450), audited, a preset or a «Personalizat» colour that keeps text readable
  * and stays light, and nothing else.
  */

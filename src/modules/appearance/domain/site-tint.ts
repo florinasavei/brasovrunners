@@ -3,7 +3,7 @@ import { SITE_TINT } from "@/theme/brand";
 import { HEX_COLOR, judgeTint } from "./tint-contrast";
 
 /**
- * «Aspectul site-ului» — the public pages' background tint (§NNN; the owner: a setting for the
+ * «Aspectul site-ului» — the public pages' background tint (§488; the owner: a setting for the
  * site's light background, "a slight shade of blue (club colours)").
  *
  * Pure: no database, no environment. The club picks one of the presets in `SITE_TINT`
@@ -66,7 +66,7 @@ export const siteTintSchema = z.union([
 
 /**
  * Where the tint applies: the light scheme, and never inside the backoffice (see above). A browser
- * without `:has()` drops the whole rule and shows the plain paper — accepted (§NNN).
+ * without `:has()` drops the whole rule and shows the plain paper — accepted (§488).
  */
 export const SITE_TINT_SELECTOR = ":root:not([data-dark]) body:not(:has([data-backoffice]))";
 

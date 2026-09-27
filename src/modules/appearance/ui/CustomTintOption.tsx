@@ -30,7 +30,7 @@ type Props = {
 };
 
 /**
- * «Personalizat» (§NNN): the one option the Administrator types — `#rrggbb` in a text box, with the
+ * «Personalizat» (§488): the one option the Administrator types — `#rrggbb` in a text box, with the
  * browser's own colour picker beside it — and the page in miniature redrawn as they type, with the
  * verdict of the same two rules the service refuses by (`tint-contrast.ts`): body and muted text at
  * AA, and a white card still a card. The server decides; this only says it early.

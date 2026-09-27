@@ -18,7 +18,7 @@ import {
 import { judgeTint } from "./domain/tint-contrast";
 
 /**
- * «Aspectul site-ului» (§NNN): one `platform_settings` row, written by an Administrator under
+ * «Aspectul site-ului» (§488): one `platform_settings` row, written by an Administrator under
  * Pagini → «Aspect», audited, read by the locale layout through the public cache (§333).
  * No migration: the settings table takes any key (§100).
  */

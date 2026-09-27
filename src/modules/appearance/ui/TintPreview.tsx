@@ -11,7 +11,7 @@ export type TintPreviewWords = {
 };
 
 /**
- * A public page in miniature on a chosen page colour (§NNN, «Aspectul site-ului»): the header
+ * A public page in miniature on a chosen page colour (§488, «Aspectul site-ului»): the header
  * strip on the header's white, a card on the card's white, and a line of body and muted text on
  * the tint itself — the three things the owner asked to see before the confirm.
  *

@@ -6,7 +6,7 @@ import { pages, pageTranslations } from "@/db/schema/pages";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — what each public read costs the database, pinned; and that one request asks for a read
+ * §489 — what each public read costs the database, pinned; and that one request asks for a read
  * once, however many parts of the page need it.
  *
  * §333 took the public pages' reads off the database for every visit but the first after a change.
@@ -168,7 +168,7 @@ const STATEMENTS: Record<string, number> = {
   sitemapAlbums: 2,
 };
 
-describe("§NNN what a public read costs the database", () => {
+describe("§489 what a public read costs the database", () => {
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
     countStatements();
@@ -209,7 +209,7 @@ describe("§NNN what a public read costs the database", () => {
   });
 });
 
-describe("§NNN one request asks for a read once", () => {
+describe("§489 one request asks for a read once", () => {
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
     countStatements();

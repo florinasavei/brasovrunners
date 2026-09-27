@@ -1,4 +1,4 @@
-// Exports under src/ that nothing uses — the dead-code sweep, repeatable (§NNN).
+// Exports under src/ that nothing uses — the dead-code sweep, repeatable (§489).
 //
 //   node scripts/unused-exports.mjs            values (functions, constants, classes) nothing uses
 //   node scripts/unused-exports.mjs --types    and types and interfaces nothing uses

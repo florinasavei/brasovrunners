@@ -209,7 +209,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
-      // «Aspect» (§NNN): the site's background tint, one setting, written here by hand.
+      // «Aspect» (§488): the site's background tint, one setting, written here by hand.
       "/admin/pages/appearance",
       "/admin/pages/new",
       // «Echipa»'s cards (§459): one screen, written here by hand.

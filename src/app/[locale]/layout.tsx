@@ -133,7 +133,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   const site = await getTranslations({ locale, namespace: "Site" });
   const messages = await getMessages({ locale });
-  // «Aspectul site-ului» (§NNN): the club's tint for the public pages, from the public cache, as
+  // «Aspectul site-ului» (§488): the club's tint for the public pages, from the public cache, as
   // one rule on MUI's page-colour variable — nothing at all for the default.
   const tintStyle = siteTintStyle(await cachedSiteTint());
 

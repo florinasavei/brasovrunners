@@ -19,14 +19,14 @@ import { COLOR, SITE_TINT } from "@/theme/brand";
 import { theme } from "@/theme/theme";
 
 /**
- * §NNN — «Aspectul site-ului»: a preset from the club's colours or a typed «Personalizat» colour
+ * §488 — «Aspectul site-ului»: a preset from the club's colours or a typed «Personalizat» colour
  * that keeps text readable and stays light, drawn by the locale layout as one rule on MUI's
  * page-colour variable, for the light scheme and the public pages only.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 
-describe("§NNN the site's background tint", () => {
+describe("§488 the site's background tint", () => {
   it("offers exactly the presets brand.ts names, the platform's paper first and by default, then «Personalizat»", () => {
     expect([...SITE_TINT_PRESETS].sort()).toEqual(Object.keys(SITE_TINT).sort());
     expect(SITE_TINT_PRESETS).toEqual(["paper", "faintBlue", "lightBlue", "blueGrey"]);
@@ -94,7 +94,7 @@ describe("§NNN the site's background tint", () => {
   });
 });
 
-describe("§NNN a «Personalizat» colour keeps text readable and stays light", () => {
+describe("§488 a «Personalizat» colour keeps text readable and stays light", () => {
   it("computes WCAG's known ratios, so the helper itself is not the thing under test", () => {
     expect(contrastRatio("#000000", "#ffffff")).toBeCloseTo(21, 5);
     expect(contrastRatio("#ffffff", "#ffffff")).toBeCloseTo(1, 5);

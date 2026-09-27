@@ -1,7 +1,7 @@
 import { COLOR } from "@/theme/brand";
 
 /**
- * The two rules a page colour has to keep (§NNN, «Aspectul site-ului»), as plain arithmetic — no
+ * The two rules a page colour has to keep (§488, «Aspectul site-ului»), as plain arithmetic — no
  * zod, no database — so the service refuses a «Personalizat» colour with them and the backoffice's
  * colour island says the same verdict live while the Administrator types, from one source.
  *

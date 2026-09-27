@@ -13,7 +13,7 @@ import { env } from "@/shared/config/env";
  * goes to Cloudflare with the challenge, which is why the privacy notice names Turnstile.
  *
  * The script's address and the token's field name are in `domain/turnstile-widget.ts`: the
- * widget is a client island, and this module's first import is the server's configuration (§NNN).
+ * widget is a client island, and this module's first import is the server's configuration (§489).
  */
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
