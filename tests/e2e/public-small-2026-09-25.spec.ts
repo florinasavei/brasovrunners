@@ -135,7 +135,7 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     }
   });
 
-  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §413, §458)", async ({
+  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §413, §458, §NNN)", async ({
     page,
   }) => {
     const isMobile = test.info().project.name === "mobile";
@@ -159,10 +159,11 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
       expect(gap).toBeLessThanOrEqual(expectMax);
     };
     if (isMobile) {
-      // `DENSITY.gapSm` on a phone is 8px (1 spacing unit), at every width the owner named.
+      // `DENSITY.gapXs` on a phone since the 360-px density pass (§NNN): 6px (0.75 spacing
+      // units), at every width the owner named — §458's `gapSm`, 8px, one step tighter.
       for (const width of [320, 360, 390, 412]) {
         await page.setViewportSize({ width, height: 800 });
-        await measure(7, 9);
+        await measure(5, 7);
       }
     } else {
       // From `sm` up the step is 12px (1.5 spacing units) — the desktop project's own viewport.

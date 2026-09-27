@@ -399,6 +399,11 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(metaLine.indexOf('data-testid="footer-build-badge-panel"')).toBeGreaterThan(metaLine.indexOf('data-testid="footer-weather-credit"'));
     const metaRule = rulesOf(css, /data-testid="footer-panel-meta"[^>]*class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)|class="(?:[^"]*\s)?(css-[A-Za-z0-9-]+)"[^>]*data-testid="footer-panel-meta"/.exec(markup)!.slice(1).find(Boolean)!);
     expect(metaRule).not.toMatch(/font-size/);
+    // From `sm` the panel is §385's one wrapping row again, desktop unchanged by the phone's lines
+    // (§NNN, the owner's "footer is too tall on mobile" round): both groups give their items to it.
+    expect(container).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*flex-direction:row;[^}]*flex-wrap:wrap;/);
+    expect(linksRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:contents;/);
+    expect(metaRule).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:contents;/);
     expect(container).toMatch(/(^|[;{])font-size:0\.875rem;/);
     // No stacked `spacing`, no paragraph of its own for the address.
     expect(panel).not.toMatch(/<p class="MuiTypography/);

@@ -329,10 +329,15 @@ export default async function SiteFooter() {
                 // floor for words a person reads). On a phone every line is `FOLD_LINE`, 24 pixels
                 // (`footer-target.ts`), the lines touching and never overlapping — a press is on
                 // one link or the next, never on two. From `sm` they are 44 tall as before
-                // (BR-REQ-041-01 criterion 6).
+                // (BR-REQ-041-01 criterion 6), and from `sm` the panel is §385's one wrapping row
+                // again, unchanged: the two groups below give their items to it (`display:
+                // contents`), sixteen pixels apart, as many to a line as fit — the lines above are
+                // the phone's (§NNN, the owner's "footer is too tall on mobile" round).
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
+                flexDirection: { xs: "column", sm: "row" },
+                flexWrap: { sm: "wrap" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                columnGap: { sm: 2 },
                 rowGap: 0,
                 pt: 0,
                 pb: { xs: 0, sm: 0.5 },
@@ -351,7 +356,7 @@ export default async function SiteFooter() {
                 data-testid="footer-panel-links"
                 // Two links on one line are the density scale's short step apart on a phone (§380),
                 // 16 pixels from `sm`; a column gap, so a wrapped link starts flush.
-                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: { xs: DENSITY.gapSm, sm: 2 }, ...footerGapSx(["rowGap"], 0), maxWidth: "100%" }}
+                sx={{ display: { xs: "flex", sm: "contents" }, flexWrap: "wrap", alignItems: "center", columnGap: { xs: DENSITY.gapSm, sm: 2 }, ...footerGapSx(["rowGap"], 0), maxWidth: "100%" }}
               >
                 {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
                 <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
@@ -384,7 +389,7 @@ export default async function SiteFooter() {
                   from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box
                 data-testid="footer-panel-meta"
-                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1, rowGap: 0, maxWidth: "100%" }}
+                sx={{ display: { xs: "flex", sm: "contents" }, flexWrap: "wrap", alignItems: "center", columnGap: 1, rowGap: 0, maxWidth: "100%" }}
               >
                 {/* Open-Meteo's credit (its licence's own ask), here rather than under the listing's
                     cards (§429); the event page and the featured hero keep their own beside the

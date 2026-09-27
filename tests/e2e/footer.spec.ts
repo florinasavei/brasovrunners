@@ -242,7 +242,9 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
         await expect(rule).toBeHidden();
       }
 
-      // Never a second line: the closed bar is one target tall, plus its border.
+      // Never a second line: the closed bar is one target tall, plus its border — the whole
+      // resting footer, measured on the built listing (§NNN, the owner's "footer is too tall on
+      // mobile" round): 25px at 320, 29 at 360 and 390, 45 from `sm`. No padding of its own.
       const bar = await boxOf(footer, "the footer");
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(target + 2);
       await expect(summary).toBeVisible();
@@ -375,7 +377,11 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
               const wrappedChip = chip.height > 30;
               const bound = width >= 360 ? 100 : wrappedChip ? 112 : 104;
               expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}`).toBeLessThanOrEqual(bound);
-            } else expect(panel.height, `the panel's height at ${width}px`).toBeLessThan(188);
+            } else {
+              // From `sm` §385's one wrapping row, unchanged by the phone's lines (§NNN): 92px at
+              // 768 on qa before this pass and after it, two 44-pixel lines and the 4 under them.
+              expect(panel.height, `the panel's height at ${width}px`).toBeLessThanOrEqual(96);
+            }
             const panelText = await panelContent(fold).evaluate((el) => el.textContent ?? "");
             expect(panelText.match(/Scrie-ne|Write to us/g), `"Scrie-ne" once at ${width}px`).toHaveLength(1);
             // The stamp, a chip, is the panel's last item.
