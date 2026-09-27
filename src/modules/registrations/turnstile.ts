@@ -57,7 +57,7 @@ export type TurnstileVerdict = "passed" | "failed" | "unavailable" | "not_config
  * reasoning was wrong about which failure costs more. A bot that omits the token still has to
  * get past the honeypot, the timing check and the per-identity throttle (`AGENTS.md` §19.4);
  * a *person* whose browser never loaded the widget was simply unable to register, with a
- * message telling them to tick a box that was not on their screen. It happened: Dani could not
+ * message telling them to tick a box that was not on their screen. It happened: a colleague could not
  * register on 2026-09-21, on two different addresses, and the address was never the problem.
  *
  * The owner's standing rule decides it (§205): "trebuie să lăsăm oamenii să se înscrie cu orice

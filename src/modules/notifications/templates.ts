@@ -263,7 +263,7 @@ function card(blocks: string[][]): string {
   const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email-banner.png" alt="${escapeHtml(CLUB_NAME)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0">`;
   /**
    * The header is a **white banner**, and the message declares itself a light-scheme document
-   * (§218; Dani: "this email header looks ugly! it should be a banner with white background").
+   * (§218; the Organizer: "this email header looks ugly! it should be a banner with white background").
    *
    * ## What was actually wrong, because the card was already white
    *

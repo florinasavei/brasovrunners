@@ -354,7 +354,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
 test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb", () => {
   /**
-   * `DECISIONS.md` §283 — Amalia: the telephone needs a maximum and a clearer answer as it is
+   * `DECISIONS.md` §283 — the Administrator: the telephone needs a maximum and a clearer answer as it is
    * typed. E.164 is fifteen digits including the country code, so what the box still has room
    * for depends on the country chosen beside it, and the cap is applied at the keystroke: the
    * digit somebody has just typed is the one they can still see.

@@ -25,15 +25,29 @@ export async function declarationLine(
   event: BoxProps["event"],
   declarations: readonly DeclarationOption[],
   words: SummaryWords,
+  groupRunDeclarations?: BoxProps["groupRunDeclarations"],
 ): Promise<{ text: string | null; missing: boolean }> {
   const tEvent = await getTranslations("Event");
   const type = event?.type ?? "GROUP_RUN";
   const chosen = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const surface = event?.surface ? tEvent(`surface.${event.surface}`) : null;
   const registers = takesRegistrations(type);
+  // A group run ticked for a surface whose text was withdrawn, or never approved (§NNN): the
+  // `groupRunDeclarations` given are the versions in force — approved and not withdrawn (§393).
+  const offered = !registers && event?.offersGroupRunDeclaration === true && event.surface !== null;
+  const textInForce =
+    !offered || groupRunDeclarations === undefined
+      ? undefined
+      : (SURFACES_WITH_TEXT as readonly string[]).includes(event.surface ?? "") &&
+        groupRunDeclarations[event.surface as (typeof SURFACES_WITH_TEXT)[number]] !== null;
   return {
-    text: declarationSummary(words, event, { takesRegistrations: registers, declarationVersion: chosen?.version ?? null, surface }),
-    missing: event !== null && registers && event.registrationMode === "INTERNAL" && chosen === null,
+    text: declarationSummary(words, event, {
+      takesRegistrations: registers,
+      declarationVersion: chosen?.version ?? null,
+      surface,
+      groupRunTextInForce: textInForce,
+    }),
+    missing: (event !== null && registers && event.registrationMode === "INTERNAL" && chosen === null) || textInForce === false,
   };
 }
 
@@ -73,7 +87,7 @@ export default async function DeclarationCard({
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
   const inForce = groupRunDeclarations ?? { ASPHALT: null, TRAIL: null };
-  const line = await declarationLine(event, declarations, words);
+  const line = await declarationLine(event, declarations, words, groupRunDeclarations);
   const card = {
     id: "box-declaration",
     level: 3,

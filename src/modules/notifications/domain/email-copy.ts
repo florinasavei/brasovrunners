@@ -4,7 +4,7 @@ import { richTextSchema } from "@/modules/content/rich-text/domain/schema";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 
 /**
- * The club's own wording for a message (`DECISIONS.md` §247; Dani's ask: the templates should
+ * The club's own wording for a message (`DECISIONS.md` §247; the Organizer's ask: the templates should
  * be editable in the backoffice).
  *
  * ## What is editable, and what is not

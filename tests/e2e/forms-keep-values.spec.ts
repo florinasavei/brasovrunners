@@ -8,7 +8,7 @@ import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold"
  *
  * The event form is the owner's report and `cms-publish.spec.ts` walks it; this is the same
  * promise on the smallest form that has it: a refusal the browser could not see coming keeps
- * every box, and names the one that was wrong. "amalia@club" is an address to the browser — the
+ * every box, and names the one that was wrong. "ioana@club" is an address to the browser — the
  * HTML rule takes a domain without a dot — and not to the service, whose rule wants one; so the
  * browser lets the press through and the server refuses it, which is the path this is about.
  * Nothing is written by a refused add, so the spec can run as often as it likes.
@@ -23,8 +23,8 @@ test.describe("§315 a refused form keeps what was typed", () => {
     const panel = page.getByTestId("staff-invite");
     // A fold, closed on arrival like every backoffice fold (§336); opened the way a person does.
     await openFold(panel);
-    await panel.getByLabel(/Adresă de email/).fill("amalia@club");
-    await panel.getByLabel(/^Nume/).fill("Amalia Probă");
+    await panel.getByLabel(/Adresă de email/).fill("ioana@club");
+    await panel.getByLabel(/^Nume/).fill("Ioana Probă");
     await panel.getByRole("button", { name: "Adaugă" }).click();
     await confirmDialog(page);
 
@@ -35,10 +35,10 @@ test.describe("§315 a refused form keeps what was typed", () => {
     // The summary names the box and links to it (§47); the box says so where it is.
     await expect(refusal.getByRole("link", { name: "Adresă de email" })).toHaveAttribute("href", "#field-email");
     await expect(panel.getByText("Verifică acest câmp.")).toBeVisible();
-    await expect(panel.getByLabel(/Adresă de email/)).toHaveValue("amalia@club");
-    await expect(panel.getByLabel(/^Nume/)).toHaveValue("Amalia Probă");
+    await expect(panel.getByLabel(/Adresă de email/)).toHaveValue("ioana@club");
+    await expect(panel.getByLabel(/^Nume/)).toHaveValue("Ioana Probă");
     // Nothing of what was typed went into the address bar.
-    expect(page.url()).not.toContain("amalia");
+    expect(page.url()).not.toContain("ioana");
   });
 });
 

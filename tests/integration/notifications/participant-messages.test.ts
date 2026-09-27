@@ -55,7 +55,7 @@ describe("§364 the organizer's message to an event's participants", () => {
 
   beforeEach(async () => {
     await resetTables(db);
-    organizer = await staff("MODERATOR", "organizer@dev.test", "Dani Organizatorul");
+    organizer = await staff("MODERATOR", "organizer@dev.test", "Mihai Organizatorul");
   });
 
   async function staff(role: StaffRole, email: string, displayName: string = role) {
@@ -281,7 +281,7 @@ describe("§364 the organizer's message to an event's participants", () => {
 
     // "Mesaje trimise" is read from these rows: date, subject, group, count, sender.
     expect(await listParticipantMessages(db, event.id)).toEqual([
-      { at: NOW, subject: WORDS.subject, audience: "CONFIRMED", recipients: 2, test: 1, senderName: "Dani Organizatorul" },
+      { at: NOW, subject: WORDS.subject, audience: "CONFIRMED", recipients: 2, test: 1, senderName: "Mihai Organizatorul" },
     ]);
   });
 

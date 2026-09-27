@@ -76,11 +76,11 @@ describe("BR-REQ-050-02 create and publish in one press (§315)", () => {
     await resetTables(db);
     [admin] = await db
       .insert(staffUsers)
-      .values({ email: "admin@dev.test", displayName: "Amalia", role: "ADMIN" })
+      .values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" })
       .returning();
     [organizer] = await db
       .insert(staffUsers)
-      .values({ email: "organizer@dev.test", displayName: "Dani", role: "MODERATOR" })
+      .values({ email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" })
       .returning();
   });
 

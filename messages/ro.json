@@ -1496,7 +1496,7 @@
         "status": {
           "title": "Starea evenimentului",
           "createNote": "De obicei Programat. Alege Anulat pentru un eveniment deja anulat (trecut în evidență, de exemplu de pe Facebook) sau Încheiat pentru unul care a avut loc deja. Niciuna nu trimite emailuri: nimeni nu e încă înscris.",
-          "completedRefused": "Starea: Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
+          "completedRefused": "Încheiat se poate alege doar pentru un eveniment care a început deja; altfel alege Programat sau Anulat"
         },
         "course": {
           "title": "Traseul"
@@ -1668,6 +1668,7 @@
           },
           "declaration": {
             "offered": "declarație pentru {surface}",
+            "offeredNoText": "declarație pentru {surface} — niciun text aprobat în vigoare, butonul nu apare",
             "notOffered": "fără declarație",
             "notAsked": "nu se cere"
           }
@@ -2279,7 +2280,7 @@
           "done": "Există evenimente publicate.",
           "how": [
             "Deschide /admin/events → „Eveniment nou”. Completează tipul, data, locul și titlul în ambele limbi. Salvează.",
-            "Apasă „Trimite spre verificare”, apoi „Publică”. Ambele limbi apar deodată; până atunci pagina e 404 pentru vizitatori.",
+            "Apasă „Publică” — o ciornă trece pe site dintr-o apăsare. Ambele limbi apar deodată; până atunci pagina e 404 pentru vizitatori.",
             "Un singur eveniment poate fi „principal” — el deschide prima pagină. Anul viitor: „Duplică” pe cel de anul acesta."
           ]
         },
@@ -2463,7 +2464,7 @@
         "domain": {
           "name": "Adresa site-ului (domeniul .com)",
           "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește. Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA.",
-          "ceiling": "Nu are o limită: o factură pe an, în lei.",
+          "ceiling": "Nu are o limită: o factură pe an pentru .com, în lei.",
           "whenCrossed": "Pasul următor este reînnoirea .com pe mai mulți ani; .ro nu se mai cumpără (o singură adresă pentru motoarele de căutare).",
           "closeYes": "Acest mediu răspunde pe domeniul clubului.",
           "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie."
@@ -2752,7 +2753,7 @@
         "text": "Ce e de făcut",
         "textHelp": "O propoziție sau câteva: ce, unde în backoffice, până când. Fără adrese de email sau parole — lista o vede toată echipa.",
         "owner": "Pentru cine",
-        "ownerHelp": "Un prenume — Amalia, Dani, Florin — sau gol dacă e al oricui.",
+        "ownerHelp": "Un rol sau un prenume — de exemplu Administrator, Organizator — sau gol dacă e al oricui.",
         "due": "Termen",
         "dueHelp": "Opțional: ziua până la care trebuie făcut."
       },
@@ -3123,7 +3124,7 @@
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
         "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc.",
-        "Voluntarii: un Superadministrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
@@ -4063,7 +4064,7 @@
               "title": "Publică un eveniment sau scoate-l de pe site",
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Publicare».",
-                "O ciornă: apasă «Trimite spre verificare», apoi «Publică».",
+                "O ciornă: apasă «Publică» — trece pe site dintr-o apăsare, fără «Trimite spre verificare».",
                 "În fereastră apasă din nou «Publică». Ambele limbi apar împreună.",
                 "Lipsește ceva? Apare «Nu se poate publica încă», cu lista: completează, «Salvează», apoi «Publică».",
                 "Mai multe deodată: pe lista «Evenimente» bifează-le și apasă «Publică cele bifate».",

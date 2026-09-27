@@ -26,7 +26,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §312 — the form filled a second time with the same address, as the *club* sees it.
  *
- * Amalia registered with her browser's autofill twice. She was told in the re-sent message that
+ * A colleague registered with her browser's autofill twice. She was told in the re-sent message that
  * she already was (§235); the club was told nothing, so "she says she registered but I cannot
  * find anything" had no answer on a screen. Every pass through the second-submission branch now
  * leaves one audit row on the registration it found — the state and the message type re-sent,
@@ -96,7 +96,7 @@ async function createInternalEvent(capacity: number | null = null): Promise<Even
   };
 }
 
-const submission = (at: Date, email = "amalia.pop@example.ro", firstName = "Amalia", lastName = "Popescu") => ({
+const submission = (at: Date, email = "ioana.pop@example.ro", firstName = "Ioana", lastName = "Popescu") => ({
   firstName,
   lastName,
   birthDate: "1990-05-17",
@@ -148,17 +148,17 @@ describe("§312 a second submission is recorded for the club", () => {
     const event = await createInternalEvent();
     await submitRegistration(db, event, submission(NOW), NOW);
     // A different spelling of the name the second time: it is recorded nowhere.
-    await submitRegistration(db, event, submission(minutes(5), "amalia.pop@example.ro", "Amalía", "Pop"), minutes(5));
+    await submitRegistration(db, event, submission(minutes(5), "ioana.pop@example.ro", "Ioána", "Pop"), minutes(5));
 
     const [row] = await resubmittedRows();
     const serialized = JSON.stringify(row.metadataJson).toLowerCase();
-    for (const personal of ["amalia", "amalía", "popescu", "pop@", "example.ro", "+4071", "brașov", "1990"]) {
+    for (const personal of ["ioana", "ioána", "popescu", "pop@", "example.ro", "+4071", "brașov", "1990"]) {
       expect(serialized).not.toContain(personal);
     }
     expect(Object.keys(row.metadataJson as object).sort()).toEqual(["resent", "status"]);
     // And the registration keeps the name it has.
     const [registration] = await db.select().from(registrations);
-    expect(registration.registeredName).toBe("Amalia Popescu");
+    expect(registration.registeredName).toBe("Ioana Popescu");
   });
 
   it("names the declaration once the address is confirmed", async () => {
@@ -182,15 +182,15 @@ describe("§312 a second submission is recorded for the club", () => {
     await confirmEmail(db, event, first.id, minutes(1));
 
     await submitRegistration(db, event, submission(minutes(2)), minutes(2));
-    const amalia = (await db.select().from(registrations)).find((row) => row.id !== first.id)!;
-    const queued = await confirmEmail(db, event, amalia.id, minutes(3));
+    const ioana = (await db.select().from(registrations)).find((row) => row.id !== first.id)!;
+    const queued = await confirmEmail(db, event, ioana.id, minutes(3));
     expect(queued.status).toBe("WAITLISTED");
 
     await submitRegistration(db, event, submission(minutes(20)), minutes(20));
 
     const rows = await resubmittedRows();
     expect(rows).toHaveLength(1);
-    expect(rows[0].entityId).toBe(amalia.id);
+    expect(rows[0].entityId).toBe(ioana.id);
     expect(rows[0].metadataJson).toEqual({ status: "WAITLISTED", resent: "WAITLIST_JOINED" });
   });
 
@@ -274,9 +274,9 @@ describe("§312 the list's marker, in one grouped query", () => {
     expect(rows).toHaveLength(2);
     const marks = await listResubmissionMarks(db, rows.map((row) => row.id));
 
-    const amalia = rows.find((row) => row.registeredName === "Amalia Popescu")!;
+    const ioana = rows.find((row) => row.registeredName === "Ioana Popescu")!;
     const ion = rows.find((row) => row.registeredName === "Ion Ionescu")!;
-    expect(marks.get(amalia.id)).toEqual({ count: 2, lastAt: minutes(7) });
+    expect(marks.get(ioana.id)).toEqual({ count: 2, lastAt: minutes(7) });
     expect(marks.has(ion.id)).toBe(false);
     expect(marks.size).toBe(1);
   });

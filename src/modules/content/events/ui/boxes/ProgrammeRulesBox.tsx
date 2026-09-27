@@ -39,7 +39,7 @@ export default async function ProgrammeRulesBox({
   const translations = languages.map((entry) => entry.translation);
   const locale = translations[0]?.locale ?? "ro";
   const initialType = event?.type ?? "GROUP_RUN";
-  const line = await declarationLine(event, declarations, words);
+  const line = await declarationLine(event, declarations, words, groupRunDeclarations);
   // Awaited, not nested: each element is ready when the card is (`requiredLine` does the same).
   const programme = await ProgrammeBox({ event, mayEditSettings, risk, languages });
   const rules = await RulesBox({ languages });

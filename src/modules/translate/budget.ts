@@ -31,8 +31,12 @@ import {
  */
 
 export const TRANSLATION_BUDGET_SETTING_KEY = "translation-budget";
-/** One fixed id per setting for the audit row; `…e001`–`…e009` are taken (§100 … §389). */
-export const TRANSLATION_BUDGET_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00a";
+/**
+ * One fixed id per setting for the audit row. It was `…e00a` until §NNN, which the contact
+ * address shown had taken the same afternoon: the audit rows written before keep that id and are
+ * told apart by their `action`. `tests/unit/settings/entity-ids.test.ts` holds every id unique.
+ */
+export const TRANSLATION_BUDGET_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e010";
 
 export type TranslationBudgetState = { budget: TranslationBudget; updatedAt: Date | null };
 

@@ -239,8 +239,8 @@ function field(form: FormData, name: string): string {
 }
 
 /**
- * Back to «De făcut», keeping the reader's owner filter (`for`) so a tick on Dani's list lands on
- * Dani's list. A success says so in a toast (§384) and the URL carries `saved=` like every other
+ * Back to «De făcut», keeping the reader's owner filter (`for`) so a tick on the Organizer's list lands
+ * on the Organizer's list. A success says so in a toast (§384) and the URL carries `saved=` like every other
  * panel's; a refusal of a one-button form (tick, move) comes back as `error=` for the panel's
  * banner, because those forms have no boxes to keep.
  */

@@ -184,10 +184,10 @@ export const TRANSITIONS: readonly Transition[] = [
   /*
     **Crossing into or out of public view is an Administrator's act since §201.**
 
-    The owner, of his two colleagues: "Amalia e Administrator, Dani e Organizator dar poate face
-    prostii, deci trebuie manageuit de Amalia". These four rows are the whole of what the public
+    The owner, of his two colleagues: "[colega] e Administrator, [colegul] e Organizator dar poate
+    face prostii, deci trebuie manageuit de [ea]". These four rows are the whole of what the public
     can see changing — a page appearing, a page disappearing, a live page being taken down or
-    put back — so raising exactly these four is what "nothing Dani does goes live on its own"
+    put back — so raising exactly these four is what "nothing the Organizer does goes live on its own"
     means, expressed as the smallest possible change to the table.
 
     The organizer keeps everything that does not cross that line: writing, submitting, returning
@@ -467,7 +467,7 @@ export function canSeeDiagnostics(role: StaffRole): boolean {
  * changing a role, resending an invitation, a password link, switching an account off, taking
  * access away.
  *
- * The owner: "I will make Amalia superadministrator but later administrators should manage
+ * The owner: "I will make [the Administrator] superadministrator but later administrators should manage
  * everything; superadministrator is more like administrator + platform configs that can break
  * stuff (throttling, etc)". It had been the Superadministrator's alone, on the reasoning that a
  * role able to grant itself a higher one makes every rule above it decorative. That reasoning
@@ -634,7 +634,7 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * writing texts (§207) they also stopped being able to *see* the events list, which is not what
  * anybody asked for.
  *
- * The owner: "organizatorul vede cam tot (dar în readonly), practic Dani îi zice Amaliei să
+ * The owner: "organizatorul vede cam tot (dar în readonly), practic organizatorul îi zice administratorului să
  * modifice X, Y lucru." So the Organizer is an observer with the desk: they read the events, the
  * pages, the gallery and the legal texts, and they ask the Administrator for every change. A
  * person who cannot see what the club publishes cannot tell her which line is wrong.

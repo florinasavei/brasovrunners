@@ -35,7 +35,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.type": inBox("kind", t("editor.type")),
     "event.surface": inBox("course", t("editor.surface")),
     // The one way the select is refused from a page: "Încheiat" on a new event not started yet (§448).
-    "event.eventStatus": inStatus(t("editor.boxes.status.completedRefused")),
+    // The card's title once, then the sentence: «Ce fel de eveniment › Starea evenimentului: Încheiat
+    // se poate alege doar…» — the status is not named twice (§NNN).
+    "event.eventStatus": inBox("kind", `${t("editor.boxes.status.title")}: ${t("editor.boxes.status.completedRefused")}`),
     "event.timezone": inWhenWhere(t("editor.timezone")),
     "event.startsAtDate": inWhenWhere(t("editor.startsAt")),
     "event.startsAtTime": inWhenWhere(t("editor.startsAt")),

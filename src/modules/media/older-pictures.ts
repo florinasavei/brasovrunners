@@ -3,7 +3,10 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { eventTranslations, events } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
+import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
+import { teamMembers } from "@/db/schema/team";
+import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -65,7 +68,7 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
 
 /**
  * The most pictures one press converts, and the time after which it starts no new one — sized
- * from a measurement, not a guess (§430). `ladderFromStoredMaster` on a 2400 × 1349 «Normală»
+ * from a measurement, not a guess (§430). `ladderFromStoredMaster` on a 2400 × 1349 «Medie»
  * master (six rungs and the thumbnail) took 0.9–1.5 s on the development machine with every
  * core, and 2.5–2.6 s with `sharp` and libuv held to one thread — the honest figure for a
  * Vercel function, whose one vCPU runs the `Promise.all` of encodes one after another. Counting
@@ -261,6 +264,21 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(events)
       .set({ videoPosterUrl: swapped(events.videoPosterUrl, old, next), version: sql`${events.version} + 1` })
       .where(holds(events.videoPosterUrl, old));
+    // «Echipa»'s texts (§474), which `references.ts` reads too and this press had missed (§NNN):
+    // the words about each person, and the page's introduction in its platform setting. A card's
+    // photo is by id and follows the row above on its own.
+    await tx
+      .update(teamMembers)
+      .set({
+        bioRoJson: sql`${swapped(teamMembers.bioRoJson, old, next)}::jsonb`,
+        bioEnJson: sql`${swapped(teamMembers.bioEnJson, old, next)}::jsonb`,
+        version: sql`${teamMembers.version} + 1`,
+      })
+      .where(or(holds(teamMembers.bioRoJson, old), holds(teamMembers.bioEnJson, old)));
+    await tx
+      .update(platformSettings)
+      .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
+      .where(and(eq(platformSettings.key, TEAM_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
     return true;
   });
   if (moved) return "converted";
