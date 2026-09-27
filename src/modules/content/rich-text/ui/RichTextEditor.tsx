@@ -22,6 +22,7 @@ import BorderColorIcon from "@mui/icons-material/BorderColor";
 import BorderHorizontalIcon from "@mui/icons-material/BorderHorizontal";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
+import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
@@ -144,6 +145,16 @@ const WRITING_AREA_BOX = { minHeight: 240, p: 2 } as const;
 const ALIGN_ICON = {
   left: FormatAlignLeftIcon,
   center: FormatAlignCenterIcon,
+  right: FormatAlignRightIcon,
+} as const;
+
+/**
+ * A picture's or a film's place in the column, drawn beside the words (§NNN: a glyph on every
+ * button): the whole width as justified text, a side as that side's alignment.
+ */
+const PLACEMENT_ICON = {
+  block: FormatAlignJustifyIcon,
+  left: FormatAlignLeftIcon,
   right: FormatAlignRightIcon,
 } as const;
 
@@ -1603,11 +1614,15 @@ function RichTextEditorIsland({
                 }}
                 aria-label={labels.imageAlign}
               >
-                {IMAGE_ALIGNMENTS.map((align) => (
-                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
-                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
-                  </ToggleButton>
-                ))}
+                {IMAGE_ALIGNMENTS.map((align) => {
+                  const PlacementIcon = PLACEMENT_ICON[align];
+                  return (
+                    <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40, gap: 0.5 }}>
+                      <PlacementIcon aria-hidden fontSize="small" />
+                      {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                    </ToggleButton>
+                  );
+                })}
               </ToggleButtonGroup>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                 {labels.imageAlignHelp}
@@ -1725,11 +1740,15 @@ function RichTextEditorIsland({
                 }}
                 aria-label={labels.imageAlign}
               >
-                {IMAGE_ALIGNMENTS.map((align) => (
-                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
-                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
-                  </ToggleButton>
-                ))}
+                {IMAGE_ALIGNMENTS.map((align) => {
+                  const PlacementIcon = PLACEMENT_ICON[align];
+                  return (
+                    <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40, gap: 0.5 }}>
+                      <PlacementIcon aria-hidden fontSize="small" />
+                      {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                    </ToggleButton>
+                  );
+                })}
               </ToggleButtonGroup>
             </Box>
             {/*

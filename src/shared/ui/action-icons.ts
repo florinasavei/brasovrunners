@@ -81,7 +81,9 @@ import type { ComponentType } from "react";
  * the components a public page renders — `ButtonLink`, `SubmitButton`, `RunnerLoader` — never
  * import it: the send buttons' runner is `SubmitButton`'s own `runner` flag, one glyph imported
  * directly. The test walks the imports from every route and fails if a public one reaches this
- * file through anything.
+ * file through anything. §NNN's rule — a glyph on every button and every fold, public pages
+ * included — reaches the public pages the same way: each imports its one icon file directly, and
+ * this table stays out of their bundles.
  *
  * One file per glyph from `@mui/icons-material`, never the barrel (§90). Every glyph is
  * decoration beside a label that already says the verb: `SvgIcon` renders `aria-hidden` unless

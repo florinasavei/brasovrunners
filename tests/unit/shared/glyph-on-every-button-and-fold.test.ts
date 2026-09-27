@@ -6,6 +6,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import Panel from "@/shared/ui/Panel";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
+import { WITHOUT_GLYPH } from "./glyph-allowlist";
 
 /**
  * §NNN — the owner, 2026-09-27: a glyph on every button and every fold header, on the public
@@ -18,9 +19,11 @@ import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
  * what is written, and the TypeScript compiler API reads JSX without rendering it.
  *
  * - **Buttons:** every `Button`, `ButtonLink`, `SubmitButton`, `GlyphButton`, `GlyphButtonLink`,
- *   `GlyphSubmitButton`, `ConfirmSubmitButton` and bare `<button>` draws a glyph — by prop
- *   (`startIcon`, `runner`, `glyph`, `icon`) or as a child (an `…Icon` element, a `GLYPHS.…`
- *   lookup, a bare `<svg>`, or the `{children}` / `{icon}` a wrapper hands on).
+ *   `GlyphSubmitButton`, `ConfirmSubmitButton`, `ToggleButton`, bare `<button>`, and any element
+ *   drawn as one (`component="button"`, `role="button"`) draws a glyph — by prop (`startIcon`,
+ *   `runner`, `glyph`, `icon`) or as a child (an `…Icon` element, a `GLYPHS.…` lookup, a bare
+ *   `<svg>`). A `{children}` counts only in a wrapper named in `PASSED_ON`, whose call sites are
+ *   checked in its place. The exceptions, each with its reason, are `glyph-allowlist.ts`.
  * - **Fold headers:** every `<summary>` — the element, or `component="summary"` — draws one of the
  *   same among its descendants, after the fold's own arrow.
  * - **Cards:** `Panel`'s type requires `glyph` on every card (the `help` line's caret is its
@@ -40,6 +43,10 @@ function tsxUnder(directory: string): string[] {
 const FILES = tsxUnder("src");
 const parse = (file: string) => ts.createSourceFile(file, read(file), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
+/**
+ * The button components. A wrapper that hands its caller's glyph on (see `PASSED_ON`) is listed
+ * here too, so every place it is used is checked for the glyph it is handed.
+ */
 const BUTTONS = new Set([
   "Button",
   "ButtonLink",
@@ -48,46 +55,54 @@ const BUTTONS = new Set([
   "GlyphButtonLink",
   "GlyphSubmitButton",
   "ConfirmSubmitButton",
+  "ToggleButton",
+  "InstagramShareButton",
   "button",
 ]);
 const GLYPH_PROPS = new Set(["startIcon", "runner", "glyph", "icon"]);
 
-/** Whether a JSX subtree draws a glyph. */
-function drawsGlyph(node: ts.Node): boolean {
+/**
+ * The wrappers whose button draws the glyph its caller hands it — `{children}` or `{icon}` — rather
+ * than one of its own. Anywhere else, a bare `{children}` inside a button proves nothing and does
+ * not count. Each wrapper's call sites are checked instead: a component through `BUTTONS`, the
+ * share row's local `anchor(…)` helper by the test below.
+ */
+const PASSED_ON: ReadonlyArray<{ file: string; expression: string; wrapper: string }> = [
+  { file: "src/shared/ui/ButtonLink.tsx", expression: "children", wrapper: "ButtonLink" },
+  { file: "src/modules/events/ui/InstagramShareButton.tsx", expression: "children", wrapper: "InstagramShareButton" },
+  { file: "src/modules/events/ui/ShareLinks.tsx", expression: "icon", wrapper: "anchor" },
+];
+
+/** Whether a JSX subtree draws a glyph; `passedOn` names the expressions a wrapper hands on. */
+function drawsGlyph(node: ts.Node, passedOn: ReadonlySet<string>): boolean {
   if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
     const tag = node.tagName.getText();
     if (/Icon$/.test(tag) || tag === "Glyph" || tag === "svg" || /^GLYPHS\./.test(tag)) return true;
   }
-  if (ts.isJsxExpression(node) && node.expression && ts.isIdentifier(node.expression) && ["children", "icon"].includes(node.expression.text)) return true;
-  return ts.forEachChild(node, (child) => (drawsGlyph(child) ? true : undefined)) ?? false;
+  if (ts.isJsxExpression(node) && node.expression && ts.isIdentifier(node.expression) && passedOn.has(node.expression.text)) return true;
+  return ts.forEachChild(node, (child) => (drawsGlyph(child, passedOn) ? true : undefined)) ?? false;
 }
 
-/**
- * The buttons that wear no separate glyph, each with its reason. A `file:words` entry matches a
- * button in that file whose source contains the words.
- *
- * - §498's two: the race's conditions row, whose required checkbox is its picture, and the
- *   header's «Meniu ▾» / ☰, which draws its glyph in text.
- * - The order arrows of the pages list, the team page and the club's checklist: the label *is*
- *   the glyph — "↑" and "↓" — and the row's name is the accessible name. Recognised by the label,
- *   so any file may use them.
- * - A bare `<button />` with no children at all: an invisible overlay over a control that draws
- *   its own picture (the telephone's flag, `PhoneField`), with nothing to put a glyph beside.
- */
-const WITHOUT_GLYPH = new Set([
-  "src/modules/registrations/ui/ReadAndAgree.tsx:agreed ? agreedLabel : openLabel",
-  'src/shared/ui/SiteNav.tsx:id="site-nav-more"',
-]);
+const passedOnIn = (file: string) => new Set(PASSED_ON.filter((entry) => entry.file === file).map((entry) => entry.expression));
+
 const ARROW_LABEL = /\blabel="[↑↓]"/;
+
+function attribute(opening: ts.JsxOpeningElement | ts.JsxSelfClosingElement, name: string): string | undefined {
+  const found = opening.attributes.properties.find((property) => ts.isJsxAttribute(property) && property.name.getText() === name);
+  return found && ts.isJsxAttribute(found) ? found.initializer?.getText() : undefined;
+}
+
+/** A button by its tag, or any element drawn as one: `component="button"` or `role="button"`. */
+function isButton(opening: ts.JsxOpeningElement | ts.JsxSelfClosingElement): boolean {
+  return BUTTONS.has(opening.tagName.getText()) || attribute(opening, "component") === '"button"' || attribute(opening, "role") === '"button"';
+}
 
 function exempt(file: string, node: ts.Node): boolean {
   const text = node.getText();
   if (ARROW_LABEL.test(text)) return true;
-  if (ts.isJsxSelfClosingElement(node) && node.tagName.getText() === "button") return true;
-  return [...WITHOUT_GLYPH].some((allowed) => {
-    const cut = allowed.indexOf(".tsx:") + ".tsx".length;
-    return allowed.slice(0, cut) === file && text.includes(allowed.slice(cut + 1));
-  });
+  // A button with no children at all: an invisible overlay over a control that draws its own picture.
+  if (ts.isJsxSelfClosingElement(node) && (node.tagName.getText() === "button" || attribute(node, "component") === '"button"')) return true;
+  return WITHOUT_GLYPH.some((allowed) => allowed.file === file && text.includes(allowed.words));
 }
 
 function where(source: ts.SourceFile, node: ts.Node) {
@@ -96,12 +111,13 @@ function where(source: ts.SourceFile, node: ts.Node) {
 
 function buttonsWithoutGlyph(file: string): string[] {
   const source = parse(file);
+  const passedOn = passedOnIn(file);
   const found: string[] = [];
   const visit = (node: ts.Node) => {
     const opening = ts.isJsxElement(node) ? node.openingElement : ts.isJsxSelfClosingElement(node) ? node : null;
-    if (opening && BUTTONS.has(opening.tagName.getText())) {
+    if (opening && isButton(opening)) {
       const byProp = opening.attributes.properties.some((attribute) => ts.isJsxAttribute(attribute) && GLYPH_PROPS.has(attribute.name.getText()));
-      const byChild = ts.isJsxElement(node) && node.children.some((child) => drawsGlyph(child));
+      const byChild = ts.isJsxElement(node) && node.children.some((child) => drawsGlyph(child, passedOn));
       if (!byProp && !byChild && !exempt(file, node)) found.push(where(source, opening));
     }
     ts.forEachChild(node, visit);
@@ -116,6 +132,8 @@ function buttonsWithoutGlyph(file: string): string[] {
  */
 const SUMMARY_DRAWN_ELSEWHERE = new Set(["src/shared/ui/Panel.tsx:{heading}"]);
 
+const NOTHING_PASSED_ON: ReadonlySet<string> = new Set();
+
 function foldsWithoutGlyph(file: string): string[] {
   const source = parse(file);
   const found: string[] = [];
@@ -125,7 +143,7 @@ function foldsWithoutGlyph(file: string): string[] {
       const component = opening.attributes.properties.find((attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText() === "component");
       const isSummary = opening.tagName.getText() === "summary" || (component !== undefined && /"summary"/.test(component.getText()));
       if (isSummary) {
-        const drawn = node.children.some((child) => drawsGlyph(child));
+        const drawn = node.children.some((child) => drawsGlyph(child, NOTHING_PASSED_ON));
         const elsewhere = [...SUMMARY_DRAWN_ELSEWHERE].some((entry) => {
           const cut = entry.indexOf(".tsx:") + ".tsx".length;
           return entry.slice(0, cut) === file && node.getText().includes(entry.slice(cut + 1));
@@ -152,13 +170,33 @@ describe("§NNN a glyph on every button", () => {
   });
 
   it("the exceptions are still there and still what they say", () => {
-    expect(read("src/modules/registrations/ui/ReadAndAgree.tsx")).toContain("{agreed ? agreedLabel : openLabel}");
-    expect(read("src/shared/ui/SiteNav.tsx")).toContain('id="site-nav-more"');
+    for (const allowed of WITHOUT_GLYPH) {
+      expect(allowed.reason, allowed.file).toMatch(/\S/);
+      expect(read(allowed.file), `${allowed.file}: ${allowed.words}`).toContain(allowed.words);
+    }
     // The arrows still carry the row's name as their accessible name.
     for (const file of ["src/app/[locale]/admin/pages/(list)/page.tsx", "src/app/[locale]/admin/pages/team/page.tsx", "src/modules/club-todo/ui/ClubTodoPanel.tsx"]) {
       const text = read(file);
       expect(text, file).toMatch(/label="↑"[\s\S]*?ariaLabel=/);
     }
+  });
+
+  it("a wrapper that hands its caller's glyph on is itself checked where it is used", () => {
+    for (const entry of PASSED_ON) {
+      expect(read(entry.file), entry.file).toContain(`{${entry.expression}}`);
+      if (entry.wrapper !== "anchor") expect(BUTTONS.has(entry.wrapper), entry.wrapper).toBe(true);
+    }
+    // The share row's local helper: every call hands it an icon element.
+    const share = read("src/modules/events/ui/ShareLinks.tsx");
+    const calls = [...share.matchAll(/\banchor\(([\s\S]*?)\)\}/g)];
+    expect(calls.length).toBe(4);
+    for (const call of calls) expect(call[1]).toMatch(/<\w+Icon\b/);
+  });
+
+  it("does not count a bare {children} inside a button that is not a listed wrapper", () => {
+    const source = ts.createSourceFile("x.tsx", "const x = <Button>{children}{label}</Button>;", ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    expect(drawsGlyph(source, new Set())).toBe(false);
+    expect(drawsGlyph(source, new Set(["children"]))).toBe(true);
   });
 
   it("makes the confirming button's glyph required: a verb with several questions still wears its picture", () => {

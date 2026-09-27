@@ -2,6 +2,12 @@
 
 import Box from "@mui/material/Box";
 import CloseIcon from "@mui/icons-material/Close";
+import ArticleIcon from "@mui/icons-material/Article";
+import CollectionsIcon from "@mui/icons-material/Collections";
+import EventIcon from "@mui/icons-material/Event";
+import GroupsIcon from "@mui/icons-material/Groups";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
+import PhotoAlbumIcon from "@mui/icons-material/PhotoAlbum";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -10,6 +16,19 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { PICTURE_SOURCES, type PickerScope, pickerScopeParam, type PictureSource, type PictureUse, visiblePictures } from "../picker";
 import { formatBytes } from "./stored-facts";
+
+/**
+ * Each chip's picture beside its words (§NNN: a glyph on every button): every picture, an event,
+ * an album, a standing page, «Echipa», and «here» — the record whose editor opened the picker.
+ */
+const SOURCE_ICON = {
+  all: CollectionsIcon,
+  event: EventIcon,
+  album: PhotoAlbumIcon,
+  page: ArticleIcon,
+  team: GroupsIcon,
+  here: MyLocationIcon,
+} as const;
 
 /**
  * One stored picture, as `GET /api/admin/media` lists it: the master's address in the shape a
@@ -193,11 +212,15 @@ export default function GalleryPicker({
               data-testid={`${testId}-sources`}
               sx={{ flexWrap: "wrap" }}
             >
-              {chips.map((value) => (
-                <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
-                  {value === "here" ? labels.here : labels.sources[value]}
-                </ToggleButton>
-              ))}
+              {chips.map((value) => {
+                const SourceIcon = SOURCE_ICON[value];
+                return (
+                  <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1, gap: 0.5 }}>
+                    <SourceIcon aria-hidden fontSize="small" />
+                    {value === "here" ? labels.here : labels.sources[value]}
+                  </ToggleButton>
+                );
+              })}
             </ToggleButtonGroup>
           </Box>
           {shown.length === 0 ? (
