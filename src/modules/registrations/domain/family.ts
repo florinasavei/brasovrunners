@@ -14,8 +14,9 @@ import { isActiveStatus } from "./state-machine";
  * - **the confirmation pressed from the email** (`link`): whoever holds it has read that inbox, so
  *   here — and only here — a refusal may say "this person is already registered on this address"
  *   or "the address is at the club's limit";
- * - **a staff entry** (`staff`), which refuses a registered address out loud before calling in
- *   (`createRegistrationByStaff`) and reaches this only by racing another entry.
+ * - **a staff entry** (`staff`): somebody at the desk typing a name, so another name on a registered
+ *   address is another person, within the club's limit (§NNN) — and a refusal is said out loud, as
+ *   behind the link, since the staff member can already read the whole list.
  *
  * Decided under the event's lock (`submitRegistration`), from every registration the address holds
  * at the event, so two submissions of one family cannot both find the address empty.
@@ -84,7 +85,16 @@ export type SubmissionDecision<R extends FamilyRow> =
    * §235). `notAnotherPerson` when only one of the name and the birth date matched (§446): the
    * re-sent message then says how to register somebody else — in the inbox, never on the screen.
    */
-  | { kind: "resend"; registration: R; notAnotherPerson?: true }
+  | {
+      kind: "resend";
+      registration: R;
+      notAnotherPerson?: true;
+      /**
+       * The slip matched a registration's birth date under another name (§NNN) — twins, perhaps: the
+       * re-sent message says how two people born on one day are registered (another address, or the club).
+       */
+      sameBirthDate?: true;
+    }
   /**
    * Another person on a registered address, from the public form: nothing registered; the posted
    * form is kept for the address to confirm from its inbox (§446), or — at the club's limit — the
@@ -95,9 +105,9 @@ export type SubmissionDecision<R extends FamilyRow> =
   | { kind: "restart"; registration: R }
   /** A new registration for this runner. */
   | { kind: "insert" }
-  /** From the confirmation: this person is already registered on this address. */
+  /** From the confirmation or a staff entry: this person is already registered on this address. */
   | { kind: "refuseAlreadyRegistered" }
-  /** From the confirmation: the address already carries the club's limit at this event. */
+  /** From the confirmation or a staff entry: the address already carries the club's limit at this event. */
   | { kind: "refuseAtCap" }
   /** From the confirmation, while the schema still holds one registration per address: nothing can be honoured. */
   | { kind: "refuseClosed" };
@@ -151,6 +161,21 @@ export function decideSubmission<R extends FamilyRow>(input: {
   // Nobody on the address is registered now: this runner starts again, or starts.
   if (active.length === 0) return same ? { kind: "restart", registration: same } : { kind: "insert" };
 
+  if (via === "staff") {
+    /*
+      A staff member entering another person on a registered address (§NNN). The public form cannot
+      tell a second person from a slip without the owner's two-part rule, and asks the inbox; the
+      person at the desk has no such doubt — they typed the name of somebody standing in front of
+      them, or relayed a request (the tick `createRegistrationByStaff` requires). So the name alone
+      decides here: the same runner again is refused, anybody else is registered, within the club's
+      limit per address. It is also the one way twins reach one address: the public form reads the
+      second as a slip of the first, by the birth date they share (§446).
+    */
+    if (active.some((row) => sameRunner(row.registeredName, legalName))) return { kind: "refuseAlreadyRegistered" };
+    if (!addressHasRoom(active.length, cap)) return { kind: "refuseAtCap" };
+    return same ? { kind: "restart", registration: same } : { kind: "insert" };
+  }
+
   const exact = active.find((row) => comparePerson(row, posted) === "same");
   if (exact) return { kind: "resend", registration: exact };
 
@@ -161,8 +186,17 @@ export function decideSubmission<R extends FamilyRow>(input: {
     name before the date. The message says how to register somebody else; the screen, as always,
     says nothing.
   */
-  const partial = active.find((row) => sameRunner(row.registeredName, legalName)) ?? active.find((row) => comparePerson(row, posted) === "partial");
-  if (partial) return via === "form" ? { kind: "resend", registration: partial, notAnotherPerson: true } : { kind: "resend", registration: partial };
+  const byName = active.find((row) => sameRunner(row.registeredName, legalName));
+  const partial = byName ?? active.find((row) => comparePerson(row, posted) === "partial");
+  if (partial) {
+    if (via !== "form") return { kind: "resend", registration: partial };
+    /*
+      Another name on a registered birth date (§NNN): possibly twins — whom the owner's rule reads
+      as a slip, and whom "send the form with that person's name and birth date" cannot help, since
+      that is what they did. The re-sent message says what can: another address, or the club.
+    */
+    return byName ? { kind: "resend", registration: partial, notAnotherPerson: true } : { kind: "resend", registration: partial, notAnotherPerson: true, sameBirthDate: true };
+  }
 
   if (via === "form") {
     /*

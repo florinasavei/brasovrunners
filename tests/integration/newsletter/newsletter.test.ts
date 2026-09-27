@@ -490,6 +490,26 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       expect(order.map((row) => (row.payloadJson as { eventId: string }).eventId)).toEqual([first.id, second.id]);
     });
 
+    /*
+      §NNN — the day's one alert holds across runs that overlap: the pinger and the drain a
+      publication wakes, a second apart, each read "nothing announced today" before either queued.
+    */
+    it("never sends two announcements in one club day when two runs overlap", async () => {
+      await approveNotice({ describesNewsletter: true });
+      await subscribed("gear@example.org", ["GEAR_TESTING"]);
+      await confirmationsSent();
+      const first = await seedEvent({ type: "GEAR_TEST", publishedAt: new Date(NOW.getTime() - 2 * 60 * 60_000) });
+      const second = await seedEvent({ type: "GEAR_TEST", publishedAt: new Date(NOW.getTime() - 60 * 60_000) });
+
+      const [a, b] = await Promise.all([queueNewEventAlerts(db, NOW), queueNewEventAlerts(db, new Date(NOW.getTime() + 1_000))]);
+      expect(a + b).toBe(1);
+      const announced = (await db.select().from(newsletterSends)).filter((send) => send.recipients > 0);
+      expect(announced.map((send) => send.eventId)).toEqual([first.id]);
+      // The other waits for tomorrow, and goes then.
+      expect(await queueNewEventAlerts(db, new Date("2026-10-01T21:01:00.000Z"))).toBe(1);
+      expect((await outboxOf("NEW_EVENT_ALERT")).map((row) => (row.payloadJson as { eventId: string }).eventId).sort()).toEqual([first.id, second.id].sort());
+    });
+
     it("§445 files each kind of event under the brief's topic: a race, a group run, a special date of the weekly run, a partnered or external event, a gear test, and the rest under all the news", async () => {
       await approveNotice({ describesNewsletter: true });
       // Nobody subscribed: every event is marked seen in one run, so each send's topics can be read at once.

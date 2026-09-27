@@ -975,7 +975,9 @@
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
       "BIB_NUMBER_TAKEN": "That number is already somebody's at this event (given, held, or worn by an erased registration). Pick another number from the box and try again.",
-      "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number."
+      "WALK_IN_BIB_TAKEN": "The person was entered, but somebody at the desk gave that number away a moment ago, so their registration stays unconfirmed and no email was sent to them. Find them in the desk's list and press “Confirm here” with another spare number.",
+      "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
+      "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person."
     },
     "editor": {
       "eventSection": "Event details",
@@ -5721,7 +5723,7 @@
     "readings": "The three readings: billed {metered}, from the log {operations}, the old counter {legacy} CU-hours; the larger of the first two is used, the old counter only when neither answered.",
     "notRead": "not read",
     "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it.",
-    "spentAll": "The limit is spent: Neon stops the database until the period ends, and the site shows its saved copies.",
+    "spentAll": "By this reading the limit is used up. Neon stops the database only when its own meter reaches the limit; from then until the period ends the site shows its saved copies and the forms wait. Until then the scheduled jobs keep running, at the pace below.",
     "thresholds": {
       "intro": "The thresholds, as percents of the monthly limit: amber from the first, red from the second (red raises the alarm on /api/health).",
       "amber": "Amber from (%)",
@@ -5734,6 +5736,7 @@
   },
   "Offline": {
     "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
+    "saved": "This is the saved copy of the page, from {when}; it is being brought up to date within a few minutes, so a very recent change may not show yet.",
     "resting": "The site is showing a saved copy of this page, from {when}: registration and the forms are paused until {until}. Thank you for your patience!",
     "capacityUnknown": "We cannot check how many places are left right now.",
     "capacityRetry": "Try again",

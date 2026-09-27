@@ -27,10 +27,11 @@ import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
-import { registrationNameKey } from "./domain/name-key";
+import { registrationNameKey, sameRunner } from "./domain/name-key";
+import { ALREADY_ON_ADDRESS } from "./domain/family";
+import { composeLegalName } from "./names";
 import {
   findEventForAllocation,
-  findRegistrationByEventAndParticipant,
   findRegistrationById,
   findRegistrationsByEventAndParticipant,
   lockEventForCapacity,
@@ -357,20 +358,22 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
    * an Administrator who can already read the whole list, and "nothing happened, and you were
    * told it worked" is the wrong outcome for somebody standing at a desk.
    */
+  /*
+    Since §NNN the question is "is *this person* already registered on the address", not "is the
+    address registered": a family on one address (§389, §446) is entered at the desk one person at a
+    time — twins included, whom the public form's rule cannot tell from a slip — and the staff member
+    typing the name is the intent the public form has to ask the inbox for. The same runner again
+    (the name by the runner's key) is refused here, before anything is written; everything else —
+    the club's limit per address, a schema that still holds one registration per address — is
+    decided under the event's lock (`decideSubmission`, via `staff`), which refuses out loud too.
+  */
   const identity = canonicalizeEmail(input.email);
   const existingParticipant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
   if (existingParticipant) {
-    const existing = await findRegistrationByEventAndParticipant(
-      db,
-      event.id,
-      existingParticipant.id,
-    );
-    if (existing && isActiveStatus(existing.status)) {
-      throw new DomainError(
-        "VALIDATION_ERROR",
-        "this address already has a registration for this event",
-        ["email"],
-      );
+    const legalName = composeLegalName(input.firstName, input.lastName);
+    const rows = await findRegistrationsByEventAndParticipant(db, event.id, existingParticipant.id);
+    if (rows.some((row) => isActiveStatus(row.status) && sameRunner(row.registeredName, legalName))) {
+      throw new DomainError("VALIDATION_ERROR", "this person is already registered on this address", ["email", ALREADY_ON_ADDRESS]);
     }
   }
 

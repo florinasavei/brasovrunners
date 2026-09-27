@@ -668,6 +668,11 @@ export type TemplateData = {
    */
   anotherPersonHint?: boolean;
   /**
+   * The slip was another name on a registered birth date (§NNN): twins, perhaps, whom "send the form
+   * again" cannot help — the sentence says what can (another address, or the club at the desk).
+   */
+  sameBirthDateHint?: boolean;
+  /**
    * The kept form behind the message is gone (§446): confirmed already, or lapsed and purged —
    * a row the outbox deferred past the window (§40), or sent again after the press. There is no
    * button and no person to name, so the message says the request lapsed and how to start again.
@@ -1240,6 +1245,9 @@ const T = {
     familyDecline: "Nu înscriu această persoană",
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
+    /** In its place when the slip was another name on a registered birth date (§NNN): how twins are registered. */
+    sameBirthDateHint:
+      "Pe aceeași adresă de email nu pot fi înscrise din formular două persoane născute în aceeași zi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email, ori răspunde la acest email și facem noi înscrierea.",
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
@@ -1639,6 +1647,8 @@ const T = {
     ],
     familyDecline: "I am not registering this person",
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
+    sameBirthDateHint:
+      "Two people born on the same day cannot both be registered from one email address through the form. For a twin, send the form from another email address, or reply to this email and we will register them.",
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
@@ -1988,7 +1998,7 @@ export function buildTemplateContent(
       // desk gave, whichever this registration actually has (§286).
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
-      ...(data.anotherPersonHint ? [copy.anotherPersonHint] : []),
+      ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
       /*
         Another person on the address (§446): who the address holds and who the form named, before
         the question — facts of this send, like "you were already registered" above, so a club that
