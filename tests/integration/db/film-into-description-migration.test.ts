@@ -20,7 +20,8 @@ import { parseRichText } from "@/modules/content/rich-text/domain/schema";
  * - a description that already shows that film gets no second copy;
  * - a link no video id can be read from, and an event with no film, are untouched;
  * - every touched translation's version moves on (a stale editor tab is refused, not obeyed);
- * - the columns stay, and the file only writes rows — no drop, no rename (AGENTS.md §7.6).
+ * - the columns stay, and the file only writes rows — no drop, no rename (AGENTS.md §7.6);
+ * - 0093 and 0094 leave them too; 0095, BR-V2.11's own contract migration, drops them (§491, §NNN).
  */
 const MIGRATIONS = "src/db/migrations";
 const TAG = "0092_film_into_description";
@@ -97,8 +98,8 @@ beforeAll(async () => {
   await insertEvent("plain", null, null);
   await insertTranslation("plain", "ro", doc(paragraph("Fără film")));
 
-  // Then this migration over those rows — and no further: the last describe below runs the rest of
-  // the migrations (0093, 0094) on their own.
+  // Then this migration over those rows — and no further: the describes below run the rest of the
+  // migrations (0093 and 0094, then 0095) on their own.
   writeFileSync(path.join(folder, "meta", "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, position + 1) }));
   await migrate(drizzle(client), { migrationsFolder: folder });
 });
@@ -161,6 +162,15 @@ describe("§481 migration 0092_film_into_description — the film section's link
   });
 });
 
+/** The migrations up to and including `tag`, over the rows already written — as a release applies its own. */
+async function migrateThrough(tag: string) {
+  const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
+  const position = journal.entries.findIndex((entry) => entry.tag === tag);
+  expect(position, `the journal lists ${tag}`).toBeGreaterThan(0);
+  writeFileSync(path.join(folder, "meta", "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, position + 1) }));
+  await migrate(drizzle(client), { migrationsFolder: folder });
+}
+
 /**
  * What follows it in this release (§491): migrations 0093 and 0094 touch only «Echipa»'s links
  * CHECK, and the film's old columns stay in the database. BR-V2.10 stops declaring them in the
@@ -177,7 +187,7 @@ describe("§491 migrations 0093 and 0094 — the film columns stay until the rel
       plain: await translation("plain", "ro"),
     };
 
-    await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
+    await migrateThrough("0094_team_links_twelve");
 
     const { rows: columns } = await client.query<{ column_name: string }>(
       "SELECT column_name FROM information_schema.columns WHERE table_name = 'events' AND column_name IN ('video_url', 'video_poster_url') ORDER BY column_name",
@@ -200,5 +210,66 @@ describe("§491 migrations 0093 and 0094 — the film columns stay until the rel
       expect(sql, file).not.toMatch(/video/i);
       expect(sql, file).toMatch(/"team_members_links_is_a_short_array_of_https_links"/);
     }
+  });
+});
+
+/**
+ * The release after (§491, §NNN): BR-V2.10 stopped declaring `video_url` and `video_poster_url`,
+ * so no release that can still be serving while BR-V2.11 migrates names them, and
+ * `0095_film_columns_dropped` is the contract that takes them and their CHECK out of the database
+ * (AGENTS.md §7.6, the §390 pattern). Runs after the describe above, over the same rows, with every
+ * remaining migration — as `yarn db:migrate:env` runs them over production.
+ */
+describe("§NNN migration 0095_film_columns_dropped — the film's old columns leave the database", () => {
+  const TAG_0095 = "0095_film_columns_dropped";
+
+  it("drops both columns and their CHECK, and leaves every event, description and version as 0092 left them", async () => {
+    const before = {
+      race: [await translation("race", "ro"), await translation("race", "en")],
+      pasted: [await translation("pasted", "ro"), await translation("pasted", "en")],
+      plain: await translation("plain", "ro"),
+    };
+    const { rows: eventsBefore } = await client.query<{ n: number }>("SELECT count(*)::int AS n FROM events");
+
+    await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
+
+    const { rows: columns } = await client.query<{ column_name: string }>(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'events' AND column_name IN ('video_url', 'video_poster_url')",
+    );
+    expect(columns).toEqual([]);
+    const { rows: checks } = await client.query<{ conname: string }>("SELECT conname FROM pg_constraint WHERE conname = 'events_video_url_is_https'");
+    expect(checks).toEqual([]);
+    // Every event survives, and the films 0092 moved are still in the descriptions.
+    const { rows: eventsAfter } = await client.query<{ n: number }>("SELECT count(*)::int AS n FROM events");
+    expect(eventsAfter[0].n).toBe(eventsBefore[0].n);
+    expect([await translation("race", "ro"), await translation("race", "en")]).toEqual(before.race);
+    expect([await translation("pasted", "ro"), await translation("pasted", "en")]).toEqual(before.pasted);
+    expect(await translation("plain", "ro")).toEqual(before.plain);
+    // What this release's schema writes is taken; a write naming the old columns no longer is.
+    await client.query("INSERT INTO events (type, starts_at) VALUES ('RACE', '2026-12-05T08:00:00Z')");
+    await expect(client.query("INSERT INTO events (type, starts_at, video_url) VALUES ('RACE', '2026-12-12T08:00:00Z', NULL)")).rejects.toThrow(
+      /video_url/,
+    );
+  });
+
+  it("is a contract of its own: a contract note, the three drops and nothing else, sorted after 0094 (AGENTS.md §7.6)", () => {
+    const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
+    const position = journal.entries.findIndex((entry) => entry.tag === TAG_0095);
+    expect(position, "the journal lists the migration").toBeGreaterThan(0);
+    expect(journal.entries[position - 1].tag).toBe("0094_team_links_twelve");
+    expect(journal.entries[position].when).toBeGreaterThan(journal.entries[position - 1].when);
+
+    const raw = readFileSync(`${MIGRATIONS}/${TAG_0095}.sql`, "utf8");
+    expect(raw).toMatch(/^-- contract: \S/m);
+    const statements = raw
+      .replace(/--[^\n]*/g, "")
+      .split(";")
+      .map((statement) => statement.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+    expect(statements).toEqual([
+      'ALTER TABLE "events" DROP CONSTRAINT "events_video_url_is_https"',
+      'ALTER TABLE "events" DROP COLUMN "video_url"',
+      'ALTER TABLE "events" DROP COLUMN "video_poster_url"',
+    ]);
   });
 });

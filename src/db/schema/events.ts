@@ -237,9 +237,9 @@ export const events = pgTable(
 
     // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
-    // stored film there. The two columns and `events_video_url_is_https` are still in the database
-    // until BR-V2.11's contract migration drops them — BR-V2.09 declared them and may be serving
-    // while BR-V2.10 migrates (AGENTS.md §7.6), so this release's snapshot keeps them too.
+    // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;
+    // BR-V2.11's contract migration 0095 drops them from the database, a release later, because
+    // BR-V2.09 still declared them while BR-V2.10 migrated (AGENTS.md §7.6, §NNN).
 
     /**
      * The club's Strava group event for this occurrence (BR-REQ-011-01 criterion 10): the
