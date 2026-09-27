@@ -22,7 +22,7 @@ const PERSON = {
 };
 
 function delivery(transport: SmtpTransport, appEnv: ContactDelivery["appEnv"] = "production"): ContactDelivery {
-  return { transport, from: { name: "Brașov Runners", address: "club@example.com" }, to: ["club@example.com", "amalia@example.org"], appEnv };
+  return { transport, from: { name: "Brașov Runners", address: "club@example.com" }, to: ["club@example.com", "ioana@example.org"], appEnv };
 }
 
 /**
@@ -50,7 +50,7 @@ describe("BR-REQ-070-04 the contact form", () => {
     expect(outcome).toEqual({ outcome: "sent" });
     expect(capture.messages).toHaveLength(1);
     const [message] = capture.messages;
-    expect(message.to).toEqual(["club@example.com", "amalia@example.org"]);
+    expect(message.to).toEqual(["club@example.com", "ioana@example.org"]);
     expect(message.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
     expect(message.subject).toBe("Mesaj de pe site: Ana Popescu");
     expect(message.text).toContain(PAGE);
@@ -133,7 +133,7 @@ describe("BR-REQ-070-04 the contact form", () => {
         expect(capture.messages).toHaveLength(1);
         const [message] = capture.messages;
         expect(message.subject).toBe("[posibil spam] Mesaj de pe site: Jaqueline Denehy");
-        expect(message.to).toEqual(["club@example.com", "amalia@example.org"]);
+        expect(message.to).toEqual(["club@example.com", "ioana@example.org"]);
         expect(message.replyTo).toEqual({ name: "Jaqueline Denehy", address: "domains@search-club.example" });
         expect(message.text).toContain(SCRIPT_POST.message);
         expect(message.text).toContain("• Verificarea anti-bot nu a rulat: formularul a fost trimis fără token — de obicei un program, nu un om.");
@@ -273,7 +273,7 @@ describe("BR-REQ-070-04 the contact form", () => {
 
   /**
    * §164 — the club's own recipients, the copy list among them (the owner: "I wanna allow CC
-   * on the contact form so that Amalia can receive emails"). The setting wins over
+   * on the contact form so that [the Administrator] can receive emails"). The setting wins over
    * `CONTACT_FORM_TO`, the copy list applies whichever of the two answered, and a deployment
    * that can send but has nobody to send to is as unavailable as one with no transport.
    */
@@ -289,15 +289,15 @@ describe("BR-REQ-070-04 the contact form", () => {
       EMAIL_FROM_NAME: "Brașov Runners",
     };
 
-    const configured = contactDeliveryFor(base, { to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] });
+    const configured = contactDeliveryFor(base, { to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"] });
     expect(configured?.to).toEqual(["club@example.com"]);
-    expect(configured?.cc).toEqual(["amalia@example.org"]);
+    expect(configured?.cc).toEqual(["ioana@example.org"]);
     expect(configured?.bcc).toEqual(["arhiva@example.org"]);
 
     await submitContactMessage(db, configured, PERSON, NOW, PAGE);
     const [sent] = capturedContactMessages();
     expect(sent?.to).toEqual(["club@example.com"]);
-    expect(sent?.cc).toEqual(["amalia@example.org"]);
+    expect(sent?.cc).toEqual(["ioana@example.org"]);
     // The hidden copies reach the transport as `bcc` (2026-09-22): an envelope recipient the
     // SMTP adapter hands to Nodemailer under that name, so no header names them.
     expect(sent?.bcc).toEqual(["arhiva@example.org"]);
@@ -306,9 +306,9 @@ describe("BR-REQ-070-04 the contact form", () => {
 
     // No "to" in the setting: the environment answers, and both copy lists still apply — minus
     // the environment's own address, which is a recipient already.
-    const fallback = contactDeliveryFor(base, { to: [], cc: ["amalia@example.org"], bcc: ["OLD@example.com", "arhiva@example.org"] });
+    const fallback = contactDeliveryFor(base, { to: [], cc: ["ioana@example.org"], bcc: ["OLD@example.com", "arhiva@example.org"] });
     expect(fallback?.to).toEqual(["old@example.com"]);
-    expect(fallback?.cc).toEqual(["amalia@example.org"]);
+    expect(fallback?.cc).toEqual(["ioana@example.org"]);
     expect(fallback?.bcc).toEqual(["arhiva@example.org"]);
 
     // Neither, on a deployment: nobody to send to is the same answer as no way to send.

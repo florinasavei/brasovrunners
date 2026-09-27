@@ -148,7 +148,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await openFold(contacts);
 
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("club@example.com");
-    await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("amalia@example.org");
+    await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("ioana@example.org");
     // The hidden copy (2026-09-22), with the club's own address typed again: an address in
     // "Către" is not also Bcc'd, so only the archive mailbox is kept from this box.
     await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("Club@example.com, arhiva@example.org");
@@ -159,10 +159,10 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // Its own save opens it (§336), and the closed summary would now say the new address.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: club@example.com");
-    await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie: amalia@example\.org\. Copie ascunsă: arhiva@example\.org/)).toBeVisible();
+    await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie: ioana@example\.org\. Copie ascunsă: arhiva@example\.org/)).toBeVisible();
     // What was saved is what the boxes show on the way back — the whole point of a setting.
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("club@example.com");
-    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("amalia@example.org");
+    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("ioana@example.org");
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("arhiva@example.org");
 
     // An address that is not one is refused and nothing of it is saved — but what was typed stays
@@ -175,7 +175,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // nothing around it (§336, §315).
     await expect(contacts).toHaveAttribute("open", "");
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("nope");
-    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("amalia@example.org");
+    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("ioana@example.org");
     await hydrated(page);
     await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie:/)).toBeVisible();
 

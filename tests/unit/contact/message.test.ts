@@ -34,9 +34,9 @@ describe("BR-REQ-070-04 the message the club receives", () => {
   });
 
   it("carries the club's copy list as a real Cc, one line each (§164)", () => {
-    const copied = renderContactMessage(INPUT, { ...ROUTE, cc: ["amalia@example.org", "board@example.org"] });
+    const copied = renderContactMessage(INPUT, { ...ROUTE, cc: ["ioana@example.org", "board@example.org"] });
     expect(copied.to).toEqual(["club@example.com", "colleague@example.org"]);
-    expect(copied.cc).toEqual(["amalia@example.org", "board@example.org"]);
+    expect(copied.cc).toEqual(["ioana@example.org", "board@example.org"]);
     // "Reply" still answers the visitor, whoever else was copied — the whole of the workflow.
     expect(copied.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
 
@@ -52,9 +52,9 @@ describe("BR-REQ-070-04 the message the club receives", () => {
   });
 
   it("carries the club's hidden copies as a Bcc, one line each, and none when there are none (2026-09-22)", () => {
-    const hidden = renderContactMessage(INPUT, { ...ROUTE, cc: ["amalia@example.org"], bcc: ["arhiva@example.org", "presedinte@example.org"] });
+    const hidden = renderContactMessage(INPUT, { ...ROUTE, cc: ["ioana@example.org"], bcc: ["arhiva@example.org", "presedinte@example.org"] });
     expect(hidden.to).toEqual(["club@example.com", "colleague@example.org"]);
-    expect(hidden.cc).toEqual(["amalia@example.org"]);
+    expect(hidden.cc).toEqual(["ioana@example.org"]);
     // A separate field, so the transport puts them on the envelope and in no header: that is
     // what makes them hidden from the visitor and from the Cc'd colleagues alike.
     expect(hidden.bcc).toEqual(["arhiva@example.org", "presedinte@example.org"]);

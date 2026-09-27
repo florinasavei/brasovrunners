@@ -28,7 +28,7 @@ import { DEFAULT_IMAGE_QUALITY, IMAGE_QUALITIES, type ImageQuality, parseImageQu
 /*
   `sessionStorage`, not `localStorage`, deliberately: the choice is about the pictures of one
   sitting — an album of posters, a page with a map — and a shared backoffice laptop should not
-  start the next person, or the same person next week, on «Înaltă» because of what was uploaded
+  start the next person, or the same person next week, on «Mare» because of what was uploaded
   before. Closing the tab is the reset, and the recommendation is where every new tab starts.
 */
 const SESSION_KEY = "br.imageQuality";

@@ -2267,6 +2267,19 @@ function readCreateStatus(actor: Actor, status: EditableEvent["eventStatus"], st
 }
 
 /**
+ * The status a new date of a series is made with — the create-status rule of §448 applied per
+ * date, not copied from the source (§NNN; the review of §448: a weekly run created «Anulat» made
+ * every future Monday «Anulat» too, and one created «Încheiat» made future dates «over»).
+ *
+ * - `CANCELLED` is one date's news, asked with its own reason in both languages: never inherited.
+ * - `COMPLETED` only for a date whose start has passed — an event cannot be over before it begins.
+ * - Anything else is `SCHEDULED`, as every new event is.
+ */
+export function seriesDateStatus(sourceStatus: EditableEvent["eventStatus"], startsAt: Date, now: Date): EditableEvent["eventStatus"] {
+  return sourceStatus === "COMPLETED" && startsAt.getTime() <= now.getTime() ? "COMPLETED" : "SCHEDULED";
+}
+
+/**
  * Everything a create needs from outside the database — parsing, the two rules-based checks, and
  * every YouTube poster fetch (the event's own `video_url` and any film pasted into a body) — run
  * once, before any transaction opens.
@@ -2839,6 +2852,8 @@ async function materializeSeries<T extends Record<string, unknown>>(
           updatedByStaffUserId: by,
           repeatOf: source.id,
           startsAt: occurrence.startsAt,
+          // The date's own status, never the source's cancellation or completion (§NNN).
+          eventStatus: seriesDateStatus(source.eventStatus, occurrence.startsAt, now),
           endsAt: shift(source.endsAt, occurrence),
           raceStartsAt: shift(source.raceStartsAt, occurrence),
           scheduleItems: source.scheduleItems

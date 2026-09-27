@@ -50,14 +50,14 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
 /**
  * The rungs, in CSS pixels × device pixels. 480 and 640 are a gallery tile and a card on a phone
  * at 2× and 3×; 960 and 1280 a phone's full column at 3× and a laptop's half column at 2×; 1600
- * and 1920 a laptop's full column at 1.5× and 2×. The master (≤ 2400 at «Normală») is the
+ * and 1920 a laptop's full column at 1.5× and 2×. The master (≤ 2400 at «Medie») is the
  * widest screen's. Each rung is at most 1.5× the one below, so the browser never downloads more
  * than half again what it draws.
  *
- * 2400 is a rung only under a master at «Înaltă» (up to `HIGH_WEB_MAX`, 4000; §414): a
- * «Normală» master is at most 2400 and so never gets it (`ladderWidths` keeps rungs under 0.9 of
+ * 2400 is a rung only under a master at «Mare» (up to `HIGH_WEB_MAX`, 4000; §414): a
+ * «Medie» master is at most 2400 and so never gets it (`ladderWidths` keeps rungs under 0.9 of
  * the master), and a 4000-pixel poster is not what a laptop at 2× has to download — it takes
- * the same 2400 file a «Normală» picture's master is, and only a screen wider than that takes
+ * the same 2400 file a «Medie» picture's master is, and only a screen wider than that takes
  * the whole master.
  *
  * 3200 is a rung only under a master wider than `HIGH_WEB_MAX` (§437) — that is, only under an

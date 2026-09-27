@@ -629,7 +629,7 @@ function RichTextEditorIsland({
    * `attachYoutubePosters` from ever replacing it with YouTube's own thumbnail on a later save.
    *
    * At the chosen quality, like every other upload, with the same facts under it (§414, found by
-   * re-review: the poster went up at «Normală» whatever was chosen, and said nothing). Its size
+   * re-review: the poster went up at «Medie» whatever was chosen, and said nothing). Its size
    * goes on the node beside its address, `posterWidth` / `posterHeight`, because the page draws
    * the poster from its ladder (`RichTextVideo`) and a `srcset` needs the master's width.
    */
@@ -1346,7 +1346,7 @@ function RichTextEditorIsland({
 
           {/*
             The bar over a selection (§273; the owner: "I want that rich text editor to be almost
-            as good as word … or at least close to WordPress, Amalia is used to WordPress").
+            as good as word … or at least close to WordPress, [the Administrator] is used to WordPress").
 
             Three verbs, because a bubble menu is for what somebody does *to the words they just
             selected* — make them bold, make them a link — and everything structural stays in the
@@ -1659,7 +1659,7 @@ function RichTextEditorIsland({
               "Use YouTube's" only shows once a club poster is picked — it clears `posterSource`
               so `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
             */}
-            {/* The same choice as every upload (§414), remembered with it: a poster with lettering wants «Înaltă». */}
+            {/* The same choice as every upload (§414), remembered with it: a poster with lettering wants «Mare». */}
             <ImageQualityChoice
               value={imageQuality}
               onChange={setImageQuality}

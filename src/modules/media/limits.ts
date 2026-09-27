@@ -27,7 +27,7 @@ export const WEB_MAX = 2400;
 export const THUMB_MAX = 640;
 
 /**
- * The master's long side at «Înaltă» (§414). Keeping 2400 for both choices made "high" a
+ * The master's long side at «Mare» (§414). Keeping 2400 for both choices made "high" a
  * different encoder on the same pixels, and a poster photographed at 4000 pixels lost the same
  * 40% of its lettering either way; the choice now keeps up to 4000, which is what a phone's
  * 12-megapixel camera writes, and the browser shrinks to it rather than to "normal"'s 3000.
@@ -54,7 +54,7 @@ export const ORIGINAL_WEB_MAX = 6000;
  * (§66), with room for the multipart envelope and the other fields. `MAX_UPLOAD_BYTES` is the
  * server's own refusal and stays 6 MB for a caller that is not a function behind that limit; a
  * browser that sent a 5 MB file untouched met the platform's refusal first, with no words of
- * ours around it — rare while «Normală» sent at most 3000 pixels, ordinary once «Înaltă» sends
+ * ours around it — rare while «Medie» sent at most 3000 pixels, ordinary once «Mare» sends
  * a phone's 4000-pixel photograph as it is.
  */
 export const BROWSER_SEND_BYTES = 4 * 1024 * 1024;

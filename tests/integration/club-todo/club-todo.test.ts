@@ -67,12 +67,12 @@ describe("§438 the club's checklist, stored", () => {
 
   it("stores the starting list with the first change on it, and audits the change with who and the words", async () => {
     const organizer = await staff("MODERATOR");
-    await changeClubTodo(db, organizer, { kind: "setDone", id: "start-dani-01", done: true }, NOW);
+    await changeClubTodo(db, organizer, { kind: "setDone", id: "start-organizer-01", done: true }, NOW);
 
     const state = await readClubTodo(db);
     expect(state.stored).toBe(true);
     expect(state.items).toHaveLength(19);
-    expect(state.items.find((item) => item.id === "start-dani-01")).toMatchObject({
+    expect(state.items.find((item) => item.id === "start-organizer-01")).toMatchObject({
       done: true,
       doneAt: NOW.toISOString(),
       by: "Dev MODERATOR",
@@ -83,28 +83,28 @@ describe("§438 the club's checklist, stored", () => {
     expect(row.action).toBe("club_todo.done");
     expect(row.actorStaffUserId).toBe(organizer.id);
     expect(row.entityType).toBe("platform_setting");
-    expect(row.metadataJson).toMatchObject({ itemId: "start-dani-01", owner: "Dani" });
+    expect(row.metadataJson).toMatchObject({ itemId: "start-organizer-01", owner: "Organizator" });
     expect(String((row.metadataJson as { text: string }).text)).toMatch(/^Intră în backoffice/);
   });
 
   it("adds, edits, moves, unticks and deletes — one audit row each, in order", async () => {
     const admin = await staff("ADMIN");
-    const added = await changeClubTodo(db, admin, { kind: "add", text: "  Comandă tricourile  ", owner: "Florin", due: "2026-10-15" }, at(1));
-    expect(added.item).toMatchObject({ text: "Comandă tricourile", owner: "Florin", due: "2026-10-15", order: 20 });
+    const added = await changeClubTodo(db, admin, { kind: "add", text: "  Comandă tricourile  ", owner: "Ana", due: "2026-10-15" }, at(1));
+    expect(added.item).toMatchObject({ text: "Comandă tricourile", owner: "Ana", due: "2026-10-15", order: 20 });
 
     await changeClubTodo(db, admin, { kind: "edit", id: added.item.id, text: "Comandă tricourile (M, L)", owner: "", due: "" }, at(2));
     await changeClubTodo(db, admin, { kind: "move", id: added.item.id, direction: "up" }, at(3));
     await changeClubTodo(db, admin, { kind: "setDone", id: added.item.id, done: true }, at(4));
     await changeClubTodo(db, admin, { kind: "setDone", id: added.item.id, done: false }, at(5));
-    await changeClubTodo(db, admin, { kind: "delete", id: "start-amalia-08" }, at(6));
+    await changeClubTodo(db, admin, { kind: "delete", id: "start-admin-08" }, at(6));
 
     const { items } = await readClubTodo(db);
     expect(items).toHaveLength(19);
-    expect(items.some((item) => item.id === "start-amalia-08")).toBe(false);
+    expect(items.some((item) => item.id === "start-admin-08")).toBe(false);
     const mine = items.find((item) => item.id === added.item.id);
     expect(mine).toMatchObject({ text: "Comandă tricourile (M, L)", owner: null, due: null, done: false });
     // Moved up one, above the last starting line.
-    expect(items.at(-1)?.id).toBe("start-dani-07");
+    expect(items.at(-1)?.id).toBe("start-organizer-07");
     expect(items.at(-2)?.id).toBe(added.item.id);
 
     const rows = await trail();
@@ -117,25 +117,25 @@ describe("§438 the club's checklist, stored", () => {
       "club_todo.deleted",
     ]);
     expect(rows[1].metadataJson).toMatchObject({
-      from: { text: "Comandă tricourile", owner: "Florin", due: "2026-10-15" },
+      from: { text: "Comandă tricourile", owner: "Ana", due: "2026-10-15" },
       to: { text: "Comandă tricourile (M, L)", owner: null, due: null },
     });
-    expect(rows[5].metadataJson).toMatchObject({ itemId: "start-amalia-08", text: "(bonus) Refă seria Happy Monday și pe Facebook." });
+    expect(rows[5].metadataJson).toMatchObject({ itemId: "start-admin-08", text: "(bonus) Refă seria Happy Monday și pe Facebook." });
   });
 
   it("never brings a deleted starting line back", async () => {
     const admin = await staff("SUPERADMIN");
-    await changeClubTodo(db, admin, { kind: "delete", id: "start-amalia-01" }, NOW);
-    await changeClubTodo(db, admin, { kind: "setDone", id: "start-amalia-02", done: true }, NOW);
+    await changeClubTodo(db, admin, { kind: "delete", id: "start-admin-01" }, NOW);
+    await changeClubTodo(db, admin, { kind: "setDone", id: "start-admin-02", done: true }, NOW);
     const { items } = await readClubTodo(db);
-    expect(items.map((item) => item.id)).not.toContain("start-amalia-01");
+    expect(items.map((item) => item.id)).not.toContain("start-admin-01");
     expect(items).toHaveLength(18);
   });
 
   it("records nothing in the audit trail when nothing changes", async () => {
     const admin = await staff("ADMIN");
-    await changeClubTodo(db, admin, { kind: "move", id: "start-amalia-01", direction: "up" }, NOW);
-    await changeClubTodo(db, admin, { kind: "setDone", id: "start-amalia-01", done: false }, NOW);
+    await changeClubTodo(db, admin, { kind: "move", id: "start-admin-01", direction: "up" }, NOW);
+    await changeClubTodo(db, admin, { kind: "setDone", id: "start-admin-01", done: false }, NOW);
     expect(await trail()).toEqual([]);
   });
 
@@ -156,7 +156,7 @@ describe("§438 the club's checklist, stored", () => {
 
   it("is refused on the server to the Redactor, Tehnic and the volunteer, and leaves no trace", async () => {
     for (const role of ["COPYWRITER", "DEV", "CONTRIBUTOR"] as const) {
-      expect(await refusal(changeClubTodo(db, await staff(role), { kind: "setDone", id: "start-amalia-01", done: true }, NOW))).toBe("FORBIDDEN");
+      expect(await refusal(changeClubTodo(db, await staff(role), { kind: "setDone", id: "start-admin-01", done: true }, NOW))).toBe("FORBIDDEN");
     }
     expect(await storedRow()).toBeUndefined();
     expect(await trail()).toEqual([]);

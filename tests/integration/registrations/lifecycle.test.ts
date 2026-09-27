@@ -521,7 +521,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
 
   it("refuses an emergency contact who is the participant (§228)", async () => {
     /*
-      Amalia, testing: "și poți pune la persoana de contact numele tău și nr tău". You could,
+      The Administrator, testing: "și poți pune la persoana de contact numele tău și nr tău". You could,
       and the field was then worth nothing — its whole purpose is a number somebody can ring
       when the runner cannot answer their own.
 

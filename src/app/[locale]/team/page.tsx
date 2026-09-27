@@ -11,6 +11,7 @@ import { notFound, unstable_rethrow } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { teamLinkHost, type TeamLinkKind } from "@/modules/content/team/links";
+import { teamMetaDescription } from "@/modules/content/team/meta-description";
 import { type PublicTeamLink, type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
 import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
 import TeamLinkGlyph from "@/modules/content/team/ui/TeamLinkGlyph";
@@ -75,7 +76,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await teamOrNull(locale);
   return {
     title: t("title"),
-    description: page?.introText ?? t("lead", { club: CLUB_NAME }),
+    // About 160 characters of the introduction, never the whole of it (§NNN).
+    description: page?.introText ? teamMetaDescription(page.introText) : t("lead", { club: CLUB_NAME }),
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/team")),
     // An address with nobody on it is not for a search engine; the sitemap leaves it out too.
     ...(page && teamPageOnSite(page) ? {} : { robots: { index: false, follow: true } }),

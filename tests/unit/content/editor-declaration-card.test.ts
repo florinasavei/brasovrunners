@@ -105,6 +105,15 @@ describe("§448 the declaration card sits under «Regulamentul»", () => {
     expect((await declarationLine(null, DECLARATIONS, WORDS)).missing).toBe(false);
   });
 
+  it("reads the texts in force for a ticked group run: none for its surface is a gap, never «declarație pentru Trail» (§NNN)", async () => {
+    const withdrawn = await declarationLine(TRAIL_RUN, DECLARATIONS, WORDS, { ASPHALT: { version: 1 }, TRAIL: null });
+    expect(withdrawn).toEqual({ text: "declarație pentru Trail — niciun text aprobat în vigoare, butonul nu apare", missing: true });
+    expect(await declarationLine(TRAIL_RUN, DECLARATIONS, WORDS, { ASPHALT: null, TRAIL: { version: 2 } })).toEqual({
+      text: "declarație pentru Trail",
+      missing: false,
+    });
+  });
+
   it("offers a group run's tick with the surface from «Traseul» and the text in force for it", async () => {
     const html = await rules(TRAIL_RUN);
     expect(html).toContain('name="event.offersGroupRunDeclaration"');

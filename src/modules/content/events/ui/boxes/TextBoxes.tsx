@@ -198,7 +198,7 @@ export async function RulesBox({
 }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
-  const line = await declarationLine(event, declarations, words);
+  const line = await declarationLine(event, declarations, words, groupRunDeclarations);
   // Awaited, not nested: the element is ready when the box is (`requiredLine` does the same).
   const declaration = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
   return (

@@ -19,7 +19,7 @@ export type TeamPhotoLabels = {
   failed: string;
   none: string;
   help: string;
-  /** «Calitate: Normală / Înaltă» beside the upload (§414), the gallery's words. */
+  /** «Calitate: Minimă / Medie / Mare / Originală» beside the upload (§414), the gallery's words. */
   quality: ImageQualityLabels;
 };
 

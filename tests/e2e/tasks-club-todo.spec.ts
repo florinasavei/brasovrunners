@@ -6,7 +6,7 @@ import { openFold } from "./support/fold";
 /**
  * BR-REQ-090-05 and BR-REQ-060-01 — `/admin/tasks` lands on «Club», and «De făcut» is the club's
  * own checklist (`DECISIONS.md` §438; the owner, 2026-09-26: "by default I need to be on the
- * «Club» tab, and I need another folder — a list for Amalia (the club's to-do)").
+ * «Club» tab, and I need another folder — a list for [the Administrator] (the club's to-do)").
  *
  * The list operations, the role gate and the starting list are unit- and PGlite-tested; this is
  * what they cannot see — that the tabs are where the owner asked, that a tick is one 44-pixel

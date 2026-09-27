@@ -36,13 +36,13 @@ describe("the contact recipients setting", () => {
     const saved = await updateContactRecipients(
       db,
       admin,
-      { to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] },
+      { to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"] },
       NOW,
     );
-    expect(saved).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"], updatedAt: NOW });
+    expect(saved).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"], updatedAt: NOW });
     expect(await readContactRecipients(db)).toMatchObject({
       to: ["club@example.com"],
-      cc: ["amalia@example.org"],
+      cc: ["ioana@example.org"],
       bcc: ["arhiva@example.org"],
     });
 
@@ -54,14 +54,14 @@ describe("the contact recipients setting", () => {
     expect(audit.entityType).toBe("platform_setting");
     expect(audit.metadataJson).toMatchObject({
       from: { to: [], cc: [], bcc: [] },
-      to: { to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] },
+      to: { to: ["club@example.com"], cc: ["ioana@example.org"], bcc: ["arhiva@example.org"] },
     });
 
     // A second change overwrites the one row rather than adding another, and the plan's row
     // (if any) is a different key — this one is `contactRecipients`.
-    await updateContactRecipients(db, admin, { to: ["club@example.com", "amalia@example.org"], cc: [] }, new Date(NOW.getTime() + 60_000));
+    await updateContactRecipients(db, admin, { to: ["club@example.com", "ioana@example.org"], cc: [] }, new Date(NOW.getTime() + 60_000));
     expect(await db.select().from(platformSettings)).toHaveLength(1);
-    expect(await readContactRecipients(db)).toMatchObject({ to: ["club@example.com", "amalia@example.org"], cc: [] });
+    expect(await readContactRecipients(db)).toMatchObject({ to: ["club@example.com", "ioana@example.org"], cc: [] });
   });
 
   it("is refused to a Moderator and for anything that is not an address", async () => {
@@ -72,7 +72,7 @@ describe("the contact recipients setting", () => {
       code: "VALIDATION_ERROR",
       fields: ["to"],
     });
-    await expect(updateContactRecipients(db, admin, { to: [], cc: ["amalia at example.org"] }, NOW)).rejects.toMatchObject({
+    await expect(updateContactRecipients(db, admin, { to: [], cc: ["ioana at example.org"] }, NOW)).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
       fields: ["cc"],
     });
@@ -96,9 +96,9 @@ describe("the contact recipients setting", () => {
     // What §164 wrote: two lists. No migration rewrites a JSON setting; the schema reads it.
     await db.insert(platformSettings).values({
       key: "contactRecipients",
-      value: { to: ["club@example.com"], cc: ["amalia@example.org"] },
+      value: { to: ["club@example.com"], cc: ["ioana@example.org"] },
       updatedAt: NOW,
     });
-    expect(await readContactRecipients(db)).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"], bcc: [], updatedAt: NOW });
+    expect(await readContactRecipients(db)).toEqual({ to: ["club@example.com"], cc: ["ioana@example.org"], bcc: [], updatedAt: NOW });
   });
 });

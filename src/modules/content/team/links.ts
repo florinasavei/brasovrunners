@@ -24,6 +24,34 @@ export type TeamLinkKind = (typeof TEAM_LINK_KINDS)[number];
 
 /** Six: a person's networks and a site of their own, few enough to read on a card two to a row. */
 export const MAX_TEAM_LINKS = 6;
+/**
+ * The highest row index a save reads from `links[i].<box>` (§NNN; the V2.06 review): the editor
+ * never draws more than `MAX_TEAM_LINKS` rows and a spare line, so a posted `links[99999999]` is
+ * not a row of it — and gathered by index it would have become an array of a hundred million holes.
+ * Twelve, an event's own ceiling (§332), leaves room for the cap to grow without a second change.
+ */
+export const MAX_TEAM_LINK_ROW_INDEX = 12;
+
+/**
+ * The links' rows (§474), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,
+ * blanks included; `fields.ts` drops the spare line and names a refused row by this same index.
+ * The editor always posts `links.present`, so a card whose every row was removed saves "no links".
+ * Here rather than in the Server Action's file so the bound is tested without a request (§NNN).
+ */
+export function teamLinkRowsOf(form: FormData): Array<Record<string, string>> | undefined {
+  if (form.get("links.present") === null) return undefined;
+  const rows: Array<Record<string, string>> = [];
+  for (const [key, entry] of form.entries()) {
+    const match = /^links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
+    if (!match || typeof entry !== "string") continue;
+    const index = Number(match[1]);
+    // Past the editor's own rows: not a row, and never an index to grow the array to (§NNN).
+    if (index > MAX_TEAM_LINK_ROW_INDEX) continue;
+    rows[index] = { ...(rows[index] ?? {}), [match[2]]: entry };
+  }
+  // A hole (a row index nobody posted) is the spare line, not a row to refuse.
+  return Array.from(rows, (row) => row ?? {});
+}
 /** The longest address accepted — the event links' own ceiling (§332). */
 export const MAX_TEAM_LINK_URL = 2048;
 /** A label is a few words on one line. */

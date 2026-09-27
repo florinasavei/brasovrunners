@@ -27,7 +27,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 const ARCHIVE = "arhiva@example.test";
-const AMALIA = "amalia@example.test";
+const IOANA = "ioana@example.test";
 const HIDDEN = "contabil@example.test";
 const PRESIDENT = "presedinte@example.test";
 
@@ -122,7 +122,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
   it("sends the declaration to the mailbox the club named, with the copies it asked for", async () => {
     await approve(db);
     await setNotices(db, {
-      declarations: { to: ARCHIVE, cc: [AMALIA], bcc: [HIDDEN] },
+      declarations: { to: ARCHIVE, cc: [IOANA], bcc: [HIDDEN] },
       confirmations: { to: [] },
     });
     const event = await createEvent(db);
@@ -134,12 +134,12 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
       .where(eq(emailOutbox.messageType, "DECLARATION_ARCHIVE"));
     expect(archive.recipientEmail).toBe(ARCHIVE);
     // The lists travel on the row, so a list edited tomorrow cannot redirect today's copy.
-    expect(archive.payloadJson).toEqual({ cc: [AMALIA], bcc: [HIDDEN] });
+    expect(archive.payloadJson).toEqual({ cc: [IOANA], bcc: [HIDDEN] });
     expect(archive.registrationId).toBe(row.id);
 
     const message = await renderOutboxMessage({ ...archive, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(message.to).toBe(ARCHIVE);
-    expect(message.cc).toEqual([AMALIA]);
+    expect(message.cc).toEqual([IOANA]);
     expect(message.bcc).toEqual([HIDDEN]);
     // Still the club's copy: the PDF, and nothing a participant could act on (§12.8).
     expect(message.attachments).toHaveLength(1);
@@ -150,7 +150,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
     await approve(db);
     await setNotices(db, {
       declarations: { to: "", cc: [], bcc: [] },
-      confirmations: { to: [PRESIDENT, AMALIA] },
+      confirmations: { to: [PRESIDENT, IOANA] },
     });
     const event = await createEvent(db);
     const row = await signed(db, event);
@@ -159,7 +159,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
       .select()
       .from(emailOutbox)
       .where(eq(emailOutbox.messageType, "CLUB_CONFIRMATION_NOTICE"));
-    expect(notices.map((notice) => notice.recipientEmail).sort()).toEqual([AMALIA, PRESIDENT].sort());
+    expect(notices.map((notice) => notice.recipientEmail).sort()).toEqual([IOANA, PRESIDENT].sort());
     // No archive mailbox named: nothing was sent there, and the Cc list was not promoted.
     expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "DECLARATION_ARCHIVE"))).toHaveLength(0);
 
@@ -193,13 +193,13 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
 
   it("keeps who receives what, and audits the change", async () => {
     await setNotices(db, {
-      declarations: { to: ARCHIVE, cc: [AMALIA, AMALIA], bcc: [] },
+      declarations: { to: ARCHIVE, cc: [IOANA, IOANA], bcc: [] },
       confirmations: { to: [PRESIDENT] },
       participants: { bcc: [HIDDEN, HIDDEN] },
     });
     const stored = await readClubNotices(db);
     // The same mailbox twice is one mailbox, and what is stored is what will be sent.
-    expect(stored.declarations).toEqual({ to: ARCHIVE, cc: [AMALIA], bcc: [] });
+    expect(stored.declarations).toEqual({ to: ARCHIVE, cc: [IOANA], bcc: [] });
     expect(stored.confirmations.to).toEqual([PRESIDENT]);
     expect(stored.participants).toEqual({ bcc: [HIDDEN] });
     expect(stored.updatedAt).toEqual(NOW);

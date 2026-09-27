@@ -4,8 +4,8 @@ import { BROWSER_SEND_BYTES } from "@/modules/media/limits";
 
 /**
  * BR-REQ-054-01, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — what the browser sends for
- * each choice. Found by re-review: «Înaltă» was capped at 3000 pixels here whatever the server
- * kept, so it could not be sharper than «Normală».
+ * each choice. Found by re-review: «Mare» was capped at 3000 pixels here whatever the server
+ * kept, so it could not be sharper than «Medie».
  *
  * The browser's two tools are stood in for: `createImageBitmap` answers the picture's size, and
  * a canvas records the size it was drawn at and encodes to a blob of a size the case chooses.
@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 describe("§414 the browser half of the choice", () => {
-  it("sends a phone's 4032-pixel photograph as it is at «Înaltă», and shrinks it to 3000 at «Normală»", async () => {
+  it("sends a phone's 4032-pixel photograph as it is at «Mare», and shrinks it to 3000 at «Medie»", async () => {
     const photo = fileOf(2.4 * MB);
     const drawnHigh = stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
     expect(await shrinkImageInBrowser(photo, "high")).toBe(photo);
@@ -45,12 +45,12 @@ describe("§414 the browser half of the choice", () => {
     const drawnNormal = stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
     expect(await shrinkImageInBrowser(photo, "normal")).not.toBe(photo);
     expect(drawnNormal).toEqual([3000]);
-    // No choice at all is «Normală»: what an older caller gets.
+    // No choice at all is «Medie»: what an older caller gets.
     stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);
     expect(await shrinkImageInBrowser(photo)).not.toBe(photo);
   });
 
-  it("draws a file too large to send at 4000 for «Înaltă», not at «Normală»'s 3000", async () => {
+  it("draws a file too large to send at 4000 for «Mare», not at «Medie»'s 3000", async () => {
     const drawn = stubBrowser({ width: 6000, height: 4000 }, () => 2 * MB);
     const sent = await shrinkImageInBrowser(fileOf(9 * MB), "high");
     expect(drawn).toEqual([4000]);

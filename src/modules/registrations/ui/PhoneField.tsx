@@ -321,7 +321,7 @@ function PhoneFieldIsland({
   );
 
   /*
-    E.164 is fifteen digits in all, country code included (§282; Amalia: the number needs a
+    E.164 is fifteen digits in all, country code included (§282; the Administrator: the number needs a
     maximum and a clearer answer as it is typed). So the room left in the box depends on the
     country chosen with it — and, since §337, on the form typed: `phoneDigitCap` counts the
     digits that will be *stored*, so a `+40…` may carry its code and a trunk zero is not charged.

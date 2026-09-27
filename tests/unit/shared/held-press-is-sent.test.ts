@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
  *
  * §285 made the button wait for Cloudflare's token and swallow a press made before it existed.
  * §304 is the defect that swallowing hid: with autofill the whole form is filled in a second and
- * the press comes in the same second, so the swallowed press was the normal press — Amalia, on
+ * the press comes in the same second, so the swallowed press was the normal press — the Administrator, on
  * 2026-09-23: "nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe lista",
  * and QA's database had no row for that minute.
  *

@@ -1490,7 +1490,7 @@
         "status": {
           "title": "Event status",
           "createNote": "Usually Scheduled. Choose Cancelled for an event already called off (recorded, say, from Facebook) or Completed for one that already took place. Neither sends an email: nobody is registered yet.",
-          "completedRefused": "Status: Completed can only be chosen for an event that has already started; otherwise choose Scheduled or Cancelled"
+          "completedRefused": "Completed can only be chosen for an event that has already started; otherwise choose Scheduled or Cancelled"
         },
         "course": {
           "title": "The course"
@@ -1662,6 +1662,7 @@
           },
           "declaration": {
             "offered": "declaration for {surface}",
+            "offeredNoText": "declaration for {surface} — no approved text in force, the button does not show",
             "notOffered": "no declaration",
             "notAsked": "not asked"
           }
@@ -2282,7 +2283,7 @@
           "done": "Events are published.",
           "how": [
             "Open /admin/events → “New event”. Fill in the type, the date, the place and the title in both languages. Save.",
-            "Press “Submit for review”, then “Publish”. Both languages go live together; until then the page is a 404 for visitors.",
+            "Press “Publish” — a draft goes live in one press. Both languages go live together; until then the page is a 404 for visitors.",
             "Only one event can be “featured” — it opens the home page. Next year: “Duplicate” this year's."
           ]
         },
@@ -2466,7 +2467,7 @@
         "domain": {
           "name": "The site's address (the .com domain)",
           "freeGives": "There is no free version — this is the one thing on the page that is paid for. Bought on 16 September 2026 from ROMARG, for a year. The registry price for a .com is 10.97 USD a year from 1 November 2026; ROMARG invoices in lei, with its margin and VAT.",
-          "ceiling": "No ceiling: one invoice a year, in lei.",
+          "ceiling": "No ceiling: one invoice a year for the .com, in lei.",
           "whenCrossed": "The next step is renewing the .com for several years; the .ro is no longer bought (one address for search engines).",
           "closeYes": "This deployment answers on the club's domain.",
           "closeNo": "This deployment answers on the provider's address — for QA or a laptop, that is as it should be."
@@ -2755,7 +2756,7 @@
         "text": "What to do",
         "textHelp": "A sentence or a few: what, where in the backoffice, by when. No email addresses or passwords — the whole team sees this list.",
         "owner": "For whom",
-        "ownerHelp": "A first name — Amalia, Dani, Florin — or empty if it is anyone's.",
+        "ownerHelp": "A role or a first name — Administrator, Organizator, say — or empty if it is anyone's.",
         "due": "Due",
         "dueHelp": "Optional: the day it has to be done by."
       },
@@ -3126,7 +3127,7 @@
       "howTitle": "How race day works, step by step",
       "how": [
         "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
-        "Volunteers: a Superadministrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
+        "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens. Or search by name or by race number.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name. If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
@@ -4047,7 +4048,7 @@
               "title": "Publish an event, or take it off the site",
               "steps": [
                 "«Events» → «Edit» → the «Publication» card.",
-                "A draft: press «Trimite spre verificare» (submit for review), then «Publică» (publish).",
+                "A draft: press «Publică» (publish) — it goes live in one press, no «Trimite spre verificare» (submit for review) first.",
                 "In the window press «Publică» again. Both languages go live together.",
                 "Something missing? «Cannot publish yet» appears with the list: fill it in, «Save», then «Publică».",
                 "Several at once: on the «Events» list tick them and press «Publish the ticked ones».",

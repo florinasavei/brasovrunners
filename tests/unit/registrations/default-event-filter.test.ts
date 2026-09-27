@@ -56,24 +56,24 @@ describe("BR-REQ-037-05 the registrations list's default event", () => {
  */
 describe("BR-REQ-037-05 a name search with no event chosen (§312)", () => {
   it("searches every event, and says it widened", () => {
-    expect(defaultEventFilter(undefined, EVENTS, "amalia")).toEqual({
+    expect(defaultEventFilter(undefined, EVENTS, "ioana")).toEqual({
       eventId: undefined,
       selected: AUTOMATIC,
       searchesEverywhere: true,
     });
     // The select's empty value is "nothing chosen" too — the form submits it until an event
     // is picked.
-    expect(defaultEventFilter(AUTOMATIC, EVENTS, "amalia").searchesEverywhere).toBe(true);
+    expect(defaultEventFilter(AUTOMATIC, EVENTS, "ioana").searchesEverywhere).toBe(true);
   });
 
   it("honours an explicit event as it is, search or not", () => {
-    expect(defaultEventFilter("c", EVENTS, "amalia")).toEqual({ eventId: "c", selected: "c", searchesEverywhere: false });
+    expect(defaultEventFilter("c", EVENTS, "ioana")).toEqual({ eventId: "c", selected: "c", searchesEverywhere: false });
     // The featured event chosen explicitly is a choice, not the default.
-    expect(defaultEventFilter("b", EVENTS, "amalia")).toEqual({ eventId: "b", selected: "b", searchesEverywhere: false });
+    expect(defaultEventFilter("b", EVENTS, "ioana")).toEqual({ eventId: "b", selected: "b", searchesEverywhere: false });
   });
 
   it("honours `all` as it is, and does not call that widening", () => {
-    expect(defaultEventFilter(ALL_EVENTS, EVENTS, "amalia")).toEqual({
+    expect(defaultEventFilter(ALL_EVENTS, EVENTS, "ioana")).toEqual({
       eventId: undefined,
       selected: ALL_EVENTS,
       searchesEverywhere: false,
@@ -87,7 +87,7 @@ describe("BR-REQ-037-05 a name search with no event chosen (§312)", () => {
 
   it("has nothing to widen when the club features no event", () => {
     const none = EVENTS.map((event) => ({ ...event, featured: false }));
-    expect(defaultEventFilter(undefined, none, "amalia")).toEqual({
+    expect(defaultEventFilter(undefined, none, "ioana")).toEqual({
       eventId: undefined,
       selected: ALL_EVENTS,
       searchesEverywhere: false,
@@ -95,7 +95,7 @@ describe("BR-REQ-037-05 a name search with no event chosen (§312)", () => {
   });
 
   it("widens for a stale id as it would for none", () => {
-    expect(defaultEventFilter("gone", EVENTS, "amalia")).toEqual({
+    expect(defaultEventFilter("gone", EVENTS, "ioana")).toEqual({
       eventId: undefined,
       selected: AUTOMATIC,
       searchesEverywhere: true,

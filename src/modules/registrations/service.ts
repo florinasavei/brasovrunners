@@ -428,7 +428,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     The place is held, so the number is (§214). Under the lock the caller is holding, which is
     why it is safe here and would not be in the service's outer scope.
 
-    Dani, on why this cannot wait for a confirmation: "procesul trebuie să fie automat… vor fi
+    The Organizer, on why this cannot wait for a confirmation: "procesul trebuie să fie automat… vor fi
     gratis, cu număr limitat de înscrieri… ce discuții și hate ne luăm dacă nu l-am înscris pe
     unul la timp și i-a luat altul locul". The place was already held from submission; what was
     missing was anything the runner or the club could *see*, and a number is that thing.
@@ -1456,7 +1456,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       /*
         …and the club learns it too (§312).
 
-        Amalia registered with her browser's autofill, twice; she was told in the second
+        A colleague registered with her browser's autofill, twice; she was told in the second
         message that she already was (§235), and the club was told nothing — "she says she
         registered but I cannot find anything" had no answer on any screen. So every pass through
         this branch leaves one audit row on the registration it found, whatever the state and

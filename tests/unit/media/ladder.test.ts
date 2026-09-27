@@ -53,7 +53,7 @@ describe("§414 the quality a request may ask for", () => {
 
 describe("§414 the ladder", () => {
   it("stores every rung narrower than 0.9 of the master, and never one wider", () => {
-    // A «Normală» master is at most 2400, so it never gets the 2400 rung; a 4000 «Înaltă» one does.
+    // A «Medie» master is at most 2400, so it never gets the 2400 rung; a 4000 «Mare» one does.
     expect(ladderWidths(2400)).toEqual([480, 640, 960, 1280, 1600, 1920]);
     // §437: 3200 only under a master wider than 4000 — an «Originală». A «Mare» master of up to
     // 4000 was stored without it since §414, and its srcset must not start naming it.

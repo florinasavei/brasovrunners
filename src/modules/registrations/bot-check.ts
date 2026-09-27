@@ -14,7 +14,7 @@ import { turnstileSiteKey } from "./turnstile";
  *
  * Turnstile has been behind two environment keys since §97, which means turning it off needed a
  * Vercel setting and a deployment — and the day it needs turning off is the day it is refusing
- * real people (it refused Dani twice on 2026-09-21, §216). A switch in the backoffice is the
+ * real people (it refused a colleague twice on 2026-09-21, §216). A switch in the backoffice is the
  * difference between a five-minute fix by whoever is awake and a developer.
  *
  * ## What the switch does and does not do
