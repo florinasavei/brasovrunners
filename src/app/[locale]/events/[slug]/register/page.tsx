@@ -826,16 +826,34 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/* The city, required and right after the birth date (§467; the owner, 2026-09-26:
                   "orașul ar trebui să fie obligatoriu, pune după data nașterii"), reversing
-                  §322's optional fold. */}
-              <TextField
-                {...field("city", t("originHelp"))}
-                label={t("city")}
-                required
-                autoComplete="address-level2"
-              />
+                  §322's optional fold. The country the runner lives in comes first (§NNN): a city
+                  means little without it, and a citizenship is not where somebody lives. The
+                  citizenship's own searchable native select (§463), required and on Romania unless
+                  the runner says otherwise; stored and exported, never shown publicly. */}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <NationalityField
+                  {...field("country")}
+                  label={t("country")}
+                  // A blank from an older draft comes back as Romania, as the citizenship does.
+                  defaultValue={prefill("country") || "RO"}
+                  countries={countries}
+                  words={countrySearchWords}
+                />
+                <TextField
+                  {...field("city", t("originHelp"))}
+                  label={t("city")}
+                  required
+                  fullWidth
+                  autoComplete="address-level2"
+                />
+              </Stack>
 
               {/* What the answer is for, under the field (§322): a category ranking, and "prefer
-                  not to say" is an answer. */}
+                  not to say" is an answer. It starts empty (§NNN): pre-chosen on «Prefer să nu
+                  spun», a runner who never looked at it sent an answer they did not give, and the
+                  category ranking could not tell the two apart. Now the browser, the §422 list
+                  and the server (the enum has no blank) refuse a form with no answer, and "prefer
+                  not to say" stays one press away. */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
                   {...field("sex", t("sexHelp"))}
@@ -843,7 +861,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue={prefill("sex", "UNSPECIFIED")}
+                  defaultValue={prefill("sex", "")}
                   sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la

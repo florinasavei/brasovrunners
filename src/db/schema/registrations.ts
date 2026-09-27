@@ -217,6 +217,14 @@ export const registrations = pgTable(
     sex: registrationSex("sex"),
     /** ISO 3166-1 alpha-2, rendered per locale by `Intl.DisplayNames` — no country-name table. */
     nationality: text("nationality"),
+    /**
+     * The country the person lives in (§NNN), ISO 3166-1 alpha-2 like `nationality` — asked right
+     * before the city, because «Brașov» and «Bristol» need a country to mean anything, and a
+     * citizenship is not where somebody lives. Required on the public form, Romania by default;
+     * optional on a staff entry; null on every row written before it (no backfill: a guess from
+     * the citizenship would be a fact the person never gave). Stored and exported, never public.
+     */
+    country: text("country"),
     city: text("city"),
 
     phone: text("phone"),

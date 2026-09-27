@@ -78,6 +78,7 @@ export function readRegistrationForm(
     sex: text(form, "sex"),
     // Optional since §322: blank is absent, so the schema's own "optional" is what answers.
     nationality: optional(form, "nationality"),
+    country: optional(form, "country"),
     city: optional(form, "city"),
 
     phone: phoneField(form, "phone"),

@@ -1196,6 +1196,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     birthDate: input.birthDate ?? null,
     sex: input.sex ?? null,
     nationality: input.nationality ?? null,
+    country: input.country ?? null,
     city: input.city ?? null,
     phone: input.phone ?? null,
     emergencyContactName: input.emergencyContactName ?? null,

@@ -269,6 +269,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       birthDate: input.details?.birthDate ?? null,
       sex: input.details?.sex ?? null,
       nationality: input.details?.nationality ?? null,
+      country: input.details?.country ?? null,
       city: input.details?.city ?? null,
       phone: input.details?.phone ?? null,
       emergencyContactName: input.details?.emergencyContactName ?? null,

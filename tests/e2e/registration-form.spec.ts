@@ -2,6 +2,7 @@ import { expect, type Locator, test, type Page } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { chooseSex } from "./support/sex-choice";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -36,6 +37,8 @@ async function fillRequired(page: Page, omit?: string) {
     if (name === omit) continue;
     await page.locator(`[name="${name}"]`).fill(value);
   }
+  // «Sex» starts empty (§NNN): answered unless the test wants it missing.
+  if (omit !== "sex") await chooseSex(page);
   /*
     The address a second time (§206): typed by hand on the real form, because QA's outbox held
     three bounced messages to "…@gmail.con" and one letter loses somebody for good. Omitting
@@ -108,6 +111,13 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // native select the form posts, searchable once the island runs (§463).
     await expect(page.locator('select[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('select[name="nationality"]')).toHaveAttribute("required", "");
+    // The country of residence sits before the city (§NNN): required, a native select the form
+    // posts, and on Romania unless the runner says otherwise.
+    await expect(page.locator('select[name="country"]')).toHaveValue("RO");
+    await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
+    // «Sex» forces a choice (§NNN): nothing pre-chosen, and the hidden input the form posts is required.
+    await expect(page.locator('input[name="sex"]')).toHaveValue("");
+    await expect(page.locator('input[name="sex"]')).toHaveAttribute("required", "");
     // The city is required and asked right after the birth date (§467, reversing §322).
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");

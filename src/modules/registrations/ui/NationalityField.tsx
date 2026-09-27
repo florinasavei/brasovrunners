@@ -10,7 +10,8 @@ import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_S
 
 /**
  * Citizenship: required, Romania unless the runner says otherwise (§432), and searchable (§463;
- * the owner, "vreau searchbox să pot găsi țara").
+ * the owner, "vreau searchbox să pot găsi țara"). The country of residence is the same control
+ * under its own `name` (`country`, §NNN): the same list, the same default, the same search.
  *
  * **What posts is a native `<select name="nationality" required>`**, drawn by the server with
  * every country as an option and the draft's (or Romania's) chosen — so a reader without

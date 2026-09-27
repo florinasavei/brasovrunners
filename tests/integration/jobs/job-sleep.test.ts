@@ -196,6 +196,7 @@ describe("BR-REQ-090-03 criterion 11 a write path that makes work sooner wakes t
         birthDate: "1990-05-17",
         sex: "UNSPECIFIED",
         nationality: "RO",
+        country: "RO",
         city: "Brașov",
         phone: "+40711111111",
         emergencyContactName: "Contact Urgență",

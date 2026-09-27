@@ -652,6 +652,13 @@
       "when": 1790508920517,
       "tag": "0095_film_columns_dropped",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1790520267786,
+      "tag": "0096_registration_country",
+      "breakpoints": true
     }
   ]
 }

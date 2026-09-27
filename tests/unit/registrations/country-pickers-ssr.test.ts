@@ -96,6 +96,24 @@ describe("BR-REQ-031-04 the country pickers as the server renders them", () => {
     }
   });
 
+  it("draws the country of residence as its own native, required select, on Romania without a draft (§NNN)", () => {
+    const html = renderToStaticMarkup(
+      createElement(NationalityField, {
+        id: fieldId("country"),
+        name: "country",
+        label: "Țara de reședință",
+        defaultValue: undefined,
+        countries,
+        words,
+      }),
+    );
+    const tag = selectTag(html, "country");
+    expect(tag).toContain(`id="${fieldId("country")}"`);
+    expect(tag).toContain("required");
+    expect(html).toMatch(/<option[^>]*value="RO"[^>]*selected/);
+    expect(html).not.toContain('<option value=""');
+  });
+
   it("has the same search words in both catalogues", () => {
     const keys = (catalogue: typeof ro) => Object.keys(catalogue.Registration.countrySearch).sort();
     expect(keys(ro)).toEqual(keys(en as typeof ro));

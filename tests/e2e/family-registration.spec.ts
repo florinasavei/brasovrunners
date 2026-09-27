@@ -8,6 +8,7 @@ import {
   registrationStatus,
 } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { chooseSex } from "./support/sex-choice";
 import { confirmDialog } from "./support/confirm";
 import { openFold } from "./support/fold";
 
@@ -47,6 +48,8 @@ test.describe("§389 §446 a family on one address", () => {
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
+    // «Sex» starts empty (§NNN): the form is refused without an answer.
+    await chooseSex(page);
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();

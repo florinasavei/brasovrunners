@@ -21,6 +21,8 @@ export type RegistrationEntryDetails = {
   sex?: RegistrationSex | null;
   /** ISO 3166-1 alpha-2, uppercase. */
   nationality?: string | null;
+  /** Where the person lives (§NNN), ISO 3166-1 alpha-2, uppercase. */
+  country?: string | null;
   city?: string | null;
   phone?: string | null;
   emergencyContactName?: string | null;

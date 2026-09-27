@@ -23,6 +23,7 @@ export const REGISTRATION_FORM_FIELDS = [
   "birthDate",
   "sex",
   "nationality",
+  "country",
   "city",
   "phone",
   "emergencyContactName",

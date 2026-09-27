@@ -148,6 +148,7 @@ describe("§321 the rule on the schema, for whichever caller adds it", () => {
     birthDate: "2012-11-22",
     sex: "FEMALE",
     nationality: "RO",
+    country: "RO",
     city: "Brașov",
     phone: "+40711111111",
     emergencyContactName: "Ion Popescu",

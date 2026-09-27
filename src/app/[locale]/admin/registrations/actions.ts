@@ -239,6 +239,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           birthDate: optional(form, "birthDate"),
           sex: optional(form, "sex") as "FEMALE" | "MALE" | "UNSPECIFIED" | undefined,
           nationality: optional(form, "nationality"),
+          country: optional(form, "country"),
           city: optional(form, "city"),
           phone: optional(form, "phone"),
           emergencyContactName: optional(form, "emergencyContactName"),

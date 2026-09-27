@@ -130,6 +130,7 @@ const submission = (overrides: Record<string, unknown> = {}) => ({
   birthDate: FOURTEEN_THE_DAY_AFTER,
   sex: "FEMALE",
   nationality: "RO",
+  country: "RO",
   city: "Brașov",
   phone: "+40711111111",
   emergencyContactName: "Ion Popescu",
