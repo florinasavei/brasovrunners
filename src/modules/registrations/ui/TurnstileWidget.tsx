@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import { useEffect, useRef } from "react";
-import { TURNSTILE_SCRIPT_URL } from "../domain/turnstile-widget";
+import { TURNSTILE_SCRIPT_URL, TURNSTILE_TOKEN_EVENT } from "../domain/turnstile-widget";
 
 /**
  * Cloudflare Turnstile, rendered explicitly and reset on every attempt (`DECISIONS.md` §185).
@@ -28,7 +28,7 @@ import { TURNSTILE_SCRIPT_URL } from "../domain/turnstile-widget";
  */
 
 type TurnstileApi = {
-  render: (element: HTMLElement, options: { sitekey: string; language?: string }) => string;
+  render: (element: HTMLElement, options: { sitekey: string; language?: string; callback?: (token: string) => void }) => string;
   reset: (widgetId?: string) => void;
   remove: (widgetId: string) => void;
 };
@@ -63,7 +63,22 @@ export default function TurnstileWidget({
         window.turnstile.reset(widgetId.current);
         return;
       }
-      widgetId.current = window.turnstile.render(holder.current, { sitekey: siteKey, language: locale });
+      /*
+        Say so when the token arrives (§NNN). A send button held for the token also watches the
+        hidden field's `value` attribute, but that holds only while Cloudflare draws the field as
+        `type="hidden"`; the success callback is its documented answer. It bubbles to the form from
+        here, and the button reads the field on the next task — so a held press is sent the moment
+        the check says yes, whatever the field is and whichever order the script calls back and
+        writes it in. Only the success callback: handing Cloudflare an
+        `error-callback` changes how its widget retries, and nothing here needs to know of a failure
+        — a held press has its own eight-second valve.
+      */
+      const element = holder.current;
+      widgetId.current = window.turnstile.render(element, {
+        sitekey: siteKey,
+        language: locale,
+        callback: () => element.dispatchEvent(new Event(TURNSTILE_TOKEN_EVENT, { bubbles: true })),
+      });
     };
 
     if (window.turnstile) {
