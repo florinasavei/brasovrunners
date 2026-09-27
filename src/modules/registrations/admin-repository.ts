@@ -512,7 +512,7 @@ export type RegistrationDetail = {
   listSocials: boolean;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
-  /** Where the person lives (§NNN): the country's ISO code and the city as typed; null when not given. */
+  /** Where the person lives (§NNN): the country's ISO code (never null, `RO` by default) and the city as typed. */
   country: string | null;
   city: string | null;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */

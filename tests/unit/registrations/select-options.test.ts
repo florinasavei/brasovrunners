@@ -78,8 +78,10 @@ describe("BR-REQ-050-02 an option's glyph is laid out in the menu and in the clo
       readFileSync(file, "utf8").includes("OPTION_ROW_SX"),
     );
 
-    // The styles themselves, and the one page that uses them.
-    expect(files.length).toBeGreaterThanOrEqual(2);
+    // The styles themselves. «Sex», the last MUI select with glyphs on its rows, became a native
+    // select in §NNN (a no-JavaScript reader must answer it), so no page lays out a menu row
+    // today; the guard below still holds the next one that does.
+    expect(files.length).toBeGreaterThanOrEqual(1);
 
     for (const file of files) {
       const text = readFileSync(file, "utf8");

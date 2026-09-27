@@ -1,8 +1,5 @@
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
-import FemaleIcon from "@mui/icons-material/Female";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
-import MaleIcon from "@mui/icons-material/Male";
-import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -51,12 +48,6 @@ import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice"
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
-import {
-  OPTION_GLYPH_SX,
-  OPTION_LABEL_SX,
-  OPTION_ROW_SX,
-  SELECT_WITH_GLYPHS_SX,
-} from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
@@ -67,6 +58,7 @@ import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import NationalityField from "@/modules/registrations/ui/NationalityField";
+import SexField from "@/modules/registrations/ui/SexField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
@@ -628,7 +620,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Box component="ul" sx={{ m: 0, mt: 1, pl: 3 }}>
                     {rejected.map((name) => (
                       <li key={name}>
-                        <MuiLink href={`#${fieldId(name)}`}>{t(`fieldNames.${name}`)}</MuiLink>
+                        <MuiLink href={`#${fieldId(name)}`}>
+                          {/* «Sex» says what to do, and that "prefer not to say" is an answer (§NNN). */}
+                          {name === "sex" ? t("sexMissing") : t(`fieldNames.${name}`)}
+                        </MuiLink>
                         {/* The rule, where the browser lands (§321): a birth date refused for age
                             is not a typo to hunt for, and the sentence says what would be accepted. */}
                         {name === "birthDate" && tooYoung && <>: {t("errors.tooYoung", minimumAge)}</>}
@@ -865,50 +860,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   spun», a runner who never looked at it sent an answer they did not give, and the
                   category ranking could not tell the two apart. Now the browser, the §422 list
                   and the server (the enum has no blank) refuse a form with no answer, and "prefer
-                  not to say" stays one press away. */}
+                  not to say" stays one press away. A native select behind an «Alege…» placeholder,
+                  so it answers without JavaScript as the citizenship does (§463). */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
+                <SexField
                   {...field("sex", t("sexHelp"))}
                   label={t("sex")}
-                  select
-                  required
-                  fullWidth
-                  defaultValue={prefill("sex", "")}
-                  sx={SELECT_WITH_GLYPHS_SX}
-                >
-                  {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
-                      sex"). As **children** of the item, never as a prop across the boundary —
-                      see `CheckboxField` for what an element-valued prop costs — and MUI shows
-                      the chosen item's children in the closed field, so the mark stays.
-
-                      Which is also why the row is declared twice: the children travel to the
-                      closed field, the item's own `sx` does not. `select-option.ts` says what
-                      that cost before it was laid out in both places. */}
-                  <MenuItem value="FEMALE" sx={OPTION_ROW_SX}>
-                    <Box component="span" sx={OPTION_GLYPH_SX}>
-                      <FemaleIcon fontSize="small" aria-hidden="true" />
-                    </Box>
-                    <Box component="span" sx={OPTION_LABEL_SX}>
-                      {t("sexOptions.FEMALE")}
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="MALE" sx={OPTION_ROW_SX}>
-                    <Box component="span" sx={OPTION_GLYPH_SX}>
-                      <MaleIcon fontSize="small" aria-hidden="true" />
-                    </Box>
-                    <Box component="span" sx={OPTION_LABEL_SX}>
-                      {t("sexOptions.MALE")}
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="UNSPECIFIED" sx={OPTION_ROW_SX}>
-                    <Box component="span" sx={OPTION_GLYPH_SX}>
-                      <PersonIcon fontSize="small" aria-hidden="true" />
-                    </Box>
-                    <Box component="span" sx={OPTION_LABEL_SX}>
-                      {t("sexOptions.UNSPECIFIED")}
-                    </Box>
-                  </MenuItem>
-                </TextField>
+                  placeholder={t("sexChoose")}
+                  answers={{
+                    FEMALE: t("sexOptions.FEMALE"),
+                    MALE: t("sexOptions.MALE"),
+                    UNSPECIFIED: t("sexOptions.UNSPECIFIED"),
+                  }}
+                />
                 {/*
                   Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
                   "cetățenia ar trebui să fie obligatorie; by default pune Român") — most entrants
@@ -1459,6 +1423,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   // rules of its own shows a plain box linking to its page, where the field's
                   // own name is the right thing to list (review finding 1).
                   ...(hasRules ? { rulesAcknowledged: t("rules.missing") } : {}),
+                  // «Sex» likewise: it starts empty, and "prefer not to say" is an answer (§NNN).
+                  sex: t("sexMissing"),
                 }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the

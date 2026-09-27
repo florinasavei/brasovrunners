@@ -3,7 +3,8 @@
 import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { type ComponentProps, useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { useRecall } from "@/shared/forms/recall";
 import Flag from "@/shared/ui/Flag";
 import type { SearchableCountry } from "../country-search";
 import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_SX } from "./CountryPicker";
@@ -25,7 +26,7 @@ import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_S
  *
  * The countries, their order and their names are the server's (§324), handed down as data.
  */
-export default function NationalityField({
+function NationalityFieldIsland({
   id,
   name,
   label,
@@ -140,5 +141,28 @@ export default function NationalityField({
         </option>
       ))}
     </TextField>
+  );
+}
+
+/**
+ * The same control inside a backoffice `ActionForm` too (the staff entry's country of residence,
+ * §NNN): a refused press gives back the posted country, marks the box when the refusal named it
+ * and carries the id the refusal summary links to (§315), as `PhoneField` does. On the public
+ * form there is no recall, and the page's own id, draft and error stand.
+ */
+export default function NationalityField(
+  props: Omit<ComponentProps<typeof NationalityFieldIsland>, "id"> & { id?: string },
+) {
+  const recall = useRecall();
+  const named = recall.named(props.name);
+  return (
+    <NationalityFieldIsland
+      key={recall.generation}
+      {...props}
+      id={props.id ?? recall.idOf(props.name)}
+      defaultValue={(recall.has ? recall.value(props.name) : undefined) ?? props.defaultValue}
+      error={props.error ?? (named || undefined)}
+      helperText={props.helperText ?? (named ? recall.fieldError : undefined)}
+    />
   );
 }

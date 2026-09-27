@@ -4977,6 +4977,8 @@
       "UNSPECIFIED": "Prefer not to say"
     },
     "sexHelp": "For category rankings. Pick an answer — “Prefer not to say” is one of them.",
+    "sexChoose": "Choose…",
+    "sexMissing": "Choose your sex — you may pick “Prefer not to say”",
     "nationality": "Citizenship",
     "country": "Country of residence",
     "city": "City",

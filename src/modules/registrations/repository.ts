@@ -269,7 +269,9 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       birthDate: input.details?.birthDate ?? null,
       sex: input.details?.sex ?? null,
       nationality: input.details?.nationality ?? null,
-      country: input.details?.country ?? null,
+      // Never null (§NNN): a staff entry or a kept family entry without one lives in Romania,
+      // the column's own default, said here so the insert never names a null.
+      country: input.details?.country ?? "RO",
       city: input.details?.city ?? null,
       phone: input.details?.phone ?? null,
       emergencyContactName: input.details?.emergencyContactName ?? null,

@@ -1208,7 +1208,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     birthDate: input.birthDate ?? null,
     sex: input.sex ?? null,
     nationality: input.nationality ?? null,
-    country: input.country ?? null,
+    // Never null (§NNN): a staff entry without one lives in Romania, the column's own default —
+    // on a restart too, which writes these fields over the old row.
+    country: input.country ?? "RO",
     city: input.city ?? null,
     phone: input.phone ?? null,
     emergencyContactName: input.emergencyContactName ?? null,

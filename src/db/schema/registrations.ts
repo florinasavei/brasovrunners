@@ -221,10 +221,12 @@ export const registrations = pgTable(
      * The country the person lives in (§NNN), ISO 3166-1 alpha-2 like `nationality` — asked right
      * before the city, because «Brașov» and «Bristol» need a country to mean anything, and a
      * citizenship is not where somebody lives. Required on the public form, Romania by default;
-     * optional on a staff entry; null on every row written before it (no backfill: a guess from
-     * the citizenship would be a fact the person never gave). Stored and exported, never public.
+     * a staff entry picks it too, on Romania unless changed. Never null: the column's default
+     * `RO` reads every row written before it — and every insert by the release still serving
+     * while the migration runs — as România, most of the club's runners, as the brief asked.
+     * Stored and exported, never public.
      */
-    country: text("country"),
+    country: text("country").notNull().default("RO"),
     city: text("city"),
 
     phone: text("phone"),

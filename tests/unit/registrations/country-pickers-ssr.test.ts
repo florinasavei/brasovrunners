@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
@@ -9,6 +9,7 @@ import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/p
 import NationalityField from "@/modules/registrations/ui/NationalityField";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import { fieldId } from "@/shared/forms/outcome";
+import { RecallProvider } from "@/shared/forms/recall";
 
 /**
  * BR-REQ-031-04 — the searchable country pickers (§463) post exactly what they posted before:
@@ -112,6 +113,21 @@ describe("BR-REQ-031-04 the country pickers as the server renders them", () => {
     expect(tag).toContain("required");
     expect(html).toMatch(/<option[^>]*value="RO"[^>]*selected/);
     expect(html).not.toContain('<option value=""');
+  });
+
+  it("on the staff entry, gives back a refused press's country and the id the summary links to (§315, §NNN)", () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        RecallProvider,
+        { value: { values: { country: ["AT"] }, fields: ["country"], generation: 1, fieldError: "Verifică", scope: "staff" } } as unknown as ComponentProps<typeof RecallProvider>,
+        createElement(NationalityField, { name: "country", label: "Țara de reședință", defaultValue: "RO", countries, words }),
+      ),
+    );
+    const tag = selectTag(html, "country");
+    expect(tag).toContain(`id="${fieldId("country", "staff")}"`);
+    expect(html).toMatch(/<option[^>]*value="AT"[^>]*selected/);
+    expect(html).not.toMatch(/<option[^>]*value="RO"[^>]*selected/);
+    expect(html).toContain("Verifică");
   });
 
   it("has the same search words in both catalogues", () => {
