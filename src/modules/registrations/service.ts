@@ -27,7 +27,7 @@ import {
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
-import { type Deadlines, emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { type Deadlines, emailLinkExpiresAt, familySittingHeldUntil, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { maintenanceDueFor } from "@/modules/jobs/schedule";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -44,7 +44,10 @@ import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
-import { familyEntryFields, insertFamilyEntry } from "./family-entries";
+import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
+import { holdInSitting, lockLiveSitting, openSitting, settleSitting } from "./family-sitting";
+import { sittingEntryFor } from "./domain/family-sitting";
+import { addressHasRoom } from "./domain/address-cap";
 import { familyRegistrationOpen } from "./family-gate";
 import {
   anotherPersonFitnessRule,
@@ -446,19 +449,27 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
   recipientEmail: string,
   idempotencyKey: string,
   now: Date,
+  /**
+   * A family confirmed in one press (§NNN): the declaration request waits this long, while the
+   * wizard asks the same signatures on the screen, and goes only to whoever is still unsigned then
+   * (`familyHeld`, read by the renderer). The waiting-list message is never held.
+   */
+  declarationNotBefore?: Date,
 ): Promise<void> {
   const messageType =
     allocated.status === "WAITLISTED" ? "WAITLIST_JOINED" : allocated.status === "PENDING_DECLARATION" ? "COMPLETE_DECLARATION" : null;
   if (!messageType) return;
+  const held = messageType === "COMPLETE_DECLARATION" && declarationNotBefore !== undefined;
   await enqueueEmail(db, {
     participantId: allocated.participantId,
     registrationId: allocated.id,
     messageType,
     locale: allocated.locale,
     recipientEmail,
-    payload: {},
+    payload: held ? { familyHeld: true } : {},
     idempotencyKey,
     now,
+    ...(held ? { notBefore: declarationNotBefore } : {}),
   });
 }
 
@@ -807,6 +818,13 @@ export type SubmitRegistrationResult = {
    * everybody (§39).
    */
   registrationId?: string;
+  /**
+   * The family sitting this public submission held its messages in (§NNN), for the browser's sealed
+   * half — null when it held nothing (a re-send about a registration outside the sitting, the
+   * address at the club's limit). Only for the action to keep in that cookie: the screen it renders
+   * is the same whatever this says (§39).
+   */
+  sittingId?: string | null;
 };
 
 /**
@@ -855,6 +873,20 @@ export type RegistrationOrigin = {
    *   the waiting list, with its own declaration email. The registration's id comes back for that.
    */
   anotherPerson?: { participantId: string };
+  /**
+   * The public form's family sitting (§NNN): the form is one of several a browser sends in a row
+   * for people on one address, with one email at the end. `id` is the sitting its earlier forms
+   * opened, from the browser's sealed half, or null for the first form. It changes what is mailed
+   * and nothing else — the decision, the lock, the limit and the throttle are the form's own:
+   * - a new registration's verification email, and the confirmation of another person (§446), are
+   *   held until «Gata» or the club's window (`family-sitting.ts`); from the second person on they
+   *   become the one family message;
+   * - the same person as a kept form of this sitting replaces it rather than adding one more;
+   * - a re-send about a registration of this sitting queues nothing: its held message says it.
+   * Everything else — a re-send about a registration outside the sitting, the address at the
+   * limit, a verified runner's restart — is sent at once, as without a sitting.
+   */
+  sitting?: { id: string | null };
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
@@ -867,6 +899,8 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   now: Date,
   /** What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§446). */
   payload: Record<string, unknown> = {},
+  /** Held by a family sitting until «Gata» or the club's window (§NNN). */
+  notBefore?: Date,
 ): Promise<OutboxRow | null> {
   return enqueueEmail(db, {
     participantId: participant.id,
@@ -877,6 +911,7 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
     payload,
     idempotencyKey: `registration:${registration.id}:verify-requested:${now.toISOString()}`,
     now,
+    ...(notBefore ? { notBefore } : {}),
   });
 }
 
@@ -1245,6 +1280,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   let createdDeadlines = undefined as (Date | null)[] | undefined;
   /** The registration this submission created or restarted, for a staff caller (§420); none on a resend. */
   let written = undefined as string | undefined;
+  /** The family sitting this public form held its messages in (§NNN), for the browser's sealed half. */
+  let sittingResult = null as string | null;
   /*
     The club's deadlines (§377), read before the transaction and from the instance's memo when it
     is fresh, so a registration costs no extra round trip: the email link's lapse is written on
@@ -1327,6 +1364,62 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "this address already has a registration for this event", ["email"]);
     }
 
+    /*
+      The family sitting (§NNN): the public form, sent again from the screen after it — «Încă o
+      persoană» — for somebody else on the same address. Read under the event's lock, like the
+      address's rows above, so two forms of one sitting are one after the other. A sitting that no
+      longer takes forms (sent by «Gata», past its window, of another address) is none: this form
+      opens a new one where it has something to hold.
+    */
+    const inSitting = origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined;
+    let sitting =
+      inSitting && origin.sitting?.id
+        ? await lockLiveSitting(tx, origin.sitting.id, { eventId: event.id, participantId: participant.id }, now)
+        : null;
+    const heldUntil = familySittingHeldUntil(now, settings);
+    /** Every public path below ends here: the sitting's window moves on, and the browser keeps its id. */
+    const finishSitting = async () => {
+      if (!sitting) return;
+      await settleSitting(tx, sitting, { heldUntil, recipientEmail: participant.deliveryEmail, now });
+      sittingResult = sitting.id;
+    };
+    const keptInSitting = sitting ? await liveSittingEntries(tx, sitting.id, now) : [];
+    /*
+      The same person as a form this sitting kept (§NNN): the newer form replaces it — a corrected
+      birth date, a name spelled right — rather than keeping the person twice for the one button.
+      Asked only where the address's registrations call the form another person: a form that is the
+      same as a registration is that registration's re-send, sitting or not.
+    */
+    const sameKept =
+      decision.kind === "offerAnother" && keptInSitting.length > 0
+        ? sittingEntryFor(
+            keptInSitting.map((entry) => {
+              const person = personOfEntry(entry);
+              return { entry, registeredName: person.legalName, birthDate: person.birthDate };
+            }),
+            { legalName, birthDate: input.birthDate ?? null },
+          )
+        : null;
+    if (sameKept) {
+      const expiresAt = emailLinkExpiresAt(now, settings);
+      await replaceFamilyEntry(tx, sameKept.entry.id, {
+        fields: familyEntryFields(input as unknown as Record<string, unknown>, now),
+        locale: input.locale,
+        expiresAt,
+      });
+      createdDeadlines = [expiresAt];
+      await finishSitting();
+      return;
+    }
+    /*
+      The club's limit counts the sitting's kept forms too (§NNN): each is somebody the one button
+      will register, and a fifth child typed into a sitting of four would only be refused at the
+      press. At the limit the address hears so at once, as without a sitting (§389).
+    */
+    const atCap =
+      decision.kind === "offerAnother" &&
+      (decision.atCap || (keptInSitting.length > 0 && !addressHasRoom(rows.filter((row) => isActiveStatus(row.status)).length + keptInSitting.length, cap)));
+
     if (decision.kind === "offerAnother") {
       /*
         A different person, on an address that is registered here (§389, §446; the owner,
@@ -1347,7 +1440,19 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         the address holds here, and the renderer ties it to this entry, so it names the event, the
         participant and this one person, and nothing a stranger typed can reach another inbox.
       */
-      const entry = decision.atCap
+      // In a sitting (§NNN), the kept form joins it, and its message waits with the sitting's others.
+      if (inSitting && !atCap && !sitting) {
+        sitting = await openSitting(tx, {
+          eventId: event.id,
+          participantId: participant.id,
+          registrationId: decision.about.id,
+          locale: input.locale,
+          heldUntil,
+          now,
+        });
+      }
+      const holding = inSitting && !atCap && sitting !== null;
+      const entry = atCap
         ? null
         : await insertFamilyEntry(tx, {
             eventId: event.id,
@@ -1357,6 +1462,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             fields: familyEntryFields(input as unknown as Record<string, unknown>, now),
             expiresAt: emailLinkExpiresAt(now, settings),
             now,
+            sittingId: holding && sitting ? sitting.id : null,
           });
       if (entry) createdDeadlines = [entry.expiresAt];
       const queued = await enqueueEmail(tx, {
@@ -1371,10 +1477,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // The entry by its id alone — never a name or a date in the outbox (§12.12).
         payload: entry
           ? { atCap: false, registrationsPerAddress: cap.registrationsPerAddress, familyEntryId: entry.id }
-          : { atCap: decision.atCap, registrationsPerAddress: cap.registrationsPerAddress },
+          : { atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
         now,
+        // Held with the sitting's others until «Gata» or the window (§NNN); at the limit, at once.
+        ...(holding ? { notBefore: heldUntil } : {}),
       });
+      if (holding && sitting) sitting = await holdInSitting(tx, sitting, { outboxId: queued?.id ?? null });
       // The club's record, as for any re-submission (§312): the state found and the message sent —
       // never the name that was typed (§12.12). The registration's timeline reads it as a line.
       await recordAuditEvent(tx, {
@@ -1386,10 +1495,30 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         metadata: { status: decision.about.status, resent: queued ? "REGISTER_ANOTHER_PERSON" : null },
         now,
       });
+      await finishSitting();
       return;
     }
 
     const existing = decision.kind === "resend" || decision.kind === "restart" ? decision.registration : undefined;
+
+    /*
+      The same person as a registration this sitting created (§NNN): its verification email is held
+      with the sitting's others, and says what a re-send would. Nothing more is queued; the club's
+      record still has the line (§312).
+    */
+    if (existing && isActiveStatus(existing.status) && sitting && sitting.registrationIds.includes(existing.id)) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: null,
+        participantId: participant.id,
+        action: "registration.resubmitted",
+        entityType: "registration",
+        entityId: existing.id,
+        metadata: { status: existing.status, resent: null },
+        now,
+      });
+      await finishSitting();
+      return;
+    }
 
     if (existing && isActiveStatus(existing.status)) {
       /*
@@ -1502,8 +1631,31 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         metadata: { status: existing.status, resent: queued && messageType ? messageType : null },
         now,
       });
+      await finishSitting();
       return;
     }
+
+    /*
+      A new registration of a sitting (§NNN): its verification email waits with the sitting's others,
+      and the sitting — opened by this form when it is the first to hold anything — names it among
+      the registrations its one button confirms. Outside a sitting, the email goes at once.
+    */
+    const holdVerification = async (registration: Registration) => {
+      if (!inSitting) {
+        await enqueueVerificationEmail(tx, participant, registration, now);
+        return;
+      }
+      sitting ??= await openSitting(tx, {
+        eventId: event.id,
+        participantId: participant.id,
+        registrationId: registration.id,
+        locale: input.locale,
+        heldUntil,
+        now,
+      });
+      const queued = await enqueueVerificationEmail(tx, participant, registration, now, {}, heldUntil);
+      sitting = await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId: queued?.id ?? null });
+    };
 
     const carriedFields = {
       registeredName: legalName,
@@ -1548,9 +1700,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           now,
         });
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
-        if (restarted && !atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, restarted, now);
+        if (restarted && !atTheDesk && !origin.anotherPerson) await holdVerification(restarted);
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
+        await finishSitting();
         return;
       }
 
@@ -1569,6 +1722,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // the allocator released a lapsed hold (§160) — the same deadlines `confirmEmail` wakes for.
       createdDeadlines = [allocated.holdExpiresAt, joinedQueue(allocated) ? offerDeadline(event, now, settings) : null];
       written = allocated.id;
+      await finishSitting();
       return;
     }
 
@@ -1623,9 +1777,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     // Nor another person confirmed from the email (§446): the press proved the inbox, and the
     // caller confirms the address in this same transaction (`family-confirm.ts`).
-    if (!atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, created, now);
+    if (!atTheDesk && !origin.anotherPerson) await holdVerification(created);
     createdDeadlines = [linkExpiresAt];
     written = created.id;
+    await finishSitting();
   });
 
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
@@ -1633,7 +1788,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
   // To a staff caller (§420), and to the confirmation from the email (§446), which confirms that row
   // and no other: the public form's answer stays byte for byte the same for everybody (§39).
-  return (origin.source === "STAFF" || origin.anotherPerson) && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
+  const answer: SubmitRegistrationResult =
+    (origin.source === "STAFF" || origin.anotherPerson) && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
+  // The sitting's id for the browser's sealed half (§NNN) — never for the screen, which is the same for all.
+  return origin.sitting !== undefined && origin.source === "PUBLIC" && !origin.anotherPerson ? { ...answer, sittingId: sittingResult } : answer;
 }
 
 // --- §15.2 Email confirmation ------------------------------------------------------------------
@@ -1644,6 +1802,8 @@ export async function confirmEmail<T extends Record<string, unknown>>(
   event: EventForRegistration,
   registrationId: string,
   now: Date,
+  /** A family confirmed in one press (§NNN): the declaration request waits for the wizard (`enqueueAllocationEmail`). */
+  options: { declarationNotBefore?: Date } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
@@ -1697,6 +1857,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       await deliveryEmailOf(tx, current.participantId),
       `registration:${allocated.id}:email-confirmed:${now.toISOString()}`,
       now,
+      options.declarationNotBefore,
     );
 
     return { registration: allocated, allocated: true };

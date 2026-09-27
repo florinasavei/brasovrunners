@@ -131,6 +131,11 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await expect(page.getByText(address)).toBeVisible();
     // And the same capture notice here, where somebody would otherwise stand with an inbox open.
     await expect(page.getByText(captureNotice)).toBeVisible();
+    // Nothing is mailed until «Gata» (§NNN): the screen asks first about another person on the address.
+    await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
+    await page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" }).click();
+    await expect(page).toHaveURL(/sent=1/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
     // BR-REQ-041-01 criterion 6: the way back is a real target on a phone.
     const back = page.getByRole("link", { name: "Înapoi la eveniment" });
     const backBox = await back.boundingBox();

@@ -153,7 +153,12 @@ const SUBMITTED_COOKIE = "br_submitted_to";
  * rather than read like a receipt. The name is the first word of what they typed in the
  * first-name box (`firstNameOf`), sealed with the address, and forgotten with it.
  */
-export type SubmittedFacts = Readonly<{ email: string | null; firstName: string | null }>;
+export type SubmittedFacts = Readonly<{
+  email: string | null;
+  firstName: string | null;
+  /** Everybody a family sitting sent the form for (§NNN), as typed, in order; one name or none otherwise. */
+  names?: readonly string[];
+}>;
 
 /**
  * The one word a greeting uses: the first token of the first-name box, or null when there is
@@ -165,8 +170,8 @@ export function firstNameOf(typedFirstName: string | null | undefined): string |
   return first === "" ? null : first;
 }
 
-export async function stashSubmittedFacts(facts: { email: string; firstName: string }, path: string): Promise<void> {
-  const sealed = sealFormDraft({ email: facts.email, firstName: firstNameOf(facts.firstName) ?? "" });
+export async function stashSubmittedFacts(facts: { email: string; firstName: string; names?: readonly string[] }, path: string): Promise<void> {
+  const sealed = sealFormDraft({ email: facts.email, firstName: firstNameOf(facts.firstName) ?? "", names: (facts.names ?? []).join("\n") });
   if (!sealed) return;
   const jar = await cookies();
   jar.set(SUBMITTED_COOKIE, sealed, {
@@ -186,5 +191,6 @@ export async function readSubmittedFacts(): Promise<SubmittedFacts | null> {
   if (!opened) return null;
   const email = typeof opened.email === "string" && opened.email !== "" ? opened.email : null;
   const firstName = firstNameOf(opened.firstName);
-  return { email, firstName };
+  const names = typeof opened.names === "string" ? opened.names.split("\n").filter((name) => name.trim() !== "") : [];
+  return { email, firstName, names };
 }

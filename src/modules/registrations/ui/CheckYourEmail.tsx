@@ -75,6 +75,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
   const textLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
+  const family = (facts?.names?.length ?? 0) > 1;
 
   return (
     <Stack spacing={3}>
@@ -97,10 +98,16 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             <CelebrationIcon />
           </Box>
           <Typography component="h2" variant="h2" sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }}>
-            {facts?.firstName ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
+            {facts?.firstName && !family ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
           </Typography>
         </Box>
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
+        {/* A family sitting (§NNN): one email for everybody it sent the form for, named as typed on this browser. */}
+        {family && (
+          <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 700 }} data-testid="check-email-family">
+            {t("done.family", { names: (facts?.names ?? []).join(", ") })}
+          </Typography>
+        )}
         {/*
           The address it went to (§224): "check your email" is useless to somebody who typed
           `@gmail.con`, and reading their own address back is what catches it in the second

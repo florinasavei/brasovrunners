@@ -104,6 +104,12 @@ export type EnqueueEmailParams = {
    * the one drain itself once they are all written, rather than one per row.
    */
   drainAfter?: boolean;
+  /**
+   * Not before this instant (§NNN): a family sitting holds its messages back until «Gata» or the
+   * club's window, as `next_attempt_at` — the column the claim already waits on, so nothing else
+   * about the row changes. The club's copies of the message wait with it. Absent: due at once.
+   */
+  notBefore?: Date;
 };
 
 /**
@@ -146,6 +152,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       isManualResend: params.isManualResend ?? false,
       status: "PENDING",
       attemptCount: 0,
+      nextAttemptAt: params.notBefore ?? null,
       createdAt: params.now,
     })
     .onConflictDoNothing({ target: emailOutbox.idempotencyKey })
@@ -223,6 +230,8 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
         isManualResend: params.isManualResend ?? false,
         status: "PENDING",
         attemptCount: 0,
+        // Held with the participant's own message (§NNN): a copy never leaves before it.
+        nextAttemptAt: params.notBefore ?? null,
         createdAt: params.now,
       })
       .onConflictDoNothing({ target: emailOutbox.idempotencyKey });

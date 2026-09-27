@@ -3668,7 +3668,8 @@
           "selfCheckinHours": "“I have arrived” can be pressed before the start by (hours)",
           "raceWeekDays": "The homepage countdown starts (days before)",
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
-          "publicListDays": "The public participant list stays up after the event (days)"
+          "publicListDays": "The public participant list stays up after the event (days)",
+          "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
@@ -3678,7 +3679,8 @@
           "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
-          "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the platform's template states this number."
+          "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the platform's template states this number.",
+          "familySittingMinutes": "After the form, the screen asks whether you are registering anyone else on the same address. One email leaves for everybody: on “Done”, or by itself this many minutes after the last form."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the platform's template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -4904,7 +4906,8 @@
       },
       "delay": "It usually arrives within a minute, five at the most.",
       "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
-      "backToEvent": "Back to the event"
+      "backToEvent": "Back to the event",
+      "family": "One email, for everybody: {names}."
     },
     "deliveryNotice": {
       "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
@@ -5142,7 +5145,26 @@
       "missing": "We cannot take registrations just now: the club has no approved terms and conditions yet. Please come back soon.",
       "changed": "The terms and conditions changed while you were filling in the form. Read the version named below and tick the box again."
     },
-    "restingForm": "The form is paused while we cannot check our records — it cannot be sent right now. Whatever you have filled in stays here; come back in a few minutes."
+    "restingForm": "The form is paused while we cannot check our records — it cannot be sent right now. Whatever you have filled in stays here; come back in a few minutes.",
+    "sitting": {
+      "lead": "For {event}. We have not sent any email yet.",
+      "leadNamed": "The form for {name} is in, for {event}. We have not sent any email yet.",
+      "soFar": "Sent so far, with the address",
+      "question": "Are you registering anyone else with the same address?",
+      "add": "Yes, one more person",
+      "done": "No, done — send me the email",
+      "donePending": "Sending…",
+      "nothingYet": "We send nothing until you press “Done”.",
+      "oneEmail": "Then you get one email for everybody above, with one button: you confirm the address and every registration at once.",
+      "wizard": "You sign the declarations right away, one after the other, on the same page; each person then gets their own QR code.",
+      "byItself": "If you close the page without pressing, the email leaves by itself in {minutes}.",
+      "addressLabel": "Email address (the same as for the person before)",
+      "addressHelp": "Every message for this person comes here too.",
+      "formTitle": "One more person with the same address",
+      "formSoFar": "So far: {names}. Fill in the new person's details — the address stays the same.",
+      "formNothingSent": "We have not sent any email yet.",
+      "formBack": "I am not registering anyone else — back to “Done”"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -5317,6 +5339,17 @@
       "familySign": {
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"
+      },
+      "declaration": {
+        "signed": "Declaration: signed — {when}",
+        "toSign": "Declaration: to sign",
+        "afterAddress": "Declaration: signed once you confirm the address from the email",
+        "waiting": "Declaration: signed when you get a place from the waiting list"
+      },
+      "pending": {
+        "title": "Waiting for the confirmation from the email",
+        "person": "{name} — {event}",
+        "how": "They are not registered yet: press the button in the email you got for them. Until then no place is held for them."
       }
     },
     "manage": {
@@ -5402,6 +5435,29 @@
         "few": "{count} people",
         "other": "{count} people"
       }
+    },
+    "familySitting": {
+      "title": "Family registration for {event}",
+      "titlePlain": "Family registration",
+      "intro": "The form was sent from {email} for {people}. Nobody is registered yet: check the list and press the button once.",
+      "joining": "Joining now",
+      "personLabel": "{n}. {name}",
+      "born": "Date of birth: {date}",
+      "untick": "Someone should not be registered? Untick them: their details are deleted when you press, and they are not registered. Wrong details? Untick the person and send the form again for them.",
+      "next": "Once you press, the address {email} is confirmed, each person gets their own place (or a place on the waiting list), and you sign the declarations right away, one after the other. Each then gets their own QR code. At most {people} can register with one address for an event.",
+      "fitnessAcknowledged": "I know that the adults I am registering declare for themselves, when they sign their declaration, that their health allows the effort.",
+      "action": "Confirm and sign the declarations ({count})",
+      "actionPending": "Confirming…",
+      "doneTitle": "The family is registered",
+      "done": "The address is confirmed and the registrations are made.",
+      "refusedAtCap": "Someone on the list was not registered: the address has reached the most people allowed for this event.",
+      "refusedAlready": "Someone on the list was already registered with this address, so we did not register them twice.",
+      "refusedWaitlist": "Someone on the list did not fit: the places and the waiting list are full.",
+      "refusedOther": "Someone on the list could not be registered with the details sent (for example, the terms changed in the meantime). Send the form again for that person.",
+      "sign": "Sign the declarations",
+      "nothingToSign": "Nobody has a declaration to sign yet: those on the waiting list get an email when a place is offered to them.",
+      "mineHint": "Everybody's state, any time:",
+      "mine": "All my registrations"
     }
   },
   "Devs": {

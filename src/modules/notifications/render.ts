@@ -45,13 +45,16 @@ import {
   personOfEntry,
   registeredOnAddress,
 } from "@/modules/registrations/family-entries";
-import type { PendingFamilyEntry } from "@/db/schema/family-entries";
+import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
+import { findSittingById, linkSittingToken, sittingPeople, sittingStillOpen } from "@/modules/registrations/family-sitting";
+import { readAddressCap } from "@/modules/registrations/address-cap";
+import { SIGNABLE_STATUSES } from "@/modules/registrations/domain/family-signing";
 import { confirmationDueMoment, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { forecastForEvent } from "@/modules/weather/source";
 import { renderNewsletterRow } from "@/modules/newsletter/render";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import { emailEventFacts } from "./event-facts-row";
-import type { EmailRenderer, OutboxRow } from "./outbox";
+import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 
 /**
  * Turns one outbox row into the message to send (AGENTS.md §16.1, §16.3; BR-REQ-080-01).
@@ -197,6 +200,20 @@ async function renderRow(
   const [registration] = row.registrationId
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
     : [];
+
+  /*
+    A declaration request held while a family signed in the wizard (§NNN, `enqueueAllocationEmail`):
+    by now the person signed there, or their place moved on — then there is nothing to ask, and the
+    message (and its club copy) is withdrawn rather than sent. Only a person still unsigned hears it,
+    their own link to sign from, as «Semnez mai târziu» promised (§471).
+  */
+  if (
+    row.messageType === "COMPLETE_DECLARATION" &&
+    (row.payloadJson as { familyHeld?: unknown } | null)?.familyHeld === true &&
+    (!registration || !SIGNABLE_STATUSES.includes(registration.status))
+  ) {
+    throw new OutboxMessageWithdrawn("the family's declaration was signed in the wizard");
+  }
 
   // A club copy's greeting still names the runner, read through the registration it is about.
   const participantId = row.participantId ?? (clubCopy ? registration?.participantId : undefined);
@@ -609,7 +626,35 @@ async function renderRow(
     is nothing to confirm, and no link either.
   */
   let familyEntry: PendingFamilyEntry | undefined;
-  if (row.messageType === "REGISTER_ANOTHER_PERSON") {
+  /*
+    A family sitting's one message (§NNN): «Înscriere de familie: 3 persoane la …». Everybody the
+    sitting sent the form for and nobody confirmed yet — its new registrations, then its kept forms —
+    each by full name and birth date, read at send time; who the address held before, as "Ana P.";
+    one button for all of them. Confirmed already, or lapsed: the lapsed shape, with no button.
+  */
+  let familySitting: FamilySitting | undefined;
+  const sittingId = row.messageType === "REGISTER_ANOTHER_PERSON" ? (row.payloadJson as { familySittingId?: unknown } | null)?.familySittingId : undefined;
+  if (typeof sittingId === "string") {
+    const found = await findSittingById(db, sittingId);
+    const people = found && sittingStillOpen(found, now) ? await sittingPeople(db, found, now) : null;
+    const listed = people
+      ? [
+          ...people.registrations.map((person) => ({ name: person.registeredName, birthDate: person.birthDate ?? "" })),
+          ...people.entries.map((entry) => {
+            const person = personOfEntry(entry);
+            return { name: person.legalName, birthDate: person.birthDate?.slice(0, 10) ?? "" };
+          }),
+        ]
+      : [];
+    if (found && listed.length > 0) {
+      familySitting = found;
+      data.familySittingPeople = listed;
+      data.familyRegistered = await registeredOnAddress(db, found.eventId, found.participantId, found.registrationIds);
+      data.addressCap = (await readAddressCap(db)).cap.registrationsPerAddress;
+    } else {
+      data.familyEntryGone = true;
+    }
+  } else if (row.messageType === "REGISTER_ANOTHER_PERSON") {
     const payload = (row.payloadJson ?? {}) as { atCap?: unknown; registrationsPerAddress?: unknown; familyEntryId?: unknown };
     data.addressAtCap = payload.atCap === true;
     if (typeof payload.registrationsPerAddress === "number") data.addressCap = payload.registrationsPerAddress;
@@ -632,7 +677,38 @@ async function renderRow(
   // A club copy has no action button at all — not even the thank-you's public link — so there is
   // one rule to check rather than a list of which actions are safe to copy (§320).
   let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
-  if (purpose === "REGISTER_ANOTHER_PERSON") {
+  if (purpose === "REGISTER_ANOTHER_PERSON" && familySitting) {
+    if (row.participantId && !clubCopy) {
+      /*
+        The family's one link (§NNN): single use, hashed at rest, minted here at send time (§12.8,
+        §14.5), scoped to the registration the sitting names and tied to the sitting by the token's
+        id, alive until the last thing it can act on lapses. Opening the page reads it; the press
+        spends it, confirms the address and everybody on the list, and opens the declarations.
+      */
+      const issued = await issueActionToken(db, {
+        participantId: row.participantId,
+        registrationId: familySitting.registrationId,
+        purpose,
+        expiresAt: familySitting.expiresAt,
+        now,
+      });
+      await linkSittingToken(db, familySitting.id, issued.token.id);
+      actionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/registrations/family/[token]", params: { token: issued.secret } } })}`;
+      /*
+        «Toate înscrierile mele» (§77): the address's own page, beside the button — each person's
+        state and declaration, there before the press and after it. Its own token, as the "my
+        registrations" message mints it, superseding the older one (§12.8).
+      */
+      const mine = await issueActionToken(db, {
+        participantId: row.participantId,
+        registrationId: null,
+        purpose: "MANAGE_PROFILE",
+        expiresAt: new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000),
+        now,
+      });
+      data.familyMineUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/registrations/mine/[token]", params: { token: mine.secret } } })}`;
+    }
+  } else if (purpose === "REGISTER_ANOTHER_PERSON") {
     if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
       /*
         Single use, hashed at rest, minted here at send time like every link (§12.8, §14.5), and

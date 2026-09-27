@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, lte, min, ne } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lte, min, ne, notInArray } from "drizzle-orm";
 import { pendingFamilyEntries, type PendingFamilyEntry } from "@/db/schema/family-entries";
 import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -79,6 +79,8 @@ export async function insertFamilyEntry<T extends Record<string, unknown>>(
     fields: Record<string, unknown>;
     expiresAt: Date;
     now: Date;
+    /** The family sitting the form was sent in (§NNN), when it was. */
+    sittingId?: string | null;
   },
 ): Promise<PendingFamilyEntry> {
   const [row] = await db
@@ -90,10 +92,38 @@ export async function insertFamilyEntry<T extends Record<string, unknown>>(
       locale: values.locale,
       fields: values.fields,
       expiresAt: values.expiresAt,
+      sittingId: values.sittingId ?? null,
       createdAt: values.now,
     })
     .returning();
   return row;
+}
+
+/**
+ * A sitting's kept forms still alive (§NNN), in the order they were sent: the people the family
+ * message names beside the sitting's new registrations, and the ones its one button confirms.
+ */
+export async function liveSittingEntries<T extends Record<string, unknown>>(db: Database<T>, sittingId: string, now: Date): Promise<PendingFamilyEntry[]> {
+  return db
+    .select()
+    .from(pendingFamilyEntries)
+    .where(and(eq(pendingFamilyEntries.sittingId, sittingId), gt(pendingFamilyEntries.expiresAt, now)))
+    .orderBy(asc(pendingFamilyEntries.createdAt), asc(pendingFamilyEntries.id));
+}
+
+/**
+ * The same person sent again in the same sitting (§NNN): the newer form replaces the kept one — a
+ * corrected date, a fixed spelling — and lives the club's email-link window from now.
+ */
+export async function replaceFamilyEntry<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+  values: { fields: Record<string, unknown>; locale: Locale; expiresAt: Date },
+): Promise<void> {
+  await db
+    .update(pendingFamilyEntries)
+    .set({ fields: values.fields, locale: values.locale, expiresAt: values.expiresAt })
+    .where(eq(pendingFamilyEntries.id, id));
 }
 
 export async function findFamilyEntryById<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<PendingFamilyEntry | undefined> {
@@ -144,7 +174,13 @@ export async function nextFamilyEntryLapse<T extends Record<string, unknown>>(db
  * address's own rows — the participant is the address — so nothing about anybody else's inbox is
  * ever said to this one.
  */
-export async function registeredOnAddress<T extends Record<string, unknown>>(db: Database<T>, eventId: string, participantId: string): Promise<string[]> {
+export async function registeredOnAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  participantId: string,
+  /** Registrations named elsewhere in the same message — a family sitting's own (§NNN). */
+  exceptIds: readonly string[] = [],
+): Promise<string[]> {
   const rows = await db
     .select({ firstName: registrations.firstName, lastName: registrations.lastName, displayName: registrations.displayName })
     .from(registrations)
@@ -153,6 +189,7 @@ export async function registeredOnAddress<T extends Record<string, unknown>>(db:
         eq(registrations.eventId, eventId),
         eq(registrations.participantId, participantId),
         inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+        ...(exceptIds.length > 0 ? [notInArray(registrations.id, [...exceptIds])] : []),
       ),
     )
     .orderBy(asc(registrations.createdAt));

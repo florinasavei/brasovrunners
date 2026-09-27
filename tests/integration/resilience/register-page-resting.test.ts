@@ -19,7 +19,11 @@ import ro from "../../../messages/ro.json";
  * cannot render an async component.
  */
 const QUOTA = new Error("Your project has exceeded the compute time quota. Upgrade your plan to increase limits.");
-const state = vi.hoisted(() => ({ refusal: null as Error | null, draft: null as Record<string, string> | null }));
+const state = vi.hoisted(() => ({
+  refusal: null as Error | null,
+  draft: null as Record<string, string> | null,
+  sitting: null as null | { sittingId: string | null; eventId: string; email: string; names: string[]; heldUntil: Date },
+}));
 
 const EVENT = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -99,7 +103,13 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
-vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({ default: () => null }));
+vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({ default: () => createElement("div", { "data-testid": "check-your-email" }) }));
+// The family sitting's browser half (§NNN) and its async screen, stood in for like the parts above.
+vi.mock("@/modules/registrations/family-sitting-cookie", () => ({ readFamilySittingCookie: async () => state.sitting }));
+vi.mock("@/modules/registrations/ui/FamilySittingNext", () => ({
+  default: ({ names, addHref }: { names: string[]; addHref: string }) =>
+    createElement("div", { "data-testid": "family-sitting", "data-names": names.join("|"), "data-add": addHref }),
+}));
 vi.mock("@/modules/resilience/ui/LastGoodNotice", () => ({
   default: ({ read }: { read: { freshness: string } }) => (read.freshness === "live" ? null : createElement("div", { "data-testid": "resting-notice" })),
 }));
@@ -119,6 +129,7 @@ async function render(searchParams: Record<string, string> = {}, slug: string = 
 beforeEach(() => {
   state.refusal = null;
   state.draft = null;
+  state.sitting = null;
   forgetLastGood();
   resetBreaker();
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -145,6 +156,40 @@ describe("§447 the registration page while the database is away", () => {
     expect(resting).toContain('value="Ana"');
     // The refusal summary does not repeat what the notice says.
     expect(resting).not.toContain(ro.Registration.errors.databaseAwayTitle);
+  });
+
+  it("§NNN after the form, asks «Mai înscrii pe cineva?» while the sitting holds its email; after «Gata», says to open the inbox", async () => {
+    state.sitting = { sittingId: "00000000-0000-4000-8000-0000000000aa", eventId: EVENT.id, email: "familia.pop@example.ro", names: ["Ana Pop", "Maria Pop"], heldUntil: new Date(Date.now() + 600_000) };
+    const asking = await render({ submitted: "1" });
+    expect(asking).toContain('data-testid="family-sitting"');
+    expect(asking).toContain('data-names="Ana Pop|Maria Pop"');
+    expect(asking).toContain("?family=1");
+    expect(asking).not.toContain('data-testid="check-your-email"');
+
+    const sent = await render({ submitted: "1", sent: "1" });
+    expect(sent).toContain('data-testid="check-your-email"');
+    expect(sent).not.toContain('data-testid="family-sitting"');
+
+    // The window over: the sitting is no more, and the screen is the inbox's.
+    state.sitting = { ...state.sitting, heldUntil: new Date(Date.now() - 1_000) };
+    expect(await render({ submitted: "1" })).toContain('data-testid="check-your-email"');
+  });
+
+  it("§NNN the next form of a sitting fixes the address — said back, not asked — and lists who was sent so far", async () => {
+    state.sitting = { sittingId: "00000000-0000-4000-8000-0000000000aa", eventId: EVENT.id, email: "familia.pop@example.ro", names: ["Ana Pop"], heldUntil: new Date(Date.now() + 600_000) };
+    const next = await render({ family: "1" });
+    expect(next).toContain('data-testid="family-sitting-address"');
+    expect(next).toContain("familia.pop@example.ro");
+    expect(next).toContain('name="familySitting" value="1"');
+    expect(next).not.toContain('name="emailConfirm"');
+    expect(next).toContain('data-testid="family-sitting-intro"');
+    expect(next).toContain("Până acum: Ana Pop.");
+
+    // Without a live sitting, `?family=1` is the ordinary form, the address asked twice.
+    state.sitting = null;
+    const plain = await render({ family: "1" });
+    expect(plain).not.toContain('data-testid="family-sitting-address"');
+    expect(plain).toContain('name="emailConfirm"');
   });
 
   it("still fails honestly when there is no copy to serve", async () => {

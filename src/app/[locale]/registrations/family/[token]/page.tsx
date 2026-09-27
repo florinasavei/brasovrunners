@@ -8,21 +8,26 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { countForm } from "@/i18n/count-form";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
-import { readFamilyEntryLinkPage } from "@/modules/registrations/token-actions";
+import { readFamilyEntryLinkPage, readFamilySittingLinkPage } from "@/modules/registrations/token-actions";
+import FamilySittingConfirm from "@/modules/registrations/ui/FamilySittingConfirm";
+import DrawIcon from "@mui/icons-material/Draw";
+import Button from "@mui/material/Button";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
-import { confirmFamilyEntryAction, declineFamilyEntryAction } from "./actions";
+import { confirmFamilyEntryAction, confirmFamilySittingAction, declineFamilyEntryAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; refused?: string; decline?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; refused?: string; decline?: string; wizard?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -50,7 +55,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, refused, decline } = await searchParams;
+  const { done, invalid, refused, decline, wizard } = await searchParams;
   const t = await getTranslations("Registrations");
   const tEvent = await getTranslations("Event");
 
@@ -83,8 +88,78 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
     );
   }
 
+  /*
+    A family confirmed with one press (§NNN), and somebody on its list did not join — or nobody has
+    a declaration to sign (the waiting list). What happened, as sentences for the markers in the
+    address, and the way into the declarations when there are some: the pass the press handed this
+    browser carries the wizard on the declaration page under this same link.
+  */
+  if (done === "family") {
+    const markers = new Set((refused ?? "").split(","));
+    const refusals = [
+      markers.has(ADDRESS_AT_CAP) ? t("familySitting.refusedAtCap") : null,
+      markers.has(ALREADY_ON_ADDRESS) ? t("familySitting.refusedAlready") : null,
+      markers.has("waitlist") ? t("familySitting.refusedWaitlist") : null,
+      markers.has("other") ? t("familySitting.refusedOther") : null,
+    ].filter((sentence): sentence is string => sentence !== null);
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("familySitting.doneTitle")}
+        </Typography>
+        <RegistrationJourney current="declare" />
+        <Stack spacing={2}>
+          <Alert severity="success" data-testid="family-sitting-done">
+            {t("familySitting.done")}
+          </Alert>
+          {refusals.map((sentence) => (
+            <Alert key={sentence} severity="warning" data-testid="family-sitting-refused">
+              {sentence}
+            </Alert>
+          ))}
+          {wizard === "1" ? (
+            <div>
+              <Button
+                component="a"
+                href={getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } })}
+                variant="contained"
+                sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}
+                data-testid="family-sitting-sign"
+              >
+                <DrawIcon aria-hidden="true" sx={glyphSx("medium")} />
+                {t("familySitting.sign")}
+              </Button>
+            </div>
+          ) : (
+            <Typography>{t("familySitting.nothingToSign")}</Typography>
+          )}
+          <Typography variant="body2" color="text.secondary">
+            {t("familySitting.mineHint")} <Link href="/registrations/mine">{t("familySitting.mine")}</Link>
+          </Typography>
+        </Stack>
+      </Container>
+    );
+  }
+
   // One throttled read for the page; after a refused press whose link is known dead, none.
   const link = invalid ? null : await readFamilyEntryLinkPage(token, locale, new Date());
+  /*
+    Not one person's link: perhaps a family's (§NNN) — the same token purpose, read again without a
+    second charge, since this request already paid its one attempt above.
+  */
+  const sittingLink =
+    !invalid && link && !link.ok && !link.throttled ? await readFamilySittingLinkPage(token, locale, new Date(), { charge: false }) : null;
+  if (sittingLink?.ok) {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {sittingLink.eventTitle ? t("familySitting.title", { event: sittingLink.eventTitle }) : t("familySitting.titlePlain")}
+        </Typography>
+        <RegistrationJourney current="confirm" />
+        <FamilySittingConfirm locale={locale} token={token} link={sittingLink} refused={refused} action={confirmFamilySittingAction} />
+      </Container>
+    );
+  }
 
   if (!link || !link.ok) {
     return (

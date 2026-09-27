@@ -46,7 +46,12 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 const COOKIE = "br_family_sign";
 const PURPOSE = "family-signing";
 
-export type FamilyPassBinding = "link" | "mine";
+/**
+ * What the pass is bound to: the opened declaration link (`link`), the «Înscrierile mele» link it was
+ * exchanged for (`mine`), or the family message's one link (`family`, §NNN), spent by the press that
+ * confirmed the family and opened the wizard.
+ */
+export type FamilyPassBinding = "link" | "mine" | "family";
 
 export type FamilySigningPass = {
   binding: FamilyPassBinding;
@@ -87,11 +92,11 @@ const ids = (value: string | undefined) => (value ?? "").split(",").filter(Boole
 /** The pass, when it opens under this deployment's key and has not lapsed; null otherwise. */
 export function openFamilyPass(sealed: string, now: Date, secret = purposeSecret(PURPOSE)): FamilySigningPass | null {
   const opened = openFormDraft(sealed, secret);
-  if (!opened?.p || !opened.e || !opened.x || (opened.b !== "link" && opened.b !== "mine")) return null;
+  if (!opened?.p || !opened.e || !opened.x || (opened.b !== "link" && opened.b !== "mine" && opened.b !== "family")) return null;
   const expiresAt = new Date(Number(opened.x));
   if (!Number.isFinite(expiresAt.getTime()) || expiresAt.getTime() <= now.getTime()) return null;
   const originId = opened.o || null;
-  // A link's pass always names its link's person; a pass from «Înscrierile mele» never does.
+  // A link's pass always names its link's person; a pass from «Înscrierile mele» or the family message never does.
   if ((opened.b === "link") !== (originId !== null)) return null;
   return {
     binding: opened.b,
@@ -248,6 +253,21 @@ async function bindingHolds<T extends Record<string, unknown>>(
   if (pass.binding === "mine") {
     const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_PROFILE", now });
     return context.ok && context.token.participantId === pass.participantId;
+  }
+  /*
+    The family message's link (§NNN): spent by the press that confirmed the family and handed this
+    browser the pass, for this participant, scoped to a registration of this event. Until the token's
+    own lapse — the pass's half hour is always shorter.
+  */
+  if (pass.binding === "family") {
+    const spent = await readSpentActionTokenScope(db, { secret, purpose: "REGISTER_ANOTHER_PERSON", now });
+    if (!spent?.registrationId || spent.participantId !== pass.participantId) return false;
+    const [anchor] = await db
+      .select({ eventId: registrations.eventId })
+      .from(registrations)
+      .where(eq(registrations.id, spent.registrationId))
+      .limit(1);
+    return anchor?.eventId === pass.eventId;
   }
   if (!pass.originId || !pass.eligibleIds.includes(pass.originId)) return false;
   const matches = (scope: { participantId: string; registrationId: string | null } | null) =>

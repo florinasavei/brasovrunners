@@ -160,6 +160,25 @@ export function isFamilyWizard(steps: readonly FamilyStep[]): boolean {
   return steps.length > 1;
 }
 
+/**
+ * Where one person's declaration stands, as «Toate înscrierile mele» says it under each name (§NNN;
+ * the owner: «pagina „Toate înscrierile mele” arată starea declarației fiecăruia»):
+ * - `signed` — an acceptance exists, on a link, in the wizard or on paper at the desk;
+ * - `toSign` — a place held, or offered, waiting for it;
+ * - `afterAddress` — asked once the address is confirmed from the email;
+ * - `waiting` — on the waiting list: asked when a place is offered.
+ * A key under `mine.declaration`, so both languages' words are tested together.
+ */
+export type DeclarationStateKey = "signed" | "toSign" | "afterAddress" | "waiting";
+
+export function declarationStateKey(status: RegistrationStatus, signedAt: Date | null): DeclarationStateKey | null {
+  if (signedAt !== null) return "signed";
+  if (isSignable(status)) return "toSign";
+  if (status === "PENDING_EMAIL_CONFIRMATION") return "afterAddress";
+  if (status === "WAITLISTED") return "waiting";
+  return null;
+}
+
 /** How long the pass that carries the wizard lives after each press, at most. */
 export const FAMILY_PASS_MINUTES = 30;
 

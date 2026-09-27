@@ -3668,7 +3668,8 @@
           "selfCheckinHours": "„Am ajuns” se poate apăsa înainte de start cu (ore)",
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
           "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
-          "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)"
+          "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)",
+          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră și numărul provizoriu se eliberează.",
@@ -3678,7 +3679,8 @@
           "selfCheckinHours": "Butonul din pagina participantului, „Am ajuns — marchează-mă prezent”.",
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
-          "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablonul platformei spune acest număr."
+          "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablonul platformei spune acest număr.",
+          "familySittingMinutes": "După formular, ecranul întreabă dacă mai înscrii pe cineva cu aceeași adresă. Emailul pleacă o singură dată pentru toți: la „Gata”, sau singur după atâtea minute de la ultimul formular."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablonul platformei, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -4904,7 +4906,8 @@
       },
       "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
       "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {confirmation}, așa că ai timp.",
-      "backToEvent": "Înapoi la eveniment"
+      "backToEvent": "Înapoi la eveniment",
+      "family": "Un singur email, pentru toți: {names}."
     },
     "deliveryNotice": {
       "capture": "Acesta este un mediu de dezvoltare: emailurile nu se trimit deloc de aici — se pot citi doar în backoffice. Nu aștepta un mesaj în inbox.",
@@ -5142,7 +5145,26 @@
       "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând.",
       "changed": "Termenii și condițiile s-au schimbat cât completai formularul. Citește versiunea numită mai jos și bifează din nou."
     },
-    "restingForm": "Formularul este oprit cât timp nu ne putem verifica evidențele — nu se poate trimite acum. Ce ai completat deja rămâne aici; revino peste câteva minute."
+    "restingForm": "Formularul este oprit cât timp nu ne putem verifica evidențele — nu se poate trimite acum. Ce ai completat deja rămâne aici; revino peste câteva minute.",
+    "sitting": {
+      "lead": "Pentru {event}. Încă nu am trimis niciun email.",
+      "leadNamed": "Formularul pentru {name} a ajuns, pentru {event}. Încă nu am trimis niciun email.",
+      "soFar": "Trimise până acum, cu adresa",
+      "question": "Mai înscrii pe cineva cu aceeași adresă?",
+      "add": "Da, încă o persoană",
+      "done": "Nu, gata — trimite-mi emailul",
+      "donePending": "Se trimite…",
+      "nothingYet": "Nu trimitem nimic până nu apeși „Gata”.",
+      "oneEmail": "Apoi primești un singur email pentru toți cei de mai sus, cu un singur buton: confirmi adresa și toate înscrierile deodată.",
+      "wizard": "Semnezi declarațiile pe loc, una după alta, pe aceeași pagină; fiecare persoană primește apoi propriul cod QR.",
+      "byItself": "Dacă închizi pagina fără să apeși, emailul pleacă singur peste {minutes}.",
+      "addressLabel": "Adresa de email (aceeași ca la persoana dinainte)",
+      "addressHelp": "Toate mesajele pentru această persoană vin tot aici.",
+      "formTitle": "Încă o persoană cu aceeași adresă",
+      "formSoFar": "Până acum: {names}. Completează datele persoanei noi — adresa rămâne aceeași.",
+      "formNothingSent": "Încă nu am trimis niciun email.",
+      "formBack": "Nu mai înscriu pe nimeni — înapoi la „Gata”"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -5317,6 +5339,17 @@
       "familySign": {
         "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
         "action": "Semnează declarațiile"
+      },
+      "declaration": {
+        "signed": "Declarația: semnată — {when}",
+        "toSign": "Declarația: de semnat",
+        "afterAddress": "Declarația: se semnează după ce confirmi adresa din email",
+        "waiting": "Declarația: se semnează când primești un loc de pe lista de așteptare"
+      },
+      "pending": {
+        "title": "Așteaptă confirmarea din email",
+        "person": "{name} — {event}",
+        "how": "Nu sunt încă înscriși: apasă butonul din emailul primit pentru ei. Până atunci nu li se ține niciun loc."
       }
     },
     "manage": {
@@ -5402,6 +5435,29 @@
         "few": "{count} persoane",
         "other": "{count} de persoane"
       }
+    },
+    "familySitting": {
+      "title": "Înscriere de familie la {event}",
+      "titlePlain": "Înscriere de familie",
+      "intro": "De pe adresa {email} s-a trimis formularul pentru {people}. Nu am înscris încă pe nimeni: verifică lista și apasă butonul o singură dată.",
+      "joining": "Se înscriu acum",
+      "personLabel": "{n}. {name}",
+      "born": "Data nașterii: {date}",
+      "untick": "Cineva nu trebuie înscris? Debifează-l: datele lui se șterg la apăsare și nu se înscrie. Date greșite? Debifează persoana și trimite din nou formularul pentru ea.",
+      "next": "După apăsare, adresa {email} e confirmată, fiecare persoană are propriul loc (sau un loc pe lista de așteptare), iar declarațiile le semnezi imediat, una după alta. Fiecare primește apoi propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "fitnessAcknowledged": "Știu că adulții pe care îi înscriu declară ei înșiși, când își semnează declarația, că starea de sănătate le permite efortul.",
+      "action": "Confirm și semnez declarațiile ({count})",
+      "actionPending": "Se confirmă…",
+      "doneTitle": "Familia este înscrisă",
+      "done": "Adresa este confirmată și înscrierile sunt făcute.",
+      "refusedAtCap": "Cineva din listă nu a fost înscris: adresa a ajuns la numărul maxim de persoane pentru acest eveniment.",
+      "refusedAlready": "Cineva din listă era deja înscris cu această adresă, așa că nu l-am înscris a doua oară.",
+      "refusedWaitlist": "Cineva din listă nu a mai încăput: locurile și lista de așteptare sunt pline.",
+      "refusedOther": "Cineva din listă nu a putut fi înscris cu datele trimise (de exemplu, termenii s-au schimbat între timp). Trimite din nou formularul pentru acea persoană.",
+      "sign": "Semnează declarațiile",
+      "nothingToSign": "Nimeni nu are încă o declarație de semnat: cei de pe lista de așteptare primesc un email când li se oferă un loc.",
+      "mineHint": "Starea fiecăruia, oricând:",
+      "mine": "Toate înscrierile mele"
     }
   },
   "Devs": {

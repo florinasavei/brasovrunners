@@ -113,6 +113,15 @@ type FamilyFactsInput = {
   /** The club's limit of registrations per address, from «Termene»; absent, no line. */
   cap?: number;
 };
+/** A family sitting's facts (§NNN): the event, everybody joining now, who the address held before, the link's life, the limit. */
+type FamilySittingFactsInput = {
+  event?: string;
+  when?: string;
+  people: ReadonlyArray<{ name: string; birthDate: string }>;
+  registered: readonly string[];
+  hours: string;
+  cap?: number;
+};
 /** A fact's value as parts, the important ones bold — each on its own, never the joining words. */
 type FamilyFact = { label: string; value: ReadonlyArray<{ text: string; bold?: boolean }> };
 
@@ -662,6 +671,14 @@ export type TemplateData = {
    * one press deletes the kept form. Set only beside the button, from the one token minted for it.
    */
   familyDeclineUrl?: string;
+  /**
+   * A family sitting's one message (§NNN): everybody the sitting sent the form for and nobody
+   * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
+   * Set, the message is the family's: its subject, its facts box, its button and its words.
+   */
+  familySittingPeople?: ReadonlyArray<{ name: string; birthDate: string }>;
+  /** «Toate înscrierile mele» beside the family's button (§77, §NNN): the address's own page, its own token. */
+  familyMineUrl?: string;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
    * both (§446): one sentence says how to register somebody else. Only ever in the inbox.
@@ -1241,6 +1258,43 @@ const T = {
         ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
         : []),
     ],
+    /**
+     * A family sitting's one message (§NNN): everybody the forms of one sitting named, one button for
+     * all of them, and the address's own page beside it. The platform's words: the message's facts are
+     * the sitting's, and a club text for the single-person link would promise the wrong button.
+     */
+    familySitting: {
+      subject: (d: TemplateData) => `Înscriere de familie: ${peoplePhrase("ro", d.familySittingPeople?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
+      facts: (f: FamilySittingFactsInput): FamilyFact[] => [
+        ...(f.event ? [{ label: "Evenimentul", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
+        ...f.people.map((person, index) => ({
+          label: `Persoana ${index + 1} din ${f.people.length}`,
+          value: [
+            { text: person.name, bold: true },
+            ...(formatBirthDate(person.birthDate, "ro") ? [{ text: ", data nașterii " }, { text: formatBirthDate(person.birthDate, "ro"), bold: true }] : []),
+          ],
+        })),
+        ...(f.registered.length > 0 ? [{ label: "Înscriși deja cu această adresă", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
+        {
+          label: "Ce se întâmplă dacă apeși",
+          value: [
+            { text: "confirmi adresa și toate înscrierile deodată", bold: true },
+            { text: "; semnezi apoi declarațiile pe loc, una după alta, iar fiecare persoană primește propriul loc și propriul cod QR, pe această adresă" },
+          ],
+        },
+        { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
+        ...(f.cap !== undefined
+          ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
+          : []),
+      ],
+      body: (): string[] => [
+        "Formularul de înscriere a fost trimis de pe această adresă pentru persoanele de mai sus. Nu am înscris încă pe nimeni: un singur buton confirmă adresa și toată familia.",
+        "Cineva din listă nu trebuie înscris? Îl debifezi pe pagina care se deschide. Dacă nu tu ai trimis formularul, ignoră mesajul: nu se înscrie nimeni, iar datele se șterg singure când linkul expiră.",
+        "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
+      ],
+      action: (count: number) => `Confirm și semnez declarațiile (${count})`,
+      mine: "Toate înscrierile mele",
+    },
     /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
@@ -1645,6 +1699,38 @@ const T = {
         ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
         : []),
     ],
+    familySitting: {
+      subject: (d: TemplateData) => `Family registration: ${peoplePhrase("en", d.familySittingPeople?.length ?? 1)} for ${d.eventTitle ?? "the event"}`,
+      facts: (f: FamilySittingFactsInput): FamilyFact[] => [
+        ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
+        ...f.people.map((person, index) => ({
+          label: `Person ${index + 1} of ${f.people.length}`,
+          value: [
+            { text: person.name, bold: true },
+            ...(formatBirthDate(person.birthDate, "en") ? [{ text: ", date of birth " }, { text: formatBirthDate(person.birthDate, "en"), bold: true }] : []),
+          ],
+        })),
+        ...(f.registered.length > 0 ? [{ label: "Already registered with this address", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
+        {
+          label: "What happens if you press",
+          value: [
+            { text: "you confirm the address and every registration at once", bold: true },
+            { text: "; you then sign the declarations right away, one after the other, and each person gets their own place and their own QR code, at this address" },
+          ],
+        },
+        { label: "Deadline", value: [{ text: "the link is valid for " }, { text: f.hours, bold: true }, { text: " and can be used once" }] },
+        ...(f.cap !== undefined
+          ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
+          : []),
+      ],
+      body: (): string[] => [
+        "The registration form was sent from this address for the people above. Nobody is registered yet: one button confirms the address and the whole family.",
+        "Someone on the list should not be registered? Untick them on the page that opens. If you did not send the form, ignore this message: nobody is registered, and the details are deleted by themselves when the link expires.",
+        "Only register someone with their consent, and tell them how we use their data: the privacy notice is at the link at the end of this message.",
+      ],
+      action: (count: number) => `Confirm and sign the declarations (${count})`,
+      mine: "All my registrations",
+    },
     familyDecline: "I am not registering this person",
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     sameBirthDateHint:
@@ -1888,6 +1974,12 @@ export function buildTemplateContent(
   */
   const familyGone = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyEntryGone === true;
   /*
+    …and a family sitting's one message (§NNN): its facts, its button and its words are the sitting's
+    — everybody at once — and a club text written for one person's link would promise the wrong one.
+  */
+  const familySittingPeople = data.familySittingPeople ?? [];
+  const familySittingShape = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && familySittingPeople.length > 0;
+  /*
     The freed place's offer with no deadline ahead (§419) — a resend after it lapsed — is the
     platform's sentence alone, which states the offer's length instead of a moment. The club's words
     name the moment (`{holdExpiresAtFormatted}`), and a sentence missing it would read "până la
@@ -1900,11 +1992,16 @@ export function buildTemplateContent(
     the address's state, like the limit above: the club's words for this message ask to confirm.
   */
   const newsletterState = messageType === "NEWSLETTER" || (messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready === true);
-  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || lapsedOffer || newsletterState ? null : copyFor(overrides, messageType, locale);
+  const written =
+    messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || familySittingShape || lapsedOffer || newsletterState
+      ? null
+      : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
-  const subject = written
+  const subject = familySittingShape
+    ? copy.familySitting.subject(data)
+    : written
     ? fill(written.subject)
     : typeof entry.subject === "function"
       ? entry.subject(data)
@@ -2006,7 +2103,22 @@ export function buildTemplateContent(
         outlined box, the values bold (§468; the owner: "trebuie să avem bold pe chestiile
         importante"), so the parent sees at a glance which event and which person the button is for.
       */
-      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyPersonName
+      // A family sitting's facts (§NNN): everybody joining now, each on a line of the one outlined box.
+      ...(familySittingShape
+        ? [
+            familyFactsPart(
+              copy.familySitting.facts({
+                event: data.eventTitle,
+                when: data.eventStartsAtFormatted,
+                people: familySittingPeople,
+                registered: data.familyRegistered ?? [],
+                hours: data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours),
+                cap: data.addressCap,
+              }),
+            ),
+          ]
+        : []),
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familySittingShape && data.familyPersonName
         ? [
             familyFactsPart(
               copy.familyFacts({
@@ -2034,7 +2146,9 @@ export function buildTemplateContent(
         ? emailBodyParts(writtenBody, data as unknown as Record<string, unknown>)
         : written
           ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
-          : entry.body(data)),
+          : familySittingShape
+            ? copy.familySitting.body()
+            : entry.body(data)),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
         this registration and the text in force, like the provisional number (§237): on the request
@@ -2092,11 +2206,17 @@ export function buildTemplateContent(
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
       // In the facts box instead when the kept form is in hand (§468).
-      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && !data.familyPersonName && data.addressCap !== undefined
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && !familySittingShape && !data.familyPersonName && data.addressCap !== undefined
         ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],
-    action: entry.action && actionUrl ? { label: typeof entry.action === "function" ? entry.action(data) : entry.action, url: actionUrl } : undefined,
+    action: familySittingShape
+      ? actionUrl
+        ? { label: copy.familySitting.action(familySittingPeople.length), url: actionUrl }
+        : undefined
+      : entry.action && actionUrl
+        ? { label: typeof entry.action === "function" ? entry.action(data) : entry.action, url: actionUrl }
+        : undefined,
     /*
       «Nu înscriu această persoană» (§468): the same single-use link's other answer, under the
       confirmation button and only beside it — never at the limit, never once the kept form is gone,
@@ -2110,6 +2230,8 @@ export function buildTemplateContent(
     eventFacts: factsBlock,
     links: (() => {
       const own = [
+        // «Toate înscrierile mele» first under a family's button (§NNN): each person's state, before and after the press.
+        ...(familySittingShape && data.familyMineUrl ? [{ label: copy.familySitting.mine, url: data.familyMineUrl }] : []),
         ...(entry.links?.(linkData) ?? []),
         // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.
         ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl

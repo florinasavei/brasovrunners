@@ -6,6 +6,64 @@ import { participants } from "./participants";
 import { registrations } from "./registrations";
 
 /**
+ * One sitting of a family on one address (§NNN): the public form sent several times in a row from
+ * one browser, for several people, with one email at the end — «Înscriere de familie: 3 persoane la
+ * …» — instead of one per submission. The owner, 2026-09-27: "niciun email instant: unul singur,
+ * după ce apeși «Gata» sau după fereastra din Termene".
+ *
+ * What the row is: the server's half of the sitting, the browser's half being a sealed cookie on
+ * the form's own path (`registrations/family-sitting.ts`). It holds ids and instants, never a name:
+ *
+ * - `registration_id` is the address's registration the sitting's one link is scoped to (the token
+ *   table's rule: a registration purpose names a registration) — the first one the sitting created,
+ *   or the one the address already held when the sitting began;
+ * - `registration_ids` are the registrations the sitting created, each waiting for the address's
+ *   confirmation; the one press confirms them all;
+ * - `held_outbox_ids` are the messages the sitting holds back until «Gata» or `held_until`: the
+ *   verification email and the family links while the sitting names one person, the one family
+ *   message from the second person on;
+ * - `held_until` is the club's sitting window («Termene») from the last submission; `released_at`
+ *   the press of «Gata»; `confirmed_at` the press of the family email's button;
+ * - `action_token_id` is the token the family message carries, written by the renderer at send
+ *   time (§12.8, §14.5), as `pending_family_entries.action_token_id` is for one person;
+ * - `expires_at` is when the last thing the sitting's link could still act on lapses — the rows'
+ *   email links and the kept forms — after which the maintenance job deletes the row.
+ */
+export const familySittings = pgTable(
+  "family_sittings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    participantId: uuid("participant_id")
+      .notNull()
+      .references(() => participants.id, { onDelete: "cascade" }),
+    registrationId: uuid("registration_id")
+      .notNull()
+      .references(() => registrations.id, { onDelete: "cascade" }),
+    registrationIds: jsonb("registration_ids").notNull().$type<string[]>().default([]),
+    heldOutboxIds: jsonb("held_outbox_ids").notNull().$type<string[]>().default([]),
+    actionTokenId: uuid("action_token_id").references(() => emailActionTokens.id, { onDelete: "set null" }),
+    // The language of the first form of the sitting: the family message's.
+    locale: locale("locale").notNull(),
+    heldUntil: timestamp("held_until", { withTimezone: true }).notNull(),
+    releasedAt: timestamp("released_at", { withTimezone: true }),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // The family page finds its sitting by the token it read or spent.
+    uniqueIndex("family_sittings_action_token_unique").on(t.actionTokenId),
+    // The purge's scan.
+    index("family_sittings_expires_at_idx").on(t.expiresAt),
+  ],
+);
+
+export type FamilySitting = typeof familySittings.$inferSelect;
+
+/**
  * Another person's registration, typed into the public form on an address that is registered at
  * the event already, waiting for the address to confirm it from its inbox (§446, amending §389).
  *
@@ -47,6 +105,12 @@ export const pendingFamilyEntries = pgTable(
       .notNull()
       .references(() => registrations.id, { onDelete: "cascade" }),
     actionTokenId: uuid("action_token_id").references(() => emailActionTokens.id, { onDelete: "set null" }),
+    /*
+      The sitting the form was sent in (§NNN), when it was: then the family message's one button
+      confirms it with the others, and a second form for the same person in the same sitting
+      replaces it rather than adding one more. Null for a form sent on its own, as before.
+    */
+    sittingId: uuid("sitting_id").references(() => familySittings.id, { onDelete: "set null" }),
     // The language of the form that was filled in: the registration's, once it is created.
     locale: locale("locale").notNull(),
     fields: jsonb("fields").notNull().$type<Record<string, unknown>>(),
@@ -58,6 +122,8 @@ export const pendingFamilyEntries = pgTable(
     uniqueIndex("pending_family_entries_action_token_unique").on(t.actionTokenId),
     // The purge's scan.
     index("pending_family_entries_expires_at_idx").on(t.expiresAt),
+    // A sitting's kept forms, read by the family message and its page.
+    index("pending_family_entries_sitting_idx").on(t.sittingId),
   ],
 );
 

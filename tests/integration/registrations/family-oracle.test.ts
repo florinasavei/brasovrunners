@@ -131,8 +131,12 @@ async function press(firstName: string, birthDate?: string): Promise<string> {
     redirectTo = (error as { redirectTo?: string }).redirectTo ?? `threw: ${(error as Error).message}`;
   }
   const cookies = jar.map(({ name, value, options }) => ({ name, options, value: value === "" ? "" : openFormDraft(value) }));
+  for (const cookie of jar) if (cookie.name === "br_family_sitting") sittingCookieLengths.push({ firstName, length: cookie.value.length });
   return JSON.stringify({ redirectTo, cookies });
 }
+
+/** How long each sealed sitting cookie was — the one thing about it a browser can see (§39, §NNN). */
+const sittingCookieLengths: { firstName: string; length: number }[] = [];
 
 /** Registrations already on the address, made through the same action and the emailed confirmation (§446). */
 async function registered(names: string[]) {
@@ -171,12 +175,20 @@ describe("§389 §39 the public form answers the same whatever the address holds
     expect(await db.select().from(registrations)).toHaveLength(2);
 
     expect(none).toContain('"redirectTo":"/ro/evenimente/crosul-familiei/inscriere?submitted=1"');
-    // The draft cleared and the "check your inbox" facts set — the whole of what the browser keeps.
-    const cookies = (JSON.parse(none) as { cookies: { value: unknown }[] }).cookies;
-    expect(cookies).toHaveLength(2);
-    expect(cookies[1].value).toEqual({ email: EMAIL, firstName: "Maria" });
+    /*
+      The draft cleared, the family sitting's sealed half (§NNN) — under its own key, so it opens as
+      nothing here — and the "check your inbox" facts: the whole of what the browser keeps.
+    */
+    const cookies = (JSON.parse(none) as { cookies: { name: string; value: unknown }[] }).cookies;
+    expect(cookies.map((cookie) => cookie.name)).toEqual(["br_form_draft", "br_family_sitting", "br_submitted_to"]);
+    expect(cookies[1].value).toBeNull();
+    expect(cookies[2].value).toEqual({ email: EMAIL, firstName: "Maria", names: "Maria Pop" });
     expect(one).toBe(none);
     expect(atCap).toBe(none);
+    // The sitting's sealed half is one length whatever the case (§39): a sitting that held nothing carries a random id.
+    const maria = sittingCookieLengths.filter((entry) => entry.firstName === "Maria").map((entry) => entry.length);
+    expect(maria).toHaveLength(3);
+    expect(new Set(maria).size).toBe(1);
 
     // …and only the inbox learns which case it was.
     const offers = (await db.select().from(emailOutbox)).filter((row) => row.messageType === "REGISTER_ANOTHER_PERSON");
