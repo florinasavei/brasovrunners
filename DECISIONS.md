@@ -20179,7 +20179,7 @@ Two further exceptions are recognised by shape: the ↑/↓ order arrows, whose 
 - DateRange: a series' dates.
 - Groups: the start list.
 - FormatListNumbered: steps.
-- InfoOutlined: the footer.
+- InfoOutlined: the footer's «Despre club», from `sm` only. On a phone the fold's arrow is its picture: §372's one row leaves 3.6 px beside "About the club" at 320 and 360, and the glyph with its gap cut the label at both (`footer.spec.ts`).
 - MenuBook / Checklist: the guide.
 - RemoveCircle: the bulk cancel.
 - ConfirmationNumber: the bib.

@@ -270,8 +270,12 @@ export default async function SiteFooter() {
             {/* One flex item for the words: the summary is a flex row (§325), and the tail as an
                 item of its own took the row's gap — "Despre club , contact și termeni" on every
                 desktop. The ellipsis is here, where the text is. */}
-            {/* What the fold holds, as every fold header says it (§521): the club's own facts. */}
-            <InfoOutlinedIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            {/* What the fold holds, as every fold header says it (§521): the club's own facts —
+                from `sm` only. A phone's row is §372's one line, with 3.6 pixels to spare beside
+                "About the club" at 320 and 360 (the table above); the glyph and the summary's gap
+                are 23.6 more, and cut the label at both. There the fold's own arrow is its
+                picture, and `display: none` takes the gap with it. */}
+            <InfoOutlinedIcon aria-hidden sx={{ ...FOLD_GLYPH_SX, display: { xs: "none", sm: "inline-block" } }} />
             <Box component="span" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
               {footer("about.summaryShort")}
               {/* The tail — ", contact and legal" — from `sm` up; a phone's line has no room for it. */}
