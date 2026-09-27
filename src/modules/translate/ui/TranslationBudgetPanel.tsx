@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateTranslationBudgetAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateTranslationBudgetAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -45,6 +45,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
 
   return (
     <Panel
+      id="translation-budget"
       title={t("tasks.translationBudget.title")}
       intro={t("tasks.translationBudget.intro")}
       introMore={t("tasks.translationBudget.introMore")}

@@ -7,7 +7,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
-import { updateContactRecipientsAction } from "@/app/[locale]/admin/emails/actions";
+import { updateContactRecipientsAction } from "@/app/[locale]/admin/settings/contact/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList, type ResolvedContactRecipients } from "@/modules/contact/domain/recipients";
 import type { ContactRecipientsState } from "@/modules/contact/recipients";

@@ -324,7 +324,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     }
 
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     await expect(page.locator("#main")).toContainText("Declarația semnată la o alergare de grup (PDF atașat)");
     await expect(page.locator("#main")).toContainText("Copia clubului: declarație la o alergare de grup (PDF atașat)");
   });

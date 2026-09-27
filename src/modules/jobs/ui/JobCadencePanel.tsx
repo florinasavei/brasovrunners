@@ -3,7 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
-import { updateJobCadenceAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateJobCadenceAction } from "@/app/[locale]/admin/settings/costs/actions";
 import type { Locale } from "@/i18n/routing";
 import type { JobCadenceState } from "@/modules/jobs/cadence";
 import type { JobOverview } from "@/modules/jobs/overview";
@@ -57,6 +57,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   return (
     <Panel
       level={level}
+      id="job-cadence"
       title={t("tasks.jobCadence.title")}
       intro={t("tasks.jobCadence.intro")}
       introMore={t("tasks.jobCadence.introMore")}

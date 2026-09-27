@@ -19,15 +19,10 @@ import {
   sampleValuesIn,
 } from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
-import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
-import { readContactRecipients } from "@/modules/contact/recipients";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
-import DeadlinesPanel from "@/modules/deadlines/ui/DeadlinesPanel";
-import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
-import { configuredGmailAddress, replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
+import { replyToHeader, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
-import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { copyFor } from "@/modules/notifications/domain/email-copy";
@@ -49,11 +44,12 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageClubSettings, canManageRegistrations, canReadRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { readAddressCap } from "@/modules/registrations/address-cap";
-import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { readOutboxDelivery } from "@/modules/notifications/outbox-delivery";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { countForm } from "@/i18n/count-form";
+import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { requireStaff } from "@/modules/staff-identity/session";
+import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import { env } from "@/shared/config/env";
 
 type Props = {
@@ -86,6 +82,10 @@ export const dynamic = "force-dynamic";
  * Every email the platform sends, rendered with sample data (`DECISIONS.md` §91; the owner:
  * "I must be able to see the email templates that get sent to them").
  *
+ * «Setări» → «Emailuri» since §NNN (it was `/admin/emails`, which answers 308 here): the plan, the
+ * roads, the queue, the club's copies, the forecast and the messages. «Termene» and «Contact» are
+ * their own tabs beside it — the numbers the when-lines below state, and where the club is written to.
+ *
  * The same `buildTemplateContent` and `renderContent` the outbox worker uses, so what is on
  * this page is what a participant gets, subject and all — there is no second copy of the
  * wording to drift. The sample is a made-up runner at a made-up event; the links point at
@@ -98,6 +98,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const staff = await requireStaff();
+  if (!canOpenSettingsTab(staff.role, "emails")) notFound();
   const { lang, saved, error, sent, message } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
   /*
@@ -140,13 +141,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, recipients, queue, notices, written, deadlines, forecast, addressCap, shownAddress, deliveryTiming, outboxDelivery] = await Promise.all([
+  const [plan, transport, volume, queue, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
     readEmailVolumeToday(db, now),
-    // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
-    readContactRecipients(db),
     maySeeQueue ? readOutboxQueue(db) : null,
     // Who receives a signed declaration and who is told about a confirmation (§244, §245):
     // participant data again, so the same gate as the queue.
@@ -164,16 +163,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       reader of this page sees it.
     */
     deadlinesRead.then(({ deadlines: inForce }) => forecastAutomaticEmails(db, { now, horizonDays: FORECAST_HORIZON_DAYS, deadlines: inForce })),
-    // How many registrations one address may carry at an event (§389), straight through like the deadlines.
+    // How many registrations one address may carry at an event (§389): the family link's preview states it.
     readAddressCap(db),
-    // «Adresa de contact afișată» (§442): what the site shows and every email's Reply-To.
+    // «Adresa de contact afișată» (§442): every email's Reply-To, which the previews' "reply to this email" line follows.
     readShownContactAddress(db),
-    // «Când pleacă emailurile» (§NNN), in «Termene»: on the scheduler's tick or right after the request.
-    readDeliveryTiming(db),
     /*
-      What waits in the queue and when it next leaves (§NNN), for the forecast's first line and the
-      setting's own words: the pinger's cadence, the Administrator's interval and the governor's floor
-      (§447) — the budget's reading is this instance's memo, the same one /admin/tasks reads.
+      What waits in the queue and when it next leaves (§NNN), for the forecast's first line: the
+      pinger's cadence, the Administrator's interval and the governor's floor (§447) — the budget's
+      reading is this instance's memo, the same one /admin/tasks reads. «Termene» says the same wait
+      beside its «Când pleacă emailurile» setting.
     */
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
   ]);
@@ -203,9 +201,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   };
   const whenShortOf = (type: EmailMessageType): string =>
     type === "EVENT_REMINDER" && reminderOff ? t("emails.reminderOff.whenShort") : t(`emails.whenShort.${type}`, whenValues);
-  const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
-  const emailsPath = getPathname({ locale, href: "/admin/emails" });
+  const emailsPath = getPathname({ locale, href: "/admin/settings/emails" });
   // The club's deadlines (§377), as the outbox gives every message: the numbers the words say.
   const timings = {
     confirmationHours: deadlines.deadlines.confirmationHours,
@@ -270,19 +267,16 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
 
   return (
     <Stack spacing={3}>
+      <SettingsSubNav locale={locale} role={staff.role} active="emails" />
+
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
         {saved === "emailTransport" && <Alert severity="success">{t("emails.transport.saved")}</Alert>}
-        {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
-        {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
         {saved === "outboxSent" && <Alert severity="success">{t("outbox.sentNow", { count: sent ?? "0" })}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
-        {saved === "deadlines" && <Alert severity="success">{t("emails.deadlines.saved")}</Alert>}
-        {saved === "addressCap" && <Alert severity="success">{t("emails.addressCap.saved")}</Alert>}
-        {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
         {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
       </Box>
 
@@ -316,7 +310,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         />
       )}
 
-      {/* The club's own copies (§244, §245), beside the contact recipients they mirror. */}
+      {/* The club's own copies (§244, §245); the contact recipients they mirror are on «Contact» (§NNN). */}
       {notices && (
         <ClubNoticesPanel
           locale={locale}
@@ -327,24 +321,6 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         />
       )}
 
-      <ContactRecipientsPanel
-        locale={locale}
-        recipients={recipients}
-        resolved={resolvedRecipients}
-        mayEdit={mayEditEmail}
-        openWhen={{ saved: saved === "contactRecipients" }}
-      />
-
-      {/* «Adresa de contact afișată» (§442), beside who receives the form: both are "where the club is written to". */}
-      <ShownAddressPanel
-        locale={locale}
-        state={shownAddress}
-        mailbox={env.EMAIL_REPLY_TO ?? null}
-        configuredGmail={configuredGmailAddress(env.CONTACT_SMTP_USER)}
-        resolved={resolveShownContactAddresses(shownAddress, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER)}
-        mayEdit={mayEditEmail}
-        openWhen={{ saved: saved === "shownContactAddress" }}
-      />
       {/*
         The newsletter (§445) has its own page in the menu since the owner's 2026-09-26 "un meniu
         suplimentar în backoffice cu «Newsletter»": one line here pointing at it, for the roles that
@@ -358,17 +334,6 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           </Typography>
         </Typography>
       )}
-
-      {/* "Termene" (§377): the numbers the messages below state, right above them, so a change is read back in the next card. */}
-      <DeadlinesPanel
-        locale={locale}
-        state={deadlines}
-        mayEdit={mayEditEmail}
-        openWhen={{ saved: saved === "deadlines" || saved === "addressCap" || saved === "deliveryTiming" }}
-        addressCap={addressCap}
-        deliveryTiming={deliveryTiming}
-        scheduledWait={outboxDelivery.scheduledWait}
-      />
 
       {/*
         What goes out on its own next (§383), directly above the cards each row links to. The

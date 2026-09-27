@@ -15,7 +15,7 @@ import { signIn } from "./support/featured-event";
 test.describe("BR-REQ-090-07 the database's limits card without a key", () => {
   test("names the missing variables, offers no form, and leaves the to-do row open", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     // Scoped to `#main` for the streamed-duplicate reason `tasks-cost.spec.ts` explains (§93).
     const main = page.locator("#main");
     const card = main.getByTestId("neon-limits");

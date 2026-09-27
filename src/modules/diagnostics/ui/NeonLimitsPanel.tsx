@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { updateNeonLimitsAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateNeonLimitsAction } from "@/app/[locale]/admin/settings/costs/actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -134,6 +134,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
     return (
       <Panel
         level={level}
+        id="neon-limits"
         title={t("tasks.neonLimits.title")}
         intro={t("tasks.neonLimits.intro")}
         introMore={t("tasks.neonLimits.introMore")}
@@ -217,6 +218,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   return (
     <Panel
       level={level}
+      id="neon-limits"
       title={t("tasks.neonLimits.title")}
       intro={t("tasks.neonLimits.intro")}
       introMore={t("tasks.neonLimits.introMore")}

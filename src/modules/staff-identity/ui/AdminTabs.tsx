@@ -12,7 +12,6 @@ import ArticleIcon from "@mui/icons-material/Article";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
-import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GavelIcon from "@mui/icons-material/Gavel";
 import GroupIcon from "@mui/icons-material/Group";
 import ListAltIcon from "@mui/icons-material/ListAlt";
@@ -20,6 +19,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import SettingsIcon from "@mui/icons-material/Settings";
+import TuneIcon from "@mui/icons-material/Tune";
 
 export type AdminTab = {
   href: string;
@@ -51,8 +51,9 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   registrations: ListAltIcon,
   tasks: ChecklistIcon,
   legal: GavelIcon,
-  emails: ForwardToInboxIcon,
-  // The club's news to the people who asked for it (§445): a paper, not an envelope — «Emailuri» is the envelope.
+  // «Setări» (§NNN): the sliders, not a gear — the gear is «Configurație» (/devs), the system's own page.
+  settings: TuneIcon,
+  // The club's news to the people who asked for it (§445): a paper, not an envelope.
   newsletter: NewspaperIcon,
   staff: GroupIcon,
   devs: SettingsIcon,

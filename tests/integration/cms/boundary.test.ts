@@ -180,7 +180,6 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin",
       "/admin/checkin",
       "/admin/checkin/[code]",
-      "/admin/emails",
       "/admin/events/[id]",
       "/admin/events/[id]/bibs",
       // The hard delete's confirmation screen (BR-REQ-037-06): written here by hand, like
@@ -209,8 +208,6 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
-      // «Aspect» (§488): the site's background tint, one setting, written here by hand.
-      "/admin/pages/appearance",
       "/admin/pages/new",
       // «Echipa»'s cards (§459): one screen, written here by hand.
       "/admin/pages/team",
@@ -219,6 +216,15 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/registrations/new",
       // Everything held about one person (§322), for an access request: by hand, like the rest.
       "/admin/registrations/person",
+      // «Setări» (§NNN): the club's settings as one row of tabs, each written here by hand — the
+      // email page and «Aspect» (§488) moved in, and answer 308 from their old addresses.
+      "/admin/settings",
+      "/admin/settings/appearance",
+      "/admin/settings/contact",
+      "/admin/settings/costs",
+      "/admin/settings/deadlines",
+      "/admin/settings/emails",
+      "/admin/settings/platform",
       "/admin/staff",
       "/admin/tasks",
       // The club's month, its own page since §251.

@@ -334,21 +334,21 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       The Organizer sees the same content as the copywriter and changes none of it — "organizatorul îi
       zice administratorului să modifice X, Y lucru".
     */
-    // "emails" joins them in §253: the messages and the words in them are the Redactor's work
-    // (§247), and the panels behind that page ask their own questions — the queue and the
-    // club's copies are read only for a role that may see a participant's address (§243, §244).
+    // "emails" joined them in §253 — the messages and the words in them are the Redactor's work
+    // (§247) — and is «Setări» since §NNN, whose other tabs gate themselves (`settings-map.test.ts`).
     // "tasks" joins them in §438: «Sarcini» → «De făcut», the club's own checklist, is read by
     // every role from the copywriter up — only the Organizer and the Administrators write it,
     // and the panels read from the system stay the Administrator's (`task-panels.test.ts`).
+    // In the bar's order since §NNN: by how often the club opens them.
     expect(visibleAdminSections("COPYWRITER")).toEqual([
       "events",
       "checkin",
-      "guide",
-      "pages",
       "gallery",
+      "pages",
+      "settings",
       "tasks",
       "legal",
-      "emails",
+      "guide",
     ]);
     // The Organizer gained the registrations in §289 — the owner: "ca si organizator ar trebui
     // sa vad cine s-a inscris!" — and gained no verb on them. What that section offers this role
@@ -358,15 +358,15 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // participants (§364) — the page's own entry since the owner's 2026-09-26 "un meniu suplimentar".
     expect(visibleAdminSections("MODERATOR")).toEqual([
       "events",
-      "checkin",
-      "guide",
-      "pages",
-      "gallery",
       "registrations",
+      "checkin",
+      "gallery",
+      "pages",
+      "newsletter",
+      "settings",
       "tasks",
       "legal",
-      "emails",
-      "newsletter",
+      "guide",
     ]);
   });
 
@@ -391,16 +391,16 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // Superadministrator — is refused per row and in the service, not by hiding the section.
     expect(visibleAdminSections("ADMIN")).toEqual([
       "events",
-      "checkin",
-      "guide",
-      "pages",
-      "gallery",
       "registrations",
-      "tasks",
-      "legal",
-      "emails",
+      "checkin",
+      "gallery",
+      "pages",
       "newsletter",
+      "settings",
+      "tasks",
       "staff",
+      "legal",
+      "guide",
       "devs",
     ]);
   });
@@ -408,16 +408,16 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives SUPERADMIN every section — the case that was broken", () => {
     expect(visibleAdminSections("SUPERADMIN")).toEqual([
       "events",
-      "checkin",
-      "guide",
-      "pages",
-      "gallery",
       "registrations",
-      "tasks",
-      "legal",
-      "emails",
+      "checkin",
+      "gallery",
+      "pages",
       "newsletter",
+      "settings",
+      "tasks",
       "staff",
+      "legal",
+      "guide",
       "devs",
     ]);
   });
@@ -508,6 +508,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canManagePlatform: /*     */ [false, false, false, false, false, true],
     canManageClubSettings: /* */ [false, false, false, false, true, true],
     canReadContent: /*        */ [false, true, true, true, true, true],
+    // «Setări» (§NNN): every role that reads the club's content — the volunteer has the desk alone.
+    canOpenSettings: /*       */ [false, true, true, true, true, true],
   };
   // Exported functions of one argument that are not about a role.
   const NOT_A_ROLE_CAPABILITY = new Set(["isLiveContent", "assignableRoles", "visibleAdminSections", "atLeast"]);
@@ -574,25 +576,25 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
   };
 
   it("«Prin ce pleacă emailurile» (§443) is a club setting: the Administrator's", () => {
-    expect(action("src/app/[locale]/admin/emails/actions.ts", "updateEmailTransportAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(action("src/app/[locale]/admin/settings/emails/actions.ts", "updateEmailTransportAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/notifications/email-transport.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
   });
 
   it("«Adresa de contact afișată» (§442) is a club setting: the Administrator's", () => {
-    expect(action("src/app/[locale]/admin/emails/actions.ts", "updateShownContactAddressAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(action("src/app/[locale]/admin/settings/contact/actions.ts", "updateShownContactAddressAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/contact/shown-address.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
   });
 
   it("«Fundalul site-ului» (§488) is a club setting: the Administrator's, form included", () => {
-    expect(action("src/app/[locale]/admin/pages/appearance/actions.ts", "updateSiteTintAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(action("src/app/[locale]/admin/settings/appearance/actions.ts", "updateSiteTintAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/appearance/site-tint.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
-    expect(source("src/app/[locale]/admin/pages/appearance/page.tsx")).toMatch(/<SiteTintPanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);
+    expect(source("src/app/[locale]/admin/settings/appearance/page.tsx")).toMatch(/<SiteTintPanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);
   });
 
   it("the month's budget thresholds (§447) are a platform setting: the Superadministrator's, form included", () => {
-    expect(action("src/app/[locale]/admin/tasks/actions.ts", "updateBudgetThresholdsAction")).toContain("requireStaffCapability(canManagePlatform)");
+    expect(action("src/app/[locale]/admin/settings/costs/actions.ts", "updateBudgetThresholdsAction")).toContain("requireStaffCapability(canManagePlatform)");
     expect(source("src/modules/diagnostics/budget-thresholds.ts")).toMatch(/if \(!canManagePlatform\(actor\.role\)\)/);
-    expect(source("src/app/[locale]/admin/tasks/page.tsx")).toMatch(/<NeonBudgetPanel [^>]*mayEdit=\{canManagePlatform\(actor\.role\)\}/);
+    expect(source("src/app/[locale]/admin/settings/costs/page.tsx")).toMatch(/<NeonBudgetPanel [^>]*mayEdit=\{canManagePlatform\(actor\.role\)\}/);
     expect([canManagePlatform("ADMIN"), canManagePlatform("SUPERADMIN")]).toEqual([false, true]);
   });
 

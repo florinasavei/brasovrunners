@@ -84,7 +84,7 @@ test.describe("§383 the upcoming automatic emails on /admin/emails", () => {
 
   test("lists the event's reminder, links to its editor and to the message's preview", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     const panel = page.locator("#main").getByTestId("upcoming-emails");
     // Closed by default (§336), directly above the messages it links to.
     await expect(panel).not.toHaveAttribute("open", "");
@@ -113,7 +113,7 @@ test.describe("§383 the upcoming automatic emails on /admin/emails", () => {
 
   test("says the same in English", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/en/admin/emails");
+    await page.goto("/en/admin/settings/emails");
     const panel = page.locator("#main").getByTestId("upcoming-emails");
     await openFold(panel);
     const row = panel.getByTestId("upcoming-email").filter({ hasText: `Automatic emails check ${suffix}` }).and(page.locator('[data-type="EVENT_REMINDER"]'));

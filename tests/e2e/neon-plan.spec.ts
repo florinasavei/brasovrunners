@@ -13,12 +13,11 @@ import { signIn } from "./support/featured-event";
  * a unit test cannot see — that the select posts, that the other screen reads the row, and that a
  * reader who may not open the costs panel is told where the plan is set rather than shown it.
  *
- * Since `DECISIONS.md` §397, Tehnic may open `/admin/tasks` for its own "Aplicația" tab — a
- * typed `?panel=costs` address now lands back on that tab rather than a missing route, the same
- * "an address nobody offered reads as nothing asked" the owner/kind filters already use
- * (`modules/diagnostics/domain/task-panels.ts`).
+ * The costs are «Setări» → «Costuri» since §NNN (they were `/admin/tasks?panel=costs`, which now
+ * answers 308 there), and a Tehnic asking for that tab gets a real 404: «Setări» has no loading
+ * boundary to flush a 200 first.
  */
-test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
+test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /devs", () => {
   // One `platform_settings` row, two projects against one database: desktop only, as the
   // Mailgun plan's spec does, or the two runs overwrite each other's plan mid-assertion.
   test.beforeEach(() => {
@@ -31,7 +30,7 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     // workers on one server it passed the default 30 s budget, so it declares itself slow.
     test.slow();
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/tasks?panel=costs");
+    await page.goto("/ro/admin/settings/costs");
     const main = page.locator("#main");
     const panel = main.getByTestId("neon-plan");
 
@@ -46,7 +45,7 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await panel.getByRole("button", { name: "Salvează planul Neon" }).click();
     await confirmDialog(page, "Schimbi planul Neon?");
 
-    await expect(page).toHaveURL(/panel=costs/);
+    await expect(page).toHaveURL(/\/admin\/settings\/costs/);
     await expect(main.getByText("Planul Neon a fost salvat", { exact: false })).toBeVisible();
     await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Launch/);
     await expect(panel.getByText(/Notă: Launch din 22 septembrie/)).toBeVisible();
@@ -63,15 +62,16 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await signIn(page, "Dev Technical");
     await page.goto("/ro/devs");
     const block = page.locator("#main").getByTestId("neon-block");
-    await expect(block.getByTestId("neon-plan-sentence")).toHaveText(/Planul setat: Launch\. Îl setează Administratorul, pe Sarcini → Costuri\./);
+    await expect(block.getByTestId("neon-plan-sentence")).toHaveText(/Planul setat: Launch\. Îl setează Administratorul, pe Setări → Costuri\./);
     await expect(block.getByRole("link", { name: /Schimbă planul/ })).toHaveCount(0);
     await expect(block.getByText(/Planul Launch e plătit pe consum: fără plafon de ore și fără oprire/)).toBeVisible();
     await expect(block.getByText(/Spațiu ocupat: [\d,.]+ MB — [\d,.]+ \$\/GB-lună/)).toBeVisible();
     await expect(block.getByText(/din 512 MB/)).toHaveCount(0);
     await expect(block.getByText(/din 100 ore-CU/)).toHaveCount(0);
-    await page.goto("/ro/admin/tasks?panel=costs");
-    await expect(page).toHaveURL(/panel=app/);
-    await expect(page.locator("#main").getByRole("heading", { name: "The work queue" })).toBeVisible();
+    // Where the limits are set, in words, never a link into a 404 (§NNN).
+    await expect(block.getByTestId("neon-limits-sentence")).toHaveText("Limitele bazei de date le setează Administratorul, pe Setări → Costuri.");
+    await expect(block.getByTestId("neon-limits-sentence").getByRole("link")).toHaveCount(0);
+    expect((await page.goto("/ro/admin/settings/costs"))?.status()).toBe(404);
 
     // And back to Free, as the Administrator, so the next test on this database starts from the
     // default; the Administrator's `/devs` carries the link into the panel that sets it.
@@ -80,8 +80,10 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await page.goto("/ro/devs");
     const adminBlock = page.locator("#main").getByTestId("neon-block");
     await expect(adminBlock.getByTestId("neon-plan-sentence")).toContainText("Planul setat: Launch.");
+    // The limits' link is there whatever the plan's source — the owner's «unde sunt limitele Neon?» (§NNN).
+    await expect(adminBlock.getByRole("link", { name: /Limitele bazei de date/ })).toHaveAttribute("href", /\/admin\/settings\/costs#neon-limits$/);
     await adminBlock.getByRole("link", { name: /Schimbă planul/ }).click();
-    await expect(page).toHaveURL(/\/admin\/tasks\?panel=costs/);
+    await expect(page).toHaveURL(/\/admin\/settings\/costs#neon-plan$/);
     const again = page.locator("#main").getByTestId("neon-plan");
     await again.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("FREE");
     await again.getByLabel("Notă (de ce, până când)").fill("");

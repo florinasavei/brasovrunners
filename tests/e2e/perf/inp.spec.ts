@@ -507,7 +507,7 @@ test("the email wording editor: Salvează textul", async ({ page }) => {
   await signIn(page, "Dev Administrator");
   const hold = await holdServerActions(page);
   await record("emails: Salvează textul", async () => {
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/emails");
     await hydrated(page);
     const editor = page.locator('[data-testid^="email-copy-"]').first();
     await openAround(editor);

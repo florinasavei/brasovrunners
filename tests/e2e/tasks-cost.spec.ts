@@ -10,12 +10,11 @@ import { signIn } from "./support/featured-event";
  * is a vendor quotation like `$0.106/CU-hour` sitting in a grid cell, and §18.5 forbids sideways
  * scrolling at any width.
  */
-test.describe("BR-REQ-090-05 the cost half of the task board", () => {
+test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§NNN)", () => {
   test("tells an Administrator what the club pays, with no sideways scroll", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    // The cost half is its own panel since §265 — the checklist, the anti-bot switch and the
-    // prices were one scroll of seven hundred lines.
-    await page.goto("/ro/admin/tasks?panel=costs");
+    // The cost half was its own panel of «Sarcini» since §265, and is «Setări» → «Costuri» since §NNN.
+    await page.goto("/ro/admin/settings/costs");
 
     /**
      * Scoped to the page's own `<main>`, and not for tidiness. This route streams behind
@@ -53,26 +52,31 @@ test.describe("BR-REQ-090-05 the cost half of the task board", () => {
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
 
-  test("keeps the costs from an Organizer, who opens only the club's checklist here", async ({ page }) => {
-    // BR-REQ-060-01. What a club is close to exceeding is not an Organizer's business. Since
-    // §438 an Organizer opens `/admin/tasks` for «De făcut», the club's own checklist, and
-    // nothing else on it: the costs panel, asked for by name, lands back on «De făcut» with no
-    // price on the page — the same "an address nobody offered reads as nothing asked" as §397.
+  test("keeps the costs from an Organizer: no tab offered, and a real 404 for the typed address", async ({ page }) => {
+    // BR-REQ-060-01. What a club is close to exceeding is not an Organizer's business. The
+    // Organizer opens «Setări» for the club's content tabs and is offered no «Costuri»; the
+    // address itself, typed or reached through the old `?panel=costs` (308), answers 404 —
+    // decided before anything streams, since «Setări» has no loading boundary (§NNN).
     await signIn(page, "Dev Moderator");
-    const response = await page.goto("/ro/admin/tasks?panel=costs");
-    expect(response?.status()).toBe(200);
-    await expect(page).toHaveURL(/panel=todo/);
     const main = page.locator("#main");
-    await expect(main.getByTestId("club-todo-counts")).toBeVisible();
-    await expect(main.getByRole("heading", { name: "Cât costă" })).toHaveCount(0);
-    const nav = main.getByRole("navigation", { name: "Ce mai este de făcut" });
+    await page.goto("/ro/admin/settings");
+    const nav = main.getByRole("navigation", { name: "Setări" });
+    await expect(nav.getByRole("link", { name: "Emailuri" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Costuri" })).toHaveCount(0);
-    await expect(nav.getByRole("link", { name: "Club", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Platformă" })).toHaveCount(0);
+
+    expect((await page.goto("/ro/admin/settings/costs"))?.status()).toBe(404);
+    expect((await page.goto("/ro/admin/tasks?panel=costs"))?.status()).toBe(404);
+    await expect(page).toHaveURL(/\/ro\/admin\/settings\/costs$/);
+    await expect(main.getByRole("heading", { name: "Cât costă" })).toHaveCount(0);
   });
 
   test("still refuses a volunteer, with the answer a missing route gives", async ({ page }) => {
     await signIn(page, "Dev Contributor");
     const response = await page.goto("/ro/admin/tasks");
     expect(response?.status()).toBe(404);
+    // «Setări» too: the volunteer's backoffice is the desk and the guide (§103).
+    expect((await page.goto("/ro/admin/settings"))?.status()).toBe(404);
+    expect((await page.goto("/ro/admin/settings/emails"))?.status()).toBe(404);
   });
 });

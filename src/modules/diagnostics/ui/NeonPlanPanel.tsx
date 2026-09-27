@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { updateNeonPlanAction } from "@/app/[locale]/admin/tasks/actions";
+import { updateNeonPlanAction } from "@/app/[locale]/admin/settings/costs/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { NEON_PLAN_IDS, NEON_PLANS, NEON_PLANS_CHECKED_ON, type NeonBlockModel } from "@/modules/diagnostics/domain/neon-plan";
@@ -61,7 +61,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
   return (
-    <Panel level={level} title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
+    <Panel level={level} id="neon-plan" title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
       {/* The plan in force, and what this month looks like on it — the figures a wrong answer would expose. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-plan-in-force">
         {block.plan === "LAUNCH"

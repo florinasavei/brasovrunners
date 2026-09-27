@@ -24,7 +24,7 @@ vi.mock("next-intl/server", async () => {
     getLocale: async () => "ro",
   };
 });
-vi.mock("@/app/[locale]/admin/tasks/actions", () => ({ updateJobCadenceAction: async () => null }));
+vi.mock("@/app/[locale]/admin/settings/costs/actions", () => ({ updateJobCadenceAction: async () => null }));
 
 const { default: JobCadencePanel } = await import("@/modules/jobs/ui/JobCadencePanel");
 

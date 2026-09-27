@@ -229,7 +229,7 @@ test.describe("§389 the limit per address, set and stated", () => {
 
   test("an Administrator changes the limit, the guide says the new number, and it goes back to four", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/deadlines");
     const main = page.locator("#main");
     const panel = main.getByTestId("deadlines");
     await openFold(panel);
@@ -247,7 +247,8 @@ test.describe("§389 the limit per address, set and stated", () => {
     await confirmDialog(page, "Salvezi limita pe adresă?");
     await expect(main.getByText("Maximul de înscrieri pe o adresă a fost salvat", { exact: false })).toBeVisible();
     await expect(page.locator("#main").getByTestId("address-cap").locator('input[name="registrationsPerAddress"]')).toHaveValue("3");
-    // The message that states it, in its when-line.
+    // The message that states it, in its when-line — one tab over, on «Emailuri» (§NNN).
+    await page.goto("/ro/admin/settings/emails");
     await expect(main.locator("#email-REGISTER_ANOTHER_PERSON > summary")).toContainText("când formularul e trimis din nou cu altă persoană");
 
     await page.goto("/ro/admin/guide");
@@ -260,7 +261,7 @@ test.describe("§389 the limit per address, set and stated", () => {
     await expect(section).toContainText("câte un cod QR pentru fiecare persoană confirmată");
 
     // Back to the default, through the panel.
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/deadlines");
     const again = page.locator("#main").getByTestId("deadlines");
     await openFold(again);
     await again.getByTestId("address-cap").locator('input[name="registrationsPerAddress"]').fill("4");
@@ -271,7 +272,7 @@ test.describe("§389 the limit per address, set and stated", () => {
 
   test("an Organizer reads the limit and is offered no form", async ({ page }) => {
     await signIn(page, "Dev Moderator");
-    await page.goto("/ro/admin/emails");
+    await page.goto("/ro/admin/settings/deadlines");
     const panel = page.locator("#main").getByTestId("deadlines");
     await openFold(panel);
     await expect(panel.getByTestId("address-cap-value")).toHaveText("Pe o adresă se pot înscrie cel mult 4 persoane la un eveniment.");
