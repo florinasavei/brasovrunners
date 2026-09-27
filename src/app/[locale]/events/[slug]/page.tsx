@@ -160,25 +160,19 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
   if (!event) notFound();
 
-  /*
-    Three reads that need only the event, asked together rather than in turn (§NNN):
-    - the page's words;
-    - who is signed in. A staff member who may edit the words gets the way into the editor from
-      here (§135; the owner: "when I am signed in … I should be able to edit events from the event
-      page"). The page is rendered per request anyway, so reading the session costs it nothing; the
-      editor asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in;
-    - the forecast for the start (§402): read on the server, from Open-Meteo through the data cache,
-      only within seven days of it; null — and no row — otherwise or when the service did not answer.
-  */
-  const [t, staffUser, weather] = await Promise.all([
-    getTranslations("Event"),
-    env.STAFF_AUTH_MODE === "disabled" ? null : readStaffUserOrNone(),
-    forecastForEvent(event, now),
-  ]);
+  const t = await getTranslations("Event");
   // Each kind of link's own word in this language (§332), for the route section and "Linkuri și fișiere" alike.
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   const interestOutcome = parseInterestOutcome(interest);
+  // A staff member who may edit the words gets the way into the editor from here (§135; the
+  // owner: "when I am signed in … I should be able to edit events from the event page"). The
+  // page is rendered per request anyway, so reading the session costs it nothing; the editor
+  // asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in.
+  const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
+  // The forecast for the start (§402): read on the server, from Open-Meteo through the data cache,
+  // only within seven days of it; null — and no row — otherwise or when the service did not answer.
+  const weather = await forecastForEvent(event, now);
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <JsonLd

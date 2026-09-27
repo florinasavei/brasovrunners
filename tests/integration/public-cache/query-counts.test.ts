@@ -222,6 +222,42 @@ describe("§NNN one request asks for a read once", () => {
     forgetLastGood();
   });
 
+  /*
+    Per page, one simulated request: every read the page's own body and metadata make, asked
+    together as the render asks them, sharing `request.reads`. A page that starts making one read
+    more, or stops sharing one through the memo, changes its total here. The header's four and the
+    footer's one are the same on every page and are counted above, read by read.
+  */
+  it("the listing, with a race on it, costs eight statements in one request", async () => {
+    const race = await calendar(2);
+    expect(
+      await cost(() =>
+        Promise.all([
+          reads.cachedUpcomingEvents("ro", NOW),
+          reads.cachedPastEvents("ro", NOW, 60),
+          reads.cachedDeadlines(),
+          reads.cachedPublicAvailability(race.id, NOW),
+        ]),
+      ),
+    ).toBe(8);
+  });
+
+  it("an event page with its metadata costs two statements in one request", async () => {
+    await calendar(2);
+    const tura = await reads.cachedPublishedEventBySlug("ro", "tura-1");
+    if (!tura) throw new Error("the sample run is missing");
+    expect(
+      await cost(() =>
+        Promise.all([
+          // generateMetadata: the event, then its other language's address.
+          reads.cachedPublishedEventBySlug("ro", "tura-1").then(() => reads.cachedPublishedTranslations(tura.id)),
+          // The page: the same event, answered by the request's memo.
+          reads.cachedPublishedEventBySlug("ro", "tura-1"),
+        ]),
+      ),
+    ).toBe(2);
+  });
+
   it("the listing's two sections share the endings that key them: three statements, not four", async () => {
     await calendar(2);
     expect(await cost(() => Promise.all([reads.cachedUpcomingEvents("ro", NOW), reads.cachedPastEvents("ro", NOW, 60)]))).toBe(3);
