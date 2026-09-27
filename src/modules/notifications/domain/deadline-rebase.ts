@@ -34,6 +34,8 @@ import { capHoldExpiry } from "@/modules/registrations/domain/hold-deadlines";
  *
  * The rules, each with its reason:
  *
+ * - **Once, on the message that started it** (`STARTS_DEADLINE`): the type alone is not enough —
+ *   the same four types are resent, reminded and copied, and each of those must move nothing.
  * - **Later, never earlier**, and **by the wait alone**: the new deadline is the stored one plus
  *   `sentAt − queuedAt` — the same length the club's setting gave at the time (§377: a later change
  *   of «Termene» never moves a deadline already given), counted from the send instead.
@@ -60,6 +62,30 @@ export const DEADLINE_KIND_BY_MESSAGE: Partial<Record<EmailMessageType, Deadline
   WAITLIST_SPOT_OFFER: "offer",
   REGISTER_ANOTHER_PERSON: "familyLink",
 };
+
+/**
+ * The payload key of the one message that **starts** its deadline (§NNN): the email the allocator,
+ * the offer or the form queued in the same transaction that wrote the deadline — the first send,
+ * and only it. A resend (the backoffice's «Trimite din nou», §80; the runner's own «trimite-mi
+ * linkul din nou», §39; the form sent again), a reminder (§104, §160) and the club's copies (§320)
+ * carry no flag, so they move nothing: re-basing on the type alone pushed a hold or an offer on
+ * with every resend.
+ *
+ * The same flag tells the lapsed-hold sweep that a declaration hold's clock has not started yet
+ * (`registrations/repository.ts#awaitingItsFirstEmail`): while this message is still in the
+ * queue, the hold is not lapsed, whatever its stored deadline says.
+ */
+export const STARTS_DEADLINE = "startsDeadline";
+
+/** The payload of a message that starts its deadline, with whatever else it carries. */
+export function startingDeadline(payload: Record<string, unknown> = {}): Record<string, unknown> {
+  return { ...payload, [STARTS_DEADLINE]: true };
+}
+
+/** Whether a queued row is the message that starts its deadline. */
+export function startsItsDeadline(payload: unknown): boolean {
+  return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[STARTS_DEADLINE] === true;
+}
 
 /** A message that left within this long of being queued moves no deadline. */
 export const REBASE_MIN_WAIT_MS = 60_000;

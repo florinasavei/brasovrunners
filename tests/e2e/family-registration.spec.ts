@@ -121,7 +121,8 @@ test.describe("§389 §446 a family on one address", () => {
     await publicSubmission(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, email);
     const [ana] = await registrationsByEmail(email);
     expect(await queuedPayloads(ana.id, "REGISTER_ANOTHER_PERSON")).toEqual([
-      { atCap: false, registrationsPerAddress: expect.any(Number), familyEntryId: expect.any(String) },
+      // The entry's link starts with this message, so it carries the mark (§NNN).
+      { atCap: false, registrationsPerAddress: expect.any(Number), familyEntryId: expect.any(String), startsDeadline: true },
     ]);
 
     // The captured email: who the address holds, the person the form named, one button.
@@ -195,7 +196,8 @@ test.describe("§389 §446 a family on one address", () => {
     const rows = await registrationsByEmail(email);
     expect(rows).toHaveLength(1);
     expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([]);
-    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{}, { anotherPersonHint: true }]);
+    // The first starts the link (§NNN); the re-send for the slip starts nothing.
+    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ startsDeadline: true }, { anotherPersonHint: true }]);
 
     // The re-sent email, as captured: the sentence, in both halves.
     const resent = await capturedEmail(page, email, "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.");

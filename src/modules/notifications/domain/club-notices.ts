@@ -1,5 +1,6 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
+import { STARTS_DEADLINE } from "./deadline-rebase";
 import { z } from "zod";
 
 /**
@@ -323,10 +324,14 @@ export function isClubCopy(payload: unknown): boolean {
 /**
  * The club copy's payload: what the participant's row asked the template for — "you were already
  * registered", the thank-you's link, a number given by hand — plus the flag. Never a `cc` or a
- * `bcc` of its own, so a copy cannot fan out further than the one address its row is for.
+ * `bcc` of its own, so a copy cannot fan out further than the one address its row is for — and
+ * never the mark of the message that starts a deadline (§NNN, `STARTS_DEADLINE`): a copy starts
+ * nothing, and a copy still queued must not keep a runner's hold from lapsing.
  */
 export function clubCopyPayload(payload: Record<string, unknown>): Record<string, unknown> {
-  const kept = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== "cc" && key !== "bcc"));
+  const kept = Object.fromEntries(
+    Object.entries(payload).filter(([key]) => key !== "cc" && key !== "bcc" && key !== STARTS_DEADLINE),
+  );
   return { ...kept, [CLUB_COPY_FLAG]: true };
 }
 

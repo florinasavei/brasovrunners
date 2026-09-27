@@ -11,6 +11,7 @@ import { setListConsent } from "@/modules/registrations/list-consent";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { confirmEmail, type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * §333 — the writes that change a public page expire the public cache they are read from.
@@ -254,6 +255,7 @@ describe("§333 writes expire the public cache", () => {
       const first = await registerAndConfirm(event, "first@example.ro");
       const second = await registerAndConfirm(event, "second@example.ro");
       expect(second.status).toBe("WAITLISTED");
+      await sendHoldEmails(db, NOW);
       vi.mocked(revalidateTag).mockClear();
 
       // Nothing has lapsed yet: the job visits no event, changes no place, tells the cache nothing.

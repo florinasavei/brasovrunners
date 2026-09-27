@@ -2225,7 +2225,7 @@
         },
         "scheduler": {
           "title": "Monitoarele de producție pe cron-job.org",
-          "todo": "Monitoare pentru cele două sarcini programate (email-outbox și registration-maintenance), cu JOB_SECRET-ul mediului — SETUP.md §26: la 15 minute ziua (07–23, ora României) și o dată pe oră noaptea. Emailurile pleacă oricum imediat după fiecare înscriere; monitoarele expiră locurile rezervate și retrimit ce a eșuat. Lipsește sau întârzie",
+          "todo": "Monitoare pentru cele două sarcini programate (email-outbox și registration-maintenance), cu JOB_SECRET-ul mediului — SETUP.md §26: la 15 minute ziua (07–23, ora României) și o dată pe oră noaptea. Cu «Termene» → «Când pleacă emailurile» pe trecerea programată (implicit), monitoarele sunt cele care trimit emailurile: fără ele, nicio confirmare și niciun link nu pleacă. Tot ele expiră locurile rezervate și retrimit ce a eșuat. Lipsește sau întârzie",
           "done": "Ambele sarcini rulează la timp.",
           "how": [
             "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
@@ -2559,7 +2559,7 @@
         },
         "scheduler": {
           "name": "cron-job.org + GitHub (sarcinile automate)",
-          "freeGives": "Gratuit amândouă: cron-job.org apelează cele două sarcini la 15 minute (emailurile pleacă oricum imediat după fiecare înscriere), iar GitHub Actions este plasa de siguranță când primul nu răspunde.",
+          "freeGives": "Gratuit amândouă: cron-job.org apelează cele două sarcini la 15 minute — cu «Când pleacă emailurile» pe trecerea programată (implicit), el trimite emailurile —, iar GitHub Actions este plasa de siguranță când primul nu răspunde.",
           "ceiling": "Aici limita nu sunt banii, ci ritmul: fără monitoarele de pe cron-job.org, sarcinile pornesc doar din plasa de siguranță, cam la două ore.",
           "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui. Nu se strică nimic și nimeni nu-și pierde locul — dar confirmarea vine târziu, iar în ziua înscrierilor asta pare un site stricat.",
           "closeYes": "O sarcină automată nu a mai rulat de prea mult timp.",
@@ -2644,7 +2644,7 @@
         "saved": "Intervalul a fost salvat. Fiecare lucrare se uită din nou în bază la următorul ping și se planifică după el.",
         "emails": {
           "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
-          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii («Termene» → «Când pleacă emailurile» e pe trecerea programată), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
+          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii («Termene» → «Când pleacă emailurile» e pe trecerea programată): monitoarele sunt cele care le trimit, iar un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
         }
       },
       "budgetThresholds": {
@@ -3333,7 +3333,7 @@
     },
     "emails": {
       "title": "Emailurile trimise participanților",
-      "intro": "Fiecare mesaj pe care platforma îl trimite, exact cum ajunge la participant, cu date de exemplu. Linkurile din exemple nu duc nicăieri.",
+      "intro": "Fiecare mesaj pe care platforma îl trimite, exact cum ajunge la participant, cu date de exemplu. Linkurile din exemple nu duc nicăieri. Fiecare pleacă prin coada de emailuri: la trecerea programată a platformei (implicit) sau imediat după cerere, după «Termene» → «Când pleacă emailurile». Rândul «când» al fiecăruia spune ce îl pune în coadă.",
       "link": "Vezi emailurile pe care le primesc participanții →",
       "subject": "Subiect",
       "aside": "{count} mesaje · {language}",
@@ -3372,11 +3372,11 @@
         "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar"
       },
       "when": {
-        "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil {confirmation}.",
-        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut {hold}. Termenul contează doar dacă așteaptă cineva: altfel locul rămâne al persoanei până la start, iar declarația se semnează online sau pe hârtie la masă.",
+        "VERIFY_REGISTRATION_EMAIL": "După trimiterea formularului. Linkul e valabil {confirmation}, de când pleacă emailul.",
+        "COMPLETE_DECLARATION": "După confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut {hold}, de când pleacă emailul. Termenul contează doar dacă așteaptă cineva: altfel locul rămâne al persoanei până la start, iar declarația se semnează online sau pe hârtie la masă.",
         "WAITLIST_JOINED": "După confirmarea adresei, când nu mai sunt locuri.",
         "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. Are {offer} să semneze.",
-        "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
+        "REGISTRATION_CONFIRMED": "După semnarea declarației — sau la masă, pe hârtie.",
         "REGISTRATION_CANCELLED": "Când participantul se retrage sau un organizator anulează înscrierea.",
         "WAITLIST_OFFER_EXPIRED": "Nu se mai trimite: când cele {offer} ale unui loc oferit trec fără semnătură, locul trece la următorul de pe listă fără niciun email către cel care nu a semnat.",
         "REGISTRATION_MANAGE_LINK": "Nu se mai trimite: „Retrimite linkul” trimite confirmarea întreagă (cu linkul de gestionare, codul QR și numărul), iar „Înscrierile mele” are mesajul lui.",
@@ -3393,10 +3393,10 @@
         "EVENT_UPDATE_NOTICE": "Doar când un organizator bifează „Anunță participanții despre schimbare” la salvarea evenimentului, și doar dacă s-a schimbat locul, data și ora sau programul, ori dacă a scris un mesaj. Câte un email fiecărei înscrieri active (în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată), în limba ei; locul și ora sunt cele de la trimitere. Fără token: butonul duce la pagina evenimentului. Nebifat, nu pleacă nimic.",
         "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune.",
         "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului.",
-        "GROUP_RUN_DECLARATION_SIGNED": "Imediat după ce cineva semnează declarația opțională pe pagina unei alergări de grup, către adresa pe care a dat-o. Cu declarația în PDF, întreagă; fără token și fără link de acțiune — nu există o înscriere de gestionat.",
+        "GROUP_RUN_DECLARATION_SIGNED": "După ce cineva semnează declarația opțională pe pagina unei alergări de grup, către adresa pe care a dat-o. Cu declarația în PDF, întreagă; fără token și fără link de acțiune — nu există o înscriere de gestionat.",
         "GROUP_RUN_DECLARATION_ARCHIVE": "Odată cu declarația semnată la o alergare de grup, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici). Fără link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
         "REGISTER_ANOTHER_PERSON": "Când formularul public este trimis din nou cu o adresă deja înscrisă la eveniment și cu alt nume. Nu se creează nicio înscriere, iar pe ecran apare același „verifică-ți emailul” ca oricând. Adresa primește un link de unică folosință, valabil {confirmation}, către formular, cu adresa fixată — sau, dacă are deja {people}, doar fraza care spune asta, fără link.",
-        "NEWSLETTER_CONFIRM": "Imediat ce cineva se abonează din pop-up-ul de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}. Unei adrese deja abonate îi trimite, în loc, linkul spre abonamentul ei, fără să schimbe nimic. Altceva nu primește o adresă neconfirmată.",
+        "NEWSLETTER_CONFIRM": "Când cineva se abonează din pop-up-ul de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}. Unei adrese deja abonate îi trimite, în loc, linkul spre abonamentul ei, fără să schimbe nimic. Altceva nu primește o adresă neconfirmată.",
         "NEWSLETTER": "Doar când un organizator scrie și trimite un newsletter din pagina „Newsletter” a backoffice-ului. Către abonații temei alese și cei care primesc tot, fiecare în limba lui întâi, cu linkul de dezabonare. Pleacă după celelalte emailuri și doar din partea limitei care rămâne după rezerva pentru înscrieri.",
         "NEW_EVENT_ALERT": "Automat, o singură dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), la prima rulare a jobului după publicare: către abonații la evenimente noi și la temele evenimentului (concurs, eveniment special, testare de echipament) și cei care primesc tot, cu linkul de dezabonare."
       },
@@ -4446,7 +4446,7 @@
                 "Participantul citește textul completat cu numele lui și evenimentul, tastează seria și numărul actului (nu încărcăm poze de buletin) și semnează cu degetul sau cu mouse-ul.",
                 "Un minor de la 14 ani semnează cu acordul părintelui; sub 14 ani semnează doar părintele sau tutorele — cum spune declarația aprobată.",
                 "Se păstrează numele, actele, versiunea textului, amprenta lui, momentul și metoda. E semnătură electronică simplă.",
-                "Imediat după, primește pe email declarația semnată, ca PDF. La masă, kitul se dă pe baza actului scris în declarație.",
+                "Apoi primește pe email declarația semnată, ca PDF, prin coada de emailuri (după «Termene» → «Când pleacă emailurile»). La masă, kitul se dă pe baza actului scris în declarație.",
                 "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul."
               ]
             },
@@ -4705,7 +4705,7 @@
         "few": "Trimiți mesajul la {count} participanți?",
         "other": "Trimiți mesajul la {count} de participanți?"
       },
-      "confirmBody": "Emailul pleacă acum prin coada de emailuri, fiecăruia în limba lui, și nu mai poate fi retras.",
+      "confirmBody": "Emailul intră acum în coada de emailuri și pleacă după «Termene» → «Când pleacă emailurile», fiecăruia în limba lui. Nu mai poate fi retras.",
       "confirmSend": "Trimite",
       "sent": {
         "one": "Mesaj pus la coadă pentru {count} participant. Pleacă imediat sau la următoarea trecere programată, după «Când pleacă emailurile» din «Termene».",
@@ -5811,7 +5811,7 @@
       "floor": "lucrările programate se uită în baza de date cel mult o dată la {minutes} de minute (mementourile și locurile eliberate pot întârzia atât; niciun loc nu se dă de două ori).",
       "cache": "Paginile publice își păstrează datele de {factor} ori mai mult; o modificare făcută de club apare tot imediat.",
       "healthReuse": "Verificarea de sănătate refolosește un răspuns de cel mult {minutes} minute, ca un apel străin să nu trezească baza de date.",
-      "monitor": "Emailurile pleacă tot imediat, înscrierile și backoffice-ul merg normal.",
+      "monitor": "Emailurile pleacă la fel ca până acum (după «Termene» → «Când pleacă emailurile»), înscrierile și backoffice-ul merg normal.",
       "cacheOnly": "Vizitatorii nu mai trezesc baza de date: o pagină care nu e în memorie se arată din ultima copie salvată și se reîmprospătează în fundal cel mult o dată la {minutes} minute."
     },
     "source": {

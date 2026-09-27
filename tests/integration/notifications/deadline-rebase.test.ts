@@ -13,10 +13,20 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
 import { createOutboxRenderer } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration, unregister } from "@/modules/registrations/service";
+import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
+import { countOccupied } from "@/modules/registrations/repository";
+import {
+  confirmEmail,
+  type EventForRegistration,
+  requestRegistrationLink,
+  signDeclaration,
+  submitRegistration,
+  unregister,
+} from "@/modules/registrations/service";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -271,5 +281,89 @@ describe("§NNN a participant's deadline counts from the moment its email leaves
     expect(moved.expiresAt).toEqual(new Date(later.getTime() + 48 * HOUR));
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
     expect(token.expiresAt).toEqual(moved.expiresAt);
+  });
+
+  it("moves a hold once, on the message that started it: a resend ten minutes later leaves it where the first send put it", async () => {
+    const race = await event(10);
+    await submitRegistration(db, race, submission("ana@example.ro", T), T);
+    const pending = await registrationOf(race.id, "ana@example.ro");
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: T });
+    await confirmEmail(db, race, pending.id, T);
+
+    const tick = new Date(T.getTime() + 55 * MINUTE);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: tick });
+    const once = new Date(tick.getTime() + 30 * MINUTE);
+    expect((await reload(pending.id)).holdExpiresAt).toEqual(once);
+
+    // «Trimite-mi linkul din nou» (§39): the same message type, queued anew — and unmarked.
+    const asked = new Date(tick.getTime() + 5 * MINUTE);
+    await requestRegistrationLink(db, { email: "ana@example.ro", eventId: race.id }, asked);
+    const declarations = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "COMPLETE_DECLARATION"));
+    const resend = declarations.find((row) => row.participantId !== null && row.status === "PENDING");
+    expect(resend).toBeDefined();
+    expect(resend?.payloadJson).not.toHaveProperty(STARTS_DEADLINE);
+    const original = declarations.find((row) => row.participantId !== null && row.status === "SENT");
+    expect(original?.payloadJson).toHaveProperty(STARTS_DEADLINE, true);
+
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: new Date(asked.getTime() + 10 * MINUTE) });
+    expect((await reload(pending.id)).holdExpiresAt).toEqual(once);
+  });
+
+  it("moves an offer once: a resend after the first send changes nothing", async () => {
+    const race = await event(1);
+    const first = await enter(race, "ana@example.ro", T);
+    await signDeclaration(db, race, first.id, await signingInput(db, T, "Ana Pop"), T);
+    const second = await enter(race, "ion@example.ro", new Date(T.getTime() + MINUTE));
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: new Date(T.getTime() + MINUTE) });
+    const freed = new Date(T.getTime() + HOUR);
+    await unregister(db, race, first.id, "PARTICIPANT", freed);
+
+    const tick = new Date(freed.getTime() + HOUR);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: tick });
+    const once = new Date(tick.getTime() + 24 * HOUR);
+    expect((await reload(second.id)).holdExpiresAt).toEqual(once);
+
+    const asked = new Date(tick.getTime() + 5 * MINUTE);
+    await requestRegistrationLink(db, { email: "ion@example.ro", eventId: race.id }, asked);
+    const offers = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"));
+    expect(offers.filter((row) => row.participantId !== null)).toHaveLength(2);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: new Date(asked.getTime() + 15 * MINUTE) });
+    expect((await reload(second.id)).holdExpiresAt).toEqual(once);
+  });
+
+  it("keeps a hold whose first email is still queued: the sweep releases nothing until it has left and the full hold has run", async () => {
+    const race = await event(1);
+    await submitRegistration(db, race, submission("ana@example.ro", T), T);
+    const ana = await registrationOf(race.id, "ana@example.ro");
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: T });
+    const held = await confirmEmail(db, race, ana.id, T);
+    expect(held.holdExpiresAt).toEqual(new Date(T.getTime() + 30 * MINUTE));
+
+    // Somebody waits for the place — and nothing is sent: the night's hourly tick has not come.
+    const joined = new Date(T.getTime() + MINUTE);
+    await submitRegistration(db, race, submission("ion@example.ro", joined), joined);
+    const ionPending = await registrationOf(race.id, "ion@example.ro");
+    const ion = await confirmEmail(db, race, ionPending.id, joined);
+    expect(ion.status).toBe("WAITLISTED");
+
+    // T+45: past the stored deadline, but Ana's declaration email has not left yet.
+    const before = new Date(T.getTime() + 45 * MINUTE);
+    expect((await countOccupied(db, race.id, before)).lapsedDeclarationHolds).toBe(0);
+    await runRegistrationMaintenance(db, before);
+    expect((await reload(ana.id)).status).toBe("PENDING_DECLARATION");
+    expect((await reload(ion.id)).status).toBe("WAITLISTED");
+
+    // T+60: the tick sends it, and the hold runs its thirty minutes from there.
+    const sent = new Date(T.getTime() + 60 * MINUTE);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: sent });
+    expect((await reload(ana.id)).holdExpiresAt).toEqual(new Date(T.getTime() + 90 * MINUTE));
+
+    await runRegistrationMaintenance(db, new Date(T.getTime() + 89 * MINUTE));
+    expect((await reload(ana.id)).status).toBe("PENDING_DECLARATION");
+
+    // T+91: lapsed for real, and wanted — released to the one who waits.
+    await runRegistrationMaintenance(db, new Date(T.getTime() + 91 * MINUTE));
+    expect((await reload(ana.id)).status).toBe("EXPIRED");
+    expect((await reload(ion.id)).status).toBe("WAITLIST_OFFERED");
   });
 });

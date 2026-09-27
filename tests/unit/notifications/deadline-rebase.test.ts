@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DEADLINE_KIND_BY_MESSAGE, rebasedDeadline } from "@/modules/notifications/domain/deadline-rebase";
+import { clubCopyPayload } from "@/modules/notifications/domain/club-notices";
+import {
+  DEADLINE_KIND_BY_MESSAGE,
+  rebasedDeadline,
+  STARTS_DEADLINE,
+  startingDeadline,
+  startsItsDeadline,
+} from "@/modules/notifications/domain/deadline-rebase";
 
 /**
  * §NNN — the arithmetic of «termenul curge de când pleacă emailul» (`domain/deadline-rebase.ts`):
@@ -64,5 +71,17 @@ describe("§NNN rebasedDeadline", () => {
   it("does not cap the two links by the event, as nothing ever did", () => {
     const family = rebasedDeadline({ kind: "familyLink", stored: at(48 * HOUR), queuedAt: QUEUED, sentAt: at(HOUR) });
     expect(family).toEqual(at(49 * HOUR));
+  });
+
+  it("marks only the message that starts its deadline — never a plain payload, and never the club's copy of it", () => {
+    const first = startingDeadline({ familyEntryId: "e" });
+    expect(first).toEqual({ familyEntryId: "e", [STARTS_DEADLINE]: true });
+    expect(startsItsDeadline(first)).toBe(true);
+    expect(startsItsDeadline({})).toBe(false);
+    expect(startsItsDeadline({ [STARTS_DEADLINE]: "true" })).toBe(false);
+    expect(startsItsDeadline(null)).toBe(false);
+    const copy = clubCopyPayload(first);
+    expect(copy).toEqual({ familyEntryId: "e", clubCopy: true });
+    expect(startsItsDeadline(copy)).toBe(false);
   });
 });

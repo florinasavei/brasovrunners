@@ -3,11 +3,12 @@ import { events } from "@/db/schema/events";
 import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { findFamilyEntryById } from "@/modules/registrations/family-entries";
 import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { isClubCopy } from "./domain/club-notices";
-import { DEADLINE_KIND_BY_MESSAGE, REBASE_MIN_WAIT_MS, rebasedDeadline } from "./domain/deadline-rebase";
+import { DEADLINE_KIND_BY_MESSAGE, REBASE_MIN_WAIT_MS, rebasedDeadline, startsItsDeadline } from "./domain/deadline-rebase";
 import type { OutboxRow } from "./outbox";
 
 /**
@@ -43,9 +44,11 @@ export type DeadlineRebase =
   | { kind: "familyLink"; entryId: string; from: Date; to: Date; waitMs: number };
 
 /**
- * What sending this row now would do to the deadline it carries, or null. The participant's own
- * message only: a club copy carries no link and starts nothing (§320). A message that has waited
- * less than a minute costs no read at all — every message under the `immediate` timing.
+ * What sending this row now would do to the deadline it carries, or null. Only the message that
+ * started that deadline (`STARTS_DEADLINE` in its payload, written by the enqueue that wrote the
+ * deadline): a resend, a reminder or a club copy carries no mark and moves nothing, so a deadline
+ * is re-based once, on its first send, never again (§NNN). A message that has waited less than a
+ * minute costs no read at all — every message under the `immediate` timing.
  */
 export async function planDeadlineRebase<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -53,7 +56,7 @@ export async function planDeadlineRebase<T extends Record<string, unknown>>(
   sentAt: Date,
 ): Promise<DeadlineRebase | null> {
   const kind = DEADLINE_KIND_BY_MESSAGE[row.messageType];
-  if (!kind || !row.participantId || isClubCopy(row.payloadJson)) return null;
+  if (!kind || !row.participantId || isClubCopy(row.payloadJson) || !startsItsDeadline(row.payloadJson)) return null;
   const waitMs = sentAt.getTime() - row.createdAt.getTime();
   if (waitMs < REBASE_MIN_WAIT_MS) return null;
 
@@ -151,6 +154,10 @@ export async function applyDeadlineRebase<T extends Record<string, unknown>>(
       )
       .returning({ id: registrations.id });
   });
-  if (moved.length > 0) revalidatePublicContent("places");
+  if (moved.length > 0) {
+    revalidatePublicContent("places");
+    // The job planned its quiet on the old deadline; the new one is what it must wake for (§334).
+    wakeJobs("registration-maintenance", plan.to, clock());
+  }
   return moved.length > 0;
 }
