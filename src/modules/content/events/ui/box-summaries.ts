@@ -7,6 +7,7 @@ import { hasOneLanguageCoHostDescription, hasOneLanguageCoHostLabel, readCoHosts
 import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/links";
 import { placeInBox } from "@/modules/events/domain/place";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
+import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { savedDurationMinutes } from "../duration";
 import type { EditableEvent } from "../repository";
@@ -15,7 +16,7 @@ import { storedTextValue } from "./publish-check";
 /**
  * The line each box of the event editor shows while it is shut (§350; the owner asked for the
  * editor to read "like the event's fact sheet"): "Parcul Titulescu · hartă", "Pe site · 150 locuri
- * · de la 14 ani · declarația v3". A closed fold that says nothing is a fold nobody opens, and a
+ * · declarația v3". A closed fold that says nothing is a fold nobody opens, and a
  * fold that says its answer is one nobody has to open to check it.
  *
  * Pure functions of the saved event and its languages, rendered on the server (`Panel`'s `aside`)
@@ -58,7 +59,6 @@ export type SummaryWords = {
     internal: string;
     places: CountWords;
     unlimited: string;
-    minAge: string;
     declaration: string;
     noDeclaration: string;
     listHidden: string;
@@ -68,6 +68,8 @@ export type SummaryWords = {
   };
   window: { range: string; fromPublication: string; soon: string; untilStart: string };
   conditions: { noDeclaration: string };
+  /** The minimum age, in «Regulamentul»'s closed line (§505): "vârsta minimă {age}", or none. */
+  age: { from: string; none: string };
   /** A group run's optional self-declaration, under «Regulamentul» (§448). */
   declaration: { offered: string; offeredNoText: string; notOffered: string; notAsked: string };
   confirmation: { sentence: string; atStart: string; off: string };
@@ -343,14 +345,13 @@ export function initialCostTypeOf(event: Pick<RegistrationEvent, "costType"> | n
   return event === null ? "FREE" : (event.costType ?? "");
 }
 
-/** Box 8: `Pe site · 150 locuri · de la 14 ani · gratuit · declarația v3 · lista ascunsă`. */
+/** Box 8: `Pe site · 150 locuri · gratuit · declarația v3 · lista ascunsă`. */
 export function registrationSummary(
   words: SummaryWords,
   event: RegistrationEvent | null,
   options: {
     takesRegistrations: boolean;
     declarationVersion: number | null;
-    defaultMinAge: number;
     locale: string;
     creating: boolean;
   },
@@ -365,7 +366,6 @@ export function registrationSummary(
   return join(words, [
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
-    fillIn(words.registration.minAge, { age: event?.minAge ?? options.defaultMinAge }),
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
     event?.participantListVisibility === "NAMES" ? words.registration.listShown : words.registration.listHidden,
   ]);
@@ -390,9 +390,14 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
   return fillIn(words.window.range, { from, to });
 }
 
-/** Sub-card 8.2: `de la 14 ani` — the declaration is chosen under «Regulamentul» since §448. */
-export function conditionsSummary(words: SummaryWords, minAge: number): string {
-  return join(words, [fillIn(words.registration.minAge, { age: minAge })]);
+/**
+ * The minimum age's part of «Regulamentul»'s closed line (§505 — the box moved there from the
+ * registration card's «Condiții de participare», for every type): `vârsta minimă 16 ani`, or
+ * `fără vârstă minimă` for zero — never "de la 0 ani". The number reads through `yearsPhrase`,
+ * so twenty is «20 de ani».
+ */
+export function minAgeSummary(words: SummaryWords, minAge: number, locale: string): string {
+  return minAge > 0 ? fillIn(words.age.from, { age: yearsPhrase(minAge, locale) }) : words.age.none;
 }
 
 type DeclarationEvent = Pick<EditableEvent, "registrationMode" | "offersGroupRunDeclaration">;

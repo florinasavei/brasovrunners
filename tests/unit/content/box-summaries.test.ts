@@ -5,7 +5,7 @@ import {
   addressSummary,
   bibsSummary,
   coHostsSummary,
-  conditionsSummary,
+  minAgeSummary,
   declarationSummary,
   confirmationSummary,
   courseSummary,
@@ -201,10 +201,10 @@ describe("§350 each box's summary, empty and filled", () => {
       externalProvider: null,
       costType: "FREE",
     };
-    const options = { takesRegistrations: true, declarationVersion: 3, defaultMinAge: 14, locale: "ro", creating: false };
-    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · de la 14 ani · declarația v3 · lista ascunsă");
+    const options = { takesRegistrations: true, declarationVersion: 3, locale: "ro", creating: false };
+    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · declarația v3 · lista ascunsă");
     expect(registrationSummary(words, { ...internal, capacity: 1 } as never, options)).toContain("1 loc");
-    expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · de la 14 ani · lipsește declarația");
+    expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · lipsește declarația");
     expect(registrationSummary(words, { ...internal, registrationMode: "EXTERNAL", externalProvider: "Asociația X" } as never, options)).toBe(
       "La organizator: Asociația X",
     );
@@ -229,9 +229,13 @@ describe("§350 each box's summary, empty and filled", () => {
         "ro",
       ),
     ).toBe("Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59");
-    // §448: the declaration is chosen under «Regulamentul»; this card says the age alone.
-    expect(conditionsSummary(words, 14)).toBe("de la 14 ani");
-    expect(conditionsSummary(words, 16)).toBe("de la 16 ani");
+    // §505: the minimum age is a box of «Regulamentul» for every type; its part of the closed
+    // line counts in Romanian («20 de ani») and never says "de la 0 ani".
+    expect(minAgeSummary(words, 14, "ro")).toBe("vârsta minimă 14 ani");
+    expect(minAgeSummary(words, 20, "ro")).toBe("vârsta minimă 20 de ani");
+    expect(minAgeSummary(words, 0, "ro")).toBe("fără vârstă minimă");
+    expect(minAgeSummary(wordsEn, 16, "en")).toBe("minimum age 16 years");
+    expect(minAgeSummary(wordsEn, 0, "en")).toBe("no minimum age");
     expect(confirmationSummary(words, 7, 2)).toBe("Cerută cu 7 zile înainte, termen cu 2 zile înainte");
     // §407: a deadline of zero is the start, and no window says so rather than two dead numbers.
     expect(confirmationSummary(words, 7, 0)).toBe("Cerută cu 7 zile înainte, termen la start");
