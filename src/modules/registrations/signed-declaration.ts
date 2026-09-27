@@ -71,6 +71,8 @@ export type SignedDeclaration = {
   attestedByName: string | null;
   version: number;
   contentSha256: string;
+  /** The day the signed version took effect (§NNN), for the PDF's version line. */
+  effectiveAt: Date;
   locale: Locale;
   title: string;
   /** The template, unmerged. */
@@ -132,6 +134,7 @@ function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<
       attestedByName: staffUsers.displayName,
       version: declarationAcceptances.declarationVersion,
       contentSha256: declarationAcceptances.contentSha256,
+      effectiveAt: legalDocuments.effectiveAt,
       locale: declarationAcceptances.locale,
       title: legalDocumentTranslations.title,
       body: legalDocumentTranslations.bodyJson,
@@ -260,11 +263,13 @@ function signedEntry(
     eventTitle: event.title,
     version: signed.version,
     contentSha256: signed.contentSha256,
+    effectiveAt: signed.effectiveAt,
     signature: {
       typedName: signed.typedName,
       idDocument,
       minor,
       signedAt: whenStart,
+      signedAtInline: when,
       method:
         signed.method === "PAPER"
           ? labels.signedOnPaper(signed.attestedByName ?? labels.attesterRemoved, when)
@@ -349,6 +354,7 @@ export async function renderBlankDeclarationPdf<T extends Record<string, unknown
         eventTitle: event.title,
         version: document.version,
         contentSha256: document.contentSha256,
+        effectiveAt: document.effectiveAt,
         forMinor: forMinor && asksForMinorSignature(document.body),
       },
     ],

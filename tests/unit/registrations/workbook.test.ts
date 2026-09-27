@@ -168,6 +168,12 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     // The version's cell, by the column's own letter: a number, with no shared-string marker.
     const cell = `${columnLetter(REGISTRATION_SHEET_HEADERS.length - 2)}2`;
     expect(parts.get("xl/worksheets/sheet1.xml") ?? "").toContain(`<c r="${cell}"><v>37</v></c>`);
+    // The two stamps side by side read one clock (§439): the same moment is the same cell value, never three hours apart.
+    const moment = new Date("2026-09-26T08:30:00.000Z");
+    const both = unzip(await buildRegistrationsWorkbook([row({ termsVersion: 1, termsAcceptedAt: moment, declarationVersion: 1, declarationSignedAt: moment })], "Test"));
+    const stamp = (index: number) => new RegExp(`<c r="${columnLetter(index)}2"[^>]*><v>([^<]+)</v>`).exec(both.get("xl/worksheets/sheet1.xml") ?? "")?.[1];
+    expect(stamp(REGISTRATION_SHEET_HEADERS.length - 3)).toBeDefined();
+    expect(stamp(REGISTRATION_SHEET_HEADERS.length - 3)).toBe(stamp(REGISTRATION_SHEET_HEADERS.length - 1));
     // Nothing signed: the cell is not written, never 0.
     const blank = unzip(await buildRegistrationsWorkbook([row({ declarationVersion: null, declarationSignedAt: null })], "Test"));
     expect(blank.get("xl/worksheets/sheet1.xml") ?? "").not.toContain(`<c r="${cell}"><v>`);

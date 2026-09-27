@@ -35,6 +35,11 @@ export type DeclarationEntry = {
   /** The version's facts, under the signature and in the document's subject. */
   version: number;
   contentSha256: string;
+  /**
+   * The day that version took effect, as `/admin/legal` shows it (§NNN): the version line under the
+   * title and in every page's footer says «Versiunea N, în vigoare din …», the signing pages' words.
+   */
+  effectiveAt: Date;
   /** Absent for the blank form. */
   signature?: {
     /** The declarant's signature: the adult's own, or the parent's or guardian's for a minor. */
@@ -47,6 +52,8 @@ export type DeclarationEntry = {
      */
     minor: { typedName: string; idDocument: string | null } | null;
     signedAt: string;
+    /** The same instant inside a sentence — "joi, 24 sept. 2026, la 18:05" — for the footer's «semnată …» (§NNN). */
+    signedAtInline: string;
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
   };
@@ -80,6 +87,10 @@ export type DeclarationPdfInput = {
     date: string;
     idDocument: string;
     version: string;
+    /** «Versiunea 3, în vigoare din sâmbătă, 12 sept. 2026» — the signing pages' `Legal.inForce` (§NNN). */
+    versionInForce: (version: number, effectiveAt: Date) => string;
+    /** «semnată joi, 24 sept. 2026, la 18:05» — the footer of a signed entry's pages (§NNN). */
+    signedWhen: (when: string) => string;
     generatedOn: string;
     page: (n: number, total: number) => string;
   };
@@ -132,29 +143,35 @@ const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
 /**
- * Which version of which text a page carries (§NNN): "Versiunea 3 · sha256 0123456789abcdef…" — the
- * version's number and the first sixteen characters of its hash, as the legal documents' own PDF
- * prints them (§53). Under the title of every entry and in the footer of every page, so a page that
- * travels alone — the second sheet of a printed form, one page of the event's bundle, the file a
- * runner forwarded — still says which approved text it is, not only the signature block at its end.
- * The full hash stays under the signature and in the file's metadata. Pure, for its test.
+ * Which version of which text an entry carries, under its title (§NNN): «Versiunea 3, în vigoare
+ * din sâmbătă, 12 sept. 2026 · sha256 0123456789abcdef…» — the number and the day it took effect as
+ * `/admin/legal` and the signing pages say them, and the first sixteen characters of its hash, as the
+ * legal documents' own PDF prints them (§53). The full hash stays under the signature and in the
+ * file's metadata. Pure, for its test.
  */
-export function declarationVersionLine(entry: Pick<DeclarationEntry, "version" | "contentSha256">, versionLabel: string): string {
-  return `${versionLabel} ${entry.version} · sha256 ${entry.contentSha256.slice(0, 16)}…`;
+export function declarationVersionLine(
+  entry: Pick<DeclarationEntry, "version" | "contentSha256" | "effectiveAt">,
+  labels: Pick<DeclarationPdfInput["labels"], "versionInForce">,
+): string {
+  return `${labels.versionInForce(entry.version, entry.effectiveAt)} · sha256 ${entry.contentSha256.slice(0, 16)}…`;
 }
 
 /**
- * The footer's first line, left of the page count (§NNN): the club, the version of the text on
- * that page, and when the file was drawn. A bundle holds many entries, possibly of different
- * versions — a declaration signed before the club approved a new text keeps its own — so the
- * version is the page's own entry's, never the file's first. A page with no entry (the empty
- * bundle) says what it said before. Pure, for its test.
+ * The footer's line, left of the page count (§NNN), so a page that travels alone — the second sheet
+ * of a printed form, one page of the event's bundle, the file a runner forwarded — still says which
+ * approved text it is: the club, the version in force of the text on that page, and when that entry
+ * was signed — or, for the blank form, when the file was drawn. A bundle holds many entries, possibly
+ * of different versions — a declaration signed before the club approved a new text keeps its own — so
+ * it is the page's own entry, never the file's first. A page with no entry (the empty bundle) says
+ * what it said before. Pure, for its test.
  */
 export function declarationFooterLine(
-  entry: Pick<DeclarationEntry, "version" | "contentSha256"> | undefined,
-  labels: Pick<DeclarationPdfInput["labels"], "organization" | "version" | "generatedOn">,
+  entry: (Pick<DeclarationEntry, "version" | "effectiveAt"> & { signature?: Pick<NonNullable<DeclarationEntry["signature"]>, "signedAtInline"> }) | undefined,
+  labels: Pick<DeclarationPdfInput["labels"], "organization" | "versionInForce" | "signedWhen" | "generatedOn">,
 ): string {
-  return [labels.organization, entry ? declarationVersionLine(entry, labels.version) : null, labels.generatedOn].filter(Boolean).join(" · ");
+  if (!entry) return `${labels.organization} · ${labels.generatedOn}`;
+  const when = entry.signature ? labels.signedWhen(entry.signature.signedAtInline) : labels.generatedOn;
+  return [labels.organization, labels.versionInForce(entry.version, entry.effectiveAt), when].join(" · ");
 }
 
 /**
@@ -231,9 +248,9 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
     doc.font("body").fontSize(12).fillColor(COLOR.inkMuted).text("—", MARGIN.left, MARGIN.top);
   }
 
-  // Footers: the page count is what makes a missing page noticeable; the version and the start of
-  // the hash of the text on that page (§NNN) are what make a loose page say what it is. The full
-  // hash is under each text's own signature block, where a printed copy is checked against it.
+  // Footers: the page count is what makes a missing page noticeable; the version in force of the
+  // text on that page and when it was signed (§NNN) are what make a loose page say what it is. The
+  // full hash is under each text's own signature block, where a printed copy is checked against it.
   const range = doc.bufferedPageRange();
   const idDocumentsNotice = idDocumentsNoticeFor(input);
   for (let i = range.start; i < range.start + range.count; i++) {
@@ -275,7 +292,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   // Which approved text this is, before a word of it is read (§NNN) — on the blank form the desk
   // prints too, so a stack of paper says which version each sheet was printed from.
   doc.moveDown(0.2);
-  doc.font("body").fontSize(8.5).fillColor(COLOR.inkMuted).text(declarationVersionLine(entry, labels.version), { width: TEXT_WIDTH, align: "center" });
+  doc.font("body").fontSize(8.5).fillColor(COLOR.inkMuted).text(declarationVersionLine(entry, labels), { width: TEXT_WIDTH, align: "center" });
   doc.moveDown(1.2);
 
   // The text. A heading is kept with its first paragraph; a paragraph that starts with a

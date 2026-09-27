@@ -57,6 +57,8 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       key: legalDocuments.key,
       version: groupRunDeclarations.declarationVersion,
       contentSha256: groupRunDeclarations.contentSha256,
+      // The day the signed version took effect, for the PDF's version line (§NNN).
+      effectiveAt: legalDocuments.effectiveAt,
       locale: groupRunDeclarations.locale,
       typedName: groupRunDeclarations.typedName,
       idDocument: groupRunDeclarations.idDocument,

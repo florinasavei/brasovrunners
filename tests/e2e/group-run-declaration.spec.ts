@@ -64,6 +64,10 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
   await expect(page.locator("#main")).toContainText(words.adults);
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
+  // The text's version and the weekday it took effect, over it, as the PDF says it (§NNN).
+  await expect(page.getByTestId("declaration-version")).toHaveText(
+    locale === "ro" ? /^Versiunea \d+, în vigoare din \p{L}+, \d{1,2} .+ \d{4}$/u : /^Version \d+, in force since \p{L}+, \d{1,2} .+ \d{4}$/u,
+  );
   // No language select: the text signed is the one on the page, in the page's language (§57).
   await expect(page.locator('[name="preferredLocale"]')).toHaveCount(0);
   // The platform's texts ask for no identity document since the counsel review (§418), and a

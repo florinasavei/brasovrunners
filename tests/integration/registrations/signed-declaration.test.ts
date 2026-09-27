@@ -23,6 +23,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { listLatestDeclarationAcceptances } from "@/modules/registrations/admin-repository";
 import { signingInput } from "../../helpers/declaration-signing";
+import { DECLARATION_FOOTER_Y, type DrawnRun, drawnRuns } from "../../helpers/pdf-drawn";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { BLANK, mergeLegalBody, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
 
@@ -43,6 +44,9 @@ const LABELS = {
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
+  // The version line under each title and in every footer (§NNN): the day as an ISO date, so a test reads it plainly.
+  versionInForce: (version: number, effectiveAt: Date) => `Versiunea ${version}, în vigoare din ${effectiveAt.toISOString().slice(0, 10)}`,
+  signedWhen: (when: string) => `semnată ${when}`,
   // What declarationWords writes for NOW (§349): "pe" before a date that starts with its weekday.
   generatedOn: "Generat pe vineri, 4 sept. 2026, 13:00",
   page: (n: number, total: number) => `Pagina ${n} din ${total}`,
@@ -436,6 +440,49 @@ describe("the club's declaration (§95)", () => {
       }
     }
   });
+
+  /**
+   * §NNN — every declaration document names its version in force: under each entry's title (with
+   * the start of its hash) and in the footer of every page, each page its own entry's version, a
+   * signed page saying when it was signed and the blank form when it was drawn. What is drawn, not
+   * only what is handed to the renderer: the runs are caught at pdfkit's `text()`.
+   */
+  it("names the version in force under every title and in every page's footer: signed, blank, and a bundle of two versions", async () => {
+    await approve(db, CLUB_DECLARATION);
+    const event = await createEvent(db);
+    const first = await pendingRegistration(event);
+    await signDeclaration(db, event, first.id, { ...(await signingInput(db, NOW, "Ana Popescu")), idDocument: "BV 111111" }, NOW);
+    // The club approves a second text; the next runner signs that one, and the first keeps hers.
+    const newer: LegalDocumentTranslationInput[] = CLUB_DECLARATION.map((translation) => ({ ...translation, title: `${translation.title} (2)` }));
+    await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(newer), translations: newer, now: NOW });
+    await submitRegistration(db, event, { ...submission, email: "ion@example.ro", firstName: "Ion", lastName: "Ionescu" }, NOW);
+    const [second] = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter((row) => row.id !== first.id);
+    await confirmEmail(db, event, second.id, NOW);
+    await signDeclaration(db, event, second.id, { ...(await signingInput(db, NOW, "Ion Ionescu")), idDocument: "BV 222222" }, new Date(NOW.getTime() + 60_000));
+
+    // LABELS writes the day as an ISO date; the words themselves are `declaration-version.test.ts`'s.
+    const v1 = "Versiunea 1, în vigoare din 2026-01-01";
+    const v2 = "Versiunea 2, în vigoare din 2026-02-01";
+    // The signing instant inside the sentence, in the event's zone (13:00 in Brașov is 10:00 UTC).
+    const signedAt: Record<string, string> = { [v1]: "semnată vineri, 4 sept. 2026, la 13:00", [v2]: "semnată vineri, 4 sept. 2026, la 13:01" };
+
+    const acceptance = (await findSignedDeclaration(db, first.id))!;
+    const signed = byPage(await drawnRuns(() => renderSignedDeclarationPdf(db, acceptance, event.id, LABELS, NOW, "participant")));
+    expect(signed.map((page) => page.title).filter(Boolean)).toEqual([v1]);
+    expect(signed.length).toBeGreaterThanOrEqual(2);
+    for (const page of signed) expect(page.footer).toEqual([`${LABELS.organization} · ${v1} · ${signedAt[v1]}`]);
+
+    const blank = byPage(await drawnRuns(() => renderBlankDeclarationPdf(db, event.id, "ro", LABELS, NOW)));
+    // The desk prints the text in force today, and says when the sheet was drawn.
+    expect(blank.map((page) => page.title).filter(Boolean)).toEqual([v2]);
+    for (const page of blank) expect(page.footer).toEqual([`${LABELS.organization} · ${v2} · ${LABELS.generatedOn}`]);
+
+    const bundle = byPage(await drawnRuns(() => renderEventDeclarationsPdf(db, event.id, "ro", LABELS, NOW)));
+    expect(bundle.map((page) => page.title).filter(Boolean)).toEqual([v1, v2]);
+    // Every page's footer names the version of the entry drawn on it — never the file's first.
+    expect(new Set(bundle.map((page) => page.owner))).toEqual(new Set([v1, v2]));
+    for (const page of bundle) expect(page.footer).toEqual([`${LABELS.organization} · ${page.owner} · ${signedAt[page.owner!]}`]);
+  });
 });
 
 /**
@@ -473,6 +520,23 @@ function textLinesByPage(pdf: Buffer): Array<Array<[number, number]>> {
     }
     if (!content.includes(" Tm")) continue;
     pages.push([...content.matchAll(/1 0 0 1 (-?[\d.]+) (-?[\d.]+) Tm/g)].map((m) => [Number(m[1]), Number(m[2])]));
+  }
+  return pages;
+}
+
+/**
+ * A rendered declaration's runs as pages (§NNN): the version line under an entry's title, when the
+ * page opens one; the version of the entry the page belongs to (the last title at or before it);
+ * and the footer's left line — the run on the footer's `y` that starts with the club's name.
+ */
+function byPage(runs: DrawnRun[]): Array<{ title: string | undefined; owner: string | undefined; footer: string[] }> {
+  const pages: Array<{ title: string | undefined; owner: string | undefined; footer: string[] }> = [];
+  let owner: string | undefined;
+  for (let page = 0; page <= Math.max(...runs.map((run) => run.page)); page++) {
+    const onPage = runs.filter((run) => run.page === page);
+    const title = onPage.find((run) => /^Versiunea \d+, în vigoare din .+ · sha256 [0-9a-f]{16}…$/.test(run.text))?.text.split(" · ")[0];
+    if (title) owner = title;
+    pages.push({ title, owner, footer: onPage.filter((run) => run.y === DECLARATION_FOOTER_Y && run.text.startsWith(LABELS.organization)).map((run) => run.text) });
   }
   return pages;
 }

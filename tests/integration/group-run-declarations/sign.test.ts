@@ -19,7 +19,10 @@ import { findSignedGroupRunDeclaration, listGroupRunDeclarations } from "@/modul
 import { eraseGroupRunDeclaration, type GroupRunSigningInput, signGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pdf";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
+import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
+import { CLUB_NAME } from "@/theme/brand";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { DECLARATION_FOOTER_Y, drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
  * A group run's optional self-declaration, signed, sent, erased and swept (§393).
@@ -208,6 +211,27 @@ describe("§393 signing a group run's self-declaration", () => {
     expect(clubPdf).toContain("••••56");
     // Neither message carries an action button: there is nothing to manage.
     for (const message of [toSigner, toClub]) expect(message.html).not.toMatch(/\/(inregistrari|registrations)\//);
+  });
+
+  /**
+   * §NNN — the group-run PDF names the version signed and the day it took effect, under the title
+   * and in every page's footer, with when it was signed: what is drawn, caught at pdfkit's `text()`.
+   */
+  it("draws the version in force under the title and in every page's footer, with when it was signed", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun();
+    await signGroupRunDeclaration(db, await input(event.id), NOW);
+    const [row] = await db.select().from(groupRunDeclarations);
+    const signed = (await findSignedGroupRunDeclaration(db, row.id))!;
+
+    const runs = await drawnRuns(() => renderGroupRunDeclarationPdf(db, signed, "participant", NOW));
+    // Approved from 2026-01-01T00:00Z: 02:00 on Thursday 1 January on the club's clock.
+    const version = "Versiunea 1, în vigoare din joi, 1 ian. 2026";
+    expect(runs.filter((run) => run.text.startsWith(`${version} · sha256 ${signed.contentSha256.slice(0, 16)}`))).toHaveLength(1);
+    const pages = new Set(runs.map((run) => run.page));
+    const footers = runs.filter((run) => run.y === DECLARATION_FOOTER_Y && run.text.startsWith(CLUB_NAME));
+    // 08:00 UTC on 1 October is 11:00 in Brașov, a Thursday.
+    expect(footers.map((run) => run.text)).toEqual([...pages].map(() => `${CLUB_NAME} · ${version} · semnată joi, 1 oct. 2026, la 11:00`));
   });
 
   it("queues no archive copy when the club has no declarations mailbox", async () => {
