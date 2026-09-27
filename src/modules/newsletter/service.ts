@@ -3,6 +3,7 @@ import { z } from "zod";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { type NewsletterTopic, newsletterSends, newsletterSubscribers } from "@/db/schema/newsletter";
+import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -536,19 +537,8 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
     )
     .orderBy(asc(events.publishedAt), asc(events.id));
 
-  // Whether today's one announcement already went (`alertDayOf`): the sends of the last day and a bit, read in the club's zone.
-  const today = alertDayOf(now, CLUB_TIME_ZONE);
-  const recent = await db
-    .select({ at: newsletterSends.createdAt })
-    .from(newsletterSends)
-    .where(
-      and(
-        eq(newsletterSends.kind, "EVENT_ALERT"),
-        sql`${newsletterSends.recipients} > 0`,
-        sql`${newsletterSends.createdAt} >= ${new Date(now.getTime() - 26 * 60 * 60_000).toISOString()}::timestamptz`,
-      ),
-    );
-  let announcedToday = recent.some((row) => alertDayOf(row.at, CLUB_TIME_ZONE) === today);
+  // Whether today's one announcement already went (`alertDayOf`), read before the loop as a fast path; asked again under the lock below.
+  let announcedToday = await alertAlreadyAnnouncedToday(db, now);
 
   let queued = 0;
   let drain = false;
@@ -563,16 +553,30 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
       .where(and(isNotNull(newsletterSubscribers.confirmedAt), receivesSql(topics)));
     if (audience > 0 && announcedToday) continue;
     await db.transaction(async (tx) => {
+      /*
+        One alert a day, across runs that overlap (§493). The check above is read before the loop, so
+        two maintenance runs a second apart — the pinger and the drain a publication wakes, or two
+        instances — could each find the day free and each announce a different event. Every run now
+        queues its alert holding one row lock (`newsletterAlertDay`), and asks again under it: the
+        second waits for the first to commit, then sees its send and leaves the event for tomorrow.
+        A row of `platform_settings`, as Gmail's ledger holds its slot (§443): no new mechanism.
+      */
+      await lockAlertDay(tx, now);
+      const recipients = await tx
+        .select({ id: newsletterSubscribers.id, locale: newsletterSubscribers.locale, email: newsletterSubscribers.deliveryEmail })
+        .from(newsletterSubscribers)
+        .where(and(isNotNull(newsletterSubscribers.confirmedAt), receivesSql(topics)));
+      // Somebody would be told, and another run announced today while this one waited: tomorrow's.
+      if (recipients.length > 0 && (await alertAlreadyAnnouncedToday(tx, now))) {
+        announcedToday = true;
+        return;
+      }
       const [send] = await tx
         .insert(newsletterSends)
         .values({ kind: "EVENT_ALERT", topics, eventId: event.id, createdAt: now })
         .onConflictDoNothing({ target: newsletterSends.eventId })
         .returning({ id: newsletterSends.id });
       if (!send) return;
-      const recipients = await tx
-        .select({ id: newsletterSubscribers.id, locale: newsletterSubscribers.locale, email: newsletterSubscribers.deliveryEmail })
-        .from(newsletterSubscribers)
-        .where(and(isNotNull(newsletterSubscribers.confirmedAt), receivesSql(topics)));
       for (const recipient of recipients) {
         const inserted = await enqueueEmail(tx, {
           participantId: null,
@@ -605,4 +609,34 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
   }
   if (drain) drainOutboxAfterResponse();
   return queued;
+}
+
+/** The `platform_settings` row every run takes before it queues an alert (§493): the day's one alert, serialised. */
+export const NEWSLETTER_ALERT_LOCK_KEY = "newsletterAlertDay";
+
+async function lockAlertDay<T extends Record<string, unknown>>(tx: Database<T>, now: Date): Promise<void> {
+  await tx
+    .insert(platformSettings)
+    .values({ key: NEWSLETTER_ALERT_LOCK_KEY, value: {}, updatedAt: now, updatedByStaffUserId: null })
+    .onConflictDoNothing({ target: platformSettings.key });
+  await tx.select({ key: platformSettings.key }).from(platformSettings).where(eq(platformSettings.key, NEWSLETTER_ALERT_LOCK_KEY)).for("update");
+}
+
+/**
+ * Whether an alert that reached somebody was already queued on the club's calendar day of `now`
+ * (`alertDayOf`, Europe/Bucharest): the sends of the last day and a bit, read in the club's zone.
+ */
+async function alertAlreadyAnnouncedToday<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const today = alertDayOf(now, CLUB_TIME_ZONE);
+  const recent = await db
+    .select({ at: newsletterSends.createdAt })
+    .from(newsletterSends)
+    .where(
+      and(
+        eq(newsletterSends.kind, "EVENT_ALERT"),
+        sql`${newsletterSends.recipients} > 0`,
+        sql`${newsletterSends.createdAt} >= ${new Date(now.getTime() - 26 * 60 * 60_000).toISOString()}::timestamptz`,
+      ),
+    );
+  return recent.some((row) => alertDayOf(row.at, CLUB_TIME_ZONE) === today);
 }

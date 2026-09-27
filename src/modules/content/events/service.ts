@@ -410,8 +410,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
-    // No `video_url` (§481): a film is a figure in the description (§266), and the column is
-    // written by nobody until a later contract migration drops it.
+    // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
+    // and leaves the database in BR-V2.11 (§491).
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
     // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
@@ -1684,7 +1684,8 @@ function wallDay(date: Date, zone: string): number {
  * rows shifted by the same days as when the date was made; a partner is the series' and
  * travels with it (§168); the featured flag, **the special mark** — the owner: "some dates can
  * be special events where we overlap with, say, Brașov Marathon on the same Wednesday" — the
- * rule, the publication state and a film are one date's own and never travel; the Strava and
+ * rule and the publication state are one date's own and never travel (a film is a figure in the
+ * description since §481, so it travels exactly when the description's words do); the Strava and
  * Facebook event links do travel since §300, because both platforms give a recurring event one
  * address for all its dates; a slug is a public address and never changes. Capacity is checked against each date's own places
  * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
@@ -2566,7 +2567,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // dates keep one address for every occurrence — so `repeatEvent` and the job put the source's
     // two links back on top of this (§300). The co-host is carried by both: a series held with a
     // partner is held with them every time. (A film is a figure in the description since §481 and
-    // travels with the words; `video_url` is written by nobody.)
+    // travels with the words; the schema has declared no film column on the event since BR-V2.10.)
     stravaEventUrl: null,
     facebookEventUrl: null,
     coHosts: source.coHosts,

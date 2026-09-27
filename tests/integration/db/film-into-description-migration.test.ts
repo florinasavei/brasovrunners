@@ -97,8 +97,10 @@ beforeAll(async () => {
   await insertEvent("plain", null, null);
   await insertTranslation("plain", "ro", doc(paragraph("Fără film")));
 
-  // Then the rest, this migration among them, over those rows.
-  await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
+  // Then this migration over those rows — and no further: the last describe below runs the rest of
+  // the migrations (0093, 0094) on their own.
+  writeFileSync(path.join(folder, "meta", "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, position + 1) }));
+  await migrate(drizzle(client), { migrationsFolder: folder });
 });
 
 afterAll(async () => {
@@ -156,5 +158,47 @@ describe("§481 migration 0092_film_into_description — the film section's link
     const sql = readFileSync(`${MIGRATIONS}/${TAG}.sql`, "utf8").replace(/--[^\n]*/g, "");
     expect(sql).not.toMatch(/\b(DROP|RENAME|ALTER|CREATE)\b/i);
     expect(sql).toMatch(/UPDATE "event_translations"/);
+  });
+});
+
+/**
+ * What follows it in this release (§491): migrations 0093 and 0094 touch only «Echipa»'s links
+ * CHECK, and the film's old columns stay in the database. BR-V2.10 stops declaring them in the
+ * Drizzle schema; BR-V2.09, which may still be serving while BR-V2.10 migrates, declares them, and
+ * every bare select, returning and insert of `events` it makes names them — so their drop is
+ * BR-V2.11's own contract migration (AGENTS.md §7.6). Runs last in this file, over the same rows,
+ * as `yarn db:migrate:env` runs every pending migration over production.
+ */
+describe("§491 migrations 0093 and 0094 — the film columns stay until the release after", () => {
+  it("leaves the two columns, their CHECK, every description and every version as 0092 left them", async () => {
+    const before = {
+      race: [await translation("race", "ro"), await translation("race", "en")],
+      pasted: [await translation("pasted", "ro"), await translation("pasted", "en")],
+      plain: await translation("plain", "ro"),
+    };
+
+    await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
+
+    const { rows: columns } = await client.query<{ column_name: string }>(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'events' AND column_name IN ('video_url', 'video_poster_url') ORDER BY column_name",
+    );
+    expect(columns.map((row) => row.column_name)).toEqual(["video_poster_url", "video_url"]);
+    const { rows: checks } = await client.query<{ conname: string }>("SELECT conname FROM pg_constraint WHERE conname = 'events_video_url_is_https'");
+    expect(checks).toHaveLength(1);
+    // A row the previous release's bare insert would write — naming both columns — is still taken.
+    await client.query("INSERT INTO events (type, starts_at, video_url, video_poster_url) VALUES ('RACE', '2026-11-28T08:00:00Z', NULL, NULL)");
+
+    expect([await translation("race", "ro"), await translation("race", "en")]).toEqual(before.race);
+    expect([await translation("pasted", "ro"), await translation("pasted", "en")]).toEqual(before.pasted);
+    expect(await translation("plain", "ro")).toEqual(before.plain);
+  });
+
+  it("drops no column in this release: 0093 and 0094 name only the team links' CHECK (AGENTS.md §7.6)", () => {
+    for (const file of ["0093_team_links_six_check_retired.sql", "0094_team_links_twelve.sql"]) {
+      const sql = readFileSync(`${MIGRATIONS}/${file}`, "utf8").replace(/--[^\n]*/g, "");
+      expect(sql, file).not.toMatch(/DROP\s+COLUMN/i);
+      expect(sql, file).not.toMatch(/video/i);
+      expect(sql, file).toMatch(/"team_members_links_is_a_short_array_of_https_links"/);
+    }
   });
 });

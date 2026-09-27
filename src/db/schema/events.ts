@@ -235,25 +235,11 @@ export const events = pgTable(
      */
     routeUrl: text("route_url"),
 
-    /**
-     * Last year's film (BR-REQ-011-01 criterion 9): a YouTube link as the organizer pasted it,
-     * validated to carry a video id before it is stored (`events/domain/video.ts`), embedded
-     * on the page from the id alone. Text rather than the id, so the row says what was given.
-     */
-    videoUrl: text("video_url"),
-
-    /**
-     * The club's own copy of that film's thumbnail (`DECISIONS.md` §403, AGENTS.md §17): the
-     * address `modules/media/video-poster.ts` stored it at, fetched from YouTube once when
-     * `video_url` was saved and never asked of Google again — the facade the visitor sees
-     * shows this address, not `i.ytimg.com`, keeping §69/§110's rule that nothing but the
-     * player itself is a request to a third party, and only after the visitor presses play.
-     * Null until a fetch has succeeded for the video currently stored, or after `video_url` is
-     * cleared; a fetch failure for a *new* video leaves it null (the page falls back to the
-     * text facade) and one for the *same* video leaves whatever was there (a transient network
-     * failure keeps the old poster rather than blanking it).
-     */
-    videoPosterUrl: text("video_poster_url"),
+    // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
+    // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
+    // stored film there. The two columns and `events_video_url_is_https` are still in the database
+    // until BR-V2.11's contract migration drops them — BR-V2.09 declared them and may be serving
+    // while BR-V2.10 migrates (AGENTS.md §7.6), so this release's snapshot keeps them too.
 
     /**
      * The club's Strava group event for this occurrence (BR-REQ-011-01 criterion 10): the
@@ -658,10 +644,6 @@ export const events = pgTable(
     check(
       "events_route_url_is_https",
       sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
-    ),
-    check(
-      "events_video_url_is_https",
-      sql`${t.videoUrl} IS NULL OR ${t.videoUrl} LIKE 'https://%'`,
     ),
     check(
       "events_strava_event_url_is_https",

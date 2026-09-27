@@ -138,7 +138,8 @@ describe("§389 §446 what one submission does on an address", () => {
   it("another name with a registered birth date is a slip too — the name is looked for first", () => {
     const ana = row("Ana Pop", "CONFIRMED", "1985-03-02");
     const ion = row("Ion Pop", "CONFIRMED", "2012-06-01");
-    expect(decide([ana, ion], "Maria Pop", "form", true, "2012-06-01")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true });
+    // Another name on a registered birth date (§493): the re-sent message says how twins are registered.
+    expect(decide([ana, ion], "Maria Pop", "form", true, "2012-06-01")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true, sameBirthDate: true });
     expect(decide([ana, ion], "Ion Pop", "form", true, "1985-03-02")).toEqual({ kind: "resend", registration: ion, notAnotherPerson: true });
   });
 
@@ -181,9 +182,32 @@ describe("§389 §446 what one submission does on an address", () => {
     expect(decide(rows, "Maria Pop", "link")).toEqual({ kind: "refuseAtCap" });
   });
 
-  it("a staff entry racing past its own check re-sends to the one there, as before", () => {
+  /*
+    §493 — a staff entry decides by the name alone: the person at the desk typed somebody's name, so
+    another name on a registered address is another person — twins included, whom the form's rule
+    reads as a slip — within the club's limit; the same runner again is refused out loud.
+  */
+  it("a staff entry registers another person on a registered address, twins included", () => {
+    const ana = row("Ana Pop", "CONFIRMED", "2014-05-05");
+    expect(decide([ana], "Maria Pop", "staff", true, null)).toEqual({ kind: "insert" });
+    // The twin: another name, the same birth date — a slip on the form, a registration at the desk.
+    expect(decide([ana], "Ioana Pop", "form", true, "2014-05-05")).toMatchObject({ kind: "resend", sameBirthDate: true });
+    expect(decide([ana], "Ioana Pop", "staff", true, "2014-05-05")).toEqual({ kind: "insert" });
+    // The same runner's cancelled row beside the active one comes back rather than a second row.
+    const ion = row("Ion Pop", "CANCELLED");
+    expect(decide([ana, ion], "Ion Pop", "staff")).toEqual({ kind: "restart", registration: ion });
+  });
+
+  it("a staff entry of the same runner again, or past the club's limit, is refused out loud", () => {
+    const ana = row("Ana Pop", "CONFIRMED", "2014-05-05");
+    expect(decide([ana], "ANA  POP", "staff", true, "1999-01-01")).toEqual({ kind: "refuseAlreadyRegistered" });
+    const full = [ana, row("Ion Pop"), row("Dan Pop")];
+    expect(decide(full, "Maria Pop", "staff")).toEqual({ kind: "refuseAtCap" });
+  });
+
+  it("while the schema holds one registration per address, a staff entry still re-sends — and the service refuses it", () => {
     const ana = row("Ana Pop");
-    expect(decide([ana], "Maria Pop", "staff", true, null)).toEqual({ kind: "resend", registration: ana });
+    expect(decide([ana], "Maria Pop", "staff", false, null)).toEqual({ kind: "resend", registration: ana });
   });
 
   it("while the schema holds one registration per address, everything is as it was, and the confirmation cannot be honoured", () => {

@@ -283,9 +283,12 @@ describe("§446 the form sent again from a registered address for a different pe
     expect(await rowsOf(event.id)).toHaveLength(1);
     expect(await entries()).toHaveLength(0);
     const resent = (await outbox("COMPLETE_DECLARATION")).at(-1)!;
-    expect(resent.payloadJson).toEqual({ alreadyRegistered: true, anotherPersonHint: true });
+    // Another name on a registered birth date (§493): twins, perhaps — the sentence says how they are registered.
+    expect(resent.payloadJson).toEqual({ alreadyRegistered: true, anotherPersonHint: true, sameBirthDateHint: true });
     const message = await render(resent, at(6));
-    expect(message.text).toContain("Dacă vrei să înscrii pe altcineva");
+    expect(message.text).not.toContain("Dacă vrei să înscrii pe altcineva");
+    expect(message.text).toContain("Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email");
+    expect(message.text).toContain("For a twin, send the form from another email address, or reply to this email and we will register them.");
   });
 });
 

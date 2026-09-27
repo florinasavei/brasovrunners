@@ -39,7 +39,8 @@ import { getStorage, isStorageConfigured, objectKey, type Storage } from "./stor
  *    and the rungs are made from it (`ladderFromStoredMaster`).
  * 2. **One transaction** moves the row to the new prefix and rewrites the old prefix to the new one
  *    in every text the reference check reads (`references.ts`: a page's body, an event
- *    translation's five rich texts, the event's film poster), and bumps the `version` of every
+ *    translation's five rich texts, a film's poster being an attribute of the description's
+ *    youtube figure since §481), and bumps the `version` of every
  *    row it rewrote — an editor open on one of them is then refused at save as for any other
  *    change made meanwhile (AGENTS.md §11.5), instead of writing the old address back.
  * 3. **The old two files stay** at the old address. The pictures page offers a picture's address
@@ -261,7 +262,8 @@ async function convertOne<T extends Record<string, unknown>>(
       .set({ bodyJson: sql`${swapped(pageTranslations.bodyJson, old, next)}::jsonb`, version: sql`${pageTranslations.version} + 1` })
       .where(holds(pageTranslations.bodyJson, old));
     // Not `events.video_poster_url` (§485): a film's poster lives in the description's youtube
-    // node, which the translations' swap above already carries; the column is unread.
+    // node, which the translations' swap above already carries; the column is unread and
+    // leaves the database in BR-V2.11 (§491).
     // «Echipa»'s texts (§474), which `references.ts` reads too and this press had missed (§483):
     // the words about each person, and the page's introduction in its platform setting. A card's
     // photo is by id and follows the row above on its own.

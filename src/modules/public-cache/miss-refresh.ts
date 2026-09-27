@@ -30,6 +30,11 @@ let nextWaveAt = 0;
  */
 export function scheduleMissRefresh(key: string, refresh: () => Promise<unknown>, everyMinutes: number, now: number = Date.now()): boolean {
   if (pending.has(key) || pending.size < MISS_REFRESH_MAX_PENDING) pending.set(key, refresh);
+  return startWave(everyMinutes, now);
+}
+
+/** Run everything queued in one wave after the response, when a wave is allowed now. */
+function startWave(everyMinutes: number, now: number): boolean {
   if (now < nextWaveAt || pending.size === 0) return false;
   nextWaveAt = now + everyMinutes * 60_000;
 
@@ -54,9 +59,35 @@ export function scheduleMissRefresh(key: string, refresh: () => Promise<unknown>
   return true;
 }
 
-/** A write has woken the compute already: the next miss may start a wave at once. */
-export function allowRefreshNow(): void {
+/**
+ * How long after a write on this instance a red month's miss is read in the request (§493): the
+ * write woke the compute, which stays awake five minutes after its last query whatever anybody
+ * does (Neon's fixed suspend), so a read inside this window costs at most the window itself — never
+ * a wake — and the organizer who just cancelled an event and opens its page sees it cancelled,
+ * rather than the copy taken before the save. Well under the five minutes, so the reads it allows
+ * cannot keep the compute awake much past the write's own tail.
+ */
+export const READ_AFTER_WRITE_MS = 2 * 60_000;
+
+let wokenByWriteAt = Number.NEGATIVE_INFINITY;
+
+/** A write has woken the compute already: the next miss may start a wave at once, and read in the request for a moment. */
+export function allowRefreshNow(now: number = Date.now()): void {
   nextWaveAt = 0;
+  wokenByWriteAt = now;
+}
+
+/** Whether a write on this instance woke the compute within `READ_AFTER_WRITE_MS` (§493). */
+export function computeAwakeFromWrite(now: number = Date.now()): boolean {
+  return now - wokenByWriteAt < READ_AFTER_WRITE_MS;
+}
+
+/**
+ * Start the wave the queue is waiting for, when one may run now — for a miss that is read in the
+ * request anyway (`computeAwakeFromWrite`): the same wake carries whatever else was queued.
+ */
+export function flushMissRefreshes(everyMinutes: number, now: number = Date.now()): boolean {
+  return startWave(everyMinutes, now);
 }
 
 /** For the tests: what is waiting, and a clean slate. */
@@ -67,4 +98,5 @@ export function pendingMissRefreshes(): number {
 export function forgetMissRefreshes(): void {
   pending.clear();
   nextWaveAt = 0;
+  wokenByWriteAt = Number.NEGATIVE_INFINITY;
 }

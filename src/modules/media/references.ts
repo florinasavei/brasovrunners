@@ -89,7 +89,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
   -- poster the event translation's own body names above (migration 0092 carried every stored
-  -- poster there). The column is unread and unwritten until its contract migration drops it.
+  -- poster there). The column is unread and leaves the database in BR-V2.11 (§491).
   -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
   -- is a card somebody is about to show.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})

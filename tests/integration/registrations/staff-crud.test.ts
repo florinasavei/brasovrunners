@@ -25,6 +25,7 @@ import {
   submitRegistration,
 } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -272,24 +273,70 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
     const event = await createInternalEvent(10);
     await addByStaff(event, "desk@example.org");
 
-    const code = await codeOf(
-      createRegistrationByStaff(
+    // The same person again (§493: the name decides at the desk), however it is spaced or cased.
+    let refusal: unknown = null;
+    try {
+      await createRegistrationByStaff(
         db,
         admin,
         {
           eventId: event.id,
-          firstName: "Desk",
-          lastName: "Again",
+          firstName: "DESK",
+          lastName: " desk@example.org ",
           email: "desk@example.org",
           locale: "ro",
           listOptOut: false,
           relayedByParticipantRequest: true,
         },
         NOW,
-      ),
-    );
+      );
+    } catch (error) {
+      refusal = error;
+    }
 
-    expect(code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(refusal) && refusal.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(refusal) && refusal.fields).toEqual(["email", ALREADY_ON_ADDRESS]);
+    expect(await db.select().from(registrations)).toHaveLength(1);
+  });
+
+  /*
+    §493 — another person on a registered address is entered at the desk: a family one at a time,
+    twins included (the public form reads the second twin as a slip of the first, §446), within the
+    club's limit per address, which is refused out loud.
+  */
+  it("enters another person on a registered address — twins too — and refuses past the club's limit", async () => {
+    const event = await createInternalEvent(10);
+    const enter = (firstName: string) =>
+      createRegistrationByStaff(
+        db,
+        admin,
+        {
+          eventId: event.id,
+          firstName,
+          lastName: "Pop",
+          email: "family@example.org",
+          locale: "ro",
+          listOptOut: false,
+          relayedByParticipantRequest: true,
+          details: { birthDate: "1990-05-05" },
+        },
+        NOW,
+      );
+
+    // Four people on one address, the default limit: two of them twins, born the same day.
+    for (const name of ["Ana", "Ioana", "Ion", "Dan"]) await enter(name);
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(rows.map((row) => row.registeredName).sort()).toEqual(["Ana Pop", "Dan Pop", "Ioana Pop", "Ion Pop"]);
+    expect(new Set(rows.map((row) => row.participantId)).size).toBe(1);
+
+    let refusal: unknown = null;
+    try {
+      await enter("Maria");
+    } catch (error) {
+      refusal = error;
+    }
+    expect(isDomainError(refusal) && refusal.fields).toEqual(["email", ADDRESS_AT_CAP]);
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(4);
   });
 
   /**

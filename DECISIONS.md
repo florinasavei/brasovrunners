@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.09-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.10-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.09-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.10-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2011,8 +2011,8 @@ Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
 
 ## 38. Decided — five staff roles that nest, and where the personal-data line falls (2026-09-05)
 
-**Context.** The owner asked for a hierarchy: *"superadmin (me), admins (Amalia & Marius),
-moderator (Dani: can edit events and approve edits) and contributors (can propose edits but needs
+**Context.** The owner asked for a hierarchy: *"superadmin (me), admins (the administrator colleague & another colleague),
+moderator (the organizer colleague: can edit events and approve edits) and contributors (can propose edits but needs
 approval)… superuser - admin - dev - moderator - contributor"*.
 
 Three roles existed — AUTHOR, EDITOR, ADMIN — and the workflow they drove was already the right
@@ -2040,7 +2040,7 @@ DEV rather than at ADMIN.
 **Every existing ADMIN migrates to SUPERADMIN.** Staff administration moved from ADMIN to
 SUPERADMIN, so mapping ADMIN to ADMIN would have removed a power those accounts have today — and
 could have left the club with nobody able to manage staff at all. A role migration must never
-take away access somebody already had. Demoting Amalia and Marius to ADMIN afterwards is a click;
+take away access somebody already had. Demoting the two colleagues to ADMIN afterwards is a click;
 being locked out of the staff screen is not.
 
 ### What the change found
@@ -2060,7 +2060,7 @@ column is still `text`, then convert.
 
 ### What was deliberately not built
 
-**Per-event or per-section permissions.** "Dani moderates the trail races, Amalia the road races"
+**Per-event or per-section permissions.** "the organizer colleague moderates the trail races, the administrator colleague the road races"
 is a real thing clubs want and a different model entirely — it is authorization on rows, not on
 roles, and it would touch every query rather than one file. If the club asks, that is its own
 decision with its own migration.
@@ -6685,7 +6685,7 @@ Baseline `BR-V1.38-2026-09-18`.
 
 **Context.** The owner: "Email communication must be minimal so we meet the quota. A
 contact form on the website that submits to the club's Gmail and bypasses Mailgun.
-Protected against bots. We configure as devs where the emails go, because Amalia has a
+Protected against bots. We configure as devs where the emails go, because the administrator colleague has a
 Yahoo account too." The footer already showed `EMAIL_REPLY_TO` as a `mailto:`; on a phone
 without a mail app that is a dead end, and every message the platform sends today goes
 through Mailgun's 100 a day (§98, §100), which the registrations need. He chose Gmail SMTP
@@ -7177,7 +7177,7 @@ Baseline `BR-V1.38-2026-09-18`.
 ## 164. Decided — the club says who reads its mail, in the app; the platform says how it leaves (2026-09-20)
 
 **Context.** Three things the owner said this morning, and they are one thing. „I wanna
-allow CC on the contact form so that Amalia can receive emails”; then, when told it was an
+allow CC on the contact form so that the administrator colleague can receive emails”; then, when told it was an
 environment variable, „I need these CC's to be configurable in the app”; and, of the number
 on `/admin/emails`, „please note Mailgun is shared by QA and PROD”. The contact form's
 recipients were `CONTACT_FORM_TO` on two Vercel projects (§149), so adding a colleague meant a
@@ -8856,7 +8856,7 @@ Baseline `BR-V1.38-2026-09-18`.
 
 **Context.** Somebody the owner had asked to test QA registered, saw "Ți-am trimis un email cu un
 link de confirmare", and nothing arrived. He did not appear in the registrations list either. The
-owner reported it as an email problem — "Dani nu a primit mail", and then, reasonably, "so Yahoo
+owner reported it as an email problem — "colegul nu a primit mail", and then, reasonably, "so Yahoo
 doesn't receive registrations but Gmail does".
 
 It was not an email problem. A query against QA's `email_outbox` returned **zero rows** for his
@@ -9103,12 +9103,12 @@ Baseline `BR-V1.38-2026-09-18`.
 ## 201. Decided — crossing into public view is the Administrator's (2026-09-20)
 
 **Context.** The owner, naming his two colleagues: "Organizatorul trebuie să primească aprobare de
-la Administrator pt orice. Amalia e Administrator, Dani e Organizator dar poate face prostii, deci
-trebuie manageuit de Amalia."
+la Administrator pt orice. colega e Administrator, colegul e Organizator dar poate face prostii, deci
+trebuie manageuit de the administrator colleague."
 
 "Pt orice" is the hard part, and the honest answer is that this codebase has no approval queue: a
 change an Organizer makes takes effect when they make it. Building one — a pending revision beside
-every live record, a screen where Amalia reads the difference, an apply-on-approve path, a story
+every live record, a screen where the administrator colleague reads the difference, an apply-on-approve path, a story
 for two pending revisions of the same page — is a feature, not a flag.
 
 **Decision.** *The line that is available today, and it is a true one: below Administrator,
@@ -9352,7 +9352,7 @@ offered every section a lower one is" — survives, but only because of §208.
 
 ## 208. Decided — reading the club's content is its own question (2026-09-21)
 
-**Context.** Immediately after §207: "organizatorul vede cam tot (dar în readonly), practic Dani
+**Context.** Immediately after §207: "organizatorul vede cam tot (dar în readonly), practic the organizer colleague
 îi zice Amaliei să modifice X, Y lucru."
 
 And §207 had just made that impossible by accident. Every capability in `roles.ts` answered "may
@@ -9574,7 +9574,7 @@ Baseline `BR-V1.40-2026-09-21`.
 ## 214. Decided — the race number is reserved when the place is, and settled when registration closes (2026-09-21)
 
 **Context.** The owner, looking at his own registration stuck on "waiting for the email":
-"I need the BID to be reserved ASAP because I still did not receive this email." And Dani,
+"I need the BID to be reserved ASAP because I still did not receive this email." And the organizer colleague,
 on why it cannot be a manual step: "procesul trebuie să fie automat, să nu pierdem timp să
 facem noi înscrieri manuale… ca nimeni nu face așa ceva. Și mai ales că vor fi gratis, cu nr
 limitat de înscrieri… să vezi ce discuții și hate ne luăm dacă nu l-am înscris pe unul la
@@ -9682,7 +9682,7 @@ Baseline `BR-V1.40-2026-09-21`.
 
 ## 216. Decided — a challenge that cannot run is not a reason to refuse a registration (2026-09-21)
 
-**Context.** Dani could not register, on two different addresses. Diagnosing it turned up
+**Context.** the organizer colleague could not register, on two different addresses. Diagnosing it turned up
 something worse than the bug being looked for: `verifyTurnstile` answered `failed` for **no
 token at all** and for **Cloudflare not answering**, and the action refused the submission on
 `failed`.
@@ -9709,7 +9709,7 @@ An over-long token stays `failed`: nothing legitimate produces one, and it *was*
 *The contact form and the interest box are fixed by the same change*, because both already
 refused only on `failed`.
 
-**This was not Dani's bug**, and the distinction is worth recording. His widget ticks itself,
+**This was not the organizer colleague's bug**, and the distinction is worth recording. His widget ticks itself,
 so Turnstile was passing for him all along. What discarded him is §194's silent drop, which is
 fixed on `qa` and has never been deployed — production still runs `if (looksLikeSpam(input,
 now)) return { ok: true }`, which writes no registration, queues no email, and tells the person
@@ -9723,7 +9723,7 @@ Baseline `BR-V1.40-2026-09-21`.
 
 ## 217. Decided — nobody is told to wait for an email that was never sent (2026-09-21)
 
-**Context.** Dani could not register. On the same afternoon he registered successfully in
+**Context.** the organizer colleague could not register. On the same afternoon he registered successfully in
 DuckDuckGo and failed repeatedly in Edge, which is the whole diagnosis in one sentence: Edge
 holds his details and fills the form instantly, and production answers an instant submission
 with the confirmation page and nothing else.
@@ -9779,7 +9779,7 @@ matters most of the three: it is the escape hatch somebody reaches for *because*
 site would not take them (§205), so refusing it silently is the worst failure on the one page
 that exists to catch the others.
 
-**The second finding, and it is the expensive one.** While looking for what blocked Dani it
+**The second finding, and it is the expensive one.** While looking for what blocked the organizer colleague it
 turned out that **production has never had §194**: `main` is forty-one commits behind `qa` and
 still runs the silent drop. Every symptom matched — the widget ticked itself, the form
 submitted, the page said to check the inbox, no email arrived, and there was no row for him in
@@ -9847,7 +9847,7 @@ Baseline `BR-V1.40-2026-09-21`.
 
 ## 219. Decided — the email header is a white banner, and the message says it is a light document (2026-09-21)
 
-**Context.** Dani, of the verification email: "this email header looks ugly! it should be a
+**Context.** the organizer colleague, of the verification email: "this email header looks ugly! it should be a
 banner with white background", with a screenshot of the lockup sitting in a white rectangle on
 a dark card.
 
@@ -9962,7 +9962,7 @@ a screen they were invited to open and being told their role does not permit it.
 *A screen an Organizer may read and could not open*, which is worse, because the work simply
 cannot be done. `/admin/pages/[id]` and `/admin/legal/[id]` both gated on **writing**, so the
 one role §208 exists for could see the list and open nothing on it. "Organizatorul vede cam tot
-(dar în readonly), practic Dani îi zice Amaliei să modifice X" is impossible if X cannot be
+(dar în readonly), practic the organizer colleague îi zice Amaliei să modifice X" is impossible if X cannot be
 read.
 
 **Decision.** *Every screen opens on `canReadContent`; every control inside is guarded on the
@@ -10144,7 +10144,7 @@ Baseline `BR-V1.40-2026-09-21`.
 
 ## 228. Decided — an emergency contact is somebody else (2026-09-21)
 
-**Context.** Amalia, testing: "și poți pune la persoana de contact numele tău și nr tău."
+**Context.** the administrator colleague, testing: "și poți pune la persoana de contact numele tău și nr tău."
 
 **Decision.** You could, and the field was then worth nothing. Its whole purpose is a number
 somebody can ring when the runner cannot answer their own; a contact who *is* the runner is not
@@ -10164,7 +10164,7 @@ Baseline `BR-V1.40-2026-09-21`.
 
 ## 229. Decided — the confirmation screen stops asserting a registration it did not make (2026-09-21)
 
-**Context.** Amalia, testing: "te poți înscrie cu fix același mail de 2 ori, primești și QR și
+**Context.** the administrator colleague, testing: "te poți înscrie cu fix același mail de 2 ori, primești și QR și
 tot."
 
 **What actually happens, because it is not what it looks like.** No second registration is ever
@@ -10197,7 +10197,7 @@ Baseline `BR-V1.40-2026-09-21`.
 
 **Context.** The owner, on a registration detail page showing "nr. 2" in the journey and an
 empty "give this runner a number" box underneath: "I would like the BIDs to be reserved from
-the first stages (I've already said that!) Cuz this input does not make any sense now! Amalia
+the first stages (I've already said that!) Cuz this input does not make any sense now! the administrator colleague
 already has number 2 reserved."
 
 The reservation was already working — that is where the "nr. 2" came from. What had not caught
@@ -10807,7 +10807,7 @@ rows apart, and the same filters the list uses.
 
 ## 247. Decided — the club writes the words, the platform keeps the machinery (2026-09-21)
 
-**Context.** Dani's ask, carried by the owner: the email templates should be editable in the
+**Context.** the organizer colleague's ask, carried by the owner: the email templates should be editable in the
 backoffice. Today every word is in `templates.ts`, so "Ne vedem duminică!" instead of "Ne
 vedem la eveniment" is a pull request, a review and a deployment — for a club whose voice is
 the whole point of a club.
@@ -11040,7 +11040,7 @@ Baseline `BR-V1.43-2026-09-21`.
 
 Turnstile has been behind `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` since §97, so turning
 it off meant editing two Vercel projects and waiting for a build. The day that is needed is the
-day the widget is refusing real people — which happened on 2026-09-21, twice, to Dani (§216) —
+day the widget is refusing real people — which happened on 2026-09-21, twice, to the organizer colleague (§216) —
 and on that day a deployment is the wrong unit of response.
 
 **Decision.** *One stored flag, `platform_settings.botCheck`, default **on**.* A missing row does
@@ -11722,7 +11722,7 @@ Baseline `BR-V1.43-2026-09-21`.
 
 **Context.** The owner, 2026-09-22: "I want that rich text editor to be almost as good as word
 doc editing", and then the sentence that decides the shape of it — "or at least close to
-WordPress, Amalia is used to WordPress." This is a usability requirement with a named user, not
+WordPress, the administrator colleague is used to WordPress." This is a usability requirement with a named user, not
 a feature list: what matters is that somebody who has written in WordPress finds their habits
 work here.
 
@@ -12127,7 +12127,7 @@ Baseline `BR-V1.44-2026-09-22`.
 
 ## 283. Decided — the telephone and the declaration say what they want before they refuse it (2026-09-22)
 
-**Context.** Amalia, testing on QA: the telephone number needs a maximum and a clearer answer as
+**Context.** the administrator colleague, testing on QA: the telephone number needs a maximum and a clearer answer as
 it is typed; and signing the declaration should "give some hints on the ID document or select ID
 doc type", and should say that the name typed as a signature is the one used at registration —
 "as a hint, not a hard validation".
@@ -12220,7 +12220,7 @@ Baseline `BR-V1.45-2026-09-22`.
 
 ## 286. Fixed — four things found by watching two people use the form (2026-09-22)
 
-**Context.** Amalia and the owner, testing on QA within an hour of each other.
+**Context.** the administrator colleague and the owner, testing on QA within an hour of each other.
 
 **"Anumerarea in batch nu merge!"** It was working and saying nothing. A number is given to a
 **confirmed, real** registration that has none — a number follows the declaration and never
@@ -12239,7 +12239,7 @@ the screen still showed 5 beside them — two numbers for one person, neither vi
 *The number somebody was told is the number they keep*, and it stops being provisional.
 
 **The consents survive a rejected submission**, reversing that part of §142. The owner, watching
-it happen: "vreau sa persist inclusiv bifele, sa nu se enerveze Dani … gen vreau ca dani sa mai
+it happen: "vreau sa persist inclusiv bifele, sa nu se enerveze the organizer colleague … gen vreau ca dani sa mai
 apese inca o data submit si atat!" The reasoning for dropping them was thinner than it looked: the
 tick that counts is the one on the submission that **succeeds**, and that is the one the row
 records with its version and timestamp. Making somebody re-tick three boxes to recover from a
@@ -12305,7 +12305,7 @@ Baseline `BR-V1.45-2026-09-22`.
 
 ## 288. Fixed — the invitation key could authenticate and do nothing (2026-09-22)
 
-**Context.** The owner invited Dani as an Administrator from Echipa, and Dani met Zitadel's own
+**Context.** The owner invited the organizer colleague as an Administrator from Echipa, and the organizer colleague met Zitadel's own
 screen: **"User not found in the system"**. The `staff_users` row existed; the Zitadel account did
 not.
 
@@ -12596,13 +12596,13 @@ Baseline `BR-V1.51-2026-09-23`.
 
 Four reports from one evening, all on a phone or a tablet: the footer's Strava mark could not be tapped on an iPhone; between 600 and 750 pixels the social marks sat on the summary's last word and on the build badge; a Facebook share opened a "Create post" whose card was the bare domain, no title and no picture; "on iPhone the share buttons do not work"; and the owner wanted Instagram to be "an actual share, not just create a picture". Two were the site's; two were not, and the review is what told them apart.
 
-**The footer is one wrapping flex row** (`shared/ui/SiteFooter.tsx`). The marks, the scheme switch and the language were absolutely positioned over the bar, so they had no width in the layout and were drawn over whatever sibling reached them — which is both the overlap and why Amalia's tap on Strava landed on something else. Now every control is an item of its own: the scheme switch (44 px), the `<details>` fold, the three 44×44 marks and, on a phone, the language. The fold gets `flex: 1 1 0%` on `xs` — a wrapping row assigns lines by hypothetical size, and a summary-sized basis pushed the language to a second line at 320 px — and `0 1 auto` from `sm`; `&[open]` takes the rest of the line so the marks step under the panel. `BuildBadge` floats from `md` rather than `sm`, since 600–900 px is where it sat on the Instagram mark. `tests/e2e/footer.spec.ts` measures the bar at five widths: 44 px targets, every control on the bar's first 44 px while closed, no two controls intersecting (the badge included), a trial click on every mark, the open-fold state, the badge on its own line at 640.
+**The footer is one wrapping flex row** (`shared/ui/SiteFooter.tsx`). The marks, the scheme switch and the language were absolutely positioned over the bar, so they had no width in the layout and were drawn over whatever sibling reached them — which is both the overlap and why the administrator colleague's tap on Strava landed on something else. Now every control is an item of its own: the scheme switch (44 px), the `<details>` fold, the three 44×44 marks and, on a phone, the language. The fold gets `flex: 1 1 0%` on `xs` — a wrapping row assigns lines by hypothetical size, and a summary-sized basis pushed the language to a second line at 320 px — and `0 1 auto` from `sm`; `&[open]` takes the rest of the line so the marks step under the panel. `BuildBadge` floats from `md` rather than `sm`, since 600–900 px is where it sat on the Instagram mark. `tests/e2e/footer.spec.ts` measures the bar at five widths: 44 px targets, every control on the bar's first 44 px while closed, no two controls intersecting (the badge included), a trial click on every mark, the open-fold state, the badge on its own line at 640.
 
 **Instagram is a share where the phone can take a file** (`events/instagram-share.ts`, `ui/InstagramShareButton.tsx`). Instagram has no share URL; what it takes is a picture from the phone's own sharing sheet. The island renders on the server as the download anchor, "Descarcă poza pentru Instagram", and becomes a button once the browser says it can share a file (`canShareFiles`, probed with a real `File`) **and the pointer is coarse** — a deliberate narrowing of the ask, recorded here: a desktop Safari can share files too, but its sheet has no Instagram in it, so a mouse keeps the download and the label says so. The click fetches the square card and calls `navigator.share({ files })` in the fetch's `.then`, inside the user activation iOS demands; `AbortError` (the sheet was closed) does nothing, anything else falls back to `location.assign(imageHref)` — the route answers `Content-Disposition: attachment`. `NativeShareButton` is unchanged in behaviour and shares the pill style through `share-pill.ts`. New key `Event.share.instagramDownload` in both catalogues. Playwright's `webServer` sets three placeholder `CLUB_*_URL`s so the footer's marks exist under test — CI configured none, and a footer with no marks has nothing to measure.
 
 **The empty Facebook card was not the site, and the first fix for it was withdrawn.** The implementer's diagnosis was a trailing slash in `APP_BASE_URL` making `u=` read `https://host//ro/…`. The reviewer checked the live QA it was reported from: the button already sent `sharer.php?u=https%3A%2F%2Fqa.<host>%2Fro%2Fevenimente%2F…` — absolute, one slash, encoded once — with a matching canonical, `og:url`, `og:title` and an `og:image` answering 200 to `facebookexternalhit`. What QA answers every crawler is `robots.txt` → `Disallow: /` (`src/app/robots.ts`), on purpose for every environment but production, so Facebook's scraper is refused and draws the bare domain. **Production's robots allows, and production's event page serves the same correct card.** Nothing in this change alters that, and nothing should: a QA that search engines and scrapers index would be worse than a QA whose share preview is blank. What stays from the withdrawn fix is hygiene: `APP_BASE_URL` drops a trailing slash once, where it is validated (`shared/config/env.ts`, `z.url()` then a transform; a path prefix is kept), because forty `${env.APP_BASE_URL}${pathname}` joins would each mint a second spelling of every address if somebody ever typed one — normalised rather than refused, since a slash is a spelling and not an unsafe combination like the startup guards. `tests/unit/config/env.test.ts` covers the strip, the kept prefix and the join.
 
-**"On iPhone the share buttons do not work" was not reproduced.** On `origin/qa` the Facebook and WhatsApp buttons were already plain `<a href target="_blank" rel="noopener noreferrer">`, and `NativeShareButton` already called `navigator.share` synchronously in its click handler; there was no `window.open` after an `await` to remove. The share builders were still consolidated (`events/share-links.ts`: `absoluteUrl`, `eventPageUrl`, `facebookShareUrl`, `whatsappShareUrl`, also feeding the canonical, `og:url` and the JSON-LD image), and the event page's share row is asserted by `share-links.spec.ts` (`u=` equals `page.url()` encoded once, the WhatsApp text, the Instagram control, 44 px on a phone). **Open, and only a real iPhone answers it:** the event page's share row — Facebook, WhatsApp, "Distribuie", Instagram share-then-fallback — tapped on Amalia's phone. If the report stands after this lands, the cause is something the emulator does not have (a content blocker, an in-app browser), and that is where to look.
+**"On iPhone the share buttons do not work" was not reproduced.** On `origin/qa` the Facebook and WhatsApp buttons were already plain `<a href target="_blank" rel="noopener noreferrer">`, and `NativeShareButton` already called `navigator.share` synchronously in its click handler; there was no `window.open` after an `await` to remove. The share builders were still consolidated (`events/share-links.ts`: `absoluteUrl`, `eventPageUrl`, `facebookShareUrl`, `whatsappShareUrl`, also feeding the canonical, `og:url` and the JSON-LD image), and the event page's share row is asserted by `share-links.spec.ts` (`u=` equals `page.url()` encoded once, the WhatsApp text, the Instagram control, 44 px on a phone). **Open, and only a real iPhone answers it:** the event page's share row — Facebook, WhatsApp, "Distribuie", Instagram share-then-fallback — tapped on the administrator colleague's phone. If the report stands after this lands, the cause is something the emulator does not have (a content blocker, an in-app browser), and that is where to look.
 
 **Tests.** 18 unit tests (the URL builders against a fixed base; the `File` construction and the fallback decision) plus the env strip; `footer.spec.ts` and `share-links.spec.ts`; 79 e2e runs green on both projects against a production build. BR-REQ-052-02 criterion 8 now reads: shares the square card through the phone's sheet where a file can be shared from a coarse pointer, otherwise offers it as a download labelled as such.
 
@@ -12743,11 +12743,11 @@ Baseline `BR-V1.54-2026-09-23`.
 
 ## 304. Fixed — a press held for the anti-bot check is sent, not dropped; a slow submit says so (2026-09-23)
 
-**Context.** Amalia, from her laptop, 11:26: "cu autofill nu am reusit nici eu sa ma inscriu … nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe lista." The owner: "fix Amalia's issue ASAP".
+**Context.** the administrator colleague, from her laptop, 11:26: "cu autofill nu am reusit nici eu sa ma inscriu … nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe lista." The owner: "fix the administrator colleague's issue ASAP".
 
-**What the database said.** Read-only, QA, three days back: Amalia registered on 2026-09-22 at 14:13, was confirmed, and every message to her — verification, declaration, confirmation, and the cancellation at 17:22 — was `SENT`. So the Mailgun sandbox was not her problem. For 11:26 on the 23rd there is **no registration, no outbox row, no audit row**: whatever she pressed never reached the server. The form has exactly three exits — a red summary, the check-your-email screen, or a request that never returns — and none of them had run.
+**What the database said.** Read-only, QA, three days back: the administrator colleague registered on 2026-09-22 at 14:13, was confirmed, and every message to her — verification, declaration, confirmation, and the cancellation at 17:22 — was `SENT`. So the Mailgun sandbox was not her problem. For 11:26 on the 23rd there is **no registration, no outbox row, no audit row**: whatever she pressed never reached the server. The form has exactly three exits — a red summary, the check-your-email screen, or a request that never returns — and none of them had run.
 
-**What swallowed the press.** §285 made the send button wait for Cloudflare's token: a press made before the token existed was held — `event.preventDefault()`, a sentence under the button, "Se verifică o secundă că nu ești robot — apoi poți trimite" — and when the token landed the sentence simply went away. Nothing sent the form. The person had to press again, and nothing said so. That was tolerable for somebody typing: the token arrives in the half-second between the last field and the button. It is the *normal* case for autofill, which fills the whole form and lets the person press in the same second the widget starts. Amalia's press was held, the sentence vanished, and she read a quiet form as a form that had gone through — "ca si cum m-am inscris".
+**What swallowed the press.** §285 made the send button wait for Cloudflare's token: a press made before the token existed was held — `event.preventDefault()`, a sentence under the button, "Se verifică o secundă că nu ești robot — apoi poți trimite" — and when the token landed the sentence simply went away. Nothing sent the form. The person had to press again, and nothing said so. That was tolerable for somebody typing: the token arrives in the half-second between the last field and the button. It is the *normal* case for autofill, which fills the whole form and lets the person press in the same second the widget starts. the administrator colleague's press was held, the sentence vanished, and she read a quiet form as a form that had gone through — "ca si cum m-am inscris".
 
 **Decision.** *The held press is replayed.* `SubmitButton` remembers the early press and, the moment `waiting` turns false — the token arrived, or §285's eight-second valve opened because the widget never answered — calls `form.requestSubmit(button)`: the browser's own submit, with this button as the submitter, so constraint validation and the Server Action run exactly as for a fresh press. Once, and never while a request is in flight. The sentence now promises it: "Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde; nu mai apăsa."
 
@@ -12755,7 +12755,7 @@ Baseline `BR-V1.54-2026-09-23`.
 
 **What was rejected.** *Submitting immediately with no token when the person presses early.* The server accepts an `unavailable` verdict on the other defences, so it would work — and it would turn every quick press into a submission that skipped the check, which is the one thing §285 was for. Waiting up to eight seconds and then sending is the same outcome for a blocked widget and the intended one for a working widget. *A browser test.* The unit suite has no DOM; `tests/unit/shared/held-press-is-sent.test.ts` pins the replay, the valve, the slow sentence and both catalogues at source level, and `registration-autofill.spec.ts` keeps proving the autofill path in a browser — where Turnstile is not configured under test, so the wait never engages; the replay is exercised only where a widget exists, which is QA and production.
 
-**Left open.** Whether Amalia's widget ever answered on her laptop is unknown (a work network can block `challenges.cloudflare.com`); either way the press is now sent within eight seconds. Her earlier registration was cancelled by staff on the 22nd, so her retry was a genuine re-registration — the server handles that (§235) and would have emailed her; staff still have no marker for a repeated submission, which is queued separately.
+**Left open.** Whether the administrator colleague's widget ever answered on her laptop is unknown (a work network can block `challenges.cloudflare.com`); either way the press is now sent within eight seconds. Her earlier registration was cancelled by staff on the 22nd, so her retry was a genuine re-registration — the server handles that (§235) and would have emailed her; staff still have no marker for a repeated submission, which is queued separately.
 
 Baseline `BR-V1.55-2026-09-23`.
 
@@ -12799,7 +12799,7 @@ Baseline `BR-V1.57-2026-09-23`.
 
 ## 307. Changed — QA sends through the club's domain with its own key, and its notice says the mail is real (2026-09-23)
 
-**Context.** §163 let a QA deployment address anyone through the allowlist's star, and QA's notice (the one §37's two waiting testers produced) kept saying "only the addresses the club authorized receive mail", because QA still sent through Mailgun's US sandbox, which delivers to five confirmed recipients and nobody else. Amalia's second registration on 2026-09-23 made the owner say it outright: "we need to drop that allowlist, and both us and the user needs to know he is trying to re-register". The application's allowlist was already the star; the gate that remained was the provider's.
+**Context.** §163 let a QA deployment address anyone through the allowlist's star, and QA's notice (the one §37's two waiting testers produced) kept saying "only the addresses the club authorized receive mail", because QA still sent through Mailgun's US sandbox, which delivers to five confirmed recipients and nobody else. the administrator colleague's second registration on 2026-09-23 made the owner say it outright: "we need to drop that allowlist, and both us and the user needs to know he is trying to re-register". The application's allowlist was already the star; the gate that remained was the provider's.
 
 **Decision.** QA sends through the club's verified domain, `mail.<club domain>` in Mailgun's EU region, with **its own sending key** (`brasovrunners-qa`), not production's: a key revoked on one environment must not stop the other. The key lives on the QA Vercel project as `MAILGUN_API_KEY` and in the owner's `.env.local` as `MAILGUN_API_KEY_QA`, never in the repository. `EMAIL_DELIVERY_MODE` stays `allowlist` and the list keeps its star (§163): `live` outside production is still refused at startup, and every QA subject still carries `[QA] ` (`QA_SUBJECT_PREFIX`).
 
@@ -12837,7 +12837,7 @@ Baseline `BR-V1.60-2026-09-23`.
 
 **Context.** The owner, 2026-09-23: „la cel de contact cred ca imi mai trebuie ceva captcha pt ca primesc spam cu SEO stuff". The sample came through the production form from `domains@search-<domain>`: "Feature <domain> in Google's Search Index … searchregister.net".
 
-**Why more captcha changes nothing (checked against the code: it holds).** `submitContactAction` verifies Turnstile first and refuses only `failed`. A plain HTTP script never runs the widget, so it posts an empty `cf-turnstile-response`. `verifyTurnstile("")` answers `unavailable`, and that passes (§216). `submitContactMessage` then runs `looksLikeSpam`, and the script passes that too: it leaves the hidden field empty, and it posts either the `renderedAt` it scraped, more than a second old, or no render time at all, which has not been suspicious since §217. The per-identity throttle (five an hour per canonical address, §149) never engages either, because each spam comes from one address, once. Every gate passes by design. A second challenge would pass the same way: the widget is exactly the thing a script does not run. And turning "no token" into a refusal would repeat Dani's failure from §216: a person with JavaScript off, a content blocker or a bad five seconds at Cloudflare posts the same nothing, and §205 says that person must still reach the club.
+**Why more captcha changes nothing (checked against the code: it holds).** `submitContactAction` verifies Turnstile first and refuses only `failed`. A plain HTTP script never runs the widget, so it posts an empty `cf-turnstile-response`. `verifyTurnstile("")` answers `unavailable`, and that passes (§216). `submitContactMessage` then runs `looksLikeSpam`, and the script passes that too: it leaves the hidden field empty, and it posts either the `renderedAt` it scraped, more than a second old, or no render time at all, which has not been suspicious since §217. The per-identity throttle (five an hour per canonical address, §149) never engages either, because each spam comes from one address, once. Every gate passes by design. A second challenge would pass the same way: the widget is exactly the thing a script does not run. And turning "no token" into a refusal would repeat the organizer colleague's failure from §216: a person with JavaScript off, a content blocker or a bad five seconds at Cloudflare posts the same nothing, and §205 says that person must still reach the club.
 
 **Decision: mark, do not refuse.** A pure classifier, `contact/domain/suspicion.ts`, reads what got through. Two things make a message suspicious:
 
@@ -12917,7 +12917,7 @@ Baseline `BR-V1.62-2026-09-23`.
 
 ## 312. Decided — a second submission is marked for the club, and a name search looks in every event (2026-09-23)
 
-**Context.** Amalia, an organizer testing on QA, registered with her browser's autofill twice. The owner: "both us and the user needs to know he is trying to re-register". The participant already learns it: the re-sent message opens with "Ești deja înscris", underlined (§235, §309). The club did not. A second submission changed no row and left no trace a staff member could see, so "she says she registered but I cannot find anything" had no answer on any screen. And the staff member who searched for her by name found nothing, for a second reason: the list opens on the featured event (§178), and a name typed into the search stayed inside that filter, which nobody had chosen and the screen did not name.
+**Context.** the administrator colleague, an organizer testing on QA, registered with her browser's autofill twice. The owner: "both us and the user needs to know he is trying to re-register". The participant already learns it: the re-sent message opens with "Ești deja înscris", underlined (§235, §309). The club did not. A second submission changed no row and left no trace a staff member could see, so "she says she registered but I cannot find anything" had no answer on any screen. And the staff member who searched for her by name found nothing, for a second reason: the list opens on the featured event (§178), and a name typed into the search stayed inside that filter, which nobody had chosen and the screen did not name.
 
 (The first half of the owner's sentence — dropping QA's recipient allowlist — is the mail setting of §307, not this.)
 
@@ -17552,7 +17552,7 @@ Baseline `BR-V2.03-2026-09-26`.
 
 ## 436. A backoffice save a corporate proxy blocks goes the simple way, says so, and /admin/network names what to allow
 
-**The symptom and its cause.** The owner, 2026-09-26: Amalia, on a corporate laptop behind Zscaler, could open every backoffice page but not save on some of them. The whole-site block of 2026-09-22 (SETUP.md §39, "Newly Registered and Observed Domains") had lifted. What was left was a proxy that passes ordinary page loads and HTML form posts but refuses the scripted Server Action call, or answers it with its own HTML block page. That call is a `fetch` POST to the page's own address with a `Next-Action` header, answered as a `text/x-component` stream. Next then rejects the call's promise: with a `TypeError` when the fetch never got an answer, or with "An unexpected response was received from the server." (error code `E394`) when the answer was not a Server Action's. The button went back to rest (§371) with nothing saved and nothing said (§384).
+**The symptom and its cause.** The owner, 2026-09-26: the administrator colleague, on a corporate laptop behind Zscaler, could open every backoffice page but not save on some of them. The whole-site block of 2026-09-22 (SETUP.md §39, "Newly Registered and Observed Domains") had lifted. What was left was a proxy that passes ordinary page loads and HTML form posts but refuses the scripted Server Action call, or answers it with its own HTML block page. That call is a `fetch` POST to the page's own address with a `Next-Action` header, answered as a `text/x-component` stream. Next then rejects the call's promise: with a `TypeError` when the fetch never got an answer, or with "An unexpected response was received from the server." (error code `E394`) when the answer was not a Server Action's. The button went back to rest (§371) with nothing saved and nothing said (§384).
 
 **The fallback, and why the native post passes.** Every form whose action is a Server Action already carries its no-JavaScript path in the server's HTML: React writes hidden `$ACTION_…` fields into it. The same form posted as plain `multipart/form-data` is decoded by Next and answered with the redirect the action returns, or with the page carrying its refusal. That is the request every web form sends, and it is the one the proxy lets through. So when the scripted call fails in transport, the form is sent again that way (`shared/forms/save-fallback.ts`, `replayNatively`). The values go as they stand, with the pressed button, from a detached `<form>` React has no say in. The §384 toast still arrives through the flash cookie.
 
@@ -17627,7 +17627,7 @@ Baseline `BR-V2.03-2026-09-26`.
 - The role set: write for MODERATOR, ADMIN and SUPERADMIN; read from COPYWRITER up; the volunteer gets a 404.
 - The «Sarcini» section is now offered from the Redactor up, which amends the §397 gate and the §103 section table.
 - The audit actions `club_todo.*`.
-- The starting list with no address or URL, for the public repository; the Mailgun-plan-switch line among Amalia's twelve carries the due date 2026-11-01, alongside the two «după 10 octombrie» lines.
+- The starting list with no address or URL, for the public repository; the Mailgun-plan-switch line among the administrator colleague's twelve carries the due date 2026-11-01, alongside the two «după 10 octombrie» lines.
 - Links that name a tab are unchanged, and `todo` now means the checklist.
 - A no-op press (a tick on a ticked line, a move at the end, a save of unchanged words) records nothing in the audit trail and gets the same `clubTodoUnchanged` info toast on every path — tick, move and edit alike.
 
@@ -18044,7 +18044,7 @@ Baseline `BR-V2.04-2026-09-26`.
 
 ## 450. The Administrator runs the club; the Superadministrator adds the platform settings that can stop the service
 
-**The owner, 2026-09-26:** "I will make Amalia superadministrator but later administrators should manage everything; superadministrator is more like administrator + platform configs that can break stuff (throttling, etc)."
+**The owner, 2026-09-26:** "I will make the administrator colleague superadministrator but later administrators should manage everything; superadministrator is more like administrator + platform configs that can break stuff (throttling, etc)."
 
 **What moved to the Administrator (ADMIN).**
 - The team is the Administrator's (`canManageStaff`): inviting, changing a role, resending an invitation, the password link, switching an account off, and revoking access. It is capped by `canAssignRole` and `canManageMember`: an Administrator never makes a Superadministrator, never touches a Superadministrator's row, and never changes their own row.
@@ -19041,3 +19041,86 @@ Nothing a visitor reads changes. No dependency, no migration, no message.
 - **Render times are not claimed as a win.** The machine is shared, and renders also got faster on URLs the branch does not touch: the `.ics` feeds 11.5 → 7.8 and 26.2 → 16.3 ms, the sitemap 6.8 → 5.3 ms, the 404 page 38.4 → 26.4 ms. The machine's load changed between the two runs.
 
 Baseline `BR-V2.09-2026-09-27`.
+
+## 490. The V2.08/V2.09 review nits
+
+§490 — the V2.08/V2.09 review nits. (1) The orphaned pageFlow.short.place/cost/rules keys are removed, and a test holds the short words to cardStates (from §466/§481). (2) The YouTube guide steps use the toolbar's words (§441). (3) The guide's «Cost» card becomes «Ce fel de eveniment» (§466). (4) The translate step covers only the boxes you may edit (§464). (5) Stale film comments fixed: in RichTextVideo, in the series edit, in older-pictures (the event's poster column is gone, and a poster is an attribute of the description's youtube figure) and in video-poster (§481/§485). (6) The CARD_TAP_SX doc now says the rhythm chip is lifted (§486). (7) The calendar period row's gap is back to 8 px from sm, and the e2e measures the capitalised month (§487). (8) The weather-span header names BR-REQ-011-01 (§469/§484). (9) The ProgrammeRulesBox and declarationLine docstrings name both reasons the card opens itself: a site-registering event with no declaration, or a group run offering its self-declaration with no approved, not-withdrawn text for its surface (§483). (10) The Redactor's «Trimite spre verificare» guide step stays as it is, because the Redactor cannot publish (a publisher's step already says «Publică», §423).
+
+Baseline `BR-V2.10-2026-09-27`.
+
+## 491. Twelve links per team card; the film columns leave the schema now and the database in the next release; the snapshot chain re-linked
+
+**What.** Three things were queued behind one broken snapshot chain.
+
+1. **The snapshot chain is linear again.** Sibling branches generated 0082, 0083, 0084, 0088, 0089 and 0090 on top of 0081, and each kept 0081's id as its `prevId`. drizzle-kit calls that fork "a collision" and refused every `generate`, so schema changes had to be hand-written (§483 queued the team links' CHECK behind it). Each snapshot's `prevId` now points to the snapshot before it in journal order. No id and no SQL was rewritten. `tests/unit/db/migration-chain.test.ts` keeps the chain that way. It checks that every journal entry has a SQL file and a snapshot, that each parent is the entry before it, that no id repeats, and that `idx`, the tag numbers and `when` only grow. The recipe for generating the next migration, including the renumbering drizzle-kit forces because it names files by entry count, is in `docs/DEVELOPMENT.md`.
+
+2. **«Echipa» takes up to twelve links per person** (BR-REQ-050-03, growing §474). `MAX_TEAM_LINKS` goes from 6 to 12, which matches an event's own ceiling (§332) and the rows a save already read (§483). Migration **0093** (`0093_team_links_six_check_retired`) drops `team_members_links_is_a_short_array_of_https_links`, the six-link CHECK. Migration **0094** (`0094_team_links_twelve`, expand) adds it again under the same name at twelve. Dropping a CHECK only loosens it: the code serving during the run caps a card at six, so the database refuses none of its writes. No stored list holds more than six links, so 0094 refuses no existing row. A test keeps the constant and the CHECK equal. PGlite proves the database takes twelve links and refuses a thirteenth.
+
+3. **The film's old columns leave the Drizzle schema in this release and the database in the next** (amends §481 and §485). BR-V2.08 stopped reading and writing `events.video_url` and `events.video_poster_url` after migration 0092 moved every film into its description. BR-V2.09 still *declared* both columns, though. Drizzle names every declared column in a bare `select().from(events)`, a bare `.returning()` and an `insert(events)`. That includes the allocator's locked `FOR UPDATE` read, `findEventForRegistrationById`, the family-confirm and my-registrations reads, the editor's reads and the series horizon job. On a deployed environment the gated migration runs first, and `wait-for-migration.mjs` holds the new build until it is applied. So the old release is always serving while the migration runs. Dropping the columns in the same release would break it for that whole window, and would make a rollback to V2.09 impossible. So BR-V2.10 removes `videoUrl`, `videoPosterUrl` and the `events_video_url_is_https` check from the schema only. The columns and their check stay in the database, and the 0093 and 0094 snapshots keep them, so this release's snapshots match the database. BR-V2.11 generates the drop as its own `-- contract:` migration (AGENTS.md §7.6, the §390 pattern). Until then, `drizzle-kit generate` proposes exactly that drop: `DROP CONSTRAINT "events_video_url_is_https"` and `DROP COLUMN` for both columns. This release knowingly carries a schema that is one step ahead of its snapshot. PGlite proves that 0093 and 0094 leave both columns, their CHECK and every description and version untouched, and that the database still accepts an insert that names both columns.
+
+**Why not drop them now.** Migration 0017 did exactly that, but it ran before launch. Since production is live, a contract ships only in the release after the code stopped *declaring* what it drops, not merely after the code stopped reading it.
+
+Baseline `BR-V2.10-2026-09-27`.
+
+## 492. «Din galerie» through the browser, in every place that takes a picture
+
+**What changed.** `tests/e2e/gallery-picker.spec.ts` walks §485's picker through a real browser. It runs on the 320-px and desktop projects. Its fixtures are its own: two standing pages, a draft event, a hidden «Echipa» card that the spec deletes again, and a free album.
+
+- **A text.** A picture stored by one page is found from another page's text by its name. The search ignores accents and case, and the server narrows the list before its cap. The picture goes into the text as the same stored src: linked, never copied.
+  - The picker's items and chips are 44-px targets (BR-REQ-041-01 criterion 6).
+  - The «Folosită în» chips sort the picture under «Pagină», not «Album».
+  - A page's own editor opens on «Această pagină».
+- **An event's summary** takes a gallery picture in the card's 16∶9 shape. After the pick the picture's panel shows the same crop box an upload gets (§454):
+  - the five shapes, with 16∶9 pressed;
+  - the rectangle drawn from the middle;
+  - «Centrul pe card» and the card's frame.
+- **An event's description.** Its picker opens on «Acest eveniment», pressed, and lists exactly that event's one picture. The picture goes in «Liber», with no card centre to pick.
+- **A film's poster** picked from the gallery is the same stored file. Its crop box holds 16∶9, pressed first, and draws the largest 16∶9 part of the picture.
+- **A card of «Echipa»** keeps the picture's own id. Once the card is deleted, the picture stays, because a page and the event still use it.
+- **An album** takes a stored picture once and says so on the second press. Removing the photo from the album leaves the stored picture that a page still uses:
+  - it is still listed under «Toate» and «Pagină»;
+  - its uses no longer include the album;
+  - the page's src still answers 200.
+- **The list's own request:**
+  - `GET /api/admin/media?for=event:<id>&source=here` answers only the ids of that event's pictures, each with `here: true`.
+  - A well-formed id of an event with no pictures answers an empty list.
+  - A malformed `for` (not a UUID, a trailing character, or an unknown kind) is no scope at all, as `parsePickerScope` reads it. The answer is then the unscoped list, and no picture carries `here`.
+  - A volunteer is refused with 403, and the Redactor gets 200 (BR-REQ-060-01).
+
+**The calendar's fit check, as drawn (§487).** The month select capitalises its value with `text-transform: capitalize`, so «Septembrie» is drawn wider than the option's raw text. The check in `event-pages.spec.ts` now applies the select's computed transform and letter spacing before `measureText`. It also asserts that the transform is `capitalize`, so a change to the styling is a change to the check.
+
+**What stays.** No application code changed. There is no migration and no new dependency.
+
+Baseline `BR-V2.10-2026-09-27`.
+
+## 493. The V2.03 behaviour nits: the Gmail road, the red month, the day's one alert and twins
+
+The V2.03 landing let several behaviour nits into the queue. This change fixes them together. It does not change a documented rule. It makes §443, §445, §446 and §447 do what they already say.
+
+**The Gmail road (§443).**
+- One pooled SMTP connection per batch (maxConnections 1, maxRequeues 0), closed when the batch ends. Before, every message paid a TLS handshake and a login.
+- An address Gmail refuses for good (a 5xx with enhanced status 5.1.x) is BOUNCED, as Mailgun's 5.1.1 becomes through the webhook (BR-REQ-080-02 criterion 4). It is not handed to Mailgun, which would spend a message of the allowance to bounce the same way hours later. It is not a Gmail failure either, so Gmail keeps the rest of the batch. The same holds when only the club's copies were accepted.
+- A temporary refusal of the runner's address while the copies went is a refusal of the address, not of the account. It goes back to the outbox's own retry, never to Mailgun, which would send the copies twice. Gmail is not marked down and no Gmail failure is recorded.
+- In both cases the copies Gmail did accept left the account and count against Google's rolling day, so the club's ledger is credited with them.
+- 5.4.5, 5.7.x and every other failure are still Mailgun's to try.
+- A row waiting out Gmail's cap because the club chose to wait is counted in /api/health's Gmail block (deferred, resumesAt), not as a stall.
+
+**The budget governor at red (§447).**
+- The fault behind the rest: Next files an `unstable_cache` entry under the callback's source text as well as its key parts. The red lookup passed its own "throw ColdMissError" function, so it could never find an entry `loadAndKeep` had written. At red every public read was a cold miss, however warm the cache.
+- Every path now passes the same function literal (`fillEntry`), with "lookup only" as a captured value rather than different code. The unit test's stand-in keys the way Next does, so a mismatch fails the test.
+- A miss answered from a saved copy says so on the page («copia salvată…, din …») through an AsyncLocalStorage note that readWithLastGood reads. With the lookup fixed, the notice appears only on a real miss, not on every page view.
+- For two minutes after a write on this instance, a miss is read in the request. The organizer who saved sees the page as saved, and whatever else was queued rides the same wake.
+- These no longer answer 500 on a cold miss: the language switch, the group-run declaration page, its offer on the event page, the sitemap's legal entries and the register form's terms. The terms read goes through the breaker, as the event read does.
+- A slug or switch address that can name no row answers without the database.
+- The red lookup never treats an entry as stale by age, so it starts no background revalidation that could only throw.
+- «spentAll» says it is the platform's reading, not Neon's cut-off.
+
+**The newsletter (§445).** The day's one new-event alert is serialised across overlapping runs (the pinger and the drain a publication wakes) by a row lock on the platform_settings row and a re-check under it.
+
+**Twins (§446).**
+- At the desk the name decides. Staff may enter another person on a registered address, twins included, within the club's limit. Entering the same runner again is refused with a message.
+- On the public form, another name on a registered birth date is not taken. The email says how twins are registered: «Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email, ori răspunde la acest email și facem noi înscrierea.»
+
+Not done: a two-connection proof of the alert lock in tests/concurrency. The PGlite test proves the re-check under serialisation. It does not prove that the row lock blocks a second connection.
+
+Baseline `BR-V2.10-2026-09-27`.

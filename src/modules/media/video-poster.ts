@@ -17,8 +17,8 @@ import { bodyImageSrc, getStorage, objectKey } from "./storage";
  * facade a visitor's browser renders then shows *this* address, never YouTube's, so the
  * privacy property §69 built stands: no third-party request before the click.
  *
- * The row is keyed by the video id itself (`yt-<id>`, not a random UUID): a video embedded on
- * an event and in a page's body at once shares one stored poster rather than fetching and
+ * The row is keyed by the video id itself (`yt-<id>`, not a random UUID): a video embedded
+ * in an event's description and in a page's body at once shares one stored poster rather than fetching and
  * storing it twice, and a repeat save of the same video costs one indexed lookup, not a new
  * fetch. The id is public — it is the whole of what a YouTube link already discloses — so
  * using it as the object key trades nothing away that "opaque keys" (§17) was protecting.
@@ -247,8 +247,9 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
 }
 
 /*
-  `resolveEventVideoPoster`, which kept `events.video_poster_url` in step with `events.video_url`,
-  is gone with the film section (§481): a film lives only in a description, and migration `0092`
+  `resolveEventVideoPoster`, which kept the event's old poster column in step with its old film
+  link column (both unread since §481, dropped from the database in BR-V2.11, §491), is gone with
+  the film section (§481): a film lives only in a description, and migration `0092`
   moved each stored link — with its stored poster — into the descriptions as a `youtube` node. A
   node that arrived without a poster gets one from `attachYoutubePosters` on the event's next save,
   before any transaction opens, like any film pasted there (§403).

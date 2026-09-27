@@ -1,6 +1,7 @@
 import { getDb } from "@/db/client";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { parseLocalizedPath } from "@/i18n/alternate-path";
+import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
@@ -53,7 +54,8 @@ import { EXPECTED_MIGRATION } from "@/db/schema-version";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
 import { readWithLastGood } from "@/modules/resilience/last-good";
-import { type PublicContent, publicRead } from "./cache";
+import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
+import { answeringFromCacheOnly, type PublicContent, publicRead } from "./cache";
 import { clockWindow } from "./clock";
 
 /**
@@ -87,15 +89,24 @@ const CACHEABLE_SLUG_MAX_LENGTH = 200;
  * random would leave one entry per address, which is the language switch's problem too
  * (`cachedLocaleSwitch` refuses a path over 300 characters). A slug of the wrong shape or length
  * can name no row, so it is answered by the database, exactly as before, and filed nowhere.
+ *
+ * While a red month answers from the cache alone (§447) it is not asked even that (§493): such a
+ * slug names no row, so the answer is "no such page" without a query — a crawler walking odd
+ * addresses at red would otherwise wake the database once per address, the one cost red exists to
+ * stop. Below red the database still answers it, so nothing about a green month changes.
  */
 function readBySlug<T>(
   slug: string,
   key: readonly (string | number)[],
   contents: readonly PublicContent[],
-  load: () => Promise<T>,
-): Promise<T> {
-  if (slug.length > CACHEABLE_SLUG_MAX_LENGTH || !CACHEABLE_SLUG.test(slug)) return load();
+  load: () => Promise<T | undefined>,
+): Promise<T | undefined> {
+  if (!isCacheableSlug(slug)) return answeringFromCacheOnly() ? Promise.resolve(undefined) : load();
   return publicRead(key, contents, load);
+}
+
+function isCacheableSlug(slug: string): boolean {
+  return slug.length <= CACHEABLE_SLUG_MAX_LENGTH && CACHEABLE_SLUG.test(slug);
 }
 
 // --- Events -----------------------------------------------------------------------------------
@@ -532,7 +543,24 @@ const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/even
  */
 export async function cachedLocaleSwitch(from: string, target: Locale): Promise<string> {
   const path = from.split("?")[0];
-  const route = parseLocalizedPath(path)?.route;
-  if (!route || !SLUG_ROUTES.has(route) || path.length > 300) return resolveLocaleSwitch(getDb(), from, target);
-  return publicRead(["locale-switch", target, path], ["events", "pages", "gallery"], () => resolveLocaleSwitch(getDb(), path, target));
+  const parsed = parseLocalizedPath(path);
+  const route = parsed?.route;
+  if (!route || !SLUG_ROUTES.has(route)) return resolveLocaleSwitch(getDb(), from, target);
+  /*
+    The switch is a redirect, never a page (§493): it has no copy to show and no resting page to send
+    anybody to, so while the database cannot answer for it — away, or a red month's miss — it lands
+    on the other language's listing, which needs no row, instead of a 500. The same landing a slug
+    with no sibling in that language already gets. And at red, an address that could never name a
+    row, or is too long to cache, lands there without the database, as `readBySlug` answers one.
+  */
+  const listing = getPathname({ locale: target, href: "/events" });
+  const slug = parsed?.params.slug ?? "";
+  if ((path.length > 300 || !isCacheableSlug(slug)) && answeringFromCacheOnly()) return listing;
+  if (path.length > 300) return resolveLocaleSwitch(getDb(), from, target);
+  try {
+    return await publicRead(["locale-switch", target, path], ["events", "pages", "gallery"], () => resolveLocaleSwitch(getDb(), path, target));
+  } catch (error) {
+    if (!isDatabaseAwayError(error)) throw error;
+    return listing;
+  }
 }

@@ -47,13 +47,14 @@ vi.mock("@/modules/registrations/repository", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/modules/registrations/repository")>();
   return {
     ...original,
-    findRegistrationByEventAndParticipant: (async (...args: Parameters<typeof original.findRegistrationByEventAndParticipant>) => {
+    // The pre-check reads the address's rows at the event (§493: by the runner's name); the locked decision reads them again.
+    findRegistrationsByEventAndParticipant: (async (...args: Parameters<typeof original.findRegistrationsByEventAndParticipant>) => {
       if (gap.hideAddressOnce) {
         gap.hideAddressOnce = false;
-        return undefined;
+        return [];
       }
-      return original.findRegistrationByEventAndParticipant(...args);
-    }) as typeof original.findRegistrationByEventAndParticipant,
+      return original.findRegistrationsByEventAndParticipant(...args);
+    }) as typeof original.findRegistrationsByEventAndParticipant,
   };
 });
 vi.mock("@/db/client", () => ({ getDb: () => db }));
@@ -280,16 +281,17 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     await submitRegistration(db, event, submission("Ion", EMAIL), NOW);
     gap.hideAddressOnce = true;
 
+    // The desk enters Ion too (§493: at the desk the name decides): the lock finds him and says so.
     expect(
       await refusal(
         createRegistrationByStaff(
           db,
           staff,
-          { eventId: event.id, firstName: "Maria", lastName: "Pop", email: EMAIL, locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: true },
+          { eventId: event.id, firstName: "Ion", lastName: "Pop", email: EMAIL, locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: true },
           at(1),
         ),
       ),
-    ).toEqual({ code: "VALIDATION_ERROR", fields: ["email"] });
+    ).toEqual({ code: "VALIDATION_ERROR", fields: ["email", "alreadyOnAddress"] });
 
     // Ion is exactly as he was: not confirmed, and nothing written in anybody's name.
     const rows = await db.select().from(registrations);
@@ -299,6 +301,24 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     expect(audits).not.toContain("registration.confirmed_by_staff");
     expect(audits).not.toContain("registration.resubmitted");
     expect((await db.select().from(emailOutbox)).map((row) => row.messageType)).toEqual(["VERIFY_REGISTRATION_EMAIL"]);
+  });
+
+  it("§493 another person entered at the desk on that address gets a row of their own, confirmed on their own paper", async () => {
+    const staff = await admin();
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ion", EMAIL), NOW);
+    gap.hideAddressOnce = true;
+
+    await createRegistrationByStaff(
+      db,
+      staff,
+      { eventId: event.id, firstName: "Maria", lastName: "Pop", email: EMAIL, locale: "ro", listOptOut: false, relayedByParticipantRequest: true, fastTrack: true },
+      at(1),
+    );
+
+    // Maria is confirmed on her paper; Ion is exactly as he was — never confirmed on anybody's.
+    expect((await rowOf(event, "Maria")).status).toBe("CONFIRMED");
+    expect((await rowOf(event, "Ion")).status).toBe("PENDING_EMAIL_CONFIRMATION");
   });
 
   it("a staff entry is told which row it wrote; a public answer never carries one", async () => {

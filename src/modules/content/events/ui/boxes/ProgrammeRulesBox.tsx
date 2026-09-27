@@ -22,7 +22,9 @@ import { RulesBox } from "./TextBoxes";
  *
  * Each keeps its fields, names, ids, closed line and refusals; this card only holds them. Its own
  * closed line says the three in a row. It opens itself while a saved event that registers on the
- * site has no declaration chosen (the declaration card inside opens too), and with people
+ * site has no declaration chosen, or while a group run offering its self-declaration has no
+ * approved, not-withdrawn text for its surface (§483) — the declaration card inside opens too —
+ * and with people
  * registered it is amber — the programme is one of the boxes a change reaches (§350).
  */
 export default async function ProgrammeRulesBox({

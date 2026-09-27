@@ -190,7 +190,7 @@ function TeamLinkRowsEditorIsland({
           </Stack>
         );
       })}
-      {/* The list's own ceiling: the button stops at six rather than letting a seventh row be typed and refused. */}
+      {/* The list's own ceiling: the button stops at `MAX_TEAM_LINKS` (twelve) rather than letting one more row be typed and refused. */}
       <Button
         type="button"
         variant="text"

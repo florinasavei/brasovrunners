@@ -530,122 +530,130 @@ export async function processOutboxBatch(
     bounced: 0,
   };
 
-  for (const row of claimed) {
-    let message: OutgoingEmail;
-    try {
-      message = await render(row, db, now);
-      if (route) message = { ...message, transport: route(row) };
-    } catch (error) {
-      if (error instanceof OutboxMessageWithdrawn) {
-        await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));
+  /*
+    The Gmail road's one connection for the whole batch (§493) is let go when the batch ends,
+    however it ends: a pooled SMTP socket left open would outlive the function's work for nothing.
+  */
+  try {
+    for (const row of claimed) {
+      let message: OutgoingEmail;
+      try {
+        message = await render(row, db, now);
+        if (route) message = { ...message, transport: route(row) };
+      } catch (error) {
+        if (error instanceof OutboxMessageWithdrawn) {
+          await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));
+          continue;
+        }
+        await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
+        summary.failed += 1;
         continue;
       }
-      await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
-      summary.failed += 1;
-      continue;
-    }
 
-    // The provider call. No transaction is open here, by construction.
-    let result;
-    try {
-      result = await sender.send(message);
-    } catch (error) {
-      // An adapter that throws instead of returning a result is treated as transient: the
-      // usual cause is a socket, and the usual cure is trying again.
-      result = { outcome: "transient_failure", error: sanitizeProviderError(error) } as const;
-    }
+      // The provider call. No transaction is open here, by construction.
+      let result;
+      try {
+        result = await sender.send(message);
+      } catch (error) {
+        // An adapter that throws instead of returning a result is treated as transient: the
+        // usual cause is a socket, and the usual cure is trying again.
+        result = { outcome: "transient_failure", error: sanitizeProviderError(error) } as const;
+      }
 
-    if (result.outcome === "sent") {
-      await db
-        .update(emailOutbox)
-        .set({
-          status: "SENT",
-          // The moment Gmail took it when it did (§443 review): the pace runs from here in every sender.
-          sentAt: result.acceptedAt ?? now,
-          providerMessageId: result.providerMessageId,
-          // Which road carried it (§443): Gmail's cap and Mailgun's allowance are counted from this.
-          transport: result.transport ?? "mailgun",
-          // What Google counts against the day (§443): the address and every copy that left; 0 when captured.
-          recipientCount: result.recipients ?? null,
-          lockedAt: null,
-          nextAttemptAt: null,
-          lastError: null,
-        })
-        .where(eq(emailOutbox.id, row.id));
-      summary.sent += 1;
-      continue;
-    }
+      if (result.outcome === "sent") {
+        await db
+          .update(emailOutbox)
+          .set({
+            status: "SENT",
+            // The moment Gmail took it when it did (§443 review): the pace runs from here in every sender.
+            sentAt: result.acceptedAt ?? now,
+            providerMessageId: result.providerMessageId,
+            // Which road carried it (§443): Gmail's cap and Mailgun's allowance are counted from this.
+            transport: result.transport ?? "mailgun",
+            // What Google counts against the day (§443): the address and every copy that left; 0 when captured.
+            recipientCount: result.recipients ?? null,
+            lockedAt: null,
+            nextAttemptAt: null,
+            lastError: null,
+          })
+          .where(eq(emailOutbox.id, row.id));
+        summary.sent += 1;
+        continue;
+      }
 
-    const error = sanitizeProviderError(result.error);
+      const error = sanitizeProviderError(result.error);
 
-    /**
-     * The allowance is spent, not the message rejected. Nothing was transmitted.
-     *
-     * Scheduled for the reset the adapter names, or the next daily one, instead of the
-     * one-to-thirty-two-minute backoff below — which would spend all six attempts inside the
-     * hour and mark a perfectly good confirmation FAILED. The attempt still counts, so this
-     * stays bounded at six days rather than becoming a message that retries forever.
-     *
-     * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
-     */
-    /*
-      Held back by Gmail's pace, not refused (§443): nothing was tried, so the attempt the claim
-      counted is given back, and the row is due again in the few seconds the pace asks for — the
-      next drain or job run takes it. Counted as a retry: the mechanism working, not the plan's limit.
-    */
-    if (result.outcome === "throttled" && result.paced) {
+      /**
+       * The allowance is spent, not the message rejected. Nothing was transmitted.
+       *
+       * Scheduled for the reset the adapter names, or the next daily one, instead of the
+       * one-to-thirty-two-minute backoff below — which would spend all six attempts inside the
+       * hour and mark a perfectly good confirmation FAILED. The attempt still counts, so this
+       * stays bounded at six days rather than becoming a message that retries forever.
+       *
+       * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
+       */
+      /*
+        Held back by Gmail's pace, not refused (§443): nothing was tried, so the attempt the claim
+        counted is given back, and the row is due again in the few seconds the pace asks for — the
+        next drain or job run takes it. Counted as a retry: the mechanism working, not the plan's limit.
+      */
+      if (result.outcome === "throttled" && result.paced) {
+        await db
+          .update(emailOutbox)
+          .set({
+            status: "PENDING",
+            lockedAt: null,
+            attemptCount: Math.max(0, row.attemptCount - 1),
+            nextAttemptAt: result.retryAfter ?? now,
+          })
+          .where(eq(emailOutbox.id, row.id));
+        summary.retrying += 1;
+        continue;
+      }
+
+      if (result.outcome === "throttled") {
+        await db
+          .update(emailOutbox)
+          .set({
+            status: "PENDING",
+            lockedAt: null,
+            nextAttemptAt: result.retryAfter ?? nextAllowanceResetAt(now),
+            lastError: error,
+          })
+          .where(eq(emailOutbox.id, row.id));
+        summary.deferred += 1;
+        continue;
+      }
+
+      if (result.outcome === "permanent_failure") {
+        // BR-REQ-080-02 criterion 4: a permanent failure is not retried. Suppressing *further*
+        // messages to that address needs the provider's webhook verdict (BR-REQ-080-04), which
+        // is not built; this half — never retrying this message — is.
+        await recordFailure(db, row.id, "BOUNCED", error);
+        summary.bounced += 1;
+        continue;
+      }
+
+      if (row.attemptCount >= MAX_SEND_ATTEMPTS) {
+        await recordFailure(db, row.id, "FAILED", error);
+        summary.failed += 1;
+        continue;
+      }
+
       await db
         .update(emailOutbox)
         .set({
           status: "PENDING",
           lockedAt: null,
-          attemptCount: Math.max(0, row.attemptCount - 1),
-          nextAttemptAt: result.retryAfter ?? now,
-        })
-        .where(eq(emailOutbox.id, row.id));
-      summary.retrying += 1;
-      continue;
-    }
-
-    if (result.outcome === "throttled") {
-      await db
-        .update(emailOutbox)
-        .set({
-          status: "PENDING",
-          lockedAt: null,
-          nextAttemptAt: result.retryAfter ?? nextAllowanceResetAt(now),
+          nextAttemptAt: nextAttemptAt(now, row.attemptCount),
           lastError: error,
         })
         .where(eq(emailOutbox.id, row.id));
-      summary.deferred += 1;
-      continue;
+      summary.retrying += 1;
     }
-
-    if (result.outcome === "permanent_failure") {
-      // BR-REQ-080-02 criterion 4: a permanent failure is not retried. Suppressing *further*
-      // messages to that address needs the provider's webhook verdict (BR-REQ-080-04), which
-      // is not built; this half — never retrying this message — is.
-      await recordFailure(db, row.id, "BOUNCED", error);
-      summary.bounced += 1;
-      continue;
-    }
-
-    if (row.attemptCount >= MAX_SEND_ATTEMPTS) {
-      await recordFailure(db, row.id, "FAILED", error);
-      summary.failed += 1;
-      continue;
-    }
-
-    await db
-      .update(emailOutbox)
-      .set({
-        status: "PENDING",
-        lockedAt: null,
-        nextAttemptAt: nextAttemptAt(now, row.attemptCount),
-        lastError: error,
-      })
-      .where(eq(emailOutbox.id, row.id));
-    summary.retrying += 1;
+  } finally {
+    sender.close?.();
   }
 
   // `itemsProcessed` is what was claimed, and `errorCount` the outcomes that need a person: a

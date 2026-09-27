@@ -114,8 +114,6 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     */
     expect(third.stravaEventUrl).toBe("https://www.strava.com/clubs/1147727/group_events/3393210254679131656");
     expect(third.facebookEventUrl).toBe("https://www.facebook.com/events/885822964531556");
-    // And never the film: last year's would be wrong on this year's date.
-    expect(third.videoUrl).toBeNull();
     // The source carries the rule.
     expect((await db.select().from(events).where(eq(events.id, source.id)))[0].repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [], until: null, publish: false });
   });

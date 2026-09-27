@@ -100,6 +100,14 @@ export type SendResult =
        * same link, so the sender does not; the outbox retries it on its own backoff.
        */
       mayHaveBeenAccepted?: true;
+      /**
+       * The runner's own address refused for now while the club's copies went (Gmail, §443): a
+       * refusal of the address, not of the account — the sender neither marks Gmail down nor
+       * records a Gmail failure, and the outbox retries the row on its own backoff.
+       */
+      addressRefusedForNow?: true;
+      /** How many recipients the server took all the same — the copies — for Gmail's daily ledger. */
+      acceptedRecipients?: number;
     }
   | {
       outcome: "throttled";
@@ -116,10 +124,24 @@ export type SendResult =
        */
       retryAfter?: Date;
     }
-  | { outcome: "permanent_failure"; error: string };
+  | {
+      outcome: "permanent_failure";
+      error: string;
+      /**
+       * How many recipients the server took before refusing the address (Gmail, §443): the club's
+       * copies left and count against Google's daily cap, so the sender credits the ledger with them.
+       */
+      acceptedRecipients?: number;
+    };
 
 export interface EmailAdapter {
   /** Identifies the adapter in logs and in the backoffice. Never a secret. */
   readonly name: string;
   send(message: OutgoingEmail): Promise<SendResult>;
+  /**
+   * Let go of whatever the adapter holds open between two messages — the Gmail road's one pooled
+   * SMTP connection (§493). Called once, when the batch that built it ends; an adapter that holds
+   * nothing (Mailgun's HTTP calls, the capture) has none.
+   */
+  close?(): void;
 }
