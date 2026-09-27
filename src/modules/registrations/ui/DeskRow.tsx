@@ -1,3 +1,4 @@
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -12,7 +13,7 @@ import { identityDocumentsOf } from "@/modules/registrations/domain/identity-doc
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -247,6 +248,7 @@ export default async function DeskRow({
           {number !== null && number.settled && row.kind === "REAL" && !terminal && (
             <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
               <Typography component="summary" variant="body2" color="text.secondary">
+                <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
                 {t("desk.showBib")}
               </Typography>
               {/* The picture draws the paper's edge itself (A5 bibs, §338): no second frame round it. */}

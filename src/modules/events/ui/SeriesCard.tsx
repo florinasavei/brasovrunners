@@ -1,4 +1,6 @@
+import DateRangeIcon from "@mui/icons-material/DateRange";
 import Box from "@mui/material/Box";
+import { FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 import Card from "@mui/material/Card";
@@ -124,6 +126,7 @@ export default async function SeriesCard({
             are here, without the fold's usual ten pixels of padding on top of them. */}
         <Box component="details" sx={CARD_FOLD_SX}>
           <Typography component="summary" variant="body2" color="text.secondary">
+            <DateRangeIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("series.allDatesCount", { count: members.length })}
           </Typography>
           <Box sx={{ pt: 0.5 }}>

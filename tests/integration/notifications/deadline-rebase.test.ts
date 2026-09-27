@@ -244,7 +244,7 @@ describe("§513 a participant's deadline counts from the moment its email leaves
     expect((await reload(pending.id)).holdExpiresAt).toEqual(new Date(leaves.getTime() + 30 * MINUTE));
   });
 
-  it("an offer already past its deadline when it finally leaves is not revived — its place may be somebody else's", async () => {
+  it("an offer past its stored deadline when it finally leaves runs its full hours from the send — the queue kept it (§520)", async () => {
     const race = await event(1);
     const first = await enter(race, "ana@example.ro", T);
     await signDeclaration(db, race, first.id, await signingInput(db, T, "Ana Pop"), T);
@@ -255,7 +255,47 @@ describe("§513 a participant's deadline counts from the moment its email leaves
 
     const late = new Date(freed.getTime() + 25 * HOUR);
     await processOutboxBatch(db, { sender: sender(), render: stub, now: late });
-    expect((await reload(second.id)).holdExpiresAt).toEqual(new Date(freed.getTime() + 24 * HOUR));
+    const offered = await reload(second.id);
+    expect(offered.status).toBe("WAITLIST_OFFERED");
+    expect(offered.holdExpiresAt).toEqual(new Date(late.getTime() + 24 * HOUR));
+    const [offer] = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"), eq(emailOutbox.registrationId, second.id)));
+    expect(offer.status).toBe("SENT");
+  });
+
+  it("keeps an offer whose first email is still queued: occupied, not swept, and passed on only once it has left and run out (§520)", async () => {
+    const race = await event(1);
+    const first = await enter(race, "ana@example.ro", T);
+    await signDeclaration(db, race, first.id, await signingInput(db, T, "Ana Pop"), T);
+    const second = await enter(race, "ion@example.ro", new Date(T.getTime() + MINUTE));
+    const third = await enter(race, "maria@example.ro", new Date(T.getTime() + 2 * MINUTE));
+    expect(third.status).toBe("WAITLISTED");
+
+    // Ana leaves: Ion is offered the place, and the offer's email waits for the scheduler's tick.
+    const freed = new Date(T.getTime() + HOUR);
+    await unregister(db, race, first.id, "PARTICIPANT", freed);
+    const offered = await reload(second.id);
+    expect(offered.status).toBe("WAITLIST_OFFERED");
+    expect(offered.holdExpiresAt).toEqual(new Date(freed.getTime() + 24 * HOUR));
+
+    // Past the stored deadline, the email still queued: the offer holds its place and the job leaves it.
+    const before = new Date(freed.getTime() + 25 * HOUR);
+    expect((await countOccupied(db, race.id, before)).unexpiredWaitlistOfferedHolds).toBe(1);
+    await runRegistrationMaintenance(db, before);
+    expect((await reload(second.id)).status).toBe("WAITLIST_OFFERED");
+    expect((await reload(third.id)).status).toBe("WAITLISTED");
+
+    // The tick sends it: the offer runs its twenty-four hours from there.
+    const sent = new Date(freed.getTime() + 26 * HOUR);
+    await processOutboxBatch(db, { sender: sender(), render: stub, now: sent });
+    expect((await reload(second.id)).holdExpiresAt).toEqual(new Date(sent.getTime() + 24 * HOUR));
+
+    await runRegistrationMaintenance(db, new Date(sent.getTime() + 23 * HOUR));
+    expect((await reload(second.id)).status).toBe("WAITLIST_OFFERED");
+
+    // Lapsed for real: the place goes to the next in line.
+    await runRegistrationMaintenance(db, new Date(sent.getTime() + 24 * HOUR + MINUTE));
+    expect((await reload(second.id)).status).toBe("EXPIRED");
+    expect((await reload(third.id)).status).toBe("WAITLIST_OFFERED");
   });
 
   it("the verification link and the family link run their hours from the send, the family link's token with them", async () => {

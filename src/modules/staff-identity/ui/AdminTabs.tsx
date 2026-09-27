@@ -18,7 +18,6 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
-import SettingsIcon from "@mui/icons-material/Settings";
 import TuneIcon from "@mui/icons-material/Tune";
 
 export type AdminTab = {
@@ -29,6 +28,11 @@ export type AdminTab = {
   count?: number | null;
   /** What that figure counts, as the tab's tooltip (§277). */
   countHint?: string;
+  /**
+   * Other addresses this tab stands for — «Setări» on `/devs`, the row's «Configurație» tab that
+   * lives outside `/admin/settings` (§520) — so the bar still says where the reader is.
+   */
+  alsoActiveOn?: readonly string[];
 };
 
 /**
@@ -51,12 +55,11 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   registrations: ListAltIcon,
   tasks: ChecklistIcon,
   legal: GavelIcon,
-  // «Setări» (§516): the sliders, not a gear — the gear is «Configurație» (/devs), the system's own page.
+  // «Setări» (§516): the sliders — «Configurație» (/devs) is one of its tabs, with no gear of its own in the bar since §NNN.
   settings: TuneIcon,
   // The club's news to the people who asked for it (§445): a paper, not an envelope.
   newsletter: NewspaperIcon,
   staff: GroupIcon,
-  devs: SettingsIcon,
 };
 
 /**
@@ -86,9 +89,10 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
    * "Events" on every page in the backoffice. Comparing lengths picks the most specific tab,
    * which is the one whose section the visitor is actually in.
    */
-  const active = items
-    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
-    .sort((a, b) => b.href.length - a.href.length)[0];
+  const under = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const active =
+    items.filter((item) => under(item.href)).sort((a, b) => b.href.length - a.href.length)[0] ??
+    items.find((item) => item.alsoActiveOn?.some(under));
 
   /**
    * The current tab, in view, on a phone (`DECISIONS.md` §79). MUI scrolls the selected tab

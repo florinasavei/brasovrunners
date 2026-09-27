@@ -149,7 +149,7 @@ export async function TitleSummaryBox({ languages, creating, heading }: { langua
   const incomplete = incompleteLocales(translations, "required", BLANK.titleSummary);
   const required = await requiredLine("titleSummary", null, languages);
   return (
-    <Panel
+    <Panel glyph="title"
       collapsible
       id="box-title"
       title={heading ?? t("editor.boxes.titleSummary.title")}
@@ -174,7 +174,7 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   return (
-    <Panel collapsible id="box-description" title={heading ?? t("editor.boxes.description.title")} aside={descriptionSummary(words, languages.map(summaryOf))}>
+    <Panel glyph="description" collapsible id="box-description" title={heading ?? t("editor.boxes.description.title")} aside={descriptionSummary(words, languages.map(summaryOf))}>
       <LanguageTabs
         idPrefix="description"
         languages={languages}
@@ -217,7 +217,7 @@ export async function RulesBox({
   const minAge = effectiveMinimumAge(event?.minAge);
   const aside = [rulesSummary(words, languages.map(summaryOf)), minAgeSummary(words, minAge, locale)].join(words.separator);
   return (
-    <Panel collapsible level={3} id="box-rules" title={t("editor.boxes.rules.title")} aside={aside}>
+    <Panel glyph="rules" collapsible level={3} id="box-rules" title={t("editor.boxes.rules.title")} aside={aside}>
       <LanguageTabs
         idPrefix="rules"
         languages={languages}
@@ -276,7 +276,7 @@ export async function AddressBox({
   );
   const required = await requiredLine("address", null, languages);
   return (
-    <Panel
+    <Panel glyph="address"
       collapsible
       id="box-address"
       title={t("editor.boxes.address.title")}

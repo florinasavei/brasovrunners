@@ -73,7 +73,7 @@ export default async function NewsletterPanel({ locale, audience, history, volum
 
   return (
     <>
-      <Panel
+      <Panel glyph="newsletter"
         title={t("newsletter.title")}
         intro={t("newsletter.intro")}
         aside={t(`newsletter.aside.${countForm(audience.confirmed, locale)}`, { count: audience.confirmed })}
@@ -155,7 +155,7 @@ export default async function NewsletterPanel({ locale, audience, history, volum
         )}
       </Panel>
 
-      <Panel title={t("newsletter.compose")} intro={t("newsletter.composeIntro")} id="newsletter-write" data-testid="newsletter-composer">
+      <Panel glyph="compose" title={t("newsletter.compose")} intro={t("newsletter.composeIntro")} id="newsletter-write" data-testid="newsletter-composer">
         <ActionForm
           key={sendId}
           action={sendNewsletterAction}

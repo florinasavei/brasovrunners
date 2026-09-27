@@ -29,8 +29,10 @@ import { canManageRegistrations, canReadContent, canSeeDiagnostics, type StaffRo
  * between them. It is a tab of the row rather than a seventh route under `/admin/settings`, because
  * `/devs` stays where it is — its own layout and gate (§119, BR-REQ-090-04), its three panels (§265),
  * the address the hosting dashboard's holder is given — and it draws this same row above its panels,
- * with «Configurație» marked, so the way back to «Costuri» is one tap. The main bar keeps its own
- * «Configurație» entry too: the Tehnic's whole reason to open the backoffice is that page.
+ * with «Configurație» marked, so the way back to «Costuri» is one tap. The main bar has no
+ * «Configurație» of its own since §520 — one page, one way in; the Tehnic, whose whole reason to open
+ * the backoffice is that page, reaches it through «Setări», and `/devs` draws its own three panels as
+ * entries of this row (`SettingsSubNav`'s `configurationPanels`), never as a second row.
  */
 export const SETTINGS_TABS = ["emails", "deadlines", "contact", "appearance", "costs", "platform"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];

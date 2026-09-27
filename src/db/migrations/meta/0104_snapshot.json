@@ -1,6 +1,6 @@
 {
   "id": "2c31c80f-9116-44b6-9ae9-c3fbbb302663",
-  "prevId": "35d067ea-b32a-4f28-80d3-2819620ba2e3",
+  "prevId": "9e48ba7f-22d4-4757-af06-c09c1be87a28",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2656,6 +2656,30 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "series_key": {
+          "name": "series_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signer_key": {
+          "name": "signer_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_facts": {
+          "name": "signed_facts",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "view_token_hash": {
+          "name": "view_token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -2676,6 +2700,49 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "group_run_declarations_one_per_series_signer_version": {
+          "name": "group_run_declarations_one_per_series_signer_version",
+          "columns": [
+            {
+              "expression": "legal_document_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "coalesce(\"series_key\", \"event_id\"::text)",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "signer_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"group_run_declarations\".\"signer_key\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "group_run_declarations_view_token_hash_unique": {
+          "name": "group_run_declarations_view_token_hash_unique",
+          "columns": [
+            {
+              "expression": "view_token_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2720,6 +2787,10 @@
         "group_run_declarations_hash_is_sha256_hex": {
           "name": "group_run_declarations_hash_is_sha256_hex",
           "value": "\"group_run_declarations\".\"content_sha256\" ~ '^[0-9a-f]{64}$'"
+        },
+        "group_run_declarations_view_token_is_sha256_hex": {
+          "name": "group_run_declarations_view_token_is_sha256_hex",
+          "value": "\"group_run_declarations\".\"view_token_hash\" IS NULL OR \"group_run_declarations\".\"view_token_hash\" ~ '^[0-9a-f]{64}$'"
         }
       },
       "isRLSEnabled": false

@@ -61,7 +61,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
   const listBox = { multiline: true, minRows: 1, maxRows: 6 } as const;
 
   return (
-    <Panel
+    <Panel glyph="notices"
       title={t("emails.clubNotices.title")}
       intro={t("emails.clubNotices.intro")}
       /*

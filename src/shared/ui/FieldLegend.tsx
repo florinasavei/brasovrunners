@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 
-/** A short mark beside a field's name: "în text", "folosit în textul platformei", "poate lipsi". */
+/** A short mark beside a field's name: "în text", "folosit în textul implicit", "poate lipsi". */
 export type FieldLegendMark = {
   label: string;
   /** `success` for "this text uses it"; `neutral` for a remark about the field. */

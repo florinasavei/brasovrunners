@@ -13,6 +13,7 @@ import {
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
 } from "../domain/merge-fields";
+import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 
 /**
@@ -53,6 +54,8 @@ export type DeclarationToken = {
 /** The made-up event's start (Saturday 21 November 2026, 10:00 in Brașov) and the signature's instant. */
 export const TOKEN_EXAMPLE_EVENT_STARTS_AT = new Date("2026-11-21T08:00:00Z");
 export const TOKEN_EXAMPLE_SIGNED_AT = new Date("2026-09-20T16:42:00Z");
+/** The made-up weekly run's dates (§523): three Tuesdays at 18:30 in Brașov. */
+const TOKEN_EXAMPLE_SERIES_DATES = ["2026-10-06", "2026-10-13", "2026-10-20"].map((day) => ({ startsAt: new Date(`${day}T15:30:00Z`) }));
 
 const same = (value: string): Record<TokenLocale, string> => ({ ro: value, en: value });
 const inBoth = (write: (locale: TokenLocale) => string): Record<TokenLocale, string> => ({ ro: write("ro"), en: write("en") });
@@ -95,6 +98,16 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: MINIMUM_AGE_MERGE_FIELD,
     example: inBoth((locale) => yearsPhrase(16, locale)),
   },
+  // A group run's series (§523): the series sentence's name, rhythm and usual place, filled at
+  // signing from the dates §113 groups; "" on a one-off run, which keeps the one-off sentence.
+  { token: "{{series}}", messageKey: "series", example: { ro: "Tura de marți", en: "The Tuesday loop" } },
+  {
+    token: "{{seriesRhythm}}",
+    messageKey: "seriesRhythm",
+    // Three Tuesdays at 18:30 in Brașov, through the words a signature is filled with.
+    example: inBoth((locale) => seriesRhythmPhrase(TOKEN_EXAMPLE_SERIES_DATES, CLUB_TIME_ZONE, locale)),
+  },
+  { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Nicolae Titulescu") },
   // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
   // Each language's example in its own words, as the text in that language is filled (§369).

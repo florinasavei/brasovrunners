@@ -121,13 +121,17 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     expect(gallery).not.toContain("GlyphButtonLink");
     for (const file of [
       "src/app/[locale]/admin/tasks/page.tsx",
-      "src/app/[locale]/devs/page.tsx",
       "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
       // «Setări»'s tab row (§516).
       "src/modules/staff-identity/ui/SettingsSubNav.tsx",
     ]) {
       expect(read(file), file).toMatch(/<SubNav\s[^>]*?label=/);
     }
+    // The configuration's panels are entries of «Setări»'s row since §520 — one row, never a second.
+    const devs = read("src/app/[locale]/devs/page.tsx");
+    expect(devs).toContain("<SettingsSubNav");
+    expect(devs).toContain("configurationPanels=");
+    expect(devs).not.toMatch(/<SubNav\b/);
   });
 
   it("leaves no pill-button navigation behind: no current entry drawn as a filled button", () => {

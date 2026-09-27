@@ -116,7 +116,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
       )}
 
       {/*
-        Start from the platform's text, offered above the blank form rather than as small print
+        Start from the template, offered above the blank form rather than as small print
         under it (§190).
 
         The owner, having pressed "Versiune nouă" and been handed an empty textarea: "când fac

@@ -20,8 +20,10 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { birthDateRefusal, ERASE_REASON_MAX, ID_DOCUMENT_MAX, signingOpen, TYPED_NAME_MAX } from "./domain";
-import { insertGroupRunDeclaration } from "./repository";
+import { birthDateRefusal, ERASE_REASON_MAX, ID_DOCUMENT_MAX, keptSignature, signerIdentity, signingOpen, TYPED_NAME_MAX } from "./domain";
+import { groupRunMergeValues } from "./facts";
+import { insertGroupRunDeclaration, listCoveringSignatures, listSeriesDatesOf } from "./repository";
+import { factsToKeep } from "./series";
 
 /**
  * Signing a group run's optional self-declaration, and erasing one (§393).
@@ -38,6 +40,14 @@ import { insertGroupRunDeclaration } from "./repository";
  * signature would and write nothing (a distinct answer tells a script which check it tripped); the
  * Turnstile verdict is asked by the action; and a throttle keyed on a hash of the signer's
  * canonical address, because every post spends two messages of the club's allowance.
+ *
+ * **One per person, series and version (§523).** A series' signature covers every date of the run
+ * (§113), so a returning runner who signs again writes no second row: the one they signed for the
+ * version in force is kept and its copy sent again (`keptSignature`), and the unique index on
+ * (version, series, signer) holds two presses at once to one row. A newer version is a new row
+ * beside the older one, which stays as evidence: a public press, which nobody verified, never
+ * deletes a signature — only the Administrator's audited erase does. Nothing on the page tells a
+ * kept signature from a new one.
  *
  * **Bound to the text that was read (§57).** The page posts the version's id and hash; a different
  * version in force at the press is refused with `CONFLICT` (`DECLARATION_CHANGED`) and nothing is
@@ -66,8 +76,12 @@ export type GroupRunSigningInput = {
 };
 
 export type GroupRunSigningOutcome =
-  /** Signed: the row and the messages are written. */
-  | { outcome: "signed"; id: string }
+  /**
+   * Signed: the row and the messages are written — or, when the same person had already signed the
+   * version in force for this run (`kept`, §523), that row is kept and its copy sent again. The page
+   * answers both alike; `kept` is for the tests and the log, never for the visitor.
+   */
+  | { outcome: "signed"; id: string; kept: boolean }
   /** A bot's post: answered as signed, and nothing written. */
   | { outcome: "ignored" }
   /** Too many from this address this hour. */
@@ -168,8 +182,37 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const throttle = await consumeRateLimit(db, "group-run-declaration", emailBucketKey("group-run-declaration", canonicalEmail as string), now);
   if (!throttle.allowed) return { outcome: "limited", retryAfter: throttle.retryAfter };
 
-  const id = await db.transaction(async (tx) => {
-    const row = await insertGroupRunDeclaration(tx as unknown as Database<T>, {
+  // The blanks as the signer read them, kept on the row for the PDF (§523): the run's and the series'.
+  const facts = await groupRunMergeValues(db, event.id, input.locale, document.body);
+  const signerKey = signerIdentity(input.email, typedName) as string;
+
+  return db.transaction(async (tx) => {
+    const txDb = tx as unknown as Database<T>;
+    /*
+      One declaration per person, series and version (§523): the signatures of the version in force
+      that cover this date — signed on it, or for its series on any date of it (§113). The same
+      person's is kept and sent again; otherwise this one is written. Nothing is deleted: an older
+      version's signature stays beside the new one, as the evidence for the runs it covered (§53).
+    */
+    const dates = (await listSeriesDatesOf(txDb, event.id)).map((date) => date.id);
+    const existing = keptSignature(await listCoveringSignatures(txDb, event.id, dates, document.id), { email: input.email, typedName }, document.id);
+    const resend = async (kept: { id: string; email: string }) => {
+      // Their copy again, to the address the row keeps (the same mailbox, canonically): no second
+      // row, no second archive copy, and the page answers as it does to a signature (§39's rule).
+      await enqueueEmail(tx, {
+        participantId: null,
+        registrationId: null,
+        messageType: "GROUP_RUN_DECLARATION_SIGNED",
+        locale: input.locale,
+        recipientEmail: kept.email,
+        payload: { groupRunDeclarationId: kept.id },
+        idempotencyKey: `group-run-declaration:${kept.id}:signed:${now.getTime()}`,
+        now,
+      });
+      return { outcome: "signed" as const, id: kept.id, kept: true };
+    };
+    if (existing) return resend(existing);
+    const row = await insertGroupRunDeclaration(txDb, {
       eventId: event.id,
       legalDocumentId: document.id,
       declarationVersion: document.version,
@@ -180,7 +223,21 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       email: input.email.trim(),
       acceptedAt: now,
       createdAt: now,
+      seriesKey: facts?.seriesKey ?? null,
+      signerKey,
+      signedFacts: facts ? factsToKeep(facts.values) : null,
     });
+    if (!row) {
+      /*
+        Another press for the same person wrote the row between our read and our write (§523): the
+        unique index refused this one, and nothing was written. Theirs is the signature; send it.
+      */
+      const [raced] = await listCoveringSignatures(txDb, event.id, dates, document.id).then((rows) =>
+        rows.filter((candidate) => signerIdentity(candidate.email, candidate.typedName) === signerKey),
+      );
+      if (!raced) throw new Error("the declaration was not written");
+      return resend(raced);
+    }
     // The signer's copy, with the PDF: no participant, no registration, no token (§393).
     await enqueueEmail(tx, {
       participantId: null,
@@ -207,9 +264,8 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
         now,
       });
     }
-    return row.id;
+    return { outcome: "signed" as const, id: row.id, kept: false };
   });
-  return { outcome: "signed", id };
 }
 
 /**

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, isNull, lte, not, sql } from "drizzle-orm";
 import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { newsletterSends } from "@/db/schema/newsletter";
@@ -9,6 +9,7 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { readNewsletterWords } from "@/modules/newsletter/domain/message";
 import { awaitingSettledNumber } from "@/modules/registrations/bibs";
+import { holdAwaitingItsFirstEmail } from "@/modules/registrations/repository";
 import {
   AUTOMATIC_SEND_KEYS,
   bibsSettleAt,
@@ -174,6 +175,12 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         isNotNull(events.capacity),
         inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
         lte(registrations.holdExpiresAt, until),
+        /*
+          Not a hold or an offer whose first email is still queued (§520): it does not lapse at its
+          stored deadline — the send re-bases it — so no release, and no offer to the next in line,
+          is foreseen for it until that email has left.
+        */
+        not(holdAwaitingItsFirstEmail(now)),
       ),
     );
   const nextInLinePending: Due[] = [];

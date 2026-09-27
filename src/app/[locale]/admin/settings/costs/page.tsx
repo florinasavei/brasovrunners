@@ -344,7 +344,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         the forms inside must never sit in a shut box. The ids are the addresses «Sarcini»'s rows
         link to (§336, §516).
       */}
-      <Panel id="database-config" title={t("database.title")} intro={t("database.intro")} data-testid="database-config">
+      <Panel glyph="database" id="database-config" title={t("database.title")} intro={t("database.intro")} data-testid="database-config">
         <Stack spacing={2}>
           {/*
             Which Neon plan the account is on (§280's follow-up, §326), above the figures that

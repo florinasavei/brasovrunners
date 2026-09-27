@@ -43,7 +43,7 @@ export default async function OlderPicturesPanel({ locale, left, lastFailed }: P
   const batch = Math.min(left, OLDER_PICTURES_PER_PRESS);
 
   return (
-    <Panel
+    <Panel glyph="pictures"
       id="older-pictures"
       title={t("tasks.olderPictures.title")}
       intro={t("tasks.olderPictures.intro", { perPress: OLDER_PICTURES_PER_PRESS })}

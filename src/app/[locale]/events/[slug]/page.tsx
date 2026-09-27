@@ -25,6 +25,7 @@ import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
+import GavelIcon from "@mui/icons-material/Gavel";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
@@ -54,13 +55,13 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
-type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string }> };
+type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string; declaratie?: string }> };
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -129,7 +130,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { interest, since, lista } = await searchParams;
+  const { interest, since, lista, declaratie } = await searchParams;
 
   const now = new Date();
   /*
@@ -374,6 +375,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         >
           <Box component="summary">
             <Typography component="h2" id="conditions-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+              <GavelIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
               {t("conditions.heading")}
             </Typography>
           </Box>
@@ -399,7 +401,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
           {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
               organizer offered it and the club has approved the text of its surface. */}
-          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
+          {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
+          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} viewToken={declaratie} />
         </Box>
         <OpenFoldFromHash />
       </Box>

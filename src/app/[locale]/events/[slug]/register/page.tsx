@@ -1,4 +1,8 @@
+import BadgeIcon from "@mui/icons-material/Badge";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import GroupsIcon from "@mui/icons-material/Groups";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import ShareIcon from "@mui/icons-material/Share";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
@@ -47,7 +51,7 @@ import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
 import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
@@ -1088,6 +1092,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {env.FEATURE_DISPLAY_NAME && (
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
+                  <BadgeIcon aria-hidden sx={FOLD_GLYPH_SX} />
                   {t("displayNameToggle")}
                 </Typography>
                 <Stack spacing={1.5} sx={{ pb: 2 }}>
@@ -1106,6 +1111,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               )}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
+                  <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
                   {t("disclosure.race", { club: CLUB_NAME })}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
@@ -1202,6 +1208,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               >
               <Box component="details" sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
+                  <ShareIcon aria-hidden sx={FOLD_GLYPH_SX} />
                   {t("disclosure.socials")}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
@@ -1250,6 +1257,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 const healthBlock = (
               <Box component="details" sx={disclosureSx} open={invalid.has("healthConsent")}>
                 <Typography component="summary" variant="body2">
+                  <MedicalServicesIcon aria-hidden sx={FOLD_GLYPH_SX} />
                   {t("disclosure.health")}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>

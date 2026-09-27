@@ -51,6 +51,6 @@ describe("§436 the admin boundary", () => {
     const markup = render(new TypeError("Failed to fetch"));
     expect(markup).toContain('data-testid="save-blocked"');
     expect(markup).toContain("Trimite pe calea simplă");
-    expect(markup).toContain("Înainte să apeși, deschide pagina într-un tab nou și verifică");
+    expect(markup).toContain("Înainte să apeși, verifică pagina într-un tab nou");
   });
 });

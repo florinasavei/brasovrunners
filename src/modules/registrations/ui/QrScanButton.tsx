@@ -13,6 +13,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 // A client island already, so the element is made here; the glyph is still the registry's (§318).
 const ScanGlyph = ACTION_ICONS.scan;
+const DismissIcon = ACTION_ICONS.dismiss;
 
 type Detector = { detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>> };
 type DetectorCtor = new (options: { formats: string[] }) => Detector;
@@ -122,7 +123,9 @@ export default function QrScanButton({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>{closeLabel}</Button>
+          <Button onClick={() => setOpen(false)} startIcon={<DismissIcon fontSize="small" />}>
+            {closeLabel}
+          </Button>
         </DialogActions>
       </Dialog>
     </>
