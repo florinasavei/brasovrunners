@@ -21,7 +21,8 @@ import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
-import { cachedBotCheckSiteKey, cachedDeadlines, cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
+import { cachedBotCheckSiteKey, cachedDeadlines } from "@/modules/public-cache/reads";
+import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
@@ -69,7 +70,8 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const { done, invalid, changed, limited, closed, away } = await searchParams;
 
   const now = new Date();
-  const event = await cachedPublishedEventBySlug(locale, slug);
+  // The cached row, or the database's own at a red month's miss (§NNN): this page reads it anyway.
+  const event = await formEventBySlug(locale, slug);
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key) notFound();
 

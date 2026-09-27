@@ -41,7 +41,6 @@ import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
-import { DEFAULT_ADDRESS_CAP } from "./domain/address-cap";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
@@ -1256,9 +1255,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   /*
     The club's limit of registrations per address (§389), read the same way and for the same reason
     as the deadlines: before the transaction, from the instance's memo, never under the event's lock.
-    A staff entry never meets it — it refuses a registered address out loud before calling in.
+    A staff entry meets it too since §NNN: it may enter another person on a registered address, and
+    the club's limit is the club's at the desk as on the form.
   */
-  const cap = origin.source === "PUBLIC" ? await currentAddressCap(db) : DEFAULT_ADDRESS_CAP;
+  const cap = await currentAddressCap(db);
 
   await db.transaction(async (tx) => {
     /*
@@ -1300,11 +1300,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     if (decision.kind === "refuseClosed") {
       throw new DomainError("VALIDATION_ERROR", "a second person on one address is not available yet", [ANOTHER_LINK_INVALID]);
     }
+    /*
+      A staff entry hears the same two refusals (§NNN), with the address box named beside the marker:
+      the backoffice form points at the box and says the sentence.
+    */
+    const addressBox = via === "staff" ? ["email"] : [];
     if (decision.kind === "refuseAlreadyRegistered") {
-      throw new DomainError("VALIDATION_ERROR", "this runner is already registered on this address", [ALREADY_ON_ADDRESS]);
+      throw new DomainError("VALIDATION_ERROR", "this runner is already registered on this address", [...addressBox, ALREADY_ON_ADDRESS]);
     }
     if (decision.kind === "refuseAtCap") {
-      throw new DomainError("VALIDATION_ERROR", "this address already carries the club's limit of registrations at this event", [ADDRESS_AT_CAP]);
+      throw new DomainError("VALIDATION_ERROR", "this address already carries the club's limit of registrations at this event", [...addressBox, ADDRESS_AT_CAP]);
     }
     /*
       A staff entry that finds the address registered, here under the lock (§420): the refusal
@@ -1314,6 +1319,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       fast track would confirm *that* runner — somebody who is not there and signed nothing — on the
       paper of the one who is (BR-REQ-037-07). Refused out loud instead, and rolled back whole: no
       re-send, no audit row, nothing confirmed. A staff entry succeeds only by creating or restarting.
+      Since §NNN a staff entry reaches a re-send only while the schema holds one registration per
+      address; with the family open it decides by the name (`decideSubmission`, via `staff`) and is
+      refused above when it is this runner again or the address is at the club's limit.
     */
     if (origin.source === "STAFF" && (decision.kind === "resend" || decision.kind === "offerAnother")) {
       throw new DomainError("VALIDATION_ERROR", "this address already has a registration for this event", ["email"]);
@@ -1433,7 +1441,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         so nothing was created — and the message, in the one place it may be said, adds how to
         register somebody else: the form again, with that person's full name and birth date.
       */
-      const hint = decision.kind === "resend" && decision.notAnotherPerson === true ? { anotherPersonHint: true } : {};
+      // …and, for another name on a registered birth date, how twins are registered (§NNN).
+      const hint =
+        decision.kind === "resend" && decision.notAnotherPerson === true
+          ? { anotherPersonHint: true, ...(decision.sameBirthDate === true ? { sameBirthDateHint: true } : {}) }
+          : {};
       if (messageType === "VERIFY_REGISTRATION_EMAIL") {
         queued = await enqueueVerificationEmail(tx, participant, existing, now, hint);
       } else if (messageType) {

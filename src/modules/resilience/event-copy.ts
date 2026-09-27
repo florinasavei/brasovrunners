@@ -2,7 +2,7 @@ import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
-import { throughBreaker } from "./breaker";
+import { isColdMiss, throughBreaker } from "./breaker";
 import { readWithLastGood, type Resilient } from "./last-good";
 
 /**
@@ -29,6 +29,23 @@ export async function eventBySlugWithLastGood(locale: Locale, slug: string, now:
 }
 
 export type RegistrationEvent = NonNullable<Awaited<ReturnType<typeof findPublishedEventBySlug>>>;
+
+/**
+ * The event a form page is for — the group run's self-declaration (§393) — from the public cache,
+ * and from the database itself when a red month's miss finds no copy (§NNN). Such a page reads the
+ * texts in force and the event's facts from the database on every visit anyway (signing is a
+ * decision), so the cold miss has nothing to save: it used to throw `ColdMissError` out of a page
+ * nothing wrapped, a 500 for somebody about to sign. Through the breaker, so a database this
+ * instance knows is away still fails at once, as it did.
+ */
+export async function formEventBySlug(locale: Locale, slug: string) {
+  try {
+    return await cachedPublishedEventBySlug(locale, slug);
+  } catch (error) {
+    if (!isColdMiss(error)) throw error;
+    return throughBreaker(() => findPublishedEventBySlug(getDb(), locale, slug));
+  }
+}
 
 /**
  * The event the registration form is for, with its last good copy behind it (§447).

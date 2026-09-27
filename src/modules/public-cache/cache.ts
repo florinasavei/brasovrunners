@@ -4,8 +4,8 @@ import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
 import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
 import { ColdMissError, isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
-import { copyOf, keepCopy } from "@/modules/resilience/last-good";
-import { allowRefreshNow, scheduleMissRefresh } from "./miss-refresh";
+import { copyOf, keepCopy, noteSavedCopyServed } from "@/modules/resilience/last-good";
+import { allowRefreshNow, computeAwakeFromWrite, flushMissRefreshes, scheduleMissRefresh } from "./miss-refresh";
 import { thisRequestsReads } from "./request-memo";
 import { buildInfo } from "@/shared/config/build-info";
 
@@ -170,7 +170,16 @@ export async function publicRead<T>(
     return tagDates(value);
   };
 
-  if (effects.publicMissRefreshMinutes === 0) {
+  /*
+    A write on this instance woke the compute a moment ago (§NNN, `miss-refresh.ts`): a red month's
+    miss is read in the request for that moment, as below red — the compute is awake whatever this
+    read does — so the organizer who saved sees the page as saved, never the copy from before the
+    save. Whatever else was queued rides the same wake.
+  */
+  const readInRequest = effects.publicMissRefreshMinutes === 0 || computeAwakeFromWrite();
+  if (effects.publicMissRefreshMinutes > 0 && readInRequest) flushMissRefreshes(effects.publicMissRefreshMinutes);
+
+  if (readInRequest) {
     /*
       Asked once per request however many parts of the page need it (§489, `request-memo.ts`).
       The request keeps the stored form, and each caller is handed its own copy by `untagDates`,
@@ -205,17 +214,46 @@ export async function publicRead<T>(
           throw new ColdMissError();
         },
         keyParts,
-        options,
+        /*
+          Looked up as never stale by age (§NNN): an entry past its ceiling is served as the hit it
+          is, rather than served and "revalidated" in the background by this very function — which
+          throws by design, so every such hit logged "revalidating cache with key …" with a
+          ColdMissError and refreshed nothing. At red an entry lives until a write expires it, and
+          the entry the background refresh files keeps the ×4 ceiling for when the month is green.
+        */
+        { ...options, revalidate: RED_LOOKUP_REVALIDATE_SECONDS },
       )(),
     ) as T;
   } catch (error) {
     if (!isColdMiss(error)) throw error;
     scheduleMissRefresh(keyParts.join("|"), () => unstable_cache(loadAndKeep, keyParts, options)(), effects.publicMissRefreshMinutes);
     const copy = copyKey ? await copyOf<T>(copyKey) : null;
-    if (copy) return copy.value;
+    if (copy) {
+      // The page says it shows a saved copy, and from when (§NNN): nothing failed, but the database was not asked.
+      noteSavedCopyServed(copy.takenAt);
+      return copy.value;
+    }
     throw error;
   }
 }
+
+/**
+ * Whether a public read that misses is being answered without the database right now (§447, §NNN):
+ * a red month, inside a production Next server, and no write on this instance has just woken the
+ * compute. For the reads that go around `publicRead` — an address that can name no row, a path too
+ * long to cache — so that at red they, too, answer without waking the database for whoever typed it.
+ */
+export function answeringFromCacheOnly(): boolean {
+  if (!insideNextServer() || process.env.NODE_ENV !== "production" || prerenderingAtBuild()) return false;
+  return governorEffects(peekNeonBudgetLevel()).publicMissRefreshMinutes > 0 && !computeAwakeFromWrite();
+}
+
+/**
+ * The age a red month's cache lookup treats as stale (§NNN): a year — Next's own "no revalidation"
+ * value — so the lookup never starts a background revalidation of an entry it would only fail to
+ * refresh. Only the lookup's: the entries the refresh writes keep the stretched day's ceiling.
+ */
+const RED_LOOKUP_REVALIDATE_SECONDS = 365 * 24 * 60 * 60;
 
 /**
  * Expire every cached answer made of these kinds of content — the one call a write makes.

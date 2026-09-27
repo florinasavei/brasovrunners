@@ -1,6 +1,6 @@
 import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { type GmailAtCap, gmailJitterCeilingMs, type GmailLedger } from "@/modules/notifications/domain/email-transport";
+import { GMAIL_CAP_DEFERRED_ERROR, type GmailAtCap, gmailJitterCeilingMs, type GmailLedger } from "@/modules/notifications/domain/email-transport";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
 /**
@@ -100,6 +100,11 @@ export function markSubjectForEnvironment(subject: string, appEnv: AppEnvironmen
 
 export type EmailSender = {
   send(message: OutgoingEmail): Promise<SendResult>;
+  /**
+   * The batch is over: let go of the Gmail road's one connection, when this sender opened it
+   * (§NNN). Safe to call twice, and on a sender that never sent through Gmail.
+   */
+  close?(): void;
 };
 
 /**
@@ -173,6 +178,13 @@ export function createEmailSender(config: {
   // One Gmail failure and this sender stops asking Gmail: the next message should not pay the
   // same connection timeout to learn the same thing.
   let gmailDown = false;
+  /*
+    One Gmail adapter per sender, which is one per batch (§NNN): built at the first Gmail message and
+    kept, so its pooled connection carries every Gmail message of the batch — one TLS handshake and
+    one login, not one of each per message — and `close()` lets it go when the batch ends.
+  */
+  let gmailAdapter: EmailAdapter | null = null;
+  const gmailAdapterOnce = (road: GmailRoad): EmailAdapter => (gmailAdapter ??= road.adapter());
 
   /**
    * Gmail's answer for one message: carried, handed back (the pace, the cap the club chose to wait
@@ -208,7 +220,7 @@ export function createEmailSender(config: {
       // At the cap and the club said wait: deferred to the moment the oldest send leaves the
       // rolling day, as a spent Mailgun allowance is deferred (§40) — never discarded.
       if (admission.reason === "cap" && chosen && gmail.atGmailCap === "defer") {
-        return { outcome: "throttled", error: "gmail daily cap: deferred", retryAfter: admission.roomAt };
+        return { outcome: "throttled", error: GMAIL_CAP_DEFERRED_ERROR, retryAfter: admission.roomAt };
       }
       return null;
     }
@@ -230,7 +242,13 @@ export function createEmailSender(config: {
       if (rest > 0) await sleep(rest);
       waited += admission.waitMs;
     }
-    const result = await gmail.adapter().send(message);
+    const result = await gmailAdapterOnce(gmail).send(message);
+    /*
+      The address itself refused for good (§NNN, `gmail-adapter.ts`): the bounce it is. Not a Gmail
+      failure — the account works, the next message still goes through it — and not Mailgun's to try,
+      which would spend a message of the allowance to bounce the same way hours later.
+    */
+    if (result.outcome === "permanent_failure") return result;
     if (result.outcome !== "sent") {
       gmailDown = true;
       const error = result.error;
@@ -254,6 +272,16 @@ export function createEmailSender(config: {
   }
 
   return {
+    close() {
+      const opened = gmailAdapter;
+      gmailAdapter = null;
+      try {
+        opened?.close?.();
+      } catch {
+        // Letting go of a connection must never be what fails the batch that used it.
+      }
+    },
+
     async send(message: OutgoingEmail): Promise<SendResult> {
       const marked: OutgoingEmail = {
         ...message,
@@ -295,6 +323,7 @@ export function createEmailSender(config: {
         1. The club chose Gmail for this group: Gmail, if configured and not failed in this batch —
            after the pace. At the cap, deferred or Mailgun, as the club chose. A failure before Gmail
            could have taken it: Mailgun, at once. A failure after it might have: the outbox retries.
+           The address itself refused for good (a `5.1.x`): bounced, on neither road again (§NNN).
         2. Mailgun refuses because the plan's allowance is spent (§40): Gmail, when the club lets
            it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
       */

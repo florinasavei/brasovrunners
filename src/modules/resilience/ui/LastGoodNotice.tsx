@@ -31,6 +31,19 @@ export default async function LastGoodNotice({ read }: { read: Pick<Resilient<un
   const locale = await getLocale();
   const when = formatDay(read.takenAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
 
+  /*
+    A red month answered the page from a saved copy rather than wake the database (§NNN): nothing is
+    wrong, and the copy is refreshed in the background within minutes — but it may be from before a
+    change the club just made, so the page names the copy's time, quietly.
+  */
+  if (read.freshness === "saved") {
+    return (
+      <Alert severity="info" sx={{ mb: 3 }} data-testid="saved-copy-notice">
+        {t("saved", { when })}
+      </Alert>
+    );
+  }
+
   if (read.restingUntil) {
     return (
       <Alert severity="info" sx={{ mb: 3 }} data-testid="resting-notice">

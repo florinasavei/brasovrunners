@@ -975,7 +975,9 @@
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment (dat, rezervat sau al unei înscrieri șterse). Alege alt număr din cutie și încearcă din nou.",
-      "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă."
+      "WALK_IN_BIB_TAKEN": "Persoana a fost înscrisă, dar numărul tocmai l-a dat altcineva de la masă, așa că înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Caut-o în lista de la masă și apasă „Confirmă aici” cu alt număr de rezervă.",
+      "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
+      "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -5724,7 +5726,7 @@
     "readings": "Cele trei citiri: facturat {metered}, din jurnal {operations}, contorul vechi {legacy} ore-CU; se folosește cea mai mare dintre primele două, contorul vechi doar când niciuna nu a răspuns.",
     "notRead": "necitit",
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
-    "spentAll": "Limita e consumată: Neon oprește baza de date până la sfârșitul perioadei, iar site-ul arată copiile salvate.",
+    "spentAll": "După această citire, limita e consumată. Neon oprește baza de date abia când propriul lui contor ajunge la limită; din acel moment și până la sfârșitul perioadei, site-ul arată copiile salvate, iar formularele așteaptă. Până atunci, lucrările programate merg în continuare, în ritmul de mai jos.",
     "thresholds": {
       "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
       "amber": "Galben de la (%)",
@@ -5737,6 +5739,7 @@
   },
   "Offline": {
     "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
+    "saved": "Îți arătăm copia salvată a paginii, din {when}; o actualizăm în câteva minute, așa că o schimbare foarte recentă poate să nu apară încă.",
     "resting": "Site-ul arată acum o copie salvată a paginii, din {when}: înscrierile și formularele sunt în pauză până {until}. Mulțumim pentru răbdare!",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou",
