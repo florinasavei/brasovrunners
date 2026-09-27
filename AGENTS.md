@@ -579,7 +579,10 @@ Step 4 is enforced locally, not left to memory. `yarn setup` sets `core.hooksPat
 tracked `.githooks`, whose `pre-commit` runs `yarn check` and blocks a failing commit. CI
 runs the same `yarn check`, so the two cannot drift as `check` grows (BR-REQ-090-02).
 Hooks need no dependency: husky and lint-staged are deliberately not installed (§1.5
-priority 4 and 6). `--no-verify` exists for emergencies and does not bypass CI.
+priority 4 and 6). `--no-verify` exists for emergencies and does not bypass CI. The one
+documented exception is the landing commit of a batch (`docs/DISPATCHER.md` § Land a batch):
+every branch in it already passed the hook, it runs `yarn docs:check` first, and CI runs the
+full `yarn check` on the batch pull request minutes later; every other commit keeps the hook (§NNN).
 
 ### 6.4 Production promotion
 

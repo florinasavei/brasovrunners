@@ -16,8 +16,8 @@ import { describe, expect, it, vi } from "vitest";
  * word from `sm`, and a phone's items 6px apart. The owner, later that day (§385): "GDPR" on the
  * phone too, a rule before the languages, a condensed panel and the version in a chip — with the
  * phone's gap 4px below 360 and 6px from 360. The e2e suite measures the bar in a browser
- * (`footer.spec.ts`, `build-badge.spec.ts`); pull requests run it on the desktop project only
- * (§209), and the phone is where the complaint was. This runs in `yarn check`, on every commit,
+ * (`footer.spec.ts`, `build-badge.spec.ts`); since §NNN every run, a pull request's included,
+ * runs it on both projects over eight shards — the phone is where the complaint was. This runs in `yarn check`, on every commit,
  * and pins the facts the phone depends on to the markup and the styles the server renders.
  *
  * The catalogue is the real Romanian one, through next-intl's own translator. Next's navigation
