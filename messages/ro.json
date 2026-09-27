@@ -6243,7 +6243,7 @@
       "contactRecipients": "Destinatarii mesajelor de contact au fost salvați.",
       "clubNotices": "Copiile clubului au fost salvate.",
       "emailCopy": "Textul emailului a fost salvat.",
-      "emailCopyReset": "Textul emailului a revenit la cel al platformei.",
+      "emailCopyReset": "Textul emailului a revenit la cel implicit.",
       "emailCopySamples": "Valorile de exemplu au fost înlocuite cu câmpuri.",
       "botCheckOn": "Anti-bot: pornit.",
       "botCheckOff": "Anti-bot: oprit.",
