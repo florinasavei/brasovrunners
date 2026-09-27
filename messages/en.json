@@ -6007,15 +6007,17 @@
       "teamPageUnpublished": "The team page was taken off the site.",
       "translationBudget": "The translation budget was saved.",
       "translatedAll": {
-        "one": "Done, everything is translated: {count} English box. Read it, correct it if needed, then save.",
-        "few": "Done, everything is translated: {count} English boxes. Read them, correct them if needed, then save.",
-        "other": "Done, everything is translated: {count} English boxes. Read them, correct them if needed, then save."
+        "one": "Done: {count} box translated from Romanian into English. Check it and press Save.",
+        "few": "Done: {count} boxes translated from Romanian into English. Check them and press Save.",
+        "other": "Done: {count} boxes translated from Romanian into English. Check them and press Save."
       },
       "translatedAllCut": {
-        "one": "Everything is translated: {count} English box, but some texts were cut at the box's limit — see the line under the button.",
-        "few": "Everything is translated: {count} English boxes, but some texts were cut at their box's limit — see the line under the button.",
-        "other": "Everything is translated: {count} English boxes, but some texts were cut at their box's limit — see the line under the button."
-      }
+        "one": "Done: {count} box translated from Romanian into English, but a text was cut at the box's limit — see the line under the button. Check it and press Save.",
+        "few": "Done: {count} boxes translated from Romanian into English, but some texts were cut at their box's limit — see the line under the button. Check them and press Save.",
+        "other": "Done: {count} boxes translated from Romanian into English, but some texts were cut at their box's limit — see the line under the button. Check them and press Save."
+      },
+      "translatedOne": "Translated. Check it and press Save.",
+      "translateRefused": "The translation was not made: see the line under the button."
     }
   },
   "Network": {

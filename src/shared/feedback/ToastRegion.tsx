@@ -4,10 +4,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
+import { HEADER_CLEARANCE_PX } from "@/theme/brand";
 import { type NoticeKind, TOAST_AUTO_HIDE_MS } from "./notice";
 
 /** One toast as drawn: its sentence already in the reader's language, and an id that changes with every toast. */
-export type DrawnToast = { id: number; kind: NoticeKind; sentence: string };
+export type DrawnToast = { id: number; kind: NoticeKind; sentence: string; autoHideMs?: number };
+
+/** Where every toast is anchored: top centre, just under the sticky site header (`HEADER_CLEARANCE_PX`). */
+export const TOAST_ANCHOR = { vertical: "top", horizontal: "center" } as const;
+export const TOAST_TOP_PX = HEADER_CLEARANCE_PX;
 
 /**
  * The toast as drawn, and the live region around it (`DECISIONS.md` §384) — one component for
@@ -42,7 +47,7 @@ export default function ToastRegion({
         <Snackbar
           key={toast.id}
           open
-          autoHideDuration={TOAST_AUTO_HIDE_MS}
+          autoHideDuration={toast.autoHideMs ?? TOAST_AUTO_HIDE_MS}
           // The clock runs whether or not this window has the focus: a volunteer who glanced at
           // another app must not come back to a stale "it worked" from five minutes ago.
           disableWindowBlurListener
@@ -52,11 +57,11 @@ export default function ToastRegion({
             if (reason === "clickaway") return;
             onDismiss();
           }}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          // At the top (§NNN), just under the sticky site header — the same two heights the
-          // theme's `scroll-padding-top` clears (`theme.ts`) — so it never covers the header's
-          // way out, nor the footer's bar or the editor's sticky save row at the bottom.
-          sx={{ top: { xs: 72, sm: 76 } }}
+          anchorOrigin={TOAST_ANCHOR}
+          // At the top (§NNN), just under the sticky site header — the one pair the theme's
+          // `scroll-padding-top` also reads (`HEADER_CLEARANCE_PX`) — so it never covers the
+          // header's way out, nor the footer's bar or the editor's sticky save row at the bottom.
+          sx={{ top: { xs: TOAST_TOP_PX.xs, sm: TOAST_TOP_PX.sm } }}
           data-testid="toast"
         >
           <Alert
