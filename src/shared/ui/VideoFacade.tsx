@@ -68,7 +68,9 @@ export default function VideoFacade({
   const frameId = useId();
 
   return (
-    <Box>
+    // `data-lifted`: on a listing card, the film sits above the title's stretched cover, so the
+    // player, its controls and the volume glyph take their own presses (`CARD_TAP_SX`, §NNN).
+    <Box data-lifted="true">
       <Box
         component="details"
         sx={{

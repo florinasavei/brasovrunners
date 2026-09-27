@@ -119,7 +119,7 @@ export default async function EventCard({
           <EventKindChips type={event.type} surface={null} />
           {/* One date of a repeated event, alone on its card (§NNN): the series card's repeat chip,
               in the same place, so the rhythm is read the same way on both cards. */}
-          {rhythm && <GlyphChip glyph="series" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />}
+          {rhythm && <GlyphChip glyph="repeat" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />}
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}

@@ -46,7 +46,7 @@ const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: SeriesCard } = await import("@/modules/events/ui/SeriesCard");
 const { default: RichText } = await import("@/modules/content/rich-text/ui/RichText");
 const { shortenUrls } = await import("@/modules/content/rich-text/domain/short-url");
-const { CARD_TITLE_SX, LINE_GAP } = await import("@/modules/events/ui/card-layout");
+const { CARD_TAP_SX, CARD_TITLE_SX, LINE_GAP } = await import("@/modules/events/ui/card-layout");
 const { CARD_EXCERPT_SX } = await import("@/modules/events/ui/EventExcerpt");
 
 afterEach(() => {
@@ -248,12 +248,33 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
       expect(rules).toMatch(/^\{[^}]*position:relative;isolation:isolate/m);
       // Every control of the card's own — the map, the dates, the fold, the door, a registration
       // button, a pill with a tooltip — above the cover, so a press on it is still a press on it.
-      expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip]){position:relative;z-index:2;}");
+      expect(rules).toContain(" :where(a, button, summary, [data-has-tooltip], [data-lifted]){position:relative;z-index:2;}");
       // The keyboard's ring is the card's, since the title's link targets the whole card (§NNN)…
       expect(rules).toMatch(new RegExp(`:has\\(h2 a:focus-visible\\)\\{outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\\}`));
-      // …and the title keeps only its underline, no second ring around its words.
-      expect(title).toMatch(/ a:focus-visible\{[^}]*;text-decoration:underline;outline:none;\}/);
+      // …and the title keeps only its underline, no second ring around its words — where the card
+      // can draw the ring. A browser without `:has` keeps the title's own ring (§NNN).
+      expect(title).toMatch(new RegExp(` a:focus-visible\{[^}]*;text-decoration:underline;outline:2px solid;outline-color:${PRIMARY};outline-offset:2px;\}`));
+      expect(html).toContain(`@supports selector(:has(a)){.${titleClass(html)} a:focus-visible{outline:none;}}`);
     }
+  });
+
+  it("lifts a film in the summary whole above the cover — the play button, the player and the volume glyph take their own presses (§NNN)", async () => {
+    const { default: VideoFacade } = await import("@/shared/ui/VideoFacade");
+    const film = withoutStyles(
+      renderToStaticMarkup(
+        createElement(VideoFacade, {
+          embedSrc: "https://www.youtube-nocookie.com/embed/abc",
+          posterUrl: null,
+          title: "Film",
+          labels: { play: "Play", mute: "Mute", unmute: "Unmute", volume: "Volume" },
+        }),
+      ),
+    );
+    // The facade's root is the marked box: the details, the iframe and the volume bar all inside it.
+    expect(film).toMatch(/^<div\b[^>]*data-lifted="true"[^>]*><details\b/);
+    expect(film).toContain("<iframe");
+    // And the card lifts what is marked, as it lifts a link (the rule itself is asserted above).
+    expect(CARD_TAP_SX["& :where(a, button, summary, [data-has-tooltip], [data-lifted])"]).toEqual({ position: "relative", zIndex: 2 });
   });
 
   it("marks a pill with a tooltip so the card lifts it above the cover — the night pill's sunset still opens on a tap (§NNN)", async () => {
@@ -268,14 +289,19 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     const mondays = series();
     const one = await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays }));
     expect(chipLabels(one).slice(0, 2)).toEqual(["Alergare de grup", "Săptămânal"]);
-    expect(withoutStyles(one)).toContain('data-testid="EventRepeatIcon"');
+    expect(withoutStyles(one)).toContain('data-testid="AutorenewIcon"');
     expect(withoutStyles(one)).toMatch(/^<li\b[^>]*data-series="true"/);
     // The same chip, class for class, the series card wears.
-    const chipOf = (html: string) => /<div class="([^"]*)"[^>]*><svg\b[^>]*data-testid="EventRepeatIcon"/.exec(withoutStyles(html))?.[1];
+    const chipOf = (html: string) => /<div class="([^"]*)"[^>]*><svg\b[^>]*data-testid="AutorenewIcon"/.exec(withoutStyles(html))?.[1];
     expect(chipOf(one)).toBe(chipOf(await repeated()));
+    // The mark is a wheel, «ca o rotiță» (the owner) — Material's Autorenew, not the calendar the
+    // `series` glyph draws — on the featured card too.
+    expect(withoutStyles(one)).not.toContain("EventRepeatIcon");
+    const lead = await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays, featured: { raceWeekDays: 7 } }));
+    expect(withoutStyles(lead)).toContain('data-testid="AutorenewIcon"');
     // A one-off, or a "series" of one date, wears none.
     for (const html of [await single(), await markup(createElement(EventCard, { event: mondays[0], index: 0, now: NOW, seriesDates: [mondays[0]] }))]) {
-      expect(withoutStyles(html)).not.toContain("EventRepeatIcon");
+      expect(withoutStyles(html)).not.toContain("AutorenewIcon");
       expect(withoutStyles(html)).not.toContain("data-series");
     }
     // In English, the catalogue's own word; and a set of dates with no rhythm keeps the count.
@@ -290,7 +316,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
 
   it("says the series' rule on the repeat chip — hover, tap and screen reader — on both cards, in both languages (§NNN)", async () => {
     const mondays = series();
-    const repeatChip = (html: string) => /<div\b[^>]*data-has-tooltip="true"[^>]*>(?:(?!<\/div>)[\s\S])*?data-testid="EventRepeatIcon"[\s\S]*?<\/div>/.exec(withoutStyles(html))?.[0] ?? "";
+    const repeatChip = (html: string) => /<div\b[^>]*data-has-tooltip="true"[^>]*>(?:(?!<\/div>)[\s\S])*?data-testid="AutorenewIcon"[\s\S]*?<\/div>/.exec(withoutStyles(html))?.[0] ?? "";
     for (const html of [await markup(createElement(EventCard, { event: mondays[1], index: 0, now: NOW, seriesDates: mondays })), await repeated()]) {
       const chip = repeatChip(html);
       expect(chip).not.toBe("");

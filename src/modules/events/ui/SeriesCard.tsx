@@ -76,7 +76,7 @@ export default async function SeriesCard({
         <Box sx={CARD_CHIPS_SX}>
           {/* The type; the surface is a pill with the facts below, said once (§366). */}
           <EventKindChips type={next.type} surface={null} />
-          <GlyphChip glyph="series" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />
+          <GlyphChip glyph="repeat" variant="outlined" label={rhythm} tooltip={repeats} srSuffix={repeats} />
           {/* An edition apart on *any* of the dates (§168, §169). A repeated event is one card
               (§113), so the badge the single-event card wears would otherwise be shown nowhere
               for the owner's own case — "some dates can be special events where we overlap
