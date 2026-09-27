@@ -107,8 +107,8 @@ function isRegistrationStatus(value: string | undefined): value is RegistrationS
  * cancelling several at once is the bulk form below the table, and everything about one person —
  * rename, cancel, erase — is on their own page, which is where §15.11's four verbs live in full.
  */
-/** Present for a screen reader, absent on screen (the usual clip pattern). */
-const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+/** Present for a screen reader, absent on screen (the usual clip pattern; `"1px"`, since MUI reads `1` as 100%). */
+const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
 export default async function AdminRegistrationsPage({ params, searchParams }: Props) {
   const { locale } = await params;
