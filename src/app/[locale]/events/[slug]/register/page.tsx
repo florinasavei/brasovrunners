@@ -536,6 +536,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           firstName={submittedFacts?.firstName ?? null}
           eventTitle={event.title}
           atOnce={sitting.atOnce === true}
+          windowMinutes={sitting.windowMinutes ?? null}
           locale={locale}
           slug={slug}
           continueAction={continueFamilySittingAction}

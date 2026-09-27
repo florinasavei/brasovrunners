@@ -13,6 +13,7 @@ import { Link } from "@/i18n/navigation";
 import { daysPhrase, hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { doneFamilySentence } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
 
 /**
@@ -75,7 +76,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
   const textLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
-  const family = (facts?.names?.length ?? 0) > 1;
+  const familySentence = doneFamilySentence(facts);
+  const family = familySentence !== null;
 
   return (
     <Stack spacing={3}>
@@ -102,10 +104,14 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
           </Typography>
         </Box>
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
-        {/* A family sitting (§NNN): one email for everybody it sent the form for, named as typed on this browser. */}
-        {family && (
+        {/*
+          A family sitting (§NNN): one email for everybody it sent the form for, named as typed on this
+          browser — or, at a window of 0, where each person's email left on its own, the sentence that
+          says so (the review of 2026-09-27).
+        */}
+        {familySentence && (
           <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 700 }} data-testid="check-email-family">
-            {t("done.family", { names: (facts?.names ?? []).join(", ") })}
+            {familySentence === "family" ? t("done.family", { names: (facts?.names ?? []).join(", ") }) : t("done.familyEach")}
           </Typography>
         )}
         {/*

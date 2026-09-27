@@ -9,7 +9,7 @@ import { getTranslations } from "next-intl/server";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { sittingMinutesLeft } from "../domain/family-sitting";
+import { AUTO_PRESS_FIELD, sittingMinutesLeft } from "../domain/family-sitting";
 import PressWhenWindowEnds from "./PressWhenWindowEnds";
 
 type Props = {
@@ -26,6 +26,12 @@ type Props = {
   eventTitle: string;
   /** The club's window is 0 (§NNN): nothing was held, the email has already left. */
   atOnce: boolean;
+  /**
+   * The club's window as the action read it, from the browser's half (§NNN): the sentence names the
+   * window the email is actually held for, not the public cache's, which may lag a «Termene» save.
+   * Null on a half written before it was kept: the cache's then.
+   */
+  windowMinutes: number | null;
   locale: string;
   slug: string;
   /** «Da, încă o persoană»: the window starts again, and the same form opens with the address fixed. */
@@ -60,13 +66,14 @@ export default async function FamilySittingNext({
   firstName,
   eventTitle,
   atOnce,
+  windowMinutes,
   locale,
   slug,
   continueAction,
   releaseAction,
 }: Props) {
   const t = await getTranslations("Registration");
-  const windowWords = minutesPhrase(locale, (await cachedDeadlines()).familySittingMinutes);
+  const windowWords = minutesPhrase(locale, windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
   // The time left, not the whole window (the review's nit): the screen may be opened again later.
   const left = minutesPhrase(locale, Math.max(1, sittingMinutesLeft(releaseInMs)));
   // A form that was not kept (§493) is not «the form for …» that arrived: the plain lead then.
@@ -157,7 +164,7 @@ export default async function FamilySittingNext({
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="slug" value={slug} />
             {/* The window's end, while this screen is open: the same press, by itself. Nothing waits at 0. */}
-            {!atOnce && <PressWhenWindowEnds delayMs={releaseInMs} />}
+            {!atOnce && <PressWhenWindowEnds delayMs={releaseInMs} field={AUTO_PRESS_FIELD} />}
             <SubmitButton label={atOnce ? t("sitting.doneAtOnce") : t("sitting.done")} pendingLabel={t("sitting.donePending")} size="large" fullWidth>
               <MarkEmailReadIcon />
             </SubmitButton>

@@ -22,6 +22,7 @@ import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import {
+  AUTO_PRESS_FIELD,
   FAMILY_SITTING_FIELD,
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
@@ -212,6 +213,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       people: typedPerson.people,
       heldUntil: sittingCookieUntil(now, minutes),
       atOnce,
+      windowMinutes: minutes,
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
     },
@@ -221,7 +223,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   // The screen that follows says to go and read an inbox, so it names which one (§224) — and
   // greets the person by first name while it does. Its own short-lived sealed cookie, never
   // the URL: nothing typed goes into one (§14.5).
-  await stashSubmittedFacts({ email: input.email.trim(), firstName: input.firstName, names }, path);
+  // At a window of 0 (§NNN) each person's email left on its own: the last screen must not promise one.
+  await stashSubmittedFacts({ email: input.email.trim(), firstName: input.firstName, names, atOnce }, path);
   redirect(`${path}?submitted=1`);
 }
 
@@ -236,6 +239,12 @@ export async function releaseFamilySittingAction(form: FormData): Promise<void> 
   const slug = text(form, "slug");
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
   const sitting = await readFamilySittingCookie();
+  /*
+    The open screen's own press at the window's end (`PressWhenWindowEnds`, §NNN): with the browser's
+    half already gone — a phone slower than the cookie's grace — it does nothing and stays where it
+    is. The server releases the sitting at its `held_until` anyway; nothing depends on this press.
+  */
+  if (!sitting && form.get(AUTO_PRESS_FIELD) === "1") return;
   if (sitting?.sittingId) await releaseFamilySitting(getDb(), sitting.sittingId, new Date());
   await clearFamilySittingCookie(path);
   redirect(`${path}?submitted=1&${SITTING_SENT_PARAM}=1`);
@@ -259,7 +268,16 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
   if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
     const deadlines = await currentDeadlines(db);
     if (!sitting.atOnce && sitting.sittingId) await continueFamilySitting(db, sitting.sittingId, familySittingHeldUntil(now, deadlines), now);
-    await writeFamilySittingCookie({ ...sitting, heldUntil: sittingCookieUntil(now, deadlines.familySittingMinutes), sameBirthDate: null }, path, now);
+    await writeFamilySittingCookie(
+      {
+        ...sitting,
+        heldUntil: sittingCookieUntil(now, deadlines.familySittingMinutes),
+        windowMinutes: deadlines.familySittingMinutes,
+        sameBirthDate: null,
+      },
+      path,
+      now,
+    );
   }
   redirect(`${path}?${FAMILY_SITTING_PARAM}=1`);
 }

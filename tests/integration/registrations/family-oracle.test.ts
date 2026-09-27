@@ -182,7 +182,7 @@ describe("§389 §39 the public form answers the same whatever the address holds
     const cookies = (JSON.parse(none) as { cookies: { name: string; value: unknown }[] }).cookies;
     expect(cookies.map((cookie) => cookie.name)).toEqual(["br_form_draft", "br_family_sitting", "br_submitted_to"]);
     expect(cookies[1].value).toBeNull();
-    expect(cookies[2].value).toEqual({ email: EMAIL, firstName: "Maria", names: "Maria Pop" });
+    expect(cookies[2].value).toEqual({ email: EMAIL, firstName: "Maria", names: "Maria Pop", atOnce: "" });
     expect(one).toBe(none);
     expect(atCap).toBe(none);
     // The sitting's sealed half is one length whatever the case (§39): a sitting that held nothing carries a random id.

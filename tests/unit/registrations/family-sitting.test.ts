@@ -6,7 +6,10 @@ vi.mock("next/headers", () => ({
 
 const {
   compareFamilyOrder,
+  doneFamilySentence,
   familyHeldDeclaration,
+  sittingCookieMaxAgeSeconds,
+  SITTING_COOKIE_GRACE_MINUTES,
   sittingCookieUntil,
   sittingMinutesLeft,
   withFamilyRank,
@@ -23,7 +26,7 @@ const {
 const { openFamilySittingCookie, sealFamilySittingCookie } = await import("@/modules/registrations/family-sitting-cookie");
 const { openFormDraft } = await import("@/modules/registrations/form-draft");
 const { declarationStateKey } = await import("@/modules/registrations/domain/family-signing");
-const { buildOutgoingEmail } = await import("@/modules/notifications/templates");
+const { buildOutgoingEmail, joinNames } = await import("@/modules/notifications/templates");
 const { DEADLINE_RULES, familySittingHeldUntil, familySittingHolds } = await import("@/modules/deadlines/domain/deadlines");
 
 /**
@@ -269,5 +272,52 @@ describe("§NNN the family's one confirmation", () => {
     expect(email.text).toContain("Număr de concurs: 12");
     expect(email.text).not.toContain("AAA111");
     expect(email.html).not.toContain("/api/registrations/qr/");
+  });
+
+  it("greets everybody by first name in the order of the forms, commas and «și» / “and” (the owner's answer)", () => {
+    const email = buildOutgoingEmail({ ...params, data: { ...data, familyConfirmed: data.familyConfirmed.map((person, index) => ({ ...person, firstName: index === 1 ? "Ion" : undefined })) } });
+    expect(email.text).toContain("Salut, Ana, Ion și Radu,");
+    expect(email.text).toContain("Hi Ana, Ion and Radu,");
+    expect(email.text).not.toContain("Salut, Ana Pop,");
+    expect(joinNames("ro", ["Ana"])).toBe("Ana");
+    expect(joinNames("ro", ["Ana", "Ion"])).toBe("Ana și Ion");
+    expect(joinNames("en", ["Ana", "Ion", "Maria"])).toBe("Ana, Ion and Maria");
+  });
+});
+
+describe("§NNN the fix round of the second review", () => {
+  it("says one email for the family while the window holds, and each person's own at a window of 0 — in both catalogues", async () => {
+    expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"] })).toBe("family");
+    expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: false })).toBe("family");
+    expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: true })).toBe("familyEach");
+    expect(doneFamilySentence({ names: ["Ana Pop"], atOnce: true })).toBeNull();
+    expect(doneFamilySentence(null)).toBeNull();
+    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+    expect(ro.Registration.done.familyEach).toBe("Fiecare persoană primește emailul ei.");
+    expect(en.Registration.done.familyEach).toBe("Each person gets their own email.");
+    expect(ro.Registration.sitting.leadNamed).toBe("Formularul lui {name} pentru {event} a ajuns.");
+    expect(ro.Registration.sitting.when).toContain("de la ultima apăsare");
+    expect(en.Registration.sitting.when).toContain("after your last press");
+  });
+
+  it("keeps the browser's half two minutes past the window, and the window the action read", () => {
+    expect(SITTING_COOKIE_GRACE_MINUTES).toBe(2);
+    expect(sittingCookieMaxAgeSeconds(new Date(NOW.getTime() + 600_000), NOW)).toBe(600 + 120);
+    expect(sittingCookieMaxAgeSeconds(new Date(NOW.getTime() - 60_000), NOW)).toBe(60);
+    const cookie = {
+      sittingId: null,
+      eventId: EVENT_ID,
+      email: "familia.pop@example.ro",
+      people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
+      heldUntil: new Date(NOW.getTime() + 600_000),
+      windowMinutes: 10,
+      sameBirthDate: null,
+    };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(cookie)!)?.windowMinutes).toBe(10);
+    expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, windowMinutes: 0 })!)?.windowMinutes).toBe(0);
+    expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, windowMinutes: undefined })!)?.windowMinutes).toBeUndefined();
+    // The screen reads the window's end, never the grace: the sitting is over when its email leaves.
+    expect(sittingCookieLive(cookie, EVENT_ID, new Date(NOW.getTime() + 600_000))).toBe(false);
   });
 });

@@ -150,6 +150,21 @@ function familyFactsPart(facts: readonly FamilyFact[]): EmailBodyPart {
 type FamilyConfirmedWords = { number: string; provisional: string; noNumber: string; code: string; qr: string };
 
 /**
+ * Names as one phrase in the email's language (§NNN, the owner's answer of 2026-09-27): commas, and
+ * «și» / "and" before the last — «Ana, Ion și Maria», "Ana, Ion and Maria" (no serial comma, as in
+ * Romanian; written out rather than `Intl.ListFormat`, whose English adds one). One name is itself.
+ */
+export function joinNames(locale: EmailLocale, names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} ${locale === "ro" ? "și" : "and"} ${names.at(-1)}`;
+}
+
+/** The family's greeting (§NNN): every confirmed person's first name, in the order the forms were sent. */
+function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>): string[] {
+  return people.map((person) => person.firstName?.trim() || person.name.trim().split(/\s+/)[0] || person.name);
+}
+
+/**
  * A family's one confirmation (§NNN): one outlined block per person, headed by the name in bold —
  * the race number, bold (§189: the number is what a runner reads at the desk), the desk code, and
  * the QR the desk scans. The second half of the bilingual message repeats the words, not the pictures
@@ -729,9 +744,17 @@ export type TemplateData = {
    * A family's one confirmation (§NNN; the owner: «în mail trebuie să vină toate QR-urile pentru toată
    * familia»): everybody confirmed by the family's one button, in the order the forms were sent — the
    * name, the desk code and its QR (never on a club copy, §320), and the race number (`raceNumberOf`),
-   * provisional or not, or null while there is none. Set, the confirmation is the family's.
+   * provisional or not, or null while there is none. Set, the confirmation is the family's, and it
+   * greets everybody by `firstName` (the name's first word when absent), in that order (§NNN).
    */
-  familyConfirmed?: ReadonlyArray<{ name: string; checkinCode?: string; qrUrl?: string; raceNumber: number | null; provisional: boolean }>;
+  familyConfirmed?: ReadonlyArray<{
+    name: string;
+    firstName?: string;
+    checkinCode?: string;
+    qrUrl?: string;
+    raceNumber: number | null;
+    provisional: boolean;
+  }>;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
    * both (§446): one sentence says how to register somebody else. Only ever in the inbox.
@@ -2028,7 +2051,12 @@ export function buildTemplateContent(
       checkinQrUrl: undefined,
       thanksUrl: undefined,
       // A family's confirmation keeps the names and the numbers, never a code or a QR (§NNN).
-      familyConfirmed: data.familyConfirmed?.map((person) => ({ name: person.name, raceNumber: person.raceNumber, provisional: person.provisional })),
+      familyConfirmed: data.familyConfirmed?.map((person) => ({
+        name: person.name,
+        firstName: person.firstName,
+        raceNumber: person.raceNumber,
+        provisional: person.provisional,
+      })),
     };
     actionUrl = undefined;
   }
@@ -2156,13 +2184,20 @@ export function buildTemplateContent(
     registering somebody else, so it greets plainly ("Salut," / "Hello,", its own `greeting`)
     whoever the registration the address already holds is for, a minor included.
   */
-  const guardianName = data.guardianName && !entry.greeting && !bulkCopy && messageType !== "DECLARATION_SIGNED" ? data.guardianName : undefined;
+  /*
+    A family's one confirmation (§NNN, the owner's answer of 2026-09-27) greets everybody it confirms
+    by first name, in the order of the forms — «Salut, Ana, Ion și Maria,» — and so no parent's
+    greeting and no "whose registration this is" line: every name is already in the greeting.
+  */
+  const familyGreeting = familyConfirmedShape ? joinNames(locale, familyFirstNames(familyConfirmedPeople)) : undefined;
+  const guardianName =
+    data.guardianName && !entry.greeting && !bulkCopy && !familyGreeting && messageType !== "DECLARATION_SIGNED" ? data.guardianName : undefined;
 
   return {
     // Each half of a bilingual subject carries its own language's mark, so a mailbox filter on
     // either word finds every copy whichever language the runner chose (§96).
     subject: clubCopy ? `${copy.clubCopy.subject}${subject}` : subject,
-    greeting: entry.greeting ? entry.greeting(data) : bulkCopy ? copy.hello : copy.hi(guardianName ?? data.participantName),
+    greeting: entry.greeting ? entry.greeting(data) : bulkCopy ? copy.hello : copy.hi(familyGreeting ?? guardianName ?? data.participantName),
     facts: factsBlock ? undefined : entry.facts?.(data),
     /*
       The re-send says it is one (§235).

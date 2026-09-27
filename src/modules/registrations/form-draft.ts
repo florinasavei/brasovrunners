@@ -158,6 +158,8 @@ export type SubmittedFacts = Readonly<{
   firstName: string | null;
   /** Everybody a family sitting sent the form for (§NNN), as typed, in order; one name or none otherwise. */
   names?: readonly string[];
+  /** The club's window was 0 (§NNN): each person's email left on its own, so nothing promises one email. */
+  atOnce?: boolean;
 }>;
 
 /**
@@ -170,8 +172,16 @@ export function firstNameOf(typedFirstName: string | null | undefined): string |
   return first === "" ? null : first;
 }
 
-export async function stashSubmittedFacts(facts: { email: string; firstName: string; names?: readonly string[] }, path: string): Promise<void> {
-  const sealed = sealFormDraft({ email: facts.email, firstName: firstNameOf(facts.firstName) ?? "", names: (facts.names ?? []).join("\n") });
+export async function stashSubmittedFacts(
+  facts: { email: string; firstName: string; names?: readonly string[]; atOnce?: boolean },
+  path: string,
+): Promise<void> {
+  const sealed = sealFormDraft({
+    email: facts.email,
+    firstName: firstNameOf(facts.firstName) ?? "",
+    names: (facts.names ?? []).join("\n"),
+    atOnce: facts.atOnce ? "1" : "",
+  });
   if (!sealed) return;
   const jar = await cookies();
   jar.set(SUBMITTED_COOKIE, sealed, {
@@ -192,5 +202,5 @@ export async function readSubmittedFacts(): Promise<SubmittedFacts | null> {
   const email = typeof opened.email === "string" && opened.email !== "" ? opened.email : null;
   const firstName = firstNameOf(opened.firstName);
   const names = typeof opened.names === "string" ? opened.names.split("\n").filter((name) => name.trim() !== "") : [];
-  return { email, firstName, names };
+  return { email, firstName, names, atOnce: opened.atOnce === "1" };
 }

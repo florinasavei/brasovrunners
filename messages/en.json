@@ -636,6 +636,7 @@
       "resubmittedHint": "The form was sent again with the same address ({count}), last on {date}. Each one is on the registration's timeline.",
       "resubmittedSent": "Registered again with the same address: {date} ({state}) — we re-sent “{message}”",
       "resubmittedNothing": "Registered again with the same address: {date} ({state}) — there was nothing to re-send",
+      "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once",
       "resendShort": "Resend",
       "resendQr": "Resend QR",
       "sendReminder": "Send the reminder",
@@ -4927,7 +4928,8 @@
       "delay": "It usually arrives within a minute, five at the most.",
       "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
       "backToEvent": "Back to the event",
-      "family": "One email, for everybody: {names}."
+      "family": "One email, for everybody: {names}.",
+      "familyEach": "Each person gets their own email."
     },
     "deliveryNotice": {
       "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
@@ -5169,8 +5171,8 @@
     "restingForm": "The form is paused while we cannot check our records — it cannot be sent right now. Whatever you have filled in stays here; come back in a few minutes.",
     "sitting": {
       "lead": "The form is in, for {event}.",
-      "leadNamed": "The form for {name} is in, for {event}.",
-      "when": "The email leaves when you press “Done”, or by itself {window} after the last form — {left} left.",
+      "leadNamed": "{name}'s form for {event} is in.",
+      "when": "The email leaves when you press “Done”, or by itself {window} after your last press — {left} left.",
       "alreadySent": "This person's email has already left: you will find it in your inbox.",
       "soFar": "Sent so far, with the address",
       "question": "Are you registering anyone else with the same address?",

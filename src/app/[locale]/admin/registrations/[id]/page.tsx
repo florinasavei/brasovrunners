@@ -142,16 +142,20 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     .filter((entry) => entry.action === "registration.resubmitted")
     .reverse()
     .map((entry) => {
-      const metadata = entry.metadataJson as { status?: unknown; resent?: unknown };
+      const metadata = entry.metadataJson as { status?: unknown; resent?: unknown; held?: unknown };
       const status = registrationStatus.enumValues.find((value) => value === metadata.status);
       const resent = emailMessageType.enumValues.find((value) => value === metadata.resent);
       const values = {
         date: dt(entry.createdAt) ?? "",
         state: status ? REGISTRATION_STATUS_LABEL[status] : "—",
       };
+      // `held`: sent again inside a family sitting (§NNN) — nothing new queued, the held email leaves once.
       return {
         text: resent
-          ? tr("registrations.resubmittedSent", { ...values, message: tr(`emails.types.${resent}`) })
+          ? tr(metadata.held === true ? "registrations.resubmittedHeld" : "registrations.resubmittedSent", {
+              ...values,
+              message: tr(`emails.types.${resent}`),
+            })
           : tr("registrations.resubmittedNothing", values),
         actorName: entry.actorName,
       };

@@ -636,6 +636,7 @@
       "resubmittedHint": "Formularul a fost trimis din nou cu aceeași adresă ({count}), ultima dată {date}. Fiecare trimitere este în cronologia înscrierii.",
       "resubmittedSent": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”",
       "resubmittedNothing": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — nu era nimic de retrimis",
+      "resubmittedHeld": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — „{message}” așteaptă deja să plece și pleacă o singură dată",
       "resendShort": "Retrimite",
       "resendQr": "Retrimite QR",
       "sendReminder": "Trimite reminderul",
@@ -4927,7 +4928,8 @@
       "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
       "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {confirmation}, așa că ai timp.",
       "backToEvent": "Înapoi la eveniment",
-      "family": "Un singur email, pentru toți: {names}."
+      "family": "Un singur email, pentru toți: {names}.",
+      "familyEach": "Fiecare persoană primește emailul ei."
     },
     "deliveryNotice": {
       "capture": "Acesta este un mediu de dezvoltare: emailurile nu se trimit deloc de aici — se pot citi doar în backoffice. Nu aștepta un mesaj în inbox.",
@@ -5169,8 +5171,8 @@
     "restingForm": "Formularul este oprit cât timp nu ne putem verifica evidențele — nu se poate trimite acum. Ce ai completat deja rămâne aici; revino peste câteva minute.",
     "sitting": {
       "lead": "Formularul a ajuns, pentru {event}.",
-      "leadNamed": "Formularul pentru {name} a ajuns, pentru {event}.",
-      "when": "Emailul pleacă când apeși „Gata” sau singur după {window} de la ultimul formular — mai sunt {left}.",
+      "leadNamed": "Formularul lui {name} pentru {event} a ajuns.",
+      "when": "Emailul pleacă când apeși „Gata” sau singur după {window} de la ultima apăsare — mai sunt {left}.",
       "alreadySent": "Emailul pentru această persoană a plecat deja: îl găsești în căsuța de email.",
       "soFar": "Trimise până acum, cu adresa",
       "question": "Mai înscrii pe cineva cu aceeași adresă?",

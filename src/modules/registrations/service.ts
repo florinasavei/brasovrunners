@@ -1551,7 +1551,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     /*
       The same person as a registration this sitting created (§NNN): its verification email is held
       with the sitting's others, and says what a re-send would. Nothing more is queued; the club's
-      record still has the line (§312).
+      record still has the line (§312), and says the truth: the held verification email is the one
+      that will leave, once, with the sitting — `held: true` beside its type, so the timeline reads
+      "already waiting to leave" rather than "re-sent" or "nothing to re-send".
     */
     if (existing && isActiveStatus(existing.status) && sitting && sitting.registrationIds.includes(existing.id)) {
       await recordAuditEvent(tx, {
@@ -1560,7 +1562,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         action: "registration.resubmitted",
         entityType: "registration",
         entityId: existing.id,
-        metadata: { status: existing.status, resent: null },
+        metadata: { status: existing.status, resent: "VERIFY_REGISTRATION_EMAIL", held: true },
         now,
       });
       await finishSitting();

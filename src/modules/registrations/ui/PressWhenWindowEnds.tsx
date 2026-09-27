@@ -15,21 +15,28 @@ const MAX_DELAY_MS = 2_147_483_647;
  * pressed by hand does (`releaseFamilySitting`, `drainOutboxAfterResponse`). With the page closed, or
  * JavaScript off, the pinger's run is what sends it, and the screen's sentence says so.
  *
+ * The press posts `field` as "1" (a press by hand posts it empty), so the action can tell it apart:
+ * the browser's half outlives the window by a short grace for this press, and should a slow phone
+ * still arrive without it, the automatic press does nothing — the server releases the sitting at the
+ * window's end anyway (the review of 2026-09-27).
+ *
  * The delay is the server's arithmetic (the window's end less the render's instant), so a browser
  * clock set wrong does not move it. Guarded against firing twice (React mounts effects twice in
  * development); a second press would release nothing anyway.
  */
-export default function PressWhenWindowEnds({ delayMs }: { delayMs: number }) {
-  const anchor = useRef<HTMLSpanElement>(null);
+export default function PressWhenWindowEnds({ delayMs, field }: { delayMs: number; field: string }) {
+  const marker = useRef<HTMLInputElement>(null);
   const fired = useRef(false);
 
   useEffect(() => {
-    const form = anchor.current?.closest("form");
-    if (!form) return;
+    const input = marker.current;
+    const form = input?.closest("form");
+    if (!input || !form) return;
     const timer = window.setTimeout(
       () => {
         if (fired.current) return;
         fired.current = true;
+        input.value = "1";
         // `requestSubmit`, never `submit`: React's form action listens for the submit event.
         form.requestSubmit();
       },
@@ -38,5 +45,5 @@ export default function PressWhenWindowEnds({ delayMs }: { delayMs: number }) {
     return () => window.clearTimeout(timer);
   }, [delayMs]);
 
-  return <span ref={anchor} hidden />;
+  return <input ref={marker} type="hidden" name={field} defaultValue="" />;
 }

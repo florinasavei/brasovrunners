@@ -40,6 +40,7 @@ import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { emailLinkExpiresAt, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import {
   awaitingSignatureOnAddress,
+  extendHeldFamilyEntry,
   findFamilyEntryById,
   linkFamilyEntryToken,
   personOfEntry,
@@ -671,6 +672,8 @@ async function renderRow(
       const number = raceNumberOf(person);
       people.push({
         name: person.registeredName,
+        // The greeting's word for this person (§NNN): the first word of the first name typed.
+        ...(person.firstName?.trim() ? { firstName: person.firstName.trim().split(/\s+/)[0] } : {}),
         ...(clubCopy || !code ? {} : { checkinCode: code, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${code}.png` }),
         raceNumber: number?.value ?? null,
         provisional: number !== null && !number.settled,
@@ -779,6 +782,16 @@ async function renderRow(
     }
   } else if (purpose === "REGISTER_ANOTHER_PERSON") {
     if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
+      /*
+        A kept form a family sitting held (§NNN; one person's sitting keeps this message): it is
+        leaving now, so the form — and the link below, which lives exactly as long — lives the club's
+        email-link window from this send, as the message says, the same rule as the held verification
+        email's (`extendHeldVerificationLink`): only a live form, lengthened and never shortened.
+      */
+      if (familyEntry.sittingId !== null) {
+        const extended = await extendHeldFamilyEntry(db, familyEntry.id, emailLinkExpiresAt(now, settings), now);
+        if (extended) familyEntry = { ...familyEntry, expiresAt: extended };
+      }
       /*
         Single use, hashed at rest, minted here at send time like every link (§12.8, §14.5), and
         alive exactly as long as the kept form — the club's email-link window ("Termene", §377) from

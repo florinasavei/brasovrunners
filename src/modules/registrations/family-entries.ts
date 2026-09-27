@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, lte, min, ne, notInArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lt, lte, min, ne, notInArray } from "drizzle-orm";
 import { pendingFamilyEntries, type PendingFamilyEntry } from "@/db/schema/family-entries";
 import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -124,6 +124,26 @@ export async function replaceFamilyEntry<T extends Record<string, unknown>>(
     .update(pendingFamilyEntries)
     .set({ fields: values.fields, locale: values.locale, expiresAt: values.expiresAt })
     .where(eq(pendingFamilyEntries.id, id));
+}
+
+/**
+ * A kept form a family sitting held (§NNN), its message rendered now: it lives the club's email-link
+ * window («Termene», §377) from this send, as the message says, not from the form sent a window and a
+ * pinger's wait earlier. Only a form still live, lengthened and never shortened; the new lapse, or
+ * null when nothing moved.
+ */
+export async function extendHeldFamilyEntry<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+  until: Date,
+  now: Date,
+): Promise<Date | null> {
+  const [row] = await db
+    .update(pendingFamilyEntries)
+    .set({ expiresAt: until })
+    .where(and(eq(pendingFamilyEntries.id, id), gt(pendingFamilyEntries.expiresAt, now), lt(pendingFamilyEntries.expiresAt, until)))
+    .returning({ expiresAt: pendingFamilyEntries.expiresAt });
+  return row?.expiresAt ?? null;
 }
 
 export async function findFamilyEntryById<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<PendingFamilyEntry | undefined> {

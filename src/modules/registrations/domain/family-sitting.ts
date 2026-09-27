@@ -22,6 +22,11 @@ import { sameRunner } from "./name-key";
 export const FAMILY_SITTING_FIELD = "familySitting";
 /** The address of the next form of a sitting: `?family=1`. A marker, never a value (§14.5). */
 export const FAMILY_SITTING_PARAM = "family";
+/**
+ * The field the open screen's own press at the window's end posts as "1" (`PressWhenWindowEnds`): a
+ * press by hand posts it empty. With the browser's half gone, the automatic press does nothing.
+ */
+export const AUTO_PRESS_FIELD = "autoPress";
 /** The screen after «Gata»: `?submitted=1&sent=1`. */
 export const SITTING_SENT_PARAM = "sent";
 
@@ -44,6 +49,19 @@ export const SITTING_AT_ONCE_MINUTES = 30;
  * Until when this browser's half lives after a form or a «Da, încă o persoană» (§NNN): the club's
  * window from now — the instant the server's row is moved to as well — or, at 0, the at-once offer's.
  */
+/**
+ * How long the browser keeps its half past the window's end (§NNN, the review of 2026-09-27): the open
+ * screen presses «Gata» at that instant, and a slow phone must still send the cookie with the press.
+ * The screen and the form read the window's end (`heldUntil`), never this; the server's `held_until`
+ * stays the truth of when the email leaves.
+ */
+export const SITTING_COOKIE_GRACE_MINUTES = 2;
+
+/** The browser's half's life in seconds: to the window's end, plus the grace. */
+export function sittingCookieMaxAgeSeconds(heldUntil: Date, now: Date): number {
+  return Math.max(1, Math.ceil((heldUntil.getTime() - now.getTime()) / 1000) + SITTING_COOKIE_GRACE_MINUTES * 60);
+}
+
 export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
   return new Date(now.getTime() + (windowMinutes > 0 ? windowMinutes : SITTING_AT_ONCE_MINUTES) * 60_000);
 }
@@ -54,6 +72,17 @@ export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
  */
 export function sittingMinutesLeft(releaseInMs: number): number {
   return releaseInMs <= 0 ? 0 : Math.ceil(releaseInMs / 60_000);
+}
+
+/**
+ * The screen after the last form of a sitting says one sentence about its emails (§NNN, the review of
+ * 2026-09-27), from the browser's own half: with the window held, «Un singur email, pentru toți: …»
+ * (`family`); at a window of 0, where each person's email already left on its own, «Fiecare persoană
+ * primește emailul ei.» (`familyEach`). One person, or no half: nothing.
+ */
+export function doneFamilySentence(facts: { names?: readonly string[]; atOnce?: boolean } | null): "family" | "familyEach" | null {
+  if ((facts?.names?.length ?? 0) < 2) return null;
+  return facts?.atOnce ? "familyEach" : "family";
 }
 
 /**
@@ -123,6 +152,12 @@ export type FamilySittingCookie = {
    * screen still offers the next person, and says the email has already left.
    */
   atOnce?: boolean;
+  /**
+   * The club's window («Termene») as the action read it when it wrote this half (§NNN): the screen's
+   * sentence names this one, never the public cache's, which may still hold the value before a save.
+   * Absent on a cookie written before it was kept.
+   */
+  windowMinutes?: number;
   /**
    * The facts the next form of the sitting starts with (`sittingSharedValues`): the city, the
    * citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a

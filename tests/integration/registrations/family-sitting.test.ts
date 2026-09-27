@@ -177,6 +177,26 @@ describe("§NNN one person in a sitting", () => {
     // The window moved with the second form.
     const [row] = await outbox();
     expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
+    // The club's record says the truth (the second review): the held email is the one that leaves.
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.resubmitted"));
+    expect(audit.metadataJson).toEqual({ status: "PENDING_EMAIL_CONFIRMATION", resent: "VERIFY_REGISTRATION_EMAIL", held: true });
+  });
+
+  it("a kept form a one-person sitting held lives the club's window from its message's send (the second review)", async () => {
+    const event = await createEvent();
+    // Ana registered before, outside any sitting; Ion's form, in a sitting of his own, is kept.
+    await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
+    const sittingId = await send(event, "Ion", 1, null);
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const [row] = (await outbox()).filter((candidate) => candidate.messageType === "REGISTER_ANOTHER_PERSON");
+    expect((row.payloadJson as { familyEntryId?: string }).familyEntryId).toBeTruthy();
+    const sentAt = at(9);
+    await render(row, sentAt);
+    const lapse = new Date(sentAt.getTime() + 48 * 3_600_000).toISOString();
+    const [entry] = await db.select().from(pendingFamilyEntries);
+    expect(entry.expiresAt.toISOString()).toBe(lapse);
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "REGISTER_ANOTHER_PERSON"));
+    expect(token.expiresAt.toISOString()).toBe(lapse);
   });
 });
 

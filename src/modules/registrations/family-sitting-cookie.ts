@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { env } from "@/shared/config/env";
-import type { FamilySittingCookie, SittingPerson } from "./domain/family-sitting";
+import { sittingCookieMaxAgeSeconds, type FamilySittingCookie, type SittingPerson } from "./domain/family-sitting";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
@@ -8,7 +8,8 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
  * with, the people typed so far (name and birth date), the boxes a family shares for the next form
  * and the last form's birth-date clash (§493) — sealed (AES-256-GCM under the deployment's secret bound to
  * this purpose, the form draft's sealing), `httpOnly`, `sameSite=lax`, on the registration form's
- * own path, and alive exactly as long as the sitting holds its email. Nothing in it goes in a URL
+ * own path, and alive as long as the sitting holds its email plus a short grace
+ * (`SITTING_COOKIE_GRACE_MINUTES`), so the open screen's own press at the window's end still carries it. Nothing in it goes in a URL
  * (§14.5); nothing in it was read from the registrations table, so the screen that lists it back
  * says nothing about an address to anybody (§39).
  */
@@ -42,6 +43,11 @@ function sharedOf(json: string | undefined): Record<string, string> | undefined 
   }
 }
 
+function windowMinutesOf(text: string | undefined): number | undefined {
+  const minutes = text ? Number(text) : Number.NaN;
+  return Number.isInteger(minutes) && minutes >= 0 ? minutes : undefined;
+}
+
 export function sealFamilySittingCookie(value: FamilySittingCookie, secret = purposeSecret(PURPOSE)): string | null {
   const base = {
     s: value.sittingId ?? "",
@@ -52,6 +58,8 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     w: value.sameBirthDate ? `${value.sameBirthDate.typed}\t${value.sameBirthDate.kept}` : "",
     // The club's window is 0 (§NNN): nothing held, only the offer of another person.
     a: value.atOnce ? "1" : "",
+    // The window the action read (§NNN): the screen names this one, not the public cache's.
+    k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
   };
   /*
     The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
@@ -73,6 +81,7 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
     people: peopleOf(opened.n),
     heldUntil,
     atOnce: opened.a === "1" ? true : undefined,
+    windowMinutes: windowMinutesOf(opened.k),
     shared: sharedOf(opened.f),
     sameBirthDate: typed !== "" && kept !== "" ? { typed, kept } : null,
   };
@@ -87,7 +96,8 @@ export async function readFamilySittingCookie(): Promise<FamilySittingCookie | n
 export async function writeFamilySittingCookie(value: FamilySittingCookie, path: string, now: Date): Promise<void> {
   const sealed = sealFamilySittingCookie(value);
   if (!sealed) return;
-  const maxAge = Math.max(1, Math.ceil((value.heldUntil.getTime() - now.getTime()) / 1000));
+  // The window's end plus the grace (§NNN): the automatic «Gata» at that instant still carries the cookie.
+  const maxAge = sittingCookieMaxAgeSeconds(value.heldUntil, now);
   (await cookies()).set(COOKIE, sealed, {
     httpOnly: true,
     sameSite: "lax",
