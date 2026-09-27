@@ -116,12 +116,12 @@ function chips(fragment: string) {
 }
 
 describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)", () => {
-  it("in this order: when, where, the route, the cost, the age — the partners no longer among them (§401)", async () => {
+  it("in this order: when, where, the route, the cost — the partners no longer among them (§401), the age in «Condiții de participare» since §NNN", async () => {
     // The partners moved out of the `<dl>` into their own collapsible `<section id="partners">`
     // (the owner, 2026-09-25: "this should be block, and collapsible") — so the row order below
     // them is unchanged, and "Împreună cu" is no longer one of these rows at all.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
-    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vârstă"]);
+    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost"]);
     expect(withoutStyles(html)).toMatch(/<section\b[^>]*\bid="partners"/);
   });
 
@@ -138,9 +138,8 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
 
   it("says «no registration needed» on an event that takes none, before the partners", async () => {
     const html = await page({ registrationMode: "NONE", coHosts: [{ name: "Salvamont", links: [] }] });
-    // «Vârstă» on every type since §NNN: the minimum alone, no parent's clause without a registration here.
-    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vârstă", "Înscriere"]);
-    expect(text(row(html, "Vârstă").dd)).toBe("Vârsta minimă: 14 ani.");
+    // The age is said inside «Condiții de participare» since §NNN, not among the facts.
+    expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Înscriere"]);
     expect(text(row(html, "Înscriere").dd)).toBe("Nu este necesară înscrierea");
     // "Before the partners": the `<dl>` closes and only then does the partners' own section open.
     const clean = withoutStyles(html);
@@ -311,7 +310,8 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
     // now (§401), not in a `<dt>`, but it is `ROW_ICON_SX` too, so it is checked the same way.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
     const glyphs = rows(html).map((r) => /<svg\b[^>]*>/.exec(r.dt)?.[0] ?? "");
-    expect(glyphs).toHaveLength(5);
+    // Four rows since §NNN: the age is said in «Condiții de participare», not among the facts.
+    expect(glyphs).toHaveLength(4);
     const summary = /<summary\b[^>]*>([\s\S]*?)<\/summary>/.exec(withoutStyles(html))?.[1] ?? "";
     const summaryGlyph = /<svg\b[^>]*>/.exec(summary)?.[0] ?? "";
     for (const glyph of [...glyphs, summaryGlyph]) expect(glyph).toContain('aria-hidden="true"');

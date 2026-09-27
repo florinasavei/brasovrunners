@@ -1,4 +1,4 @@
-import { type AgeRuleVariant, ageRuleVariant } from "@/modules/registrations/domain/age";
+import { ADULT_AGE, type AgeRuleVariant, ageRuleVariant } from "@/modules/registrations/domain/age";
 
 /**
  * The event types and surfaces, as AGENTS.md §10.1 defines them.
@@ -106,18 +106,23 @@ export function hasAgeRule(event: { type: EventType; registrationMode: "NONE" | 
  *
  * - Where the club takes the registrations (`hasAgeRule`): the form's own sentence, with the
  *   parent's clause (`ageRuleVariant`) — the page and the form cannot disagree.
- * - Anywhere else — a group run, an event registered elsewhere or not at all — the minimum alone,
- *   «Vârsta minimă: 16 ani.»: there is no registration there for a parent to make, so the parent's
- *   sentence would describe a door that does not exist.
+ * - Anywhere else — a group run, an event registered elsewhere or not at all — the minimum with
+ *   the parent's consent below eighteen, «Vârsta minimă: 16 ani. Sub 18 ani, participarea se face
+ *   cu acordul unui părinte.» (`minimumAndConsent`): there is no registration here for a parent to
+ *   make, so the sentence names the consent, not a door that does not exist. Eighteen and over,
+ *   the minimum alone (`minimumOnly`).
  * - No minimum (zero) and no registration here: nothing — never "from 0 years".
  */
+export type PublicAgeRuleVariant = AgeRuleVariant | "minimumAndConsent";
+
 export function publicAgeRule(event: {
   type: EventType;
   registrationMode: "NONE" | "INTERNAL" | "EXTERNAL";
   minAge: number;
-}): AgeRuleVariant | null {
+}): PublicAgeRuleVariant | null {
   if (hasAgeRule(event)) return ageRuleVariant(event.minAge);
-  return event.minAge > 0 ? "minimumOnly" : null;
+  if (event.minAge <= 0) return null;
+  return event.minAge >= ADULT_AGE ? "minimumOnly" : "minimumAndConsent";
 }
 
 /** Whether the editor offers a programme — the timed rows and the text under `#schedule`. */

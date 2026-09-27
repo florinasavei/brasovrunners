@@ -1290,7 +1290,7 @@
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
       "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
-      "minAge": "Vârsta minimă (ani)",
+      "minAge": "Vârsta minimă de participare",
       "reminder": {
         "label": "Reminderul dinaintea startului",
         "usual": "Ca de obicei ({lead})",
@@ -1299,7 +1299,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "Împlinită în ziua evenimentului, pentru orice tip de eveniment; pagina evenimentului o spune la «Vârstă». La înscrierea pe site, formularul refuză pe cine e mai tânăr, iar sub 18 ani înscrierea se face de un părinte sau tutore, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
+      "minAgeHelp": "0 = fără limită. Sub 18 ani, înscrierea se face de un părinte.",
       "minAgeReadOnly": "{age}. O schimbă cine poate schimba setările evenimentului.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
@@ -4228,7 +4228,7 @@
                 "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
+                "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, 0 pentru fără), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]
@@ -4434,7 +4434,7 @@
               "title": "Minori și vârsta minimă",
               "steps": [
                 "Un participant sub 18 ani e înscris de părinte sau tutore, care își scrie numele în secțiunea pentru minori a formularului; la masă și în export apare „Minor — părinte/tutore”.",
-                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă (ani)», în «Program, regulament și declarație» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă."
+                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Program, regulament și declarație» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă."
               ]
             },
             {
@@ -4969,6 +4969,7 @@
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
+      "minimumAndConsent": "Vârsta minimă: {age}. Sub 18 ani, participarea se face cu acordul unui părinte.",
       "minimumOnly": "Vârsta minimă: {age}.",
       "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia."
     },
