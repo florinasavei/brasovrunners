@@ -38,6 +38,11 @@ describe("§NNN docs-check: one tree, tested once", () => {
     expect(job("docs-check")).toMatch(/run: yarn check\n/);
     expect(job("e2e")).toContain("needs: [tested-tree, e2e-shard]");
     expect(job("e2e")).toContain("if: always()");
+    // A `name:` on either job would rename the required check.
+    expect(job("docs-check")).not.toMatch(/^ {4}name:/m);
+    expect(job("e2e")).not.toMatch(/^ {4}name:/m);
+    // A failed lookup must not turn a green run red.
+    expect(job("tested-tree")).toMatch(/^ {4}continue-on-error: true$/m);
   });
 
   it("names the tree it tested and trusts only this workflow's record from this repository", () => {

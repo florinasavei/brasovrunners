@@ -162,6 +162,11 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   then `yarn docs:land <manifest>` (a dry run: the numbers, the SPECS criteria, any `§NNN`
   written by a merge) and `--apply`. By hand after it: the `docs/QUEUE.md` rows, the CLAUDE.md
   batch line, and every `§NNN` it listed.
+- **Commit:** run `yarn docs:check`, then `git commit --no-verify` — not the hook's full
+  `yarn check`, which took about ten minutes of every release (§NNN). CI runs the full
+  `yarn check` on the batch PR minutes later, and every merged branch already passed the hook.
+  The risk is a red batch PR instead of a red hook; a fix round fixes it. The hook still runs
+  for every other commit.
 - **Model:** the dispatcher, or Haiku with the manifest and the dry run's output.
 
 ### Ship
@@ -171,7 +176,10 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   merges the batch into `qa`, opens and merges the release PR, approves the gated migration and
   waits for production's `/api/health` to name the new baseline. It stops, and says why, at
   the first red. An already-merged batch PR is not an error — the script says so and
-  continues from step 3.
+  continues from step 3. It waits for the `qa` push's run by its status and opens the release
+  PR only once that run is green, so the release PR's run finds the tree tested and skips; at
+  the end, and at any stop, it prints each step's m:ss and appends one JSON line to
+  `SHIP_TIMES_FILE` (§NNN).
 
 ### Status sweep
 

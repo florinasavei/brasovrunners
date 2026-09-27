@@ -45,9 +45,15 @@ jobs:
   #
   # A record counts only when its run is this workflow, on a branch of this repository: a pull
   # request from a fork runs its own copy of this file and could upload any name it likes.
-  # Anything that goes wrong here answers "not tested", so the failure mode is a full run.
+  # A branch of this repository also runs its own copy, and could record a tree it never tested;
+  # that is trusted because pushing a branch here already needs write access, which could change
+  # this file on `qa` anyway. This check keeps strangers out; it does not police collaborators.
+  # Anything that goes wrong here answers "not tested", so the failure mode is a full run — and
+  # `continue-on-error` keeps a failure of this job (checkout, a runner) from turning an
+  # otherwise green run red, which would stop `yarn ship` on a tree that passed.
   tested-tree:
     runs-on: ubuntu-latest
+    continue-on-error: true
     outputs:
       tree: ${{ steps.tree.outputs.tree }}
       tested: ${{ steps.tree.outputs.tested }}
