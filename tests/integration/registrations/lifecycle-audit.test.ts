@@ -12,6 +12,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * The registration lifecycle's audited defects (§420), one regression per finding, each through the
@@ -387,6 +388,7 @@ describe("§420 §160 §214 §220 a lapsed declaration hold gives its provisiona
     const bogdan = await allocated(event, "Bogdan", at(2));
     expect([ana.provisionalBibNumber, bogdan.provisionalBibNumber]).toEqual([1, 2]);
     expect((await allocated(event, "Cristi", at(4))).status).toBe("WAITLISTED");
+    await sendHoldEmails(db, at(4));
 
     // Two hours on: somebody waits, so the oldest lapsed hold goes to the queue (§160).
     await runRegistrationMaintenance(db, at(120));
@@ -419,6 +421,7 @@ describe("§420 §160 once registration has closed, a lapsed declaration hold st
     // Nobody has this capacity's one place until Ana's hold is resolved, so Bogdan queues.
     const bogdan = await allocated(event, "Bogdan", at(5));
     expect(bogdan.status).toBe("WAITLISTED");
+    await sendHoldEmails(db, at(5));
 
     // Registration is closed, and Ana's thirty-minute hold is long past its own deadline. Somebody
     // waits, so the hold is released as §160 says (its number with it, §220) — only the offer is

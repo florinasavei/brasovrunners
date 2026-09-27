@@ -138,6 +138,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateDeadlinesAction: [],
   // "Maxim de înscrieri pe o adresă" (§389): a limit every public submission meets from now on.
   updateAddressCapAction: [],
+  // «Când pleacă emailurile» (§NNN): every message the platform sends from now on leaves by it.
+  updateDeliveryTimingAction: [],
   // A line of the club's checklist deleted (§438): gone for the whole team, with no undo.
   deleteClubTodoAction: [],
   // «Tradu din română»'s daily character budget (§464): what the club may spend from now on.

@@ -542,13 +542,13 @@ export function canWriteLegalTexts(role: StaffRole): boolean {
  *                                       hand-over of a place and every email the jobs send
  *     "Limitele bazei de date"          Neon's size ceiling and monthly quota (§335): a quota
  *                                       reached suspends the database, and the site with it
- *     the email delivery timing         (§221) every message waits for the scheduler
  *     the anti-robot check              (§254, §282) the Turnstile switch: on with a broken key
  *                                       it refuses every registration; off, the form is open
  *                                       to bots — either way every participant at once
  *
- * The club's own settings — the Mailgun and Neon plans (§100, §280), the deadlines (§377), who
- * receives the club's copies — are `canManageClubSettings`, the Administrator's: each changes
+ * The club's own settings — the Mailgun and Neon plans (§100, §280), the deadlines (§377) and
+ * when email leaves (§221, in «Termene» since §NNN: nothing is lost either way), who receives the
+ * club's copies — are `canManageClubSettings`, the Administrator's: each changes
  * what the club promises or pays, not whether the platform runs.
  */
 export function canManagePlatform(role: StaffRole): boolean {
@@ -557,7 +557,8 @@ export function canManagePlatform(role: StaffRole): boolean {
 
 /**
  * **The club's own settings — the Administrator's (§450).** The email and database plans
- * (§100, §280), the deadlines and the per-address limit ("Termene", §377), the club's notices and
+ * (§100, §280), the deadlines, the per-address limit and when email leaves ("Termene", §377,
+ * §NNN), the club's notices and
  * email texts, who receives the contact form and the club's copies, "Trimite acum" within the
  * allowance (§80), giving older pictures their sizes (§414). Each changes what the club promises,
  * says or pays; none of them can stop the platform — those are `canManagePlatform`.

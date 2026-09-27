@@ -3,9 +3,11 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateAddressCapAction, updateDeadlinesAction } from "@/app/[locale]/admin/emails/actions";
+import { updateAddressCapAction, updateDeadlinesAction, updateDeliveryTimingAction } from "@/app/[locale]/admin/emails/actions";
 import { countForm } from "@/i18n/count-form";
 import type { AddressCapState } from "@/modules/registrations/address-cap";
+import type { DeliveryTimingState } from "@/modules/notifications/delivery-timing";
+import { DELIVERY_TIMINGS } from "@/modules/notifications/domain/delivery-timing";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
@@ -18,7 +20,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import type { DeadlinesState } from "../deadlines";
 import { DEADLINE_KEYS, DEADLINE_RULES, RECOMMENDED } from "../domain/deadlines";
-import { deadlineWords } from "../domain/duration-words";
+import { deadlineWords, minutesPhrase } from "../domain/duration-words";
 import FillRecommendedButton from "./FillRecommendedButton";
 
 type Props = {
@@ -37,6 +39,18 @@ type Props = {
    * save, so a refused number never costs the deadlines typed beside it.
    */
   addressCap?: AddressCapState;
+  /**
+   * «Când pleacă emailurile» (§NNN): on the scheduler's tick (the default) or right after the
+   * request that queued them (§221). In this fold because it is a wait every participant is told
+   * about — its own form and its own save, like the address cap.
+   */
+  deliveryTiming?: DeliveryTimingState;
+  /**
+   * The most a message waits on the scheduled round on this deployment, by day and at night
+   * (`notifications/outbox-delivery.ts`): the pinger's cadence, the minimum interval and the budget
+   * governor's floor, so the words say this site's numbers and never a typed "15 minutes" (§NNN).
+   */
+  scheduledWait?: { day: number; night: number };
 };
 
 /**
@@ -47,10 +61,14 @@ type Props = {
  * browser refuses "0 hours" before the server does (§315); the closed line says the four a
  * participant meets most.
  */
-export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen, addressCap }: Props) {
+export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen, addressCap, deliveryTiming, scheduledWait }: Props) {
   const t = await getTranslations("Admin");
   const confirmText = await confirmWords();
   const { deadlines, updatedAt } = state;
+  // The scheduled round's wait in words (§NNN): "15 minute" by day, "o oră" at night on production.
+  const waitWords = scheduledWait
+    ? { day: minutesPhrase(locale, scheduledWait.day), night: minutesPhrase(locale, scheduledWait.night), wait: minutesPhrase(locale, Math.max(scheduledWait.day, scheduledWait.night)) }
+    : null;
   const words = deadlineWords(locale, deadlines);
   const labels = Object.fromEntries(DEADLINE_KEYS.map((key) => [key, t(`emails.deadlines.fields.${key}`)]));
 
@@ -174,6 +192,53 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
                 />
                 <Box>
                   <GlyphSubmitButton label={t("emails.addressCap.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
+                </Box>
+              </Stack>
+            </ActionForm>
+          )}
+        </Box>
+      )}
+
+      {deliveryTiming && waitWords && (
+        <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }} data-testid="delivery-timing">
+          <Typography variant="subtitle2" component="h3" sx={{ mb: 0.5 }}>
+            {t("emails.deliveryTiming.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("emails.deliveryTiming.intro", waitWords)}
+          </Typography>
+          {!mayEdit ? (
+            <Typography variant="body2" data-testid="delivery-timing-value">
+              {t(`emails.deliveryTiming.option.${deliveryTiming.timing}`, waitWords)}
+            </Typography>
+          ) : (
+            /* Asks first (§384): every message the platform sends from now on leaves by it. */
+            <ActionForm
+              action={updateDeliveryTimingAction}
+              messages={await refusalMessages({ timing: t("emails.deliveryTiming.field") })}
+              confirm={{ title: t("confirm.deliveryTimingTitle"), body: t("confirm.deliveryTimingBody"), confirmLabel: t("emails.deliveryTiming.save"), cancelLabel: confirmText.cancel }}
+              scope="delivery-timing"
+              data-testid="delivery-timing-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
+                <RecallField
+                  select
+                  name="timing"
+                  label={t("emails.deliveryTiming.field")}
+                  defaultValue={deliveryTiming.timing}
+                  size="small"
+                  slotProps={{ select: { native: true } }}
+                  helperText={t("emails.deliveryTiming.help")}
+                >
+                  {DELIVERY_TIMINGS.map((timing) => (
+                    <option key={timing} value={timing}>
+                      {t(`emails.deliveryTiming.option.${timing}`, waitWords)}
+                    </option>
+                  ))}
+                </RecallField>
+                <Box>
+                  <GlyphSubmitButton label={t("emails.deliveryTiming.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
                 </Box>
               </Stack>
             </ActionForm>

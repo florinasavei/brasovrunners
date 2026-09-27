@@ -18,6 +18,7 @@ import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * BR-REQ-033-01 — confirmation, hold, declaration, confirmed. Also exercises BR-REQ-030-01
@@ -256,6 +257,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     await submitRegistration(db, event, submissionInput({ email: "first@example.ro" }), NOW);
     const first = await findOneRegistration(db, event.id);
     await confirmEmail(db, event, first.id, NOW);
+    await sendHoldEmails(db, NOW);
 
     // Lapsed, nobody waiting: the count still says full — the place is the person's.
     const past31Minutes = new Date(NOW.getTime() + 31 * 60_000);

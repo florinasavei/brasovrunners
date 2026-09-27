@@ -12,6 +12,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestMyRegistrationsLinkAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -39,6 +41,9 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
   // One-word namespaces (the i18n check reads `getTranslations("Registrations.mine")` as none).
   const t = await getTranslations("Registrations");
   const legal = await getTranslations("Legal");
+  // The link leaves on the scheduler's tick by default (§NNN): "just sent" would be untrue for up to
+  // the outbox job's wait, as on the resend page — the same real wait, read only on "sent".
+  const waitMinutes = sent ? await cachedEmailWaitMinutes(new Date()) : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -47,7 +52,9 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
       </Typography>
 
       {sent ? (
-        <Alert severity="success">{t("mine.sent")}</Alert>
+        <Alert severity="success">
+          {waitMinutes === null ? t("mine.sent") : t("mine.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
+        </Alert>
       ) : (
         <form action={requestMyRegistrationsLinkAction}>
           <Stack spacing={2}>

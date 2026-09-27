@@ -18,6 +18,7 @@ import {
 } from "@/modules/registrations/service";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * AGENTS.md §16.2 registration maintenance — a liveness mechanism. Every case here has already
@@ -191,6 +192,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     }
 
     // All three past their thirty minutes, nobody waiting: three kept places, none free.
+    await sendHoldEmails(db, new Date(NOW.getTime() + 2 * 60_000));
     const later = new Date(NOW.getTime() + 40 * 60_000);
     expect(await readPublicAvailability(db, event, later)).toBe(0);
 
@@ -226,6 +228,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     const onWaited = await db.select().from(registrations).where(eq(registrations.eventId, waited.id));
     const waiter = onWaited.find((row) => row.id !== kept[waited.id])!;
     expect((await confirmEmail(db, waited, waiter.id, NOW)).status).toBe("WAITLISTED");
+    await sendHoldEmails(db, NOW);
 
     const past31Minutes = new Date(NOW.getTime() + 31 * 60_000);
     expect((await runRegistrationMaintenance(db, past31Minutes)).eventsProcessed).toBe(1);
@@ -289,6 +292,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     const all = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     const second = all.find((row) => row.id !== first.id)!;
     await confirmEmail(db, event, second.id, NOW); // WAITLISTED, no place free
+    await sendHoldEmails(db, NOW);
 
     const past31Minutes = new Date(NOW.getTime() + 31 * 60_000);
     const result = await runRegistrationMaintenance(db, past31Minutes);

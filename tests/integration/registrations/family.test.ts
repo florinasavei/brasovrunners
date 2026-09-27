@@ -203,7 +203,8 @@ describe("§446 the form sent again from a registered address for a different pe
     expect(offers).toHaveLength(1);
     expect(offers[0]).toMatchObject({ recipientEmail: EMAIL, registrationId: rows[0].id, locale: "ro" });
     // The kept form by its id alone: no name and no date in the outbox (§12.12).
-    expect(offers[0].payloadJson).toEqual({ atCap: false, registrationsPerAddress: 4, familyEntryId: entry.id });
+    // The entry's link starts with this message, so it carries the mark (§NNN).
+    expect(offers[0].payloadJson).toEqual({ atCap: false, registrationsPerAddress: 4, familyEntryId: entry.id, startsDeadline: true });
 
     // The club's record: the state found and the message sent — never the name typed (§312, §12.12).
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.resubmitted"));

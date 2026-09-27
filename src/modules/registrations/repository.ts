@@ -1,6 +1,7 @@
-import { and, asc, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lte, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gte, inArray, isNotNull, isNull, lte, not, or, type SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import {
   ACTIVE_REGISTRATION_STATUSES,
@@ -12,6 +13,7 @@ import {
 } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -614,6 +616,25 @@ export type OccupiedCountsRow = {
 };
 
 /**
+ * A declaration hold whose clock has not started yet (§NNN): the message that starts it — the
+ * participant's own `COMPLETE_DECLARATION`, marked `startsDeadline` by the allocation that wrote
+ * the hold (`notifications/domain/deadline-rebase.ts#STARTS_DEADLINE`) — is still in the queue,
+ * waiting for the scheduler's tick, a deferral or a retry (`PENDING`), or claimed and not yet out
+ * (`PROCESSING`). Such a hold is not lapsed, whatever its stored deadline says: its send re-bases
+ * the deadline by the time it waited, and a sweep that ran first — the night's hourly tick against
+ * a thirty-minute hold, or any hold under the budget governor's floor (§447) — would have given the
+ * place away before the runner had even been told they held it. A resend, a reminder or a club
+ * copy carries no mark and keeps nothing; a message that failed for good is final, and the hold
+ * lapses on its stored deadline as before.
+ *
+ * One `EXISTS` on `email_outbox_registration_created_idx`, correlated on the registration row, and
+ * read under whatever lock the caller holds — the sweep's event lock among them.
+ */
+function awaitingItsFirstEmail(): SQL {
+  return sql`exists (select 1 from ${emailOutbox} where ${emailOutbox.registrationId} = ${registrations.id} and ${emailOutbox.messageType} = 'COMPLETE_DECLARATION' and ${emailOutbox.participantId} is not null and ${emailOutbox.status} in ('PENDING', 'PROCESSING') and (${emailOutbox.payloadJson} ->> ${STARTS_DEADLINE}) = 'true')`;
+}
+
+/**
  * The counts `domain/capacity.ts#computeOccupied` needs, queried inside the locked transaction.
  *
  * A declaration hold occupies its place by status, deadline or no deadline: since `DECISIONS.md`
@@ -631,7 +652,8 @@ export async function countOccupied<T extends Record<string, unknown>>(
       confirmed: sql<number>`count(*) filter (where ${registrations.status} = 'CONFIRMED')::int`,
       pendingDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
       unexpiredWaitlistOfferedHolds: sql<number>`count(*) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and ${registrations.holdExpiresAt} > ${now})::int`,
-      lapsedDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now})::int`,
+      // Not a hold whose first email is still queued (§NNN): its clock has not started.
+      lapsedDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
     })
     .from(registrations)
     .where(eq(registrations.eventId, eventId));
@@ -770,6 +792,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
   now: Date,
   wanting: number,
 ): Promise<string[]> {
+  const over = event.eventStatus !== "SCHEDULED" || event.startsAt <= now;
   const lapsed = await db
     .select({ id: registrations.id })
     .from(registrations)
@@ -778,12 +801,14 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
         eq(registrations.eventId, event.id),
         eq(registrations.status, "PENDING_DECLARATION"),
         lte(registrations.holdExpiresAt, now),
+        // A hold whose first email is still queued has not started (§NNN) — unless the race has.
+        over ? undefined : not(awaitingItsFirstEmail()),
       ),
     )
     .orderBy(asc(registrations.holdExpiresAt), asc(registrations.id));
   if (lapsed.length === 0) return [];
 
-  if (event.eventStatus !== "SCHEDULED" || event.startsAt <= now) return lapsed.map((row) => row.id);
+  if (over) return lapsed.map((row) => row.id);
 
   const waiting = (await countEligibleWaitlisted(db, event.id)) + wanting;
   if (waiting === 0) return [];
@@ -915,7 +940,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
         sql`${events.eventStatus} = 'SCHEDULED'`,
         or(
           and(eq(registrations.status, "WAITLIST_OFFERED"), lte(registrations.holdExpiresAt, now)),
-          and(eq(registrations.status, "PENDING_DECLARATION"), lte(registrations.holdExpiresAt, now), somebodyWaits),
+          and(eq(registrations.status, "PENDING_DECLARATION"), lte(registrations.holdExpiresAt, now), somebodyWaits, not(awaitingItsFirstEmail())),
           and(inArray(registrations.status, ["PENDING_DECLARATION", "WAITLISTED"]), lte(events.startsAt, now)),
           /*
             An event whose registration has closed and whose numbers have not been settled

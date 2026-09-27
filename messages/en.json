@@ -390,7 +390,7 @@
         "title": "Self-declaration",
         "intro": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
         "doneTitle": "The declaration is signed",
-        "done": "We have emailed it to you as a PDF. Come to the run as usual.",
+        "done": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. Come to the run as usual.",
         "closed": "The declaration can no longer be signed for this run.",
         "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
         "away": "We could not reach our records just now, so nothing was signed or recorded. What you filled in is still below — please try again in a few minutes.",
@@ -948,7 +948,9 @@
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "translationBudgetTitle": "Save the translation budget?",
-      "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted."
+      "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
+      "deliveryTimingTitle": "Change when emails leave?",
+      "deliveryTimingBody": "It applies from now on to every email the platform sends, including those already in the queue. No message is lost."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1380,7 +1382,7 @@
         "allowanceMonth": "the {plan} plan: {remaining} left this month",
         "allowanceNone": "the {plan} plan, no limit",
         "outcome": {
-          "update": "“Updated details” emails queued: {queued}. They go within minutes, each in the participant's language.",
+          "update": "“Updated details” emails queued: {queued}. They leave through the email queue — at once or on the next scheduled round, by «When emails leave» in «Deadlines» — each in the participant's language.",
           "none": "No email went out: the place, the date and time and the programme did not change, and the note for the participants was empty.",
           "cancelled": "The event is cancelled. “Event cancelled” emails queued: {queued}.",
           "cancelledQuiet": "The event is cancelled. The participants were not told, because the box was unticked.",
@@ -2234,7 +2236,7 @@
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
-          "todo": "Monitors for the two scheduled jobs (email-outbox and registration-maintenance), with this environment’s JOB_SECRET: every 15 minutes by day (07–23) and hourly at night. Missing or late",
+          "todo": "Monitors for the two scheduled jobs (email-outbox and registration-maintenance), with this environment’s JOB_SECRET: every 15 minutes by day (07–23) and hourly at night. They send the emails while «Deadlines» → «When emails leave» is on the scheduled round (the default). Missing or late",
           "done": "Both jobs are running on time.",
           "how": [
             "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
@@ -2580,7 +2582,7 @@
         },
         "scheduler": {
           "name": "cron-job.org + GitHub (the automatic jobs)",
-          "freeGives": "Both free: cron-job.org calls the jobs every 15 minutes, and GitHub Actions is the safety net.",
+          "freeGives": "Both free: cron-job.org calls the jobs every 15 minutes, which is what sends the emails, and GitHub Actions is the safety net.",
           "ceiling": "Here the limit is rhythm: without the cron-job.org monitors the jobs only run from the safety net, roughly every two hours.",
           "whenCrossed": "Email waits in the queue, and places held for somebody are released later than they should be.",
           "closeYes": "An automatic job has not run for too long.",
@@ -2668,7 +2670,7 @@
         "saved": "The interval was saved and applies from the next ping.",
         "emails": {
           "immediate": "Emails go out right after the request that queued them, whatever the interval.",
-          "scheduled": "Emails now go out only when the scheduled queue runs, so the interval delays them too.",
+          "scheduled": "Emails now go out only when the scheduled queue runs («Deadlines» → «When emails leave»), so the interval delays them too.",
           "immediateMore": "The scheduled queue only picks up what is left: a retry, or a message deferred until the daily allowance resets.",
           "scheduledMore": "The club's sending setting is on “scheduled”; the delay is up to as many minutes as the interval."
         },
@@ -3382,7 +3384,7 @@
     },
     "emails": {
       "title": "The emails participants receive",
-      "intro": "Every message the platform sends, exactly as it reaches the participant, with sample data. The links in the samples go nowhere.",
+      "intro": "Every message the platform sends, exactly as it reaches the participant, with sample data. The links in the samples go nowhere. Each leaves through the email queue: on the platform's scheduled round (the default) or right after the request, by «Deadlines» → «When emails leave». Each one's «when» line says what queues it.",
       "link": "See the emails participants receive →",
       "subject": "Subject",
       "aside": "{count} messages · {language}",
@@ -3421,11 +3423,11 @@
         "NEW_EVENT_ALERT": "Announcement: a new event on the calendar"
       },
       "when": {
-        "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts {confirmation}.",
-        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held {hold}. The deadline counts only when somebody is waiting: otherwise the place stays the person's until the start, and the declaration is signed online or on paper at the desk.",
+        "VERIFY_REGISTRATION_EMAIL": "After the form is sent. The link lasts {confirmation}, from when the email leaves.",
+        "COMPLETE_DECLARATION": "After the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held {hold}, from when the email leaves. The deadline counts only when somebody is waiting: otherwise the place stays the person's until the start, and the declaration is signed online or on paper at the desk.",
         "WAITLIST_JOINED": "After the address is confirmed, when the event is full.",
         "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. {offer} to sign.",
-        "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
+        "REGISTRATION_CONFIRMED": "After the declaration is signed — or at the desk, on paper.",
         "REGISTRATION_CANCELLED": "When the participant withdraws or an organizer cancels the registration.",
         "WAITLIST_OFFER_EXPIRED": "Not sent any more: when an offered place's {offer} pass without a signature, the place moves to the next person in line with no email to the one who did not sign.",
         "REGISTRATION_MANAGE_LINK": "Not sent any more: “Resend the link” sends the whole confirmation (with the manage link, the QR code and the number), and “My registrations” has its own message.",
@@ -3442,10 +3444,10 @@
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
         "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link.",
         "ORGANIZER_MESSAGE": "Only when an organizer writes and sends a message from the event's page → “Send a message to participants” — bad weather or a last-minute change, for instance. The subject and the text are written for each send, in Romanian and English; the preview here uses a sample text. To the group chosen — confirmed, on the waiting list, with the declaration unsigned, or all — each in their own language. No token and no attachment: the button leads to the event's page.",
-        "GROUP_RUN_DECLARATION_SIGNED": "Right after somebody signs the optional declaration on a group run's page, to the address they gave. With the declaration as a PDF, whole; no token and no action link — there is no registration to manage.",
+        "GROUP_RUN_DECLARATION_SIGNED": "After somebody signs the optional declaration on a group run's page, to the address they gave. With the declaration as a PDF, whole; no token and no action link — there is no registration to manage.",
         "GROUP_RUN_DECLARATION_ARCHIVE": "Together with a declaration signed on a group run, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, if none is set here). No action link; in the attached PDF the identity document's series and number are masked.",
         "REGISTER_ANOTHER_PERSON": "When the public form is sent again with an address already registered for the event and another name. No registration is created, and the screen shows the same “check your email” as always. The address gets a single-use link, valid for {confirmation}, to the form with the address fixed — or, if it already has {people}, only the sentence that says so, with no link.",
-        "NEWSLETTER_CONFIRM": "As soon as someone subscribes in the contact page's pop-up: the link that confirms the subscription, valid for {confirmation}. An address already subscribed gets, instead, the link to its own subscription, and nothing changes. An unconfirmed address receives nothing else.",
+        "NEWSLETTER_CONFIRM": "When someone subscribes in the contact page's pop-up: the link that confirms the subscription, valid for {confirmation}. An address already subscribed gets, instead, the link to its own subscription, and nothing changes. An unconfirmed address receives nothing else.",
         "NEWSLETTER": "Only when an organizer writes and sends a newsletter from the backoffice's “Newsletter” page. To the subscribers of the topic chosen and those who receive everything, each in their own language first, with the unsubscribe link. It leaves after every other email, and only from the part of the allowance left above the reserve kept for registrations.",
         "NEW_EVENT_ALERT": "Automatically, once for each new event published (never the weekly run), on the job's first run after publication: to those subscribed to new events and to the event's own topics (a race, a special event, gear testing) and those who receive everything, with the unsubscribe link."
       },
@@ -3726,7 +3728,7 @@
       },
       "deadlines": {
         "title": "Deadlines",
-        "intro": "How long each deadline given to a participant lasts. It applies from the save onwards; the numbers appear by themselves in the emails, on the form and in new legal texts.",
+        "intro": "How long each deadline given to a participant lasts. A deadline runs from when the email announcing it leaves, not from when it joined the queue. It applies from the save onwards; the numbers appear by themselves in the emails, on the form and in new legal texts.",
         "aside": "Link {confirmation} · hold {hold} · offer {offer} · reminder {reminder}",
         "reminderOff": "none",
         "bounds": "Recommended: {recommended}. Between {min} and {max}.",
@@ -3803,7 +3805,16 @@
         },
         "held": "held for the registrations' reserve, goes then",
         "newsletterUntitled": "(newsletter without a subject)",
-        "introMore": "A message goes at the job's first run after the moment shown. Not listed: what the team sends, nor what goes at once on a runner's own click."
+        "introMore": "A message goes at the job's first run after the moment shown. Not listed: what the team sends, nor what goes at once on a runner's own click.",
+        "queue": {
+          "one": "In the queue now: 1 email.",
+          "few": "In the queue now: {count} emails.",
+          "other": "In the queue now: {count} emails."
+        },
+        "tick": {
+          "scheduled": "Emails leave on the scheduled round (within {wait}); the next one is expected around {at}.",
+          "immediate": "Emails leave right after the request that queued them; what is left (a retry, a deferral) leaves on the scheduled round, the next one expected around {at}."
+        }
       },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here.",
       "addressCap": {
@@ -3844,7 +3855,19 @@
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
-      "newsletterLinkHelp": "The subscribers and the messages to them have their own page in the menu."
+      "newsletterLinkHelp": "The subscribers and the messages to them have their own page in the menu.",
+      "deliveryTiming": {
+        "title": "When emails leave",
+        "intro": "On the scheduled round (the default), emails wait in the queue and leave at the platform's next check — on this site within {day} by day and {night} at night: sending is paced, the daily allowance is spent predictably, and what one registration queues leaves together. «Right after the request» sends them within seconds of the press. No email is lost either way, and «Send now» empties the queue at any time.",
+        "field": "Emails leave",
+        "help": "The page after the registration form, the link resend and the newsletter sign-up tell the person how long it may take. However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing to the wait.",
+        "option": {
+          "scheduled": "On the platform's scheduled round (within {wait}; recommended)",
+          "immediate": "Right after the request"
+        },
+        "save": "Save the sending",
+        "saved": "When emails leave was saved."
+      }
     },
     "guide": {
       "title": "How to use the platform",
@@ -4476,7 +4499,7 @@
                 "The participant reads the text filled in with their name and the event, types their identity document's series and number (no ID picture is ever uploaded) and signs with a finger or the mouse.",
                 "A minor aged 14 or over signs with the parent's consent; under 14 only the parent or guardian signs — as the approved declaration says.",
                 "Kept: the names, the documents, the text's version, its fingerprint, the moment and the method. It is a simple electronic signature.",
-                "Right after, they get the signed declaration by email, as a PDF. At the desk, the kit is handed over against the document written in the declaration.",
+                "Then they get the signed declaration by email, as a PDF, through the email queue (by «Deadlines» → «When emails leave»). At the desk, the kit is handed over against the document written in the declaration.",
                 "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original."
               ]
             },
@@ -4735,12 +4758,12 @@
         "few": "Send the message to {count} participants?",
         "other": "Send the message to {count} participants?"
       },
-      "confirmBody": "The email goes now, through the email queue, to each in their own language, and cannot be withdrawn.",
+      "confirmBody": "The email enters the email queue now and leaves by «Deadlines» → «When emails leave», to each in their own language. It cannot be withdrawn.",
       "confirmSend": "Send",
       "sent": {
-        "one": "Message queued for {count} participant. It goes out in a few minutes.",
-        "few": "Message queued for {count} participants. It goes out in a few minutes.",
-        "other": "Message queued for {count} participants. It goes out in a few minutes."
+        "one": "Message queued for {count} participant. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines».",
+        "few": "Message queued for {count} participants. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines».",
+        "other": "Message queued for {count} participants. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines»."
       },
       "sentTest": "Plus test registrations: {test}.",
       "duplicate": "This message had already been sent, so nothing was queued a second time.",
@@ -4977,6 +5000,7 @@
         }
       },
       "delay": "It usually arrives within a minute, five at the most.",
+      "delayScheduled": "Emails leave on the platform's scheduled round, so it arrives within {wait} at the most.",
       "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
       "backToEvent": "Back to the event"
     },
@@ -5103,6 +5127,7 @@
       "emailHelp": "The address you used when registering.",
       "submit": "Send the link",
       "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
+      "sentScheduled": "If there is a registration on this address, the link leaves for it on the platform's next scheduled round, within {wait} at the most. Check your spam folder as well.",
       "prompt": "Did the message not arrive?",
       "linkLabel": "Send it again",
       "stillNothing": "Nothing arrived even after asking again?",
@@ -5152,6 +5177,7 @@
         "details": "Fill in the form. We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link.",
         "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+        "declareScheduled": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -5397,7 +5423,8 @@
       "familySign": {
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"
-      }
+      },
+      "sentScheduled": "If that address has registrations, the link leaves for it on the platform's next scheduled round, within {wait} at the most. Check the spam folder too."
     },
     "manage": {
       "title": "Manage your registration",
@@ -5843,7 +5870,7 @@
       "floor": "the scheduled jobs look at the database at most once every {minutes} minutes.",
       "cache": "The public pages keep their data {factor} times longer; a change the club makes still shows at once.",
       "healthReuse": "The health check reuses an answer at most {minutes} minutes old, so a stray caller does not wake the database.",
-      "monitor": "Emails still leave at once; registration and the backoffice work as usual.",
+      "monitor": "Emails leave as before (by «Deadlines» → «When emails leave»); registration and the backoffice work as usual.",
       "cacheOnly": "Visitors no longer wake the database: a page that is not in the cache is shown from its last saved copy.",
       "floorMore": "Reminders and freed places may wait that long; no place is ever given twice.",
       "cacheOnlyMore": "The copy is refreshed in the background at most once every {minutes} minutes."
@@ -6100,6 +6127,7 @@
       "budgetThresholds": "Budget thresholds saved.",
       "deadlines": "Deadlines saved.",
       "addressCap": "Limit per address saved.",
+      "deliveryTiming": "Email sending saved.",
       "neonLimits": "The Neon limits were saved.",
       "neonLimitsSame": "The limits were already these; nothing changed.",
       "picturesLaddered": {
@@ -6251,7 +6279,8 @@
     "submitting": "Sending…",
     "sent": {
       "title": "Check your inbox",
-      "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it. Can't find it? Look in the Spam folder too."
+      "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it. Can't find it? Look in the Spam folder too.",
+      "bodyScheduled": "If the address is right, you get an email with a link within {wait} at the most — emails leave on the platform's scheduled round. The subscription starts only once you press the link. Can't find it? Look in your Spam folder too."
     },
     "errors": {
       "title": "The subscription has not started yet",

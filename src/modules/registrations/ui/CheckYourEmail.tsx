@@ -10,8 +10,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { daysPhrase, hoursPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedDeadlines, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { SubmittedFacts } from "../form-draft";
 
@@ -72,6 +72,9 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
     confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
     opens: daysPhrase(locale, window?.opensDays ?? 0),
   };
+  // The club sends on the scheduler's tick by default (§NNN): the wait is then the pinger's, and
+  // "within a minute" would be the promise that makes somebody fill the form in again.
+  const waitMinutes = await cachedEmailWaitMinutes(new Date());
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
   const textLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
@@ -155,7 +158,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         {/* The wait, in bold and once (§224): not knowing it is normal is what makes somebody
             fill the form in again thirty seconds later. */}
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
-          {t("done.delay")}
+          {waitMinutes === null ? t("done.delay") : t("done.delayScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
         </Typography>
         <Typography variant="body2">{t("done.notArrived", values)}</Typography>
         {/*

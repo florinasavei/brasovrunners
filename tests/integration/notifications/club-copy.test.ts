@@ -10,6 +10,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { isParticipantMessage } from "@/modules/notifications/domain/club-notices";
+import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pdf";
@@ -199,7 +200,9 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
       }
       expect(copies.map((copy) => copy.recipientEmail).sort(), message.messageType).toEqual([HIDDEN, PRESIDENT].sort());
       for (const copy of copies) {
-        expect(copy.payloadJson).toEqual({ ...(message.payloadJson as object), clubCopy: true });
+        // The participant's payload, less the mark of the message that starts a deadline (§NNN): a copy starts nothing.
+        const asked = Object.fromEntries(Object.entries(message.payloadJson as Record<string, unknown>).filter(([key]) => key !== STARTS_DEADLINE));
+        expect(copy.payloadJson).toEqual({ ...asked, clubCopy: true });
         expect(copy.locale).toBe(message.locale);
         expect(copy.idempotencyKey).toBe(`${message.idempotencyKey}:club-copy:${copy.recipientEmail}`);
       }

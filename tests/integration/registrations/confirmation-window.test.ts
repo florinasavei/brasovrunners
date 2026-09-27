@@ -13,6 +13,7 @@ import { runRegistrationMaintenance } from "@/modules/registrations/maintenance"
 import { confirmByStaff, confirmEmail, type EventForRegistration, readPublicAvailability, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
  * BR-REQ-033-01 criterion 7 (`DECISIONS.md` §104) — a free race is confirmed a week before.
@@ -195,6 +196,7 @@ describe("the participation window (§104)", () => {
     const first = await verified(event, "first@example.ro");
     const second = await verified(event, "second@example.ro");
     expect(second.status).toBe("WAITLISTED");
+    await sendHoldEmails(db, NOW);
 
     // The deadline passes without a signature: the hold lapses, the place goes to the queue.
     const afterDeadline = new Date(START.getTime() - 2 * DAY + 60_000);
@@ -211,6 +213,7 @@ describe("the participation window (§104)", () => {
     const first = await verified(event, "first@example.ro");
     const second = await verified(event, "second@example.ro");
     expect(second.status).toBe("WAITLISTED");
+    await sendHoldEmails(db, NOW);
 
     // The deadline is behind and a queue exists, so the hold is not kept: signing re-runs
     // allocation (§15.3 step 7) and finds the place is the queue's, not this person's.
@@ -241,6 +244,7 @@ describe("the participation window (§104)", () => {
     expect(first.holdExpiresAt).toEqual(START);
     const second = await verified(event, "second@example.ro");
     expect(second.status).toBe("WAITLISTED");
+    await sendHoldEmails(db, NOW);
 
     const [queued] = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, first.id)).then((rows) => rows.filter((r) => r.messageType === "COMPLETE_DECLARATION"));
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);

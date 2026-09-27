@@ -13,6 +13,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
+import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, ensureProvisionalBibNumber, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
@@ -439,6 +440,10 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
 /**
  * The message an allocation's outcome earns (§15.2 step 10): the declaration to sign, or
  * "you are on the waiting list". An offer made on the way (§160) already queued its own.
+ *
+ * The declaration's message is the one that starts the hold the allocation just wrote, so it is
+ * marked as such (§NNN, `startingDeadline`): its send re-bases the hold once, and while it waits
+ * in the queue the hold is not lapsed (`repository.ts#awaitingItsFirstEmail`).
  */
 async function enqueueAllocationEmail<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -456,7 +461,7 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
     messageType,
     locale: allocated.locale,
     recipientEmail,
-    payload: {},
+    payload: messageType === "COMPLETE_DECLARATION" ? startingDeadline() : {},
     idempotencyKey,
     now,
   });
@@ -548,7 +553,8 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       messageType: "WAITLIST_SPOT_OFFER",
       locale: offered.locale,
       recipientEmail: await deliveryEmailOf(db, offered.participantId),
-      payload: {},
+      // The offer's own first message: its send re-bases the offer once (§NNN); a resend never does.
+      payload: startingDeadline(),
       idempotencyKey: `registration:${offered.id}:waitlist-offered:${now.toISOString()}`,
       now,
     });
@@ -865,7 +871,10 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   participant: Participant,
   registration: Registration,
   now: Date,
-  /** What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§446). */
+  /**
+   * What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§446); the
+   * `startingDeadline` mark on the message that starts the link (§NNN), never on a re-send.
+   */
   payload: Record<string, unknown> = {},
 ): Promise<OutboxRow | null> {
   return enqueueEmail(db, {
@@ -1386,8 +1395,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // What was decided now, not what the setting says when the message renders: the email and
         // the decision must agree, and the confirmation asks the limit again under the lock anyway.
         // The entry by its id alone — never a name or a date in the outbox (§12.12).
+        // The entry's link starts with this message (§NNN): each submission is a new entry and its own first send.
         payload: entry
-          ? { atCap: false, registrationsPerAddress: cap.registrationsPerAddress, familyEntryId: entry.id }
+          ? startingDeadline({ atCap: false, registrationsPerAddress: cap.registrationsPerAddress, familyEntryId: entry.id })
           : { atCap: decision.atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
         now,
@@ -1565,7 +1575,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           now,
         });
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
-        if (restarted && !atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, restarted, now);
+        // The link of this cycle starts with this message (§NNN): its send re-bases it, once.
+        if (restarted && !atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, restarted, now, startingDeadline());
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
         return;
@@ -1640,7 +1651,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     // Nor another person confirmed from the email (§446): the press proved the inbox, and the
     // caller confirms the address in this same transaction (`family-confirm.ts`).
-    if (!atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, created, now);
+    // The first message of the registration starts its email link (§NNN): its send re-bases it, once.
+    if (!atTheDesk && !origin.anotherPerson) await enqueueVerificationEmail(tx, participant, created, now, startingDeadline());
     createdDeadlines = [linkExpiresAt];
     written = created.id;
   });
