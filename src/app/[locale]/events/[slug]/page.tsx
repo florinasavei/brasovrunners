@@ -12,6 +12,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventAgeRule from "@/modules/events/ui/EventAgeRule";
 import EventPhotosNotice from "@/modules/events/ui/EventPhotosNotice";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import EventLinks from "@/modules/events/ui/EventLinks";
@@ -343,13 +344,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
-        rules, the photographs notice and a group run's self-declaration, in that order, under one
+        rules, the minimum age (§NNN), the photographs notice and a group run's self-declaration, in that order, under one
         fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
         is on all of them (§421), so the fold is never empty.
 
         A native `<details>` in the start list's outlined shape (`StartList`), working without
         JavaScript; its title is a real `h2` inside the `<summary>`, so it stays in a screen
-        reader's list of headings while the fold is shut (§336), and the three parts under it are
+        reader's list of headings while the fold is shut (§336), and the parts under it are
         `h3`s. The emails, the calendar entry and the registration form link `#rules`, and a group
         run's page is reached at `#declaratie`: a full navigation to either opens the fold through
         the browser's own ancestor-details reveal, and `OpenFoldFromHash` (§336, the backoffice's
@@ -386,6 +387,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               <RichText body={event.rulesJson} />
             </Box>
           )}
+
+          {/* The minimum age (§NNN; §329, §410): set in the editor's «Regulamentul» for every type,
+              so it is read here with the rules rather than as a row of the facts. Nothing for no
+              minimum where nobody registers here. */}
+          <EventAgeRule event={event} />
 
           {/* Photographs are a legitimate-interest processing, so every event page — not only the
               gallery — says how to object (§323; the photographs amendment's item 6). */}

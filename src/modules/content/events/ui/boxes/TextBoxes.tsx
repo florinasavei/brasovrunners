@@ -1,9 +1,16 @@
+import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { capitalizeFirst } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
+import { eventInputConstraints } from "../../constraints";
+import type { EditableEvent } from "../../repository";
 import {
   addressSummary,
   BLANK,
@@ -11,14 +18,16 @@ import {
   descriptionSummary,
   identicalLocales,
   incompleteLocales,
+  minAgeSummary,
   rulesSummary,
   type SummaryTranslation,
   titleSummarySummary,
 } from "../box-summaries";
+import OnlyForType from "../OnlyForType";
 import { missingForPublish, missingInLanguage, type PublishGapBox, storedPublishReader } from "../publish-check";
 import SlugFromTitle from "../SlugFromTitle";
 import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } from "../TranslationFields";
-import { type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
+import { BoxNote, type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
 
 /**
  * The four boxes of the event editor that are only words (§350): the title and summary, the
@@ -180,12 +189,31 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
  * declarație» since §481 (`ProgrammeRulesBox`): the rules in each language, on their own tabs. The
  * declaration (§448) is the card after it, no longer inside it — the three are siblings, in the
  * order the page reads them.
+ *
+ * **The minimum age is here, one box for every type** (§NNN). It was two boxes — the race's in
+ * «Participare și înscrieri» › «Condiții de participare» (§329), a group run's own in «Traseul»
+ * (§440) — and neither was shown for a type that registers elsewhere or not at all. Now one
+ * `event.minAge`, after the rules' tabs, on every event: who may take part is read with the rules.
+ * A group run keeps §440's note under it — its self-declaration is for adults, so only a number
+ * above eighteen changes what it asks. A role without settings rights reads the number instead of
+ * the box; the server refuses its change regardless (`canEditEventFields`, BR-REQ-060-01).
  */
-export async function RulesBox({ languages }: { languages: readonly LanguageEntry[] }) {
+export async function RulesBox({
+  languages,
+  event,
+  mayEditSettings,
+}: {
+  languages: readonly LanguageEntry[];
+  event: EditableEvent | null;
+  mayEditSettings: boolean;
+}) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
+  const locale = await getLocale();
+  const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
+  const aside = [rulesSummary(words, languages.map(summaryOf)), minAgeSummary(words, minAge, locale)].join(words.separator);
   return (
-    <Panel collapsible level={3} id="box-rules" title={t("editor.boxes.rules.title")} aside={rulesSummary(words, languages.map(summaryOf))}>
+    <Panel collapsible level={3} id="box-rules" title={t("editor.boxes.rules.title")} aside={aside}>
       <LanguageTabs
         idPrefix="rules"
         languages={languages}
@@ -194,6 +222,24 @@ export async function RulesBox({ languages }: { languages: readonly LanguageEntr
         identical={["rules"]}
         render={(entry) => <RulesFields translation={entry.translation} mayEdit={entry.mayEdit} />}
       />
+      <Stack spacing={1} sx={{ mt: 2 }} data-testid="min-age-card">
+        {mayEditSettings ? (
+          <RecallField
+            name="event.minAge"
+            label={t("editor.minAge")}
+            helperText={t("editor.minAgeHelp")}
+            defaultValue={minAge}
+            {...textFieldConstraints(eventInputConstraints("minAge"), { inputMode: "numeric" })}
+            sx={{ width: { sm: 220 } }}
+          />
+        ) : (
+          <BoxNote testId="min-age-read-only">{t("editor.minAgeReadOnly", { age: capitalizeFirst(minAgeSummary(words, minAge, locale), locale) })}</BoxNote>
+        )}
+        {/* A group run's self-declaration is for adults (§440): the note says which numbers change it. */}
+        <OnlyForType type="GROUP_RUN" selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+          <BoxNote testId="group-run-min-age-note">{t("editor.groupRunDeclaration.minAgeHelp")}</BoxNote>
+        </OnlyForType>
+      </Stack>
     </Panel>
   );
 }

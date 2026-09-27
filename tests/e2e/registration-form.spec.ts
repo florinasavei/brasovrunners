@@ -846,7 +846,8 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("50");
-    await openEditorBox(page, "Condiții de participare");
+    // The minimum age is a box of «Regulamentul», for every type (§NNN).
+    await openEditorBox(page, "Regulamentul");
     // The box offers the club's fourteen until the organizer says otherwise.
     await expect(field("event.minAge")).toHaveValue("14");
     await field("event.minAge").fill("16");
@@ -876,7 +877,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
 
-      // The event's page says the same sentence among its facts, and its structured data "16-".
+      // The event's page says the same sentence in «Condiții de participare» (§NNN), and its structured data "16-".
       await page.goto(`/ro/evenimente/${slug}`);
       await expect(page.locator("#main")).toContainText(
         "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
@@ -887,8 +888,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await page.goto(editorUrl);
       await hydrated(page);
       await expect(field("event.minAge")).toHaveValue("16");
-      await openEditorBox(page, "Participare și înscrieri");
-      await openEditorBox(page, "Condiții de participare");
+      await openEditorBox(page, "Regulamentul");
       await field("event.minAge").fill("0");
       const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
       if (await acknowledge.count()) await acknowledge.check();

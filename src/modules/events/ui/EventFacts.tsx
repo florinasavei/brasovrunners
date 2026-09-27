@@ -1,4 +1,3 @@
-import CakeIcon from "@mui/icons-material/Cake";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -12,7 +11,6 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
-import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { forecastPlaceName, rainLikely, type EventForecast, type WeatherReading } from "@/modules/weather/domain/forecast";
 import CardWeather from "@/modules/weather/ui/CardWeather";
@@ -23,7 +21,7 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costPaidToExternalOrganizer, costUrlHost } from "../domain/cost";
-import { hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
+import { isStravaLink, takesRegistrations } from "../domain/event-type";
 import { CLUB_LOCALITY } from "../domain/place";
 import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
@@ -1017,21 +1015,10 @@ export default async function EventFacts({
   }
 
   /*
-    Who may enter (§329): the event's own minimum age and who registers a minor, in the sentence
-    the form's intro line says — one sentence, read from one place, so the page and the form
-    cannot disagree. On the page only: it is a condition of the race a runner reads before
-    pressing, and the hero above the fold is a summary with a button to reach. Only where the club
-    counts it (`hasAgeRule`); the legal templates point here for the number.
+    Who may enter (§329, §410) is no longer a row here: since §NNN the minimum age is set in the
+    editor's «Regulamentul» for every type, and the page says it inside «Condiții de participare»,
+    after the rules (`EventAgeRule`).
   */
-  if (hasAgeRule(event)) {
-    const rt = await getTranslations("Registration");
-    rows.push({
-      key: "age",
-      label: t("age"),
-      icon: CakeIcon,
-      value: rt(`ageRule.${ageRuleVariant(event.minAge)}`, { age: yearsPhrase(event.minAge, locale) }),
-    });
-  }
   if (state === "NOT_APPLICABLE" && mentionsRegistration) {
     rows.push({ key: "registration", label: t("registration"), icon: HowToRegIcon, value: t("registrationState.NOT_APPLICABLE") });
   }
