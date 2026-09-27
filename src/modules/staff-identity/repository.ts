@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, inArray, ne, sql } from "drizzle-orm";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { StaffRole } from "./domain/roles";
@@ -104,6 +104,40 @@ export async function countSuperadministrators<T extends Record<string, unknown>
     .from(staffUsers)
     .where(eq(staffUsers.role, "SUPERADMIN"));
   return row?.count ?? 0;
+}
+
+/**
+ * How many club members have an account (§524) — the members' pages say it, as a number: the list
+ * is the team page's, and personal data.
+ */
+export async function countMembers<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(staffUsers)
+    .where(eq(staffUsers.role, "MEMBER"));
+  return row?.count ?? 0;
+}
+
+/**
+ * How many people run the club's site (§524): every account but a club member's, who signs in and
+ * is no staff. `/admin/tasks` asks it for "the team is invited"; the role line is the repository's,
+ * so no page compares a role by hand.
+ */
+export async function countBackofficeStaff<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(staffUsers)
+    .where(ne(staffUsers.role, "MEMBER"));
+  return row?.count ?? 0;
+}
+
+/** The rows behind these addresses (§524): a bulk press takes an address already a member again. */
+export async function findStaffUsersAmong<T extends Record<string, unknown>>(db: Database<T>, emails: readonly string[]): Promise<StaffUser[]> {
+  if (emails.length === 0) return [];
+  return db
+    .select()
+    .from(staffUsers)
+    .where(inArray(staffUsers.email, emails.map(normalizeStaffEmail)));
 }
 
 /**

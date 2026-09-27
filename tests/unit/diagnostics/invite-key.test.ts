@@ -29,7 +29,7 @@ describe("§288 the invitation key, tested rather than merely present", () => {
     expect(check.kind).toBe("ok");
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe("https://id.example.test/v2/users");
-    expect(calls[0].body).toEqual({ query: { limit: 200 }, queries: [{ typeQuery: { type: "TYPE_HUMAN" } }] });
+    expect(calls[0].body).toEqual({ query: { offset: 0, limit: 200, asc: true }, sortingColumn: "USER_FIELD_NAME_CREATION_DATE", queries: [{ typeQuery: { type: "TYPE_HUMAN" } }] });
     // Bounded: a provider that hangs must not take the page down with it.
     expect(calls[0].signal).toBeInstanceOf(AbortSignal);
   });
@@ -118,6 +118,18 @@ describe("§288 the invitation key, tested rather than merely present", () => {
     const check = await checkInviteKey(reader, { ...deps, fetch: hanging, timeoutMs: 20 });
     expect(check.kind).toBe("unreachable");
     expect((check as { reason: string }).reason).toContain("TimeoutError");
+  });
+
+  it("claims no missing account from a listing that stopped at its ceiling (§524)", async () => {
+    const full = (users: Array<Record<string, unknown>>) => answering(() => listing(users));
+    // The reader found, the listing full to the ceiling: the key works, and no row is said to lack an account.
+    const found = full([{ human: { email: { email: "florin@example.ro" } } }, { human: { email: { email: "x@y.ro" } } }]);
+    const ok = await checkInviteKey(reader, { ...deps, fetch: found.call, pageSize: 2, max: 2 });
+    expect(ok).toMatchObject({ kind: "ok", complete: false });
+    expect(hasNoAccount(ok, "ghost@example.ro")).toBe(false);
+    // The reader not within the ceiling: no verdict on the key, never "blind".
+    const other = full([{ human: { email: { email: "a@y.ro" } } }, { human: { email: { email: "b@y.ro" } } }]);
+    expect(await checkInviteKey(reader, { ...deps, fetch: other.call, pageSize: 2, max: 2 })).toEqual({ kind: "capped", seen: 2 });
   });
 
   it("calls nothing without a key, and nothing where the development switcher is the provider", async () => {

@@ -1135,6 +1135,17 @@ const T = {
       action: "Intră în backoffice",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
+    // A club member added on Echipa (§524): the members' zone, never the backoffice.
+    memberInvitation: {
+      subject: `Ai cont de membru ${CLUB_NAME}`,
+      body: (d: TemplateData) => [
+        `${d.inviterName || "Un coleg"} ți-a făcut cont de membru ${CLUB_NAME}: cu el intri în zona membrilor de pe site, unde clubul pune ce e doar pentru membri.`,
+        `Intri cu adresa ${d.staffEmail ?? "aceasta"}. Dacă ai primit și un mesaj de la Zitadel, îți setezi acolo parola; apoi apeși butonul de mai jos. Contul e legat de adresă.`,
+        "Pentru cont folosim Zitadel, cu numele și adresa ta. Detalii în nota de confidențialitate.",
+      ],
+      action: "Intră în zona membrilor",
+      links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
+    },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
       subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
@@ -1614,6 +1625,16 @@ const T = {
       action: "Open the backoffice",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
     },
+    memberInvitation: {
+      subject: `You have a ${CLUB_NAME} member account`,
+      body: (d: TemplateData) => [
+        `${d.inviterName || "A colleague"} made you a ${CLUB_NAME} member account: with it you open the members' area of the website, where the club puts what is for members only.`,
+        `You sign in with ${d.staffEmail ?? "this address"}. If you also received a message from Zitadel, set your password there; then press the button below. The account is tied to the address.`,
+        "Your account is held by Zitadel, with your name and address. Details in the privacy notice.",
+      ],
+      action: "Open the members' area",
+      links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -1936,6 +1957,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   NEWSLETTER_CONFIRM: "newsletterConfirm",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newEventAlert",
+  MEMBER_INVITATION: "memberInvitation",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -2418,7 +2440,13 @@ export function buildTemplateContent(
           : []),
       ];
       // The club's archive copy and the staff invitation are not a participant's message.
-      if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
+      if (
+        messageType === "DECLARATION_ARCHIVE" ||
+        messageType === "GROUP_RUN_DECLARATION_ARCHIVE" ||
+        messageType === "STAFF_INVITATION" ||
+        // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
+        messageType === "MEMBER_INVITATION"
+      ) {
         return own.length > 0 ? own : undefined;
       }
       const seen = new Set(own.map((link) => link.url));
@@ -2509,6 +2537,8 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
+  // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
+  "MEMBER_INVITATION",
 ]);
 
 /**
