@@ -161,8 +161,8 @@ describe("no film box", () => {
   });
 
   it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
-    // The columns left the Drizzle schema in BR-V2.10; the database keeps them until BR-V2.11's
-    // contract migration, because BR-V2.09 still declared them (AGENTS.md §7.6, §491).
+    // The columns left the Drizzle schema in BR-V2.10 and the database in BR-V2.11's contract
+    // migration 0095, because BR-V2.09 still declared them (AGENTS.md §7.6, §491, §NNN).
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_url")');
     expect(read("src/db/schema/events.ts")).not.toContain('text("video_poster_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
@@ -181,11 +181,17 @@ describe("no film box", () => {
     const index = journal.entries.findIndex((entry) => entry.tag === "0092_film_into_description");
     expect(index).toBeGreaterThan(0);
     expect(journal.entries[index].when).toBeGreaterThan(journal.entries[index - 1].when);
-    // And no migration of this release drops them: that is the release after's contract.
+    // The release that stopped declaring them drops nothing (0093, 0094); the drop is the release
+    // after's own contract, 0095, and the only migration after 0092 that names them (§491, §NNN).
     for (const entry of journal.entries.slice(index + 1)) {
-      const sql = read(`src/db/migrations/${entry.tag}.sql`).replace(/--[^\n]*/g, "");
-      expect(sql, entry.tag).not.toMatch(/video_(poster_)?url/);
+      const sql = read(`src/db/migrations/${entry.tag}.sql`);
+      if (entry.tag === "0095_film_columns_dropped") {
+        expect(sql, entry.tag).toMatch(/^-- contract: \S/m);
+        continue;
+      }
+      expect(sql.replace(/--[^\n]*/g, ""), entry.tag).not.toMatch(/video_(poster_)?url/);
     }
+    expect(journal.entries.map((entry) => entry.tag)).toContain("0095_film_columns_dropped");
   });
 });
 
