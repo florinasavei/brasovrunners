@@ -12,7 +12,8 @@ import {
   offeredGroupRunDeclarationKey,
   REGISTRATION_LEGAL_KEYS,
 } from "@/modules/legal-documents/domain/keys";
-import { asksForIdDocument, asksForMinorSignature, mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature, isPlacelessSeriesSentence, mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
+import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
@@ -219,18 +220,44 @@ describe("§393 the two templates", () => {
       expect(enText).toContain("It stays valid until I ask for its deletion; if the organiser approves a new version of the text, I am asked to sign it again.");
       expect(enText).toContain("This declaration is for the group run {{event}} on {{eventDate}}, starting from {{eventLocation}}.");
       // The one-off sentence names no series field, the series sentence no date: the renderer keeps one.
+      // The series sentence in two shapes (§NNN): with the usual place, and without it for a run whose
+      // place is not written — the same words otherwise, so neither says more than the other.
       for (const paragraphs of [TEXTS[surface].ro, TEXTS[surface].en]) {
         const withSeries = paragraphs.filter((paragraph) => paragraph.includes("{{series}}"));
         const withDate = paragraphs.filter((paragraph) => paragraph.includes("{{eventDate}}"));
-        expect(withSeries).toHaveLength(1);
+        expect(withSeries).toHaveLength(2);
+        expect(withSeries.filter(isPlacelessSeriesSentence)).toHaveLength(1);
+        expect(withSeries.filter((paragraph) => paragraph.includes("{{seriesPlace}}"))).toHaveLength(1);
+        const [placed, placeless] = [withSeries.find((paragraph) => paragraph.includes("{{seriesPlace}}"))!, withSeries.find(isPlacelessSeriesSentence)!];
+        expect(placeless).toBe(placed.replace(/, (cu plecare de obicei din|usually starting from) \{\{seriesPlace\}\}/, ""));
         expect(withDate).toHaveLength(1);
-        expect(withSeries[0]).not.toContain("{{eventDate}}");
+        for (const sentence of withSeries) expect(sentence).not.toContain("{{eventDate}}");
         expect(withDate[0]).not.toContain("{{series");
       }
       // The evidence is about these runs, not one run.
       expect(roText).toContain("riscurile acestor alergări");
       expect(enText).toContain("the risks of these runs");
     }
+  });
+
+  /*
+    §NNN, the review — the privacy notice says what the code does with a series' signature: signed
+    again on the same text, no second one is kept; signed on a new version, the older is kept beside
+    it as evidence of what was accepted then, the new one is in force, and both go only at the
+    signer's request. Never «replaces the old one»: no public press deletes a signature.
+  */
+  it("the privacy notice keeps the older signature as evidence beside the new one (§NNN)", () => {
+    const roText = paragraphs(privacyNoticeRo).join(" ");
+    const enText = paragraphs(privacyNoticeEn).join(" ");
+    expect(roText).toContain("Dacă o semnezi din nou pe același text, nu păstrăm a doua: îți retrimitem copia.");
+    expect(roText).toContain(
+      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci; pe amândouă le ștergem doar la cererea ta.",
+    );
+    expect(enText).toContain("If you sign it again on the same text, we keep no second one: we resend your copy.");
+    expect(enText).toContain(
+      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then; we delete both only at your request.",
+    );
+    for (const text of [roText, enText]) expect(text).not.toMatch(/o înlocuiește pe cea veche|replaces the old one/);
   });
 
   /*
@@ -292,6 +319,21 @@ describe("§393 the public offer line states the retention truthfully", () => {
     expect(ro.Event.groupRunDeclaration.page.done).toContain("nu o mai semnezi la următoarele");
     expect(en.Event.groupRunDeclaration.page.done).toContain("you do not sign it again for the next ones");
     for (const catalogue of [ro, en]) expect(catalogue.Event.groupRunDeclaration.page.done).not.toMatch(/deja|already/i);
+  });
+
+  // §NNN, the review: under a text in force that names no series, a signature covers its own date,
+  // and the offer, the signing page and its answer say this run — never «once for the whole series».
+  it("says this run, and claims no series, while the text in force names none (§NNN)", () => {
+    for (const catalogue of [ro, en]) {
+      const words = catalogue.Event.groupRunDeclaration;
+      for (const text of [words.lineOneDate, words.page.introOneDate, words.page.doneOneDate]) {
+        expect(text).not.toBe("");
+        expect(text).not.toMatch(/seri(a|ei)|series|singură dată|sign it once/i);
+      }
+      expect(words.page.doneOneDate).not.toMatch(/deja|already/i);
+    }
+    expect(ro.Event.groupRunDeclaration.lineOneDate).toContain("pentru această alergare");
+    expect(en.Event.groupRunDeclaration.lineOneDate).toContain("for this run");
   });
 
   it("offers no language select: the signature is in the page's language, the text that was read (§57)", () => {

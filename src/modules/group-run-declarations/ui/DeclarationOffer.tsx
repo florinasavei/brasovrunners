@@ -16,6 +16,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { signedStateFor, signingOpen } from "../domain";
 import { findSignatureByViewToken } from "../repository";
+import { signatureCoversSeries } from "../series";
 
 /**
  * "Semnează declarația pe propria răspundere" on a group run's page (§393; the owner, 2026-09-25:
@@ -114,9 +115,11 @@ export default async function DeclarationOffer({
           {t("groupRunDeclaration.signedOlder", { version: signed.version, when })}
         </Typography>
       ) : (
-        // Once for the whole run (§NNN): a returning runner reads here that they need not sign again.
+        // Once for the whole run (§NNN): a returning runner reads here that they need not sign again —
+        // only while the text in force says so (`signatureCoversSeries`); under an older one, a
+        // signature covers its own date, and the line says this run.
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="group-run-declaration-line">
-          {t("groupRunDeclaration.line", { event: event.title })}
+          {t(signatureCoversSeries(declaration.body) ? "groupRunDeclaration.line" : "groupRunDeclaration.lineOneDate", { event: event.title })}
         </Typography>
       )}
       {signed?.kind !== "current" && (

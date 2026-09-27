@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { keptSignature, type SeriesSignature, signedStateFor, signerIdentity } from "@/modules/group-run-declarations/domain";
-import { factsToKeep, readSignedFacts, seriesMergeValues, seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
-import { dropsParagraph, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
+import { factsToKeep, readSignedFacts, seriesMergeValues, seriesRhythmPhrase, signatureCoversSeries } from "@/modules/group-run-declarations/series";
+import { dropsParagraph, isPlacelessSeriesSentence, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 import { groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 
 /**
@@ -120,6 +120,9 @@ describe("§NNN the series sentence and the one-off sentence", () => {
     expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura de marți — în fiecare marți, la 18:30, cu plecare de obicei din Parcul Titulescu —");
     expect(text).not.toContain("Declarația este pentru alergarea de grup");
     expect(text).not.toContain("marți, 6 oct. 2026");
+    // One series sentence: the shape without the place is dropped while there is a place.
+    expect(text).not.toContain("seriei Tura de marți — în fiecare marți, la 18:30 — la care");
+    expect(text.match(/Declarația este valabilă pentru toate alergările seriei/g)).toHaveLength(1);
   });
 
   it("keeps the one-off sentence for a run of one date, with its date and place, and drops the series sentence", () => {
@@ -162,5 +165,64 @@ describe("§NNN what a signature keeps of the blanks", () => {
     expect(readSignedFacts(null)).toBeNull();
     expect(readSignedFacts([])).toBeNull();
     expect(readSignedFacts({ participant: "Ana" })).toBeNull();
+  });
+});
+
+/*
+  §NNN, the review's nit — a series whose place is not written in that language: the series sentence
+  keeps its second shape, without «cu plecare de obicei din …», and never drops both it and the one-off.
+*/
+describe("§NNN the series sentence without a place", () => {
+  const base = { participant: "Ana Popescu", event: "Tura de marți", eventDate: "marți, 6 oct. 2026", eventLocation: "", minimumAge: "18 ani" };
+  const placeless = { key: "GROUP_RUN\ntura de marți", title: "Tura de marți", rhythm: "în fiecare marți, la 18:30", place: "  " };
+
+  it("keeps the shape without the place clause, and drops the one with it and the one-off sentence", () => {
+    const values: Record<string, string> = { ...base, ...(seriesMergeValues(groupRunTrailRo, placeless) as Record<string, string>) };
+    expect(values.seriesPlace).toBe("");
+    const text = JSON.stringify(mergeLegalBody(groupRunTrailRo, values));
+    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura de marți — în fiecare marți, la 18:30 — la care particip de la semnare");
+    expect(text).not.toContain("cu plecare de obicei din");
+    expect(text).not.toContain("Declarația este pentru alergarea de grup");
+    expect(text.match(/Declarația este valabilă pentru toate alergările seriei/g)).toHaveLength(1);
+  });
+
+  it("reads the same in English", () => {
+    const values = { ...base, ...(seriesMergeValues(groupRunTrailEn, { ...placeless, rhythm: "every Tuesday at 18:30" }) as Record<string, string>) };
+    const text = JSON.stringify(mergeLegalBody(groupRunTrailEn, values));
+    expect(text).toContain("valid for every run of the series Tura de marți — every Tuesday at 18:30 — that I take part in");
+    expect(text).not.toContain("usually starting from");
+    expect(text).not.toContain("This declaration is for the group run");
+  });
+
+  it("drops both series shapes on a one-off run, keeping the one-off sentence", () => {
+    const text = JSON.stringify(mergeLegalBody(groupRunTrailRo, { ...base, ...(seriesMergeValues(groupRunTrailRo, null) as Record<string, string>) }));
+    expect(text).not.toContain("toate alergările seriei");
+    expect(text).toContain("Declarația este pentru alergarea de grup Tura de marți");
+  });
+
+  it("tells the two shapes apart, and keeps a text's only series sentence with a dotted place rather than dropping it", () => {
+    expect(isPlacelessSeriesSentence("seria {{series}} — {{seriesRhythm}} — la care")).toBe(true);
+    expect(isPlacelessSeriesSentence("seria {{series}} — {{seriesRhythm}}, din {{seriesPlace}}")).toBe(false);
+    expect(isPlacelessSeriesSentence("alergarea {{event}}, {{eventDate}}")).toBe(false);
+    // A club's text with one series sentence, the place in it: no place gives it no value to drop it by.
+    const onlyPlaced = { sections: [{ paragraphs: ["Seria {{series}} — {{seriesRhythm}}, din {{seriesPlace}}.", "Alergarea {{event}}, {{eventDate}}."] }] };
+    const values = seriesMergeValues(onlyPlaced, placeless);
+    expect(values).toEqual({ series: "Tura de marți", seriesRhythm: "în fiecare marți, la 18:30" });
+    const kept = mergeLegalBody(onlyPlaced, { ...base, ...values }).sections[0].paragraphs;
+    expect(kept).toHaveLength(1);
+    expect(kept[0]).toContain("Seria Tura de marți — în fiecare marți, la 18:30, din");
+  });
+});
+
+/*
+  §NNN, the review's second blocker — a signature covers the series only when the text it signs says
+  so: the platform's text names {{series}}; the version approved on production before it names one run.
+*/
+describe("§NNN which text a series signature needs", () => {
+  it("covers the series under a text that names {{series}}, and one date under one that does not", () => {
+    expect(signatureCoversSeries(groupRunTrailRo)).toBe(true);
+    expect(signatureCoversSeries(groupRunTrailEn)).toBe(true);
+    expect(signatureCoversSeries({ sections: [{ paragraphs: ["Particip la alergarea {{event}}, {{eventDate}}, din {{eventLocation}}."] }] })).toBe(false);
+    expect(signatureCoversSeries(null)).toBe(false);
   });
 });

@@ -154,10 +154,26 @@ export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_
 
 const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
 
+const filled = (value: string | null | undefined): boolean => typeof value === "string" && value.trim() !== "";
+
+/**
+ * The series sentence's second shape (§NNN): it names `{{series}}` and `{{seriesRhythm}}` but no
+ * `{{seriesPlace}}` — the sentence without «cu plecare de obicei din …», for a run whose place is not
+ * written. The platform's text carries both shapes; a place keeps the first and drops this one, no
+ * place ("" for `{{seriesPlace}}`, only when the text has this shape — `seriesMergeValues`) drops the
+ * first and keeps this one, so the text never loses both.
+ */
+export function isPlacelessSeriesSentence(paragraph: string): boolean {
+  const names = new Set(Array.from(paragraph.matchAll(FIELD_PATTERN), (match) => match[1]));
+  return names.has("series") && names.has("seriesRhythm") && !names.has("seriesPlace");
+}
+
 /**
  * Whether a paragraph is left out of a merged text: it names a paragraph field answered with "" —
  * or it is the one-off sentence of a run that is one of a series (`SERIES_MERGE_FIELDS`): it names
- * `{{eventDate}}` and no series field, while `{{series}}` has a value.
+ * `{{eventDate}}` and no series field, while `{{series}}` has a value — or it is the series sentence
+ * without the place clause (`isPlacelessSeriesSentence`) while `{{seriesPlace}}` has a value, the
+ * shape with the place being the one kept then.
  */
 export function dropsParagraph(paragraph: string, values: MergeValues): boolean {
   let namesSeries = false;
@@ -168,7 +184,8 @@ export function dropsParagraph(paragraph: string, values: MergeValues): boolean 
     if (SERIES_FIELD_SET.has(name)) namesSeries = true;
     if (name === "eventDate") namesEventDate = true;
   }
-  return namesEventDate && !namesSeries && typeof values.series === "string" && values.series.trim() !== "";
+  if (namesSeries && filled(values.seriesPlace) && isPlacelessSeriesSentence(paragraph)) return true;
+  return namesEventDate && !namesSeries && filled(values.series);
 }
 
 /**

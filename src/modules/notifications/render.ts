@@ -1119,7 +1119,9 @@ async function renderGroupRunDeclarationRow(
   if (!archive && !isClubCopy(row.payloadJson)) {
     const secret = generateTokenSecret();
     await setGroupRunDeclarationViewToken(db, signed.id, hashTokenSecret(secret));
-    const target = await nextDateOfRun(db, signed.eventId, now);
+    // A series' signature opens the run's next date; one that covers its own date only (a one-off's,
+    // or one signed under a text that names no series, §NNN) opens that date, the one it covers.
+    const target = signed.seriesKey !== null ? await nextDateOfRun(db, signed.eventId, now) : signed.eventId;
     const targetDetails = target === signed.eventId ? eventDetails : eventNotificationDetailsIn(await eventRows(db, target), locale);
     if (targetDetails?.slug) {
       const path = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: targetDetails.slug } } });

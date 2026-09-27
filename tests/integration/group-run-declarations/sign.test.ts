@@ -15,7 +15,8 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
-import { findSignatureByViewToken, findSignedGroupRunDeclaration, insertGroupRunDeclaration, listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
+import { findSignatureByViewToken, findSignedGroupRunDeclaration, insertGroupRunDeclaration, listCoveringSignatures, listGroupRunDeclarations, listSeriesDatesOf } from "@/modules/group-run-declarations/repository";
+import { groupRunMergeValues } from "@/modules/group-run-declarations/facts";
 import { signedStateFor } from "@/modules/group-run-declarations/domain";
 import { hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
@@ -747,6 +748,142 @@ describe("§NNN the signer's own link", () => {
     expect(await findSignatureByViewToken(db, hashTokenSecret(secret), once.id, "GROUP_RUN_DECLARATION_TRAIL")).toMatchObject({ version: 1, series: false });
     expect(await findSignatureByViewToken(db, hashTokenSecret(secret), other.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
     expect(await findSignatureByViewToken(db, hashTokenSecret("A".repeat(43)), once.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
+  });
+});
+
+/*
+  §NNN, the review of the series round — what the text in force decides, filled by one function.
+
+  1. The signing page, the press and the PDF fill a group-run text from `groupRunMergeValues`: a series'
+     values keep the series sentence and drop the one-off one; a one-off's the reverse.
+  2. A signature covers the series only when the text it signs names {{series}}. Under the version
+     approved on production before it — one run, {{eventDate}} — it covers the date it was signed on,
+     one row per date, and the runner signs again on the next date.
+  4. The Administrator's erase of a series signature clears it for every date of the series.
+  5. A series whose place is not written keeps the series sentence without its place clause.
+*/
+describe("§NNN what the text in force decides", () => {
+  const OCT = (day: number) => new Date(`2026-10-${String(day).padStart(2, "0")}T16:00:00.000Z`);
+  const secretIn = (html: string) => /[?&]declaratie=([A-Za-z0-9_-]{43})/.exec(html)?.[1];
+
+  /** The trail text as approved before §NNN: the platform's, less the series sentences — one run, one date. */
+  async function approveOlderTrailText() {
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => {
+      const template = LEGAL_TEMPLATES.GROUP_RUN_DECLARATION_TRAIL[locale];
+      return {
+        locale,
+        title: template.title,
+        body: { sections: template.body.sections.map((section) => ({ ...section, paragraphs: section.paragraphs.filter((paragraph) => !paragraph.includes("{{series")) })) },
+      };
+    });
+    await insertLegalDocumentVersion(db, { key: "GROUP_RUN_DECLARATION_TRAIL", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+    await approveOne("PRIVACY_NOTICE");
+  }
+
+  const rendered = async (eventId: string) => {
+    const document = (await findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", NOW))!;
+    const facts = await groupRunMergeValues(db, eventId, "ro", document.body);
+    return { facts, text: JSON.stringify(mergeLegalBody(document.body, facts?.values ?? {})) };
+  };
+
+  it("fills a series' text with the series sentence and a one-off's with the one-off sentence, from the one function the page and the press use", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7) });
+    await trailRun({ startsAt: OCT(14) });
+    const once = await trailRun({ startsAt: OCT(10) }, { ro: "Tura de toamnă", en: "The autumn loop" });
+
+    const series = await rendered(first.id);
+    expect(series.facts?.seriesKey).toBe("GROUP_RUN\ntura pe munte");
+    expect(series.text).toContain("Declarația este valabilă pentru toate alergările seriei Tura pe munte — în fiecare miercuri, la 19:00, cu plecare de obicei din Stația de telecabină —");
+    expect(series.text).not.toContain("Declarația este pentru alergarea de grup");
+
+    const oneOff = await rendered(once.id);
+    expect(oneOff.facts?.seriesKey).toBeNull();
+    expect(oneOff.text).toContain("Declarația este pentru alergarea de grup Tura de toamnă, sâmbătă, 10 oct. 2026, cu plecare din Stația de telecabină.");
+    expect(oneOff.text).not.toContain("toate alergările seriei");
+  });
+
+  it("keeps the series sentence without its place when the run's place is not written, never dropping both", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const first = await trailRun({ startsAt: OCT(7), locationName: null });
+    await trailRun({ startsAt: OCT(14), locationName: null });
+    const { text } = await rendered(first.id);
+    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura pe munte — în fiecare miercuri, la 19:00 — la care particip");
+    expect(text).not.toContain("cu plecare de obicei din");
+    expect(text).not.toContain("Declarația este pentru alergarea de grup");
+  });
+
+  it("under a text that names no series, a signature covers its own date: no series on the row, and the next date is signed again", async () => {
+    await approveOlderTrailText();
+    expect(await groupRunDeclarationsSeriesCurrent(db, NOW)).toBe(false);
+    const first = await trailRun({ startsAt: OCT(7) });
+    const second = await trailRun({ startsAt: OCT(14) });
+
+    // What the signer reads: the one run and its date, no series sentence to keep.
+    const { facts, text } = await rendered(first.id);
+    expect(facts?.seriesKey).toBeNull();
+    expect(text).toContain("Declarația este pentru alergarea de grup Tura pe munte, miercuri, 7 oct. 2026");
+    expect(text).not.toContain("toate alergările seriei");
+
+    const signed = await signGroupRunDeclaration(db, await input(first.id), NOW);
+    if (signed.outcome !== "signed") throw new Error("not signed");
+    const [row] = await db.select().from(groupRunDeclarations);
+    expect(row.seriesKey).toBeNull();
+    expect(row.signedFacts).not.toHaveProperty("series");
+
+    // The next date is not covered: nothing there to keep, and the signer's link reads nothing on it.
+    const dates = (await listSeriesDatesOf(db, second.id)).map((date) => date.id);
+    expect(await listCoveringSignatures(db, second.id, dates, row.legalDocumentId)).toEqual([]);
+    const [message] = await db.select().from(emailOutbox);
+    const email = await renderOutboxMessage(claimed(message), db, NOW);
+    expect(email.subject).not.toContain("seria");
+    const secret = secretIn(email.html)!;
+    // The link opens the date the signature covers, not the run's next one.
+    const [slugOfFirst] = await db.select({ slug: eventTranslations.slug }).from(eventTranslations).where(eq(eventTranslations.eventId, first.id));
+    expect(email.html).toContain(`${slugOfFirst.slug}?declaratie=${secret}#declaratie`);
+    expect(await findSignatureByViewToken(db, hashTokenSecret(secret), first.id, "GROUP_RUN_DECLARATION_TRAIL")).toMatchObject({ series: false });
+    expect(await findSignatureByViewToken(db, hashTokenSecret(secret), second.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
+
+    // So the second date takes its own signature, as the text in force says.
+    expect(await signGroupRunDeclaration(db, await input(second.id), NOW)).toMatchObject({ outcome: "signed", kept: false });
+    const rows = await db.select().from(groupRunDeclarations);
+    expect(rows.map((declaration) => declaration.eventId).sort()).toEqual([first.id, second.id].sort());
+    expect(rows.every((declaration) => declaration.seriesKey === null)).toBe(true);
+    // And pressed again on the first date, the first date's is kept.
+    expect(await signGroupRunDeclaration(db, await input(first.id), NOW)).toEqual({ outcome: "signed", id: signed.id, kept: true });
+  });
+
+  it("the Administrator's erase of a series signature clears it for every date of the series, with one audit row", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const dates = [await trailRun({ startsAt: OCT(7) }), await trailRun({ startsAt: OCT(14) }), await trailRun({ startsAt: OCT(21) })];
+    const signed = await signGroupRunDeclaration(db, await input(dates[0].id), NOW);
+    if (signed.outcome !== "signed") throw new Error("not signed");
+    const [message] = await db.select().from(emailOutbox);
+    const secret = secretIn((await renderOutboxMessage(claimed(message), db, NOW)).html)!;
+    const [row] = await db.select().from(groupRunDeclarations);
+    const ids = dates.map((date) => date.id);
+
+    // Signed once: every date of the series reads it — the page from the link, the press, the backoffice.
+    for (const date of dates) {
+      expect(await findSignatureByViewToken(db, hashTokenSecret(secret), date.id, "GROUP_RUN_DECLARATION_TRAIL")).toMatchObject({ series: true });
+      expect(await listCoveringSignatures(db, date.id, ids, row.legalDocumentId)).toHaveLength(1);
+      expect(await listGroupRunDeclarations(db, date.id)).toHaveLength(1);
+    }
+
+    const actor = await admin();
+    await eraseGroupRunDeclaration(db, actor, { id: signed.id, reason: "a cerut ștergerea" }, NOW);
+
+    // Erased: no date reads it any more.
+    for (const date of dates) {
+      expect(await findSignatureByViewToken(db, hashTokenSecret(secret), date.id, "GROUP_RUN_DECLARATION_TRAIL")).toBeUndefined();
+      expect(await listCoveringSignatures(db, date.id, ids, row.legalDocumentId)).toEqual([]);
+      expect(await listGroupRunDeclarations(db, date.id)).toEqual([]);
+    }
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.group_run_declaration_erased"));
+    expect(trail).toHaveLength(1);
+    expect(trail[0]).toMatchObject({ actorStaffUserId: actor.id, entityId: dates[0].id });
+    // The next press on any date is a new signature.
+    expect(await signGroupRunDeclaration(db, await input(dates[2].id), NOW)).toMatchObject({ outcome: "signed", kept: false });
   });
 });
 

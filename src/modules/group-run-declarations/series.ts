@@ -9,7 +9,15 @@
  */
 import { recurrenceOf } from "@/modules/events/domain/series";
 import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
-import { MERGE_FIELDS, mergeFieldsIn, type MergeField, type MergeValues, SERIES_MERGE_FIELDS } from "@/modules/legal-documents/domain/merge-fields";
+import { isLegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
+import {
+  isPlacelessSeriesSentence,
+  MERGE_FIELDS,
+  mergeFieldsIn,
+  type MergeField,
+  type MergeValues,
+  SERIES_MERGE_FIELDS,
+} from "@/modules/legal-documents/domain/merge-fields";
 
 /**
  * How a series recurs, as the series sentence says it: «în fiecare marți, la 18:30» / «every Tuesday
@@ -39,15 +47,40 @@ export function seriesRhythmPhrase(dates: readonly { startsAt: Date }[], timeZon
 export type RunSeries = { key: string; title: string; rhythm: string; place: string } | null;
 
 /**
+ * Whether a signature of this text covers the run's series (§NNN): only when the text signed names
+ * `{{series}}` — the platform's series sentence, which says so to the signer. Read from the version in
+ * force at the signing, in the signer's language, as `{{participantIdDocument}}` gates the minor's
+ * own signature (§330). A text approved before §NNN names one run and `{{eventDate}}`: a signature of
+ * it covers that date alone, one row per date as before, whatever the run's other dates.
+ */
+export function signatureCoversSeries(body: unknown): boolean {
+  return mergeFieldsIn(body).has("series");
+}
+
+/**
  * The series sentence's values for a text (§NNN): none at all for a text that names no series field —
  * every version approved before §NNN, whose sentences are left exactly as they were — else the
  * series' name, rhythm and usual place, or "" for each on a one-off run, which drops the series
  * sentence and keeps the one-off one (`dropsParagraph`).
+ *
+ * **The usual place, when the run has none** (a date whose place is not written in that language).
+ * The platform's text carries the series sentence in two shapes, with the place clause and without
+ * it (`isPlacelessSeriesSentence`): a place fills the first, and the second is dropped; no place
+ * gives `{{seriesPlace}}` "", which drops the first and keeps the second — never both, so the text
+ * always says what it covers. A text with no placeless shape keeps its one series sentence with the
+ * place left as a dotted blank, as `{{eventLocation}}` is on a one-off's; a text that names no
+ * `{{seriesPlace}}` is given none.
  */
 export function seriesMergeValues(body: unknown, series: RunSeries): MergeValues {
   const fields = mergeFieldsIn(body);
   if (!SERIES_MERGE_FIELDS.some((field) => fields.has(field))) return {};
-  return series ? { series: series.title, seriesRhythm: series.rhythm, seriesPlace: series.place } : { series: "", seriesRhythm: "", seriesPlace: "" };
+  if (!series) return { series: "", seriesRhythm: "", seriesPlace: "" };
+  const values: MergeValues = { series: series.title, seriesRhythm: series.rhythm };
+  if (!fields.has("seriesPlace")) return values;
+  const place = series.place.trim();
+  if (place !== "") return { ...values, seriesPlace: place };
+  const paragraphs = isLegalDocumentBody(body) ? body.sections.flatMap((section) => section.paragraphs) : [];
+  return paragraphs.some(isPlacelessSeriesSentence) ? { ...values, seriesPlace: "" } : values;
 }
 
 /** The fields a signature keeps as they were filled (§NNN): the run's facts and the series'. */

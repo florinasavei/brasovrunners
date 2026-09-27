@@ -385,6 +385,7 @@
       "heading": "Self-declaration",
       "button": "Sign the declaration",
       "line": "Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole {event} series; the club keeps it while you keep coming to the runs and deletes it when you ask.",
+      "lineOneDate": "Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.",
       "signedSeries": "You have already signed the declaration for these runs (v. {version}, signed {when}). It is valid for every run of the series: you need not sign it again.",
       "signedOne": "You have already signed the declaration for this run (v. {version}, signed {when}).",
       "signedOlder": "You signed version {version} of the declaration ({when}). Since then the organiser has approved a new version: read it and sign it again.",
@@ -392,8 +393,10 @@
         "back": "Back to {event}",
         "title": "Self-declaration",
         "intro": "For the group run {event}. For a run that repeats you sign it once, for the whole series. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
+        "introOneDate": "For the group run {event}. It is optional and registers you for nothing: read the text, fill in the boxes below and sign.",
         "doneTitle": "The declaration is signed",
         "done": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. For a run that repeats, it covers the whole {event} series: you do not sign it again for the next ones. The email also has a link to the run's page, which tells you that you have signed. Come to the run as usual.",
+        "doneOneDate": "We are emailing it to you as a PDF — it leaves through the email queue, usually within minutes, at the latest on the next scheduled round. It covers the {event} run on this date. The email also has a link to the run's page, which tells you that you have signed. Come to the run as usual.",
         "closed": "The declaration can no longer be signed for this run.",
         "limited": "Too many declarations were sent from this address in the last hour. Please try again later.",
         "away": "We could not reach our records just now, so nothing was signed or recorded. What you filled in is still below — please try again in a few minutes.",
@@ -2476,7 +2479,7 @@
         },
         "groupRunSeriesTexts": {
           "title": "The group-run declarations: one signature per series",
-          "todo": "A group-run declaration in force is still written for a single date. The platform's text now says what it covers: for a run that repeats, the whole series — its name, rhythm and starting place — and for a one-day run, that run. Until you approve the new version, each signature covers only its own date, as the text in force says.",
+          "todo": "A group-run declaration in force is still written for a single date. The platform's text now says what it covers: for a run that repeats, the whole series — its name, rhythm and starting place — and for a one-day run, that run. Until the new versions are approved, a signature still covers one date — the one it was signed on —, as the text in force says: the runner signs again on each date of the series.",
           "done": "The group-run declarations in force say what they cover: a runner signs once for the whole series.",
           "how": [
             "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “start from the platform's text”. Read the text, fill in the club's details, save the draft, then “Approve”.",
