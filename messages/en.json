@@ -945,7 +945,7 @@
       "olderPicturesTitle": "Make the phone sizes?",
       "olderPicturesBody": "The pictures in this batch get their smaller sizes; the old address keeps working. It takes about twenty seconds. An editor open on a page using them will ask for a reload.",
       "shownAddressTitle": "Change the contact address shown?",
-      "shownAddressBody": "The site shows the chosen address from now on, and replies to the platform's emails go to it. Approved legal texts keep their own address.",
+      "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "translationBudgetTitle": "Save the translation budget?",
@@ -1864,6 +1864,7 @@
       "interestRemoved": "The address was removed from the notification list.",
       "interestNotFound": "That address was not on this event's list. Check whether they wrote from another one.",
       "simulate": "To try the waiting list (not in production): set a few places, add more test registrations than that, then cancel a confirmed one.",
+      "simulateMore": "The first registrations take the places, held for {hold} each; the rest queue in order. A lapsed hold or more places also gives the first in line the offer; its email shows in the Outbox.",
       "holdsHelpMore": "A lapsed hold stays the person's, and is released only when somebody is waiting for a place or when the event starts."
     },
     "testRegistrations": {
@@ -2278,7 +2279,7 @@
           "title": "The invitation key (Zitadel)",
           "todo": "The key is missing (ZITADEL_MANAGEMENT_PAT). Without it, “Add” on Echipa creates no sign-in account and the person is stuck. The key is a service user's token with the Org User Manager role.",
           "blind": "The key authenticates but cannot create accounts: the service user is not an “Org User Manager” of the organization. The colleague added meets “User not found in the system”.",
-          "refused": "The key is set, but Zitadel refuses the account search — usually the token was revoked or the account is not an “Org User Manager”. Zitadel's answer",
+          "refused": "The key is set, but Zitadel refuses the account search: the token was revoked or the account is not an “Org User Manager”. Zitadel's answer",
           "unreachable": "The key could not be checked: Zitadel did not answer. Not necessarily a problem with the key — reload the page in a few minutes. The answer",
           "done": "The key works: checked just now with a real search, it found your account. “Add” on Echipa creates the sign-in account and Zitadel sends the password link.",
           "how": [
@@ -3466,6 +3467,11 @@
         "NEWSLETTER_CONFIRM": "When someone subscribes on the contact page: the link that confirms the subscription, valid for {confirmation}.",
         "NEWSLETTER": "Only when an organizer sends a newsletter from the backoffice, to the chosen topic's subscribers. It leaves after every other email, from what is left of the allowance.",
         "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics."
+      },
+      "whenMore": {
+        "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
+        "BIB_ASSIGNED": "Automatically at the close, or when an organizer types the number on the registration's page or at the desk. With the manage link. Never for a cancelled event.",
+        "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5663,7 +5669,7 @@
       },
       "emailCaptureDeployed": {
         "title": "Email",
-        "body": "Messages are kept in memory and go nowhere — and on a hosted environment nobody can read them, because the process is gone. Anyone registering here never receives the confirmation. For real delivery: EMAIL_DELIVERY_MODE=allowlist, together with EMAIL_ALLOWLIST and the three Mailgun variables."
+        "body": "Messages stay in memory and go nowhere, so nobody registering here gets the confirmation. For real delivery: EMAIL_DELIVERY_MODE=allowlist, with EMAIL_ALLOWLIST and the three Mailgun variables."
       },
       "emailAllowlist": {
         "title": "Email",
@@ -5699,19 +5705,19 @@
       },
       "contactFormSmtp": {
         "title": "Contact form",
-        "body": "Sends over SMTP, straight from the club's Gmail — not through Mailgun and not through the email queue. The recipients come from Settings → Contact, or from CONTACT_FORM_TO while nobody is set there; the label beside this says which one answered."
+        "body": "Sends over SMTP from the club's Gmail, not through Mailgun. Recipients come from Settings → Contact, else from CONTACT_FORM_TO; the label beside this says which."
       },
       "contactFormNoRecipients": {
         "title": "Contact form",
-        "body": "It can send, but there is nobody to send to: neither the list on Settings → Contact nor CONTACT_FORM_TO holds an address. The “Write to us” page shows the club's address until somebody writes a recipient on Settings → Contact — no redeploy needed."
+        "body": "It can send, but to nobody: neither Settings → Contact nor CONTACT_FORM_TO holds an address. Until a recipient is set on Settings → Contact, “Write to us” shows the club's address."
       },
       "contactFormOff": {
         "title": "Contact form",
-        "body": "The “Write to us” page shows the club's address instead of the form. The sending account is missing: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password). The recipients are written in the app, on Settings → Contact; CONTACT_FORM_TO is only the fallback."
+        "body": "“Write to us” shows the club's address instead of the form: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password) are missing. Recipients are set on Settings → Contact."
       }
     },
     "rateLimits": "Rate limits",
-    "rateLimitsIntro": "How many attempts each guarded action accepts in a fixed window, per key — an email identity, a registration, one email link, or one job. A limit somebody is hitting looks like \"the site is broken\" without anything being broken.",
+    "rateLimitsIntro": "How many attempts each guarded action accepts in a fixed window, per key. A limit being hit looks like “the site is broken” though nothing is.",
     "roles": "Roles",
     "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
     "youAre": "your role",
@@ -5734,7 +5740,7 @@
     },
     "emailHealth": {
       "ok": "Sending works: nothing deferred, overdue or failed. /api/health answers 200.",
-      "stalled": "Sending has stopped — deferred by the daily allowance: {deferred}; overdue (the monitors are not running): {overdue}; failed in the last 7 days: {failed}. Last reason: “{reason}”. /api/health answers 503 until this clears, so the monitor can notify."
+      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health answers 503 until this clears."
     },
     "registrationsToday": "Registrations today",
     "testRegistrations": "test",
@@ -5744,7 +5750,7 @@
     "inUse": "in use",
     "setting": {
       "APP_ENV": {
-        "what": "Which deployment this is. It — not NODE_ENV — decides every environment-dependent rule: whether live email may be sent, whether the development sign-in switcher is permitted, and whether sample legal text and test registrations may exist at all.",
+        "what": "Which deployment this is. It, not NODE_ENV, decides whether live email may go out, whether the development sign-in switcher is allowed, and whether sample legal text and test registrations may exist.",
         "values": {
           "local": "A developer's own machine. Email is captured and never transmitted; the sign-in switcher is available; sample legal text is seeded.",
           "test": "The automated suites. Same guarantees as local, and nothing here ever reaches a person.",
@@ -5761,16 +5767,16 @@
         }
       },
       "STAFF_AUTH_MODE": {
-        "what": "How a member of staff proves who they are. Participants never sign in at all — this is the backoffice door only, and the staff_users table decides who may come through it regardless of which mode is set.",
+        "what": "How staff prove who they are. Participants never sign in; the staff_users table decides who may enter, whatever the mode.",
         "values": {
           "dev-switcher": "A local shortcut that lets a developer become any role without an identity provider. Permitted only when APP_ENV is local or test; stating it elsewhere fails at startup.",
           "provider": "The real thing: Auth.js with Zitadel. The provider proves the address, and the staff_users allowlist decides whether that address may in.",
-          "disabled": "There is no way in. Every staff route answers 404 rather than a refusal, so the backoffice is unreachable rather than merely hidden. This is the correct setting for any environment with no identity provider configured."
+          "disabled": "No way in: every staff route answers 404, so the backoffice is unreachable, not merely hidden. Right for an environment with no identity provider."
         }
       }
     },
     "operationalTitle": "What each limit does when it is met",
-    "operationalIntro": "Who stops you — the provider's own API, or this application's code — what the application does at that moment, and which variable or monitor is involved. Costs and plans are not here: they live on Settings → Costs, for the people who pay the invoice.",
+    "operationalIntro": "Who stops you — the provider or this application's code — what the application does then, and which variable or monitor is involved. Costs live on Settings → Costs.",
     "enforcedBy": {
       "provider": "enforced by the provider",
       "application": "enforced by the application"
@@ -5778,27 +5784,27 @@
     "operational": {
       "mailgunDaily": {
         "title": "Mailgun's daily allowance (100 messages on the free plan)",
-        "body": "Mailgun refuses the send with the same HTTP 400 it uses for a malformed message. The adapter recognises the limit wording, classifies the refusal as throttled, and the outbox row stays PENDING with its next attempt scheduled just after midnight UTC — not the ordinary backoff, which would spend all six attempts within an hour and mark a good message FAILED. The signal is the email-volume figure above; there is no configuration variable for the cap."
+        "body": "Mailgun refuses with an HTTP 400; the application recognises the cap and keeps the message PENDING until just after midnight UTC instead of marking it FAILED. The signal is the volume figure above."
       },
       "captureOnServerless": {
         "title": "Capture mode delivers nothing on a deployed environment",
-        "body": "The capture adapter holds messages in the process's memory, and on serverless hosting the process is gone before anybody could read the link. A colleague who is not on the allowlist registers and then simply never hears anything. Allowlist mode with a real provider is the only way somebody outside the code completes a registration."
+        "body": "On serverless, messages held in memory vanish with the process, so anyone not on the allowlist registers and hears nothing. Only allowlist with a real provider completes a registration."
       },
       "schedulerFloor": {
         "title": "The cadence of the scheduled jobs",
-        "body": "Vercel Hobby allows one run a day and refuses a finer expression at deploy time, so the scheduler is the GitHub Actions workflow plus an external pinger; GitHub's own minimum is five minutes, and measured here the real cadence is roughly two hours. The application does not break in between: hold expiry is evaluated inside every capacity transaction (§10.6), so a late run delays a message rather than overbooking an event. Both endpoints are guarded by JOB_SECRET, and each job's liveness is reported below and in /api/health."
+        "body": "Vercel Hobby runs once a day, so the jobs start from GitHub Actions and an external pinger, with JOB_SECRET. A late run delays a message but never overbooks an event."
       },
       "hobbyCapPause": {
         "title": "Exceeding a Hobby cap pauses the feature for 30 days",
-        "body": "Not a bill — an outage with a fixed sentence, and you cannot buy your way out of it during the window. There is nothing the application can do at that point; the only response is to upgrade before the window. It is visible only in the Vercel dashboard — nothing here reports it."
+        "body": "Not a bill but a pause with a fixed end, which you cannot buy your way out of during the window. The only response is to upgrade beforehand. Only the Vercel dashboard shows it."
       },
       "identityDomain": {
         "title": "Zitadel Free: zero custom domains, one administrator",
-        "body": "No effect on the code, but it decides which host staff sign in on. While STAFF_AUTH_MODE=provider runs on the provider's hostname the limit is not felt; on the club's own domain it needs a paid tier. STAFF_AUTH_MODE=disabled answers 404 to every staff route, which is what an environment with no tenant should do."
+        "body": "It decides which host staff sign in on. On the provider's hostname the limit is not felt; on the club's own domain it needs a paid tier. With no tenant, use STAFF_AUTH_MODE=disabled."
       },
       "statementTimeout": {
         "title": "statement_timeout 10s and idle_in_transaction_session_timeout 30s",
-        "body": "Enforced by this application rather than by Neon: db/client.ts sets both on the pool. The risk was never the connection count (max: 10 is per warm instance, and PgBouncer accepts far more) but one unbounded query holding a Vercel function for 300 seconds. The first timeout is enforced by PostgreSQL, so it holds even when the Node process is frozen; the second covers an instance killed between two statements of an open transaction. There is no connection timeout, deliberately: on Neon Free the first request after an idle period waits for the database to wake."
+        "body": "Set by this application on the pool, not by Neon: no unbounded query can hold a Vercel function for 300 seconds. The connection has no timeout, so the database has time to wake."
       }
     },
     "docs": {
@@ -5825,7 +5831,7 @@
       "notOnVercel": "Not running on Vercel (local or test).",
       "usageLink": "Open Vercel → Usage.",
       "month": "This month: {deployments} deployments ({today} today, of {perDay} a day), {minutes} build minutes of {of} ({percent}%), {errored} failed.",
-      "unavailable": "Not configured. Two minutes: Vercel → Account Settings → Tokens → Create (scope: the account, 1 year); the Project ID from the project → Settings → General; then VERCEL_API_TOKEN and VERCEL_PROJECT_ID in the project's variables. The steps are on /admin/tasks too.",
+      "unavailable": "Not configured: set VERCEL_API_TOKEN and VERCEL_PROJECT_ID in the project's variables. The steps are on /admin/tasks.",
       "failed": "Vercel did not answer: {reason}.",
       "notInApi": "Bandwidth and invocations are not exposed by Vercel's API; they are only on the dashboard."
     },
@@ -5834,7 +5840,7 @@
       "size": "Storage used: {used} MB of {of} MB ({percent}%).",
       "sizeUnknown": "The storage used could not be read.",
       "intro": "This project's consumption in the current period, read from Neon. The Free plan gives {of} CU-hours a month per project; when they run out the database stops until the next month begins.",
-      "introLaunch": "This project's consumption in the current period, read from Neon. The Launch plan is paid by usage: no ceiling on hours and no stop. The figures below are estimates at the rates on neon.com/pricing, checked on {checkedOn}; the invoice is Neon's, at the end of the period.",
+      "introLaunch": "This project's use in the current period, read from Neon. The Launch plan is paid by usage: no ceiling on hours and no stop. Estimates at the rates checked on {checkedOn}; Neon sends the invoice.",
       "plan": {
         "FREE": "Plan set: Free.",
         "LAUNCH": "Plan set: Launch."
@@ -5853,7 +5859,7 @@
       "estimate": "An estimate, not an invoice: Neon adds storage and restore history (${restoreRate}/GB-month) over the whole period and rounds at the end.",
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
       "period": "Period ends {date}",
-      "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id '<id>'`; (2) the project id is in the console address (console.neon.tech/app/projects/'<id>') or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",
+      "unavailable": "Not configured: set NEON_API_KEY and NEON_PROJECT_ID in the Vercel project's variables, then redeploy. The steps are on /admin/tasks.",
       "failed": "Neon did not answer: {reason}",
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     },

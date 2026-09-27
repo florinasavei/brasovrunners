@@ -137,7 +137,8 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
       )}
 
       <Typography variant="body2" sx={{ mt: 2, whiteSpace: "pre-line" }}>
-        {t("queue.simulate", { hold: words.hold })}
+        {t("queue.simulate")}
+        <QuietHelp text={t("queue.simulateMore", { hold: words.hold })} />
       </Typography>
     </Box>
   );

@@ -945,7 +945,7 @@
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
       "olderPicturesBody": "Imaginile din lot primesc mărimile mai mici; adresa veche merge în continuare. Durează cam douăzeci de secunde. Un editor deschis pe o pagină cu ele va cere reîncărcarea.",
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
-      "shownAddressBody": "Site-ul arată de acum adresa aleasă, iar răspunsurile la emailurile platformei ajung la ea. Textele legale aprobate își păstrează adresa lor.",
+      "shownAddressBody": "Site-ul arată de acum adresa aleasă, iar răspunsurile la emailurile clubului ajung la ea. Textele legale aprobate își păstrează adresa lor.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
       "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
@@ -1864,6 +1864,7 @@
       "interestRemoved": "Adresa a fost ștearsă din lista de anunțare.",
       "interestNotFound": "Adresa nu era pe lista acestui eveniment. Verifică dacă a scris de pe altă adresă.",
       "simulate": "Ca să încerci lista de așteptare (nu în producție): pune puține locuri, adaugă mai multe înscrieri de test, apoi anulează una confirmată.",
+      "simulateMore": "Primele înscrieri iau locurile, rezervate câte {hold}; restul intră pe listă, în ordine. O rezervare expirată sau mai multe locuri dau și ele oferta primului din listă; emailul apare în Outbox.",
       "holdsHelpMore": "O rezervare expirată rămâne a persoanei și se eliberează doar când așteaptă cineva un loc sau când începe evenimentul."
     },
     "testRegistrations": {
@@ -2278,7 +2279,7 @@
           "title": "Cheia de invitații (Zitadel)",
           "todo": "Lipsește cheia (ZITADEL_MANAGEMENT_PAT). Fără ea, „Adaugă” pe Echipa nu creează contul de autentificare, iar persoana rămâne blocată. Cheia e tokenul unui service user cu rolul Org User Manager.",
           "blind": "Cheia se autentifică, dar nu poate crea conturi: service user-ul nu este „Org User Manager” în organizație. Colegul adăugat întâlnește „User not found in the system”.",
-          "refused": "Cheia e pusă, dar Zitadel refuză căutarea de conturi — de obicei tokenul e revocat sau contul nu e „Org User Manager”. Răspunsul Zitadel",
+          "refused": "Cheia e pusă, dar Zitadel refuză căutarea de conturi: tokenul e revocat sau contul nu e „Org User Manager”. Răspunsul Zitadel",
           "unreachable": "Nu am putut verifica cheia: Zitadel nu a răspuns. Nu este neapărat o problemă a cheii — reîncarcă pagina peste câteva minute. Răspunsul",
           "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
           "how": [
@@ -3466,6 +3467,11 @@
         "NEWSLETTER_CONFIRM": "Când cineva se abonează de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}.",
         "NEWSLETTER": "Doar când un organizator trimite un newsletter din backoffice, către abonații temei alese. Pleacă după celelalte emailuri, din ce rămâne din limită.",
         "NEW_EVENT_ALERT": "O dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), către abonații la evenimente noi și la temele lui."
+      },
+      "whenMore": {
+        "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
+        "BIB_ASSIGNED": "Automat la închidere, sau când un organizator scrie numărul din pagina înscrierii ori de la masă. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
+        "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5663,7 +5669,7 @@
       },
       "emailCaptureDeployed": {
         "title": "E-mail",
-        "body": "Mesajele sunt păstrate în memorie și nu pleacă nicăieri — iar pe un mediu găzduit nimeni nu le poate citi, pentru că procesul dispare. Cine se înscrie aici nu primește niciodată e-mailul de confirmare. Pentru livrare reală: EMAIL_DELIVERY_MODE=allowlist, împreună cu EMAIL_ALLOWLIST și cele trei variabile Mailgun."
+        "body": "Mesajele rămân în memorie și nu pleacă nicăieri, deci nimeni de aici nu primește confirmarea. Pentru livrare reală: EMAIL_DELIVERY_MODE=allowlist, cu EMAIL_ALLOWLIST și cele trei variabile Mailgun."
       },
       "emailAllowlist": {
         "title": "E-mail",
@@ -5699,19 +5705,19 @@
       },
       "contactFormSmtp": {
         "title": "Formularul de contact",
-        "body": "Trimite prin SMTP, direct din Gmailul clubului — nu prin Mailgun și nu prin coada de e-mail. Destinatarii vin din Setări → Contact, iar dacă acolo nu e nimeni, din CONTACT_FORM_TO; eticheta de alături spune care dintre ele a răspuns."
+        "body": "Trimite prin SMTP, din Gmailul clubului, nu prin Mailgun. Destinatarii vin din Setări → Contact, altfel din CONTACT_FORM_TO; eticheta de alături spune de unde."
       },
       "contactFormNoRecipients": {
         "title": "Formularul de contact",
-        "body": "Poate trimite, dar nu are către cine: nici lista din Setări → Contact, nici CONTACT_FORM_TO nu au vreo adresă. Pagina „Scrie-ne” arată adresa clubului până când cineva scrie un destinatar pe Setări → Contact — fără redeploy."
+        "body": "Poate trimite, dar nu are cui: nici Setări → Contact, nici CONTACT_FORM_TO nu au o adresă. Până se scrie un destinatar pe Setări → Contact, „Scrie-ne” arată adresa clubului."
       },
       "contactFormOff": {
         "title": "Formularul de contact",
-        "body": "Pagina „Scrie-ne” arată adresa clubului în loc de formular. Lipsește contul din care pleacă: CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se scriu în aplicație, pe Setări → Contact; CONTACT_FORM_TO e doar rezerva."
+        "body": "„Scrie-ne” arată adresa clubului în loc de formular: lipsesc CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se aleg pe Setări → Contact."
       }
     },
     "rateLimits": "Limite de frecvență",
-    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune protejată într-o fereastră fixă, per cheie — o identitate de e-mail, o înscriere, un link din e-mail sau o sarcină programată. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
+    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune protejată într-o fereastră fixă, per cheie. O limită atinsă arată ca „site-ul nu merge”, deși nimic nu e stricat.",
     "roles": "Roluri",
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",
@@ -5734,7 +5740,7 @@
     },
     "emailHealth": {
       "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate de limita zilnică: {deferred}; întârziate (monitoarele nu rulează): {overdue}; eșuate în ultimele 7 zile: {failed}. Ultimul motiv: „{reason}”. /api/health răspunde 503 până se rezolvă, ca monitorul să anunțe."
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health răspunde 503 până se rezolvă."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -5744,7 +5750,7 @@
     "inUse": "activ",
     "setting": {
       "APP_ENV": {
-        "what": "Ce mediu este acesta. El — nu NODE_ENV — decide fiecare regulă care depinde de mediu: dacă se pot trimite e-mailuri reale, dacă este permis comutatorul de autentificare pentru dezvoltare și dacă pot exista textul juridic de probă și înscrierile de test.",
+        "what": "Ce mediu este acesta. El, nu NODE_ENV, decide dacă pleacă emailuri reale, dacă e permis comutatorul de autentificare de dezvoltare și dacă pot exista texte juridice de probă și înscrieri de test.",
         "values": {
           "local": "Mașina unui dezvoltator. E-mailul este reținut și niciodată transmis; comutatorul de autentificare este disponibil; textul juridic de probă este încărcat.",
           "test": "Suitele automate. Aceleași garanții ca local, și nimic de aici nu ajunge vreodată la o persoană.",
@@ -5761,16 +5767,16 @@
         }
       },
       "STAFF_AUTH_MODE": {
-        "what": "Cum dovedește un membru al personalului cine este. Participanții nu se autentifică niciodată — aceasta este doar ușa backoffice-ului, iar tabelul staff_users decide cine poate intra, indiferent de modul setat.",
+        "what": "Cum dovedește personalul cine este. Participanții nu se autentifică niciodată; tabelul staff_users decide cine intră, oricare ar fi modul.",
         "values": {
           "dev-switcher": "O scurtătură locală prin care un dezvoltator devine orice rol fără furnizor de identitate. Permisă doar când APP_ENV este local sau test; declarată altundeva, pornirea eșuează.",
           "provider": "Varianta reală: Auth.js cu Zitadel. Furnizorul dovedește adresa, iar lista staff_users decide dacă acea adresă poate intra.",
-          "disabled": "Nu există nicio cale de intrare. Fiecare rută de personal răspunde 404 în loc de un refuz, deci backoffice-ul este inaccesibil, nu doar ascuns. Aceasta este setarea corectă pentru orice mediu fără furnizor de identitate configurat."
+          "disabled": "Nicio cale de intrare: fiecare rută de personal răspunde 404, deci backoffice-ul e inaccesibil, nu doar ascuns. Corect pentru un mediu fără furnizor de identitate."
         }
       }
     },
     "operationalTitle": "Ce face fiecare limită când este atinsă",
-    "operationalIntro": "Cine oprește: furnizorul, prin API-ul lui, sau chiar codul acestei aplicații. Ce face aplicația în acel moment, și ce variabilă sau monitorizare este implicată. Costurile și planurile nu sunt aici: stau pe Setări → Costuri, pentru cine plătește factura.",
+    "operationalIntro": "Cine te oprește — furnizorul sau codul aplicației —, ce face aplicația atunci și ce variabilă sau monitor e implicat. Costurile stau pe Setări → Costuri.",
     "enforcedBy": {
       "provider": "impusă de furnizor",
       "application": "impusă de aplicație"
@@ -5778,27 +5784,27 @@
     "operational": {
       "mailgunDaily": {
         "title": "Alocația zilnică Mailgun (100 de mesaje pe planul gratuit)",
-        "body": "Mailgun refuză trimiterea cu același HTTP 400 pe care îl folosește pentru un mesaj invalid. Adaptorul recunoaște formularea despre limită, clasifică refuzul ca „throttled”, iar rândul din outbox rămâne PENDING cu următoarea încercare programată imediat după miezul nopții UTC — nu backoff-ul obișnuit, care ar consuma toate cele șase încercări într-o oră și ar marca mesajul FAILED. Semnalul este cifra de volum e-mail de mai sus; nu există variabilă de configurare pentru limită."
+        "body": "Mailgun refuză cu HTTP 400; aplicația recunoaște limita și lasă mesajul PENDING până după miezul nopții UTC, în loc să-l marcheze FAILED. Semnalul e cifra de volum de mai sus."
       },
       "captureOnServerless": {
         "title": "Modul „capture” nu livrează nimic pe un mediu publicat",
-        "body": "Adaptorul de capture ține mesajele în memoria procesului, iar pe hosting serverless procesul dispare înainte ca cineva să citească linkul. Un coleg neinclus în allowlist se înscrie și pur și simplu nu aude nimic. Singurul mod în care cineva din afara codului duce o înscriere până la capăt este allowlist cu un furnizor real."
+        "body": "Pe serverless, mesajele ținute în memorie dispar cu procesul, deci cine nu e în allowlist se înscrie și nu primește nimic. Doar allowlist cu un furnizor real duce o înscriere la capăt."
       },
       "schedulerFloor": {
         "title": "Cadența sarcinilor programate",
-        "body": "Vercel Hobby permite o rulare pe zi și refuză o expresie mai deasă chiar la publicare, deci programatorul este workflow-ul GitHub Actions plus un pinger extern; minimul GitHub este de cinci minute, iar măsurat aici cadența reală este de aproximativ două ore. Aplicația nu se strică între rulări: expirarea rezervării este evaluată în fiecare tranzacție de capacitate (§10.6), deci o rulare târzie întârzie un mesaj, nu suprarezervă un eveniment. Ambele endpoint-uri sunt protejate cu JOB_SECRET, iar liveness-ul fiecărei sarcini apare mai jos și în /api/health."
+        "body": "Vercel Hobby rulează o dată pe zi, deci joburile pornesc din GitHub Actions și un pinger extern, cu JOB_SECRET. O rulare târzie întârzie un mesaj, dar nu suprarezervă niciodată un eveniment."
       },
       "hobbyCapPause": {
         "title": "Depășirea unei limite Hobby oprește funcția 30 de zile",
-        "body": "Nu este o factură, este o pauză cu termen fix, și nu se poate cumpăra ieșirea din ea în timpul ferestrei. Aplicația nu are ce să facă atunci; singura reacție este să urci planul înainte de fereastră. Se vede doar în panoul Vercel — nu există nimic aici care să o raporteze."
+        "body": "Nu e o factură, ci o pauză cu termen fix, din care nu te poți cumpăra în timpul ferestrei. Singura reacție e să urci planul înainte. Se vede doar în panoul Vercel."
       },
       "identityDomain": {
         "title": "Zitadel Free: zero domenii proprii, un singur administrator",
-        "body": "Nu are efect asupra codului, dar decide ce host apare la autentificare. Cât timp STAFF_AUTH_MODE=provider merge pe hostname-ul furnizorului, limita nu se simte; pe domeniul clubului cere plan plătit. STAFF_AUTH_MODE=disabled răspunde 404 la orice rută de staff, ceea ce este exact ce trebuie într-un mediu fără tenant."
+        "body": "Decide pe ce host se face autentificarea. Pe hostname-ul furnizorului limita nu se simte; pe domeniul clubului cere plan plătit. Fără tenant, STAFF_AUTH_MODE=disabled."
       },
       "statementTimeout": {
         "title": "statement_timeout 10s și idle_in_transaction_session_timeout 30s",
-        "body": "Impuse de această aplicație, nu de Neon: db/client.ts le setează pe pool. Riscul nu a fost niciodată numărul de conexiuni (max: 10 este per instanță caldă, iar PgBouncer acceptă mult mai multe), ci o interogare nemărginită care ține o funcție Vercel 300 de secunde. Primul timeout este impus de PostgreSQL, deci ține și când procesul Node este blocat; al doilea acoperă o instanță ucisă între două instrucțiuni ale unei tranzacții deschise. Conexiunea nu are timeout, deliberat: pe Neon Free prima cerere după inactivitate așteaptă pornirea bazei."
+        "body": "Puse de aplicație pe pool, nu de Neon: nicio interogare nemărginită nu ține o funcție Vercel 300 de secunde. Conexiunea nu are timeout, ca baza să aibă timp să pornească."
       }
     },
     "docs": {
@@ -5808,7 +5814,7 @@
     },
     "theme": {
       "title": "Laborator de temă",
-      "intro": "Încearcă site-ul cu alt corp de literă, altă familie de fonturi sau alte colțuri — doar în acest browser, fără nicio publicare. Deschide apoi orice pagină ca să vezi rezultatul; „Revino la normal” șterge tot.",
+      "intro": "Încearcă site-ul cu alt corp de literă, alte fonturi sau alte colțuri, doar în acest browser, fără publicare. „Revino la normal” șterge tot.",
       "scale": "Mărimea textului",
       "display": "Font pentru titluri",
       "body": "Font pentru text",
@@ -5825,7 +5831,7 @@
       "notOnVercel": "Nu rulează pe Vercel (local sau test).",
       "usageLink": "Deschide Vercel → Usage.",
       "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build din {of} ({percent}%), {errored} eșuate.",
-      "unavailable": "Nu este configurat. Două minute: Vercel → Account Settings → Tokens → Create (scope: contul, 1 an); Project ID din proiect → Settings → General; apoi VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt și pe /admin/tasks.",
+      "unavailable": "Nu este configurat: pune VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt pe /admin/tasks.",
       "failed": "Vercel nu a răspuns: {reason}.",
       "notInApi": "Traficul și invocările nu sunt expuse de API-ul Vercel; se văd doar în dashboard."
     },
@@ -5834,7 +5840,7 @@
       "size": "Spațiu ocupat: {used} MB din {of} MB ({percent}%).",
       "sizeUnknown": "Spațiul ocupat nu a putut fi citit.",
       "intro": "Consumul proiectului în perioada curentă, citit din Neon. Planul gratuit dă {of} ore-CU pe lună pe proiect; când se termină, baza de date se oprește până la începutul lunii următoare.",
-      "introLaunch": "Consumul proiectului în perioada curentă, citit din Neon. Planul Launch e plătit pe consum: fără plafon de ore și fără oprire. Cifrele de mai jos sunt estimări la tarifele de pe neon.com/pricing, verificate {checkedOn}; factura o face Neon, la sfârșitul perioadei.",
+      "introLaunch": "Consumul proiectului în perioada curentă, citit din Neon. Planul Launch e plătit pe consum: fără plafon de ore și fără oprire. Estimări la tarifele verificate {checkedOn}; factura o face Neon.",
       "plan": {
         "FREE": "Planul setat: Free.",
         "LAUNCH": "Planul setat: Launch."
@@ -5853,7 +5859,7 @@
       "estimate": "Estimare, nu factură: Neon adaugă spațiul și istoricul de restaurare ({restoreRate} $/GB-lună) pe toată perioada și rotunjește la final.",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
       "period": "Perioada se încheie {date}",
-      "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id '<id>'`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/'<id>') sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
+      "unavailable": "Nu este configurat: pune NEON_API_KEY și NEON_PROJECT_ID în variabilele proiectului Vercel, apoi redeploy. Pașii sunt pe /admin/tasks.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
     },

@@ -25,11 +25,14 @@ import ro from "../../../messages/ro.json";
  * 2. no string anywhere under `Admin.*` names a §-number, a repository file or a release number:
  *    those are for the people who build the platform, never for the club;
  * 3. (§NNN, the plain-words pass over the whole backoffice) EVERY string the backoffice shows —
- *    `Admin.*`, the translate panel, the network page — whatever its key is called (a notice, a
+ *    `Admin.*`, the translate panel, the network page, the developers' page `/devs` (`Devs.*`) —
+ *    whatever its key is called (a notice, a
  *    dialog's body, an error, an email's «când pleacă», a task row, a «?» named `…More`), keeps to
  *    the same 200 characters and no long parenthesis. Only the numbered steps keep their length:
  *    the guide's (`Admin.guide.*`) and a task row's «Cum» (`….how.N`, `….howBroken.N`), because
- *    the guide and the steps are where the detail lives.
+ *    the guide and the steps are where the detail lives. A short line that dropped a fact the
+ *    club still needs keeps it in a sibling `…More` key, drawn as the line's «?» (an email's
+ *    `emails.whenMore.*`, the queue's `simulateMore`), never deleted.
  *
  * `ALLOWED_LONG` names the few texts that are long on purpose, each with its reason.
  */
@@ -77,7 +80,7 @@ const ALLOWED_LONG: Record<string, string> = {
 };
 
 /** The namespaces the backoffice draws: every string in them, not only the help texts (rule 3). */
-const SCREEN_SCOPES = ["Admin", "Translate", "Network"] as const;
+const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs"] as const;
 
 /** The numbered steps, where the detail is meant to live: the guide's and a task row's «Cum». */
 const STEP_KEYS: readonly RegExp[] = [/^Admin\.guide\./, /\.how(Broken)?\.\d+$/];
@@ -180,6 +183,20 @@ describe("§NNN the backoffice says one plain sentence per field, the rest behin
     // A URL path is a place the club opens; a short parenthesis is a clarification.
     expect(breaches("Deschide /admin/legal (caseta „Într-un pas”).")).toEqual([]);
     expect(breaches("Când se atinge, Neon oprește baza până la începutul perioadei următoare. Recomandat: {hours}.")).toEqual([]);
+  });
+
+  it("keeps the facts a shortened line dropped in its `…More`, in both languages", () => {
+    for (const catalogue of [ro, en]) {
+      const { emails, queue } = catalogue.Admin;
+      // How long the place is held, and the per-address limit: said behind the «?», never lost.
+      expect(emails.whenMore.COMPLETE_DECLARATION).toContain("{hold}");
+      expect(emails.whenMore.REGISTER_ANOTHER_PERSON).toContain("{people}");
+      expect(queue.simulateMore).toContain("{hold}");
+      // Only for the messages whose line had more to say, and each one a message that exists.
+      expect(Object.keys(emails.whenMore).every((type) => type in emails.when)).toBe(true);
+    }
+    expect(ro.Admin.emails.whenMore.BIB_ASSIGNED).toMatch(/anulat/);
+    expect(en.Admin.emails.whenMore.BIB_ASSIGNED).toMatch(/cancelled/);
   });
 
   it("exempts only the numbered steps from the whole-backoffice rule", () => {
