@@ -1,6 +1,6 @@
 {
-  "id": "30676c35-70f1-4816-adb2-67d8c3b8abc2",
-  "prevId": "69c98203-e044-43fe-970e-2467efc109a5",
+  "id": "e6db8262-439f-4a36-8fa0-32946eb529cc",
+  "prevId": "b3950dc3-0850-4da7-ac46-67f93c3a73f6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1137,18 +1137,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "video_url": {
-          "name": "video_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "video_poster_url": {
-          "name": "video_poster_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "strava_event_url": {
           "name": "strava_event_url",
           "type": "text",
@@ -1300,6 +1288,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "walk_in_bib_start": {
+          "name": "walk_in_bib_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "walk_in_bib_count": {
+          "name": "walk_in_bib_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "bib_design": {
           "name": "bib_design",
           "type": "jsonb",
@@ -1364,6 +1364,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "registration_opens_soon": {
+          "name": "registration_opens_soon",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "registration_closes_at": {
           "name": "registration_closes_at",
@@ -1645,6 +1652,10 @@
           "name": "events_bib_colour_is_hex",
           "value": "\"events\".\"bib_colour\" IS NULL OR \"events\".\"bib_colour\" ~ '^#[0-9a-fA-F]{6}$'"
         },
+        "events_walk_in_bibs": {
+          "name": "events_walk_in_bibs",
+          "value": "(\"events\".\"walk_in_bib_start\" IS NULL AND \"events\".\"walk_in_bib_count\" IS NULL) OR (\"events\".\"walk_in_bib_start\" IS NOT NULL AND \"events\".\"walk_in_bib_count\" IS NOT NULL AND \"events\".\"walk_in_bib_start\" >= 1 AND \"events\".\"walk_in_bib_count\" >= 1 AND \"events\".\"walk_in_bib_count\" <= 500 AND \"events\".\"walk_in_bib_start\" + \"events\".\"walk_in_bib_count\" - 1 <= 99999)"
+        },
         "events_map_url_is_https": {
           "name": "events_map_url_is_https",
           "value": "\"events\".\"map_url\" IS NULL OR \"events\".\"map_url\" LIKE 'https://%'"
@@ -1660,10 +1671,6 @@
         "events_route_url_is_https": {
           "name": "events_route_url_is_https",
           "value": "\"events\".\"route_url\" IS NULL OR \"events\".\"route_url\" LIKE 'https://%'"
-        },
-        "events_video_url_is_https": {
-          "name": "events_video_url_is_https",
-          "value": "\"events\".\"video_url\" IS NULL OR \"events\".\"video_url\" LIKE 'https://%'"
         },
         "events_strava_event_url_is_https": {
           "name": "events_strava_event_url_is_https",
@@ -1722,6 +1729,160 @@
           "value": "\"events\".\"race_id\" IS NULL OR \"events\".\"type\" = 'RACE'"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.pending_family_entries": {
+      "name": "pending_family_entries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registration_id": {
+          "name": "registration_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action_token_id": {
+          "name": "action_token_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fields": {
+          "name": "fields",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "pending_family_entries_action_token_unique": {
+          "name": "pending_family_entries_action_token_unique",
+          "columns": [
+            {
+              "expression": "action_token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pending_family_entries_expires_at_idx": {
+          "name": "pending_family_entries_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pending_family_entries_event_id_events_id_fk": {
+          "name": "pending_family_entries_event_id_events_id_fk",
+          "tableFrom": "pending_family_entries",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "pending_family_entries_participant_id_participants_id_fk": {
+          "name": "pending_family_entries_participant_id_participants_id_fk",
+          "tableFrom": "pending_family_entries",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "pending_family_entries_registration_id_registrations_id_fk": {
+          "name": "pending_family_entries_registration_id_registrations_id_fk",
+          "tableFrom": "pending_family_entries",
+          "tableTo": "registrations",
+          "columnsFrom": [
+            "registration_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "pending_family_entries_action_token_id_email_action_tokens_id_fk": {
+          "name": "pending_family_entries_action_token_id_email_action_tokens_id_fk",
+          "tableFrom": "pending_family_entries",
+          "tableTo": "email_action_tokens",
+          "columnsFrom": [
+            "action_token_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.gallery_album_translations": {
@@ -2678,6 +2839,387 @@
         "legal_documents_hash_is_sha256_hex": {
           "name": "legal_documents_hash_is_sha256_hex",
           "value": "\"legal_documents\".\"content_sha256\" ~ '^[0-9a-f]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.newsletter_sends": {
+      "name": "newsletter_sends",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "kind": {
+          "name": "kind",
+          "type": "newsletter_send_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "topics": {
+          "name": "topics",
+          "type": "newsletter_topic[]",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subject": {
+          "name": "subject",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recipients": {
+          "name": "recipients",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "sent_by_staff_user_id": {
+          "name": "sent_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "newsletter_sends_one_alert_per_event": {
+          "name": "newsletter_sends_one_alert_per_event",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "newsletter_sends_created_idx": {
+          "name": "newsletter_sends_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "newsletter_sends_event_id_events_id_fk": {
+          "name": "newsletter_sends_event_id_events_id_fk",
+          "tableFrom": "newsletter_sends",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "newsletter_sends_sent_by_staff_user_id_staff_users_id_fk": {
+          "name": "newsletter_sends_sent_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "newsletter_sends",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "sent_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "newsletter_sends_recipients_non_negative": {
+          "name": "newsletter_sends_recipients_non_negative",
+          "value": "\"newsletter_sends\".\"recipients\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.newsletter_subscribers": {
+      "name": "newsletter_subscribers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "delivery_email": {
+          "name": "delivery_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonical_email": {
+          "name": "canonical_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonicalization_version": {
+          "name": "canonicalization_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "topics": {
+          "name": "topics",
+          "type": "newsletter_topic[]",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "privacy_notice_version": {
+          "name": "privacy_notice_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "newsletter_subscribers_confirmed_idx": {
+          "name": "newsletter_subscribers_confirmed_idx",
+          "columns": [
+            {
+              "expression": "confirmed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "newsletter_subscribers_canonical_email_unique": {
+          "name": "newsletter_subscribers_canonical_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "canonical_email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "newsletter_subscribers_topics_not_empty": {
+          "name": "newsletter_subscribers_topics_not_empty",
+          "value": "cardinality(\"newsletter_subscribers\".\"topics\") >= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.newsletter_tokens": {
+      "name": "newsletter_tokens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "subscriber_id": {
+          "name": "subscriber_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "newsletter_token_purpose",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used_at": {
+          "name": "used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invalidated_at": {
+          "name": "invalidated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "newsletter_tokens_one_active_confirm": {
+          "name": "newsletter_tokens_one_active_confirm",
+          "columns": [
+            {
+              "expression": "subscriber_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"purpose\" = 'CONFIRM' AND \"used_at\" IS NULL AND \"invalidated_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "newsletter_tokens_subscriber_purpose_expiry_idx": {
+          "name": "newsletter_tokens_subscriber_purpose_expiry_idx",
+          "columns": [
+            {
+              "expression": "subscriber_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "purpose",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "newsletter_tokens_subscriber_id_newsletter_subscribers_id_fk": {
+          "name": "newsletter_tokens_subscriber_id_newsletter_subscribers_id_fk",
+          "tableFrom": "newsletter_tokens",
+          "tableTo": "newsletter_subscribers",
+          "columnsFrom": [
+            "subscriber_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "newsletter_tokens_token_hash_unique": {
+          "name": "newsletter_tokens_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token_hash"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "newsletter_tokens_hash_is_sha256_hex": {
+          "name": "newsletter_tokens_hash_is_sha256_hex",
+          "value": "\"newsletter_tokens\".\"token_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "newsletter_tokens_expiry_after_creation": {
+          "name": "newsletter_tokens_expiry_after_creation",
+          "value": "\"newsletter_tokens\".\"expires_at\" > \"newsletter_tokens\".\"created_at\""
         }
       },
       "isRLSEnabled": false
@@ -3996,6 +4538,211 @@
         }
       },
       "isRLSEnabled": false
+    },
+    "public.team_members": {
+      "name": "team_members",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_ro": {
+          "name": "role_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role_en": {
+          "name": "role_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bio_ro": {
+          "name": "bio_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bio_en": {
+          "name": "bio_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bio_ro_json": {
+          "name": "bio_ro_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bio_en_json": {
+          "name": "bio_en_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "links": {
+          "name": "links",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "photo_media_asset_id": {
+          "name": "photo_media_asset_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visible": {
+          "name": "visible",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_by_staff_user_id": {
+          "name": "created_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by_staff_user_id": {
+          "name": "updated_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "team_members_visible_position_idx": {
+          "name": "team_members_visible_position_idx",
+          "columns": [
+            {
+              "expression": "visible",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "team_members_photo_media_asset_id_media_assets_id_fk": {
+          "name": "team_members_photo_media_asset_id_media_assets_id_fk",
+          "tableFrom": "team_members",
+          "tableTo": "media_assets",
+          "columnsFrom": [
+            "photo_media_asset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "team_members_created_by_staff_user_id_staff_users_id_fk": {
+          "name": "team_members_created_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "team_members",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "created_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "team_members_updated_by_staff_user_id_staff_users_id_fk": {
+          "name": "team_members_updated_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "team_members",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "updated_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "team_members_name_present": {
+          "name": "team_members_name_present",
+          "value": "length(btrim(\"team_members\".\"name\")) > 0"
+        },
+        "team_members_position_positive": {
+          "name": "team_members_position_positive",
+          "value": "\"team_members\".\"position\" >= 1"
+        },
+        "team_members_version_positive": {
+          "name": "team_members_version_positive",
+          "value": "\"team_members\".\"version\" >= 1"
+        },
+        "team_members_links_is_a_short_array_of_https_links": {
+          "name": "team_members_links_is_a_short_array_of_https_links",
+          "value": "\"team_members\".\"links\" IS NULL OR CASE WHEN jsonb_typeof(\"team_members\".\"links\") = 'array' THEN jsonb_array_length(\"team_members\".\"links\") <= 12 AND NOT jsonb_path_exists(\"team_members\".\"links\", '$[*] ? (!(@.url.type() == \"string\" && @.url starts with \"https://\"))') ELSE false END"
+        }
+      },
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -4047,7 +4794,10 @@
         "ORGANIZER_MESSAGE",
         "GROUP_RUN_DECLARATION_SIGNED",
         "GROUP_RUN_DECLARATION_ARCHIVE",
-        "REGISTER_ANOTHER_PERSON"
+        "REGISTER_ANOTHER_PERSON",
+        "NEWSLETTER_CONFIRM",
+        "NEWSLETTER",
+        "NEW_EVENT_ALERT"
       ]
     },
     "public.email_outbox_status": {
@@ -4157,6 +4907,36 @@
       "values": [
         "ro",
         "en"
+      ]
+    },
+    "public.newsletter_send_kind": {
+      "name": "newsletter_send_kind",
+      "schema": "public",
+      "values": [
+        "MESSAGE",
+        "EVENT_ALERT"
+      ]
+    },
+    "public.newsletter_token_purpose": {
+      "name": "newsletter_token_purpose",
+      "schema": "public",
+      "values": [
+        "CONFIRM",
+        "MANAGE"
+      ]
+    },
+    "public.newsletter_topic": {
+      "name": "newsletter_topic",
+      "schema": "public",
+      "values": [
+        "ALL",
+        "BIG_EVENTS",
+        "DISCOUNTS",
+        "GEAR_TESTING",
+        "SPECIAL_EVENTS",
+        "WEEKLY_RUNS",
+        "VOLUNTEERING",
+        "RESULTS_PHOTOS"
       ]
     },
     "public.registration_cancellation_source": {

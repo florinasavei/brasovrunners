@@ -97,8 +97,10 @@ beforeAll(async () => {
   await insertEvent("plain", null, null);
   await insertTranslation("plain", "ro", doc(paragraph("Fără film")));
 
-  // Then the rest, this migration among them, over those rows.
-  await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
+  // Then this migration over those rows — and no further: contract migration 0093 (§NNN) drops the
+  // two columns, and the last case below runs it on its own.
+  writeFileSync(path.join(folder, "meta", "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, position + 1) }));
+  await migrate(drizzle(client), { migrationsFolder: folder });
 });
 
 afterAll(async () => {
@@ -156,5 +158,45 @@ describe("§481 migration 0092_film_into_description — the film section's link
     const sql = readFileSync(`${MIGRATIONS}/${TAG}.sql`, "utf8").replace(/--[^\n]*/g, "");
     expect(sql).not.toMatch(/\b(DROP|RENAME|ALTER|CREATE)\b/i);
     expect(sql).toMatch(/UPDATE "event_translations"/);
+  });
+});
+
+/**
+ * The contract that follows it (§NNN): migration 0093 drops `events.video_url`,
+ * `events.video_poster_url` and their CHECK in the release after BR-V2.08 stopped reading them —
+ * and nothing the films moved into is touched. Runs last in this file, over the same rows, as
+ * `yarn db:migrate:env` runs every pending migration over production.
+ */
+describe("§NNN migration 0093_film_columns_and_six_links_retired — the film columns go, the films stay", () => {
+  it("drops the two columns and their CHECK, and leaves every description and version as 0092 left it", async () => {
+    const before = {
+      race: [await translation("race", "ro"), await translation("race", "en")],
+      pasted: [await translation("pasted", "ro"), await translation("pasted", "en")],
+      plain: await translation("plain", "ro"),
+    };
+
+    await migrate(drizzle(client), { migrationsFolder: MIGRATIONS });
+
+    const { rows: columns } = await client.query<{ column_name: string }>(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'events' AND column_name IN ('video_url', 'video_poster_url')",
+    );
+    expect(columns).toEqual([]);
+    const { rows: checks } = await client.query<{ conname: string }>("SELECT conname FROM pg_constraint WHERE conname = 'events_video_url_is_https'");
+    expect(checks).toEqual([]);
+
+    expect([await translation("race", "ro"), await translation("race", "en")]).toEqual(before.race);
+    expect([await translation("pasted", "ro"), await translation("pasted", "en")]).toEqual(before.pasted);
+    expect(await translation("plain", "ro")).toEqual(before.plain);
+    const { rows: events } = await client.query<{ n: number }>("SELECT count(*)::int AS n FROM events");
+    expect(events[0].n).toBe(5);
+  });
+
+  it("is a contract alone in its file, naming the release that stopped using what it drops (AGENTS.md §7.6)", () => {
+    const text = readFileSync(`${MIGRATIONS}/0093_film_columns_and_six_links_retired.sql`, "utf8");
+    expect(text).toMatch(/^-- contract: BR-V2\.08 /m);
+    const sql = text.replace(/--[^\n]*/g, "");
+    expect(sql).toMatch(/DROP COLUMN "video_url"/);
+    expect(sql).toMatch(/DROP COLUMN "video_poster_url"/);
+    expect(sql).not.toMatch(/\b(ADD|CREATE|INSERT|UPDATE)\b/i);
   });
 });

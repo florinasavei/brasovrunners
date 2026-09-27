@@ -39,7 +39,7 @@ export type PublicTeamMember = {
   role: string | null;
   /** The words about them in this language, as a document, or null. */
   bio: RichTextDoc | null;
-  /** The person's links, in the club's order — none, one or up to six. */
+  /** The person's links, in the club's order — none, one or up to twelve. */
   links: PublicTeamLink[];
   photo: TeamPhoto | null;
 };

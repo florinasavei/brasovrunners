@@ -27,7 +27,7 @@ import {
  * A name, required. What the person does for the club — Romanian **and** English, or neither
  * (§352). The words about them, written in the rich-text editor since §474 (paragraphs, a list, a
  * link in the text, a picture), the same pair rule, read as "written" by `hasRichTextContent` — a
- * picture with no words is something written. Up to six links, each a kind, an https address and
+ * picture with no words is something written. Up to twelve links (§NNN), each a kind, an https address and
  * a label in both languages or neither (§332's shape). A photograph, by the id of the picture the
  * upload stored (`/api/admin/media`), or none.
  *

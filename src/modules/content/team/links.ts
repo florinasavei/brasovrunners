@@ -4,7 +4,7 @@ import { z } from "zod";
  * The links on a card of «Echipa» (§474, growing §459's one link; the owner, 2026-09-26: "trebuie
  * să pot pune mai multe link-uri").
  *
- * An ordered list in `team_members.links`, `[{ kind, url, labelRo, labelEn }]`, at most six: a
+ * An ordered list in `team_members.links`, `[{ kind, url, labelRo, labelEn }]`, at most twelve: a
  * person's Strava, their Instagram, their Facebook, a site of their own, anything else. The shape
  * of an event's "Linkuri și fișiere" (§332) — a kind from a closed set, an https address, a label
  * in both languages or neither (§352) — with the kinds a person has rather than the kinds a race
@@ -22,18 +22,20 @@ import { z } from "zod";
 export const TEAM_LINK_KINDS = ["STRAVA", "INSTAGRAM", "FACEBOOK", "WEBSITE", "OTHER"] as const;
 export type TeamLinkKind = (typeof TEAM_LINK_KINDS)[number];
 
-/** Six: a person's networks and a site of their own, few enough to read on a card two to a row. */
-export const MAX_TEAM_LINKS = 6;
+/**
+ * Twelve (§NNN, raised from §474's six): a person's networks, a site of their own, a club's page,
+ * a race's results — an event's own ceiling (§332). The database's CHECK
+ * `team_members_links_is_a_short_array_of_https_links` holds the same number (migration 0094,
+ * after 0093 dropped the six-link one), and a test keeps the two equal.
+ */
+export const MAX_TEAM_LINKS = 12;
 /**
  * How many rows a save reads from `links[i].<box>` — indexes 0 to 11 (§483; the V2.06 review): the
- * editor never draws more than `MAX_TEAM_LINKS` rows and a spare line, so a posted
+ * editor never draws more than `MAX_TEAM_LINKS` rows (its «add» stops there), so a posted
  * `links[99999999]` is not a row of it — and gathered by index it would have become an array of a
- * hundred million holes. Twelve, an event's own ceiling (§332), leaves room for the cap to grow
- * without a second change here. The cap itself stays six for now: raising it also moves the CHECK
- * `team_members_links_is_a_short_array_of_https_links`, a migration queued in `docs/QUEUE.md`
- * until `drizzle-kit generate` runs over a rebuilt snapshot chain.
+ * hundred million holes. The same twelve as the cap: a thirteenth row would only be refused.
  */
-export const MAX_TEAM_LINK_ROWS = 12;
+export const MAX_TEAM_LINK_ROWS = MAX_TEAM_LINKS;
 
 /**
  * The links' rows (§474), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,

@@ -410,8 +410,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
-    // No `video_url` (§481): a film is a figure in the description (§266), and the column is
-    // written by nobody until a later contract migration drops it.
+    // No `video_url` (§481): a film is a figure in the description (§266); migration 0093 dropped
+    // the column (§NNN).
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
     // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
@@ -2566,7 +2566,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // dates keep one address for every occurrence — so `repeatEvent` and the job put the source's
     // two links back on top of this (§300). The co-host is carried by both: a series held with a
     // partner is held with them every time. (A film is a figure in the description since §481 and
-    // travels with the words; `video_url` is written by nobody.)
+    // travels with the words; the event row has had no film column since migration 0093.)
     stravaEventUrl: null,
     facebookEventUrl: null,
     coHosts: source.coHosts,

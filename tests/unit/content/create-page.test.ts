@@ -161,8 +161,9 @@ describe("no film box", () => {
   });
 
   it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§481)", () => {
-    // The column stays in the schema until its contract migration (AGENTS.md §7.6) — read and written by nobody.
-    expect(read("src/db/schema/events.ts")).toContain('videoUrl: text("video_url")');
+    // The columns left the schema with their contract migration, 0093 (AGENTS.md §7.6, §NNN).
+    expect(read("src/db/schema/events.ts")).not.toContain('text("video_url")');
+    expect(read("src/db/schema/events.ts")).not.toContain('text("video_poster_url")');
     expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
     expect(SERVICE).not.toContain("videoUrl");
     expect(read("src/modules/events/repository.ts")).not.toContain("videoUrl");
@@ -179,6 +180,10 @@ describe("no film box", () => {
     const index = journal.entries.findIndex((entry) => entry.tag === "0092_film_into_description");
     expect(index).toBeGreaterThan(0);
     expect(journal.entries[index].when).toBeGreaterThan(journal.entries[index - 1].when);
+    // And the contract that drops the columns comes after it, never in the same file.
+    const contract = journal.entries.findIndex((entry) => entry.tag === "0093_film_columns_and_six_links_retired");
+    expect(contract).toBeGreaterThan(index);
+    expect(journal.entries[contract].when).toBeGreaterThan(journal.entries[index].when);
   });
 });
 
