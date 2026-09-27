@@ -1,3 +1,10 @@
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import DrawIcon from "@mui/icons-material/Draw";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -142,7 +149,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="eventId" value={items[0].eventId} />
-              <Button type="submit" variant="contained" sx={TAP_TARGET}>
+              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                <DrawIcon aria-hidden="true" sx={glyphSx("medium")} />
                 {t("mine.familySign.action")}
               </Button>
             </form>
@@ -270,7 +278,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                       <input type="hidden" name="locale" value={locale} />
                       <input type="hidden" name="token" value={token} />
                       <input type="hidden" name="registrationId" value={item.id} />
-                      <Button type="submit" variant="contained" sx={TAP_TARGET}>
+                      <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                        <HowToRegIcon aria-hidden="true" sx={glyphSx("medium")} />
                         {t("manage.selfCheckIn")}
                       </Button>
                     </form>
@@ -279,7 +288,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   <input type="hidden" name="locale" value={locale} />
                   <input type="hidden" name="token" value={token} />
                   <input type="hidden" name="registrationId" value={item.id} />
-                  <Button type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44 }}>
+                  <Button type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                    <EventBusyIcon aria-hidden="true" sx={glyphSx("small")} />
                     {t("mine.cancel")}
                   </Button>
                 </form>
@@ -314,7 +324,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="registrationId" value={item.id} />
                     <input type="hidden" name="listed" value={item.listed ? "0" : "1"} />
-                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                      {item.listed ? <VisibilityOffIcon aria-hidden="true" sx={glyphSx("small")} /> : <VisibilityIcon aria-hidden="true" sx={glyphSx("small")} />}
                       {item.listed ? t("list.optOut") : t("list.optIn")}
                     </Button>
                   </form>
@@ -345,7 +356,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                         <input type="hidden" name="token" value={token} />
                         <input type="hidden" name="registrationId" value={item.id} />
                         <input type="hidden" name="field" value="health" />
-                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                          <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("small")} />
                           {t("withdraw.health")}
                         </Button>
                       </form>
@@ -356,7 +368,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                         <input type="hidden" name="token" value={token} />
                         <input type="hidden" name="registrationId" value={item.id} />
                         <input type="hidden" name="field" value="socials" />
-                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                          <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("small")} />
                           {t("withdraw.socials")}
                         </Button>
                       </form>
@@ -416,7 +429,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                       <input type="hidden" name="token" value={token} />
                       <input type="hidden" name="registrationId" value={item.id} />
                       <input type="hidden" name="field" value="health" />
-                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                        <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("small")} />
                         {t("withdraw.health")}
                       </Button>
                     </form>
@@ -427,7 +441,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                       <input type="hidden" name="token" value={token} />
                       <input type="hidden" name="registrationId" value={item.id} />
                       <input type="hidden" name="field" value="socials" />
-                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+                        <DeleteOutlinedIcon aria-hidden="true" sx={glyphSx("small")} />
                         {t("withdraw.socials")}
                       </Button>
                     </form>

@@ -1,5 +1,7 @@
 "use client";
 
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import ContentPasteIcon from "@mui/icons-material/ContentPaste";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -246,7 +248,7 @@ export default function EmailTwice({
           <Typography variant="body2" component="span">
             {suggestionLabel.replace("{address}", suggestion)}
           </Typography>{" "}
-          <Button type="button" size="small" onClick={acceptSuggestion} sx={{ minHeight: 44 }}>
+          <Button type="button" size="small" onClick={acceptSuggestion} sx={{ minHeight: 44 }} startIcon={<AutoFixHighIcon />}>
             {useSuggestionLabel}
           </Button>
         </Box>
@@ -286,7 +288,7 @@ export default function EmailTwice({
       */}
       {blocked && !allowPaste && (
         <Box>
-          <Button type="button" size="small" onClick={() => setAllowPaste(true)} sx={{ minHeight: 44 }}>
+          <Button type="button" size="small" onClick={() => setAllowPaste(true)} sx={{ minHeight: 44 }} startIcon={<ContentPasteIcon />}>
             {allowPasteLabel}
           </Button>
         </Box>

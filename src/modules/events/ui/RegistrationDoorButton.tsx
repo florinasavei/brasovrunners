@@ -1,4 +1,8 @@
+import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Button from "@mui/material/Button";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { accentOnHover } from "@/theme/surfaces";
@@ -44,15 +48,20 @@ export default function RegistrationDoorButton({ slug, cta, label }: { slug: str
         target="_blank"
         rel="noopener noreferrer nofollow"
         variant="contained"
-        sx={{ ...TAP_TARGET, ...accentOnHover }}
+        sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ...accentOnHover }}
       >
+        <OpenInNewIcon aria-hidden="true" data-testid="door-glyph" sx={glyphSx("medium")} />
         {label}
       </Button>
     );
   }
 
+  // The club's runner on the way in (the public send buttons' figure, §318), an hourglass on the
+  // way onto the waiting list (§NNN: every public button wears a glyph).
+  const Glyph = cta.kind === "FULL" ? HourglassEmptyIcon : DirectionsRunIcon;
   return (
-    <ButtonLink variant="contained" sx={{ ...TAP_TARGET, ...accentOnHover }} href={{ pathname: "/events/[slug]/register", params: { slug } }}>
+    <ButtonLink variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ...accentOnHover }} href={{ pathname: "/events/[slug]/register", params: { slug } }}>
+      <Glyph aria-hidden="true" data-testid="door-glyph" sx={glyphSx("medium")} />
       {label}
     </ButtonLink>
   );

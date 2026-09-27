@@ -1,3 +1,5 @@
+import SaveIcon from "@mui/icons-material/Save";
+import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -125,7 +127,9 @@ export default async function NewsletterManagePage({ params, searchParams }: Pro
                 ))}
               </Stack>
             </Box>
-            <SubmitButton label={t("manage.save")} pendingLabel={t("manage.saving")} />
+            <SubmitButton label={t("manage.save")} pendingLabel={t("manage.saving")}>
+              <SaveIcon />
+            </SubmitButton>
           </form>
 
           <Box component="section" aria-labelledby="newsletter-unsubscribe" sx={{ borderTop: 1, borderColor: "divider", pt: 2 }}>
@@ -138,7 +142,9 @@ export default async function NewsletterManagePage({ params, searchParams }: Pro
             <form action={unsubscribeNewsletterAction} data-testid="newsletter-unsubscribe-form">
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
-              <SubmitButton label={t("manage.unsubscribe")} pendingLabel={t("manage.unsubscribing")} color="error" variant="outlined" />
+              <SubmitButton label={t("manage.unsubscribe")} pendingLabel={t("manage.unsubscribing")} color="error" variant="outlined">
+                <UnsubscribeIcon />
+              </SubmitButton>
             </form>
           </Box>
         </Stack>

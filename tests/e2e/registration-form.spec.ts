@@ -1150,6 +1150,27 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
     }
   });
 
+  // §NNN: the rules sit in «Condiții de participare», closed on arrival — and `#rules`, the anchor
+  // every email, the calendar entry and this form link to (§81, §392), lands on the fold open.
+  test("an address naming #rules arrives with «Condiții de participare» open and the rules shown", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 120_000);
+    const { slug, editorUrl } = await createRulesEvent(page, 2);
+    try {
+      // A fresh arrival from an email's link.
+      await page.goto(`/ro/evenimente/${slug}#rules`);
+      const fold = page.getByTestId("conditions-fold");
+      await expect(fold).toHaveAttribute("open", "");
+      await expect(fold.getByRole("heading", { level: 3, name: "Regulamentul evenimentului" })).toBeVisible();
+      await expect(fold).toContainText("Regula 1.");
+      // Without the fragment the fold is shut again, and the rules with it.
+      await page.goto(`/ro/evenimente/${slug}`);
+      await expect(fold).not.toHaveAttribute("open", "");
+      await expect(fold.getByRole("heading", { level: 3, name: "Regulamentul evenimentului" })).toBeHidden();
+    } finally {
+      await retireRulesEvent(page, editorUrl);
+    }
+  });
+
   test("a short text that needs no scroll can be agreed to at once", async ({ page }) => {
     test.setTimeout(test.info().timeout + 120_000);
     const { slug, editorUrl } = await createRulesEvent(page, 2);

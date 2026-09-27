@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import { type ComponentType, type MouseEvent, useEffect, useId, useRef, useState } from "react";
+import { type ComponentType, type MouseEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
@@ -60,6 +60,15 @@ export type SubmitButtonProps = {
    * running figure, which is the one thing this button already did.
    */
   glyph?: ComponentType<SvgIconProps>;
+  /**
+   * A public button's glyph, as an element (§NNN: every button a visitor presses wears one). A
+   * public Server Component cannot pass `glyph` (a function) nor use the backoffice's names (a
+   * public page never imports `action-icons.ts`, §318), so it writes the glyph it imported as the
+   * button's children — the one slot an element crosses the boundary through safely (§370) —
+   * and it is drawn in MUI's start-icon slot, sized by it, and gives way to the running figure
+   * while the request is in flight, exactly as `glyph` and `runner` do.
+   */
+  children?: ReactNode;
   /**
    * When given, the button watches its form and, while any required field is still empty or
    * invalid, dims itself and shows this sentence beneath. It stays pressable: a press then runs
@@ -168,6 +177,7 @@ export default function SubmitButton({
   pendingLabel,
   runner,
   glyph,
+  children,
   incompleteHint,
   incompleteHintNamed,
   missingTitle,
@@ -455,7 +465,9 @@ export default function SubmitButton({
             <RunnerLoader size={GLYPH_PX[size]} color="inherit" />
           ) : Glyph ? (
             <Glyph fontSize="small" />
-          ) : undefined
+          ) : (
+            (children ?? undefined)
+          )
         }
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
@@ -475,8 +487,8 @@ export default function SubmitButton({
       {/*
         The runner's styles, drawn with the page, so the press adds none (§371). The guarantee
         assumes the button already has a start icon at rest — a verb's glyph or the runner. A
-        button with neither (the pages list's ↑ ↓, the registrations list's compact "Retrimite",
-        the desk's `ConfirmOnArrival`, which presses itself) mounts MUI's start-icon slot for the
+        button with neither (the pages list's ↑ ↓, the registrations list's compact "Retrimite";
+        every public one wears a glyph since §NNN, `ConfirmOnArrival` included) mounts MUI's start-icon slot for the
         first time on the press, and its styles may be written then if nothing else on the page
         drew that slot at that size. Accepted: those are one-line forms, not the heavy ones this
         was measured on, and each one's missing glyph is deliberate where it is written.

@@ -229,7 +229,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventDescription.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The photographs notice (§323, the photographs amendment's item 6), born on the scale.
-  { file: "src/modules/events/ui/EventPhotosNotice.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/EventPhotosNotice.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 }, // §NNN: the step moved above it, inside «Condiții de participare» after the rules
   { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page

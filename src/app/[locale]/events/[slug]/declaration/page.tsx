@@ -1,3 +1,5 @@
+import DrawIcon from "@mui/icons-material/Draw";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -293,7 +295,8 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               )}
             </Box>
           )}
-          <Button type="submit" variant="contained" sx={TAP_TARGET} data-testid="group-run-declaration-submit">
+          <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="group-run-declaration-submit">
+            <DrawIcon aria-hidden="true" sx={glyphSx("medium")} />
             {t("groupRunDeclaration.page.action")}
           </Button>
           <Box>

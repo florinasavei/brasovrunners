@@ -1,5 +1,7 @@
 "use client";
 
+import HomeIcon from "@mui/icons-material/Home";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -57,7 +59,7 @@ export default function LocaleError({
       </Typography>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
-        <Button variant="contained" onClick={reset} sx={TAP_TARGET}>
+        <Button variant="contained" onClick={reset} sx={TAP_TARGET} startIcon={<RefreshIcon />}>
           {t("retry")}
         </Button>
         {/*
@@ -67,7 +69,7 @@ export default function LocaleError({
           (the proxy's, §353), and `/events` — localized by the proxy — names the page this
           button means without needing any routing code of this page's own to run.
         */}
-        <Button component="a" href="/events" variant="outlined" sx={TAP_TARGET}>
+        <Button component="a" href="/events" variant="outlined" sx={TAP_TARGET} startIcon={<HomeIcon />}>
           {t("home")}
         </Button>
       </Stack>

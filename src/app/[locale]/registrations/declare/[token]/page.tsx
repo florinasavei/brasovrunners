@@ -1,3 +1,7 @@
+import DoneIcon from "@mui/icons-material/Done";
+import DrawIcon from "@mui/icons-material/Draw";
+import SkipNextIcon from "@mui/icons-material/SkipNext";
+import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -94,7 +98,8 @@ async function FamilyDone({ steps, doneHref }: { steps: readonly FamilyStep[]; d
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {later ? t("declare.family.doneLater") : t("declare.family.doneAll")}
       </Typography>
-      <Button component="a" href={doneHref} variant="contained" sx={TAP_TARGET} data-testid="family-signing-finish">
+      <Button component="a" href={doneHref} variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="family-signing-finish">
+        <DoneIcon aria-hidden="true" sx={glyphSx("medium")} />
         {t("declare.family.doneAction")}
       </Button>
     </Box>
@@ -798,7 +803,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 </>
               )}
               {/* «… și treci la următoarea» while another person follows (§471); the last one confirms. */}
-              <Button type="submit" variant="contained" sx={TAP_TARGET}>
+              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                <DrawIcon aria-hidden="true" sx={glyphSx("medium")} />
                 {familySteps && hasNextFamilyStep(familySteps) ? t("declare.family.nextAction") : t("declare.action")}
               </Button>
               {/*
@@ -823,7 +829,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="registrationId" value={registration.id} />
-              <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+              <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                <SkipNextIcon aria-hidden="true" sx={glyphSx("medium")} />
                 {t("declare.family.skipAction")}
               </Button>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
