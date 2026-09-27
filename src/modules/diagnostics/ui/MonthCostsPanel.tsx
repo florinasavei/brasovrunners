@@ -11,7 +11,6 @@ import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import type { MonthCostReasons } from "@/modules/diagnostics/month-costs-read";
 import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS } from "@/modules/notifications/domain/email-plan";
-import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
 import Panel from "@/shared/ui/Panel";
 
 type Props = {
@@ -109,6 +108,21 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
     if (u.state === "over") parts.push(t(`tasks.month.over.${line.id}`));
     if (line.detail?.kind === "deployments") parts.push(t("tasks.month.detail.deployments", { count: format.number(line.detail.count) }));
     if (line.detail?.kind === "storageGb") parts.push(t("tasks.month.detail.storageGb", { gb: format.number(line.detail.gb, { maximumFractionDigits: 2 }) }));
+    // DeepL's credit, from DeepL's own meter (§NNN): given once, so used and left, never "a month".
+    if (line.detail?.kind === "credit") {
+      const credit = line.detail;
+      parts.push(
+        t("tasks.month.credit.line", {
+          used: format.number(credit.used),
+          limit: format.number(credit.limit),
+          remaining: format.number(credit.remaining),
+          percent: format.number(credit.share, { style: "percent", maximumFractionDigits: 0 }),
+        }),
+      );
+      if (credit.level !== "ok") parts.push(t(`tasks.month.credit.level.${credit.level}`));
+    } else if (line.id === "deepl" && reasons.deeplCredit !== null && reasons.deeplCredit !== "unconfigured") {
+      parts.push(t(`tasks.month.credit.unread.${reasons.deeplCredit === "refused" || reasons.deeplCredit === "quota" ? reasons.deeplCredit : "unavailable"}`));
+    }
     if (line.id === "mailgun" && reasons.current.mailgun === "typed plan") parts.push(t("tasks.month.typedPlan"));
     return parts.join(" ");
   };
@@ -139,7 +153,6 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
     plan: EMAIL_PLANS.BASIC.name,
     price: usd(EMAIL_PLANS.BASIC.usdPerMonth),
     hours: format.number(NEON_PLANS.FREE.cuHoursPerMonth ?? 0),
-    free: format.number(DEEPL_FREE_CHARACTERS_PER_MONTH),
   };
   const r2Values = { free: format.number(R2_FREE_STORAGE_GB), price: format.number(R2_USD_PER_GB_MONTH, { maximumFractionDigits: 3 }) };
 

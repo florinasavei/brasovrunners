@@ -18,6 +18,7 @@
  * so "register the domain" is gone; its renewal is here instead (§435).
  */
 
+import type { CreditReading } from "@/modules/translate/credit";
 import type { DomainRenewal } from "./domain/domain-renewal";
 import { isNeonQuotaNearLimit } from "./domain/neon-limits";
 
@@ -234,6 +235,13 @@ export type OwnerTaskInputs = {
    */
   translationConfigured: boolean;
   /**
+   * The DeepL credit from DeepL's own meter (§NNN), as `readTranslationCredit` answered it. The
+   * credit is given once: `watch` (80 %) reopens the row amber with the steps for a new one, `low`
+   * (95 %) and `spent` (translation refuses everything until a new credit or key) turn it red; the figures themselves reach
+   * the sentence through the page's values, and an unread credit says «—» with the reason.
+   */
+  translationCredit: CreditReading;
+  /**
    * Can the contact form reach the club (§149, §164)? Both halves: a way to send — the Gmail
    * account and its app password, `CONTACT_FORM_MODE` (`capture` on a laptop counts, as the
    * local media store does) — and somebody to send to, from the club's own list on
@@ -425,9 +433,31 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // «Tradu din română» (§464): built; open until DeepL's free key is on the deployment, never
   // blocking — without it the English boxes are written by hand, as before.
+  // Since §NNN the credit behind the key is read too: it is given once and never refilled, so a
+  // key at 80 % of its credit is `open` (amber) with its own sentence and the steps for a new one,
+  // and at 95 % — nearly spent or spent — it is `broken` (red): the row is where the club hears it
+  // before a press fails, at the same two thresholds Costuri's line uses (`watch`, then `act`).
+  // A credit DeepL would not state is «—» with the reason: a refused key or a 456 is red, a
+  // DeepL that did not answer leaves the row as it was (translation may still work).
+  const reading = input.translationConfigured ? input.translationCredit : null;
+  const level = reading?.ok ? reading.credit.level : null;
+  const unread = reading && !reading.ok && reading.reason !== "unconfigured" ? reading.reason : null;
   push("translation", {
     owner: "club",
-    state: input.translationConfigured ? "done" : "open",
+    state: !input.translationConfigured
+      ? "open"
+      : level === "spent" || level === "low" || unread === "quota" || unread === "refused"
+        ? "broken"
+        : level === "watch"
+          ? "open"
+          : "done",
+    ...(level === "spent" || level === "low" || level === "watch"
+      ? { text: level, steps: "howCredit" }
+      : level
+        ? { text: "credit" }
+        : unread
+          ? { text: "creditUnread", ...(unread === "quota" ? { steps: "howCredit" } : {}) }
+          : {}),
   });
 
   // Built (§149); open until the club's Gmail lends the form its app password, never

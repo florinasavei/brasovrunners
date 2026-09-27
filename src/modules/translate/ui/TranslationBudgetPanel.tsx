@@ -12,6 +12,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import type { TranslationBudgetState } from "../budget";
+import type { CreditReading } from "../credit";
 import { TRANSLATION_BUDGET_RULE } from "../domain/budget";
 
 type Props = {
@@ -21,17 +22,21 @@ type Props = {
   usedToday: number;
   /** Is a translator configured here (`TRANSLATE_PROVIDER` and `DEEPL_API_KEY`)? */
   configured: boolean;
+  /** DeepL's credit from its own meter (§NNN): given once, so used and left, with its level. */
+  credit: CreditReading;
   mayEdit: boolean;
 };
+
+const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.main", spent: "error.main" } as const;
 
 /**
  * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §464), beside the
  * other brakes on Costuri and built like them (`JobCadencePanel`): one form, the service asserting
  * the role and writing the audit row, a refusal handed back as the form's state (§315), one
- * question first (§384). It says what is spent today, what DeepL Free allows a month, and that
+ * question first (§384). It says what is spent today, what is used and left of the key's one-time DeepL credit (§NNN, DeepL's own figure), and that
  * only the club's own texts are ever sent.
  */
-export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, mayEdit }: Props) {
+export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, credit, mayEdit }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const number = (value: number) => value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB");
@@ -47,6 +52,23 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="translation-budget-today">
         {t("tasks.translationBudget.today", { used: number(usedToday), budget: number(state.budget.dailyCharacters) })}
       </Typography>
+      {/* The credit, as DeepL's own meter states it (§NNN): the daily figure above is the club's brake, this is what is left at all. */}
+      {credit.ok ? (
+        <Typography variant="body2" color={CREDIT_COLOR[credit.credit.level]} sx={{ mt: 0.5 }} data-testid="translation-credit" data-level={credit.credit.level}>
+          {t("tasks.translationBudget.credit.line", {
+            used: number(credit.credit.used),
+            limit: number(credit.credit.limit),
+            remaining: number(credit.credit.remaining),
+          })}
+          {credit.credit.level !== "ok" && ` ${t(`tasks.translationBudget.credit.level.${credit.credit.level}`)}`}
+        </Typography>
+      ) : (
+        credit.reason !== "unconfigured" && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="translation-credit" data-level="unknown">
+            {t(`tasks.translationBudget.credit.unread.${credit.reason}`)}
+          </Typography>
+        )
+      )}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t(configured ? "tasks.translationBudget.configured" : "tasks.translationBudget.notConfigured")}
       </Typography>

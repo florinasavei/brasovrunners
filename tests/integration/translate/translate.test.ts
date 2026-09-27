@@ -6,6 +6,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { type TranslateRequest, type Translator, TranslatorError } from "@/infrastructure/translate/adapter";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { charactersTranslatedSince, charactersTranslatedToday, readTranslationBudget, startOfClubDay, updateTranslationBudget } from "@/modules/translate/budget";
+import { translationCredit } from "@/modules/translate/domain/credit";
 import { translateClubTexts } from "@/modules/translate/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -175,6 +176,33 @@ describe("§464 «Tradu din română»", () => {
       ).toEqual({ ok: false, reason: failure });
     }
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "content.translated"))).toHaveLength(0);
+  });
+
+  it("§NNN: a spent DeepL credit refuses as `quota`, a too-small one as `credit` with what is left — nothing sent, nothing metered", async () => {
+    const admin = await staff("ADMIN");
+    const input = { items: [{ field: "translations.en.title", kind: "text", text: "Alergare" }] };
+    const withCredit = (used: number, limit: number) => async () => translationCredit({ used, limit });
+
+    const spent = fakeTranslator();
+    expect(await translateClubTexts(db, admin, input, { translator: spent.translator, now: NOW, credit: withCredit(1_000_000, 1_000_000) })).toEqual({
+      ok: false,
+      reason: "quota",
+    });
+    expect(spent.requests).toHaveLength(0);
+
+    const small = fakeTranslator();
+    expect(await translateClubTexts(db, admin, input, { translator: small.translator, now: NOW, credit: withCredit(999_995, 1_000_000) })).toEqual({
+      ok: false,
+      reason: "credit",
+      remainingCredit: 5,
+    });
+    expect(small.requests).toHaveLength(0);
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "content.translated"))).toHaveLength(0);
+
+    // Enough left, or a credit nobody could read: the press goes to DeepL as before.
+    for (const credit of [withCredit(999_992, 1_000_000), async () => null]) {
+      expect((await translateClubTexts(db, admin, input, { translator: fakeTranslator().translator, now: NOW, credit })).ok).toBe(true);
+    }
   });
 
   it("meters what the provider billed when its second request fails — the plain words sent, the press refused", async () => {

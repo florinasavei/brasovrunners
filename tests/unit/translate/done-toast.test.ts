@@ -73,6 +73,16 @@ describe("§NNN the translate press toasts its outcome", () => {
     expect(feedback.notice).toMatchObject({ kind: "warning", sentence: ro.Translate.refusal.quota });
   });
 
+  it("the whole-record press asking more than the credit left toasts the credit sentence, with what is left, as a warning", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const feedback = pressFeedback({ kind: "refused", reason: "credit", remainingCredit: 3400 }, true, words(locale), locale);
+      expect(feedback.message.tone).toBe("refused");
+      expect(feedback.notice).toMatchObject({ kind: "warning", sentence: feedback.message.text, autoHideMs: LONG_TOAST_AUTO_HIDE_MS });
+      expect(feedback.notice?.sentence).toContain(locale === "ro" ? "creditul DeepL" : "the DeepL credit");
+      expect(feedback.notice?.sentence).toMatch(/3[.,]400/);
+    }
+  });
+
   it("a refused key, nothing to translate and a failed request are toasted too — an error, a warning, an error", () => {
     expect(pressFeedback({ kind: "refused", reason: "refused" }, true, words("en"), "en").notice).toMatchObject({ kind: "error", sentence: en.Translate.refusal.refused });
     expect(pressFeedback({ kind: "nothing" }, true, words("ro"), "ro").notice).toMatchObject({ kind: "warning", sentence: ro.Translate.refusal.nothingAll });

@@ -1,3 +1,4 @@
+import type { CreditReading } from "@/modules/translate/credit";
 import type { NeonPlanId } from "./domain/neon-plan";
 import { type MonthCostFacts, type MonthCostId, type MonthCostLine, monthCosts, type MonthTotals, monthTotals, previousMonth, utcMonth } from "./domain/month-costs";
 
@@ -25,6 +26,8 @@ export type MonthCostReaders = {
   neonPreviousPeriod: (periodStart: Date) => Promise<{ ok: true; cuHours: number } | { ok: false; reason: string }>;
   /** The pictures' recorded bytes (`storedMediaBytes`). */
   mediaBytes: () => Promise<number>;
+  /** DeepL's credit from its own meter, cached an hour and expired by every press (`readTranslationCredit`, §NNN). */
+  deeplCredit: () => Promise<CreditReading>;
 };
 
 export type MonthCostInputs = {
@@ -52,6 +55,8 @@ export type MonthCostInputs = {
 export type MonthCostReasons = {
   current: Record<MonthCostId, string | null>;
   lastMonth: Record<MonthCostId, string | null>;
+  /** Why DeepL's credit has no reading (§NNN): `unconfigured`, or the provider's refusal; null when read. */
+  deeplCredit: string | null;
 };
 
 export type MonthCostsReading = { lines: MonthCostLine[]; totals: MonthTotals; reasons: MonthCostReasons };
@@ -73,7 +78,7 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
   const before = previousMonth(month);
   const neonPeriodStart = inputs.neon.ok ? inputs.neon.meter.periodStart : month.start;
 
-  const [vercel, characters, lastMailgun, lastNeon, media] = await Promise.all([
+  const [vercel, characters, lastMailgun, lastNeon, media, credit] = await Promise.all([
     settle(readers.vercelMonth).then((read): Read<{ buildMinutes: number; deployments: number }> =>
       !read.ok ? read : read.value.ok ? { ok: true, value: read.value.month } : { ok: false, reason: read.value.reason },
     ),
@@ -86,6 +91,7 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
         )
       : Promise.resolve<Read<number>>({ ok: false, reason: inputs.neon.reason }),
     settle(readers.mediaBytes),
+    settle(readers.deeplCredit).then((read): CreditReading => (read.ok ? read.value : { ok: false, reason: "unavailable" })),
   ]);
 
   const facts: MonthCostFacts = {
@@ -103,6 +109,7 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
     vercelBuildMinutesPerMonth: inputs.vercelBuildMinutesPerMonth,
     domain: inputs.domain,
     deepl: characters.ok ? { charactersThisMonth: characters.value } : null,
+    deeplCredit: { expected: credit.ok || credit.reason !== "unconfigured", credit: credit.ok ? credit.credit : null },
     r2: media.ok ? { storedBytes: media.value } : null,
     lastMonth: {
       neonCuHours: lastNeon.ok ? lastNeon.value : null,
@@ -125,5 +132,5 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
   if (inputs.mailgun.planId === "CUSTOM") lastMonth.mailgun = "typed plan";
   if (!media.ok) lastMonth.r2 = media.reason;
 
-  return { lines, totals: monthTotals(lines), reasons: { current, lastMonth } };
+  return { lines, totals: monthTotals(lines), reasons: { current, lastMonth, deeplCredit: credit.ok ? null : credit.reason } };
 }

@@ -11,7 +11,7 @@ import {
   utcMonth,
 } from "@/modules/diagnostics/domain/month-costs";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
-import { DEEPL_FREE_CHARACTERS_PER_MONTH } from "@/modules/translate/domain/budget";
+import { translationCredit } from "@/modules/translate/domain/credit";
 import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "@/modules/diagnostics/platform-plans";
 import { neonBudget } from "@/modules/diagnostics/domain/neon-budget";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
@@ -37,6 +37,7 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" },
     deepl: { charactersThisMonth: 50_000 },
+    deeplCredit: { expected: false, credit: null },
     r2: { storedBytes: 2 * GB },
     lastMonth: { neonCuHours: 20, mailgunSent: 500 },
     ...patch,
@@ -183,11 +184,28 @@ describe("one line per provider that bills or meters something", () => {
     expect(line(facts({ domain: { ...due, expiresOn: null } }), "domain")).toMatchObject({ renewsOn: null, projectedUsd: 0 });
   });
 
-  it("DeepL: free, the month's characters against the free plan's 500,000", () => {
+  it("DeepL (§NNN): free, the month's characters with no monthly ceiling — the key's allowance is a one-time credit", () => {
     const deepl = line(facts(), "deepl");
-    expect(deepl).toMatchObject({ billing: "free", soFarUsd: 0, projectedUsd: 0 });
-    expect(deepl.usage).toMatchObject({ unit: "characters", ceiling: DEEPL_FREE_CHARACTERS_PER_MONTH, state: "ok" });
-    expect(line(facts({ deepl: { charactersThisMonth: 170_000 } }), "deepl").usage?.state).toBe("over");
+    expect(deepl).toMatchObject({ billing: "free", soFarUsd: 0, projectedUsd: 0, detail: null, severity: "ok" });
+    expect(deepl.usage).toMatchObject({ unit: "characters", ceiling: null, ceilingKind: null, state: "ok" });
+    // A busy month is never "over" by itself any more: only the credit's own figure can say so.
+    expect(line(facts({ deepl: { charactersThisMonth: 900_000 } }), "deepl").usage?.state).toBe("ok");
+  });
+
+  it("DeepL's credit (§NNN): used and left from DeepL's meter, the level is the line's severity", () => {
+    const at = (used: number) => line(facts({ deeplCredit: { expected: true, credit: translationCredit({ used, limit: 1_000_000 }) } }), "deepl");
+    expect(at(0)).toMatchObject({ severity: "ok", detail: { kind: "credit", used: 0, limit: 1_000_000, remaining: 1_000_000, level: "ok" } });
+    expect(at(799_999).severity).toBe("ok");
+    expect(at(800_000)).toMatchObject({ severity: "watch", detail: { level: "watch" } });
+    expect(at(950_000)).toMatchObject({ severity: "act", detail: { level: "low", remaining: 50_000 } });
+    expect(at(1_000_000)).toMatchObject({ severity: "act", detail: { level: "spent", remaining: 0 } });
+    // Still free: a credit already given bills nothing.
+    expect(at(1_000_000)).toMatchObject({ soFarUsd: 0, projectedUsd: 0, billing: "free" });
+  });
+
+  it("DeepL's credit unread on a configured key is «nu știm», never green; no key reads as before", () => {
+    expect(line(facts({ deeplCredit: { expected: true, credit: null } }), "deepl")).toMatchObject({ severity: "unknown", detail: null });
+    expect(line(facts({ deeplCredit: { expected: false, credit: null } }), "deepl").severity).toBe("ok");
   });
 });
 

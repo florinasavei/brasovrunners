@@ -34,7 +34,8 @@ import { useTranslatePress } from "./use-translate-press";
  *
  * **Always there** (§482) for a role that writes the club's words: a deployment with no DeepL key
  * draws it greyed, with the sentence saying why and, for a reader who may open the tasks page,
- * the link to the row with the steps — a missing button is one nobody can find. A role that
+ * the link to the row with the steps — a missing button is one nobody can find. A key whose DeepL
+ * credit is spent (§NNN) draws it greyed the same way, saying so and linking Costuri. A role that
  * writes no words sees nothing.
  *
  * Inside the form it reads, so it finds the boxes by the form they post in.
@@ -61,6 +62,27 @@ function Frame({ children, off }: { children: ReactNode; off?: boolean }) {
 
 function TranslateAllButtonOff({ offer }: { offer: TranslateOffer }) {
   const t = useTranslations("Translate");
+  if (offer.spent) {
+    return (
+      <Frame off>
+        <GlyphButton icon="translate" variant="contained" disabled sx={{ minHeight: 44 }}>
+          {t("all")}
+        </GlyphButton>
+        <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }} data-testid="translate-all-off" data-reason="spent">
+          {offer.costsHref ? (
+            <>
+              {t("spent")}{" "}
+              <MuiLink href={offer.costsHref} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+                {t("spentSteps")}
+              </MuiLink>
+            </>
+          ) : (
+            t("spentAskAdmin")
+          )}
+        </Typography>
+      </Frame>
+    );
+  }
   return (
     <Frame off>
       <GlyphButton icon="translate" variant="contained" disabled sx={{ minHeight: 44 }}>

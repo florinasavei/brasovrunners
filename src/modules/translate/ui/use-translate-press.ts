@@ -35,11 +35,12 @@ export function translatedOneNotice(): FormNotice {
 /**
  * The whole-record press that did not translate says why in a toast too (§NNN), with the status
  * line's own sentence (`Translate.refusal.*`, already in the reader's language): a limit that
- * will lift — today's budget, DeepL's month, the hourly rate, nothing written yet — is a
- * `warning`; anything else an `error`.
+ * will lift — today's budget, DeepL's month or a credit too small for this text, the hourly
+ * rate, nothing written yet — is a `warning`; anything else an `error`.
  */
 export function translateRefusalNotice(reason: TranslateRefusal | "failed", sentence: string): FormNotice {
-  const warning = reason === "budget" || reason === "quota" || reason === "rateLimited" || reason === "nothing";
+  const warning =
+    reason === "budget" || reason === "quota" || reason === "credit" || reason === "rateLimited" || reason === "nothing";
   return { kind: warning ? "warning" : "error", key: "translateRefused", sentence, autoHideMs: LONG_TOAST_AUTO_HIDE_MS };
 }
 
@@ -49,9 +50,10 @@ export type PressWords = (key: string, values?: Record<string, string | number>)
 /**
  * What one press says, without React (§464, §NNN): the status line under the button, and the
  * toast at the top, or none. The whole-record press toasts every outcome — the count when it
- * worked, the status line's own reason when it did not (today's budget, DeepL's month, nothing
- * written yet, a failed request) — because its button sits far from the boxes it filled. One
- * box's button toasts only the short «Tradus»: its refusal is read beside the box.
+ * worked, the status line's own reason when it did not (today's budget, DeepL's month or the
+ * credit left, nothing written yet, a failed request) — because its button sits far from the
+ * boxes it filled. One box's button toasts only the short «Tradus»: its refusal is read beside
+ * the box.
  */
 export function pressFeedback(
   result: TranslateBoxesResult | { kind: "failed" },
@@ -74,7 +76,9 @@ export function pressFeedback(
     text =
       result.reason === "budget"
         ? t("refusal.budget", { remaining: new Intl.NumberFormat(locale).format(result.remainingToday ?? 0) })
-        : t(`refusal.${result.reason}`);
+        : result.reason === "credit"
+          ? t("refusal.credit", { remaining: new Intl.NumberFormat(locale).format(result.remainingCredit ?? 0) })
+          : t(`refusal.${result.reason}`);
     reason = result.reason;
   } else {
     text = t("refusal.failed");

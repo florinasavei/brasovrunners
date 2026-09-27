@@ -2407,13 +2407,24 @@
         },
         "translation": {
           "title": "Traducerea automată din română (DeepL, gratuit)",
-          "todo": "Construit: sus în fiecare editor (eveniment, pagină, album, card din Echipa) e butonul „Copiază și tradu tot: RO → EN”, iar lângă fiecare câmp în engleză „Tradu din română”. Pornește când pui cheia gratuită DeepL pe server; până atunci butonul de sus e gri și trimite aici, iar câmpurile în engleză se scriu de mână.",
+          "todo": "Construit: sus în fiecare editor (eveniment, pagină, album, card din Echipa) e butonul „Copiază și tradu tot: RO → EN”, iar lângă fiecare câmp în engleză „Tradu din română”. Pornește când pui cheia DeepL pe server; până atunci butonul de sus e gri și trimite aici, iar câmpurile în engleză se scriu de mână.",
           "done": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare.",
           "how": [
-            "Fă-ți un cont DeepL API Free (pagina „DeepL API” de pe site-ul DeepL → planul Free): 500.000 de caractere pe lună, gratuit. DeepL poate cere un card doar pentru verificare; planul Free nu se taxează.",
+            "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar. DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
             "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
             "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Sarcini → Costuri."
+          ],
+          "credit": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare. Creditul DeepL: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining} — se dă o singură dată.",
+          "creditUnread": "Traducerea automată e pornită. Creditul DeepL: — {creditReason}",
+          "watch": "Peste 80% din creditul DeepL al cheii e folosit: {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Traducerea merge încă; creditul se dă o singură dată și nu revine luna viitoare, așa că pregătiți un credit sau o cheie nouă.",
+          "low": "Creditul DeepL al cheii e aproape terminat: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining}. Se dă o singură dată și nu revine luna viitoare: pregătiți un credit sau o cheie nouă înainte să se oprească traducerea.",
+          "spent": "Creditul DeepL al cheii s-a terminat (folosite {creditUsed} din {creditLimit} caractere): „Copiază și tradu tot” și „Tradu din română” refuză orice traducere. Nu revine luna viitoare — trebuie un credit sau o cheie nouă.",
+          "howCredit": [
+            "Intră în contul DeepL (pagina „DeepL API” de pe site-ul DeepL) → Usage: vezi cât a rămas din credit — aceeași cifră ca în Sarcini → Costuri.",
+            "Alege: o cheie nouă, cu creditul ei dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește — sau un plan plătit, doar cu acordul explicit al clubului, care folosește planuri gratuite.",
+            "În Vercel → proiectul de producție (și QA) → Settings → Environment Variables: DEEPL_API_KEY = cheia nouă. Redeploy.",
+            "În cel mult o oră (sau la prima traducere), Sarcini → Costuri arată noul credit, iar rândul acesta devine verde."
           ]
         }
       },
@@ -2618,7 +2629,7 @@
       },
       "translationBudget": {
         "title": "Traducerea automată (DeepL)",
-        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL API Free — gratuit, 500.000 de caractere pe lună. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume luna.",
+        "intro": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” din editoare umplu câmpurile în engleză cu traducerea celor în română, prin DeepL. Cheia clubului are un credit de caractere dat o singură dată, care nu se reînnoiește lunar. Aici alegi câte caractere se pot trimite pe zi, ca o după-amiază de traduceri să nu consume creditul.",
         "inForce": {
           "off": "Setarea în vigoare: oprită (0 caractere pe zi) — butoanele refuză orice traducere.",
           "daily": "Setarea în vigoare: cel mult {count} caractere pe zi."
@@ -2630,9 +2641,22 @@
         "updatedAt": "Ultima schimbare: {when}.",
         "readOnly": "Doar un Administrator poate schimba bugetul.",
         "field": "Caractere pe zi",
-        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere.",
+        "fieldHelp": "Între 0 (oprit) și {max}. Un eveniment tradus în întregime are de obicei 5.000–15.000 de caractere; fiecare se scade din creditul DeepL.",
         "save": "Salvează bugetul",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "credit": {
+          "line": "Creditul DeepL: {used} din {limit} caractere folosite, rămân {remaining}. Cifra e a DeepL, citită cel mult acum o oră sau la ultima traducere; creditul se dă o singură dată.",
+          "level": {
+            "watch": "Peste 80 % din credit e folosit.",
+            "low": "Creditul e aproape terminat: pregătiți un credit sau o cheie nouă (Sarcini → Club).",
+            "spent": "Creditul s-a terminat: butoanele refuză orice traducere până la un credit sau o cheie nouă."
+          },
+          "unread": {
+            "quota": "DeepL spune că nu mai sunt caractere pe această cheie.",
+            "refused": "Creditul DeepL nu s-a putut citi: DeepL refuză cheia.",
+            "unavailable": "Creditul DeepL nu s-a putut citi acum: DeepL nu a răspuns."
+          }
+        }
       },
       "month": {
         "title": "Luna aceasta",
@@ -2683,7 +2707,6 @@
           "neon": "La ritmul ăsta limita se atinge înainte de sfârșitul perioadei, iar Neon oprește baza de date până la perioada următoare — vezi «Bugetul lunii» mai jos.",
           "mailgun": "La ritmul ăsta limita lunară se atinge înainte de sfârșitul lunii; mesajele rămase așteaptă luna următoare.",
           "vercel": "La ritmul ăsta minutele de build se termină înainte de sfârșitul lunii, iar publicările noi se opresc până luna viitoare.",
-          "deepl": "La ritmul ăsta DeepL refuză traducerile înainte de sfârșitul lunii.",
           "r2": "Pozele trec de limita gratuită: surplusul se plătește lunar."
         },
         "domain": {
@@ -2721,8 +2744,21 @@
           "mailgun": "Ar costa doar trecând la un plan plătit ({plan}, {price} USD pe lună) — o alegere a voastră în «E-mailuri», niciodată a platformei.",
           "vercel": "Ar costa doar trecând la planul Pro; pe Hobby nu vine factură — la limită publicările noi se opresc până luna viitoare.",
           "neon": "Pe Free nu vine factură: la {hours} ore-CU baza se oprește până la perioada următoare. Ar costa doar trecând pe Launch.",
-          "deepl": "Ar costa doar cu DeepL API Pro; pe Free, după {free} de caractere într-o lună traducerile se opresc până luna viitoare, fără factură.",
+          "deepl": "Nu vine factură: creditul DeepL al cheii se dă o singură dată și nu se reînnoiește lunar. Când se termină, traducerile se opresc până la un credit sau o cheie nouă; ar costa doar cu un plan plătit DeepL API Pro.",
           "r2": "Ar costa doar peste {free} GB stocați: {price} USD pe GB pe lună, pentru surplus."
+        },
+        "credit": {
+          "line": "Creditul DeepL: {used} din {limit} caractere folosite ({percent}), rămân {remaining} — citit de la DeepL, se dă o singură dată.",
+          "level": {
+            "watch": "Peste 80 % din credit e folosit.",
+            "low": "Creditul e aproape terminat: pregătiți un credit sau o cheie nouă (Sarcini → Club).",
+            "spent": "Creditul s-a terminat: butoanele de traducere refuză orice traducere până la un credit sau o cheie nouă."
+          },
+          "unread": {
+            "quota": "DeepL spune că nu mai sunt caractere pe această cheie.",
+            "refused": "Creditul DeepL nu s-a putut citi: DeepL refuză cheia.",
+            "unavailable": "Creditul DeepL nu s-a putut citi acum: DeepL nu a răspuns."
+          }
         }
       },
       "database": {
@@ -3951,7 +3987,7 @@
                 "Un eveniment nu se publică fără titlu și rezumat în română și în engleză.",
                 "Un text opțional (descrierea, regulamentul, notele programului, câmpurile SEO) se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța goală, cu tot ce ai scris păstrat.",
                 "Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — doar un avertisment.",
-                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă: sub el e linkul spre pași. Dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale»."
+                "Engleza dintr-o apăsare: scrie totul în română, apoi apasă «Copiază și tradu tot: RO → EN», sus în editor (eveniment, pagină, album, card din Echipa). Fiecare text ajunge tradus în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi «Salvează». Dacă butonul e gri, cheia DeepL nu e pusă încă sau creditul ei s-a terminat: sub el scrie de ce. Dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale»."
               ]
             },
             {
@@ -4064,7 +4100,7 @@
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
-                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp pe care îl poți modifica ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp pe care îl poți modifica ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia DeepL sau creditul ei (1.000.000 de caractere, dat o singură dată) s-a terminat: cere-i unui Administrator să pună o cheie sau un credit nou (pașii sunt în Sarcini → Club).",
                 "Citește engleza și corectează ce sună greșit.",
                 "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
@@ -4123,7 +4159,7 @@
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp: titlul, rezumatul, descrierea, regulamentul, traseul, programul.",
-                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia gratuită DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club.",
+                "Sus în editor (eveniment, pagină, album, card din Echipa) apasă «Copiază și tradu tot: RO → EN». Fiecare text ajunge tradus în perechea lui din engleză, cu aceeași așezare. Dacă engleza are deja text, te întreabă câte și care: «Înlocuiește tot» sau «Doar cele goale»; la un text foarte lung spune și câte caractere se trimit din bugetul de azi. Butonul e gri? Pe server lipsește încă cheia DeepL: «Vezi pașii», sub buton, duce la rândul din Sarcini → Club. Cheia are un credit de 1.000.000 de caractere, dat o singură dată și nereînnoit lunar: cât a rămas scrie în Sarcini → Costuri, iar când s-a terminat butonul rămâne gri și spune asta, cu un link spre Costuri.",
                 "Citește engleza și corectează ce sună greșit.",
                 "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
               ]
@@ -6188,8 +6224,11 @@
     "pending": "Se traduce…",
     "all": "Copiază și tradu tot: RO → EN",
     "allHelp": "Un singur buton: fiecare text scris în română ajunge în câmpul lui din engleză, tradus automat (DeepL), cu aceeași așezare — titluri, liste, poze, linkuri. Câmpurile goale se completează direct; dacă engleza are deja text, alegi «Înlocuiește tot» sau «Doar cele goale». Citește, corectează, apoi apasă Salvează.",
-    "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
-    "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia gratuită DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+    "off": "Traducerea automată nu e pornită încă: pe server lipsește cheia DeepL. Se pune o singură dată, apoi butonul merge în fiecare editor.",
+    "offAskAdmin": "Traducerea automată nu e pornită încă: pe server lipsește cheia DeepL. Cere-i unui Administrator să o pună (pașii sunt în Sarcini → Club).",
+    "spent": "Creditul DeepL s-a terminat —",
+    "spentSteps": "vezi Costuri",
+    "spentAskAdmin": "Creditul DeepL s-a terminat: traducerea automată e oprită până când un Administrator pune un credit sau o cheie nouă (Sarcini → Costuri).",
     "offSteps": "Vezi pașii",
     "done": "Tradus. Citește, corectează dacă e nevoie, apoi salvează.",
     "doneAll": "Câmpuri traduse: {count}. Citește-le, corectează dacă e nevoie, apoi salvează.",
@@ -6220,10 +6259,11 @@
       "nothingAll": "Nu e nimic de tradus: scrie întâi textele în română.",
       "rateLimited": "Prea multe traduceri în ultima oră. Mai încearcă peste câteva minute.",
       "budget": "Traducerea aceasta cere mai mult decât a rămas din bugetul de azi (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată sau revino mâine; un Administrator îl poate mări din Sarcini → Costuri.",
-      "quota": "DeepL a consumat caracterele gratuite ale lunii. Traducerea revine luna viitoare.",
+      "quota": "DeepL nu mai are caractere pe această cheie: creditul s-a consumat. Traducerea revine când un Administrator pune un credit sau o cheie nouă (Sarcini → Club).",
       "refused": "DeepL a refuzat cheia. Un Administrator trebuie să verifice DEEPL_API_KEY (Sarcini).",
       "unavailable": "DeepL nu a răspuns. Mai încearcă peste un minut.",
-      "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă."
+      "failed": "Traducerea nu a pornit. Verifică conexiunea și mai încearcă.",
+      "credit": "Traducerea aceasta cere mai mult decât a rămas din creditul DeepL (caractere rămase: {remaining}). Tradu mai puține câmpuri deodată; un Administrator vede creditul în Sarcini → Costuri."
     }
   }
 }
