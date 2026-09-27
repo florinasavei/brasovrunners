@@ -4,7 +4,7 @@ import { botCheckSignalsFrom } from "@/modules/registrations/domain/turnstile-wi
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-031-01 — the anti-bot check's failures, counted for `/api/health` (`DECISIONS.md` §NNN),
+ * BR-REQ-031-01 — the anti-bot check's failures, counted for `/api/health` (`DECISIONS.md` §518),
  * against real PostgreSQL: one word per signal, per hour, in the throttle's own table, summed over
  * the last 24 hours, and nothing older.
  */
@@ -24,7 +24,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN the bot-check signals", () => {
+describe("§518 the bot-check signals", () => {
   it("reads its two words from the form, each once, and nothing else", () => {
     expect(botCheckSignalsFrom(["held-press-valve"])).toEqual(["held-press-valve"]);
     expect(botCheckSignalsFrom(["widget-failed", "held-press-valve", "widget-failed"])).toEqual(["held-press-valve", "widget-failed"]);

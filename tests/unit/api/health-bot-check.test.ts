@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-031-01 — `/api/health` says how often the anti-bot check let people down in the last day
- * (`DECISIONS.md` §NNN): held presses the valve sent, widgets that failed or never loaded. A level —
+ * (`DECISIONS.md` §518): held presses the valve sent, widgets that failed or never loaded. A level —
  * none / some / many — never the count (the body is public) and never the status; `null` when it could not be read, never a reason for `down`. The words travel
  * with the registration form and are counted by its action: there is no endpoint of their own.
  */
@@ -39,7 +39,7 @@ beforeEach(() => {
   execute.mockResolvedValue(undefined);
 });
 
-describe("§NNN /api/health carries the check's last day", () => {
+describe("§518 /api/health carries the check's last day", () => {
   it("reports a level, never the count, and stays ok however high it is", async () => {
     countBotCheckSignals.mockResolvedValue({ heldPressValve: 40, widgetFailed: 3 });
     const response = await GET();
@@ -72,7 +72,7 @@ describe("§NNN /api/health carries the check's last day", () => {
   });
 });
 
-describe("§NNN the signals ride with the registration", () => {
+describe("§518 the signals ride with the registration", () => {
   const ROOT = path.resolve(__dirname, "../../..");
 
   it("has no endpoint of its own: nobody writes a count without registering", () => {

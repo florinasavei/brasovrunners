@@ -9,7 +9,7 @@ import { type EventForRegistration, submitRegistration } from "@/modules/registr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the country the runner lives in, asked before the city: required on the public form,
+ * §510 — the country the runner lives in, asked before the city: required on the public form,
  * stored on the registration, read by the spreadsheet and the backoffice page, never public.
  * And «Sex» with no answer is refused rather than recorded as «Prefer să nu spun».
  */
@@ -76,7 +76,7 @@ function submissionInput(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-describe("§NNN the country of residence and a chosen «Sex»", () => {
+describe("§510 the country of residence and a chosen «Sex»", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

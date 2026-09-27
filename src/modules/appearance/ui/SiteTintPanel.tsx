@@ -23,7 +23,7 @@ type Props = {
   state: SiteTintState;
   /** Administrator only (§450); the action and the service refuse anybody else. */
   mayEdit: boolean;
-  /** Why the fold opens on arrival (§336): «Setări» → «Aspect» is this card alone (§NNN). */
+  /** Why the fold opens on arrival (§336): «Setări» → «Aspect» is this card alone (§516). */
   openWhen?: FoldOpenWhen;
 };
 

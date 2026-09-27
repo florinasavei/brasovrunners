@@ -7,7 +7,7 @@ import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tab
 import { type TaskTarget, targetRoute } from "../domain/task-targets";
 
 /**
- * Where a row of «Sarcini» → «Club» is done (§NNN): one link under the row, named by the
+ * Where a row of «Sarcini» → «Club» is done (§516): one link under the row, named by the
  * navigation's own words — «Setări → Contact», «Documente legale» — and opening the card through
  * its `#` (`OpenFoldFromHash`, §336). Nothing for a row with no target, or for a place the reader
  * may not open (the rows are the Administrator's, who opens them all; the gate is asked all the same).

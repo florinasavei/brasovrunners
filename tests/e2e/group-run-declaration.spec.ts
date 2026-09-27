@@ -61,7 +61,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await hydrated(page);
   // The approved text, before anything is asked (§57): the sample's banner says what it is, and the
   // text states the run's age through {{minimumAge}} — never under eighteen, the declaration covers
-  // no minor (§NNN).
+  // no minor (§515).
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
   await expect(page.locator("#main")).toContainText(words.adults);
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
@@ -75,7 +75,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   // regression that asks for one under these texts would go unnoticed by a lenient check —
   // the field is asked exactly when the text names it, never otherwise.
   await expect(page.getByLabel(words.document, { exact: false })).toHaveCount(0);
-  // The run's own minimum age (§440, §NNN): a run saved with the default fourteen reads as eighteen,
+  // The run's own minimum age (§440, §515): a run saved with the default fourteen reads as eighteen,
   // which the text states once; no birth date is asked at eighteen.
   await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "am împlinit 18 ani" : "I am 18 or older");
   await expect(page.locator('input[name="birthDate"]')).toHaveCount(0);

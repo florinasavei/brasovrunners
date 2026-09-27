@@ -26,7 +26,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Setări» → «Termene» (§377, its own tab since §NNN — it was a fold on `/admin/emails`): every
+ * «Setări» → «Termene» (§377, its own tab since §516 — it was a fold on `/admin/emails`): every
  * participant-facing deadline, the per-address limit (§389) and «Când pleacă emailurile» (§NNN).
  * Read by whoever reads the club's content; changed by the Administrator (`canManageClubSettings`,
  * §450), which the actions and the services assert again. The messages whose when-lines state these numbers are one tab over,
@@ -64,7 +64,7 @@ export default async function AdminDeadlinesPage({ params, searchParams }: Props
         {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
       </Box>
 
-      {/* The tab is this card alone, so it opens on arrival (§336's `primary`, §NNN). */}
+      {/* The tab is this card alone, so it opens on arrival (§336's `primary`, §516). */}
       <DeadlinesPanel
         locale={locale}
         state={deadlines}

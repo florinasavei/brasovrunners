@@ -90,7 +90,7 @@ describe("§406 the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 9 in that order, and gives the automatic share links and the nested sections none (§466, §481, §NNN)", () => {
+  it("numbers the cards 1 to 9 in that order, and gives the automatic share links and the nested sections none (§466, §481, §512)", () => {
     const numbered = numberedPageSections();
     expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 9 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
@@ -98,7 +98,7 @@ describe("§406 the page's sections, one list", () => {
     // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481).
     expect(numbered.find((section) => section.id === "place")).toMatchObject({ card: "box-place", nestedIn: "when", number: null });
     expect(numbered.find((section) => section.id === "rules")).toMatchObject({ card: "box-rules", nestedIn: "programme", number: null });
-    // The public list is the last card of «Program, regulament și declarație» since §NNN.
+    // The public list is the last card of «Program, regulament și declarație» since §512.
     expect(numbered.find((section) => section.id === "startList")).toMatchObject({ card: "box-start-list", nestedIn: "programme", number: null });
     expect(pageSectionNumber("kind")).toBe(1);
     expect(pageSectionNumber("when")).toBe(4);
@@ -158,7 +158,7 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
       });
       // The cost's card is inside the first box since §466, the place inside «Când și unde» and the
       // rules inside «Program, regulament și declarație» since §481: the page still draws each in its place.
-      // The public list inside the same card since §NNN.
+      // The public list inside the same card since §512.
       expect(NESTED).toEqual(["place", "cost", "rules", "startList"]);
       expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => !NESTED.includes(id)));
       for (const gone of [
@@ -303,7 +303,7 @@ describe("§406 whether the page draws each section", () => {
     expect(cardStates(withRules).map((card) => card.id)).toEqual(ids.filter((id) => !["place", "cost", "rules", "startList"].includes(id)));
   });
 
-  it("draws «Program, regulament și declarație» from the public list alone (§NNN)", () => {
+  it("draws «Program, regulament și declarație» from the public list alone (§512)", () => {
     const cards = (data: PageSectionData) => Object.fromEntries(cardStates(data).map((card) => [card.id, card.isDrawn]));
     const listed = bare();
     listed.event = { ...listed.event, type: "RACE", registrationMode: "INTERNAL", participantListVisibility: "NAMES" };

@@ -28,7 +28,7 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/if \(!spec\) return;\s*event\.preventDefault\(\);/);
     // A series save's email line is summed over the dates ticked at this press, then asked (§384).
     expect(source).toMatch(/const counted = resolveEmailCount\(spec, [^\n]*\);/);
-    // A typed value named in the sentence is filled from the form at the press (§NNN), then asked.
+    // A typed value named in the sentence is filled from the form at the press (§511), then asked.
     expect(source).toMatch(/const resolved = fillFromForm\(counted, [\s\S]*?\}\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
   });
 

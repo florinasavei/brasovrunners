@@ -764,7 +764,7 @@ export const eventFieldsSchema = z
     /**
      * The youngest a participant may be on the day of the event, in years (§329, amending §321:
      * "actually this min age must be set at event level!"). Absent or empty means the club's
-     * fourteen, which is also the column's default. Never under fourteen (§NNN: "aplicația nu
+     * fourteen, which is also the column's default. Never under fourteen (§515: "aplicația nu
      * permite un concurs cu minimumAge sub 14") — the "zero means no minimum" of §329 is refused
      * at the box; the database's CHECK still reads 0 to 99, since tightening it is a contract step,
      * and an older row under fourteen is read as fourteen (`effectiveMinimumAge`). The box carries

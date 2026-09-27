@@ -66,7 +66,7 @@ test.describe("§353 every island finds its words, and a public page carries onl
       "/ro/admin/registrations/new",
       "/ro/admin/checkin",
       "/ro/admin/settings/emails",
-      // «Setări»'s other tabs (§NNN): the forms that moved, with their islands.
+      // «Setări»'s other tabs (§516): the forms that moved, with their islands.
       "/ro/admin/settings/deadlines",
       "/ro/admin/settings/contact",
       "/ro/admin/settings/appearance",

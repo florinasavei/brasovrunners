@@ -209,7 +209,7 @@ describe("BR-REQ-090-07 the card's words, in both languages", () => {
       for (const message of words) {
         expect(message, `${locale} advises no limit`).not.toMatch(/no limit on production|fără limită pe producție|recommends there|recomandă acest ecran acolo/i);
       }
-      // The recommendation is the limit box's one helper sentence since §NNN, its figure a placeholder.
+      // The recommendation is the limit box's one helper sentence since §511, its figure a placeholder.
       expect(catalogue.Admin.tasks.neonLimits.quotaCuHoursHelp, `${locale} quotaCuHoursHelp`).toContain("{hours}");
       expect(catalogue.Admin.tasks.neonLimits.confirm, `${locale} confirm`).toBeTruthy();
     }

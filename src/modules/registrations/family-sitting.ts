@@ -12,7 +12,7 @@ import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing"
 import { liveSittingEntries } from "./family-entries";
 
 /**
- * The database's half of a family sitting (§NNN): the rows `submitRegistration` writes and reads
+ * The database's half of a family sitting (§519): the rows `submitRegistration` writes and reads
  * inside its own transaction, under the event's lock, and the press of «Gata». What a sitting is,
  * and why, is `domain/family-sitting.ts`; the table is `db/schema/family-entries.ts`.
  *
@@ -98,7 +98,7 @@ export function familySittingMessageKey(sittingId: string): string {
 }
 
 /**
- * After each form of the sitting (§NNN), under the event's lock: the window moves to `heldUntil`,
+ * After each form of the sitting (§519), under the event's lock: the window moves to `heldUntil`,
  * and from the second person on the held messages become the one family message. Every message the
  * sitting still holds waits until `heldUntil`; the row learns when its link's last lapse is.
  */
@@ -150,7 +150,7 @@ export async function settleSitting<T extends Record<string, unknown>>(
 }
 
 /**
- * «Gata» (§NNN): what the sitting holds leaves now, and the sitting takes no more forms. Pressed
+ * «Gata» (§519): what the sitting holds leaves now, and the sitting takes no more forms. Pressed
  * twice, or after the window, it does nothing. The id comes from the browser's sealed half; a
  * sitting that held nothing — a re-send about a registration outside it went at once — has nothing
  * to release, and the screen after it says the same either way (§39).
@@ -177,7 +177,7 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
 }
 
 /**
- * «Da, încă o persoană» (§NNN, the review of 2026-09-27: the window lapsed under the parent's hands
+ * «Da, încă o persoană» (§519, the review of 2026-09-27: the window lapsed under the parent's hands
  * while the next form was open): the sitting's window starts again from this press, as it does from
  * every form sent — the row's `held_until` and every message it still holds, together. A sitting
  * already sent, confirmed or past its window is left as it is: its email has left, and the next form
@@ -207,7 +207,7 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
 }
 
 /**
- * A verification email a sitting held (§NNN), rendered now — it is leaving: the registration's link
+ * A verification email a sitting held (§519), rendered now — it is leaving: the registration's link
  * lives the club's email-link window («Termene», §377) from this send, as the message says («valabil
  * 48 de ore»), not from the form sent a window and a pinger's wait earlier. The same rule as the
  * family message's (`extendSittingLinks`): only a link still live, lengthened and never shortened.
@@ -234,7 +234,7 @@ export async function extendHeldVerificationLink<T extends Record<string, unknow
 }
 
 /**
- * The family's order (§NNN, `compareFamilyOrder`): the registrations of every sitting of this address
+ * The family's order (§519, `compareFamilyOrder`): the registrations of every sitting of this address
  * at this event that the family's one button confirmed, in the order the forms were sent — the index
  * a registration has here is its `familyRank`. Empty for an address that never confirmed a sitting.
  */
@@ -247,7 +247,7 @@ export async function sittingOrderFor<T extends Record<string, unknown>>(db: Dat
   return rows.flatMap((row) => row.registrationIds);
 }
 
-/** The sitting whose one button confirmed this registration (§NNN), if one did. */
+/** The sitting whose one button confirmed this registration (§519), if one did. */
 export async function confirmedSittingOf<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<FamilySitting | undefined> {
   const [row] = await db
     .select()
@@ -258,13 +258,13 @@ export async function confirmedSittingOf<T extends Record<string, unknown>>(db: 
   return row;
 }
 
-/** The idempotency key of a family's one confirmation (§NNN): one per sitting, whoever signs first. */
+/** The idempotency key of a family's one confirmation (§519): one per sitting, whoever signs first. */
 export function familyConfirmedMessageKey(sittingId: string): string {
   return `family-sitting:${sittingId}:confirmed`;
 }
 
 /**
- * A family confirmed together gets one confirmation (§NNN; the owner, 2026-09-27: «statusul CONFIRMAT
+ * A family confirmed together gets one confirmation (§519; the owner, 2026-09-27: «statusul CONFIRMAT
  * trebuie să fie pentru toată familia, și în mail trebuie să vină toate QR-urile pentru toată familia»):
  * «Confirmat: 3 persoane la …», every person's QR code, desk code and race number under their name,
  * read at send time (`render.ts`) — instead of one confirmation per signature.
@@ -325,7 +325,7 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
 }
 
 /**
- * The family message is rendered — it is leaving now (§NNN): everything its one link acts on lives
+ * The family message is rendered — it is leaving now (§519): everything its one link acts on lives
  * the club's email-link window («Termene», §377) from this instant, as the message says («linkul e
  * valabil 48 de ore»), not from the form that was sent a window and a pinger's wait earlier. Only
  * what is still live is lengthened, and never shortened: a registration whose link already lapsed and
@@ -384,7 +384,7 @@ export function sittingStillOpen(sitting: Pick<FamilySitting, "confirmedAt" | "e
 }
 
 /**
- * Everybody the family message and its page name as joining now (§NNN): the sitting's registrations
+ * Everybody the family message and its page name as joining now (§519): the sitting's registrations
  * still waiting for the address, then its kept forms, each in the order they were sent.
  */
 export async function sittingPeople<T extends Record<string, unknown>>(
@@ -399,7 +399,7 @@ export async function sittingPeople<T extends Record<string, unknown>>(
 }
 
 /**
- * The sittings nobody can act on any more, deleted by the registration maintenance job (§NNN), as the
+ * The sittings nobody can act on any more, deleted by the registration maintenance job (§519), as the
  * kept forms are. The rows hold ids and instants, never a name; a kept form they pointed at stays
  * until its own lapse (`sitting_id` is set to null).
  */

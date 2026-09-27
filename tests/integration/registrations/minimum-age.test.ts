@@ -456,9 +456,9 @@ describe("§329 an event with a minimum of its own", () => {
   });
 });
 
-describe("§NNN an older event saved with no minimum binds at fourteen", () => {
+describe("§515 an older event saved with no minimum binds at fourteen", () => {
   it("refuses a six-year-old and a thirteen-year-old at every door, and takes fourteen on the day", async () => {
-    // Stored under §329 as 0 ("no minimum"); since §NNN nobody under fourteen enters any event.
+    // Stored under §329 as 0 ("no minimum"); since §515 nobody under fourteen enters any event.
     const event = await createRace(RACE_START, "Europe/Bucharest", 0);
     for (const birthDate of ["2020-03-01", FOURTEEN_THE_DAY_AFTER]) {
       const refused = await refusal(submitRegistration(db, event, submission({ birthDate }), NOW));

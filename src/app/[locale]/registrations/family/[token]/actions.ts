@@ -50,7 +50,7 @@ export async function confirmFamilyEntryAction(form: FormData): Promise<void> {
 }
 
 /**
- * The family's one button (§NNN): the token spent, the address and everybody ticked confirmed, each
+ * The family's one button (§519): the token spent, the address and everybody ticked confirmed, each
  * given a place or the waiting list (`family-sitting-confirm.ts`), the unticked kept forms deleted.
  * Then straight into the declarations as the wizard (§471) — «Declarația 1 din N» — on the
  * declaration page under this same link, which the pass is bound to. Lands on this page instead when

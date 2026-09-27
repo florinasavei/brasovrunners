@@ -54,7 +54,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
-    // «Sex» starts empty (§NNN): the form is refused without an answer.
+    // «Sex» starts empty (§510): the form is refused without an answer.
     await chooseSex(page);
     // The parent's box opens once the birth date says the runner is a minor (§188).
     if (guardianName) await page.locator('[name="guardianName"]').fill(guardianName);

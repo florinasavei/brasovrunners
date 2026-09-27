@@ -1,7 +1,7 @@
 /**
  * The facts of Cloudflare Turnstile (`DECISIONS.md` §97) that the browser needs as well as the
  * server: where the widget's script comes from, the name of the field its token arrives in — and,
- * since §NNN, the states the widget says under itself, which the send button reads as well.
+ * since §518, the states the widget says under itself, which the send button reads as well.
  *
  * A module of its own, importing nothing, because `TurnstileWidget` is a client island (§185) and
  * every module a client island imports is shipped to the browser with everything *it* imports.
@@ -28,7 +28,7 @@ export const TURNSTILE_FIELD = "cf-turnstile-response";
 export const TURNSTILE_TOKEN_EVENT = "br-turnstile-token";
 
 /**
- * Every state the widget can be in, as the person reads it under the widget (§NNN). Each is said
+ * Every state the widget can be in, as the person reads it under the widget (§518). Each is said
  * in words (`BotCheck.<state>` in both catalogues), and each one a person can be stuck in offers a
  * way out: «Reîncearcă verificarea», and a send button that never waits for a check that gave up.
  *
@@ -60,7 +60,7 @@ export const BOT_CHECK_WIDGET_STATES = [
 export type BotCheckWidgetState = (typeof BOT_CHECK_WIDGET_STATES)[number];
 
 /**
- * Cloudflare's documented callbacks, each naming a state (§NNN), for `turnstile.render`.
+ * Cloudflare's documented callbacks, each naming a state (§518), for `turnstile.render`.
  *
  * The widget is drawn once and `reset()` on every new attempt (§185), so the callbacks handed to
  * `render` are the ones Cloudflare calls for the rest of the page's life — while the effect that
@@ -160,13 +160,13 @@ export const BOT_CHECK_GAVE_UP_ATTRIBUTE = "data-bot-check-gave-up";
 /**
  * How many failures (`error-callback`, or `render` throwing) the widget takes before it gives up.
  * The first is Cloudflare's to retry — it does so by itself — and the person is offered
- * «Reîncearcă verificarea»; the second is the end of it: the form goes without the check (§NNN).
+ * «Reîncearcă verificarea»; the second is the end of it: the form goes without the check (§518).
  */
 export const BOT_CHECK_FAILURES_BEFORE_GIVING_UP = 2;
 
 /**
  * A check that will not answer by itself: waiting for its token is waiting for nothing, so a press
- * goes straight through without one, and a press already held is sent at once (§NNN). The server
+ * goes straight through without one, and a press already held is sent at once (§518). The server
  * takes a missing token for the check not running, never for a robot (§216) — the same path §285's
  * valve takes eight seconds later, without the eight seconds.
  *
@@ -181,7 +181,7 @@ export function botCheckGaveUp(state: string | null | undefined, failures: numbe
 
 /**
  * Whether the check has yet to answer, for a press on the send button, from what the form shows
- * (§285, §NNN) — the widget's state, whether it gave up, and the token field's value:
+ * (§285, §518) — the widget's state, whether it gave up, and the token field's value:
  *
  * - gave up → answered: the press goes without a token (§216);
  * - `passed` → answered only with a token in the field (a reset empties it before it says so);
@@ -189,7 +189,7 @@ export function botCheckGaveUp(state: string | null | undefined, failures: numbe
  *   holds**: a lapsed token may still sit there, and sending it buys the refusal the hold exists to
  *   spare (Cloudflare's documentation does not promise the field is emptied on expiry);
  * - `loading`, `checking` → by the field. A token written there is the answer even before the
- *   success callback says so: the field is the button's second signal (§NNN, held-press), proved
+ *   success callback says so: the field is the button's second signal (§518, held-press), proved
  *   alone by the end-to-end suite. A reset — ours on every attempt, Cloudflare's on a refresh —
  *   empties it before the state is `checking`, so no spent token is read here.
  * - no widget state at all (`null`) → by the field, as §285 did.
@@ -212,7 +212,7 @@ export function botCheckUnansweredFrom(state: string | null, gaveUp: boolean, fi
 }
 
 /**
- * Which of the held press's sentences the send button says, per the widget's state (§NNN): the
+ * Which of the held press's sentences the send button says, per the widget's state (§518): the
  * button carries the check's state in words, not only the widget's line. `valve` is not here — it
  * is said when the eight seconds are up, whatever the state.
  */
@@ -239,7 +239,7 @@ export function botCheckAsksAttention(state: BotCheckWidgetState, slow: boolean)
 }
 
 /**
- * The two things `/api/health` counts about the check over the last day (§NNN), level-only: no
+ * The two things `/api/health` counts about the check over the last day (§518), level-only: no
  * address, no IP, no page — a word, counted per hour in the throttle's own table.
  *
  * - `held-press-valve` — a held press the eight-second valve sent, because the check never answered;
@@ -247,7 +247,7 @@ export function botCheckAsksAttention(state: BotCheckWidgetState, slow: boolean)
  *
  * They travel **with the registration form** (`BOT_CHECK_SIGNAL_FIELD`), never on a request of
  * their own: the register action counts them once the registration went through the throttle and
- * the other defences, so no endpoint takes an anonymous write (the review of §NNN).
+ * the other defences, so no endpoint takes an anonymous write (the review of §518).
  */
 export const BOT_CHECK_SIGNALS = ["held-press-valve", "widget-failed"] as const;
 export type BotCheckSignal = (typeof BOT_CHECK_SIGNALS)[number];

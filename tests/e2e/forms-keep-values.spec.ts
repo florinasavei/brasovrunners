@@ -162,7 +162,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await registration.locator(":scope > summary").press("Enter");
     await expect(registration).not.toHaveAttribute("open", "");
 
-    // §NNN: a race with no declaration chosen starts on the one its course calls for — the trail
+    // §515: a race with no declaration chosen starts on the one its course calls for — the trail
     // text here, no surface being stated — so the refusal needs the select cleared by hand.
     const programme = await openEditorBox(page, "Program, regulament și declarație");
     const declarationCard = await openEditorBox(page, "Declarația pe propria răspundere");
@@ -190,11 +190,11 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 });
 
 /*
-  §NNN: the race's declaration starts on the kind its course calls for and follows the surface
+  §515: the race's declaration starts on the kind its course calls for and follows the surface
   chosen in «Traseul» until somebody picks by hand; a hand-picked kind that does not fit the course
   is said under the select, never refused. The seed approves both race texts.
 */
-test.describe("§NNN the race's declaration follows the course", () => {
+test.describe("§515 the race's declaration follows the course", () => {
   test("trail with no surface, road on asphalt, and a note for the trail text picked on asphalt", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");

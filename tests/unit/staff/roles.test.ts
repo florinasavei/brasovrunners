@@ -335,11 +335,11 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       zice administratorului să modifice X, Y lucru".
     */
     // "emails" joined them in §253 — the messages and the words in them are the Redactor's work
-    // (§247) — and is «Setări» since §NNN, whose other tabs gate themselves (`settings-map.test.ts`).
+    // (§247) — and is «Setări» since §516, whose other tabs gate themselves (`settings-map.test.ts`).
     // "tasks" joins them in §438: «Sarcini» → «De făcut», the club's own checklist, is read by
     // every role from the copywriter up — only the Organizer and the Administrators write it,
     // and the panels read from the system stay the Administrator's (`task-panels.test.ts`).
-    // In the bar's order since §NNN: by how often the club opens them.
+    // In the bar's order since §516: by how often the club opens them.
     expect(visibleAdminSections("COPYWRITER")).toEqual([
       "events",
       "checkin",
@@ -508,7 +508,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canManagePlatform: /*     */ [false, false, false, false, false, true],
     canManageClubSettings: /* */ [false, false, false, false, true, true],
     canReadContent: /*        */ [false, true, true, true, true, true],
-    // «Setări» (§NNN): every role that reads the club's content — the volunteer has the desk alone.
+    // «Setări» (§516): every role that reads the club's content — the volunteer has the desk alone.
     canOpenSettings: /*       */ [false, true, true, true, true, true],
   };
   // Exported functions of one argument that are not about a role.

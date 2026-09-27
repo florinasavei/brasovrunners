@@ -325,7 +325,7 @@ export function isClubCopy(payload: unknown): boolean {
  * The club copy's payload: what the participant's row asked the template for — "you were already
  * registered", the thank-you's link, a number given by hand — plus the flag. Never a `cc` or a
  * `bcc` of its own, so a copy cannot fan out further than the one address its row is for — and
- * never the mark of the message that starts a deadline (§NNN, `STARTS_DEADLINE`): a copy starts
+ * never the mark of the message that starts a deadline (§513, `STARTS_DEADLINE`): a copy starts
  * nothing, and a copy still queued must not keep a runner's hold from lapsing.
  */
 export function clubCopyPayload(payload: Record<string, unknown>): Record<string, unknown> {

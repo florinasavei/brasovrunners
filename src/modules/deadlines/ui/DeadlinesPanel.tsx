@@ -40,7 +40,7 @@ type Props = {
    */
   addressCap?: AddressCapState;
   /**
-   * «Când pleacă emailurile» (§NNN): on the scheduler's tick (the default) or right after the
+   * «Când pleacă emailurile» (§513): on the scheduler's tick (the default) or right after the
    * request that queued them (§221). In this fold because it is a wait every participant is told
    * about — its own form and its own save, like the address cap.
    */
@@ -48,13 +48,13 @@ type Props = {
   /**
    * The most a message waits on the scheduled round on this deployment, by day and at night
    * (`notifications/outbox-delivery.ts`): the pinger's cadence, the minimum interval and the budget
-   * governor's floor, so the words say this site's numbers and never a typed "15 minutes" (§NNN).
+   * governor's floor, so the words say this site's numbers and never a typed "15 minutes" (§513).
    */
   scheduledWait?: { day: number; night: number };
 };
 
 /**
- * "Termene" (§377): the club's deadlines, one box each — «Setări» → «Termene» since §NNN, one tab
+ * "Termene" (§377): the club's deadlines, one box each — «Setări» → «Termene» since §516, one tab
  * over from «Emailuri», whose when-lines and previews state them. A Server Component with one form, the Mailgun plan's shape (§100): every box a whole
  * number with the bounds the service enforces (`DEADLINE_RULES`), carried as `min`/`max` so the
  * browser refuses "0 hours" before the server does (§315); the closed line says the four a
@@ -64,7 +64,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
   const t = await getTranslations("Admin");
   const confirmText = await confirmWords();
   const { deadlines, updatedAt } = state;
-  // The scheduled round's wait in words (§NNN): "15 minute" by day, "o oră" at night on production.
+  // The scheduled round's wait in words (§513): "15 minute" by day, "o oră" at night on production.
   const waitWords = scheduledWait
     ? { day: minutesPhrase(locale, scheduledWait.day), night: minutesPhrase(locale, scheduledWait.night), wait: minutesPhrase(locale, Math.max(scheduledWait.day, scheduledWait.night)) }
     : null;

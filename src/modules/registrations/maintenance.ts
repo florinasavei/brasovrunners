@@ -83,7 +83,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   let familyPurgeFailed = false;
   try {
     familyEntriesPurged = await purgeLapsedFamilyEntries(db, now);
-    // …and the family sittings nobody can act on any more (§NNN): ids and instants only, no names.
+    // …and the family sittings nobody can act on any more (§519): ids and instants only, no names.
     await purgeLapsedFamilySittings(db, now);
   } catch {
     familyPurgeFailed = true;

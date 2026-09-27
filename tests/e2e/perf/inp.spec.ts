@@ -454,7 +454,7 @@ async function fillRegistration(page: Page, omit?: string) {
     if (name === omit) continue;
     await field(page, name).fill(value);
   }
-  // «Sex» starts empty (§NNN): the form is refused without an answer.
+  // «Sex» starts empty (§510): the form is refused without an answer.
   if (omit !== "sex") await chooseSex(page);
   await field(page, "emailConfirm").fill(values.email);
   for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {

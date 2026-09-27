@@ -13,7 +13,7 @@ import { useSelectedValue } from "./OnlyForType";
 const NAME = "event.declarationDocumentId";
 
 /**
- * «Declarația pe care o semnează participantul» (§39, §NNN): the race's declaration, a choice among
+ * «Declarația pe care o semnează participantul» (§39, §515): the race's declaration, a choice among
  * the approved versions of both kinds, trail and road or park.
  *
  * A client island because its start follows the surface select of «Traseul», read with the observer

@@ -26,7 +26,7 @@ const TEXTS = [
   { name: "trail en", body: groupRunTrailEn, locale: "en" },
 ] as const;
 
-// §NNN: one age rule, the run's, with its day — the text's own «18» is gone.
+// §515: one age rule, the run's, with its day — the text's own «18» is gone.
 const SENTENCE = { ro: "Declar că am cel puțin {{minimumAge}} împliniți la data alergării.", en: "I declare that I am at least {{minimumAge}} old on the day of the run." } as const;
 const paragraphs = (body: LegalDocumentBody) => body.sections.flatMap((section) => [...section.paragraphs]);
 
@@ -131,7 +131,7 @@ describe("§440 the age gate: one rule, the race's", () => {
     expect(birthDateRefusal({ ...late, timezone: "UTC" }, "2005-10-07")).toEqual(["birthDate", GROUP_RUN_TOO_YOUNG]);
   });
 
-  it("states eighteen for a minimum of eighteen or less, and asks no birth date for it (§NNN)", () => {
+  it("states eighteen for a minimum of eighteen or less, and asks no birth date for it (§515)", () => {
     // The text states the run's number, never under eighteen: the declaration covers no minor.
     expect([0, 14, 16, 18, 19, 21].map(groupRunMinimumAge)).toEqual([18, 18, 18, 18, 19, 21]);
     // The signer's own statement is the check at eighteen; above it the page asks the date (§440).
@@ -168,8 +168,8 @@ describe("§440 the age gate: one rule, the race's", () => {
   });
 
   /*
-    §495, then §NNN: the box used to start at the club's minimum for a race, and the help led with
-    "18 or less changes nothing". Since §NNN the box starts and stops at 18 (the save refuses less),
+    §495, then §515: the box used to start at the club's minimum for a race, and the help led with
+    "18 or less changes nothing". Since §515 the box starts and stops at 18 (the save refuses less),
     so the help leads with that bound — at least 18, the declaration covers no minor — and names
     neither the race's minimum (a constant that may change) nor anything but 18 and an example above it.
   */

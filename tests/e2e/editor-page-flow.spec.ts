@@ -29,7 +29,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
 
     // The map: nine cards and the share links (the cost is inside card 1, §466; the place inside
     // «Când și unde» and the rules inside «Program, regulament și declarație», §481, the public list
-    // with them, §NNN), in the page's order, the share links named as automatic.
+    // with them, §512), in the page's order, the share links named as automatic.
     const map = page.getByTestId("section-map");
     await expect(map).toBeVisible();
     await expect(map.getByRole("listitem")).toHaveCount(10);
@@ -168,7 +168,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(when.locator("#box-place")).toHaveCount(1);
     await expect(when.locator("#box-timezone")).toHaveCount(1);
     await expect(when.locator('[name="event.locationName"]')).toHaveCount(1);
-    // The programme, the rules, the declaration and the public list (§NNN) as four cards in one, in the page's order.
+    // The programme, the rules, the declaration and the public list (§512) as four cards in one, in the page's order.
     const cards = await page.locator("#box-programme details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
     const inside = ["box-schedule", "box-rules", "box-declaration", "box-start-list"];
     expect(cards.filter((id) => inside.includes(id))).toEqual(inside);

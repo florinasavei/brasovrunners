@@ -98,7 +98,7 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
 }
 
 /**
- * The declaration a race's participant signs (§NNN): the text in force of the event's kind — trail
+ * The declaration a race's participant signs (§515): the text in force of the event's kind — trail
  * or road, by the version the organizer picked, else by the course (`raceDeclarationKeysFor`) — and
  * the trail text while a road race has no road text approved. Every place that shows, signs, prints
  * or asks about a race's declaration reads it here, so the page, the signature, the paper and the
@@ -133,7 +133,7 @@ export async function findEventDeclaration<T extends Record<string, unknown>>(
  * For the screens that say what a minor's paper must carry before the press (the desk, the
  * registration's page, the event's printable form): they ask the text in the registration's
  * language, the one `signDeclaration` and the paper confirmation bind to, so the sentence and what
- * the press records agree. With the event, its own declaration (§NNN, `findEventDeclaration`);
+ * the press records agree. With the event, its own declaration (§515, `findEventDeclaration`);
  * without one — a list whose rows span events — the trail text, which every race falls back to and
  * which, from the platform's templates, asks exactly what the road text asks.
  */
@@ -167,7 +167,7 @@ export async function groupRunDeclarationsInForce<T extends Record<string, unkno
 }
 
 /**
- * Whether both race declarations (§NNN) have a version in force, in every language, written from
+ * Whether both race declarations (§515) have a version in force, in every language, written from
  * the platform's shared body — the one that states the event's minimum age through `{{minimumAge}}`
  * and has no under-14 flow. What `/admin/tasks` asks for its «Declarațiile de concurs» row; false
  * while either kind has none, which for the road text means its races sign the trail one.
@@ -191,7 +191,7 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 
 /**
  * `declarationAsksMinorToSignByLocale` for each event of a list whose rows span events (the
- * registrations list, §NNN): each race signs its own kind of declaration, trail or road
+ * registrations list, §515): each race signs its own kind of declaration, trail or road
  * (`findEventDeclaration`), and the two approved texts may ask differently — so each row reads its
  * own event's answer, never the trail text's on behalf of every race. One read per distinct event.
  */
@@ -470,7 +470,7 @@ export async function listApprovedVersions<T extends Record<string, unknown>>(
 }
 
 /**
- * The approved versions of both race declarations (§NNN), for the editor's «Declarația pe care o
+ * The approved versions of both race declarations (§515), for the editor's «Declarația pe care o
  * semnează participantul»: the trail ones first, then the road ones, each newest first — each with
  * its key, so the choice says which kind of course it is for.
  */

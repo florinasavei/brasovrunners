@@ -98,7 +98,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * «Setări» → «Costuri» (§NNN): the club's money page (§479), moved whole from `/admin/tasks` →
+ * «Setări» → «Costuri» (§516): the club's money page (§479), moved whole from `/admin/tasks` →
  * «Costuri», which answers 308 here — the month so far per provider and projected to its end, the
  * database's configuration in one card (the plan, the month's budget, the brakes, the jobs'
  * interval), the translation allowance, then what the club pays a year and what the next thing to
@@ -342,7 +342,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         month stands, what Neon will allow, how often the platform wakes it — every door unchanged:
         each card keeps its own `mayEdit` and each action asserts it. A section rather than a fold:
         the forms inside must never sit in a shut box. The ids are the addresses «Sarcini»'s rows
-        link to (§336, §NNN).
+        link to (§336, §516).
       */}
       <Panel id="database-config" title={t("database.title")} intro={t("database.intro")} data-testid="database-config">
         <Stack spacing={2}>

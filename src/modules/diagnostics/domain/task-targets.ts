@@ -2,7 +2,7 @@ import { SETTINGS_TAB_ROUTE, type SettingsTab } from "@/modules/staff-identity/d
 import type { TaskId } from "../owner-tasks";
 
 /**
- * Where a row of «Sarcini» → «Club» is done in the backoffice, when it is (§NNN; the owner,
+ * Where a row of «Sarcini» → «Club» is done in the backoffice, when it is (§516; the owner,
  * 2026-09-27: «ne duce prea dintr-o parte în alta»).
  *
  * A row used to say where to go only inside its folded steps, as a path to read — «/admin/emails →

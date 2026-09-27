@@ -89,7 +89,7 @@ test.describe("BR-REQ-090-05 the app tab on /admin/tasks", () => {
     await expect(page).toHaveURL(/panel=app/);
     await expect(main.getByRole("heading", { name: "The work queue" })).toBeVisible();
 
-    // The money moved to «Setări» → «Costuri» (§NNN), and its old address follows it there — a
+    // The money moved to «Setări» → «Costuri» (§516), and its old address follows it there — a
     // real 404 for Tehnic, since «Setări» has no loading boundary to flush a 200 first.
     expect((await page.goto("/ro/admin/tasks?panel=costs"))?.status()).toBe(404);
     await expect(page).toHaveURL(/\/admin\/settings\/costs$/);

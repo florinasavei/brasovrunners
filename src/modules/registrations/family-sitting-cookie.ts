@@ -4,7 +4,7 @@ import { sittingCookieMaxAgeSeconds, type FamilySittingCookie, type SittingPerso
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
- * The browser's half of a family sitting (§NNN): which sitting, the address its forms are sent
+ * The browser's half of a family sitting (§519): which sitting, the address its forms are sent
  * with, the people typed so far (name and birth date), the boxes a family shares for the next form
  * and the last form's birth-date clash (§493) — sealed (AES-256-GCM under the deployment's secret bound to
  * this purpose, the form draft's sealing), `httpOnly`, `sameSite=lax`, on the registration form's
@@ -56,9 +56,9 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     n: peopleLines(value.people),
     x: String(value.heldUntil.getTime()),
     w: value.sameBirthDate ? `${value.sameBirthDate.typed}\t${value.sameBirthDate.kept}` : "",
-    // The club's window is 0 (§NNN): nothing held, only the offer of another person.
+    // The club's window is 0 (§519): nothing held, only the offer of another person.
     a: value.atOnce ? "1" : "",
-    // The window the action read (§NNN): the screen names this one, not the public cache's.
+    // The window the action read (§519): the screen names this one, not the public cache's.
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
   };
   /*
@@ -96,7 +96,7 @@ export async function readFamilySittingCookie(): Promise<FamilySittingCookie | n
 export async function writeFamilySittingCookie(value: FamilySittingCookie, path: string, now: Date): Promise<void> {
   const sealed = sealFamilySittingCookie(value);
   if (!sealed) return;
-  // The window's end plus the grace (§NNN): the automatic «Gata» at that instant still carries the cookie.
+  // The window's end plus the grace (§519): the automatic «Gata» at that instant still carries the cookie.
   const maxAge = sittingCookieMaxAgeSeconds(value.heldUntil, now);
   (await cookies()).set(COOKIE, sealed, {
     httpOnly: true,

@@ -80,7 +80,7 @@ export default async function PageFieldsForm({
 
       <LocaleTabPanels
         idPrefix="locale"
-        // «Tradu cardul: RO → EN» in the tab row too (§NNN), where the person is looking.
+        // «Tradu cardul: RO → EN» in the tab row too (§514), where the person is looking.
         translateCard
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);

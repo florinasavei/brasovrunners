@@ -352,11 +352,11 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       expect(audience).toMatchObject({ confirmed: 2, unconfirmed: 1 });
       expect(audience.byTopic.GEAR_TESTING).toBe(2);
       expect(audience.byTopic.VOLUNTEERING).toBe(1);
-      // The retired discount codes are no topic a message may be counted for (§NNN).
+      // The retired discount codes are no topic a message may be counted for (§517).
       expect(audience.byTopic).not.toHaveProperty("DISCOUNTS");
     });
 
-    it("§NNN offers no discount codes: a pop-up asking for them alone is refused, beside others they are dropped, the composer refuses them", async () => {
+    it("§517 offers no discount codes: a pop-up asking for them alone is refused, beside others they are dropped, the composer refuses them", async () => {
       await approveNotice({ describesNewsletter: true });
       const refusal = await subscribeToNewsletter(db, form("ana@example.org", ["DISCOUNTS"]), NOW).catch((error: unknown) => error);
       expect(isDomainError(refusal) && refusal.fields).toContain("topics");
@@ -371,10 +371,10 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       expect(isDomainError(composed) && composed.fields).toEqual(["topic"]);
     });
 
-    it("§NNN reads a subscription the old code wrote with discount codes without them", async () => {
+    it("§517 reads a subscription the old code wrote with discount codes without them", async () => {
       await approveNotice({ describesNewsletter: true });
       const subscriber = await subscribed("ana@example.org", ["WEEKLY_RUNS"]);
-      // What the code serving before the migration could still write (§NNN).
+      // What the code serving before the migration could still write (§517).
       await db.update(newsletterSubscribers).set({ topics: ["DISCOUNTS", "WEEKLY_RUNS"] }).where(eq(newsletterSubscribers.id, subscriber.id));
       const actor = await staff("ADMIN");
       await sendNewsletter(db, actor, { topic: "WEEKLY_RUNS", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW);

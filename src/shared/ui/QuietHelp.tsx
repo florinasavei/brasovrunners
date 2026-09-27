@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
 
 /**
- * The backoffice's discreet «?» (§NNN; the owner: the backoffice's words cut to one plain sentence
+ * The backoffice's discreet «?» (§511; the owner: the backoffice's words cut to one plain sentence
  * per field, the details behind a «?»). The sentence a field needs stays on the screen; what
  * explains it — the why, the exceptions, where a figure comes from — is this glyph's tooltip and
  * its accessible name, so a screen reader hears it without the hover and a thumb gets it with a

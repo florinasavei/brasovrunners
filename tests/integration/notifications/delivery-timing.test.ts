@@ -6,7 +6,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — emails leave on the scheduler's tick, not right after the request: the §221 delivery
+ * §513 — emails leave on the scheduler's tick, not right after the request: the §221 delivery
  * timing now defaults to `scheduled` wherever a pinger runs, and it is a «Termene» setting, the Administrator's
  * (`canManageClubSettings`) at the page, the action and the service (BR-REQ-060-01).
  */
@@ -49,7 +49,7 @@ async function refusal(promise: Promise<unknown>): Promise<string> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN emails leave on the scheduler's tick by default", () => {
+describe("§513 emails leave on the scheduler's tick by default", () => {
   it("defaults to scheduled where a pinger runs, and to immediate where none does", () => {
     expect(defaultDeliveryTiming("production")).toEqual({ timing: "scheduled" });
     expect(defaultDeliveryTiming("qa")).toEqual({ timing: "scheduled" });
@@ -71,7 +71,7 @@ describe("§NNN emails leave on the scheduler's tick by default", () => {
   });
 });
 
-describe("BR-REQ-060-01 the delivery timing is a «Termene» setting, the Administrator's (§NNN)", () => {
+describe("BR-REQ-060-01 the delivery timing is a «Termene» setting, the Administrator's (§513)", () => {
   it("is set by an Administrator, audited from and to, and wakes the outbox job", async () => {
     const admin = await staff("ADMIN");
     const saved = await updateDeliveryTiming(db, admin, { timing: "scheduled" }, NOW);

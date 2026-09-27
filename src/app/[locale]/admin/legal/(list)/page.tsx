@@ -140,7 +140,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const versions = await listVersionsForBackoffice(getDb());
-  // The one press (§132): offered while any text it covers (`PLATFORM_APPROVAL_KEYS`, §NNN) has no approved version, with the
+  // The one press (§132): offered while any text it covers (`PLATFORM_APPROVAL_KEYS`, §515) has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
   // The contact address as the club chose to show it (§442).
   const facts = clubFactsFromEnv(env, await shownContactAddresses(getDb()));

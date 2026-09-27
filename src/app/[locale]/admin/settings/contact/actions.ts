@@ -14,7 +14,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /*
-  «Setări» → «Contact» (§NNN): where the club is written to — who reads «Scrie-ne» (§164) and the
+  «Setări» → «Contact» (§516): where the club is written to — who reads «Scrie-ne» (§164) and the
   address the site shows and every email answers to (§442). Both actions moved here, unchanged,
   from `/admin/emails`; they land back on this tab.
 */

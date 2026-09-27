@@ -200,7 +200,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
       // The event's own minimum age (§329) with its unit — "16 ani", "20 de ani" — for the sentence
-      // every declaration opens with (§440, §NNN): a race's never under the platform's fourteen
+      // every declaration opens with (§440, §515): a race's never under the platform's fourteen
       // (`effectiveMinimumAge`), a group run's never under eighteen, the age its self-declaration is
       // signed at (`groupRunMinimumAge`).
       minimumAge: minimumAgeMergeValue(event.type === "GROUP_RUN" ? groupRunMinimumAge(event.minAge) : effectiveMinimumAge(event.minAge), locale),
@@ -325,7 +325,7 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
 
 /**
  * The blank form for one event, on its current approved declaration — trail or road, as the event
- * signs it (§NNN, `findEventDeclaration`) — for the desk.
+ * signs it (§515, `findEventDeclaration`) — for the desk.
  *
  * `forMinor` (§330) prints the form a minor signs with a parent or guardian: two signature lines
  * and two identity-document lines, the minor's and the parent's, under "DREPT PENTRU CARE SEMNĂM".

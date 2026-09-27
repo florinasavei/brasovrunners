@@ -71,7 +71,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
   const ticked = new Set(typed.topics ?? []);
   const invalid = new Set<string>(refused);
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
-  // The confirmation link leaves on the scheduler's tick by default (§NNN): the sentence says that
+  // The confirmation link leaves on the scheduler's tick by default (§513): the sentence says that
   // wait, or "a few minutes" when the club sends right after the request. Read only on "sent".
   const waitMinutes = outcome === "sent" ? await cachedEmailWaitMinutes(new Date()) : null;
   const errorText =

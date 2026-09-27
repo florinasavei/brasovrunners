@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — under the scheduled default the outbox job is the only sender, so the wait a page promises
+ * §513 — under the scheduled default the outbox job is the only sender, so the wait a page promises
  * and the tick `/api/health` and «Următoarele emailuri automate» (§383) name come from one formula:
  * the longest of the pinger's cadence at this hour, the Administrator's minimum interval (§334) and
  * the budget governor's floor (§447). Under `immediate` there is no wait to promise.
@@ -40,7 +40,7 @@ beforeEach(() => {
   state.failing = false;
 });
 
-describe("§NNN emailWaitMinutes — the longest hold on the outbox job", () => {
+describe("§513 emailWaitMinutes — the longest hold on the outbox job", () => {
   it("is null when the request itself sends", () => {
     expect(emailWaitMinutes({ timing: "immediate", pingerMinutes: 15, intervalMinutes: 120, governorFloorMinutes: 120 })).toBeNull();
   });
@@ -52,7 +52,7 @@ describe("§NNN emailWaitMinutes — the longest hold on the outbox job", () => 
   });
 });
 
-describe("§NNN nextOutboxTick — the pinger call the outbox job is next expected at", () => {
+describe("§513 nextOutboxTick — the pinger call the outbox job is next expected at", () => {
   it("is the next quarter-hour by day, the next top of the hour at night", () => {
     expect(nextOutboxTick({ now: new Date("2026-10-01T07:04:00.000Z"), pingerMinutes: 15, intervalMinutes: 0, lastRunAt: null }).toISOString()).toBe(
       "2026-10-01T07:15:00.000Z",
@@ -84,7 +84,7 @@ describe("§NNN nextOutboxTick — the pinger call the outbox job is next expect
   });
 });
 
-describe("§NNN cachedEmailWaitMinutes — what the public pages promise", () => {
+describe("§513 cachedEmailWaitMinutes — what the public pages promise", () => {
   it("says the pinger's fifteen minutes by day and its hour at night", async () => {
     expect(await cachedEmailWaitMinutes(DAY)).toBe(15);
     expect(await cachedEmailWaitMinutes(NIGHT)).toBe(60);

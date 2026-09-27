@@ -37,7 +37,7 @@ test.describe("§389 §446 a family on one address", () => {
   type Person = { firstName: string; lastName: string; birthDate: string };
 
   /**
-   * One form, sent. `email` null is a family sitting's next form (§NNN): the address is fixed and not
+   * One form, sent. `email` null is a family sitting's next form (§519): the address is fixed and not
    * asked. `done` presses «Gata» after it, so the sitting's one message leaves at once.
    */
   async function fillPerson(page: Page, person: Person, email: string | null, done = true) {
@@ -52,7 +52,7 @@ test.describe("§389 §446 a family on one address", () => {
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
-    // «Sex» starts empty (§NNN): the form is refused without an answer.
+    // «Sex» starts empty (§510): the form is refused without an answer.
     await chooseSex(page);
     if (email) await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
@@ -64,7 +64,7 @@ test.describe("§389 §446 a family on one address", () => {
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page).toHaveURL(/submitted=1/, { timeout: 30_000 });
     /*
-      «Gata» after each form (§NNN): these cases are one person per sitting — the email of §446 for
+      «Gata» after each form (§519): these cases are one person per sitting — the email of §446 for
       each — so each sitting's message leaves at once. The sitting of several people is its own case below.
     */
     if (!done) return;
@@ -135,7 +135,7 @@ test.describe("§389 §446 a family on one address", () => {
     await publicSubmission(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, email);
     const [ana] = await registrationsByEmail(email);
     expect(await queuedPayloads(ana.id, "REGISTER_ANOTHER_PERSON")).toEqual([
-      // The entry's link starts with this message, so it carries the mark (§NNN).
+      // The entry's link starts with this message, so it carries the mark (§513).
       { atCap: false, registrationsPerAddress: expect.any(Number), familyEntryId: expect.any(String), startsDeadline: true },
     ]);
 
@@ -218,7 +218,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
   });
 
-  test("§NNN one sitting, one email: the next person keeps the address, «Gata» sends one family message, one press confirms everybody and opens the wizard", async ({ page }) => {
+  test("§519 one sitting, one email: the next person keeps the address, «Gata» sends one family message, one press confirms everybody and opens the wizard", async ({ page }) => {
     test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -322,7 +322,7 @@ test.describe("§389 the limit per address, set and stated", () => {
     await confirmDialog(page, "Salvezi limita pe adresă?");
     await expect(main.getByText("Maximul de înscrieri pe o adresă a fost salvat", { exact: false })).toBeVisible();
     await expect(page.locator("#main").getByTestId("address-cap").locator('input[name="registrationsPerAddress"]')).toHaveValue("3");
-    // The message that states it, in its when-line — one tab over, on «Emailuri» (§NNN).
+    // The message that states it, in its when-line — one tab over, on «Emailuri» (§516).
     await page.goto("/ro/admin/settings/emails");
     await expect(main.locator("#email-REGISTER_ANOTHER_PERSON > summary")).toContainText("când formularul e trimis din nou cu altă persoană");
 

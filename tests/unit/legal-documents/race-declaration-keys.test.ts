@@ -14,11 +14,11 @@ import {
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 
 /**
- * §NNN — which of the race's two declarations a participant signs: the organizer's choice, else the
+ * §515 — which of the race's two declarations a participant signs: the organizer's choice, else the
  * course; a road race falls back to the trail text while no road text is approved, never the other
  * way round.
  */
-describe("§NNN which race declaration an event signs", () => {
+describe("§515 which race declaration an event signs", () => {
   it("are two keys, the trail one the key every signature so far was recorded under", () => {
     expect([...RACE_DECLARATION_KEYS]).toEqual(["EVENT_DECLARATION", "EVENT_DECLARATION_ROAD"]);
     // The registration's three texts are unchanged: the trail text is the one every race falls back to.
@@ -62,11 +62,11 @@ describe("§NNN which race declaration an event signs", () => {
 });
 
 /**
- * §NNN — the editor starts a race with no declaration chosen on the kind its course calls for, so the
+ * §515 — the editor starts a race with no declaration chosen on the kind its course calls for, so the
  * surface's rule reaches the saved row (a race cannot be saved without a declaration, §39), and says
  * when a saved choice is the other kind.
  */
-describe("§NNN the editor's start for a race's declaration", () => {
+describe("§515 the editor's start for a race's declaration", () => {
   const NOW = new Date("2026-09-27T12:00:00.000Z");
   const LATER = new Date("2026-10-15T00:00:00.000Z");
   const trail1 = { id: "trail-1", key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-09-01T00:00:00.000Z") } as const;
@@ -118,7 +118,7 @@ describe("§NNN the editor's start for a race's declaration", () => {
   });
 });
 
-describe("§NNN the one press approves every text of the catalogue", () => {
+describe("§515 the one press approves every text of the catalogue", () => {
   it("covers exactly the catalogue's keys: the registration's three, the road declaration and the group runs' two", () => {
     expect([...PLATFORM_APPROVAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
     expect([...PLATFORM_APPROVAL_KEYS].sort()).toEqual(Object.keys(LEGAL_TEMPLATES).sort());

@@ -141,7 +141,7 @@ describe("§383 the upcoming automatic emails card", () => {
   });
 });
 
-describe("§NNN the card opens with the queue and the outbox job's next tick", () => {
+describe("§513 the card opens with the queue and the outbox job's next tick", () => {
   const delivery = {
     timing: "scheduled" as const,
     pending: 3,

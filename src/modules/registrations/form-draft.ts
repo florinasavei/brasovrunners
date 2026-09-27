@@ -156,9 +156,9 @@ const SUBMITTED_COOKIE = "br_submitted_to";
 export type SubmittedFacts = Readonly<{
   email: string | null;
   firstName: string | null;
-  /** Everybody a family sitting sent the form for (§NNN), as typed, in order; one name or none otherwise. */
+  /** Everybody a family sitting sent the form for (§519), as typed, in order; one name or none otherwise. */
   names?: readonly string[];
-  /** The club's window was 0 (§NNN): each person's email left on its own, so nothing promises one email. */
+  /** The club's window was 0 (§519): each person's email left on its own, so nothing promises one email. */
   atOnce?: boolean;
 }>;
 
@@ -173,7 +173,7 @@ export function firstNameOf(typedFirstName: string | null | undefined): string |
 }
 
 /**
- * The facts cookie's life (§NNN, the review of 2026-09-27): while a family sitting is live it lives as
+ * The facts cookie's life (§519, the review of 2026-09-27): while a family sitting is live it lives as
  * long as the sitting's own cookie — the window plus the grace — so the screen still names the inbox
  * when the automatic «Gata» fires; outside a sitting, the ten minutes it always had.
  */

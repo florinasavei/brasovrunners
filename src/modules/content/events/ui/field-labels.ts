@@ -27,7 +27,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
   // «Când și unde» holds the date, the place and the time zone since §481: one card, its fields named by it.
   const inWhenWhere = (label: string) => inBox("whenWhere", label);
-  // «Program, regulament și declarație» holds three cards since §481, and the public list since §NNN: a field is named by the card and its card.
+  // «Program, regulament și declarație» holds three cards since §481, and the public list since §512: a field is named by the card and its card.
   const inProgrammeRules = (card: "programme" | "rules" | "declaration" | "startList", label: string) =>
     inBox("programmeRules", `${t(`editor.boxes.${card}.title`)} › ${label}`);
 

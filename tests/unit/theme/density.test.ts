@@ -165,7 +165,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/registrations/confirm/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 4 },
   { file: "src/app/[locale]/registrations/declare/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
   // Another person confirmed from the inbox (§446): born on the scale, its three containers.
-  // Two more since §NNN: the family sitting's list and its outcome, the same page padding.
+  // Two more since §519: the family sitting's list and its outcome, the same page padding.
   { file: "src/app/[locale]/registrations/family/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 7 },
   { file: "src/app/[locale]/registrations/list/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/registrations/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },

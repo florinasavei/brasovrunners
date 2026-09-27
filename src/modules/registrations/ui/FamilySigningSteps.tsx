@@ -16,7 +16,7 @@ import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
  * that person — a confirmed person's desk code and QR (the same picture «Înscrierile mele» shows,
  * §77), the waiting list, or the link that still signs a person left for later.
  *
- * A confirmed person's race number beside the desk code, on every line and on the last screen (§NNN;
+ * A confirmed person's race number beside the desk code, on every line and on the last screen (§519;
  * the owner, of this list: «aici vreau să văd și BIB-urile»): the one helper the family's confirmation
  * email and the export read (`raceNumberOf`, §87, §94, §173), provisional and said so, or «încă fără
  * număr» while none is given (§420).

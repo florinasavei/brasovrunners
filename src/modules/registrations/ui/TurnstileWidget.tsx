@@ -27,7 +27,7 @@ import { isPressHeld } from "@/shared/ui/held-press";
 /**
  * Cloudflare Turnstile, rendered explicitly and reset on every attempt (`DECISIONS.md` §185), with
  * every state it can be in said in words under it and a way out of each one a person can be stuck
- * in (§NNN).
+ * in (§518).
  *
  * The form used Cloudflare's implicit mode: `<div class="cf-turnstile">` in the server's markup
  * and `api.js` loaded beside it. That works exactly once. `api.js` scans the document when it
@@ -44,7 +44,7 @@ import { isPressHeld } from "@/shared/ui/held-press";
  * changes. The server passes its own render time as `attempt`, which is a new value on every
  * response and therefore on every failed submission.
  *
- * **Every state, visible and recoverable (§NNN).** Cloudflare's own frame says «Success!» or shows
+ * **Every state, visible and recoverable (§518).** Cloudflare's own frame says «Success!» or shows
  * a box, and says nothing at all when its script is blocked, when it fails, when its token lapses
  * or when the box waited too long — and the send button (`SubmitButton`'s `awaitsBotCheck`) was
  * left to guess from an empty field. Now each of Cloudflare's documented callbacks names a state
@@ -62,7 +62,7 @@ import { isPressHeld } from "@/shared/ui/held-press";
  * - a widget that fails or never loads says so in a hidden field of its form
  *   (`BOT_CHECK_SIGNAL_FIELD`), which the register action counts, level-only, for `/api/health`.
  *
- * **Callbacks that outlive the effect run that drew them (§NNN).** The widget is drawn once and
+ * **Callbacks that outlive the effect run that drew them (§518).** The widget is drawn once and
  * reset on every attempt, so the callbacks `render` was given are the ones Cloudflare keeps calling;
  * the effect below runs again on every attempt. The callbacks read the current run's `become` from
  * a ref (`relay`, `botCheckCallbacks`) at the moment they are called — before, they held the first
@@ -112,15 +112,15 @@ export default function TurnstileWidget({
   const holder = useRef<HTMLDivElement | null>(null);
   const widgetId = useRef<string | null>(null);
   const [state, setState] = useState<BotCheckWidgetState>("loading");
-  // The current effect run's `become`, read by Cloudflare's callbacks when they are called (§NNN).
+  // The current effect run's `become`, read by Cloudflare's callbacks when they are called (§518).
   const relay = useRef<BotCheckRelay["current"]>(null);
-  // Failures so far (§NNN): the first is Cloudflare's to retry, the second gives up. Kept across
+  // Failures so far (§518): the first is Cloudflare's to retry, the second gives up. Kept across
   // «Reîncearcă verificarea» and new attempts; a pass starts the count again.
   const [failures, setFailures] = useState(0);
   // A press held on the form when the state changed: the button's own sentence is then the live
-  // region, and this line changes without being read out on top of it (§NNN).
+  // region, and this line changes without being read out on top of it (§518).
   const [quiet, setQuiet] = useState(false);
-  // The attempt in which the widget last failed or never loaded (§NNN): while it is this one, the
+  // The attempt in which the widget last failed or never loaded (§518): while it is this one, the
   // form says so to the register action, which counts it for `/api/health` — once per submission,
   // however many times it failed, and never again for a later attempt whose check worked.
   const [failedIn, setFailedIn] = useState<string | null>(null);
@@ -161,7 +161,7 @@ export default function TurnstileWidget({
         reads the field on the next task — so a held press is sent the moment the check says yes,
         whatever the field is and whichever order the script calls back and writes it in. §502 left
         the failure callbacks out because an `error-callback` can change how the widget retries;
-        the ones `drawBotCheck` hands Cloudflare (§NNN) answer `false`, which leaves Cloudflare's
+        the ones `drawBotCheck` hands Cloudflare (§518) answer `false`, which leaves Cloudflare's
         own retry as it was, and only name the state.
       */
       const element = holder.current;
@@ -215,7 +215,7 @@ export default function TurnstileWidget({
   }, [siteKey, locale, attempt, reload]);
 
   /*
-    A check that takes longer than it should says so and offers to start again (§NNN): the usual
+    A check that takes longer than it should says so and offers to start again (§518): the usual
     answer is under a second, and a spinner that never ends reads as a page that broke. The reset
     lives in the cleanup — it runs when the state moves on — rather than in the effect body, where
     a synchronous setState is a render scheduled from a render (`SubmitButton`'s own slow line).
@@ -300,7 +300,7 @@ export default function TurnstileWidget({
         sx={{ minHeight: 65 }}
       />
       {/*
-        A widget that failed in this attempt says so with the form (§NNN) — a word, nothing about
+        A widget that failed in this attempt says so with the form (§518) — a word, nothing about
         who — and the register action counts it for `/api/health`. Beside Cloudflare's element,
         never inside it: that one is the script's to draw into.
       */}
@@ -310,7 +310,7 @@ export default function TurnstileWidget({
           {/*
             A live region the state is read from as it changes: polite, it waits for the typing —
             and silent while a press is held, when the send button's own sentence says the same
-            state (§NNN): one voice, not two sentences on top of each other.
+            state (§518): one voice, not two sentences on top of each other.
           */}
           <Typography
             variant="body2"

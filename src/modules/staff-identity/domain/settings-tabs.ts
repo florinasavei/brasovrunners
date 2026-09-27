@@ -1,7 +1,7 @@
 import { canManageRegistrations, canReadContent, canSeeDiagnostics, type StaffRole } from "./roles";
 
 /**
- * «Setări» / "Settings" — the backoffice's one place for what the club sets (§NNN; the owner,
+ * «Setări» / "Settings" — the backoffice's one place for what the club sets (§516; the owner,
  * 2026-09-27: «navbar-urile și URL-urile shared între Sarcini și config sunt un pic greșite, ne
  * duce prea dintr-o parte în alta»).
  *

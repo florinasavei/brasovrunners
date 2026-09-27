@@ -3,7 +3,7 @@ import type { DeliveryTiming } from "./delivery-timing";
 
 /**
  * How long a message queued now may wait, and when the outbox job is next expected to send it
- * (§NNN) — pure, so the pages that promise a wait, `/api/health` and «Următoarele emailuri
+ * (§513) — pure, so the pages that promise a wait, `/api/health` and «Următoarele emailuri
  * automate» (§383) all say the same number from one formula.
  *
  * Under `scheduled` the outbox job is the only sender, and three things hold it back, the longest

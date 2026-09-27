@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the screen after the registration form says the wait the club's delivery timing makes:
+ * §513 — the screen after the registration form says the wait the club's delivery timing makes:
  * "within a minute" only when the request itself sends, and the scheduled round's own wait — the
  * one `cachedEmailWaitMinutes` computes — in words otherwise (§224: not knowing the wait is what
  * makes somebody fill the form in again).
@@ -43,7 +43,7 @@ async function render(): Promise<string> {
   return renderToStaticMarkup(element).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the screen after the form says the scheduled round's wait", () => {
+describe("§513 the screen after the form says the scheduled round's wait", () => {
   beforeEach(() => {
     wait.minutes = 15;
   });

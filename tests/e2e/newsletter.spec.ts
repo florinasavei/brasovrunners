@@ -32,7 +32,7 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(panel.getByTestId("newsletter-counts")).toContainText("Abonați confirmați:");
 
     const compose = page.locator("#main").getByTestId("newsletter-composer").getByTestId("newsletter-compose");
-    // The retired discount codes are no choice (§NNN).
+    // The retired discount codes are no choice (§517).
     await expect(compose.locator('input[name="topic"][value="DISCOUNTS"]')).toHaveCount(0);
     await compose.locator('input[name="topic"][value="GEAR_TESTING"]').check();
     const subject = `Testare de încălțăminte ${Date.now().toString(36)}`;
@@ -100,7 +100,7 @@ test.describe("§445 the newsletter pop-up on the contact page", () => {
       await expect(row).toBeVisible();
       expect((await row.boundingBox())?.height ?? 0, topic).toBeGreaterThanOrEqual(44);
     }
-    // The discount codes are for the club's members, not the newsletter (§NNN).
+    // The discount codes are for the club's members, not the newsletter (§517).
     await expect(dialog.getByTestId("newsletter-topic-DISCOUNTS")).toHaveCount(0);
     await expect(dialog).not.toContainText("Coduri de reducere");
     // «Toate noutățile» ticks all; unticking one unticks it.

@@ -4,7 +4,7 @@ import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase"
 import type { TestDatabase } from "./db";
 
 /**
- * The declaration emails that start their holds, as sent at `at` (§NNN): what the drain does within
+ * The declaration emails that start their holds, as sent at `at` (§513): what the drain does within
  * seconds of the request under the `immediate` timing, and the scheduler's tick under `scheduled`.
  *
  * A test about what happens once a hold lapses calls this first. A hold whose first email is still

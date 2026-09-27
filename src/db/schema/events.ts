@@ -527,7 +527,7 @@ export const events = pgTable(
      *
      * The club's fourteen is the default — `MIN_PARTICIPANT_AGE` in `registrations/domain/age.ts`
      * says the same number, and every event that existed before this column was given it, so no
-     * event's rule changed the day it was added. Since §NNN fourteen is also the floor: the editor
+     * event's rule changed the day it was added. Since §515 fourteen is also the floor: the editor
      * refuses less, and a row stored with less under §329 (when zero meant no minimum) binds as
      * fourteen (`effectiveMinimumAge`). `submitRegistration` counts it at every door; the guardian
      * rule (eighteen, §108) is not this column's.
@@ -700,7 +700,7 @@ export const events = pgTable(
     check("events_waitlist_capacity_non_negative", sql`${t.waitlistCapacity} IS NULL OR ${t.waitlistCapacity} >= 0`),
 
     /**
-     * A minimum age a person can have (§329): zero to ninety-nine. Since §NNN the form refuses
+     * A minimum age a person can have (§329): zero to ninety-nine. Since §515 the form refuses
      * under fourteen and the code reads anything under it as fourteen; raising this CHECK to 14 is
      * a contract step for a later release (AGENTS.md §7.6), after the rows under it are updated.
      */

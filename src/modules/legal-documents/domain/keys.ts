@@ -3,7 +3,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 /**
  * Every legal document key, in the order the backoffice lists them (§393): the three a
  * registration rests on (BR-REQ-053-01) with the road race's declaration beside the trail one
- * (§NNN), then the group runs' two optional self-declarations.
+ * (§515), then the group runs' two optional self-declarations.
  *
  * Written out here rather than read off the enum, so a client component (the legal editor's
  * select) can import the list without the database schema; `tests/unit/legal-documents/group-run-declaration.test.ts`
@@ -21,7 +21,7 @@ export const LEGAL_DOCUMENT_KEYS = [
 /**
  * The three texts a registration cannot go without (BR-REQ-053-01). The declaration among them is the
  * trail one, `EVENT_DECLARATION`: it is the text every race falls back to (`raceDeclarationKeysFor`),
- * so with it in force no race is without a declaration; the road one (§NNN) is wanted but not
+ * so with it in force no race is without a declaration; the road one (§515) is wanted but not
  * required — until it is approved, a road race signs the trail text, as every race did before it
  * existed. The one press approves both, with every other text of the catalogue (`PLATFORM_APPROVAL_KEYS`).
  */
@@ -29,7 +29,7 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
 
 /**
  * What «Aprobă textele platformei» on `/admin/legal` creates and approves in one press (§132,
- * §NNN): every text of the catalogue — the three a registration rests on, the road race's
+ * §515): every text of the catalogue — the three a registration rests on, the road race's
  * declaration beside the trail one, and the group runs' two optional self-declarations — so a club
  * that takes the platform's texts has everything covered from the same press. Approving a group
  * run's text only makes it available: a run offers it only once its organizer ticks the box (§393).
@@ -38,7 +38,7 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
 export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS;
 
 /**
- * The race's two declarations (§NNN; the owner's review of 2026-09-27: "Două tipuri:
+ * The race's two declarations (§515; the owner's review of 2026-09-27: "Două tipuri:
  * `event_declaration_trail`, `event_declaration_road`"), built from one shared body with a risk
  * section per course (`templates/declaration.ts`, `RACE_DECLARATION_PARTS`). `EVENT_DECLARATION` is the trail one — the
  * key every signature so far was recorded under, kept so that no recorded acceptance changes
@@ -52,7 +52,7 @@ export function isRaceDeclarationKey(key: string | null | undefined): key is Rac
 }
 
 /**
- * Which of the two declarations a race's participant signs (§NNN), most wanted first — the text in
+ * Which of the two declarations a race's participant signs (§515), most wanted first — the text in
  * force of the first key that has one is the text, and the caller stops there.
  *
  * - The organizer's choice decides: the version picked in «Declarația pe propria răspundere»
@@ -78,7 +78,7 @@ export type RaceDeclarationChoice = { id: string; key: RaceDeclarationKey; versi
 
 /**
  * The version the editor's «Declarația pe care o semnează participantul» starts on for a race with
- * no declaration chosen yet (§NNN) — a new race, or a saved one that never had one: the newest
+ * no declaration chosen yet (§515) — a new race, or a saved one that never had one: the newest
  * version **in force** (approved, not withdrawn, `effectiveAt` reached) of the kind its course
  * reads (`raceDeclarationKeysFor`), so an asphalt race starts on the road text once the club has
  * approved one and on the trail text until then. Null when nothing of either usable kind is in
@@ -103,7 +103,7 @@ export function preselectedRaceDeclaration<C extends RaceDeclarationChoice>(
 }
 
 /**
- * The kind a race's course calls for when the kind chosen is the other one (§NNN), or null when
+ * The kind a race's course calls for when the kind chosen is the other one (§515), or null when
  * they agree — or when the course's own kind has no approved version to switch to (an asphalt race
  * on the trail text while no road text exists is the fallback, not a mistake), or when the course
  * is not stated. The card's note under the select; never a refusal: the organizer knows the course.

@@ -271,7 +271,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       birthDate: input.details?.birthDate ?? null,
       sex: input.details?.sex ?? null,
       nationality: input.details?.nationality ?? null,
-      // Never null (§NNN): a staff entry or a kept family entry without one lives in Romania,
+      // Never null (§510): a staff entry or a kept family entry without one lives in Romania,
       // the column's own default, said here so the insert never names a null.
       country: input.details?.country ?? "RO",
       city: input.details?.city ?? null,
@@ -616,7 +616,7 @@ export type OccupiedCountsRow = {
 };
 
 /**
- * A declaration hold whose clock has not started yet (§NNN): the message that starts it — the
+ * A declaration hold whose clock has not started yet (§513): the message that starts it — the
  * participant's own `COMPLETE_DECLARATION`, marked `startsDeadline` by the allocation that wrote
  * the hold (`notifications/domain/deadline-rebase.ts#STARTS_DEADLINE`) — is still in the queue,
  * waiting for the scheduler's tick, a deferral or a retry (`PENDING`), or claimed and not yet out
@@ -652,7 +652,7 @@ export async function countOccupied<T extends Record<string, unknown>>(
       confirmed: sql<number>`count(*) filter (where ${registrations.status} = 'CONFIRMED')::int`,
       pendingDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
       unexpiredWaitlistOfferedHolds: sql<number>`count(*) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and ${registrations.holdExpiresAt} > ${now})::int`,
-      // Not a hold whose first email is still queued (§NNN): its clock has not started.
+      // Not a hold whose first email is still queued (§513): its clock has not started.
       lapsedDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
     })
     .from(registrations)
@@ -801,7 +801,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
         eq(registrations.eventId, event.id),
         eq(registrations.status, "PENDING_DECLARATION"),
         lte(registrations.holdExpiresAt, now),
-        // A hold whose first email is still queued has not started (§NNN) — unless the race has.
+        // A hold whose first email is still queued has not started (§513) — unless the race has.
         over ? undefined : not(awaitingItsFirstEmail()),
       ),
     )

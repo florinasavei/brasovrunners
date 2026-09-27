@@ -216,7 +216,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/registrations/new",
       // Everything held about one person (§322), for an access request: by hand, like the rest.
       "/admin/registrations/person",
-      // «Setări» (§NNN): the club's settings as one row of tabs, each written here by hand — the
+      // «Setări» (§516): the club's settings as one row of tabs, each written here by hand — the
       // email page and «Aspect» (§488) moved in, and answer 308 from their old addresses.
       "/admin/settings",
       "/admin/settings/appearance",

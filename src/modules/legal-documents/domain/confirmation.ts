@@ -30,7 +30,7 @@ export const DOCUMENT_CODES: Record<LegalDocumentKey, string> = {
   PRIVACY_NOTICE: "GDPR",
   TERMS: "TERMS",
   EVENT_DECLARATION: "DECLARATION",
-  // The road race's declaration beside the trail one (§NNN): the course in the code, as for the group runs'.
+  // The road race's declaration beside the trail one (§515): the course in the code, as for the group runs'.
   EVENT_DECLARATION_ROAD: "ROAD",
   // The group runs' optional declarations (§393): the surface in the code, so the two are told apart.
   GROUP_RUN_DECLARATION_ASPHALT: "ASPHALT",

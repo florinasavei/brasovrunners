@@ -138,7 +138,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
     (`latestBirthDateFor`, `isUnderMinimumAge`), today a bound as well. A refusal for age says the
     number, in the summary and under the box, rather than "fill it in" (§47, as the race's §321).
   */
-  // The age the text states, never under eighteen (`groupRunMinimumAge`, §NNN); a birth date is
+  // The age the text states, never under eighteen (`groupRunMinimumAge`, §515); a birth date is
   // asked only above it (`groupRunAsksBirthDate`).
   const minAge = groupRunMinimumAge(event.minAge);
   const hasMinimumAge = groupRunAsksBirthDate(event.minAge);
@@ -155,7 +155,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         {t("groupRunDeclaration.page.title")}
       </Typography>
       <Typography sx={{ mb: 1 }}>{t("groupRunDeclaration.page.intro", { event: event.title })}</Typography>
-      {/* For oneself, from the run's age — never under eighteen (§NNN) — and the text is this page's language:
+      {/* For oneself, from the run's age — never under eighteen (§515) — and the text is this page's language:
           what is signed is what is shown (§57); the header's switch brings the other language's text. */}
       <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-adults">
         {t("groupRunDeclaration.page.adultsOnly", minimumAge)}
@@ -275,7 +275,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             required
             autoComplete="email"
           />
-          {/* The consent box repeats the run's age, the one the text states through {{minimumAge}} (§NNN). */}
+          {/* The consent box repeats the run's age, the one the text states through {{minimumAge}} (§515). */}
           <CheckboxField id="accepted" name="accepted" required defaultChecked={draft?.accepted === "on"}>
             {t("groupRunDeclaration.page.accept", minimumAge)}
           </CheckboxField>

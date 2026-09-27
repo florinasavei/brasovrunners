@@ -70,7 +70,7 @@ export type EmailHealth = {
    */
   gmail: GmailHealth & { deferred: number; resumesAt: string | null };
   /**
-   * When the queue next leaves (§NNN): the delivery timing, the rows waiting to be claimed, the
+   * When the queue next leaves (§513): the delivery timing, the rows waiting to be claimed, the
    * most a message queued now may wait and the outbox job's next expected real run. Reported
    * beside the counts, never a status of its own — under the scheduled default a queue that waits
    * for the tick is the setting working, and `overdue` above already says when it is not.

@@ -50,7 +50,7 @@ const PURPOSE = "family-signing";
 
 /**
  * What the pass is bound to: the opened declaration link (`link`), the «Înscrierile mele» link it was
- * exchanged for (`mine`), or the family message's one link (`family`, §NNN), spent by the press that
+ * exchanged for (`mine`), or the family message's one link (`family`, §519), spent by the press that
  * confirmed the family and opened the wizard.
  */
 export type FamilyPassBinding = "link" | "mine" | "family";
@@ -257,7 +257,7 @@ async function bindingHolds<T extends Record<string, unknown>>(
     return context.ok && context.token.participantId === pass.participantId;
   }
   /*
-    The family message's link (§NNN): spent by the press that confirmed the family and handed this
+    The family message's link (§519): spent by the press that confirmed the family and handed this
     browser the pass, for this participant, scoped to a registration of this event. Until the token's
     own lapse — the pass's half hour is always shorter.
   */
@@ -315,6 +315,6 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
     .from(registrations)
     .where(and(eq(registrations.participantId, participantId), eq(registrations.eventId, eventId)))
     .orderBy(registrations.createdAt, registrations.id);
-  // In the order the family's forms were sent (§NNN, `compareFamilyOrder`), which `familySigningSteps` sorts by.
+  // In the order the family's forms were sent (§519, `compareFamilyOrder`), which `familySigningSteps` sorts by.
   return withFamilyRank(rows, await sittingOrderFor(db, participantId, eventId));
 }

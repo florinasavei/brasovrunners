@@ -140,7 +140,7 @@ async function submitOnly(event: EventForRegistration, email: string, kind: Regi
 async function registerAndConfirm(event: EventForRegistration, email: string, kind: RegistrationKind = "REAL", at: Date = NOW) {
   const pending = await submitOnly(event, email, kind, at);
   const confirmed = await confirmEmail(db, event, pending.id, at);
-  // The declaration email leaves at once, as under the `immediate` timing: the hold's clock runs (§NNN).
+  // The declaration email leaves at once, as under the `immediate` timing: the hold's clock runs (§513).
   await sendHoldEmails(db, at);
   return confirmed;
 }

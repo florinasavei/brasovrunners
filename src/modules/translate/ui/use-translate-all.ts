@@ -10,12 +10,12 @@ import { useTranslatePress } from "./use-translate-press";
 
 /**
  * Where a press reads and writes: the form the boxes post in, and — for one card — the card and
- * its name (`card`, for the toast «… traduse în „Descrierea completă”», §NNN).
+ * its name (`card`, for the toast «… traduse în „Descrierea completă”», §514).
  */
 export type TranslateScope = { form: HTMLFormElement | null; within?: ParentNode | null; card?: string | null };
 
 /**
- * What follows a press (§NNN): `onDone` only when boxes were filled — a refusal, a failure or a
+ * What follows a press (§514): `onDone` only when boxes were filled — a refusal, a failure or a
  * form with no Romanian words leaves the reader where they are, reading the line and the toast.
  */
 export function afterPress(result: { kind: string } | null, onDone?: () => void): void {
@@ -25,14 +25,14 @@ export function afterPress(result: { kind: string } | null, onDone?: () => void)
 /**
  * One press over many English boxes, with the one question it may ask first (§482): shared by
  * «Copiază și tradu tot: RO → EN» at the top of an editor (the whole form) and «Tradu cardul: RO →
- * EN» in a card's tab row (§NNN, the card's boxes only), so both ask the same question at the same
+ * EN» in a card's tab row (§514, the card's boxes only), so both ask the same question at the same
  * moments — English already written would be replaced («Înlocuiește tot» / «Doar cele goale»), or
  * the press would send more than `ASK_ABOVE_CHARACTERS` — and say what happened the same way
  * (`pressFeedback`: the line and the toast, §496).
  *
  * `scope` is read at the press, never at render: the boxes are the browser's, as typed now.
  * `bigTitle` is the question's title when only the size asks, in the press's own words.
- * `onDone` runs once the boxes were filled — a card's press brings its English tab forward (§NNN),
+ * `onDone` runs once the boxes were filled — a card's press brings its English tab forward (§514),
  * so the person reads the result rather than the unchanged Romanian.
  */
 export function useTranslateAll(scope: () => TranslateScope, bigTitle: string, onDone?: () => void) {

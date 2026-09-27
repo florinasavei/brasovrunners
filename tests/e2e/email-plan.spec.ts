@@ -91,7 +91,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // in either it names the Bcc ("Copie ascunsă: …"); with neither — CI sets no variable, and the
     // Administrator's test below clears the row — it says nobody receives them, and names no copy.
     // Whichever state this database is in, the Organizer is shown the sentence. On «Setări» →
-    // «Contact» since §NNN, where the card arrives open.
+    // «Contact» since §516, where the card arrives open.
     await page.goto("/ro/admin/settings/contact");
     await openFold(main.getByTestId("contact-recipients"));
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
@@ -144,7 +144,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
 
     const contacts = main.getByTestId("contact-recipients");
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
-    // «Setări» → «Contact» is this card and the shown address alone, so it arrives open (§NNN),
+    // «Setări» → «Contact» is this card and the shown address alone, so it arrives open (§516),
     // its summary still saying where the messages go right now.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: ");
@@ -217,7 +217,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     expect(page.url()).not.toContain("saved=");
 
     // With JavaScript off the refused POST renders the page afresh — the tab's card open, as it
-    // arrives (§NNN) — and the refusal, with the address as typed, is shown in it.
+    // arrives (§516) — and the refusal, with the address as typed, is shown in it.
     const { baseURL, viewport } = test.info().project.use;
     const scriptless = await browser.newContext({
       baseURL,
@@ -292,7 +292,7 @@ test.describe("§336 the emails participants receive, as a card of cards", () =>
 
   test("a #fragment naming a closed panel opens it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    // A closed card of the email tab: the contact recipients are open on their own tab (§NNN).
+    // A closed card of the email tab: the contact recipients are open on their own tab (§516).
     await page.goto("/ro/admin/settings/emails#email-plan");
     await hydrated(page);
     await expect(page.locator("#main").getByTestId("email-plan")).toHaveAttribute("open", "");

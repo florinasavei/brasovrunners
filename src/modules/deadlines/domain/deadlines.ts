@@ -75,7 +75,7 @@ export type DeadlineRule = {
  *   season's lists up can say so in its notice — the default is a month, because the names are a
  *   disclosure whose purpose (who is coming, who came) is spent soon after the event, and the
  *   registration itself is kept three years for other reasons.
- * - the **family sitting** 0 to 60 minutes, 10 by default (§NNN): how long the screen after the
+ * - the **family sitting** 0 to 60 minutes, 10 by default (§519): how long the screen after the
  *   form waits for another person on the same address before the one email leaves by itself, when
  *   nobody presses «Gata» — counted again from every form sent and every «Da, încă o persoană».
  *   Ten minutes is a second form filled on a phone; 0 holds nothing, every form's email leaving at
@@ -180,7 +180,7 @@ export function emailLinkExpiresAt(now: Date, deadlines: Pick<Deadlines, "confir
 }
 
 /**
- * Until when a family sitting holds its one email back (§NNN): the club's minutes from the last
+ * Until when a family sitting holds its one email back (§519): the club's minutes from the last
  * form sent in it, or the last «Da, încă o persoană». «Gata» sends it before; each further form in the
  * sitting, and each «Da», moves this forward. At 0 the sitting holds nothing (`familySittingHolds`).
  */
@@ -188,7 +188,7 @@ export function familySittingHeldUntil(now: Date, deadlines: Pick<Deadlines, "fa
   return new Date(now.getTime() + deadlines.familySittingMinutes * MINUTE);
 }
 
-/** Whether a family sitting holds its email at all (§NNN): 0 minutes is "every form's email at once". */
+/** Whether a family sitting holds its email at all (§519): 0 minutes is "every form's email at once". */
 export function familySittingHolds(deadlines: Pick<Deadlines, "familySittingMinutes">): boolean {
   return deadlines.familySittingMinutes > 0;
 }

@@ -10,7 +10,7 @@ import { newsletterTopic, type NewsletterTopic } from "@/db/schema/newsletter";
  */
 
 /**
- * Topics the club no longer offers (§NNN; the owner, 2026-09-27: the discount codes are for the
+ * Topics the club no longer offers (§517; the owner, 2026-09-27: the discount codes are for the
  * club's members only, so the newsletter does not offer them). The value stays in the database's
  * enum — a value is never removed, and an old send's row still names it — but no box, no composer
  * choice and no saved subscription carries it: the migration that retired it stripped it from
@@ -45,7 +45,7 @@ export function isSendableTopic(value: unknown): value is SendableTopic {
  * The topics as a subscriber chose them, in the catalogue's order, each once. "Everything" ticked
  * is everything, whatever else was ticked beside it: the row then says `ALL` alone, so a topic the
  * club adds next year reaches the person who asked for everything. Anything that is not a topic is
- * dropped — a retired topic too (§NNN); nothing chosen is an empty list, which the service refuses.
+ * dropped — a retired topic too (§517); nothing chosen is an empty list, which the service refuses.
  */
 export function normalizeTopics(values: readonly unknown[]): OfferedTopic[] {
   const chosen = new Set(values.filter(isNewsletterTopic));

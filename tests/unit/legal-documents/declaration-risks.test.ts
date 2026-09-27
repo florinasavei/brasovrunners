@@ -16,7 +16,7 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
  * runner takes ownership of everything". §418 — the counsel review: informed acceptance of risk,
  * never a waiver, and the law's limit on every sentence that says the organiser does not answer.
  *
- * §NNN — the owner's review of 2026-09-27: the race's declaration is two texts from one shared
+ * §515 — the owner's review of 2026-09-27: the race's declaration is two texts from one shared
  * body — trail (`EVENT_DECLARATION`) and road or park (`EVENT_DECLARATION_ROAD`). The shared
  * sections (the participant, the minimum age, minors of 14–17, liability, health, stopping, fair
  * play, belongings, the kit, photographs, the data, the signature) are written once; each text adds
@@ -104,13 +104,13 @@ const ROAD_ONLY = {
 const DISCLAIMER = { ro: /nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|nu răspunde\b/i, en: /cannot be held liable|not responsible/i } as const;
 const LAW_LIMIT = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
 
-describe("§NNN the race's two declarations, one shared body", () => {
+describe("§515 the race's two declarations, one shared body", () => {
   it("are the catalogue's trail and road texts, both languages", () => {
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.body).toBe(declarationTrailRo);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.body).toBe(declarationTrailEn);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.body).toBe(declarationRoadRo);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.body).toBe(declarationRoadEn);
-    // The titles the review asked for (§NNN): «— cursă trail», «— cursă pe asfalt / în parc».
+    // The titles the review asked for (§515): «— cursă trail», «— cursă pe asfalt / în parc».
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toBe("Declarație pe propria răspundere — cursă trail");
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toBe("Declarație pe propria răspundere — cursă pe asfalt / în parc");
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.title).toMatch(/— trail race$/);

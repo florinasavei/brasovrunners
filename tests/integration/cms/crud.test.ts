@@ -234,7 +234,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       expect((await createEvent(db, { actor: admin, fields: withMinAge(undefined, "absent") })).minAge).toBe(14);
     });
 
-    // §NNN: fourteen is the floor — "0, no minimum" and anything under fourteen are refused at the box.
+    // §515: fourteen is the floor — "0, no minimum" and anything under fourteen are refused at the box.
     it("refuses a number under fourteen, a number no person has, or a fraction, naming the box, and writes nothing", async () => {
       for (const minAge of ["0", "13", "100", "-1", "14.5", "paisprezece"]) {
         let fields: readonly string[] = [];
@@ -255,7 +255,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       expect((await duplicateEvent(db, { actor: admin, eventId: source.id })).minAge).toBe(18);
     });
 
-    it("gives a copy of a race saved under §329 with 0 or 12 the floor of fourteen, never the old number (§NNN)", async () => {
+    it("gives a copy of a race saved under §329 with 0 or 12 the floor of fourteen, never the old number (§515)", async () => {
       for (const [stored, slug] of [[0, "fara-minim"], [12, "doisprezece"]] as const) {
         const source = await createEvent(db, { actor: admin, fields: withMinAge("14", slug) });
         // Written straight to the row, as a save before the floor could have left it.

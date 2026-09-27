@@ -38,7 +38,7 @@ export type FamilySigningRow = {
   /** The race number's two columns (§214), for the number beside the desk code (`raceNumberOf`). */
   bibNumber?: number | null;
   provisionalBibNumber?: number | null;
-  /** The place in the family's order (§NNN, `compareFamilyOrder`), when the family's one button confirmed it. */
+  /** The place in the family's order (§519, `compareFamilyOrder`), when the family's one button confirmed it. */
   familyRank?: number | null;
 };
 
@@ -102,7 +102,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
   const ordered = [...rows].sort(
     (a, b) =>
       Number(b.id === input.originId) - Number(a.id === input.originId) ||
-      // The order the family's forms were sent (§NNN): one helper for the email, the page and the wizard.
+      // The order the family's forms were sent (§519): one helper for the email, the page and the wizard.
       compareFamilyOrder(a, b),
   );
   const included = ordered.filter(
@@ -171,7 +171,7 @@ export function isFamilyWizard(steps: readonly FamilyStep[]): boolean {
 }
 
 /**
- * Where one person's declaration stands, as «Toate înscrierile mele» says it under each name (§NNN;
+ * Where one person's declaration stands, as «Toate înscrierile mele» says it under each name (§519;
  * the owner: «pagina „Toate înscrierile mele” arată starea declarației fiecăruia»):
  * - `signed` — an acceptance exists, on a link, in the wizard or on paper at the desk;
  * - `toSign` — a place held, or offered, waiting for it;

@@ -200,7 +200,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
       }
       expect(copies.map((copy) => copy.recipientEmail).sort(), message.messageType).toEqual([HIDDEN, PRESIDENT].sort());
       for (const copy of copies) {
-        // The participant's payload, less the mark of the message that starts a deadline (§NNN): a copy starts nothing.
+        // The participant's payload, less the mark of the message that starts a deadline (§513): a copy starts nothing.
         const asked = Object.fromEntries(Object.entries(message.payloadJson as Record<string, unknown>).filter(([key]) => key !== STARTS_DEADLINE));
         expect(copy.payloadJson).toEqual({ ...asked, clubCopy: true });
         expect(copy.locale).toBe(message.locale);

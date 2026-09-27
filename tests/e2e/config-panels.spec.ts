@@ -16,7 +16,7 @@ import { signIn } from "./support/featured-event";
 test.describe("§265 the configuration panels", () => {
   test.skip(() => test.info().project.name !== "desktop", "one viewport is enough");
 
-  test("keeps what is owed on «Sarcini», and the anti-bot switch and the costs on «Setări» (§NNN)", async ({ page }) => {
+  test("keeps what is owed on «Sarcini», and the anti-bot switch and the costs on «Setări» (§516)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     const main = page.locator("#main");
 
@@ -66,7 +66,7 @@ test.describe("§265 the configuration panels", () => {
     await expect(tasksNav.getByRole("link", { name: "Club", exact: true })).toHaveAttribute("aria-current", "page");
   });
 
-  test("a row of «Sarcini» → «Club» links into the «Setări» tab that does it (§NNN)", async ({ page }) => {
+  test("a row of «Sarcini» → «Club» links into the «Setări» tab that does it (§516)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     const main = page.locator("#main");
     await page.goto("/ro/admin/tasks");
@@ -95,7 +95,7 @@ test.describe("§265 the configuration panels", () => {
     await expect(main.getByRole("heading", { name: /Baza de date/i })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Configurație" })).toHaveCount(0);
 
-    // «Setări»'s row sits above the page's own panels, «Configurație» its last tab and marked (§NNN).
+    // «Setări»'s row sits above the page's own panels, «Configurație» its last tab and marked (§516).
     const settingsRow = main.getByRole("navigation", { name: "Setări" });
     await expect(settingsRow.getByRole("link", { name: "Configurație", exact: true })).toHaveAttribute("aria-current", "page");
     const panels = main.getByRole("navigation", { name: "Configurația acestui mediu" });
@@ -110,7 +110,7 @@ test.describe("§265 the configuration panels", () => {
     await expect(main.getByRole("heading", { name: /e-?mail/i }).first()).toBeVisible();
     await expect(main.getByRole("heading", { name: "Configurație" })).toHaveCount(0);
 
-    // The anti-bot switch is the club's, on «Setări» → «Platformă» (§NNN), and the sub-nav says so.
+    // The anti-bot switch is the club's, on «Setări» → «Platformă» (§516), and the sub-nav says so.
     await panels.getByRole("link", { name: "Anti-robot" }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/platform/);
 
@@ -141,7 +141,7 @@ test.describe("§360 the sub-tabs on a phone", () => {
       { url: "/ro/admin/tasks", nav: "Ce mai este de făcut", current: "Club" },
       { url: "/ro/devs?panel=general", nav: "Configurația acestui mediu", current: "General" },
       { url: "/ro/admin/gallery/pictures", nav: "Galerie foto", current: "Imagini" },
-      // «Setări»'s six tabs (§NNN): the row that must scroll on a phone rather than wrap.
+      // «Setări»'s six tabs (§516): the row that must scroll on a phone rather than wrap.
       { url: "/ro/admin/settings/costs", nav: "Setări", current: "Costuri" },
     ];
     for (const row of rows) {

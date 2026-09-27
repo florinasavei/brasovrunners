@@ -99,7 +99,7 @@ describe("§355 the throttle card says the safety look is on the hour", () => {
     expect(html).toContain(ro.Admin.tasks.jobCadence.onTheHour);
   });
 
-  // The line on the card and its «?» (§NNN): one sentence visible, the reasons in the tooltip.
+  // The line on the card and its «?» (§511): one sentence visible, the reasons in the tooltip.
   const onTheHour = (messages: typeof ro) => `${messages.Admin.tasks.jobCadence.onTheHour} ${messages.Admin.tasks.jobCadence.onTheHourMore}`;
 
   it("names the hour, the health monitor and the one wake of an idle hour in both languages", () => {

@@ -11,7 +11,7 @@ type Props = { params: Promise<{ locale: string }> };
 export const dynamic = "force-dynamic";
 
 /**
- * A bare `/admin/settings` — the main bar's «Setări» — lands on the reader's first tab (§NNN):
+ * A bare `/admin/settings` — the main bar's «Setări» — lands on the reader's first tab (§516):
  * «Emailuri» for every role that opens the section. The tab row is the rest of the map.
  */
 export default async function SettingsIndexPage({ params }: Props) {

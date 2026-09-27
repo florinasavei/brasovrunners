@@ -89,7 +89,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   }
 
   /*
-    A family confirmed with one press (§NNN), and somebody on its list did not join — or nobody has
+    A family confirmed with one press (§519), and somebody on its list did not join — or nobody has
     a declaration to sign (the waiting list). What happened, as sentences for the markers in the
     address, and the way into the declarations when there are some: the pass the press handed this
     browser carries the wizard on the declaration page under this same link.
@@ -155,7 +155,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
   // One throttled read for the page; after a refused press whose link is known dead, none.
   const link = invalid ? null : await readFamilyEntryLinkPage(token, locale, new Date());
   /*
-    Not one person's link: perhaps a family's (§NNN) — the same token purpose, read again without a
+    Not one person's link: perhaps a family's (§519) — the same token purpose, read again without a
     second charge, since this request already paid its one attempt above.
   */
   const sittingLink =

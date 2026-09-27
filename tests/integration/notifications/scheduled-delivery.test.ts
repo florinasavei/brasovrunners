@@ -9,7 +9,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — under the scheduled delivery timing (the default on QA and production) the request that
+ * §513 — under the scheduled delivery timing (the default on QA and production) the request that
  * queues a registration's verification email sends nothing: the drain after its response only
  * wakes the outbox job, the row stays PENDING, and it leaves at the job's run (`processOutboxBatch`,
  * what `/api/internal/jobs/email-outbox` calls). The request path is the real one — the
@@ -113,7 +113,7 @@ async function render(row: OutboxRow): Promise<OutgoingEmail> {
   return { to: row.recipientEmail, subject: row.messageType, html: `<p>${row.messageType}</p>`, text: row.messageType, locale: row.locale, idempotencyKey: row.idempotencyKey };
 }
 
-describe("§NNN a registration's email waits for the outbox job under the scheduled timing", () => {
+describe("§513 a registration's email waits for the outbox job under the scheduled timing", () => {
   it("stays PENDING through the request's own drain and leaves at the job's run", async () => {
     await db.insert(platformSettings).values({ key: DELIVERY_TIMING_SETTING_KEY, value: { timing: "scheduled" }, updatedAt: NOW });
     const [row] = await db
@@ -158,7 +158,7 @@ describe("§NNN a registration's email waits for the outbox job under the schedu
   });
 });
 
-describe("§NNN /api/health's email block says the queue and the next tick", () => {
+describe("§513 /api/health's email block says the queue and the next tick", () => {
   it("counts the pending rows, the scheduled wait and the outbox job's next expected call", async () => {
     const { checkEmailHealth } = await import("@/modules/notifications/health");
     await db.insert(platformSettings).values({ key: DELIVERY_TIMING_SETTING_KEY, value: { timing: "scheduled" }, updatedAt: NOW });

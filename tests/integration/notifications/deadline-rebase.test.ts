@@ -31,7 +31,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «termenul curge de când pleacă emailul»: every participant deadline an email starts is
+ * §513 — «termenul curge de când pleacă emailul»: every participant deadline an email starts is
  * counted from the moment that email is SENT, not from the moment it was queued. Under the
  * scheduled delivery (the default on QA and production) a message waits for the outbox job's next
  * tick, up to an hour at night; the declaration hold is thirty minutes.
@@ -104,7 +104,7 @@ async function stub(row: OutboxRow): Promise<OutgoingEmail> {
   return { to: row.recipientEmail, subject: row.messageType, html: `<p>${row.messageType}</p>`, text: row.messageType, locale: row.locale, idempotencyKey: row.idempotencyKey };
 }
 
-describe("§NNN a participant's deadline counts from the moment its email leaves", () => {
+describe("§513 a participant's deadline counts from the moment its email leaves", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

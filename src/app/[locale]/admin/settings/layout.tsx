@@ -6,7 +6,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 export const dynamic = "force-dynamic";
 
 /**
- * «Setări» (§NNN): the gate for the whole section, a real 404 for a role with no tab here (the
+ * «Setări» (§516): the gate for the whole section, a real 404 for a role with no tab here (the
  * volunteer, whose backoffice is the desk and the guide — §103). Each tab's page asserts its own
  * gate again (`canOpenSettingsTab`), and every form on it its own predicate at the action and the
  * service (BR-REQ-060-01): this is the door, never the permission.

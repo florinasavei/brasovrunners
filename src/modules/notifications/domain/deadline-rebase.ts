@@ -3,7 +3,7 @@ import { DEADLINE_RULES } from "@/modules/deadlines/domain/deadlines";
 import { capHoldExpiry } from "@/modules/registrations/domain/hold-deadlines";
 
 /**
- * «Termenul curge de când pleacă emailul» (§NNN): a participant's deadline counts from the moment
+ * «Termenul curge de când pleacă emailul» (§513): a participant's deadline counts from the moment
  * the email that carries it leaves, not from the moment it was queued.
  *
  * Under the scheduled delivery (the default on QA and production) a message waits for the outbox
@@ -64,7 +64,7 @@ export const DEADLINE_KIND_BY_MESSAGE: Partial<Record<EmailMessageType, Deadline
 };
 
 /**
- * The payload key of the one message that **starts** its deadline (§NNN): the email the allocator,
+ * The payload key of the one message that **starts** its deadline (§513): the email the allocator,
  * the offer or the form queued in the same transaction that wrote the deadline — the first send,
  * and only it. A resend (the backoffice's «Trimite din nou», §80; the runner's own «trimite-mi
  * linkul din nou», §39; the form sent again), a reminder (§104, §160) and the club's copies (§320)

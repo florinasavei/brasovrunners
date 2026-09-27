@@ -143,7 +143,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
     expect(html).not.toContain('name="event.offersGroupRunDeclaration"');
   });
 
-  // §NNN — two race declarations, trail and road or park: the choice names its kind, and while the
+  // §515 — two race declarations, trail and road or park: the choice names its kind, and while the
   // club approved no road text the card says a road race signs the trail one.
   it("names each option's kind, the newest of each kind, and the road race's fallback to the trail text", async () => {
     const html = await rules(RACE);

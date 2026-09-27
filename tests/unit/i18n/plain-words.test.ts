@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the backoffice's words: one plain sentence of help per field or card, the rest behind a
+ * §511 — the backoffice's words: one plain sentence of help per field or card, the rest behind a
  * «?» or in the guide.
  *
  * The owner, 2026-09-27, of the Neon limits card: «nu înțeleg asta man… e prea mult AI slop
@@ -101,7 +101,7 @@ function breaches(text: string): string[] {
   return why;
 }
 
-describe("§NNN the backoffice says one plain sentence per field, the rest behind «?»", () => {
+describe("§511 the backoffice says one plain sentence per field, the rest behind «?»", () => {
   for (const [locale, catalogue] of [
     ["ro", ro as Catalogue],
     ["en", en as Catalogue],
@@ -155,7 +155,7 @@ describe("§NNN the backoffice says one plain sentence per field, the rest behin
   });
 });
 
-describe("§NNN the «?» itself", () => {
+describe("§511 the «?» itself", () => {
   const html = renderToStaticMarkup(createElement(QuietHelp, { text: "Un detaliu care nu încape pe rând." }));
 
   it("is a button that never submits, named by its words", () => {

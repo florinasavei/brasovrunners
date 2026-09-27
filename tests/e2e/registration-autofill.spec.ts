@@ -38,7 +38,7 @@ async function fillRequired(page: Page, email: string, lastName = "Popescu") {
     // Spaces aside: the telephone boxes group the digits as they arrive (§337), which is not a wipe.
     if ((await box.inputValue()).replace(/\s/g, "") !== value.replace(/\s/g, "")) await box.fill(value);
   }
-  // «Sex» starts empty (§NNN): the form is refused without an answer.
+  // «Sex» starts empty (§510): the form is refused without an answer.
   await chooseSex(page);
   await page.locator('[name="emailConfirm"]').fill(email);
   await page.locator('[name="privacyAcknowledged"]').check();
@@ -171,7 +171,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(line).toHaveCount(1);
     await expect(line).toContainText("S-a înscris din nou cu aceeași adresă");
     await expect(line).toContainText("(Așteaptă confirmarea emailului)");
-    // The same browser, inside its family sitting (§NNN): nothing new was queued — the held email is the
+    // The same browser, inside its family sitting (§519): nothing new was queued — the held email is the
     // one that leaves, once, and the line says so rather than "re-sent" or "nothing to re-send".
     await expect(line).toContainText("„Confirmă adresa de email” așteaptă deja să plece și pleacă o singură dată");
     // It is what the person did, so it is not in the team's own trail.

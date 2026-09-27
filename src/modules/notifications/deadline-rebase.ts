@@ -12,7 +12,7 @@ import { DEADLINE_KIND_BY_MESSAGE, REBASE_MIN_WAIT_MS, rebasedDeadline, startsIt
 import type { OutboxRow } from "./outbox";
 
 /**
- * «Termenul curge de când pleacă emailul» (§NNN, `domain/deadline-rebase.ts`): the reads before a
+ * «Termenul curge de când pleacă emailul» (§513, `domain/deadline-rebase.ts`): the reads before a
  * message renders, and the guarded write after it is SENT.
  *
  * `processOutboxBatch` plans before it renders — so the words and the link the message carries
@@ -47,7 +47,7 @@ export type DeadlineRebase =
  * What sending this row now would do to the deadline it carries, or null. Only the message that
  * started that deadline (`STARTS_DEADLINE` in its payload, written by the enqueue that wrote the
  * deadline): a resend, a reminder or a club copy carries no mark and moves nothing, so a deadline
- * is re-based once, on its first send, never again (§NNN). A message that has waited less than a
+ * is re-based once, on its first send, never again (§513). A message that has waited less than a
  * minute costs no read at all — every message under the `immediate` timing.
  */
 export async function planDeadlineRebase<T extends Record<string, unknown>>(

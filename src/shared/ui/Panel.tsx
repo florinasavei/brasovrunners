@@ -65,7 +65,7 @@ type Props = {
   /** One line under the heading saying what the panel is for. Optional. */
   intro?: string;
   /**
-   * What the intro would have said beyond its one sentence (§NNN): drawn as the discreet «?»
+   * What the intro would have said beyond its one sentence (§511): drawn as the discreet «?»
    * (`QuietHelp`) at the end of the intro's line, the words its tooltip and its accessible name.
    * Ignored without an `intro`.
    */
@@ -178,7 +178,7 @@ export default function Panel({
 }: Props) {
   const folds = collapsible && !isStatic;
   const nested = level > 2;
-  // The intro's «?», when the panel has more to say than its one sentence (§NNN).
+  // The intro's «?», when the panel has more to say than its one sentence (§511).
   const more = introMore ? <QuietHelp text={introMore} /> : null;
 
   if (variant === "help") {

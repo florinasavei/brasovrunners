@@ -16,7 +16,7 @@ type SexAnswer = (typeof SEX_ANSWERS)[number];
 const GLYPHS = { FEMALE: FemaleIcon, MALE: MaleIcon, UNSPECIFIED: PersonIcon } as const;
 
 /**
- * «Sex» on the public registration form: an answer the runner gives, never one pre-chosen (§NNN).
+ * «Sex» on the public registration form: an answer the runner gives, never one pre-chosen (§510).
  *
  * **What posts is a native `<select name="sex" required>`** drawn by the server, like the
  * citizenship (§463): its first option is an empty, disabled «Alege…», chosen while there is no

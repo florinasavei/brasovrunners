@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-053-02 criterion 6 (`DECISIONS.md` §132) — the platform's texts a race rests on, with the
- * club's facts written in, approved in one act: since §NNN every text of the catalogue — the notice,
+ * club's facts written in, approved in one act: since §515 every text of the catalogue — the notice,
  * the terms, both race declarations, trail and road, and the group runs' two optional ones
  * (`PLATFORM_APPROVAL_KEYS`). The long way's rules, in one
  * call: a placeholder left is a refusal, a text in force is never replaced, and the approver
@@ -76,7 +76,7 @@ describe("the platform's texts approved in one act", () => {
     expect(await db.select().from(legalDocuments)).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
   });
 
-  it("approves the road declaration alone for a club whose three texts were already in force (§NNN)", async () => {
+  it("approves the road declaration alone for a club whose three texts were already in force (§515)", async () => {
     // A club that pressed the button before the road declaration existed: three in force, one missing.
     await approvePlatformTemplates(db, superadmin, FACTS, NOW);
     await db.delete(legalDocuments).where(eq(legalDocuments.key, "EVENT_DECLARATION_ROAD"));

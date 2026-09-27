@@ -11,7 +11,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Tradu cardul: RO → EN» in a card's Română | English tab row: the whole editor's press
+ * §514 — «Tradu cardul: RO → EN» in a card's Română | English tab row: the whole editor's press
  * (§482), narrowed to one card.
  *
  * - the plan and the press over a card: only the English boxes inside it that post in this form,
@@ -114,7 +114,7 @@ function fakeAction(answer?: TranslateOutcome) {
   return { action, calls };
 }
 
-describe("§NNN «Tradu cardul» reads and fills one card of the form", () => {
+describe("§514 «Tradu cardul» reads and fills one card of the form", () => {
   it("lists only the card's English boxes; without a card, the whole form as before", () => {
     const { form, titleCard } = editor();
     expect(englishBoxesToTranslate(asForm(form), titleCard)).toEqual(["translations.en.title"]);
@@ -186,7 +186,7 @@ function rawStrip(offer: TranslateOffer | null, props: Partial<ComponentProps<ty
 
 const WORKING: TranslateOffer = { action: async () => ({ ok: false, reason: "forbidden" }) as TranslateOutcome, setupHref: null };
 
-describe("§NNN the button in the card's tab row", () => {
+describe("§514 the button in the card's tab row", () => {
   it("is drawn where the page translates, in the reader's language", () => {
     const html = strip(WORKING);
     expect(html).toContain('data-testid="translate-card"');

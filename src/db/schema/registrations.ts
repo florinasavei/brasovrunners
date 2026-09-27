@@ -218,7 +218,7 @@ export const registrations = pgTable(
     /** ISO 3166-1 alpha-2, rendered per locale by `Intl.DisplayNames` — no country-name table. */
     nationality: text("nationality"),
     /**
-     * The country the person lives in (§NNN), ISO 3166-1 alpha-2 like `nationality` — asked right
+     * The country the person lives in (§510), ISO 3166-1 alpha-2 like `nationality` — asked right
      * before the city, because «Brașov» and «Bristol» need a country to mean anything, and a
      * citizenship is not where somebody lives. Required on the public form, Romania by default;
      * a staff entry picks it too, on Romania unless changed. Never null: the column's default

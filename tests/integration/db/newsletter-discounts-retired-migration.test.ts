@@ -7,7 +7,7 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Migration `0100_newsletter_discounts_retired` (§NNN), proven on real PostgreSQL (PGlite): the
+ * Migration `0100_newsletter_discounts_retired` (§517), proven on real PostgreSQL (PGlite): the
  * database is built up to the migration before it, subscriptions are written the way §445's pop-up
  * wrote them, and then the rest of the migrations run over them — as `yarn db:migrate:env` runs
  * them over production.
@@ -54,7 +54,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("§NNN migration 0100_newsletter_discounts_retired — discount codes leave the newsletter", () => {
+describe("§517 migration 0100_newsletter_discounts_retired — discount codes leave the newsletter", () => {
   it("strips DISCOUNTS from every subscription and keeps every other topic", async () => {
     const { rows } = await client.query<{ canonical_email: string; topics: string }>(
       "SELECT canonical_email, topics::text AS topics FROM newsletter_subscribers ORDER BY canonical_email",

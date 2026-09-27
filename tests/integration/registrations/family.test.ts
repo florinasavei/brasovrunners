@@ -203,7 +203,7 @@ describe("§446 the form sent again from a registered address for a different pe
     expect(offers).toHaveLength(1);
     expect(offers[0]).toMatchObject({ recipientEmail: EMAIL, registrationId: rows[0].id, locale: "ro" });
     // The kept form by its id alone: no name and no date in the outbox (§12.12).
-    // The entry's link starts with this message, so it carries the mark (§NNN).
+    // The entry's link starts with this message, so it carries the mark (§513).
     expect(offers[0].payloadJson).toEqual({ atCap: false, registrationsPerAddress: 4, familyEntryId: entry.id, startsDeadline: true });
 
     // The club's record: the state found and the message sent — never the name typed (§312, §12.12).
@@ -720,12 +720,12 @@ describe("§468 the family email's facts in bold, and «Nu înscriu această per
 
 
 /**
- * §NNN — the country of residence through the family flow. The kept form carries the country the
+ * §510 — the country of residence through the family flow. The kept form carries the country the
  * form posted; a form kept before the country was asked has none, and the press still registers
  * the person — in Romania, as the column's default reads every older row — rather than refusing
  * a parent under the public schema that now requires it.
  */
-describe("§NNN the country of residence on a kept family entry", () => {
+describe("§510 the country of residence on a kept family entry", () => {
   it("stores the country the kept form carried", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
@@ -740,7 +740,7 @@ describe("§NNN the country of residence on a kept family entry", () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana"), NOW);
     const secret = await offer(event, "Maria", 5);
-    // The form as a release before §NNN kept it: no country at all.
+    // The form as a release before §510 kept it: no country at all.
     await db.update(pendingFamilyEntries).set({ fields: sql`${pendingFamilyEntries.fields} - 'country'` });
     expect((await entries())[0].fields).not.toHaveProperty("country");
     expect(await press(secret, at(7))).toMatchObject({ ok: true });

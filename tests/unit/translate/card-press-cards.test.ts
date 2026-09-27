@@ -13,7 +13,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Tradu cardul: RO → EN», the parts `card-press.test.ts` does not hold:
+ * §514 — «Tradu cardul: RO → EN», the parts `card-press.test.ts` does not hold:
  *
  * - the toast names the card — «Gata: 3 câmpuri traduse în „Descrierea completă”» — counted
  *   through `countForm` (§341), in both catalogues, and the card's name is its Panel's heading
@@ -93,7 +93,7 @@ function words(locale: "ro" | "en"): PressWords {
   return (key, values) => t(key as never, values as never) as string;
 }
 
-describe("§NNN the card's press says what it did, naming the card", () => {
+describe("§514 the card's press says what it did, naming the card", () => {
   it("toasts «Gata: 3 câmpuri traduse în „Descrierea completă”» — counted, both languages, 8 s", () => {
     const feedback = pressFeedback({ kind: "done", count: 3, cut: [] }, true, words("ro"), "ro", "Descrierea completă");
     expect(feedback.notice).toEqual(translatedCardNotice(3, [], "Descrierea completă"));
@@ -134,7 +134,7 @@ describe("§NNN the card's press says what it did, naming the card", () => {
   });
 });
 
-describe("§NNN after the press, the English tab is on top", () => {
+describe("§514 after the press, the English tab is on top", () => {
   it("brings the English panel forward only when boxes were filled", () => {
     let shown = 0;
     const show = () => {
@@ -160,7 +160,7 @@ describe("§NNN after the press, the English tab is on top", () => {
   });
 });
 
-describe("§NNN the card's name is its Panel's heading, without the closed line", () => {
+describe("§514 the card's name is its Panel's heading, without the closed line", () => {
   const text = (value: string) => ({ nodeType: 3, textContent: value });
   const element = (value: string) => ({ nodeType: 1, textContent: value });
   const card = (tagName: string, heading: unknown) =>
@@ -248,7 +248,7 @@ function realEditor() {
   return { form: new FakeForm([...cards.flatMap((entry) => entry.boxes), ...place]), cards };
 }
 
-describe("§NNN each real card's press: every English box of the card, nothing outside it", () => {
+describe("§514 each real card's press: every English box of the card, nothing outside it", () => {
   for (const kind of CARDS) {
     it(`«${kind.card}» (${kind.piece})`, () => {
       const { form, cards } = realEditor();
@@ -288,7 +288,7 @@ describe("§NNN each real card's press: every English box of the card, nothing o
   });
 });
 
-describe("§NNN every translatable tab row carries the card's button", () => {
+describe("§514 every translatable tab row carries the card's button", () => {
   it("the event editor's cards, the discount note, a standing page and an album", () => {
     expect(source("src/modules/content/events/ui/boxes/TextBoxes.tsx")).toMatch(/<LocaleTabPanels[\s\S]{0,700}\n\s+translateCard\r?\n/);
     expect(source("src/modules/content/events/ui/boxes/CostBox.tsx")).toMatch(/<LocaleTabPanels\s+idPrefix="discount-note"\s+translateCard/);

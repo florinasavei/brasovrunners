@@ -41,7 +41,7 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
   // One-word namespaces (the i18n check reads `getTranslations("Registrations.mine")` as none).
   const t = await getTranslations("Registrations");
   const legal = await getTranslations("Legal");
-  // The link leaves on the scheduler's tick by default (§NNN): "just sent" would be untrue for up to
+  // The link leaves on the scheduler's tick by default (§513): "just sent" would be untrue for up to
   // the outbox job's wait, as on the resend page — the same real wait, read only on "sent".
   const waitMinutes = sent ? await cachedEmailWaitMinutes(new Date()) : null;
 

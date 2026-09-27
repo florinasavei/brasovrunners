@@ -21,7 +21,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §NNN): how the public pages look.
+ * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
  * Today one setting, the site's light background tint. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
@@ -46,7 +46,7 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
         {saved === "siteTint" && <Alert severity="success">{t("appearance.saved")}</Alert>}
       </Box>
 
-      {/* The tab is this card alone, so it opens on arrival (§336's `primary`, §NNN). */}
+      {/* The tab is this card alone, so it opens on arrival (§336's `primary`, §516). */}
       <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
     </Stack>
   );

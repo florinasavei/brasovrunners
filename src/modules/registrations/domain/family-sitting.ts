@@ -2,7 +2,7 @@ import { comparePerson, type PostedPerson } from "./family";
 import { sameRunner } from "./name-key";
 
 /**
- * A family registered in one sitting, with one email (§NNN; the owner, 2026-09-27: "niciun email
+ * A family registered in one sitting, with one email (§519; the owner, 2026-09-27: "niciun email
  * instant: unul singur, după ce apeși «Gata» sau după fereastra din Termene"; «asta cu wizzardul de
  * confirmare si claritate e top prio!»).
  *
@@ -31,7 +31,7 @@ export const AUTO_PRESS_FIELD = "autoPress";
 export const SITTING_SENT_PARAM = "sent";
 
 /**
- * The payload mark of a verification email a sitting held (§NNN): rendered, its link's life is counted
+ * The payload mark of a verification email a sitting held (§519): rendered, its link's life is counted
  * from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a value.
  */
 export const SITTING_HELD = "sittingHeld";
@@ -40,13 +40,13 @@ export const SITTING_HELD = "sittingHeld";
 export const SITTING_NAMES_MAX = 10;
 
 /**
- * How long this browser keeps the address for the next form when the club's window is 0 (§NNN):
+ * How long this browser keeps the address for the next form when the club's window is 0 (§519):
  * nothing is held then, so the cookie's life is only the screen's offer of another person.
  */
 export const SITTING_AT_ONCE_MINUTES = 30;
 
 /**
- * How long the browser keeps its half past the window's end (§NNN, the review of 2026-09-27): the open
+ * How long the browser keeps its half past the window's end (§519, the review of 2026-09-27): the open
  * screen presses «Gata» at that instant, and a slow phone must still send the cookie with the press.
  * The screen and the form read the window's end (`heldUntil`), never this; the server's `held_until`
  * stays the truth of when the email leaves.
@@ -59,7 +59,7 @@ export function sittingCookieMaxAgeSeconds(heldUntil: Date, now: Date): number {
 }
 
 /**
- * Until when this browser's half lives after a form or a «Da, încă o persoană» (§NNN): the club's
+ * Until when this browser's half lives after a form or a «Da, încă o persoană» (§519): the club's
  * window from now — the instant the server's row is moved to as well — or, at 0, the at-once offer's.
  */
 export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
@@ -67,7 +67,7 @@ export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
 }
 
 /**
- * The whole minutes left until the email leaves by itself (§NNN, the review's nit: the screen says the
+ * The whole minutes left until the email leaves by itself (§519, the review's nit: the screen says the
  * time left, not the club's whole window), rounded up so "1" is said until the last second; 0 once due.
  */
 export function sittingMinutesLeft(releaseInMs: number): number {
@@ -75,7 +75,7 @@ export function sittingMinutesLeft(releaseInMs: number): number {
 }
 
 /**
- * The screen after the last form of a sitting says one sentence about its emails (§NNN, the review of
+ * The screen after the last form of a sitting says one sentence about its emails (§519, the review of
  * 2026-09-27), from the browser's own half: with the window held, «Un singur email, pentru toți: …»
  * (`family`); at a window of 0, where each person's email already left on its own, «Fiecare persoană
  * primește emailul ei.» (`familyEach`). One person, or no half: nothing.
@@ -86,7 +86,7 @@ export function doneFamilySentence(facts: { names?: readonly string[]; atOnce?: 
 }
 
 /**
- * The order a family's people are named in (§NNN): the order the forms were sent, everywhere — the
+ * The order a family's people are named in (§519): the order the forms were sent, everywhere — the
  * family's confirmed email, «Declarațiile de pe această adresă» and the wizard. Registered earlier is
  * first; people registered at one instant — the one press that confirmed a family creates every kept
  * form's registration at the same `created_at` — go in the sitting's own order (`familyRank`, the
@@ -108,7 +108,7 @@ export function withFamilyRank<R extends { id: string }>(rows: readonly R[], ord
 }
 
 /**
- * A family confirmed in one press (§NNN): the declaration request waits for the wizard until
+ * A family confirmed in one press (§519): the declaration request waits for the wizard until
  * `releaseAt`, so the place must still be held when it leaves — a hold counts from the moment its
  * message can leave, never before. The hold is the one the allocator would give at `releaseAt`
  * (`computeHold`, the club's minutes capped by the close and the start, or the participation window's
@@ -148,12 +148,12 @@ export type FamilySittingCookie = {
    */
   heldUntil: Date;
   /**
-   * The club's window is 0 (§NNN, «Termene»): nothing is held, every form's email left at once. The
+   * The club's window is 0 (§519, «Termene»): nothing is held, every form's email left at once. The
    * screen still offers the next person, and says the email has already left.
    */
   atOnce?: boolean;
   /**
-   * The club's window («Termene») as the action read it when it wrote this half (§NNN): the screen's
+   * The club's window («Termene») as the action read it when it wrote this half (§519): the screen's
    * sentence names this one, never the public cache's, which may still hold the value before a save.
    * Absent on a cookie written before it was kept.
    */
@@ -259,7 +259,7 @@ export function isFamilySitting(people: number): boolean {
 }
 
 /**
- * The kept form of this sitting a new form is about (§NNN), and what to do with it:
+ * The kept form of this sitting a new form is about (§519), and what to do with it:
  *
  * - `replace` — the **same name** (`sameRunner`), whatever the date: the same person again, or a
  *   corrected birth date. The new form replaces the kept one, so a parent who corrects a date is not
@@ -283,7 +283,7 @@ export function sittingEntryFor<E extends { registeredName: string; birthDate: s
 }
 
 /**
- * How long the family link lives (§NNN): until the last thing it can still act on lapses — the new
+ * How long the family link lives (§519): until the last thing it can still act on lapses — the new
  * registrations' email links and the kept forms, each written with the club's email-link window
  * («Termene», §377) when its form was sent. Null when nothing is ahead of `now`.
  */

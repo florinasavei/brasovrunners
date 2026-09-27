@@ -150,7 +150,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         date: dt(entry.createdAt) ?? "",
         state: status ? REGISTRATION_STATUS_LABEL[status] : "—",
       };
-      // `held`: sent again inside a family sitting (§NNN) — nothing new queued, the held email leaves once.
+      // `held`: sent again inside a family sitting (§519) — nothing new queued, the held email leaves once.
       return {
         text: resent
           ? tr(metadata.held === true ? "registrations.resubmittedHeld" : "registrations.resubmittedSent", {
@@ -256,7 +256,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("desk.guardian", { name: registration.guardianName })}
         </Typography>
       )}
-      {/* Where the person lives (§NNN): the city, then the country named in the reader's language;
+      {/* Where the person lives (§510): the city, then the country named in the reader's language;
           for the club's "where do our runners come from", never shown publicly. */}
       {(registration.city || registration.country) && (
         <Typography variant="body2" color="text.secondary">

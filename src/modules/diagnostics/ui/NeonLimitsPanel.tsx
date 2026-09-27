@@ -112,7 +112,7 @@ export function moneySentence(
  * A Server Component with one form, the Neon plan panel's shape: native selects, a plain box for
  * the number (a Romanian keyboard types a decimal comma, which `type="number"` refuses), and the
  * confirmation as a `CheckboxField` whose label is a string (the element made on the client side
- * of the boundary). The limit's part is the owner's four things and nothing else (§NNN): the
+ * of the boundary). The limit's part is the owner's four things and nothing else (§511): the
  * label, «Fără limită / Cu limită», the number and one sentence; what else it could say is a «?».
  */
 export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit, level = 2 }: Props) {
@@ -172,7 +172,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
     The confirmation (§384) with the money in it (§479): one dialog per combination of the three
     selects and the limit's choice the form can post, each naming what that combination does to
     the month's bill against what Neon holds now — the dialog reads the form as it stands at the
-    press. The limit is said first, in the owner's words (§NNN): «Limita nouă: 100 ore-CU.», the
+    press. The limit is said first, in the owner's words (§511): «Limita nouă: 100 ore-CU.», the
     number filled from the box at the press (`fillFrom`). A combination the form cannot post (a
     ceiling not offered, a floor above the ceiling) falls through to the plain dialogs at the end.
   */
@@ -247,7 +247,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
           min: cu(currentMin),
           suspend: t(`tasks.neonLimits.suspend.${model.suspendMode}`),
         })}
-        {/* What a compute created anew would get — a detail, behind the «?» (§NNN). */}
+        {/* What a compute created anew would get — a detail, behind the «?» (§511). */}
         <QuietHelp
           text={
             model.defaults.maxCu === null
@@ -346,7 +346,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
               </RecallField>
 
               {/*
-                The monthly limit, exactly as the owner asked (§NNN, 2026-09-27: «prea multe
+                The monthly limit, exactly as the owner asked (§511, 2026-09-27: «prea multe
                 detalii»): the label, «Fără limită / Cu limită», the number and one sentence with
                 the recommendation. The smallest limit Neon accepts now is the «?»; production's
                 confirmation box is its guard on the click (§327), not advice against a limit.

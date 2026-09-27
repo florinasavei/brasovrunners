@@ -9,7 +9,7 @@ import SexField from "@/modules/registrations/ui/SexField";
 import { fieldId } from "@/shared/forms/outcome";
 
 /**
- * §NNN — «Sex» on the public registration form starts unanswered and still answers without
+ * §510 — «Sex» on the public registration form starts unanswered and still answers without
  * JavaScript: a native, required `<select name="sex">` in the server's HTML, whose first option is
  * the empty, disabled «Alege…», chosen while there is no draft. A MUI listbox select would post
  * through a hidden input only JavaScript fills, and a required one would lock a reader without
@@ -33,7 +33,7 @@ function options(html: string) {
   }));
 }
 
-describe("§NNN «Sex» as the server renders it", () => {
+describe("§510 «Sex» as the server renders it", () => {
   it("is a native, required select with the placeholder first and chosen, and no answer selected", () => {
     const html = render();
     const tag = html.match(/<select[^>]*name="sex"[^>]*>/)?.[0];

@@ -29,7 +29,7 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Termeni și condiții", body: termsRo },
     en: { title: "Terms and conditions", body: termsEn },
   },
-  // The race's two declarations, one body with a risk section per course (§NNN): the trail one keeps
+  // The race's two declarations, one body with a risk section per course (§515): the trail one keeps
   // the key every signature so far was recorded under.
   EVENT_DECLARATION: {
     ro: { title: "Declarație pe propria răspundere — cursă trail", body: declarationTrailRo },

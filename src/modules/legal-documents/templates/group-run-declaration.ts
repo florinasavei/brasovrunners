@@ -34,7 +34,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * paragraph names the archive copy's three years beside the platform's keeping it until the
  * signer asks for its deletion (§503, reversing §393's seven days).
  *
- * **One age rule, on `{{minimumAge}}` (§NNN).** The signer declares for themselves: `{{participant}}`
+ * **One age rule, on `{{minimumAge}}` (§515).** The signer declares for themselves: `{{participant}}`
  * is the signer's own name, and the text says it is signed personally. Until the owner's review of
  * 2026-09-27 both texts opened «declar… că am împlinit 18 ani» and then said «Declar că am cel puțin
  * {{minimumAge}}» — two ages at once. Now the eighteen is not in the text at all: the one sentence is
@@ -57,7 +57,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 /** What both surfaces open with: who, which run, that it is optional and not a race. */
 const openingRo = [
   "Subsemnatul/a {{participant}}, declar pe propria răspundere că particip la alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}, și că am citit detaliile ei de pe pagina evenimentului de pe site-ul clubului.",
-  // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §NNN): the
+  // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §515): the
   // one age the text states.
   "Declar că am cel puțin {{minimumAge}} împliniți la data alergării.",
   "Știu că o alergare de grup nu este o competiție și nici o tură ghidată: nu are înscriere, cronometrare sau echipă de siguranță pe traseu, iar organizatorul* anunță ora, locul și traseul și aleargă împreună cu participanții. Semnarea acestei declarații este opțională și nu este o condiție pentru a alerga cu grupul.",
@@ -65,7 +65,7 @@ const openingRo = [
 
 const openingEn = [
   "I, {{participant}}, declare on my own responsibility that I take part in the group run {{event}}, on {{eventDate}}, starting from {{eventLocation}}, and that I have read its details on the event's page on the club's website.",
-  // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §NNN): the
+  // The run's own minimum age (§329, §440), never under eighteen (`groupRunMinimumAge`, §515): the
   // one age the text states.
   "I declare that I am at least {{minimumAge}} old on the day of the run.",
   "I know that a group run is neither a competition nor a guided tour: it has no registration, no timing and no safety crew on the course, and the organiser* announces the time, the place and the route and runs together with the participants. Signing this declaration is optional and is not a condition of running with the group.",
@@ -123,7 +123,7 @@ const asphaltRisksEn = [
  */
 const trailRisksRo = [
   "• Știu că traseul este pe poteci de munte sau de pădure, cu porțiuni abrupte, rădăcini, pietre, noroi, frunze ude, gheață sau zăpadă, și accept riscul de cădere, alunecare, entorsă, tăieturi sau lovituri; îmi adaptez ritmul la teren și la condiții;",
-  // The owner's own sentence of §NNN, the race's trail text word for word.
+  // The owner's own sentence of §515, the race's trail text word for word.
   "• Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile organizatorului și recomandările autorităților și, în caz de urgență, să apelez 112;",
   "• Știu că vremea la munte se poate schimba repede — căldură, frig, ploaie, furtună, fulgere, ceață — și că după lăsarea întunericului vizibilitatea scade; accept că organizatorul poate schimba, scurta sau opri alergarea pentru siguranța celor care aleargă;",
   "• Echipamentul este responsabilitatea mea: încălțăminte potrivită terenului (pantofi de trail), îmbrăcăminte potrivită vremii, apă și un telefon mobil încărcat; la alergările care se desfășoară sau se termină după lăsarea întunericului, o lanternă frontală funcțională, cu bateriile încărcate;",
@@ -137,7 +137,7 @@ const trailRisksRo = [
 
 const trailRisksEn = [
   "• I know the route runs on mountain or forest paths, with steep sections, roots, rocks, mud, wet leaves, ice or snow, and I accept the risk of falls, slips, sprains, cuts and knocks; I adapt my pace to the ground and the conditions;",
-  // The owner's own sentence of §NNN, the race's trail text word for word.
+  // The owner's own sentence of §515, the race's trail text word for word.
   "• I know the route may cross the habitat of wild animals and that I may meet domestic animals or sheepdogs. I undertake to keep my distance, not to provoke or feed the animals, to follow the organiser's instructions and the authorities' advice and, in an emergency, to call 112;",
   "• I know the weather in the mountains can change quickly — heat, cold, rain, storms, lightning, fog — and that visibility drops after dark; I accept that the organiser may change, shorten or stop the run for the runners' safety;",
   "• My equipment is my own responsibility: footwear suited to the terrain (trail shoes), clothing suited to the weather, water and a charged mobile phone; for runs that take place or end after dark, a working headlamp with charged batteries;",

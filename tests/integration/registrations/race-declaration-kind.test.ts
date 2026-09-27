@@ -17,7 +17,7 @@ import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the race's declaration is two texts, trail (`EVENT_DECLARATION`) and road or park
+ * §515 — the race's declaration is two texts, trail (`EVENT_DECLARATION`) and road or park
  * (`EVENT_DECLARATION_ROAD`). The event's own declaration is the organizer's chosen kind, else its
  * course's; a road race signs the trail text while no road text is approved. The signature binds to
  * the text the event resolves to, and nothing else.
@@ -81,7 +81,7 @@ const submission = {
   renderedAt: new Date(NOW.getTime() - 10_000).toISOString(),
 };
 
-describe("§NNN the event's own declaration: trail or road", () => {
+describe("§515 the event's own declaration: trail or road", () => {
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
   });

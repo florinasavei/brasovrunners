@@ -98,7 +98,7 @@ export function fillBox(form: HTMLFormElement | null, name: string, value: BoxVa
  * off, not a visible box a hidden block made read-only (§350: what is hidden is not asked), and
  * with a Romanian twin that has words in it. In the form's own order, each once.
  *
- * `within`, set, narrows the press to one card of the form (§NNN, «Tradu cardul: RO → EN»): only the
+ * `within`, set, narrows the press to one card of the form (§514, «Tradu cardul: RO → EN»): only the
  * boxes inside it that post in this form, in the document's order. The Romanian twin is still
  * looked up in the whole form — a card's pair is almost always inside it, and where it is not the
  * form is where the save reads it from.
@@ -171,7 +171,7 @@ export function planTranslateAll(form: HTMLFormElement | null, within?: ParentNo
 }
 
 /**
- * The card a «Tradu cardul: RO → EN» belongs to (§NNN): the nearest card of the editor around its
+ * The card a «Tradu cardul: RO → EN» belongs to (§514): the nearest card of the editor around its
  * tab row — a `Panel` is a `<details>` or a `<section>` — so the card's boxes outside its language
  * tabs (the programme's timed rows) are translated with it. Nothing around it: the tab strip alone.
  */
@@ -180,7 +180,7 @@ export function cardOf(element: Element): Element {
 }
 
 /**
- * The card's own name, for the toast «Gata: 3 câmpuri traduse în „Descrierea completă”» (§NNN): the
+ * The card's own name, for the toast «Gata: 3 câmpuri traduse în „Descrierea completă”» (§514): the
  * text of the `Panel`'s heading — inside the `<summary>` of a fold, first in a `<section>` — without
  * its closed line (`aside`, a `<span>` inside the heading). Null where the strip sits in no card (a
  * standing page's or an album's one strip): the press then says the whole editor's sentence.

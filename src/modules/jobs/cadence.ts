@@ -108,7 +108,7 @@ export async function updateJobCadence<T extends Record<string, unknown>>(
   // Every cached quiet and every floor was planned under the old interval: the next ping of each
   // job runs, reads this row, and plans under the new one.
   forgetJobSchedules();
-  // Under the scheduled delivery (§NNN) the interval is part of the wait the public pages promise
+  // Under the scheduled delivery (§513) the interval is part of the wait the public pages promise
   // after a form (`cachedEmailWaitMinutes`): they must say the new one, not the old.
   revalidatePublicContent("settings");
   return { ...next, updatedAt: now };

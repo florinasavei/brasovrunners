@@ -78,7 +78,7 @@ export type OutboxRow = typeof emailOutbox.$inferSelect;
  * called `new Date()` internally could not be tested for the boundary case that matters here,
  * a token whose borrowed deadline has already passed by the time the batch runs.
  *
- * `rebase` is the deadline this send will move (§NNN, `deadline-rebase.ts`): the renderer states it
+ * `rebase` is the deadline this send will move (§513, `deadline-rebase.ts`): the renderer states it
  * and mints the link to it, so the message says the deadline the runner will have once it has
  * left, not the one written when it was queued. Absent, the stored deadline, as before.
  */
@@ -110,7 +110,7 @@ export type EnqueueEmailParams = {
    */
   drainAfter?: boolean;
   /**
-   * Not before this instant (§NNN): a family sitting holds its messages back until «Gata» or the
+   * Not before this instant (§519): a family sitting holds its messages back until «Gata» or the
    * club's window, as `next_attempt_at` — the column the claim already waits on, so nothing else
    * about the row changes. The club's copies of the message wait with it. Absent: due at once.
    */
@@ -235,7 +235,7 @@ async function enqueueClubCopies<T extends Record<string, unknown>>(
         isManualResend: params.isManualResend ?? false,
         status: "PENDING",
         attemptCount: 0,
-        // Held with the participant's own message (§NNN): a copy never leaves before it.
+        // Held with the participant's own message (§519): a copy never leaves before it.
         nextAttemptAt: params.notBefore ?? null,
         createdAt: params.now,
       })
@@ -525,7 +525,7 @@ export async function processOutboxBatch(
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
   // The batch's clock moved on by the real time elapsed: what the re-base checks an offer against
-  // under the event's lock (§NNN), never an instant older than the allocator's.
+  // under the event's lock (§513), never an instant older than the allocator's.
   const startedAtMs = Date.now();
   const clock = () => new Date(now.getTime() + (Date.now() - startedAtMs));
 
@@ -556,7 +556,7 @@ export async function processOutboxBatch(
     for (const row of claimed) {
       let message: OutgoingEmail;
       /*
-        The deadline this message starts, counted from its send (§NNN, «termenul curge de când
+        The deadline this message starts, counted from its send (§513, «termenul curge de când
         pleacă emailul»): planned before the render, so the words and the link say it, and written
         only below, once the provider has taken the message. A plan that cannot be read is no plan:
         the message leaves with the stored deadline, as it always did, rather than not at all.
@@ -605,7 +605,7 @@ export async function processOutboxBatch(
         summary.sent += 1;
         if (rebase) {
           // The message is out whatever happens here: a write that fails leaves the deadline it was
-          // queued with — what every message had before §NNN — and never the send unrecorded.
+          // queued with — what every message had before §513 — and never the send unrecorded.
           await applyDeadlineRebase(db, rebase, clock).catch((error: unknown) => {
             console.error("[email-outbox] deadline re-base failed", error);
           });

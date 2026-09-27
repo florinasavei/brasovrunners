@@ -13,7 +13,7 @@ import { signIn } from "./support/featured-event";
  * a unit test cannot see — that the select posts, that the other screen reads the row, and that a
  * reader who may not open the costs panel is told where the plan is set rather than shown it.
  *
- * The costs are «Setări» → «Costuri» since §NNN (they were `/admin/tasks?panel=costs`, which now
+ * The costs are «Setări» → «Costuri» since §516 (they were `/admin/tasks?panel=costs`, which now
  * answers 308 there), and a Tehnic asking for that tab gets a real 404: «Setări» has no loading
  * boundary to flush a 200 first.
  */
@@ -68,7 +68,7 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await expect(block.getByText(/Spațiu ocupat: [\d,.]+ MB — [\d,.]+ \$\/GB-lună/)).toBeVisible();
     await expect(block.getByText(/din 512 MB/)).toHaveCount(0);
     await expect(block.getByText(/din 100 ore-CU/)).toHaveCount(0);
-    // Where the limits are set, in words, never a link into a 404 (§NNN).
+    // Where the limits are set, in words, never a link into a 404 (§516).
     await expect(block.getByTestId("neon-limits-sentence")).toHaveText("Limitele bazei de date le setează Administratorul, pe Setări → Costuri.");
     await expect(block.getByTestId("neon-limits-sentence").getByRole("link")).toHaveCount(0);
     expect((await page.goto("/ro/admin/settings/costs"))?.status()).toBe(404);
@@ -80,7 +80,7 @@ test.describe("BR-REQ-090-07 the Neon plan on «Setări» → «Costuri» and /d
     await page.goto("/ro/devs");
     const adminBlock = page.locator("#main").getByTestId("neon-block");
     await expect(adminBlock.getByTestId("neon-plan-sentence")).toContainText("Planul setat: Launch.");
-    // The limits' link is there whatever the plan's source — the owner's «unde sunt limitele Neon?» (§NNN).
+    // The limits' link is there whatever the plan's source — the owner's «unde sunt limitele Neon?» (§516).
     await expect(adminBlock.getByRole("link", { name: /Limitele bazei de date/ })).toHaveAttribute("href", /\/admin\/settings\/costs#neon-limits$/);
     await adminBlock.getByRole("link", { name: /Schimbă planul/ }).click();
     await expect(page).toHaveURL(/\/admin\/settings\/costs#neon-plan$/);

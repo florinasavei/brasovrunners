@@ -458,7 +458,7 @@ export async function consumeAndConfirmFamilyEntry(
 }
 
 /**
- * A family's one link (§NNN, `family-sitting-confirm.ts`): the page's read, uncharged when the page
+ * A family's one link (§519, `family-sitting-confirm.ts`): the page's read, uncharged when the page
  * already charged this request's one attempt reading the link as one person's (§446).
  */
 export async function readFamilySittingLinkPage(secret: string, locale: Locale, now: Date, options: { charge: boolean }): Promise<FamilySittingLink> {
@@ -478,7 +478,7 @@ export type FamilySittingPress =
   | { ok: false };
 
 /**
- * The press (§NNN): the family confirmed in one transaction, then the wizard's pass (§471) over every
+ * The press (§519): the family confirmed in one transaction, then the wizard's pass (§471) over every
  * declaration the address has to sign at the event — the family just confirmed first among them, in
  * the order registered — bound to this link, which the press has spent (`binding: "family"`). No
  * new token: the wizard runs on the declaration page under this same secret.

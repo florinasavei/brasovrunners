@@ -129,7 +129,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const linksHeading = page.getByRole("heading", { level: 2, name: /^(?:\d+ · )?Linkuri și fișiere/ });
     await expect(linksHeading).toBeVisible();
     await expect(page.locator("section").filter({ has: linksHeading })).toHaveCount(1);
-    // The public list is a card inside «Program, regulament și declarație» since §NNN: for this
+    // The public list is a card inside «Program, regulament și declarație» since §512: for this
     // reader its level-3 heading and its line, nothing to open.
     const programme = await openEditorBox(page, "Program, regulament și declarație");
     const list = programme.locator("#box-start-list");

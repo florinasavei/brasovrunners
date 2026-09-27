@@ -36,7 +36,7 @@ export const BLIND_FIELD_FLAG = "__e2eTurnstileBlindField";
  * - `"write-only"`: the field and no callback.
  *
  * `window.__failTurnstile()` calls every widget's `error-callback`, and `window.__askTurnstile()` its
- * `before-interactive-callback` — the states the widget says under itself (§NNN). And
+ * `before-interactive-callback` — the states the widget says under itself (§518). And
  * `window.__expireTurnstile()` its `expired-callback`, leaving the lapsed token in the field, and
  * `window.__timeoutTurnstile()` its `timeout-callback`, with the field emptied.
  *

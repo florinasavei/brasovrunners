@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * When a queued message actually leaves: the moment the request that queued it finishes, or
- * on the scheduler's next visit (`DECISIONS.md` §221, §NNN).
+ * on the scheduler's next visit (`DECISIONS.md` §221, §513).
  *
  * The two failure modes are opposite, which is why it is a setting and not a constant.
  *
@@ -17,7 +17,7 @@ import { z } from "zod";
  *   predictably, a burst cannot take the site's own response times with it, and what one sitting
  *   queued leaves together.
  *
- * **A «Termene» setting since §NNN**, the Administrator's (`canManageClubSettings`) — it decides a
+ * **A «Termene» setting since §513**, the Administrator's (`canManageClubSettings`) — it decides a
  * wait every participant is told about, on the screen after the form and in the newsletter's
  * pop-up, like the other numbers in that fold. It was the Superadministrator's under §221 and §450
  * with no control left on any screen.
@@ -35,13 +35,13 @@ export type DeliveryTimingSetting = z.infer<typeof deliveryTimingSettingSchema>;
 
 /**
  * Scheduled — the owner, 2026-09-27: emails leave on the scheduler's tick, not right after the
- * request (§NNN, reversing §221's default). A deployment that never stored the row sends on the
+ * request (§513, reversing §221's default). A deployment that never stored the row sends on the
  * tick; `immediate` is one save away in «Termene».
  */
 export const DEFAULT_DELIVERY_TIMING: DeliveryTimingSetting = { timing: "scheduled" };
 
 /**
- * The default where nobody stored a choice, per environment (§NNN). Scheduled where a pinger
+ * The default where nobody stored a choice, per environment (§513). Scheduled where a pinger
  * exists — QA and production, the cron-job.org monitors of `SETUP.md` §40. Immediate on a laptop
  * (`local`) and on the end-to-end suite's server (`test`): neither has a pinger, so "on the tick"
  * would be "never", and a developer's registration would wait for a scheduler that does not come.

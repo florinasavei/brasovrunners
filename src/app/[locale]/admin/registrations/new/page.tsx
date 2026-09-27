@@ -102,7 +102,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
     open: rt("countrySearch.open"),
     close: rt("countrySearch.close"),
   };
-  // The country of residence's list (§NNN), the public form's own: named and ordered here.
+  // The country of residence's list (§510), the public form's own: named and ordered here.
   const countries = countryOptions(locale, (code) => countryName(code, locale));
   // The next free desk spare per event (§444), suggested only to the desk — a person on the
   // telephone, entered from the list, is not standing at a table with a bib.
@@ -202,7 +202,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               {...textFieldConstraints(staffRegistrationConstraints("guardianName"))}
             />
           </StaffGuardian>
-          {/* Where the person lives (§NNN): the country before the city, as on the public form —
+          {/* Where the person lives (§510): the country before the city, as on the public form —
               the same searchable native select, on Romania unless the volunteer changes it. */}
           <NationalityField name="country" label={rt("country")} defaultValue="RO" countries={countries} words={countrySearchWords} />
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />

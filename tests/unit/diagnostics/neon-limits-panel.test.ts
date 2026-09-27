@@ -55,7 +55,7 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     });
     expect(html).toContain('data-testid="neon-limits-unconfigured"');
     expect(text(html)).toContain("Lipsește NEON_API_KEY, NEON_PROJECT_ID pe acest mediu");
-    // No file name or §-number on a screen (§NNN): where the variables go is the «?».
+    // No file name or §-number on a screen (§511): where the variables go is the «?».
     expect(text(html)).not.toMatch(/SETUP\.md|§/);
     expect(html).toContain("proiectul Vercel al mediului");
     expect(html).not.toContain("<form");
@@ -74,7 +74,7 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(text(forbidden)).toContain("Project-scoped");
   });
 
-  it("shows what Neon holds in words above the form, and the limit as the owner asked for it (§NNN)", async () => {
+  it("shows what Neon holds in words above the form, and the limit as the owner asked for it (§511)", async () => {
     const html = await render({ locale: "ro", reading: { ok: true, limits: LIMITS }, appEnv: "qa", mayEdit: true });
     const words = text(html);
     expect(words).toContain("Mărimea maximă: 1 CU (≈ 4 GB RAM) · Limită lunară: fără");
@@ -218,7 +218,7 @@ describe("§479 the compute's floor and scale to zero, and the money the confirm
     };
     const launch = await bodies(LIMITS);
     expect(launch).toContain("USD în plus pe lună la 100 % utilizare");
-    // The owner's confirm sentence (§NNN), the number filled from the box at the press.
+    // The owner's confirm sentence (§511), the number filled from the box at the press.
     expect(launch).toContain("Limita nouă: {quotaCuHours} ore-CU.");
     expect(launch).toContain("Fără limită lunară.");
     expect(launch).not.toContain("Pe planul Free");

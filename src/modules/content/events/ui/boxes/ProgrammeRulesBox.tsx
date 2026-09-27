@@ -22,7 +22,7 @@ import { RulesBox } from "./TextBoxes";
  * 2. «Regulamentul» (`#box-rules`): the rules, on their own tabs, and the minimum age — one box
  *    for every type since §505;
  * 3. «Declarația pe propria răspundere» (`#box-declaration`, §448): what the participant signs;
- * 4. «Lista publică a participanților» (`#box-start-list`, §32, §NNN): whether the page draws the
+ * 4. «Lista publică a participanților» (`#box-start-list`, §32, §512): whether the page draws the
  *    list, which it does last, under the rules — so it is the last card here, not a card of its own.
  *
  * Each keeps its fields, names, ids, closed line and refusals; this card only holds them. Its own
@@ -66,7 +66,7 @@ export default async function ProgrammeRulesBox({
         // «vârsta minimă 14 ani» — the age is a box of «Regulamentul» since §505.
         minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
         line.text,
-        // «lista publică: Ascunsă» — the public list's own line, named, last (§NNN).
+        // «lista publică: Ascunsă» — the public list's own line, named, last (§512).
         t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility) }),
       ]
         .filter(Boolean)

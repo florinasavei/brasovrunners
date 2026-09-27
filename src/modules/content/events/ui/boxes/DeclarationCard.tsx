@@ -98,11 +98,11 @@ export default async function DeclarationCard({
   const needsDeclaration = line.missing;
   if (!mayEditSettings) return <Panel {...card} />;
 
-  // The newest approved version of each kind (§NNN): what a race of that kind signs today.
+  // The newest approved version of each kind (§515): what a race of that kind signs today.
   const newest = RACE_DECLARATION_KEYS.map((key) => ({ key, option: declarations.find((option) => option.key === key) ?? null }));
   const kind = (key: RaceDeclarationKey) => t(`editor.declarationKinds.${key}`);
   /*
-    Where the select starts for a race with no declaration chosen (§NNN): the newest version in
+    Where the select starts for a race with no declaration chosen (§515): the newest version in
     force of the kind each surface reads — asphalt the road text once approved, else the trail
     one — so the choice the organizer sees is the one the course calls for, and the save's rule
     (an INTERNAL race names a declaration, §39) is met by default. One entry per value of the
@@ -181,7 +181,7 @@ export default async function DeclarationCard({
                   mismatch,
                 }}
               />
-              {/* Which text each kind of race signs today (§NNN), and — while the club approved no
+              {/* Which text each kind of race signs today (§515), and — while the club approved no
                   road text — that a road race signs the trail one (`raceDeclarationKeysFor`). */}
               {declarations.length > 0 &&
                 newest.map(({ key, option }) =>

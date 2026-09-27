@@ -213,7 +213,7 @@ async function renderRow(
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
     : [];
   /*
-    The deadline this send moves (§NNN, `deadline-rebase.ts`): counted from the send, so the words
+    The deadline this send moves (§513, `deadline-rebase.ts`): counted from the send, so the words
     («până la …»), the offer's length and the link's own life all say the deadline the runner has
     once the message has left — `processOutboxBatch` writes the same value after the provider takes
     it. Only on the registration the plan was made for; everything else reads the row as stored.
@@ -226,7 +226,7 @@ async function renderRow(
       : stored;
 
   /*
-    A declaration request held while a family signed in the wizard (§NNN, `enqueueAllocationEmail`):
+    A declaration request held while a family signed in the wizard (§519, `enqueueAllocationEmail`):
     by now the person signed there, or their place moved on — then there is nothing to ask, and the
     message (and its club copy) is withdrawn rather than sent. Only a person still unsigned hears it,
     their own link to sign from, as «Semnez mai târziu» promised (§471).
@@ -240,7 +240,7 @@ async function renderRow(
   }
 
   /*
-    A family's one confirmation (§NNN, `queueFamilyConfirmed`): everybody the family's one button
+    A family's one confirmation (§519, `queueFamilyConfirmed`): everybody the family's one button
     confirmed who is confirmed now, read at send time, in the order the forms were sent — each with
     their QR code, desk code and race number. Nobody confirmed any more (cancelled, erased): nothing
     to say, and the message is withdrawn rather than sent.
@@ -301,7 +301,7 @@ async function renderRow(
       `organizerMessageParts` (`templates.ts`) is what turns that blank into a neutral word wherever
       the organizer's own body used `{participantName}` (§419, review finding).
     */
-    // A family's one confirmation greets the person of the sitting's first form, not the first to sign (§NNN).
+    // A family's one confirmation greets the person of the sitting's first form, not the first to sign (§519).
     participantName: (familyConfirmed ? familyGreeting : registration?.registeredName) ?? participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
     // The place in the runner's language (§362), nullable on an event row from before the column
@@ -452,7 +452,7 @@ async function renderRow(
       club's current setting is kept, as before.
     */
     if (row.messageType === "WAITLIST_SPOT_OFFER" && registration.offerCreatedAt && data.timings) {
-      // A re-based offer (§NNN) runs from its send: its start moved by the same wait as its end.
+      // A re-based offer (§513) runs from its send: its start moved by the same wait as its end.
       const offerStartMs = registration.offerCreatedAt.getTime() + (rebase?.kind === "offer" ? rebase.waitMs : 0);
       const offerMinutes = Math.max(1, Math.floor((holdEndsAt.getTime() - offerStartMs) / 60_000));
       data.timings = { ...data.timings, offerMinutes };
@@ -671,7 +671,7 @@ async function renderRow(
   }
 
   /*
-    A family's one confirmation (§NNN): one block per person, headed by the name — the QR code and the
+    A family's one confirmation (§519): one block per person, headed by the name — the QR code and the
     desk code the desk hands the number against, and the race number from the one helper the page and
     the export read (`raceNumberOf`: settled, or provisional and said so, §237), or «încă fără număr».
     A code is given here to a person confirmed before codes existed, as above. The club's copy names
@@ -688,7 +688,7 @@ async function renderRow(
       const number = raceNumberOf(person);
       people.push({
         name: person.registeredName,
-        // The greeting's word for this person (§NNN): the first word of the first name typed.
+        // The greeting's word for this person (§519): the first word of the first name typed.
         ...(person.firstName?.trim() ? { firstName: person.firstName.trim().split(/\s+/)[0] } : {}),
         ...(clubCopy || !code ? {} : { checkinCode: code, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${code}.png` }),
         raceNumber: number?.value ?? null,
@@ -709,7 +709,7 @@ async function renderRow(
   */
   let familyEntry: PendingFamilyEntry | undefined;
   /*
-    A family sitting's one message (§NNN): «Înscriere de familie: 3 persoane la …». Everybody the
+    A family sitting's one message (§519): «Înscriere de familie: 3 persoane la …». Everybody the
     sitting sent the form for and nobody confirmed yet — its new registrations, then its kept forms —
     each by full name and birth date, read at send time; who the address held before, as "Ana P.";
     one button for all of them. Confirmed already, or lapsed: the lapsed shape, with no button.
@@ -741,7 +741,7 @@ async function renderRow(
     data.addressAtCap = payload.atCap === true;
     if (typeof payload.registrationsPerAddress === "number") data.addressCap = payload.registrationsPerAddress;
     const found = !data.addressAtCap && typeof payload.familyEntryId === "string" ? await findFamilyEntryById(db, payload.familyEntryId) : undefined;
-    // The link's window counted from this send (§NNN): the token below is minted to it.
+    // The link's window counted from this send (§513): the token below is minted to it.
     const kept = found && rebase?.kind === "familyLink" && rebase.entryId === found.id ? { ...found, expiresAt: rebase.to } : found;
     if (kept && kept.expiresAt.getTime() > now.getTime()) {
       familyEntry = kept;
@@ -770,7 +770,7 @@ async function renderRow(
       */
       familySitting = await extendSittingLinks(db, familySitting, emailLinkExpiresAt(now, settings), now);
       /*
-        The family's one link (§NNN): single use, hashed at rest, minted here at send time (§12.8,
+        The family's one link (§519): single use, hashed at rest, minted here at send time (§12.8,
         §14.5), scoped to the registration the sitting names and tied to the sitting by the token's
         id, alive until the last thing it can act on lapses. Opening the page reads it; the press
         spends it, confirms the address and everybody on the list, and opens the declarations.
@@ -801,7 +801,7 @@ async function renderRow(
   } else if (purpose === "REGISTER_ANOTHER_PERSON") {
     if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
       /*
-        A kept form a family sitting held (§NNN; one person's sitting keeps this message): it is
+        A kept form a family sitting held (§519; one person's sitting keeps this message): it is
         leaving now, so the form — and the link below, which lives exactly as long — lives the club's
         email-link window from this send, as the message says, the same rule as the held verification
         email's (`extendHeldVerificationLink`): only a live form, lengthened and never shortened.
@@ -835,7 +835,7 @@ async function renderRow(
     }
   } else if (familyConfirmed && row.participantId && !clubCopy) {
     /*
-      A family's one confirmation (§NNN): its button is «Toate înscrierile mele» (§77) — every person's
+      A family's one confirmation (§519): its button is «Toate înscrierile mele» (§77) — every person's
       state, number, «nu mai pot veni» and the public list's switch, behind the address's own link —
       rather than one person's manage link. Its own token, superseding the older one (§12.8).
     */
@@ -875,7 +875,7 @@ async function renderRow(
       registration that no longer existed (BR-REQ-031-03 criterion 2).
     */
     /*
-      A verification email a family sitting held (§NNN): it is leaving now, so its link lives the club's
+      A verification email a family sitting held (§519): it is leaving now, so its link lives the club's
       window from this send — the sentence «valabil 48 de ore» is true of the link it carries.
     */
     const heldLink =
@@ -996,7 +996,7 @@ async function renderRow(
       data.signedAtFormattedOther = formatInSentence(signed.acceptedAt, signedZone, otherLocale(locale));
     }
   }
-  // A family's one confirmation (§NNN): every person's signed declaration, numbered in the family's order.
+  // A family's one confirmation (§519): every person's signed declaration, numbered in the family's order.
   if (familyConfirmed && pdfAudience) {
     for (const [index, person] of familyConfirmed.entries()) {
       const signed = await findSignedDeclaration(db, person.id);

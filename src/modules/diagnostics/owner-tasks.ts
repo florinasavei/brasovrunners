@@ -170,7 +170,7 @@ export type OwnerTaskInputs = {
    */
   teamPageDescribed: boolean;
   /**
-   * Whether both race declarations (§NNN) — trail and road or park — have a version in force written
+   * Whether both race declarations (§515) — trail and road or park — have a version in force written
    * from the platform's shared body: it states the event's minimum age through `{{minimumAge}}`. Until
    * then a road race signs the trail text, and the text in force still speaks of a minor under 14.
    */
@@ -347,7 +347,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.teamPageDescribed ? "done" : "open",
     });
     /*
-      The race's two declarations (§NNN): open, never blocking — a road race signs the trail text
+      The race's two declarations (§515): open, never blocking — a road race signs the trail text
       in force until a road one is approved, as every race did before — and done by itself once both
       kinds have a version in force from the platform's shared body.
     */

@@ -168,7 +168,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another, family, sent } = await searchParams;
   /*
-    The family sitting (§NNN): the browser's sealed half, when its email has not left yet. After the
+    The family sitting (§519): the browser's sealed half, when its email has not left yet. After the
     form it is the screen that asks «Mai înscrii pe cineva cu aceeași adresă?»; with `?family=1` it is
     the next form, the address fixed. Everything it shows was typed on this browser (§39).
   */
@@ -235,7 +235,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * Under the event's minimum age on the day of the race (§321, §329). The same kind of marker
    * as the one above: the summary links the birth date, and this says which rule refused it —
    * "complete this field correctly" about somebody's real birth date would be untrue. Every event
-   * has a minimum since §NNN, never under fourteen (`effectiveMinimumAge`), so the marker always
+   * has a minimum since §515, never under fourteen (`effectiveMinimumAge`), so the marker always
    * has a number to say.
    */
   const minAge = effectiveMinimumAge(event.minAge);
@@ -362,7 +362,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
   // While resting too (§447): a press the database refused left the answers in the draft cookie.
   /*
-    The next form of a family sitting (§NNN) starts with the boxes the family shares — the city, the
+    The next form of a family sitting (§519) starts with the boxes the family shares — the city, the
     citizenship, the guardian, the emergency contact, the emails' language — as this browser posted
     them on the sitting's earlier forms; the person's own boxes start empty. A refusal's draft, which
     holds everything typed, outranks them.
@@ -480,7 +480,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         {/* Who may enter, among the facts of what is being signed up for and before the first
             field (§321): the event's own minimum age (§329), and who fills the form in for a
             minor (§108). A line, not a banner — it is a condition of the race like its date, not
-            a warning. Two forms, so it reads right whatever the number (§NNN: never under
+            a warning. Two forms, so it reads right whatever the number (§515: never under
             fourteen): under eighteen it names who registers a minor, eighteen or more says nothing about parents, and the
             same sentence stands on the event page. Gone once the form has been sent: by then it
             has been answered. */}
@@ -517,7 +517,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {sittingScreen && sitting ? (
         /*
-          «Mai înscrii pe cineva cu aceeași adresă?» (§NNN) — before anything is mailed: «Încă o
+          «Mai înscrii pe cineva cu aceeași adresă?» (§519) — before anything is mailed: «Încă o
           persoană» opens the form again with the address fixed, «Gata» sends the one email. The
           same screen after every form, whatever the address holds (§39).
         */
@@ -661,7 +661,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {rejected.map((name) => (
                       <li key={name}>
                         <MuiLink href={`#${fieldId(name)}`}>
-                          {/* «Sex» says what to do, and that "prefer not to say" is an answer (§NNN). */}
+                          {/* «Sex» says what to do, and that "prefer not to say" is an answer (§510). */}
                           {name === "sex" ? t("sexMissing") : t(`fieldNames.${name}`)}
                         </MuiLink>
                         {/* The rule, where the browser lands (§321): a birth date refused for age
@@ -723,7 +723,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
           {/*
-            The next person of a family sitting (§NNN): who was sent so far, that nothing is mailed
+            The next person of a family sitting (§519): who was sent so far, that nothing is mailed
             yet, and the way back to «Gata» without filling this one in.
           */}
           {familyForm && sitting && (
@@ -732,7 +732,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Typography variant="body2">{t("sitting.formSoFar", { names: sittingNames(sitting.people).join(", ") })}</Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {/*
-                  How long is left, on the server's clock at this render (§NNN): the email leaves by
+                  How long is left, on the server's clock at this render (§519): the email leaves by
                   itself then unless this form is sent — sending it starts the window again. At a
                   window of 0 nothing waits: this person's email leaves when the form is sent.
                 */}
@@ -861,7 +861,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <TextField
                 {...field("birthDate")}
                 /* The event's minimum age and the categories, in the help (§321, §329; never under
-                   fourteen since §NNN); a refusal for age says the rule again
+                   fourteen since §515); a refusal for age says the rule again
                    rather than "complete this field correctly". Left native, not the backoffice's
                    MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a runner's own birth
                    date is decades back, faster typed than paged through a calendar month by
@@ -897,7 +897,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/* The city, required and right after the birth date (§467; the owner, 2026-09-26:
                   "orașul ar trebui să fie obligatoriu, pune după data nașterii"), reversing
-                  §322's optional fold. The country the runner lives in comes first (§NNN): a city
+                  §322's optional fold. The country the runner lives in comes first (§510): a city
                   means little without it, and a citizenship is not where somebody lives. The
                   citizenship's own searchable native select (§463), required and on Romania unless
                   the runner says otherwise; stored and exported, never shown publicly. */}
@@ -920,7 +920,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Stack>
 
               {/* What the answer is for, under the field (§322): a category ranking, and "prefer
-                  not to say" is an answer. It starts empty (§NNN): pre-chosen on «Prefer să nu
+                  not to say" is an answer. It starts empty (§510): pre-chosen on «Prefer să nu
                   spun», a runner who never looked at it sent an answer they did not give, and the
                   category ranking could not tell the two apart. Now the browser, the §422 list
                   and the server (the enum has no blank) refuse a form with no answer, and "prefer
@@ -968,7 +968,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 while the screen says to check the inbox.
               */}
               {/*
-                The next form of a family sitting (§NNN): the address is the sitting's, said back in
+                The next form of a family sitting (§519): the address is the sitting's, said back in
                 bold and not asked again — the server takes it from the browser's sealed half.
               */}
               {familyForm && sitting ? (
@@ -1455,7 +1455,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  {/* The one form whose send button holds a press for the check (§NNN). */}
+                  {/* The one form whose send button holds a press for the check (§518). */}
                   <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} heldPress />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
@@ -1505,7 +1505,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   // rules of its own shows a plain box linking to its page, where the field's
                   // own name is the right thing to list (review finding 1).
                   ...(hasRules ? { rulesAcknowledged: t("rules.missing") } : {}),
-                  // «Sex» likewise: it starts empty, and "prefer not to say" is an answer (§NNN).
+                  // «Sex» likewise: it starts empty, and "prefer not to say" is an answer (§510).
                   sex: t("sexMissing"),
                 }}
                 /*

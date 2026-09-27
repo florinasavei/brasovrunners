@@ -7,7 +7,7 @@ import { openFold } from "./support/fold";
 
 /**
  * §377 — "Termene": the club's deadlines, one box each, the Administrator's — «Setări» → «Termene»
- * since §NNN, one tab over from the messages whose when-lines state them.
+ * since §516, one tab over from the messages whose when-lines state them.
  *
  * One round trip that ends where it began: the defaults are read, one deadline is changed and read
  * back in the panel's line and in the reminder's when-line under it. The defaults come back in an
@@ -85,7 +85,7 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     const main = page.locator("#main");
     const panel = main.getByTestId("deadlines");
 
-    // The tab is this card alone, so it arrives open (§NNN); its line says the four a participant meets most.
+    // The tab is this card alone, so it arrives open (§516); its line says the four a participant meets most.
     await expect(panel).toHaveAttribute("open", "");
     await expect(panel.locator(":scope > summary")).toContainText("Link 48 de ore · loc ținut 30 de minute · ofertă 24 de ore · reminder 2 zile");
     await openFold(panel);

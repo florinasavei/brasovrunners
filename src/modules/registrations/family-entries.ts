@@ -79,7 +79,7 @@ export async function insertFamilyEntry<T extends Record<string, unknown>>(
     fields: Record<string, unknown>;
     expiresAt: Date;
     now: Date;
-    /** The family sitting the form was sent in (§NNN), when it was. */
+    /** The family sitting the form was sent in (§519), when it was. */
     sittingId?: string | null;
   },
 ): Promise<PendingFamilyEntry> {
@@ -100,7 +100,7 @@ export async function insertFamilyEntry<T extends Record<string, unknown>>(
 }
 
 /**
- * A sitting's kept forms still alive (§NNN), in the order they were sent: the people the family
+ * A sitting's kept forms still alive (§519), in the order they were sent: the people the family
  * message names beside the sitting's new registrations, and the ones its one button confirms.
  */
 export async function liveSittingEntries<T extends Record<string, unknown>>(db: Database<T>, sittingId: string, now: Date): Promise<PendingFamilyEntry[]> {
@@ -112,7 +112,7 @@ export async function liveSittingEntries<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * The same person sent again in the same sitting (§NNN): the newer form replaces the kept one — a
+ * The same person sent again in the same sitting (§519): the newer form replaces the kept one — a
  * corrected date, a fixed spelling — and lives the club's email-link window from now.
  */
 export async function replaceFamilyEntry<T extends Record<string, unknown>>(
@@ -127,7 +127,7 @@ export async function replaceFamilyEntry<T extends Record<string, unknown>>(
 }
 
 /**
- * A kept form a family sitting held (§NNN), its message rendered now: it lives the club's email-link
+ * A kept form a family sitting held (§519), its message rendered now: it lives the club's email-link
  * window («Termene», §377) from this send, as the message says, not from the form sent a window and a
  * pinger's wait earlier. Only a form still live, lengthened and never shortened; the new lapse, or
  * null when nothing moved.
@@ -198,7 +198,7 @@ export async function registeredOnAddress<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   participantId: string,
-  /** Registrations named elsewhere in the same message — a family sitting's own (§NNN). */
+  /** Registrations named elsewhere in the same message — a family sitting's own (§519). */
   exceptIds: readonly string[] = [],
 ): Promise<string[]> {
   const rows = await db

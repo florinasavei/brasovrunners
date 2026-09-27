@@ -123,7 +123,7 @@ describe("§360 one look for every backoffice sub-navigation", () => {
       "src/app/[locale]/admin/tasks/page.tsx",
       "src/app/[locale]/devs/page.tsx",
       "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
-      // «Setări»'s tab row (§NNN).
+      // «Setări»'s tab row (§516).
       "src/modules/staff-identity/ui/SettingsSubNav.tsx",
     ]) {
       expect(read(file), file).toMatch(/<SubNav\s[^>]*?label=/);

@@ -28,7 +28,7 @@ export function translatedAllNotice(count: number, cut: readonly string[]): Form
 }
 
 /**
- * «Tradu cardul: RO → EN» that worked (§NNN): the whole-record toast's sentence with the card's
+ * «Tradu cardul: RO → EN» that worked (§514): the whole-record toast's sentence with the card's
  * name — «Gata: 3 câmpuri traduse în „Descrierea completă”» — counted the same way
  * (`Feedback.toast.translatedCard.one|few|other`, `countForm`, §341), with its own wording when
  * some were cut at their box's limit.
@@ -68,7 +68,7 @@ export type PressWords = (key: string, values?: Record<string, string | number>)
  * worked, the status line's own reason when it did not (today's budget, DeepL's month or the
  * credit left, nothing written yet, a failed request) — because its button sits far from the
  * boxes it filled. One box's button toasts only the short «Tradus»: its refusal is read beside
- * the box. A card's press (§NNN) is a whole-record press over one card: `card` names it, and the
+ * the box. A card's press (§514) is a whole-record press over one card: `card` names it, and the
  * toast that it worked says the card's name.
  */
 export function pressFeedback(
@@ -126,7 +126,7 @@ export function useTranslatePress() {
   const [message, setMessage] = useState<PressMessage | null>(null);
 
   /**
-   * The outcome, for a caller that follows it (a card's press shows the English tab, §NNN); null
+   * The outcome, for a caller that follows it (a card's press shows the English tab, §514); null
    * where the page cannot translate and nothing was asked. `card` names the card for its toast.
    */
   async function translate(

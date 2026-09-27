@@ -205,7 +205,7 @@ export default function ActionFormIsland({
     event.preventDefault();
     // A series save's email line, summed over the dates ticked at this press (§384).
     const counted = resolveEmailCount(spec, (field) => data.getAll(field).filter((value): value is string => typeof value === "string"));
-    // A typed value named in the sentence (§NNN): «Limita nouă: 100 ore-CU.».
+    // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.».
     const resolved = fillFromForm(counted, (field) => {
       const value = data.get(field);
       return typeof value === "string" ? value : null;

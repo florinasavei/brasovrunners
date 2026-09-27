@@ -215,7 +215,7 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(ro.Admin.emails.plan.aside.day).toBe("Planul {plan} · {sent} din {allowance} azi");
   });
 
-  it("opens the contact recipients on «Setări» → «Contact», the tab they are (§NNN), and no longer on the email tab", () => {
+  it("opens the contact recipients on «Setări» → «Contact», the tab they are (§516), and no longer on the email tab", () => {
     const panel = read("src/modules/contact/ui/ContactRecipientsPanel.tsx");
     expect(panel).toMatch(/<Panel[\s\S]*?\bcollapsible\b[\s\S]*?openWhen=\{openWhen\}[\s\S]*?id="contact-recipients"/);
     // The tab is its two cards alone, so they open on arrival (§336's `primary`); the save still names itself.

@@ -341,7 +341,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     expect((await reload(nov8.id)).minAge).toBe(18);
     for (const earlier of [source, oct18, oct25]) expect((await reload(earlier.id)).minAge).toBe(16);
 
-    // The platform's fourteen, for the whole series (§NNN: never under it).
+    // The platform's fourteen, for the whole series (§515: never under it).
     expect((await save(await reload(source.id), "all", { fields: { minAge: "14" } })).appliedTo).toBe(4);
     for (const date of [source, ...dates]) expect((await reload(date.id)).minAge).toBe(14);
   });

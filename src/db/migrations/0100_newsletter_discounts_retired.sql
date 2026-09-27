@@ -1,4 +1,4 @@
--- expand: data only (§NNN) — the newsletter stops offering «Coduri de reducere» (DISCOUNTS): discount codes are for the club's members. No column, type or constraint changes; the enum value stays, because a value is never removed and an old newsletter_sends row may name it. The code serving while this runs may still write DISCOUNTS into a new subscription, which the new code reads without harm and drops at the subscriber's next save.
+-- expand: data only (§517) — the newsletter stops offering «Coduri de reducere» (DISCOUNTS): discount codes are for the club's members. No column, type or constraint changes; the enum value stays, because a value is never removed and an old newsletter_sends row may name it. The code serving while this runs may still write DISCOUNTS into a new subscription, which the new code reads without harm and drops at the subscriber's next save.
 --
 -- A subscriber whose only topic was DISCOUNTS is deleted, with its links by cascade: nothing else
 -- was asked for, and newsletter_subscribers_topics_not_empty refuses an empty list — the same

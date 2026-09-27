@@ -39,7 +39,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await page.getByRole("combobox").first().click();
     await page
       .getByRole("option", {
-        // The race's trail declaration, named by its course since §NNN.
+        // The race's trail declaration, named by its course since §515.
         name: wantsTerms ? /Termeni|Terms/ : /— cursă trail|— trail race/,
       })
       .click();

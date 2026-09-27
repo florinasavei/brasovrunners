@@ -532,7 +532,7 @@ describe("§440 a group run's minimum age at the signing door", () => {
     expect((await signGroupRunDeclaration(db, await input(event.id, { birthDate: "2005-10-07" }), NOW)).outcome).toBe("signed");
   });
 
-  // §NNN: the text states the run's age through {{minimumAge}} alone, never under eighteen — the
+  // §515: the text states the run's age through {{minimumAge}} alone, never under eighteen — the
   // declaration covers no minor — and asks a birth date only above eighteen (§440).
   it("asks no birth date of a run whose minimum is eighteen or less, and states eighteen in the PDF", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");

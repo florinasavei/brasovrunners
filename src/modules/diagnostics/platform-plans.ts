@@ -26,7 +26,7 @@
  * arithmetic this file did on a vendor's behalf, which is what §1.2 is about. So every amount is
  * shown in the currency the vendor charges in, totals are per currency, and the conversion to
  * lei is named as the registrar's own step rather than performed here. The one exception is the
- * month's total at the top of Costuri, said in euro at a named, dated rate (`USD_PER_EUR`, §NNN).
+ * month's total at the top of Costuri, said in euro at a named, dated rate (`USD_PER_EUR`, §511).
  *
  * ## Amounts are numbers, ceilings are quotations
  *
@@ -166,7 +166,7 @@ export const DOMAIN_PRICE_CHECKED_ON = "2026-09-16";
 export const ROMANIAN_VAT_PERCENT = 21;
 
 /**
- * The one conversion on Costuri (§NNN; the owner, 2026-09-27: «vreau să văd un total man!»): the
+ * The one conversion on Costuri (§511; the owner, 2026-09-27: «vreau să văd un total man!»): the
  * month's total at the top of the page is said in euro, «Luna aceasta: X € până acum · estimare la
  * sfârșitul lunii: Y €», and the domain's year beside it. Every provider row and the year's cost
  * table keep the vendor's own USD, as the header of this file decides; the total is a reading for
@@ -531,7 +531,7 @@ export type MoneyDecision = {
 
 /**
  * Only the one fact it reads: «Sarcini» → «Club» lists the open questions and no longer reads the
- * cost table's facts since the money moved to «Setări» → «Costuri» (§NNN).
+ * cost table's facts since the money moved to «Setări» → «Costuri» (§516).
  */
 export function moneyDecisions(input: Pick<PlatformFacts, "hasPaidEvent">): MoneyDecision[] {
   return [

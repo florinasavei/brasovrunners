@@ -4,7 +4,7 @@ import { signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-090-07 criterion 7 (§334) — "Cât de des verifică platforma": the owner's throttle, on
- * «Setări» → «Costuri» beside the Neon plan (it was `/admin/tasks` → Costuri until §NNN).
+ * «Setări» → «Costuri» beside the Neon plan (it was `/admin/tasks` → Costuri until §516).
  *
  * One round trip, on the page a unit test cannot see: the card says what a longer interval costs
  * and what it does not, it shows each job's last real run and next check, the select posts, the

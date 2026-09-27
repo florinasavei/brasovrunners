@@ -9,7 +9,7 @@ import {
 } from "@/modules/notifications/domain/deadline-rebase";
 
 /**
- * §NNN — the arithmetic of «termenul curge de când pleacă emailul» (`domain/deadline-rebase.ts`):
+ * §513 — the arithmetic of «termenul curge de când pleacă emailul» (`domain/deadline-rebase.ts`):
  * the stored deadline moves later by exactly the time its email waited, capped as the allocator
  * caps it, and never for a message that left at once, a deadline already over when it was queued,
  * a lapsed offer or the participation window's own date.
@@ -20,7 +20,7 @@ const HOUR = 60 * MINUTE;
 const at = (ms: number) => new Date(QUEUED.getTime() + ms);
 const EVENT = { registrationClosesAt: null, startsAt: new Date("2026-10-01T09:00:00.000Z") };
 
-describe("§NNN rebasedDeadline", () => {
+describe("§513 rebasedDeadline", () => {
   it("names the four messages that start a participant's deadline, and no other", () => {
     expect(DEADLINE_KIND_BY_MESSAGE).toEqual({
       VERIFY_REGISTRATION_EMAIL: "emailLink",

@@ -52,7 +52,7 @@ export type RegistrationSheetRow = Omit<
   /** Whole years on the event's day (`domain/age.ts#ageOnRaceDay`): the club has no age bands yet. */
   ageOnRaceDay?: number | null;
   nationality?: string | null;
-  /** The country the person lives in (§NNN), as its ISO code like the nationality. */
+  /** The country the person lives in (§510), as its ISO code like the nationality. */
   country?: string | null;
   city?: string | null;
   tshirtSize?: string | null;
@@ -95,7 +95,7 @@ const COLUMNS: Array<{
   { header: "Last name", width: 18, cell: (row) => ({ value: row.lastName, type: String }) },
   { header: "Club", width: 22, cell: (row) => ({ value: row.clubName, type: String }) },
   /*
-    The ones the form asks for and the start list does not use (§322, the country §NNN), on the sheet the club
+    The ones the form asks for and the start list does not use (§322, the country §510), on the sheet the club
     works in and deliberately not in the CSV. Never the phone, the emergency contact or the
     health note: those are read on the registration's page and the emergency sheet, audited,
     and a file that leaves the application is exactly where they must not go (`AGENTS.md`
@@ -104,7 +104,7 @@ const COLUMNS: Array<{
   { header: "Sex", width: 12, cell: (row) => ({ value: row.sex ?? "", type: String }) },
   { header: "Age on race day", width: 14, cell: (row) => ({ value: row.ageOnRaceDay ?? null, type: Number }) },
   { header: "Nationality", width: 12, cell: (row) => ({ value: row.nationality ?? "", type: String }) },
-  // Where the person lives (§NNN), right before the city it makes sense of; blank on older rows.
+  // Where the person lives (§510), right before the city it makes sense of; blank on older rows.
   { header: "Country", width: 12, cell: (row) => ({ value: row.country ?? "", type: String }) },
   { header: "City", width: 18, cell: (row) => ({ value: row.city ?? "", type: String }) },
   { header: "T-shirt size", width: 12, cell: (row) => ({ value: row.tshirtSize && row.tshirtSize !== "NONE" ? row.tshirtSize : "", type: String }) },

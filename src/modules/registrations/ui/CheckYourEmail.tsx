@@ -73,7 +73,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
     confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
     opens: daysPhrase(locale, window?.opensDays ?? 0),
   };
-  // The club sends on the scheduler's tick by default (§NNN): the wait is then the pinger's, and
+  // The club sends on the scheduler's tick by default (§513): the wait is then the pinger's, and
   // "within a minute" would be the promise that makes somebody fill the form in again.
   const waitMinutes = await cachedEmailWaitMinutes(new Date());
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
@@ -108,7 +108,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         </Box>
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
         {/*
-          A family sitting (§NNN): one email for everybody it sent the form for, named as typed on this
+          A family sitting (§519): one email for everybody it sent the form for, named as typed on this
           browser — or, at a window of 0, where each person's email left on its own, the sentence that
           says so (the review of 2026-09-27).
         */}

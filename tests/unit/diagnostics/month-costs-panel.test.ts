@@ -75,7 +75,7 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     const html = await render("ro", facts());
     const words = text(html);
     // Neon 1,18 USD so far, 3,65 at the end; the domain's renewal falls in October: 10,97 + TVA —
-    // 14,62 USD in all. The total is first (§NNN): ONE line in the owner's words, in euro at the
+    // 14,62 USD in all. The total is first (§511): ONE line in the owner's words, in euro at the
     // dated ECB rate (1 € = 1,1403 USD): 1,18 → 1,03 €, 14,62 → 12,82 €.
     expect(words).toContain("Luna aceasta: 1,03 € până acum · estimare la sfârșitul lunii: 12,82 € + TVA");
     expect(html).toMatch(/<h2[^>]*id="costs-total-title"[^>]*>Luna aceasta: 1,03 €/);

@@ -22,7 +22,7 @@ import { staffUsers } from "./staff-users";
  * a runner may sign on a group run's page, one per surface: the Tâmpa trail run and the asphalt
  * runs carry different risks. They gate nothing — no registration, no place.
  *
- * Since §NNN a race has two declarations, one per kind of course, built from one shared body:
+ * Since §515 a race has two declarations, one per kind of course, built from one shared body:
  * the trail one is `EVENT_DECLARATION` — the key every signature so far was given, so nothing
  * recorded changes meaning — and the road or park one is `EVENT_DECLARATION_ROAD`, appended last
  * because an enum value is only ever added (AGENTS.md §7.6).

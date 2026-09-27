@@ -194,7 +194,7 @@ describe("a minor registered by a parent (§108)", () => {
     // is named with theirs in a sentence of its own.
     expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al/a actului de identitate MP 123456");
     expect(text).toContain("părintele sau tutorele legal, care o semnează alături de el: Ion Popescu, posesor/posesoare al/a actului de identitate BV 654321");
-    // The event's minimum age, never under fourteen (§NNN), stated where the text opens.
+    // The event's minimum age, never under fourteen (§515), stated where the text opens.
     expect(text).toContain("Declar că am cel puțin 14 ani împliniți la data evenimentului.");
     expect(text).not.toContain("{{");
     // Both signatures, each with its document, under the one instant.

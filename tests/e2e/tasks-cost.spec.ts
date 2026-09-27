@@ -10,10 +10,10 @@ import { signIn } from "./support/featured-event";
  * is a vendor quotation like `$0.106/CU-hour` sitting in a grid cell, and §18.5 forbids sideways
  * scrolling at any width.
  */
-test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§NNN)", () => {
+test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§516)", () => {
   test("tells an Administrator what the club pays, with no sideways scroll", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    // The cost half was its own panel of «Sarcini» since §265, and is «Setări» → «Costuri» since §NNN.
+    // The cost half was its own panel of «Sarcini» since §265, and is «Setări» → «Costuri» since §516.
     await page.goto("/ro/admin/settings/costs");
 
     /**
@@ -30,7 +30,7 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§NN
      */
     const main = page.locator("#main");
 
-    // The month's total first, straight under the tabs (§NNN): ONE line in the owner's words, in
+    // The month's total first, straight under the tabs (§511): ONE line in the owner's words, in
     // euro, before every card that justifies it; the provider rows folded closed under it (§336).
     const total = main.getByRole("heading", { name: /^Luna aceasta: .* € până acum · estimare la sfârșitul lunii: .* €/ });
     await expect(total).toBeVisible();
@@ -56,7 +56,7 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§NN
     // BR-REQ-060-01. What a club is close to exceeding is not an Organizer's business. The
     // Organizer opens «Setări» for the club's content tabs and is offered no «Costuri»; the
     // address itself, typed or reached through the old `?panel=costs` (308), answers 404 —
-    // decided before anything streams, since «Setări» has no loading boundary (§NNN).
+    // decided before anything streams, since «Setări» has no loading boundary (§516).
     await signIn(page, "Dev Moderator");
     const main = page.locator("#main");
     await page.goto("/ro/admin/settings");

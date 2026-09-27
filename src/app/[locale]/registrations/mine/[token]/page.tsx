@@ -108,7 +108,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
         .filter((items) => items.length > 1)
     : [];
 
-  /** The declaration's line under one person (§NNN), or null where there is nothing to say (cancelled). */
+  /** The declaration's line under one person (§519), or null where there is nothing to say (cancelled). */
   const declarationLine = (item: { status: Parameters<typeof declarationStateKey>[0]; declarationSignedAt: Date | null; eventTimezone: string }) => {
     const key = declarationStateKey(item.status, item.declarationSignedAt);
     if (key === null) return null;
@@ -150,7 +150,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       ) : (
         <>
         {/*
-          People sent on the form and not confirmed yet (§446, §NNN): not registrations — nobody holds
+          People sent on the form and not confirmed yet (§446, §519): not registrations — nobody holds
           a place for them — so a line each, and where the button that registers them is.
         */}
         {context.pending.length > 0 && (
@@ -229,7 +229,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>
               {/*
-                Where this person's declaration stands (§NNN; the owner: «pagina „Toate înscrierile
+                Where this person's declaration stands (§519; the owner: «pagina „Toate înscrierile
                 mele” arată starea declarației fiecăruia»): signed with its day, to sign, asked after
                 the address is confirmed, or asked when the waiting list offers a place.
               */}

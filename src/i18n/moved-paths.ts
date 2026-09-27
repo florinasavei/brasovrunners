@@ -1,7 +1,7 @@
 import { routing } from "@/i18n/routing";
 
 /**
- * Backoffice addresses that moved, and where each one lives now (§NNN).
+ * Backoffice addresses that moved, and where each one lives now (§516).
  *
  * «Setări» gathered the club's settings from three sections: the email page, two panels of
  * «Sarcini» and one tab of «Pagini». A bookmark, a link in an old email to staff, a tab left open

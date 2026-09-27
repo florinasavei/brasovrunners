@@ -94,6 +94,6 @@ describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs",
 
 /*
   The email delivery timing (§221) sat beside the throttle as a Superadministrator's platform
-  setting until §NNN moved it into «Termene», the Administrator's: its tests are in
+  setting until §513 moved it into «Termene», the Administrator's: its tests are in
   `tests/integration/notifications/delivery-timing.test.ts`.
 */

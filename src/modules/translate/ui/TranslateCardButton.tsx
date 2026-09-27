@@ -11,12 +11,12 @@ import { cardOf, cardTitleOf } from "./form-fields";
 import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslateAll } from "./use-translate-all";
 
-/** Read by assistive technology, out of sight: the sticky tab row keeps its one line (§NNN). */
+/** Read by assistive technology, out of sight: the sticky tab row keeps its one line (§514). */
 const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
 /**
  * The button at the end of the tab row: never squeezed, 44 px tall. Below `sm` it is the translate
- * glyph alone in a 44-px square, so the sticky row stays one line on a phone (§480, §NNN); from `sm`
+ * glyph alone in a 44-px square, so the sticky row stays one line on a phone (§480, §514); from `sm`
  * up the glyph and the words. The words are then in the `aria-label` and the tooltip.
  */
 const BUTTON_SX = {
@@ -42,7 +42,7 @@ function Words({ children }: { children: string }) {
 
 /**
  * «Tradu cardul: RO → EN» / "Translate this card: RO → EN" in a card's Română | English tab row
- * (§NNN), between the one box's «Tradu din română» (§464) and the whole editor's «Copiază și tradu
+ * (§514), between the one box's «Tradu din română» (§464) and the whole editor's «Copiază și tradu
  * tot» (§482): every English box of this card whose Romanian twin has words, in one press — the
  * card's boxes outside its tabs too (the programme's timed rows), since the card is the nearest
  * `Panel` around the strip (`cardOf`). The rest of the form is untouched.

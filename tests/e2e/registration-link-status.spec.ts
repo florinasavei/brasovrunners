@@ -45,7 +45,7 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
-    // «Sex» starts empty (§NNN): the form is refused without an answer.
+    // «Sex» starts empty (§510): the form is refused without an answer.
     await chooseSex(page);
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();

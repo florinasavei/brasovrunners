@@ -35,7 +35,7 @@ describe("§321 the minimum age is counted by the calendar, on the race day", ()
     expect(MIN_PARTICIPANT_AGE).toBe(14);
   });
 
-  // §NNN — the owner's review of 2026-09-27: fourteen is the absolute floor; an event asks as much or more.
+  // §515 — the owner's review of 2026-09-27: fourteen is the absolute floor; an event asks as much or more.
   it("binds at fourteen at least: an older event's 0 or 12 reads as fourteen, its own 16 or 21 as itself", () => {
     expect(effectiveMinimumAge(0)).toBe(14);
     expect(effectiveMinimumAge(12)).toBe(14);
@@ -142,7 +142,7 @@ describe("§329 a number of years, as a sentence says it", () => {
     }
   });
 
-  it("picks the sentence that reads right for the number: a minor's minimum, an adult's — never «no minimum» (§NNN)", () => {
+  it("picks the sentence that reads right for the number: a minor's minimum, an adult's — never «no minimum» (§515)", () => {
     // An older event saved with 0 or 1 reads as fourteen: the minimum and the parent.
     expect(ageRuleVariant(0)).toBe("minimumAndGuardian");
     expect(ageRuleVariant(1)).toBe("minimumAndGuardian");
@@ -204,7 +204,7 @@ describe("§321 the rule on the schema, for whichever caller adds it", () => {
     expect(registrationSubmissionSchema.superRefine(minimumAgeRule("2026-11-21", 16)).safeParse(sixteenOnTheDay).success).toBe(true);
   });
 
-  it("counts fourteen at zero or twelve: nobody under fourteen enters any event (§NNN)", () => {
+  it("counts fourteen at zero or twelve: nobody under fourteen enters any event (§515)", () => {
     // Born the week of the race, and thirteen on the day: an event saved under §329 with 0 or 12
     // refuses both, as fourteen does.
     for (const minAge of [0, 12]) {
@@ -282,7 +282,7 @@ describe("§329 every sentence about the minimum age says the event's number, th
     });
   }
 
-  it("has every sentence variant in both catalogues, and no «no minimum» sentence any more (§NNN)", () => {
+  it("has every sentence variant in both catalogues, and no «no minimum» sentence any more (§515)", () => {
     for (const variant of ["minimumAndGuardian", "minimumOnly"] as const) {
       expect(ro.Registration.ageRule[variant], `ro ${variant}`).toBeTruthy();
       expect(en.Registration.ageRule[variant], `en ${variant}`).toBeTruthy();

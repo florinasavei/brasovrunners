@@ -13,7 +13,7 @@ import {
  * The role gate for `/admin/tasks`, exhaustive over every role (`DECISIONS.md` §397, §438;
  * BR-REQ-060-01, BR-REQ-090-05).
  *
- * Five panels since §438, three since §NNN: «Club» (what the system says is still owed — it was
+ * Five panels since §438, three since §516: «Club» (what the system says is still owed — it was
  * «De făcut» until then), «De făcut» (the club's own checklist) and «Aplicația». «Anti-robot» and
  * «Costuri» moved to «Setări» (`tests/unit/staff/settings-map.test.ts`). This is what a page render
  * cannot show as clearly — the exact set each door opens for, and what each role lands on when it
@@ -39,7 +39,7 @@ describe("§438 canOpenTaskPanel — each panel's own door", () => {
     expect(STAFF_ROLES.filter((role) => canOpenTaskPanel(role, "club"))).toEqual(OPS_ROLES);
   });
 
-  it("has no «Anti-robot» or «Costuri» panel any more: they are «Setări» tabs (§NNN)", () => {
+  it("has no «Anti-robot» or «Costuri» panel any more: they are «Setări» tabs (§516)", () => {
     expect(TASK_PANELS).toEqual(["club", "todo", "app"]);
   });
 
@@ -95,7 +95,7 @@ describe("§438 resolveTaskPanel — a link naming a tab", () => {
     expect(resolveTaskPanel("MODERATOR", "not-a-panel")).toBe("todo");
   });
 
-  it("reads the two panels that moved as nothing asked — the proxy answers their old address 308 first (§NNN)", () => {
+  it("reads the two panels that moved as nothing asked — the proxy answers their old address 308 first (§516)", () => {
     expect(resolveTaskPanel("ADMIN", "costs")).toBe("club");
     expect(resolveTaskPanel("ADMIN", "botCheck")).toBe("club");
     expect(resolveTaskPanel("DEV", "costs")).toBe("app");

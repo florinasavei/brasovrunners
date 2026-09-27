@@ -98,12 +98,12 @@ describe("§502 a held press is sent whenever the check answers, every time", ()
     expect(source).toMatch(/const onToken = \(\) => \{[\s\S]*?afterToken = setTimeout\(check, 0\);/);
     expect(source).toMatch(/clearTimeout\(afterToken\);\s*\r?\n\s*clearTimeout\(late\);/);
     // …and the widget says so, bubbling from its own element into the form.
-    // The success callback (`botCheckCallbacks`, since the review of §NNN) calls `onToken` after
+    // The success callback (`botCheckCallbacks`, since the review of §518) calls `onToken` after
     // saying «passed»; the widget's `onToken` is that dispatch.
     expect(widget).toMatch(/onToken: \(\) => element\.dispatchEvent\(new Event\(TURNSTILE_TOKEN_EVENT, \{ bubbles: true \}\)\),/);
     const domain = read("src/modules/registrations/domain/turnstile-widget.ts");
     expect(domain).toMatch(/callback: \(\) => \{\s*\r?\n\s*say\("passed"\);\s*\r?\n\s*onToken\(\);/);
-    // Cloudflare's error callback names a state now (§NNN), and answers `false`: the documented
+    // Cloudflare's error callback names a state now (§518), and answers `false`: the documented
     // "let Turnstile handle the retry", so its own automatic retry is kept.
     expect(domain).toMatch(/"error-callback": \(\) => \{\s*\r?\n\s*say\("error"\);\s*\r?\n\s*return false;/);
   });

@@ -79,7 +79,7 @@ async function askTheDatabase(
       Promise.all(JOB_NAMES.map((jobName) => checkJobHealth(db, jobName, now, governorFloorMinutes))),
       // Whether the club can still send email (§98): deferred by the allowance, overdue, or failed.
       checkEmailHealth(db, now, governorFloorMinutes),
-      // The anti-bot check's last day (§NNN): a level, never the count and never the status — and
+      // The anti-bot check's last day (§518): a level, never the count and never the status — and
       // never the reason this whole half fails, so its own failure is `null` and nothing else.
       countBotCheckSignals(db, now).then(botCheckSignalLevels, (error: unknown) => {
         console.error("[health] the bot-check counts could not be read", error);
@@ -300,7 +300,7 @@ export async function GET(): Promise<Response> {
       schema,
       jobs,
       // With its `gmail` block since §443: recipients against the cap and the last failure, no status of its own.
-      // With its `delivery` block since §NNN: the timing, the pending count, the promised wait and the
+      // With its `delivery` block since §513: the timing, the pending count, the promised wait and the
       // outbox job's next expected tick — a queue waiting for the cron reads as that, not as a stall.
       email,
       // The monthly compute quota's early warning (§335): `percent: null` means nothing was
@@ -326,7 +326,7 @@ export async function GET(): Promise<Response> {
       // wrong `TURNSTILE_SECRET_KEY` fails registration open (§205) and used to announce itself
       // nowhere but a server log. `not_configured` and `unreachable` are not problems this
       // endpoint reports; only `misconfigured` is.
-      // And what the check did to people in the last 24 hours (§NNN): held presses the eight-second
+      // And what the check did to people in the last 24 hours (§518): held presses the eight-second
       // valve sent because the check never answered, and widgets that failed or never loaded — each
       // as a level, `none` / `some` (1–4) / `many` (5+), never the count: this body is public, and a
       // daily count of held presses would bound the club's registrations that day. `null` when they

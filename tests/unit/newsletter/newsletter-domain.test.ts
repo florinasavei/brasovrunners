@@ -24,7 +24,7 @@ const DAY = 24 * 60 * 60_000;
 
 /** §445 — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
 describe("§445 the newsletter's topics", () => {
-  it("offers the brief's topics but the retired discount codes (§NNN), in its order, 'all the news' first, every name and hint in both languages", () => {
+  it("offers the brief's topics but the retired discount codes (§517), in its order, 'all the news' first, every name and hint in both languages", () => {
     expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
     expect(RETIRED_TOPICS).toEqual(["DISCOUNTS"]);
     expect(ro.Newsletter.topics).toMatchObject({
@@ -53,7 +53,7 @@ describe("§445 the newsletter's topics", () => {
 
   it("reads the ticks in the catalogue's order, once each, 'everything' alone, nothing that is not a topic", () => {
     expect(normalizeTopics(["WEEKLY_RUNS", "GEAR_TESTING", "WEEKLY_RUNS", "x", 3])).toEqual(["GEAR_TESTING", "WEEKLY_RUNS"]);
-    // A retired topic posted by an old page is dropped like any word that is not a topic (§NNN).
+    // A retired topic posted by an old page is dropped like any word that is not a topic (§517).
     expect(normalizeTopics(["DISCOUNTS", "VOLUNTEERING"])).toEqual(["VOLUNTEERING"]);
     expect(normalizeTopics(["DISCOUNTS"])).toEqual([]);
     expect(normalizeTopics(["VOLUNTEERING", "ALL"])).toEqual(["ALL"]);
@@ -74,7 +74,7 @@ describe("§445 the newsletter's topics", () => {
     expect(topicsPhrase("ro", ["BIG_EVENTS", "GEAR_TESTING"])).toBe("„Evenimente mari” și „Testări de încălțăminte”");
     expect(topicsPhrase("en", ["WEEKLY_RUNS"])).toBe("“The weekly runs”");
     expect(newsletterMergeValues("en").newsletterTopics).toContain("“All the news”");
-    // The privacy notice lists what a subscriber may choose — no longer the discount codes (§NNN).
+    // The privacy notice lists what a subscriber may choose — no longer the discount codes (§517).
     expect(newsletterMergeValues("ro").newsletterTopics).not.toContain("Coduri de reducere");
     expect(newsletterMergeValues("en").newsletterTopics).not.toContain("Discount codes");
   });

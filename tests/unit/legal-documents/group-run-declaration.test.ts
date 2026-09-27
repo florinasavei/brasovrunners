@@ -35,7 +35,7 @@ const TEXTS = {
 const bullets = (list: readonly string[]) => list.filter((p) => p.startsWith("• "));
 
 describe("§393 the kinds and their names", () => {
-  it("lists every enum value, the road race's beside the trail one (§NNN), and the two optional kinds after them", () => {
+  it("lists every enum value, the road race's beside the trail one (§515), and the two optional kinds after them", () => {
     // The enum appends a value; the backoffice lists the road declaration beside the trail one.
     expect([...LEGAL_DOCUMENT_KEYS].sort()).toEqual([...legalDocumentKey.enumValues].sort());
     expect([...LEGAL_DOCUMENT_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
@@ -145,7 +145,7 @@ describe("§393 the two templates", () => {
     const limit = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
     const disclaimer = { ro: /nu (?:pot|poate) fi (?:tras|trasă)|nu răspunde\b/, en: /cannot be held liable|not responsible/ } as const;
     // A waiver, or the organiser free "in any way" — never the Civil Code's own sentence that accepting the
-    // risks is *not* a waiver (art. 1355(4), §NNN), which the text now says in so many words.
+    // risks is *not* a waiver (art. 1355(4), §515), which the text now says in so many words.
     const waiver = {
       ro: /(?<!nu înseamnă, prin ea însăși, că )renunț|în niciun fel/i,
       en: /(?<!not, by itself, a )waive|in any way/i,
@@ -194,7 +194,7 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("states one age, the run's {{minimumAge}}, and no 18 of its own; the consent box repeats the run's age (§NNN)", () => {
+  it("states one age, the run's {{minimumAge}}, and no 18 of its own; the consent box repeats the run's age (§515)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       for (const locale of ["ro", "en"] as const) {
         const text = TEXTS[surface][locale].join("\n");

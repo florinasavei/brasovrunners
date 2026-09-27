@@ -31,7 +31,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Setări» → «Contact» (§NNN; both cards were folds on `/admin/emails`): where the club is written
+ * «Setări» → «Contact» (§516; both cards were folds on `/admin/emails`): where the club is written
  * to — who reads what «Scrie-ne» sends (§164) and the address the site shows and every email
  * answers to (§442). Read by whoever reads the club's content; changed by the Administrator
  * (`canManageClubSettings`, §450), which the actions and the services assert again.
@@ -59,7 +59,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
       </Box>
 
-      {/* The tab is these two cards alone, so they open on arrival (§336's `primary`, §NNN). */}
+      {/* The tab is these two cards alone, so they open on arrival (§336's `primary`, §516). */}
       <ContactRecipientsPanel
         locale={locale}
         recipients={recipients}

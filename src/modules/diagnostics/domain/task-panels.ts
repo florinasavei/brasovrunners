@@ -8,7 +8,7 @@ import { canManageRegistrations, canSeeDiagnostics, type StaffRole } from "@/mod
  *
  * `club` is the club's own worklist read from the system, behind `canManageRegistrations`
  * (Administrator and Superadministrator) as it always was. «Anti-robot» and «Costuri» were panels
- * here too, until §NNN moved them to «Setări» → «Platformă» and «Costuri»: they are settings and the
+ * here too, until §516 moved them to «Setări» → «Platformă» and «Costuri»: they are settings and the
  * price of settings, not things owed, and `?panel=botCheck` / `?panel=costs` answer 308 there
  * (`src/i18n/moved-paths.ts`). The rows of `club` link to them instead (`task-targets.ts`).
  * `club` — «Club» — is the list that was called «De făcut» until §438: what the platform still

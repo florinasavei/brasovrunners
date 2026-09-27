@@ -385,7 +385,7 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
   });
 });
 
-describe("§NNN the country of residence on a staff entry", () => {
+describe("§510 the country of residence on a staff entry", () => {
   async function enter(email: string, details: { country?: string; city?: string }) {
     await createRegistrationByStaff(
       db,

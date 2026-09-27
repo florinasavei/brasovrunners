@@ -17,7 +17,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /*
-  «Setări» → «Costuri» (§NNN): the Neon plan, the jobs' interval, the translation allowance, the
+  «Setări» → «Costuri» (§516): the Neon plan, the jobs' interval, the translation allowance, the
   month's budget thresholds and the database's brakes. Moved here, unchanged, from
   `/admin/tasks` → «Costuri» (§479); each lands back on this tab.
 */

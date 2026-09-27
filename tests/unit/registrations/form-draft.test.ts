@@ -117,7 +117,7 @@ describe("§224 the facts the check-your-email screen greets with", () => {
   });
 });
 
-describe("the submitted-facts cookie's life follows a live family sitting (§NNN)", () => {
+describe("the submitted-facts cookie's life follows a live family sitting (§519)", () => {
   it("lives as long as the sitting's cookie while one is live, ten minutes otherwise", async () => {
     const { submittedFactsMaxAgeSeconds } = await import("@/modules/registrations/form-draft");
     const { sittingCookieMaxAgeSeconds, sittingCookieUntil } = await import("@/modules/registrations/domain/family-sitting");

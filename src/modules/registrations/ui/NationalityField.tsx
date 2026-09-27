@@ -12,7 +12,7 @@ import { chooseInSelect, CountryPicker, type CountrySearchWords, PICKER_BUTTON_S
 /**
  * Citizenship: required, Romania unless the runner says otherwise (§432), and searchable (§463;
  * the owner, "vreau searchbox să pot găsi țara"). The country of residence is the same control
- * under its own `name` (`country`, §NNN): the same list, the same default, the same search.
+ * under its own `name` (`country`, §510): the same list, the same default, the same search.
  *
  * **What posts is a native `<select name="nationality" required>`**, drawn by the server with
  * every country as an option and the draft's (or Romania's) chosen — so a reader without
@@ -146,7 +146,7 @@ function NationalityFieldIsland({
 
 /**
  * The same control inside a backoffice `ActionForm` too (the staff entry's country of residence,
- * §NNN): a refused press gives back the posted country, marks the box when the refusal named it
+ * §510): a refused press gives back the posted country, marks the box when the refusal named it
  * and carries the id the refusal summary links to (§315), as `PhoneField` does. On the public
  * form there is no recall, and the page's own id, draft and error stand.
  */

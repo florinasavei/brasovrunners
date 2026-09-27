@@ -15,7 +15,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — a family registered in one sitting, with one email (the owner, 2026-09-27: "niciun email
+ * §519 — a family registered in one sitting, with one email (the owner, 2026-09-27: "niciun email
  * instant: unul singur, după ce apeși «Gata» sau după fereastra din Termene"; «asta cu wizzardul de
  * confirmare si claritate e top prio!»).
  *
@@ -148,7 +148,7 @@ async function refusal(promise: Promise<unknown>) {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN one person in a sitting", () => {
+describe("§519 one person in a sitting", () => {
   it("holds the verification email until the club's window, and «Gata» sends it now", async () => {
     const event = await createEvent();
     const sittingId = await send(event, "Ana", 0, null);
@@ -201,7 +201,7 @@ describe("§NNN one person in a sitting", () => {
   });
 });
 
-describe("§NNN a family in one sitting", () => {
+describe("§519 a family in one sitting", () => {
   it("becomes one held message from the second person on, and a corrected form replaces the kept one", async () => {
     const event = await createEvent();
     const sittingId = await send(event, "Ana", 0, null);
@@ -448,7 +448,7 @@ async function setDeadlines(changes: Partial<typeof DEFAULT_DEADLINES>) {
   await updateDeadlines(db, admin, { ...DEFAULT_DEADLINES, ...changes }, NOW);
 }
 
-describe("§NNN the fix round of 2026-09-27", () => {
+describe("§519 the fix round of 2026-09-27", () => {
   it("holds each place from the moment its declaration request can leave: a 10-minute hold and the wizard's half hour", async () => {
     await setDeadlines({ holdMinutes: 10 });
     const event = await createEvent();

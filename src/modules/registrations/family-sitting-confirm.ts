@@ -23,7 +23,7 @@ import { publicFormEvent } from "./public-form-event";
 import { confirmEmail, submitRegistration } from "./service";
 
 /**
- * A family's one button (§NNN): the page the family message opens, and its press.
+ * A family's one button (§519): the page the family message opens, and its press.
  *
  * The message — «Înscriere de familie: 3 persoane la …» — names everybody a sitting sent the form
  * for (`family-sitting.ts`): its new registrations, waiting for the address's confirmation, and its
@@ -229,7 +229,7 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
       });
     }
     /*
-      The family's order (§NNN, `compareFamilyOrder`): the sitting's own registrations, then every kept
+      The family's order (§519, `compareFamilyOrder`): the sitting's own registrations, then every kept
       form's in the order the forms were sent — they share this press's `created_at`, so only this list
       orders them, for the family's confirmation, «Declarațiile de pe această adresă» and the wizard
       alike. Kept, ids only, until the day after the start, for those three to read.

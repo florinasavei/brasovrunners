@@ -6,7 +6,7 @@ import { fragmentId, openFoldsAround } from "./fold";
 
 /**
  * Opens the backoffice fold the address's `#fragment` names (`DECISIONS.md` §336): a link to
- * `/admin/settings/contact#contact-recipients` — a row of «Sarcini» → «Club» (§NNN) — lands on that
+ * `/admin/settings/contact#contact-recipients` — a row of «Sarcini» → «Club» (§516) — lands on that
  * panel open, not on its closed summary.
  *
  * The one piece of the fold rule the server cannot decide — a fragment never reaches it — so it

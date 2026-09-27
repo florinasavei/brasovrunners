@@ -22,7 +22,7 @@ import {
 
 /**
  * BR-REQ-041-01 — the anti-bot check on the registration form, every state visible and
- * recoverable; `DECISIONS.md` §185, §216, §285 and §NNN.
+ * recoverable; `DECISIONS.md` §185, §216, §285 and §518.
  *
  * Cloudflare's frame says «Success!» or draws a box, and says nothing when its script is blocked,
  * when it fails, when its token lapses or when the box waited too long; the send button guessed
@@ -35,11 +35,11 @@ import {
  * The browser side is `registration-turnstile.spec.ts`.
  */
 const ROOT = path.resolve(__dirname, "../../..");
-/** The sentences a form without a held press says in place of the registration form's (§NNN). */
+/** The sentences a form without a held press says in place of the registration form's (§518). */
 const PLAIN_KEYS = ["unsupported", "blocked", "slow", "failed"] as const;
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 
-describe("§NNN the widget's states", () => {
+describe("§518 the widget's states", () => {
   it("gives up at a blocked script and an unsupported browser at once, and at the second failure — not the first", () => {
     expect(BOT_CHECK_FAILURES_BEFORE_GIVING_UP).toBe(2);
     expect(BOT_CHECK_WIDGET_STATES.filter((state) => botCheckGaveUp(state, 1))).toEqual(["unsupported", "blocked"]);
@@ -153,7 +153,7 @@ describe("§NNN the widget's states", () => {
     }
   });
 
-  it("a form with no held press never promises the valve or the club's confirmation (review nit, §NNN)", () => {
+  it("a form with no held press never promises the valve or the club's confirmation (review nit, §518)", () => {
     for (const key of PLAIN_KEYS) {
       expect(ro.BotCheck.plain[key], key).not.toMatch(/clubul confirmă|pleacă și fără ea|trimitem/);
       expect(en.BotCheck.plain[key], key).not.toMatch(/club confirms|goes without it|we send/);
@@ -164,7 +164,7 @@ describe("§NNN the widget's states", () => {
   });
 });
 
-describe("§NNN the wiring", () => {
+describe("§518 the wiring", () => {
   const widget = read("src/modules/registrations/ui/TurnstileWidget.tsx");
   const button = read("src/shared/ui/SubmitButton.tsx");
 
@@ -195,7 +195,7 @@ describe("§NNN the wiring", () => {
     expect(widget).toMatch(/if \(next === "error"\) setFailures\(\(count\) => count \+ 1\);/);
     expect(widget).toMatch(/const gaveUp = botCheckGaveUp\(state, failures\);/);
     expect(widget).toMatch(/\[BOT_CHECK_GAVE_UP_ATTRIBUTE\]: "true"/);
-    // A failure in this attempt rides with the form, for the register action to count (§NNN).
+    // A failure in this attempt rides with the form, for the register action to count (§518).
     expect(widget).toMatch(/if \(next === "error" \|\| next === "blocked"\) setFailedIn\(attempt\);/);
     expect(widget).toMatch(/\{failedIn === attempt && <input type="hidden" name=\{BOT_CHECK_SIGNAL_FIELD\} value="widget-failed" \/>\}/);
   });
@@ -223,7 +223,7 @@ describe("§NNN the wiring", () => {
     expect(button).toMatch(/heldHints\[botCheckHeldHint\(checkState\)\]/);
     expect(button).toMatch(/const notice = setTimeout\(\(\) => setValved\(true\), RELEASE_AFTER_MS - VALVE_NOTICE_MS\);/);
     expect(button).toMatch(/const valve = setTimeout\(\(\) => send\(true\), RELEASE_AFTER_MS\);/);
-    // The valve's send names itself as the submitter's word, only around that one send (§NNN).
+    // The valve's send names itself as the submitter's word, only around that one send (§518).
     expect(button).toMatch(/if \(byValve\) \{\s*button\.name = BOT_CHECK_SIGNAL_FIELD;\s*button\.value = "held-press-valve";\s*\}/);
     expect(button).toMatch(/finally \{\s*if \(byValve\) \{\s*button\.removeAttribute\("name"\);\s*button\.removeAttribute\("value"\);/);
     expect(button).not.toMatch(/sendBeacon|reportBotCheckSignal/);
@@ -262,14 +262,14 @@ describe("§NNN the wiring", () => {
 });
 
 /**
- * The review's blocker (§NNN): after the form's first server re-render the widget stopped saying
+ * The review's blocker (§518): after the form's first server re-render the widget stopped saying
  * its state. The callbacks Cloudflare keeps are the ones `render` got from the run that drew the
  * widget; the effect runs again on every attempt and `reset()`s the same widget, so a callback that
  * held the first run's `become` — cancelled by that re-render — said nothing ever again. Driven here
  * with a fake `window.turnstile` through the very functions the island calls, run by run as React
  * runs the effect: draw, re-render with a new attempt, and Cloudflare calling back.
  */
-describe("§NNN the widget's callbacks outlive the effect run that drew it", () => {
+describe("§518 the widget's callbacks outlive the effect run that drew it", () => {
   function fakeTurnstile() {
     const drawn: TurnstileRenderOptions[] = [];
     let resets = 0;

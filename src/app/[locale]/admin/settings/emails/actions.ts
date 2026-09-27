@@ -31,7 +31,7 @@ function localeOf(form: FormData): Locale {
 /**
  * "The plan we are on" (`DECISIONS.md` §100). Administrator only — the same gate as "send
  * now", because both spend the club's allowance — and the service asserts the role again.
- * Lands back on «Setări» → «Emailuri» (§NNN) with the outcome in the query, like every backoffice action;
+ * Lands back on «Setări» → «Emailuri» (§516) with the outcome in the query, like every backoffice action;
  * a refusal comes back as the form's state with every box still filled (§315).
  */
 export async function updateEmailPlanAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

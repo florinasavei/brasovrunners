@@ -442,7 +442,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
 
 /**
  * The confirmation a signature earns (§91: the QR and the number) — one person's, or, for a person
- * the family's one button confirmed (§NNN), the family's one confirmation with everybody's QR code,
+ * the family's one button confirmed (§519), the family's one confirmation with everybody's QR code,
  * desk code and race number (`queueFamilyConfirmed`), for as long as it has not left. The signed
  * declaration's copies and the club's notice stay one per person, whoever the confirmation names.
  */
@@ -467,7 +467,7 @@ async function enqueueConfirmation<T extends Record<string, unknown>>(tx: Transa
  * "you are on the waiting list". An offer made on the way (§160) already queued its own.
  *
  * The declaration's message is the one that starts the hold the allocation just wrote, so it is
- * marked as such (§NNN, `startingDeadline`): its send re-bases the hold once, and while it waits
+ * marked as such (§513, `startingDeadline`): its send re-bases the hold once, and while it waits
  * in the queue the hold is not lapsed (`repository.ts#awaitingItsFirstEmail`).
  */
 async function enqueueAllocationEmail<T extends Record<string, unknown>>(
@@ -477,7 +477,7 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
   idempotencyKey: string,
   now: Date,
   /**
-   * A family confirmed in one press (§NNN): the declaration request waits this long, while the
+   * A family confirmed in one press (§519): the declaration request waits this long, while the
    * wizard asks the same signatures on the screen, and goes only to whoever is still unsigned then
    * (`familyHeld`, read by the renderer). The waiting-list message is never held.
    */
@@ -587,7 +587,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       messageType: "WAITLIST_SPOT_OFFER",
       locale: offered.locale,
       recipientEmail: await deliveryEmailOf(db, offered.participantId),
-      // The offer's own first message: its send re-bases the offer once (§NNN); a resend never does.
+      // The offer's own first message: its send re-bases the offer once (§513); a resend never does.
       payload: startingDeadline(),
       idempotencyKey: `registration:${offered.id}:waitlist-offered:${now.toISOString()}`,
       now,
@@ -848,7 +848,7 @@ export type SubmitRegistrationResult = {
    */
   registrationId?: string;
   /**
-   * The family sitting this public submission held its messages in (§NNN), for the browser's sealed
+   * The family sitting this public submission held its messages in (§519), for the browser's sealed
    * half — null when it held nothing (a re-send about a registration outside the sitting, the
    * address at the club's limit). Only for the action to keep in that cookie: the screen it renders
    * is the same whatever this says (§39).
@@ -903,7 +903,7 @@ export type RegistrationOrigin = {
    */
   anotherPerson?: { participantId: string };
   /**
-   * The public form's family sitting (§NNN): the form is one of several a browser sends in a row
+   * The public form's family sitting (§519): the form is one of several a browser sends in a row
    * for people on one address, with one email at the end. `id` is the sitting its earlier forms
    * opened, from the browser's sealed half, or null for the first form. It changes what is mailed
    * and nothing else — the decision, the lock, the limit and the throttle are the form's own:
@@ -928,10 +928,10 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   now: Date,
   /**
    * What the message says beside its link: `anotherPersonHint` on a re-send for a slip (§446); the
-   * `startingDeadline` mark on the message that starts the link (§NNN), never on a re-send.
+   * `startingDeadline` mark on the message that starts the link (§513), never on a re-send.
    */
   payload: Record<string, unknown> = {},
-  /** Held by a family sitting until «Gata» or the club's window (§NNN). */
+  /** Held by a family sitting until «Gata» or the club's window (§519). */
   notBefore?: Date,
 ): Promise<OutboxRow | null> {
   return enqueueEmail(db, {
@@ -1275,7 +1275,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     birthDate: input.birthDate ?? null,
     sex: input.sex ?? null,
     nationality: input.nationality ?? null,
-    // Never null (§NNN): a staff entry without one lives in Romania, the column's own default —
+    // Never null (§510): a staff entry without one lives in Romania, the column's own default —
     // on a restart too, which writes these fields over the old row.
     country: input.country ?? "RO",
     city: input.city ?? null,
@@ -1329,7 +1329,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   let createdDeadlines = undefined as (Date | null)[] | undefined;
   /** The registration this submission created or restarted, for a staff caller (§420); none on a resend. */
   let written = undefined as string | undefined;
-  /** The family sitting this public form held its messages in (§NNN), for the browser's sealed half. */
+  /** The family sitting this public form held its messages in (§519), for the browser's sealed half. */
   let sittingResult = null as string | null;
   /*
     The club's deadlines (§377), read before the transaction and from the instance's memo when it
@@ -1414,7 +1414,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     }
 
     /*
-      The family sitting (§NNN): the public form, sent again from the screen after it — «Încă o
+      The family sitting (§519): the public form, sent again from the screen after it — «Încă o
       persoană» — for somebody else on the same address. Read under the event's lock, like the
       address's rows above, so two forms of one sitting are one after the other. A sitting that no
       longer takes forms (sent by «Gata», past its window, of another address) is none: this form
@@ -1435,7 +1435,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     };
     const keptInSitting = sitting ? await liveSittingEntries(tx, sitting.id, now) : [];
     /*
-      A form this sitting kept, named again (§NNN). Asked only where the address's registrations call
+      A form this sitting kept, named again (§519). Asked only where the address's registrations call
       the form another person: a form that is the same as a registration is that registration's
       re-send, sitting or not.
 
@@ -1472,7 +1472,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       return;
     }
     /*
-      The club's limit counts the sitting's kept forms too (§NNN): each is somebody the one button
+      The club's limit counts the sitting's kept forms too (§519): each is somebody the one button
       will register, and a fifth child typed into a sitting of four would only be refused at the
       press. At the limit the address hears so at once, as without a sitting (§389).
     */
@@ -1500,7 +1500,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         the address holds here, and the renderer ties it to this entry, so it names the event, the
         participant and this one person, and nothing a stranger typed can reach another inbox.
       */
-      // In a sitting (§NNN), the kept form joins it, and its message waits with the sitting's others.
+      // In a sitting (§519), the kept form joins it, and its message waits with the sitting's others.
       if (inSitting && !atCap && !sitting) {
         sitting = await openSitting(tx, {
           eventId: event.id,
@@ -1535,13 +1535,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // What was decided now, not what the setting says when the message renders: the email and
         // the decision must agree, and the confirmation asks the limit again under the lock anyway.
         // The entry by its id alone — never a name or a date in the outbox (§12.12).
-        // The entry's link starts with this message (§NNN): each submission is a new entry and its own first send.
+        // The entry's link starts with this message (§513): each submission is a new entry and its own first send.
         payload: entry
           ? startingDeadline({ atCap: false, registrationsPerAddress: cap.registrationsPerAddress, familyEntryId: entry.id })
           : { atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
         now,
-        // Held with the sitting's others until «Gata» or the window (§NNN); at the limit, at once.
+        // Held with the sitting's others until «Gata» or the window (§519); at the limit, at once.
         ...(holding ? { notBefore: heldUntil } : {}),
       });
       if (holding && sitting) sitting = await holdInSitting(tx, sitting, { outboxId: queued?.id ?? null });
@@ -1563,7 +1563,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const existing = decision.kind === "resend" || decision.kind === "restart" ? decision.registration : undefined;
 
     /*
-      The same person as a registration this sitting created (§NNN): its verification email is held
+      The same person as a registration this sitting created (§519): its verification email is held
       with the sitting's others, and says what a re-send would. Nothing more is queued; the club's
       record still has the line (§312), and says the truth: the held verification email is the one
       that will leave, once, with the sitting — `held: true` beside its type, so the timeline reads
@@ -1699,7 +1699,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     }
 
     /*
-      A new registration of a sitting (§NNN): its verification email waits with the sitting's others,
+      A new registration of a sitting (§519): its verification email waits with the sitting's others,
       and the sitting — opened by this form when it is the first to hold anything — names it among
       the registrations its one button confirms. Outside a sitting, the email goes at once. Either
       way it is the message that starts the link (`startingDeadline`, §NNN): its send re-bases it.
@@ -1764,7 +1764,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           now,
         });
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
-        // The link of this cycle starts with this message (§NNN): its send re-bases it, once.
+        // The link of this cycle starts with this message (§513): its send re-bases it, once.
         if (restarted && !atTheDesk && !origin.anotherPerson) await holdVerification(restarted);
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
@@ -1842,7 +1842,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     // Nor another person confirmed from the email (§446): the press proved the inbox, and the
     // caller confirms the address in this same transaction (`family-confirm.ts`).
-    // The first message of the registration starts its email link (§NNN): its send re-bases it, once.
+    // The first message of the registration starts its email link (§513): its send re-bases it, once.
     if (!atTheDesk && !origin.anotherPerson) await holdVerification(created);
     createdDeadlines = [linkExpiresAt];
     written = created.id;
@@ -1856,7 +1856,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // and no other: the public form's answer stays byte for byte the same for everybody (§39).
   const answer: SubmitRegistrationResult =
     (origin.source === "STAFF" || origin.anotherPerson) && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
-  // The sitting's id for the browser's sealed half (§NNN) — never for the screen, which is the same for all.
+  // The sitting's id for the browser's sealed half (§519) — never for the screen, which is the same for all.
   return origin.sitting !== undefined && origin.source === "PUBLIC" && !origin.anotherPerson ? { ...answer, sittingId: sittingResult } : answer;
 }
 
@@ -1868,7 +1868,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
   event: EventForRegistration,
   registrationId: string,
   now: Date,
-  /** A family confirmed in one press (§NNN): the declaration request waits for the wizard (`enqueueAllocationEmail`). */
+  /** A family confirmed in one press (§519): the declaration request waits for the wizard (`enqueueAllocationEmail`). */
   options: { declarationNotBefore?: Date } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
@@ -1918,7 +1918,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     await markEmailVerified(tx, current.participantId, now);
     let allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
     /*
-      A family confirmed in one press (§NNN): the declaration request waits for the wizard, and the
+      A family confirmed in one press (§519): the declaration request waits for the wizard, and the
       hold counts from the moment it can leave, never before — the allocator's own formula at that
       instant, written to the allocator's own column, so the sweep and the message read one value. A
       hold the close or the start cuts before then is not waited on: the request leaves now.
@@ -2048,7 +2048,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
      */
     /*
       The text this signature binds to: the version current for this registration's language, of
-      the event's own declaration — trail or road (§NNN, `findEventDeclaration`) — read once,
+      the event's own declaration — trail or road (§515, `findEventDeclaration`) — read once,
       before anything is compared (§330). Who signs and which documents are asked are
       read from it, so it has to be the text the page showed — and that is checked first: the
       page posts the id and hash of the version it rendered, and a newer version approved in

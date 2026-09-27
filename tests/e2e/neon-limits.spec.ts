@@ -22,7 +22,7 @@ test.describe("BR-REQ-090-07 the database's limits card without a key", () => {
 
     await expect(card.getByRole("heading", { name: "Limitele bazei de date" })).toBeVisible();
     await expect(card.getByTestId("neon-limits-unconfigured")).toContainText("Lipsește NEON_API_KEY, NEON_PROJECT_ID pe acest mediu");
-    // No file name or §-number on the screen (§NNN): where the variables go is the «?» beside it.
+    // No file name or §-number on the screen (§511): where the variables go is the «?» beside it.
     await expect(card.getByTestId("neon-limits-unconfigured")).not.toContainText("SETUP.md");
     await expect(card.getByTestId("neon-limits-unconfigured").getByRole("button", { name: /proiectul Vercel al mediului/ })).toHaveCount(1);
     // Which key would do, per Neon's own documentation: a project-scoped one has Editor access.

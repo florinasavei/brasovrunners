@@ -12,13 +12,13 @@ import { type DeliveryTimingSetting, defaultDeliveryTiming, deliveryTimingSettin
 
 /**
  * Whether the outbox drains after the request that filled it, or only on the scheduler
- * (`DECISIONS.md` §221, §NNN). Read by the drain, written by an Administrator in «Termene» on
+ * (`DECISIONS.md` §221, §513). Read by the drain, written by an Administrator in «Termene» on
  * `/admin/emails`.
  *
  * The same shape as the Mailgun plan and the deadlines beside it (§100, §377) — one
  * `platform_settings` row, a strict schema, the Administrator's club setting asserted here and not
  * only by the hidden form, an audit row naming who changed it and from what. It was the
- * Superadministrator's (§221, §450); since §NNN it sits in «Termene», because what it changes is a
+ * Superadministrator's (§221, §450); since §513 it sits in «Termene», because what it changes is a
  * wait every participant is told about, not whether the platform runs — nothing is lost either way.
  */
 
@@ -36,7 +36,7 @@ export async function readDeliveryTiming<T extends Record<string, unknown>>(
     .from(platformSettings)
     .where(eq(platformSettings.key, DELIVERY_TIMING_SETTING_KEY))
     .limit(1);
-  // Unset: scheduled on QA and production, immediate where no pinger runs (§NNN).
+  // Unset: scheduled on QA and production, immediate where no pinger runs (§513).
   const fallback = defaultDeliveryTiming(env.APP_ENV);
   if (!row) return { ...fallback, updatedAt: null };
   // A value this code can no longer read falls back to the default rather than throwing on a
@@ -53,7 +53,7 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<DeliveryTimingState> {
-  // A club setting in «Termene» (§NNN): the Administrator's, as every other number in that fold.
+  // A club setting in «Termene» (§513): the Administrator's, as every other number in that fold.
   if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change when email is sent`);
   }

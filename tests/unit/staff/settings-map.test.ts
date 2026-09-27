@@ -16,7 +16,7 @@ import {
 import { SECTION_TARGET_ROUTE, TASK_TARGETS, targetRoute } from "@/modules/diagnostics/domain/task-targets";
 
 /**
- * §NNN — one predictable backoffice map (the owner, 2026-09-27: «navbar-urile și URL-urile shared
+ * §516 — one predictable backoffice map (the owner, 2026-09-27: «navbar-urile și URL-urile shared
  * între Sarcini și config sunt un pic greșite, ne duce prea dintr-o parte în alta»).
  *
  * BR-REQ-060-01: «Setări» and each of its tabs are offered only to the roles their gates open, and
@@ -89,7 +89,7 @@ describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
   });
 });
 
-describe("§NNN the main bar, in the order the club opens things", () => {
+describe("§516 the main bar, in the order the club opens things", () => {
   it("is events, registrations, the desk, gallery, pages, newsletter, settings, tasks, team, legal, guide, system", () => {
     expect([...ADMIN_SECTIONS]).toEqual(["events", "registrations", "checkin", "gallery", "pages", "newsletter", "settings", "tasks", "staff", "legal", "guide", "devs"]);
     expect(ADMIN_SECTIONS).not.toContain("emails");
@@ -122,7 +122,7 @@ describe("§NNN the main bar, in the order the club opens things", () => {
   });
 });
 
-describe("§NNN every «Setări» tab is a route with the same shape", () => {
+describe("§516 every «Setări» tab is a route with the same shape", () => {
   it("is a real route in the table, a page on disk, and the tab row first — no «← Înapoi la …»", () => {
     for (const tab of SETTINGS_TABS) {
       const route = SETTINGS_TAB_ROUTE[tab];
@@ -155,7 +155,7 @@ describe("§NNN every «Setări» tab is a route with the same shape", () => {
   });
 });
 
-describe("§NNN «Sarcini» → «Club» rows point into the map", () => {
+describe("§516 «Sarcini» → «Club» rows point into the map", () => {
   /** Every `id="…"` a component under src/ carries, the backoffice's anchors. */
   const anchors = (() => {
     const found = new Set<string>();
@@ -200,7 +200,7 @@ describe("§NNN «Sarcini» → «Club» rows point into the map", () => {
   });
 });
 
-describe("§NNN nothing in src/ links to an address that moved", () => {
+describe("§516 nothing in src/ links to an address that moved", () => {
   /** The code of a file without its comments: a comment may tell the history, a link may not. */
   const code = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
   const files: string[] = [];

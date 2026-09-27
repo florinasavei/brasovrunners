@@ -98,8 +98,8 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="city"]').fill("Brașov");
 
     // The country, the citizenship and the t-shirt size carry a default the schema accepts
-    // (§432, §NNN) and are left untouched on purpose: somebody who fills in only the text
-    // fields and answers «Sex» is accepted. «Sex» alone starts empty (§NNN) — an answer
+    // (§432, §510) and are left untouched on purpose: somebody who fills in only the text
+    // fields and answers «Sex» is accepted. «Sex» alone starts empty (§510) — an answer
     // nobody gave is not one — so it is chosen.
     await chooseSex(page);
     await page.locator('[name="phone"]').fill("+40711111111");
@@ -133,7 +133,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await expect(page.getByText(address)).toBeVisible();
     // And the same capture notice here, where somebody would otherwise stand with an inbox open.
     await expect(page.getByText(captureNotice)).toBeVisible();
-    // Nothing is mailed until «Gata» (§NNN): the screen asks first about another person on the address.
+    // Nothing is mailed until «Gata» (§519): the screen asks first about another person on the address.
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
     await page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" }).click();
     await expect(page).toHaveURL(/sent=1/, { timeout: 30_000 });

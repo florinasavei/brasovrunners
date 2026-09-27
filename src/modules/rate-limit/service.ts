@@ -140,7 +140,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
   /**
-   * Not a throttle: a counter (§NNN). The anti-bot check's two failure signals — a held press the
+   * Not a throttle: a counter (§518). The anti-bot check's two failure signals — a held press the
    * valve sent, a widget that failed or never loaded — per hour, keyed on the signal's own word
    * (never a person), summed over the last day by `/api/health`
    * (`registrations/bot-check-signals.ts`). The verdict is never read; the limit is only what

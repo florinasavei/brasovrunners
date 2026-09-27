@@ -10,7 +10,7 @@ import type { DeliveryTiming } from "./domain/delivery-timing";
 import { emailWaitMinutes, nextOutboxTick } from "./domain/email-wait";
 
 /**
- * What the queue holds and when it next leaves (§NNN): the figure `/api/health`'s `email` block
+ * What the queue holds and when it next leaves (§513): the figure `/api/health`'s `email` block
  * carries and the line «Următoarele emailuri automate» (§383) opens with. Under the scheduled
  * default a queue that waits for the cron is normal, so the count alone would read as a stall;
  * with the tick beside it, it reads as "leaves at 10:15".

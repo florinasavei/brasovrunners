@@ -3,7 +3,7 @@ import TurnstileWidget, { type BotCheckWords } from "./TurnstileWidget";
 
 /**
  * The anti-bot check as a form places it (§97, §185): Cloudflare's widget with the line under it
- * that says, in the reader's language, what the check is doing and what to do about it (§NNN).
+ * that says, in the reader's language, what the check is doing and what to do about it (§518).
  *
  * A Server Component around the client island so the words stay in the catalogue on the server
  * and cross the boundary as strings — the island carries no messages of its own. Every form that

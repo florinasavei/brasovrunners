@@ -223,7 +223,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
   return (
     <Stack spacing={4} sx={{ maxWidth: 900 }}>
       {/*
-        «Setări»'s row first, «Configurație» marked (§NNN): this page is the row's last tab, so the
+        «Setări»'s row first, «Configurație» marked (§516): this page is the row's last tab, so the
         club's settings — «Costuri» with the Neon limits the owner came here looking for — are one tap
         away, and the main bar's «Configurație» and «Setări» lead into one row rather than two places.
       */}
@@ -312,7 +312,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
       )}
       {/*
         The panels (§265), and the anti-bot switch beside them: that switch lives on «Setări» →
-        «Platformă» since §NNN (it was a panel of `/admin/tasks`, §254), and "where do I turn the
+        «Platformă» since §516 (it was a panel of `/admin/tasks`, §254), and "where do I turn the
         captcha off" is a configuration question wherever the answer is kept. The link is offered only
         to a role that may open that tab (`canOpenSettingsTab`, the page's own gate), so it can reach
         it (§397) — a Tehnic who followed it used to land on «Aplicația» instead, under a label that
@@ -583,7 +583,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             )}
           </Typography>
           {/*
-            The limits and the cost brakes live on «Setări» → «Costuri» (§479, §NNN), whatever the plan's
+            The limits and the cost brakes live on «Setări» → «Costuri» (§479, §516), whatever the plan's
             source: the link for a role that may open that tab, a sentence naming it for the rest (the
             Tehnic), never a link into a 404.
           */}

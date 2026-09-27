@@ -42,7 +42,7 @@ export default function proxy(request: NextRequest) {
   }
 
   /**
-   * A backoffice address that moved into «Setări» (§NNN): a real 308 to where it lives now, the
+   * A backoffice address that moved into «Setări» (§516): a real 308 to where it lives now, the
    * query kept, before anything renders — so a bookmark, an old link or a tab left open keeps
    * working, and a POST from a page loaded before the move stays a POST.
    */

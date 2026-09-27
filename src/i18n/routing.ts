@@ -187,7 +187,7 @@ export const routing = defineRouting({
     /** What a staff member's network lets through, and what to ask IT to allow (§436). */
     "/admin/network": "/admin/network",
     /**
-     * «Setări» (§NNN): the club's settings as one row of tabs. `/admin/emails`,
+     * «Setări» (§516): the club's settings as one row of tabs. `/admin/emails`,
      * `/admin/pages/appearance` and `/admin/tasks?panel=costs|botCheck` moved here and answer
      * 308 from their old addresses (`src/i18n/moved-paths.ts`). A backoffice address, one spelling.
      */

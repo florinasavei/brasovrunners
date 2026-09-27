@@ -136,7 +136,7 @@ async function press(firstName: string, birthDate?: string): Promise<string> {
   return JSON.stringify({ redirectTo, cookies });
 }
 
-/** How long each sealed sitting cookie was — the one thing about it a browser can see (§39, §NNN). */
+/** How long each sealed sitting cookie was — the one thing about it a browser can see (§39, §519). */
 const sittingCookieLengths: { firstName: string; length: number }[] = [];
 
 /** Registrations already on the address, made through the same action and the emailed confirmation (§446). */
@@ -177,7 +177,7 @@ describe("§389 §39 the public form answers the same whatever the address holds
 
     expect(none).toContain('"redirectTo":"/ro/evenimente/crosul-familiei/inscriere?submitted=1"');
     /*
-      The draft cleared, the family sitting's sealed half (§NNN) — under its own key, so it opens as
+      The draft cleared, the family sitting's sealed half (§519) — under its own key, so it opens as
       nothing here — and the "check your inbox" facts: the whole of what the browser keeps.
     */
     const cookies = (JSON.parse(none) as { cookies: { name: string; value: unknown }[] }).cookies;

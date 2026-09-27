@@ -97,7 +97,7 @@ describe("BR-REQ-031-04 the country pickers as the server renders them", () => {
     }
   });
 
-  it("draws the country of residence as its own native, required select, on Romania without a draft (§NNN)", () => {
+  it("draws the country of residence as its own native, required select, on Romania without a draft (§510)", () => {
     const html = renderToStaticMarkup(
       createElement(NationalityField, {
         id: fieldId("country"),
@@ -115,7 +115,7 @@ describe("BR-REQ-031-04 the country pickers as the server renders them", () => {
     expect(html).not.toContain('<option value=""');
   });
 
-  it("on the staff entry, gives back a refused press's country and the id the summary links to (§315, §NNN)", () => {
+  it("on the staff entry, gives back a refused press's country and the id the summary links to (§315, §510)", () => {
     const html = renderToStaticMarkup(
       createElement(
         RecallProvider,

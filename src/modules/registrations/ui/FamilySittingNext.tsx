@@ -24,10 +24,10 @@ type Props = {
   /** The first name of the form just sent (§224), for the heading; null once its cookie is gone. */
   firstName: string | null;
   eventTitle: string;
-  /** The club's window is 0 (§NNN): nothing was held, the email has already left. */
+  /** The club's window is 0 (§519): nothing was held, the email has already left. */
   atOnce: boolean;
   /**
-   * The club's window as the action read it, from the browser's half (§NNN): the sentence names the
+   * The club's window as the action read it, from the browser's half (§519): the sentence names the
    * window the email is actually held for, not the public cache's, which may lag a «Termene» save.
    * Null on a half written before it was kept: the cache's then.
    */
@@ -42,7 +42,7 @@ type Props = {
 
 /**
  * «Mai înscrii pe cineva cu aceeași adresă?» — the screen after the form, before anything is mailed
- * (§NNN; the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»).
+ * (§519; the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»).
  *
  * First one honest sentence (the review of 2026-09-27: the screen said «nothing until you press
  * „Gata”» and, two lines later, that the email leaves by itself): the email leaves on «Gata» or by
@@ -150,7 +150,7 @@ export default async function FamilySittingNext({
         </Typography>
         <Stack spacing={1.5} sx={{ alignItems: "stretch", maxWidth: 480 }}>
           {/*
-            A press, not a link (§NNN): «Da» starts the window again — the server's row, its held
+            A press, not a link (§519): «Da» starts the window again — the server's row, its held
             messages and this browser's half together — so it never lapses while the next form is open.
           */}
           <form action={continueAction} data-testid="family-sitting-add">

@@ -22,7 +22,7 @@ export type RegistrationEntryDetails = {
   /** ISO 3166-1 alpha-2, uppercase. */
   nationality?: string | null;
   /**
-   * Where the person lives (§NNN), ISO 3166-1 alpha-2, uppercase. A NOT NULL column with a
+   * Where the person lives (§510), ISO 3166-1 alpha-2, uppercase. A NOT NULL column with a
    * default of `RO`, so "not supplied" is `undefined` (or Romania), never `null`.
    */
   country?: string;

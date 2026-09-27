@@ -2,16 +2,16 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 
 /**
  * The race's two declarations — trail (`EVENT_DECLARATION`) and road or park
- * (`EVENT_DECLARATION_ROAD`) — built from one shared body (§NNN).
+ * (`EVENT_DECLARATION_ROAD`) — built from one shared body (§515).
  *
  * **Where it comes from.** The club's paper declaration (`DECISIONS.md` §95), with the blanks as
  * merge fields (`domain/merge-fields.ts`) so one approved version serves every event of its kind:
  * the participant, the identity documents, the event, its date, its place and its minimum age are
  * filled in when the declaration is shown, signed and printed. Rewritten per the counsel review of
- * 2026-09-25 (§418), and per the owner's review of 2026-09-27 (§NNN), which asked for:
+ * 2026-09-25 (§418), and per the owner's review of 2026-09-27 (§515), which asked for:
  *
  * 1. **No participant under fourteen, and no flow for one.** The absolute minimum is fourteen; an
- *    event may ask more (`events.min_age`, never under fourteen since §NNN). The text opens with the
+ *    event may ask more (`events.min_age`, never under fourteen since §515). The text opens with the
  *    event's own minimum through `{{minimumAge}}` — "Declar că am cel puțin {{minimumAge}} împliniți
  *    la data evenimentului" — and says that from 14 to 17 the minor signs and the parent or guardian
  *    approves and signs beside them (Civil Code art. 41(2)), and that nobody under the event's
@@ -61,7 +61,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 /** Who signs, for which event, at what age — the same in both texts. */
 const openingRo = [
   "Subsemnatul/a {{participant}}, posesor/posesoare al/a actului de identitate {{participantIdDocument}}, declar că particip pe propria răspundere la evenimentul {{event}}, care va avea loc {{eventDate}}, în locația {{eventLocation}}. Declar că datele și cele afirmate în această declarație sunt adevărate, că am citit cu atenție regulamentul și detaliile evenimentului de pe pagina lui de pe site-ul clubului și că sunt de acord cu acestea. Știu că, dacă cele declarate nu sunt adevărate, răspund eu pentru urmările acestui fapt.",
-  // The event's own minimum (§329), never under fourteen (§NNN), with its unit: "16 ani", "20 de ani".
+  // The event's own minimum (§329), never under fourteen (§515), with its unit: "16 ani", "20 de ani".
   "Declar că am cel puțin {{minimumAge}} împliniți la data evenimentului.",
   "Dacă participantul are între 14 și 17 ani inclusiv, declarația este semnată de participant și încuviințată de părintele sau tutorele legal, care o semnează alături de el: {{guardian}}, posesor/posesoare al/a actului de identitate {{guardianIdDocument}}. Prin semnătura sa, părintele sau tutorele legal își dă încuviințarea prealabilă ca minorul să participe și să semneze această declarație (art. 41 alin. (2) din Codul civil). Persoanele care nu au împlinit vârsta minimă stabilită pentru eveniment nu pot participa.",
   "Particip de bunăvoie, știind că alergarea presupune riscuri inerente, pe care nici organizatorul*, nici eu nu le putem înlătura în întregime și pe care le enumăr mai jos. Le accept în cunoștință de cauză și îmi asum obligațiile de mai jos. Această acceptare nu înseamnă, prin ea însăși, că renunț la dreptul de a fi despăgubit (art. 1355 alin. (4) din Codul civil) și nu înlătură niciun drept pe care legea nu îmi permite să îl limitez. Organizatorul răspunde, potrivit legii, pentru prejudiciile care îi sunt imputabile. Nu răspunde, în limitele permise de lege, pentru prejudiciile care nu îi sunt imputabile: cele datorate exclusiv faptei mele, nerespectării de către mine a regulamentului, a indicațiilor organizatorului ori a obligațiilor din această declarație, faptei unui terț pentru care organizatorul nu este ținut să răspundă, forței majore sau cazului fortuit (art. 1351 și art. 1352 din Codul civil). Dacă la prejudiciu a contribuit și fapta mea, răspunderea organizatorului se reduce sau, după caz, se înlătură, potrivit legii (art. 1371 din Codul civil). Nimic din această declarație nu înlătură și nu limitează răspunderea organizatorului pentru prejudiciile cauzate cu intenție sau din culpă gravă ori pentru vătămarea integrității corporale sau a sănătății, în afara cazurilor prevăzute de lege (art. 1355 alin. (1)–(3) din Codul civil). Răspund, potrivit legii, pentru prejudiciile pe care le cauzez altor persoane.",
@@ -70,7 +70,7 @@ const openingRo = [
 
 const openingEn = [
   "I, {{participant}}, holder of identity document {{participantIdDocument}}, declare that I take part at my own risk in the event {{event}}, which takes place on {{eventDate}} at {{eventLocation}}. I declare that the information and statements in this declaration are true, that I have read the event's rules and details carefully on its page on the club's website and that I agree with them. I know that if what I declare is not true, I answer for the consequences.",
-  // The event's own minimum (§329), never under fourteen (§NNN), with its unit: "16 years".
+  // The event's own minimum (§329), never under fourteen (§515), with its unit: "16 years".
   "I declare that I am at least {{minimumAge}} old on the day of the event.",
   "If the participant is aged between 14 and 17 inclusive, this declaration is signed by the participant and approved by the parent or legal guardian, who signs it beside them: {{guardian}}, holder of identity document {{guardianIdDocument}}. By signing, the parent or legal guardian gives prior approval to the minor taking part and signing this declaration (art. 41(2) of the Romanian Civil Code). Persons who have not reached the minimum age set for the event may not take part.",
   "I take part of my own free will, knowing that running carries inherent risks, which neither the organiser* nor I can remove entirely and which I list below. I accept them knowingly and take on the obligations below. This acceptance is not, by itself, a waiver of my right to compensation (art. 1355(4) of the Romanian Civil Code), and it removes no right the law does not allow me to limit. The organiser is liable, under the law, for harm attributable to it. It is not responsible, to the extent the law allows, for harm not attributable to it: harm due solely to my own conduct, to my failure to follow the event's rules, the organiser's instructions or the obligations in this declaration, to the act of a third party for whom the organiser is not answerable, or to force majeure or a fortuitous event (art. 1351 and art. 1352 of the Civil Code). Where my own conduct contributed to the harm, the organiser's liability is reduced or, as the case may be, removed, under the law (art. 1371 of the Civil Code). Nothing in this declaration excludes or limits the organiser's liability for harm caused intentionally or through gross negligence, or for harm to bodily integrity or health, except where the law provides (art. 1355(1)–(3) of the Civil Code). I am liable, under the law, for harm I cause to others.",
@@ -78,7 +78,7 @@ const openingEn = [
 ];
 
 /**
- * The trail's risks (§357's list, the owner's wild-animal sentence of §NNN): mountain and forest
+ * The trail's risks (§357's list, the owner's wild-animal sentence of §515): mountain and forest
  * ground, animals, the mountain's weather and slow help, the trail's own equipment, roads crossed,
  * protected areas.
  */
@@ -103,7 +103,7 @@ const trailRisksEn = [
 ];
 
 /**
- * The road's and the park's risks (§NNN): hard and slippery surfaces and what breaks them, bends and
+ * The road's and the park's risks (§515): hard and slippery surfaces and what breaks them, bends and
  * narrow sections, crowding and contact, other people on the course, traffic, the conduct that keeps
  * the course safe for everybody, the road's own equipment.
  */

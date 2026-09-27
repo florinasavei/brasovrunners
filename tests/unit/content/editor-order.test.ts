@@ -47,7 +47,7 @@ const EDITOR_ORDER = [
   "<CoHostsBox",
   "<AutomaticSection",
   "<LinksBox",
-  // «Program, regulament și declarație»: three cards in one (§481), and the public list (§NNN).
+  // «Program, regulament și declarație»: three cards in one (§481), and the public list (§512).
   "<ProgrammeRulesBox",
   't("editor.groups.offPage")',
   "<PromotionBox",
@@ -78,7 +78,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       for (const card of ["<CourseBox", "<LinksBox", "<WhenBox", "<ProgrammeRulesBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
-      // No film card (§481); the place, the rules and the public list (§NNN) are drawn by the cards that hold them.
+      // No film card (§481); the place, the rules and the public list (§512) are drawn by the cards that hold them.
       for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<StartListBox"]) expect(source, `${page}: ${gone}`).not.toContain(gone);
     }
     // The status: a level-3 card inside the first box, with the id it always had (§448).
@@ -153,7 +153,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }
-    // The public list is drawn by «Program, regulament și declarație», its last card (§NNN), and
+    // The public list is drawn by «Program, regulament și declarație», its last card (§512), and
     // reaches nobody either: the programme card wears the mark for the programme.
     const programmeRules = read("src/modules/content/events/ui/boxes/ProgrammeRulesBox.tsx");
     expect(programmeRules).toContain("await StartListBox({ event, mayEditSettings })");

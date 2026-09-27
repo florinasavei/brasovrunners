@@ -112,7 +112,7 @@ vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () =
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({ default: () => createElement("div", { "data-testid": "check-your-email" }) }));
-// The family sitting's browser half (§NNN) and its async screen, stood in for like the parts above.
+// The family sitting's browser half (§519) and its async screen, stood in for like the parts above.
 vi.mock("@/modules/registrations/family-sitting-cookie", () => ({ readFamilySittingCookie: async () => state.sitting }));
 vi.mock("@/modules/registrations/ui/FamilySittingNext", () => ({
   default: ({ names, atOnce, sameBirthDate, releaseInMs }: { names: string[]; atOnce: boolean; sameBirthDate: { typed: string } | null; releaseInMs: number }) =>
@@ -172,7 +172,7 @@ describe("§447 the registration page while the database is away", () => {
     expect(resting).not.toContain(ro.Registration.errors.databaseAwayTitle);
   });
 
-  it("§NNN after the form, asks «Mai înscrii pe cineva?» while the sitting holds its email; after «Gata», says to open the inbox", async () => {
+  it("§519 after the form, asks «Mai înscrii pe cineva?» while the sitting holds its email; after «Gata», says to open the inbox", async () => {
     state.sitting = {
       sittingId: "00000000-0000-4000-8000-0000000000aa",
       eventId: EVENT.id,
@@ -190,7 +190,7 @@ describe("§447 the registration page while the database is away", () => {
     // The form not kept (§493) is said on the screen, and the open screen presses «Gata» when the window ends.
     expect(asking).toContain('data-same="Ioana Pop"');
     expect(asking).toContain('data-release="later"');
-    // «Da, încă o persoană» is a press that starts the window again (§NNN), not a link; nothing was sent at once.
+    // «Da, încă o persoană» is a press that starts the window again (§519), not a link; nothing was sent at once.
     expect(asking).toContain('data-at-once="no"');
     expect(asking).not.toContain('data-testid="check-your-email"');
 
@@ -203,7 +203,7 @@ describe("§447 the registration page while the database is away", () => {
     expect(await render({ submitted: "1" })).toContain('data-testid="check-your-email"');
   });
 
-  it("§NNN the next form of a sitting fixes the address — said back, not asked — and lists who was sent so far", async () => {
+  it("§519 the next form of a sitting fixes the address — said back, not asked — and lists who was sent so far", async () => {
     state.sitting = {
       sittingId: "00000000-0000-4000-8000-0000000000aa",
       eventId: EVENT.id,
@@ -219,9 +219,9 @@ describe("§447 the registration page while the database is away", () => {
     expect(next).not.toContain('name="emailConfirm"');
     expect(next).toContain('data-testid="family-sitting-intro"');
     expect(next).toContain("Până acum: Ana Pop.");
-    // How long is left, on the server's clock at this render (§NNN): ten minutes from now.
+    // How long is left, on the server's clock at this render (§519): ten minutes from now.
     expect(next).toContain("pleacă singur peste 10 minute");
-    // The boxes a family shares start filled (§NNN); the person's own start empty.
+    // The boxes a family shares start filled (§519); the person's own start empty.
     expect(next).toMatch(/name="city"[^>]*value="Brașov"|value="Brașov"[^>]*name="city"/);
     expect(next).toMatch(/name="guardianName"[^>]*value="Ana Pop"|value="Ana Pop"[^>]*name="guardianName"/);
     expect(next).toMatch(/name="emergencyContactName"[^>]*value="Dan Pop"|value="Dan Pop"[^>]*name="emergencyContactName"/);

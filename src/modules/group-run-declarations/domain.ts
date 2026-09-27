@@ -22,7 +22,7 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
 }
 
 /**
- * The minimum age a group run's self-declaration states (§440, amended by §NNN): the event's own
+ * The minimum age a group run's self-declaration states (§440, amended by §515): the event's own
  * `min_age` (§329), never under eighteen.
  *
  * The owner's review of 2026-09-27: the texts said at once «declar că am împlinit 18 ani» and «Declar

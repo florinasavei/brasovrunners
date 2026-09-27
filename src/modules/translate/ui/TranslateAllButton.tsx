@@ -100,7 +100,7 @@ function TranslateAllButtonOff({ offer }: { offer: TranslateOffer }) {
 function TranslateAllButtonIsland() {
   const t = useTranslations("Translate");
   const anchor = useRef<HTMLSpanElement>(null);
-  // The whole form (§482); the one question and the feedback are shared with a card's press (§NNN).
+  // The whole form (§482); the one question and the feedback are shared with a card's press (§514).
   const { pending, message, press, dialog } = useTranslateAll(() => ({ form: anchor.current?.closest("form") ?? null }), t("confirm.bigTitle"));
 
   return (

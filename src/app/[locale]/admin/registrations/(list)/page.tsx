@@ -205,7 +205,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     getTranslations("Admin"),
     /*
       Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
-      declaration in effect, per event (a race signs its own kind, trail or road, §NNN) and per
+      declaration in effect, per event (a race signs its own kind, trail or road, §515) and per
       language, looked up by each row's own. Only for the events of the minors on the page — the
       confirmation's sentence is the only thing that reads it.
     */

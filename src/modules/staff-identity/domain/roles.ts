@@ -547,7 +547,7 @@ export function canWriteLegalTexts(role: StaffRole): boolean {
  *                                       to bots — either way every participant at once
  *
  * The club's own settings — the Mailgun and Neon plans (§100, §280), the deadlines (§377) and
- * when email leaves (§221, in «Termene» since §NNN: nothing is lost either way), who receives the
+ * when email leaves (§221, in «Termene» since §513: nothing is lost either way), who receives the
  * club's copies — are `canManageClubSettings`, the Administrator's: each changes
  * what the club promises or pays, not whether the platform runs.
  */
@@ -558,7 +558,7 @@ export function canManagePlatform(role: StaffRole): boolean {
 /**
  * **The club's own settings — the Administrator's (§450).** The email and database plans
  * (§100, §280), the deadlines, the per-address limit and when email leaves ("Termene", §377,
- * §NNN), the club's notices and
+ * §513), the club's notices and
  * email texts, who receives the contact form and the club's copies, "Trimite acum" within the
  * allowance (§80), giving older pictures their sizes (§414). Each changes what the club promises,
  * says or pays; none of them can stop the platform — those are `canManagePlatform`.
@@ -595,7 +595,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     newsletter     canSendNewsletter        `admin/newsletter/page.tsx` — the subscribers and the
  *                                             composer (§445); withdrawing an address asks
  *                                             `canManageRegistrations` for itself
- *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§NNN), each tab
+ *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§516), each tab
  *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
  *                                             «Contact», «Aspect» canReadContent, «Costuri» and
  *                                             «Platformă» canManageRegistrations; the forms on them ask
@@ -610,7 +610,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *     guide          every staff session      `admin/guide/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
  *
- * **In the order the club opens them (§NNN)**, which is the array's order and the bar's: the
+ * **In the order the club opens them (§516)**, which is the array's order and the bar's: the
  * events, who signed up, the race-day desk, the pictures, the pages, the newsletter, then the
  * settings, what is owed, the team, the legal texts, the guide, and the system last. A role is
  * offered the same order with its own gaps — the volunteer's bar is «Ziua cursei», «Ghid».
@@ -666,7 +666,7 @@ export function canReadContent(role: StaffRole): boolean {
 }
 
 /**
- * Whether «Setări» is offered at all (§NNN): the union of its tabs' gates, which
+ * Whether «Setări» is offered at all (§516): the union of its tabs' gates, which
  * `settings-tabs.ts` spells out per tab. Written here as the threshold — every tab asks
  * `canReadContent` or the higher `canManageRegistrations` — because that module reads its
  * predicates from this one and importing back would cycle; a unit test holds the two equal.
@@ -678,7 +678,7 @@ export function canOpenSettings(role: StaffRole): boolean {
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   /*
     Each section's own gate, filtered over `ADMIN_SECTIONS` so the bar's order is the array's —
-    by how often the club opens them (§NNN) — and a role only ever loses a tab, never reorders one.
+    by how often the club opens them (§516) — and a role only ever loses a tab, never reorders one.
   */
   const offered: Record<AdminSection, boolean> = {
     // The events list, for everyone who may look at it — writing is a separate question and
@@ -701,7 +701,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     */
     newsletter: canSendNewsletter(role),
     /*
-      «Setări» (§NNN): the club's settings as one row of tabs — the email page (§250, which had no
+      «Setări» (§516): the club's settings as one row of tabs — the email page (§250, which had no
       entry at all until the owner's "I am missing the email templates config … in this navbar"),
       «Termene», «Contact», «Aspect», «Costuri», «Platformă». Offered to whoever may open one tab of
       it (`settings-tabs.ts`); the Redactor opens «Emailuri» for the words (§247).

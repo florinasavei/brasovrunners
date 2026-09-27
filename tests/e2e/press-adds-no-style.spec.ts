@@ -87,7 +87,7 @@ test("BR-REQ-041-01 the registration form's Trimite înscrierea adds no style", 
     emergencyContactPhone: "+40722222222",
   };
   for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
-  // «Sex» starts empty (§NNN): the form is refused without an answer.
+  // «Sex» starts empty (§510): the form is refused without an answer.
   await chooseSex(page);
   for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     const box = page.locator(`[name="${name}"]`);

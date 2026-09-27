@@ -32,7 +32,7 @@ export default async function RegistrationJourney({ current }: { current: Journe
   const currentIndex = current === "done" ? ORDER.length : ORDER.indexOf(current);
   /*
     The signing step promises when the signed PDF and the number arrive. Under the scheduled
-    delivery (§NNN) that is the outbox job's wait, which «cel târziu într-o oră» would get wrong
+    delivery (§513) that is the outbox job's wait, which «cel târziu într-o oră» would get wrong
     under the budget governor's floor (§447) — the same real wait the screen after the form says.
   */
   const waitMinutes = current === "declare" ? await cachedEmailWaitMinutes(new Date()) : null;

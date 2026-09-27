@@ -292,7 +292,7 @@ export type ConfirmSpec = {
    */
   when?: readonly FormCondition[];
   /**
-   * Fields whose value, as typed at the press, replaces `{name}` in `body` (§NNN): the Neon
+   * Fields whose value, as typed at the press, replaces `{name}` in `body` (§511): the Neon
    * limits card says «Limita nouă: 100 ore-CU.» from the box itself — a typed number has no
    * `when` to match, and the server cannot know it before the press.
    */

@@ -48,7 +48,7 @@ export default async function ResendPage({ params, searchParams }: Props) {
 
   const { sent, event } = await searchParams;
   const t = await getTranslations("Registration");
-  // The link leaves on the scheduler's tick by default (§NNN): "just sent" would be untrue for up to
+  // The link leaves on the scheduler's tick by default (§513): "just sent" would be untrue for up to
   // the pinger's interval, and that is what makes somebody press again.
   const waitMinutes = sent ? await cachedEmailWaitMinutes(new Date()) : null;
 

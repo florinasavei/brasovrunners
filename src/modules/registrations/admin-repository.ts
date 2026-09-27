@@ -512,7 +512,7 @@ export type RegistrationDetail = {
   listSocials: boolean;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
-  /** Where the person lives (§NNN): the country's ISO code (never null, `RO` by default) and the city as typed. */
+  /** Where the person lives (§510): the country's ISO code (never null, `RO` by default) and the city as typed. */
   country: string | null;
   city: string | null;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
@@ -742,7 +742,7 @@ export type WorkbookDetails = {
   sex: "FEMALE" | "MALE" | "UNSPECIFIED" | null;
   birthDate: string | null;
   nationality: string | null;
-  /** Where the person lives (§NNN); null on a row written before the form asked it. */
+  /** Where the person lives (§510); null on a row written before the form asked it. */
   country: string | null;
   city: string | null;
   tshirtSize: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | null;

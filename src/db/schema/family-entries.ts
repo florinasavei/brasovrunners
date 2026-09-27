@@ -6,7 +6,7 @@ import { participants } from "./participants";
 import { registrations } from "./registrations";
 
 /**
- * One sitting of a family on one address (§NNN): the public form sent several times in a row from
+ * One sitting of a family on one address (§519): the public form sent several times in a row from
  * one browser, for several people, with one email at the end — «Înscriere de familie: 3 persoane la
  * …» — instead of one per submission. The owner, 2026-09-27: "niciun email instant: unul singur,
  * după ce apeși «Gata» sau după fereastra din Termene".
@@ -106,7 +106,7 @@ export const pendingFamilyEntries = pgTable(
       .references(() => registrations.id, { onDelete: "cascade" }),
     actionTokenId: uuid("action_token_id").references(() => emailActionTokens.id, { onDelete: "set null" }),
     /*
-      The sitting the form was sent in (§NNN), when it was: then the family message's one button
+      The sitting the form was sent in (§519), when it was: then the family message's one button
       confirms it with the others, and a second form for the same person in the same sitting
       replaces it rather than adding one more. Null for a form sent on its own, as before.
     */

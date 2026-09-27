@@ -26,7 +26,7 @@ function filledForm(overrides: Record<string, string> = {}): FormData {
     email: "ana@example.org",
     birthDate: "1990-05-17",
     // MUI renders a select's value into an input carrying the field's name. «Sex» has no
-    // default since §NNN, so a runner answers it; the others are what an untouched form posts.
+    // default since §510, so a runner answers it; the others are what an untouched form posts.
     sex: "UNSPECIFIED",
     nationality: "RO",
     country: "RO",
@@ -110,10 +110,10 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
   });
 
   /**
-   * §NNN — the country the runner lives in is required on the public form (a native select on
+   * §510 — the country the runner lives in is required on the public form (a native select on
    * Romania, like the citizenship), an ISO code whatever case it arrives in, optional for staff.
    */
-  it("refuses the public form without a country of residence, and a staff entry does not need it (§NNN)", () => {
+  it("refuses the public form without a country of residence, and a staff entry does not need it (§510)", () => {
     const values = readRegistrationForm(filledForm({ country: "" }), "ro");
     expect(values.country).toBeUndefined();
     const parsed = registrationSubmissionSchema.safeParse(values);
@@ -125,10 +125,10 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
   });
 
   /**
-   * §NNN — «Sex» starts empty: an untouched select posts an empty value, and the public form
+   * §510 — «Sex» starts empty: an untouched select posts an empty value, and the public form
    * refuses it by name rather than recording «Prefer să nu spun» nobody chose.
    */
-  it("refuses the public form with no answer to «Sex», naming it (§NNN)", () => {
+  it("refuses the public form with no answer to «Sex», naming it (§510)", () => {
     const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "" }), "ro"));
     expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["sex"]);
     // «Prefer să nu spun» is still an answer.

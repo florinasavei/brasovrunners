@@ -64,7 +64,7 @@ const submissionFields = z.object({
    */
   nationality: z.string().trim().length(2).toUpperCase(),
   /**
-   * The country the person lives in (§NNN), right before the city: ISO 3166-1 alpha-2 like the
+   * The country the person lives in (§510), right before the city: ISO 3166-1 alpha-2 like the
    * citizenship, and like it required on the public form and pre-chosen on `RO`; optional for a
    * staff entry, relaxed below.
    */
@@ -300,7 +300,7 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * all meet it through the one door every registration already passes (`AGENTS.md` §12.6: `kind`
  * decides nothing here either). The number is a parameter with no default on purpose: the club's
  * fourteen (`MIN_PARTICIPANT_AGE`) is what an event starts with, never what this rule falls back
- * to behind an event that says otherwise — but it is the floor (§NNN): a number under it, stored
+ * to behind an event that says otherwise — but it is the floor (§515): a number under it, stored
  * under §329 when zero meant "no minimum", binds as fourteen (`effectiveMinimumAge`).
  *
  * *Only when a birth date is given.* The public schema always has one; the staff schema may not
@@ -314,7 +314,7 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * the minimum is about the day somebody runs; eighteen is about who fills the form in.
  */
 export function minimumAgeRule(eventDay: string, minAge: number) {
-  // Never under fourteen (§NNN): an event saved under §329 with 0 or 12 admits nobody younger.
+  // Never under fourteen (§515): an event saved under §329 with 0 or 12 admits nobody younger.
   const binding = effectiveMinimumAge(minAge);
   return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
     if (!value.birthDate || !isUnderMinimumAge(value.birthDate, eventDay, binding)) return;
@@ -438,7 +438,7 @@ export const staffRegistrationSubmissionSchema = submissionFields
     sex: true,
     // Citizenship is required on the public form only (§432): a paper entry may not have it.
     nationality: true,
-    // The country of residence likewise (§NNN): required on the public form, optional on paper.
+    // The country of residence likewise (§510): required on the public form, optional on paper.
     country: true,
     // The city likewise (§467): required on the public form, optional on paper.
     city: true,

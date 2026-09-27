@@ -82,7 +82,7 @@ export const dynamic = "force-dynamic";
  * Every email the platform sends, rendered with sample data (`DECISIONS.md` §91; the owner:
  * "I must be able to see the email templates that get sent to them").
  *
- * «Setări» → «Emailuri» since §NNN (it was `/admin/emails`, which answers 308 here): the plan, the
+ * «Setări» → «Emailuri» since §516 (it was `/admin/emails`, which answers 308 here): the plan, the
  * roads, the queue, the club's copies, the forecast and the messages. «Termene» and «Contact» are
  * their own tabs beside it — the numbers the when-lines below state, and where the club is written to.
  *
@@ -310,7 +310,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         />
       )}
 
-      {/* The club's own copies (§244, §245); the contact recipients they mirror are on «Contact» (§NNN). */}
+      {/* The club's own copies (§244, §245); the contact recipients they mirror are on «Contact» (§516). */}
       {notices && (
         <ClubNoticesPanel
           locale={locale}

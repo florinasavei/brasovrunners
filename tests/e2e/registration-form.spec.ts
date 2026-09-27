@@ -37,7 +37,7 @@ async function fillRequired(page: Page, omit?: string) {
     if (name === omit) continue;
     await page.locator(`[name="${name}"]`).fill(value);
   }
-  // «Sex» starts empty (§NNN): answered unless the test wants it missing.
+  // «Sex» starts empty (§510): answered unless the test wants it missing.
   if (omit !== "sex") await chooseSex(page);
   /*
     The address a second time (§206): typed by hand on the real form, because QA's outbox held
@@ -111,11 +111,11 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // native select the form posts, searchable once the island runs (§463).
     await expect(page.locator('select[name="nationality"]')).toHaveValue("RO");
     await expect(page.locator('select[name="nationality"]')).toHaveAttribute("required", "");
-    // The country of residence sits before the city (§NNN): required, a native select the form
+    // The country of residence sits before the city (§510): required, a native select the form
     // posts, and on Romania unless the runner says otherwise.
     await expect(page.locator('select[name="country"]')).toHaveValue("RO");
     await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
-    // «Sex» forces a choice (§NNN): a native, required select on its empty «Alege…», nothing pre-chosen.
+    // «Sex» forces a choice (§510): a native, required select on its empty «Alege…», nothing pre-chosen.
     await expect(page.locator('select[name="sex"]')).toHaveValue("");
     await expect(page.locator('select[name="sex"]')).toHaveAttribute("required", "");
     await expect(page.locator('select[name="sex"] option').first()).toHaveText("Alege…");
@@ -561,7 +561,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
       // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
-      // So is the country of residence (§NNN), and «Sex»: a native select on «Alege…», required,
+      // So is the country of residence (§510), and «Sex»: a native select on «Alege…», required,
       // that a reader without JavaScript answers from the phone's own list — the form can be sent.
       await expect(noScript.locator('select[name="country"]')).toHaveValue("RO");
       const sex = noScript.locator('select[name="sex"]');
@@ -684,7 +684,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Popescu");
   });
 
-  test("names an unanswered «Sex» by what to do, and that «Prefer să nu spun» is an answer (§NNN)", async ({ page }) => {
+  test("names an unanswered «Sex» by what to do, and that «Prefer să nu spun» is an answer (§510)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
@@ -890,7 +890,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await field("event.capacity").fill("50");
     // The minimum age is a box of «Regulamentul», for every type (§505).
     await openEditorBox(page, "Regulamentul");
-    // The box offers the club's fourteen until the organizer says otherwise, and never less (§NNN).
+    // The box offers the club's fourteen until the organizer says otherwise, and never less (§515).
     await expect(field("event.minAge")).toHaveValue("14");
     await expect(field("event.minAge")).toHaveAttribute("min", "14");
     await field("event.minAge").fill("16");
@@ -927,7 +927,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       );
       expect(await typicalAgeRange()).toBe("16-");
 
-      // Eighteen, set in the editor: no event has «no minimum» any more (§NNN).
+      // Eighteen, set in the editor: no event has «no minimum» any more (§515).
       await page.goto(editorUrl);
       await hydrated(page);
       await expect(field("event.minAge")).toHaveValue("16");
@@ -999,7 +999,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
       "Prenume",
       "Nume de familie",
       "Data nașterii",
-      // «Sex» starts on «Alege…» (§NNN), named by what to do about it.
+      // «Sex» starts on «Alege…» (§510), named by what to do about it.
       SEX_MISSING,
       "Adresa scrisă a doua oară",
       "Declarația că ești apt medical",
@@ -1032,7 +1032,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
   });
 });
 
-/** How the summary and the list above the send button name an unanswered «Sex» (§NNN). */
+/** How the summary and the list above the send button name an unanswered «Sex» (§510). */
 const SEX_MISSING = "Alege sexul — poți alege „Prefer să nu spun”";
 
 /** How the list above the send button names the race's conditions: what is missing and what to do (§422). */

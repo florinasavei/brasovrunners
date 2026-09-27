@@ -14,7 +14,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  * and the page's order are one thing.
  *
  * A card that holds more than one of the page's sections (§481: the date and the place, the
- * programme and the rules; §NNN: the public list with them; §466: the type and the cost) is one chip and one number, drawn when
+ * programme and the rules; §512: the public list with them; §466: the type and the cost) is one chip and one number, drawn when
  * any section it holds is drawn.
  *
  * The card's own words stay its name — the name a refusal, a gap in Publicare and every e2e spec
@@ -37,7 +37,7 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   coHosts: "coHosts",
   links: "links",
   // «Program, regulament și declarație» (§481): the programme, the rules, the declaration and,
-  // since §NNN, the public list — four cards in one.
+  // since §512, the public list — four cards in one.
   programme: "programmeRules",
 };
 

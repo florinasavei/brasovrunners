@@ -2609,7 +2609,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
-    // of a series keep the source's minimum age, like its capacity — as it binds (§NNN): a source
+    // of a series keep the source's minimum age, like its capacity — as it binds (§515): a source
     // saved under §329 with 0 or 12 gives a copy fourteen, the number the editor would have asked
     // for, never a row under the floor that no save could have written.
     minAge: effectiveMinimumAge(source.minAge),

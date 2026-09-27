@@ -7,7 +7,7 @@ const MAX_DELAY_MS = 2_147_483_647;
 
 /**
  * Presses «Gata» by itself when the family sitting's window ends while its screen is still open
- * (§NNN; the review of 2026-09-27: the email must leave when the screen says it does).
+ * (§519; the review of 2026-09-27: the email must leave when the screen says it does).
  *
  * The held email leaves the outbox on its own only at the outbox job's next run, which an external
  * pinger starts — every quarter of an hour by day, hourly at night and on QA. A screen left open

@@ -24,7 +24,7 @@ type Props = {
 };
 
 /**
- * The page the family message's one button opens (§NNN): everybody the sitting sent the form for,
+ * The page the family message's one button opens (§519): everybody the sitting sent the form for,
  * one line each — name in bold, birth date in words — with a tick on each kept form (on by default:
  * untick somebody and their details are deleted at the press, nobody registered for them), who the
  * address held before, what the press does, and the one button «Confirm și semnez declarațiile (N)».

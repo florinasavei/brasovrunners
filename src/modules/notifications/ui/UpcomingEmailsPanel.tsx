@@ -33,7 +33,7 @@ type Props = {
   roads?: Readonly<Record<EmailMessageType, EmailTransport>>;
   openWhen?: FoldOpenWhen;
   /**
-   * What waits in the queue now and when the outbox job is next expected to send it (§NNN,
+   * What waits in the queue now and when the outbox job is next expected to send it (§513,
    * `outbox-delivery.ts`): under the scheduled default a queue waiting for the tick is normal, and
    * this line is where the club sees it. Absent, the line is left out.
    */

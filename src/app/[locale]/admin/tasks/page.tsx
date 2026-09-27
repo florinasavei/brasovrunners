@@ -91,13 +91,13 @@ export const maxDuration = 60;
  *
  * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
  * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
- * every service on the way. Five panels, then three since §NNN, which moved «Anti-robot» and
+ * every service on the way. Five panels, then three since §516, which moved «Anti-robot» and
  * «Costuri» to «Setări» → «Platformă» and «Costuri» (their old `?panel=` answers 308 there):
  *
  * - `club` — «Club»: what is still owed, read from the system, with its filters, and the
  *   decisions still open. It was `todo`, «De făcut», until §438, and it is still where a bare
  *   `/admin/tasks` lands for the Administrator and the Superadministrator. A row whose work is a
- *   screen of this backoffice links to it, the card opened by the `#` (`task-targets.ts`, §NNN).
+ *   screen of this backoffice links to it, the card opened by the `#` (`task-targets.ts`, §516).
  * - `todo` — «De făcut»: the club's own checklist, typed and ticked by hand (§438,
  *   `modules/club-todo`), for every role from the Redactor up.
  * - `app` — `docs/QUEUE.md`, the dispatcher's own work queue, read-only (§368, §397).
@@ -119,7 +119,7 @@ const STATE_COLOR: Record<TaskState, "error" | "warning" | "success"> = {
  * What is still owed — for the people who owe it.
  *
  * `/devs` is for whoever reads a status enum; this is for the club. What it costs was the second
- * half of this page until §NNN moved it, whole, to «Setări» → «Costuri» (§479): a setting and its
+ * half of this page until §516 moved it, whole, to «Setări» → «Costuri» (§479): a setting and its
  * price are not something owed. Here stay the rows, the open money questions beneath them, and a
  * link from each row to the screen where it is done.
  *
@@ -179,7 +179,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const clubTodo = await readClubTodo(getDb());
   const openTodo = openClubTodoCount(clubTodo.items);
   // «Club», «De făcut», then «Sistem» (the link to `/devs`) and «Aplicația» after it (§397);
-  // «Anti-robot» and «Costuri» are «Setări» tabs since §NNN. Each role sees the panels its own
+  // «Anti-robot» and «Costuri» are «Setări» tabs since §516. Each role sees the panels its own
   // gates open (`task-panels.ts`).
   const subNavItems = visibleTaskPanels(actor.role).flatMap((name) => [
     ...(name === "app" ? [{ href: devsPath, label: t("panel.system") }] : []),
@@ -262,7 +262,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const db = getDb();
   const now = new Date();
 
-  // The anti-bot switch (§254), for its row: switched on «Setări» → «Platformă» since §NNN.
+  // The anti-bot switch (§254), for its row: switched on «Setări» → «Platformă» since §516.
   const botCheck = await readBotCheck(db);
   // Whether the configured secret works, not merely whether it is set (§420, finding (10)'s
   // health half) — cached fifteen minutes, same as `/api/health`.
@@ -374,7 +374,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   // Read early, ahead of the task board: the derived `neonLimits` row (§335) needs this
   // period's quota and spend — the same project row `readNeonConsumption` fetches; the brakes'
-  // full reading (`readNeonLimits`) is «Setări» → «Costuri»'s alone (§NNN).
+  // full reading (`readNeonLimits`) is «Setări» → «Costuri»'s alone (§516).
   // DeepL's credit from its own meter (§497), cached an hour and a failure remembered a minute,
   // asked beside Neon rather than after it: the translation row reads it here, and «Costuri»
   // reads the same cached answer. No key, no request.
@@ -404,7 +404,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
-      // §NNN: both race declarations, trail and road or park, from the platform's shared body.
+      // §515: both race declarations, trail and road or park, from the platform's shared body.
       raceDeclarationsCurrent: await raceDeclarationsCurrent(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
@@ -483,7 +483,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   // Only what is still undecided: a settled question rendered "answered" for ever is a line to
   // scroll past, and the section disappears entirely when nothing is open. It reads one fact since
-  // the cost table moved to «Setări» → «Costuri» (§NNN).
+  // the cost table moved to «Setări» → «Costuri» (§516).
   const decisions = moneyDecisions({ hasPaidEvent }).filter((decision) => decision.state === "open");
 
   return (
@@ -629,7 +629,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                 {t(`items.${task.id}.${task.text ?? (task.state === "done" ? "done" : "todo")}`, howValues)}
                 {task.detail && ` — ${task.detail}`}
               </Typography>
-              {/* Where it is done, when that is a screen of this backoffice (§NNN): gone once the row is. */}
+              {/* Where it is done, when that is a screen of this backoffice (§516): gone once the row is. */}
               {task.state !== "done" && <TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />}
               {/*
                 How to do it, on the page, with this deployment's own values filled in — so the

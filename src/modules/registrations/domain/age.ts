@@ -23,7 +23,7 @@
  * today. This constant is what the column defaults to, what the editor offers a new event, and
  * what a partial `EventForRegistration` built without the column is read with.
  *
- * **And, since §NNN, the floor.** The owner's review of 2026-09-27: "vârsta minimă absolută 14 ani;
+ * **And, since §515, the floor.** The owner's review of 2026-09-27: "vârsta minimă absolută 14 ani;
  * fiecare eveniment poate avea `minimumAge` ≥ 14; sub 14: nu poate participa, nu există flux de
  * semnare". An event may ask for more — 16, 18, 21 — never less, and "0, no minimum" (§329) is gone:
  * the editor refuses a number under fourteen, and an event saved before with a smaller one is read
@@ -34,7 +34,7 @@
 export const MIN_PARTICIPANT_AGE = 14;
 
 /**
- * The minimum age that binds an event (§NNN): its own number, never under the platform's fourteen.
+ * The minimum age that binds an event (§515): its own number, never under the platform's fourteen.
  * The one reading of `events.min_age` for every door, sentence and declaration — the column's CHECK
  * still allows 0 to 99, because tightening it is a contract step (AGENTS.md §7.6) and an event saved
  * under §329 with 0 or 12 must still be readable; this is what makes that number mean fourteen.
@@ -75,7 +75,7 @@ export function yearsPhrase(years: number, locale: string): string {
  * - `minimumAndGuardian` — a minimum under eighteen: both sentences, minimum age then parent;
  * - `minimumOnly` — eighteen or more: nobody who may enter needs a parent, so no parent sentence.
  *
- * §329's third form, «no minimum», is gone with the minimum itself (§NNN): every event has one, of
+ * §329's third form, «no minimum», is gone with the minimum itself (§515): every event has one, of
  * at least fourteen (`effectiveMinimumAge`), so an older event saved with 0 reads as fourteen here.
  */
 export type AgeRuleVariant = "minimumAndGuardian" | "minimumOnly";

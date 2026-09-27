@@ -79,7 +79,7 @@ describe("BR-REQ-050-02 an option's glyph is laid out in the menu and in the clo
     );
 
     // The styles themselves. «Sex», the last MUI select with glyphs on its rows, became a native
-    // select in §NNN (a no-JavaScript reader must answer it), so no page lays out a menu row
+    // select in §510 (a no-JavaScript reader must answer it), so no page lays out a menu row
     // today; the guard below still holds the next one that does.
     expect(files.length).toBeGreaterThanOrEqual(1);
 

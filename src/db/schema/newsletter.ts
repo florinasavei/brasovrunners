@@ -20,7 +20,7 @@ export const newsletterTopic = pgEnum("newsletter_topic", [
   "ALL",
   // The club's own big days: its races, the anniversary cross. A new race is announced here.
   "BIG_EVENTS",
-  // Retired (§NNN): discount codes are for the club's members, not the newsletter. Kept because an
+  // Retired (§517): discount codes are for the club's members, not the newsletter. Kept because an
   // enum value is never removed and an old send's row may name it; no subscription carries it.
   "DISCOUNTS",
   // Shoe and gear testing sessions (the `GEAR_TEST` event type).

@@ -327,7 +327,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     : context.ok && context.token.registrationId
       ? await findRegistrationById(db, context.token.registrationId)
       : undefined;
-  // The event's own declaration, trail or road (§NNN, `findEventDeclaration`): the text shown is
+  // The event's own declaration, trail or road (§515, `findEventDeclaration`): the text shown is
   // the text `signDeclaration` binds, read for the same event.
   const declaration = signing && registration ? await findEventDeclaration(db, registration.eventId, locale, now) : undefined;
   /*
@@ -594,7 +594,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
-              // The event's minimum age, never under fourteen (§NNN) — as the PDF fills it.
+              // The event's minimum age, never under fourteen (§515) — as the PDF fills it.
               minimumAge: eventDetails ? minimumAgeMergeValue(effectiveMinimumAge(eventDetails.minAge), locale) : undefined,
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),

@@ -68,12 +68,12 @@ function Fact({ label, wide = false, testId, children }: { label: string; wide?:
  * providers that bill nothing and meter nothing named in one sentence at the end, so the list is
  * complete without rows of zeros.
  *
- * One plain sentence per fact (§NNN): the usage, its limit, the warning when the pace goes past
+ * One plain sentence per fact (§511): the usage, its limit, the warning when the pace goes past
  * it and the usage facts beside the money (Vercel's deployments, Neon's size) are each their own
  * fact, never one paragraph; what a fact needs explaining sits behind a «?» (`QuietHelp`).
  *
  * Every provider's amount is in USD, the currency each of these vendors bills in and the cost
- * table below prints. The total above them is in euro (§NNN, the owner's «X € până acum»), at the
+ * table below prints. The total above them is in euro (§511, the owner's «X € până acum»), at the
  * dated reference rate `USD_PER_EUR` its «?» names — the one conversion on the page.
  *
  * Read-only, and a Server Component: every figure comes from `monthCosts` (pure), and a line
@@ -182,7 +182,7 @@ export default async function MonthCostsPanel({ locale, lines, totals, reasons, 
   const r2Values = { free: format.number(R2_FREE_STORAGE_GB), price: format.number(R2_USD_PER_GB_MONTH, { maximumFractionDigits: 3 }) };
 
   /*
-    The top of Costuri (§479, and §NNN: the total first; the owner, 2026-09-27: «vreau să văd un
+    The top of Costuri (§479, and §511: the total first; the owner, 2026-09-27: «vreau să văd un
     total man!»): ONE line, the largest on the page — «Luna aceasta: X € până acum · estimare la
     sfârșitul lunii: Y €» — every provider summed, in euro with two decimals, the domain's year
     beside it. Under it one short line when it is true: Neon is the only monthly cost. Then last

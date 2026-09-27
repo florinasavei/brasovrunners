@@ -122,7 +122,7 @@ export async function SettingsReadOnly() {
 
 /**
  * A plain sentence under a field or in place of a group of fields — one sentence, and what it
- * would add beyond that as `more`, the discreet «?» (§NNN).
+ * would add beyond that as `more`, the discreet «?» (§511).
  */
 export function BoxNote({ children, testId, more }: { children: string; testId?: string; more?: string }) {
   return (

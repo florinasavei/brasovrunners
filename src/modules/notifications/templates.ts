@@ -112,7 +112,7 @@ type FamilyFactsInput = {
   /** The club's limit of registrations per address, from «Termene»; absent, no line. */
   cap?: number;
 };
-/** A family sitting's facts (§NNN): the event, everybody joining now, who the address held before, the link's life, the limit. */
+/** A family sitting's facts (§519): the event, everybody joining now, who the address held before, the link's life, the limit. */
 type FamilySittingFactsInput = {
   event?: string;
   when?: string;
@@ -145,11 +145,11 @@ function familyFactsPart(facts: readonly FamilyFact[]): EmailBodyPart {
   };
 }
 
-/** A family confirmation's words for its blocks (§NNN), one language's. */
+/** A family confirmation's words for its blocks (§519), one language's. */
 type FamilyConfirmedWords = { number: string; provisional: string; noNumber: string; code: string; qr: string };
 
 /**
- * Names as one phrase in the email's language (§NNN, the owner's answer of 2026-09-27): commas, and
+ * Names as one phrase in the email's language (§519, the owner's answer of 2026-09-27): commas, and
  * «și» / "and" before the last — «Ana, Ion și Maria», "Ana, Ion and Maria" (no serial comma, as in
  * Romanian; written out rather than `Intl.ListFormat`, whose English adds one). One name is itself.
  */
@@ -158,13 +158,13 @@ export function joinNames(locale: EmailLocale, names: readonly string[]): string
   return `${names.slice(0, -1).join(", ")} ${locale === "ro" ? "și" : "and"} ${names.at(-1)}`;
 }
 
-/** The family's greeting (§NNN): every confirmed person's first name, in the order the forms were sent. */
+/** The family's greeting (§519): every confirmed person's first name, in the order the forms were sent. */
 function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>): string[] {
   return people.map((person) => person.firstName?.trim() || person.name.trim().split(/\s+/)[0] || person.name);
 }
 
 /**
- * A family's one confirmation (§NNN): one outlined block per person, headed by the name in bold —
+ * A family's one confirmation (§519): one outlined block per person, headed by the name in bold —
  * the race number, bold (§189: the number is what a runner reads at the desk), the desk code, and
  * the QR the desk scans. The second half of the bilingual message repeats the words, not the pictures
  * (`renderBilingual`), as for one person's QR. The plain-text half reads one line per fact.
@@ -427,7 +427,7 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
-    // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§NNN).
+    // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
     // The organizer's message (§364): its own subject and body in the second half's language.
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
@@ -732,19 +732,19 @@ export type TemplateData = {
    */
   familyDeclineUrl?: string;
   /**
-   * A family sitting's one message (§NNN): everybody the sitting sent the form for and nobody
+   * A family sitting's one message (§519): everybody the sitting sent the form for and nobody
    * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
    * Set, the message is the family's: its subject, its facts box, its button and its words.
    */
   familySittingPeople?: ReadonlyArray<{ name: string; birthDate: string }>;
-  /** «Toate înscrierile mele» beside the family's button (§77, §NNN): the address's own page, its own token. */
+  /** «Toate înscrierile mele» beside the family's button (§77, §519): the address's own page, its own token. */
   familyMineUrl?: string;
   /**
-   * A family's one confirmation (§NNN; the owner: «în mail trebuie să vină toate QR-urile pentru toată
+   * A family's one confirmation (§519; the owner: «în mail trebuie să vină toate QR-urile pentru toată
    * familia»): everybody confirmed by the family's one button, in the order the forms were sent — the
    * name, the desk code and its QR (never on a club copy, §320), and the race number (`raceNumberOf`),
    * provisional or not, or null while there is none. Set, the confirmation is the family's, and it
-   * greets everybody by `firstName` (the name's first word when absent), in that order (§NNN).
+   * greets everybody by `firstName` (the name's first word when absent), in that order (§519).
    */
   familyConfirmed?: ReadonlyArray<{
     name: string;
@@ -1334,7 +1334,7 @@ const T = {
         : []),
     ],
     /**
-     * A family sitting's one message (§NNN): everybody the forms of one sitting named, one button for
+     * A family sitting's one message (§519): everybody the forms of one sitting named, one button for
      * all of them, and the address's own page beside it. The platform's words: the message's facts are
      * the sitting's, and a club text for the single-person link would promise the wrong button.
      */
@@ -1370,7 +1370,7 @@ const T = {
       action: (count: number) => `Confirm și semnez declarațiile (${count})`,
       mine: "Toate înscrierile mele",
     },
-    /** A family's one confirmation (§NNN): everybody's QR code, desk code and race number, one block each. */
+    /** A family's one confirmation (§519): everybody's QR code, desk code and race number, one block each. */
     familyConfirmed: {
       subject: (d: TemplateData) => `Confirmat: ${peoplePhrase("ro", d.familyConfirmed?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
       body: (d: TemplateData): string[] => [
@@ -2049,7 +2049,7 @@ export function buildTemplateContent(
       checkinCode: undefined,
       checkinQrUrl: undefined,
       thanksUrl: undefined,
-      // A family's confirmation keeps the names and the numbers, never a code or a QR (§NNN).
+      // A family's confirmation keeps the names and the numbers, never a code or a QR (§519).
       familyConfirmed: data.familyConfirmed?.map((person) => ({
         name: person.name,
         firstName: person.firstName,
@@ -2097,13 +2097,13 @@ export function buildTemplateContent(
   */
   const familyGone = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.familyEntryGone === true;
   /*
-    …and a family sitting's one message (§NNN): its facts, its button and its words are the sitting's
+    …and a family sitting's one message (§519): its facts, its button and its words are the sitting's
     — everybody at once — and a club text written for one person's link would promise the wrong one.
   */
   const familySittingPeople = data.familySittingPeople ?? [];
   const familySittingShape = messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && familySittingPeople.length > 0;
   /*
-    …and a family's one confirmation (§NNN): everybody's blocks, the family's subject and button — a
+    …and a family's one confirmation (§519): everybody's blocks, the family's subject and button — a
     club text written for one runner's confirmation would say "your number" over three.
   */
   const familyConfirmedPeople = messageType === "REGISTRATION_CONFIRMED" ? (data.familyConfirmed ?? []) : [];
@@ -2184,7 +2184,7 @@ export function buildTemplateContent(
     whoever the registration the address already holds is for, a minor included.
   */
   /*
-    A family's one confirmation (§NNN, the owner's answer of 2026-09-27) greets everybody it confirms
+    A family's one confirmation (§519, the owner's answer of 2026-09-27) greets everybody it confirms
     by first name, in the order of the forms — «Salut, Ana, Ion și Maria,» — and so no parent's
     greeting and no "whose registration this is" line: every name is already in the greeting.
   */
@@ -2241,7 +2241,7 @@ export function buildTemplateContent(
         outlined box, the values bold (§468; the owner: "trebuie să avem bold pe chestiile
         importante"), so the parent sees at a glance which event and which person the button is for.
       */
-      // A family sitting's facts (§NNN): everybody joining now, each on a line of the one outlined box.
+      // A family sitting's facts (§519): everybody joining now, each on a line of the one outlined box.
       ...(familySittingShape
         ? [
             familyFactsPart(
@@ -2374,7 +2374,7 @@ export function buildTemplateContent(
     eventFacts: factsBlock,
     links: (() => {
       const own = [
-        // «Toate înscrierile mele» first under a family's button (§NNN): each person's state, before and after the press.
+        // «Toate înscrierile mele» first under a family's button (§519): each person's state, before and after the press.
         ...(familySittingShape && data.familyMineUrl ? [{ label: copy.familySitting.mine, url: data.familyMineUrl }] : []),
         ...(entry.links?.(linkData) ?? []),
         // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.

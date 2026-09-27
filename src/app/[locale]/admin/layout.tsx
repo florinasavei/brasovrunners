@@ -82,7 +82,7 @@ export default async function AdminLayout({ children, params }: Props) {
   const messages = await getMessages({ locale });
   // Who translates, and whether this deployment can (§464, §482). Without a key the steps are
   // on «Sarcini» → «Club», linked only for a role that may open that panel; the credit on
-  // «Setări» → «Costuri» (§NNN). A key whose one-time
+  // «Setări» → «Costuri» (§516). A key whose one-time
   // DeepL credit is spent (§497, DeepL's own meter, cached an hour) offers nothing either: the
   // whole-record button greyed with «Creditul DeepL s-a terminat — vezi Costuri», no per-box one.
   // Spent is the meter at 100 % or the usage read answered 456 (`creditIsSpent`); any other
@@ -96,7 +96,7 @@ export default async function AdminLayout({ children, params }: Props) {
         action: configured && !creditSpent ? translateFieldAction : null,
         setupHref: canOpenTaskPanel(staffUser.role, "club") ? `${tasksPath}#task-translation` : null,
         spent: creditSpent,
-        // «Setări» → «Costuri» since §NNN (it was «Sarcini» → «Costuri»).
+        // «Setări» → «Costuri» since §516 (it was «Sarcini» → «Costuri»).
         costsHref: canOpenSettingsTab(staffUser.role, "costs") ? getPathname({ locale, href: "/admin/settings/costs" }) : null,
       }
     : null;

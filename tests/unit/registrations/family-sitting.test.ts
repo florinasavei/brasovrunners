@@ -30,14 +30,14 @@ const { buildOutgoingEmail, joinNames } = await import("@/modules/notifications/
 const { DEADLINE_RULES, familySittingHeldUntil, familySittingHolds } = await import("@/modules/deadlines/domain/deadlines");
 
 /**
- * §NNN — a family registered in one sitting, with one email: the pure half. What the browser keeps,
+ * §519 — a family registered in one sitting, with one email: the pure half. What the browser keeps,
  * when the messages become one, who a second form in the sitting is about, how long the family's link
  * lives, the family message's own shape, and each person's declaration on «Toate înscrierile mele».
  */
 const NOW = new Date("2026-09-27T10:00:00.000Z");
 const EVENT_ID = "00000000-0000-4000-8000-000000000001";
 
-describe("§NNN the browser's half of a sitting", () => {
+describe("§519 the browser's half of a sitting", () => {
   const cookie = {
     sittingId: "00000000-0000-4000-8000-0000000000aa",
     eventId: EVENT_ID,
@@ -111,7 +111,7 @@ describe("§NNN the browser's half of a sitting", () => {
   });
 });
 
-describe("§NNN the sitting's decisions", () => {
+describe("§519 the sitting's decisions", () => {
   it("is a family from the second person on", () => {
     expect(isFamilySitting(0)).toBe(false);
     expect(isFamilySitting(1)).toBe(false);
@@ -141,7 +141,7 @@ describe("§NNN the sitting's decisions", () => {
   });
 });
 
-describe("§NNN the family message", () => {
+describe("§519 the family message", () => {
   const data = {
     participantName: "",
     eventTitle: "Crosul familiei",
@@ -194,7 +194,7 @@ describe("§NNN the family message", () => {
   });
 });
 
-describe("§NNN each person's declaration on «Toate înscrierile mele»", () => {
+describe("§519 each person's declaration on «Toate înscrierile mele»", () => {
   it("says signed, to sign, after the address, or when a place is offered", () => {
     expect(declarationStateKey("CONFIRMED", NOW)).toBe("signed");
     expect(declarationStateKey("WAITLISTED", NOW)).toBe("signed");
@@ -206,7 +206,7 @@ describe("§NNN each person's declaration on «Toate înscrierile mele»", () =>
   });
 });
 
-describe("§NNN the fix round's pure rules", () => {
+describe("§519 the fix round's pure rules", () => {
   const MIN = 60_000;
   const plus = (minutes: number) => new Date(NOW.getTime() + minutes * MIN);
 
@@ -243,7 +243,7 @@ describe("§NNN the fix round's pure rules", () => {
   });
 });
 
-describe("§NNN the family's one confirmation", () => {
+describe("§519 the family's one confirmation", () => {
   const data = {
     participantName: "Ana Pop",
     eventTitle: "Crosul familiei",
@@ -285,7 +285,7 @@ describe("§NNN the family's one confirmation", () => {
   });
 });
 
-describe("§NNN the fix round of the second review", () => {
+describe("§519 the fix round of the second review", () => {
   it("says one email for the family while the window holds, and each person's own at a window of 0 — in both catalogues", async () => {
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"] })).toBe("family");
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: false })).toBe("family");

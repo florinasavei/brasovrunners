@@ -5,7 +5,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import type { BotCheckSignal } from "./domain/turnstile-widget";
 
 /**
- * How often the anti-bot check let people down in the last day (§NNN), for `/api/health`: the held
+ * How often the anti-bot check let people down in the last day (§518), for `/api/health`: the held
  * presses the eight-second valve sent because the check never answered, and the widgets that failed
  * or never loaded — as the registration form carried them (`BOT_CHECK_SIGNAL_FIELD`), counted by
  * the register action once the registration went through; no endpoint of its own.
@@ -31,7 +31,7 @@ export async function recordBotCheckSignal<T extends Record<string, unknown>>(
 export type BotCheckSignalCounts = { heldPressValve: number; widgetFailed: number };
 
 /**
- * What `/api/health` publishes in place of a count (§NNN): the body is readable by anyone, and a
+ * What `/api/health` publishes in place of a count (§518): the body is readable by anyone, and a
  * raw daily count of held presses is a lower bound on the club's registrations that day. A level
  * says whether the owner should look — `none`, `some` (1–4), `many` (5 or more) — and nothing more.
  */

@@ -7,14 +7,14 @@ import { routing } from "@/i18n/routing";
 import proxy from "@/proxy";
 
 /**
- * §NNN — every backoffice address that moved into «Setări» answers a 308 to its new one, before
+ * §516 — every backoffice address that moved into «Setări» answers a 308 to its new one, before
  * anything renders, with the query kept: `/admin/emails`, `/admin/pages/appearance`,
  * `/admin/tasks?panel=costs` and `/admin/tasks?panel=botCheck`. BR-REQ-060-01: the redirect
  * says where a page is, never whether the reader may open it — the page behind it still decides.
  */
 const ROOT = process.cwd();
 
-describe("§NNN the moved backoffice addresses", () => {
+describe("§516 the moved backoffice addresses", () => {
   it("names each old address and its new place, in both locales, with the query kept", () => {
     for (const locale of routing.locales) {
       expect(resolveMovedBackofficePath(`/${locale}/admin/emails`, "")).toEqual({ pathname: `/${locale}/admin/settings/emails`, search: "" });

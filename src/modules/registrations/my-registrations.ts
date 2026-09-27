@@ -106,14 +106,14 @@ export type MyRegistration = {
   holdsSocials: boolean;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the
-   * desk (§67) — or null while it is not (§NNN: «Toate înscrierile mele» says each person's
+   * desk (§67) — or null while it is not (§519: «Toate înscrierile mele» says each person's
    * declaration, the owner's «pagina arată starea declarației fiecăruia»).
    */
   declarationSignedAt: Date | null;
 };
 
 /**
- * A family's person still waiting for the address's say-so (§446, §NNN): a kept form, not a
+ * A family's person still waiting for the address's say-so (§446, §519): a kept form, not a
  * registration — the page names them, the event, and until when the email's button can register them.
  */
 export type MyPendingPerson = { id: string; name: string; eventTitle: string | null; eventId: string; expiresAt: Date };
@@ -245,7 +245,7 @@ export async function readMyRegistrations<T extends Record<string, unknown>>(
 }
 
 /**
- * The address's kept forms still alive (§446, §NNN): people sent on the form and not yet confirmed
+ * The address's kept forms still alive (§446, §519): people sent on the form and not yet confirmed
  * from the email — named on the address's own page, behind its own link, which is the one place a
  * name on it may be read. The name as the registration would carry it; nothing else of the form.
  */

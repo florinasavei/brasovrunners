@@ -109,7 +109,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   }
 
   /*
-    The family sitting (§NNN): the form sent from «Încă o persoană» carries the address of the
+    The family sitting (§519): the form sent from «Încă o persoană» carries the address of the
     sitting's first form, from the browser's sealed half — the boxes are not on that form. A form
     whose sitting has lapsed meanwhile is the ordinary form: it arrives without an address and is
     refused on that box, with what was typed kept, like any other refusal.
@@ -158,7 +158,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
-        // Every public form is a sitting's (§NNN): its messages wait for «Gata» or the club's window.
+        // Every public form is a sitting's (§519): its messages wait for «Gata» or the club's window.
         sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null },
       },
     );
@@ -180,7 +180,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         refused twice for the same reason.
       */
       const retry = error.fields.includes("tooFast") ? "&retry=1" : "";
-      // A family sitting's next form comes back as that form, the address still fixed (§NNN).
+      // A family sitting's next form comes back as that form, the address still fixed (§519).
       const family = familyMode ? `&${FAMILY_SITTING_PARAM}=1` : "";
       redirect(`${path}?error=${error.code}${fields}${retry}${family}#${ERROR_SUMMARY_ID}`);
     }
@@ -188,7 +188,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   }
 
   /*
-    What the anti-bot check did to this person (§NNN), counted for `/api/health`: a press the
+    What the anti-bot check did to this person (§518), counted for `/api/health`: a press the
     valve sent, a widget that failed — the words the form carried (`BOT_CHECK_SIGNAL_FIELD`), and
     only once the registration went through the throttle and the other defences, so the figure
     takes no anonymous write. A count that fails is a smaller figure, never a refused registration.
@@ -205,7 +205,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
 
   await clearFormDraft(path);
   /*
-    The sitting's browser half (§NNN): the address the next form is sent with, the people typed so far
+    The sitting's browser half (§519): the address the next form is sent with, the people typed so far
     — this one last, by the rule the server keeps for the sitting (`withSittingPerson`) — the boxes a
     family shares, which the next form starts filled with, and the club's window from now, which the
     server moved to the same instant. Everything from this browser's own forms (§39).
@@ -215,7 +215,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
   const minutes = (await currentDeadlines(db)).familySittingMinutes;
-  // At a window of 0 nothing was held (§NNN): the cookie only keeps the address for the next person.
+  // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
   const atOnce = minutes <= 0;
   /*
     Always an id of one shape (§39): a sitting that held nothing — a re-send about somebody already
@@ -242,8 +242,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   // The screen that follows says to go and read an inbox, so it names which one (§224) — and
   // greets the person by first name while it does. Its own short-lived sealed cookie, never
   // the URL: nothing typed goes into one (§14.5).
-  // At a window of 0 (§NNN) each person's email left on its own: the last screen must not promise one.
-  // It lives as long as the sitting's cookie (§NNN), so the screen keeps its facts when «Gata» fires by itself.
+  // At a window of 0 (§519) each person's email left on its own: the last screen must not promise one.
+  // It lives as long as the sitting's cookie (§519), so the screen keeps its facts when «Gata» fires by itself.
   await stashSubmittedFacts(
     { email: input.email.trim(), firstName: input.firstName, names, atOnce },
     path,
@@ -253,7 +253,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
 }
 
 /**
- * «Gata — trimite emailul» (§NNN): the sitting's one email leaves now, and this browser's sitting
+ * «Gata — trimite emailul» (§519): the sitting's one email leaves now, and this browser's sitting
  * ends. The screen after it is the one that says to open the inbox. Pressed with no sitting — the
  * window had passed, or the sitting held nothing — it is the same screen: the email left, or is
  * leaving, by itself (§39: the answer never depends on what the address holds).
@@ -264,7 +264,7 @@ export async function releaseFamilySittingAction(form: FormData): Promise<void> 
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
   const sitting = await readFamilySittingCookie();
   /*
-    The open screen's own press at the window's end (`PressWhenWindowEnds`, §NNN): with the browser's
+    The open screen's own press at the window's end (`PressWhenWindowEnds`, §519): with the browser's
     half already gone — a phone slower than the cookie's grace — it does nothing and stays where it
     is. The server releases the sitting at its `held_until` anyway; nothing depends on this press.
   */
@@ -275,7 +275,7 @@ export async function releaseFamilySittingAction(form: FormData): Promise<void> 
 }
 
 /**
- * «Da, încă o persoană» (§NNN; the review of 2026-09-27: the window lapsed under the parent's hands while
+ * «Da, încă o persoană» (§519; the review of 2026-09-27: the window lapsed under the parent's hands while
  * the next form was open): a press, never a link — it starts the club's window again from now, on the
  * server's row and every message it holds (`continueFamilySitting`) and on this browser's half, then
  * opens the same form with the address fixed. The form's page says how long is left. A sitting whose
@@ -297,7 +297,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
       {
         ...sitting,
         heldUntil,
-        // Read afresh with the window (§NNN): a «Termene» change mid-sitting leaves no stale flag.
+        // Read afresh with the window (§519): a «Termene» change mid-sitting leaves no stale flag.
         atOnce: deadlines.familySittingMinutes <= 0,
         windowMinutes: deadlines.familySittingMinutes,
         sameBirthDate: null,
@@ -305,7 +305,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
       path,
       now,
     );
-    // The screen's facts live as long as the sitting, refreshed with it (§NNN).
+    // The screen's facts live as long as the sitting, refreshed with it (§519).
     const facts = await readSubmittedFacts();
     if (facts?.email) {
       await stashSubmittedFacts(

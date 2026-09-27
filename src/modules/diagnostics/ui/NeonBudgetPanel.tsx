@@ -98,7 +98,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
         </>
       )}
 
-      {/* What the platform does now: one sentence a line (§NNN), the lead on the first. */}
+      {/* What the platform does now: one sentence a line (§511), the lead on the first. */}
       <Box sx={{ mt: 1.5 }} data-testid="neon-budget-effect">
         <Typography variant="body2">
           {t("effectLead")}{" "}

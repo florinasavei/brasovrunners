@@ -108,7 +108,7 @@ export function StaffEventSelect({
 export function StaffBirthDateField({ label, helperText }: { label: string; helperText: string }) {
   const { selected, eventDays, eventMinAges, today, earliest } = useContext(ChoiceContext);
   const day = selected ? eventDays[selected] : undefined;
-  // The chosen event's own minimum (§329), never under fourteen (§NNN); with no event chosen, today.
+  // The chosen event's own minimum (§329), never under fourteen (§515); with no event chosen, today.
   const minAge = effectiveMinimumAge(selected ? eventMinAges[selected] : undefined);
   const youngest = day ? latestBirthDateFor(minAge, day) : today;
   const max = youngest < today ? youngest : today;

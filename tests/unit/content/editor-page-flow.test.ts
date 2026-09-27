@@ -204,7 +204,7 @@ describe("§406 the cards' headings and the map", () => {
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
     // The cost is asked inside card 1 since §466, the place and the rules inside their cards since
     // §481: no heading of their own, the cards after them renumber. No film card at all.
-    // The public list inside «Program, regulament și declarație» since §NNN.
+    // The public list inside «Program, regulament și declarație» since §512.
     for (const nested of ["cost", "place", "rules", "startList", "video"]) expect(nested in flow.headings, nested).toBe(false);
     expect(flow.headings.registration).toBe("6 · Participare și înscrieri — gol, nu apare pe pagină");
     expect(flow.headings.programme).toBe("9 · Program, regulament și declarație — gol, nu apare pe pagină");
