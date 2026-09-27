@@ -97,7 +97,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     // The colleague saves in the meantime.
     await page.goto(editor);
     await hydrated(page);
-    await openEditorBox(page, "Locul");
+    await openEditorBox(page, "Când și unde");
     await field("event.locationName").fill("Colegul a scris asta");
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page).toHaveURL(/saved=event/);
@@ -106,7 +106,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     const box = stale.locator('[name="event.locationName"]');
     const save = stale.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true });
     // A `<details>` opens without JavaScript: the Locul box, the way a person opens it.
-    await openFold(editorBox(stale, "Locul"));
+    await openFold(editorBox(stale, "Când și unde"));
     await box.fill("Eu am scris asta");
     let posted = stale.waitForResponse((response) => response.request().method() === "POST");
     await save.click();
@@ -165,9 +165,9 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
-    await expect(refusal.getByRole("link", { name: "Regulamentul › Declarația pe propria răspundere › Declarația pe care o semnează participantul" })).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Program, regulament și declarație › Declarația pe propria răspundere › Declarația pe care o semnează participantul" })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
-    await expect(editorBox(page, "Regulamentul")).toHaveAttribute("open", "");
+    await expect(editorBox(page, "Program, regulament și declarație")).toHaveAttribute("open", "");
     await expect(editorBox(page, "Declarația pe propria răspundere")).toHaveAttribute("open", "");
     await expect(field("event.capacity")).toHaveValue("40");
     await expect(field("event.registrationMode")).toHaveValue("INTERNAL");

@@ -19,7 +19,7 @@ const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf
 
 const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
 const EDIT = read("src/app/[locale]/admin/events/[id]/page.tsx");
-const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
+const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeRulesBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");
 const TRANSLATION_FIELDS = read("src/modules/content/events/ui/TranslationFields.tsx");
@@ -58,15 +58,13 @@ describe("the create page is the editor's page", () => {
       "<KindBox",
       "<TitleSummaryBox",
       "<DescriptionBox",
+      // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§NNN).
       "<WhenBox",
-      "<PlaceBox",
       "<CourseBox",
       "<RegistrationBox",
       "<CoHostsBox",
       "<LinksBox",
-      "<ProgrammeBox",
-      "<RulesBox",
-      "<VideoBox",
+      "<ProgrammeRulesBox",
       "<StartListBox",
       't("editor.groups.offPage")',
       "<PromotionBox",
@@ -80,6 +78,8 @@ describe("the create page is the editor's page", () => {
       }
       // No box holds another any more: the first box is the type alone (§406, undoing §358's nesting).
       expect(page).not.toContain("</KindBox>");
+      // No film card, and no card of its own for the place or the rules (§NNN).
+      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox "]) expect(page, gone).not.toContain(gone);
     }
   });
 
@@ -160,14 +160,25 @@ describe("no film box", () => {
     }
   });
 
-  it("keeps the column, the validation and the public embed for the links older events carry", () => {
-    expect(read("src/modules/content/events/fields.ts")).toContain("videoUrl:");
+  it("has no film card and no film section: a film is a figure in the description, where migration 0092 moved the stored links (§NNN)", () => {
+    // The column stays in the schema until its contract migration (AGENTS.md §7.6) — read and written by nobody.
     expect(read("src/db/schema/events.ts")).toContain('videoUrl: text("video_url")');
-    expect(read("src/app/[locale]/events/[slug]/page.tsx")).toContain(
-      "<EventVideo videoUrl={event.videoUrl} posterUrl={event.videoPosterUrl} eventTitle={event.title} />",
-    );
-    // A save that says nothing about the film writes nothing over it.
-    expect(SERVICE).toContain("fields.videoUrl === undefined ? {} : { videoUrl: fields.videoUrl }");
+    expect(read("src/modules/content/events/fields.ts")).not.toMatch(/^\s+videoUrl:/m);
+    expect(SERVICE).not.toContain("videoUrl");
+    expect(read("src/modules/events/repository.ts")).not.toContain("videoUrl");
+    const page = read("src/app/[locale]/events/[slug]/page.tsx");
+    expect(page).not.toContain("EventVideo");
+    expect(page).not.toContain("videoUrl");
+    expect(BOXES).not.toContain('id="box-video"');
+    for (const [file, messages] of MESSAGES) {
+      expect(messages.Admin.editor.boxes.video, file).toBeUndefined();
+      expect(messages.Admin.editor.pageFlow.short.video, file).toBeUndefined();
+    }
+    // The migration that moved them is data only, and sorts after the one before it.
+    const journal = JSON.parse(read("src/db/migrations/meta/_journal.json")) as { entries: { tag: string; when: number }[] };
+    const index = journal.entries.findIndex((entry) => entry.tag === "0092_film_into_description");
+    expect(index).toBeGreaterThan(0);
+    expect(journal.entries[index].when).toBeGreaterThan(journal.entries[index - 1].when);
   });
 });
 
@@ -195,7 +206,7 @@ describe("the time is a typed box, shown and posted on the 24-hour clock", () =>
 });
 
 describe("the place's name in each language (§362)", () => {
-  it("is asked once per language in the Locul box, beside each other — hidden with the map link while to be announced", () => {
+  it("is asked once per language in the place's part of «Când și unde» (§NNN), beside each other — hidden with the map link while to be announced", () => {
     const place = read("src/modules/content/events/ui/boxes/PlaceBox.tsx");
     const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");
     // No tabs and no second, shared box: the island holds the two names and the map link.

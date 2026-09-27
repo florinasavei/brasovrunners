@@ -2,7 +2,6 @@ import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
-import { isYoutubeLink } from "@/modules/events/domain/video";
 import { parseTypedCoordinates } from "@/modules/weather/domain/place";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
@@ -694,24 +693,11 @@ export const eventFieldsSchema = z
      * language.
      */
     links: eventLinksField,
-    /**
-     * A film of the event: a YouTube link, or nothing. The editor no longer has a box for it —
-     * a film goes into the description with the rich text's own YouTube button (§266), sized
-     * and placed like a picture — so no form posts this any more. The column stays for the
-     * events that carry one and the public page still embeds it; **absent means "not editing
-     * the film"**, the discipline `coHosts` and `bibDesign` follow, so a save from the editor
-     * leaves a stored link exactly as it was. Only `""` clears it, and only a link a video id
-     * can be read from is stored.
-     */
-    videoUrl: z
-      .string()
-      .trim()
-      .max(2000)
-      .optional()
-      .transform((value) => (value === undefined ? undefined : value ? value : null))
-      .refine((value) => value === undefined || value === null || isYoutubeLink(value), {
-        message: "a video link must be a YouTube link (watch, youtu.be, shorts or embed)",
-      }),
+    /*
+      No `videoUrl` (§NNN): a film is a figure in the description (§266), where migration `0092`
+      moved every stored link. The column is neither read nor written until a later contract
+      migration drops it (AGENTS.md §7.6); no form posts one, and `.strict()` refuses a caller that does.
+    */
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),

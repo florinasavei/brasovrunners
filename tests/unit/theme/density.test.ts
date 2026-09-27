@@ -185,7 +185,6 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
-  { file: "src/modules/events/ui/EventVideo.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3, count: 6 },
   { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   // The filter panel (§424, a fix round on §413/§424's small-chip button — the owner: "Butonul

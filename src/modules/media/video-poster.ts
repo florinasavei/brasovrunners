@@ -212,8 +212,8 @@ type RichTextLike = { type: "doc"; content?: Array<YoutubeBlockLike | OtherBlock
 
 /**
  * Every `youtube` block in a body whose `poster` is not already set gets one fetched
- * (`DECISIONS.md` §403) — a body may embed the same film the event's `video_url` does, or
- * several different films, and each is stored once and keyed by its own video id. A block
+ * (`DECISIONS.md` §403) — a body may embed several different films, and each is stored once and
+ * keyed by its own video id. A block
  * whose fetch fails is left exactly as parsed (`poster: null`), and `RichTextVideo` falls back
  * to the text facade for that one film — never a broken image, and never a reason to refuse
  * the save.
@@ -246,57 +246,10 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
   return changed ? ({ ...doc, content } as D) : doc;
 }
 
-/**
- * What an event save resolves `video_poster_url` to, given what it is trying to save and what
- * the row already held. `undefined` means "leave the column exactly as it is" — the same
- * discipline every other optional column in `eventColumnsFrom` follows.
- *
- * - No caller mentioned `videoUrl` (§266: no form posts it any more): untouched, *unless* the
- *   row already has a YouTube `video_url` and no poster yet — an event saved before this feature
- *   existed, or whose one fetch failed, gets one more try on its next ordinary save, rather than
- *   keeping the blank rectangle forever because nothing ever posts `videoUrl` again to give
- *   `nextVideoUrl` a value (found by re-review, `DECISIONS.md` §403).
- * - Cleared to null: the poster is cleared with it — there is no film to show a poster for.
- * - A link that is not a YouTube link: untouched; the column already means nothing for it.
- * - A YouTube link: a poster is fetched (or reused) for its id. Success stores the new
- *   address. Failure keeps the current poster when the video id did not change (a transient
- *   failure on a save that touched something else), and clears it when the video id did
- *   change (there is nothing yet to show a poster of).
- */
-export async function resolveEventVideoPoster<T extends Record<string, unknown>>(
-  db: Database<T>,
-  input: {
-    nextVideoUrl: string | null | undefined;
-    currentVideoUrl: string | null;
-    currentPosterUrl: string | null;
-    videoIdOf: (url: string | null | undefined) => string | null;
-    now?: Date;
-    fetchImpl?: FetchImage;
-  },
-): Promise<{ videoPosterUrl?: string | null }> {
-  if (input.nextVideoUrl === undefined) {
-    if (input.currentPosterUrl !== null) return {};
-    const currentVideoId = input.videoIdOf(input.currentVideoUrl);
-    if (!currentVideoId) return {};
-    try {
-      const fetched = await ensureYoutubePoster(db, currentVideoId, { now: input.now, fetchImpl: input.fetchImpl });
-      return fetched ? { videoPosterUrl: fetched } : {};
-    } catch {
-      return {};
-    }
-  }
-  if (input.nextVideoUrl === null) return { videoPosterUrl: null };
-
-  const nextVideoId = input.videoIdOf(input.nextVideoUrl);
-  if (!nextVideoId) return {};
-
-  const currentVideoId = input.videoIdOf(input.currentVideoUrl);
-  const fallback = currentVideoId === nextVideoId ? input.currentPosterUrl : null;
-
-  try {
-    const fetched = await ensureYoutubePoster(db, nextVideoId, { now: input.now, fetchImpl: input.fetchImpl });
-    return { videoPosterUrl: fetched ?? fallback };
-  } catch {
-    return { videoPosterUrl: fallback };
-  }
-}
+/*
+  `resolveEventVideoPoster`, which kept `events.video_poster_url` in step with `events.video_url`,
+  is gone with the film section (§NNN): a film lives only in a description, and migration `0092`
+  moved each stored link — with its stored poster — into the descriptions as a `youtube` node. A
+  node that arrived without a poster gets one from `attachYoutubePosters` on the event's next save,
+  before any transaction opens, like any film pasted there (§403).
+*/

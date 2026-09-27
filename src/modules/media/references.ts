@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
-import { eventTranslations, events } from "@/db/schema/events";
+import { eventTranslations } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -87,10 +87,9 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${names(sql`${pageTranslations.bodyJson}::text`)})
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
-  -- An event's own film poster (DECISIONS.md §403): the address is stored on the event row
-  -- itself, not a translation, and carries the poster's key prefix as an ordinary path segment —
-  -- the same substring check every other body uses.
-  OR EXISTS (SELECT 1 FROM ${events} WHERE ${names(sql`${events.videoPosterUrl}`)})
+  -- No events.video_poster_url any more (§NNN): a film is a figure in the description, whose
+  -- poster the event translation's own body names above (migration 0092 carried every stored
+  -- poster there). The column is unread and unwritten until its contract migration drops it.
   -- A card of «Echipa» (§459): its photo, by id, hidden cards included — a card being prepared
   -- is a card somebody is about to show.
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${teamMembers.photoMediaAssetId} = ${mediaAssets.id})

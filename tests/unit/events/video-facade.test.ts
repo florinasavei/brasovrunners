@@ -30,7 +30,6 @@ vi.mock("next-intl/server", async () => {
 
 const { default: VideoFacade } = await import("@/shared/ui/VideoFacade");
 const { default: VideoVolumeBar } = await import("@/shared/ui/VideoVolumeBar");
-const { default: EventVideo } = await import("@/modules/events/ui/EventVideo");
 const { youtubeEmbedUrl } = await import("@/modules/events/domain/video");
 const { default: RichTextVideo } = await import("@/modules/content/rich-text/ui/RichTextVideo");
 
@@ -97,20 +96,15 @@ describe("§403 VideoFacade — a native disclosure, server-rendered", () => {
     expect(html).toContain('allow="autoplay; encrypted-media; picture-in-picture"');
   });
 
-  it("EventVideo builds the embed on the no-cookie host, with the js api enabled", async () => {
-    const element = await EventVideo({
-      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      posterUrl: "https://media.example.test/yt-dQw4w9WgXcQ/web.webp",
-    });
+  it("a film in the description — its one home since §NNN retired the page's film section — is the same facade: the stored poster, the no-cookie embed asking for HD, the quiet mute control", async () => {
+    const element = await RichTextVideo({ videoId: "dQw4w9WgXcQ", caption: "", poster: "https://media.example.test/yt-dQw4w9WgXcQ/web.webp" });
     const html = renderToStaticMarkup(element as Parameters<typeof renderToStaticMarkup>[0]);
     expect(html).not.toContain("i.ytimg.com");
     expect(html).toContain("<details");
-    expect(html).toContain("media.example.test");
-  });
-
-  it("EventVideo answers null for a link that is not a YouTube link, and for none at all", async () => {
-    expect(await EventVideo({ videoUrl: null, posterUrl: null })).toBeNull();
-    expect(await EventVideo({ videoUrl: "https://vimeo.com/1", posterUrl: null })).toBeNull();
+    expect(html).toContain('src="https://media.example.test/yt-dQw4w9WgXcQ/web.webp"');
+    expect(html).toContain("youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(html).toContain("vq=hd1080");
+    expect(html).toContain('aria-label="Fără sunet"');
   });
 });
 

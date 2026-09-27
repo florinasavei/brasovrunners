@@ -10,7 +10,6 @@ import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ShareIcon from "@mui/icons-material/Share";
-import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
 import SubjectIcon from "@mui/icons-material/Subject";
 import TitleIcon from "@mui/icons-material/Title";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
@@ -39,6 +38,5 @@ export const SECTION_GLYPHS: Record<PageSectionGlyph, ComponentType<SvgIconProps
   links: LinkIcon,
   programme: ScheduleIcon,
   rules: GavelIcon,
-  video: SmartDisplayIcon,
   startList: FormatListNumberedIcon,
 };

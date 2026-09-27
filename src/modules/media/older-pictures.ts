@@ -1,6 +1,6 @@
 import { and, asc, eq, or, type SQL, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { eventTranslations, events } from "@/db/schema/events";
+import { eventTranslations } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -257,10 +257,8 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(pageTranslations)
       .set({ bodyJson: sql`${swapped(pageTranslations.bodyJson, old, next)}::jsonb`, version: sql`${pageTranslations.version} + 1` })
       .where(holds(pageTranslations.bodyJson, old));
-    await tx
-      .update(events)
-      .set({ videoPosterUrl: swapped(events.videoPosterUrl, old, next), version: sql`${events.version} + 1` })
-      .where(holds(events.videoPosterUrl, old));
+    // Not `events.video_poster_url` (§NNN): a film's poster lives in the description's youtube
+    // node, which the translations' swap above already carries; the column is unread.
     return true;
   });
   if (moved) return "converted";

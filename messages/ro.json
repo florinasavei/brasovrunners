@@ -341,7 +341,6 @@
     "openRoute": "Vezi traseul",
     "routeJump": "Despre traseu",
     "video": {
-      "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
       "play": "Redă filmul",
@@ -1081,7 +1080,7 @@
         "autoLine": "Automat: {day}, începe la {start}, apusul la {sunset} — {verdict}",
         "autoLineDawn": "Automat: {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}",
         "autoLineNoTime": "Automat: {day}, apusul la {sunset} — alege ora startului",
-        "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
+        "autoLineNoDate": "Automat: alege data și ora startului în „Când și unde”, iar răspunsul apare aici.",
         "verdictNight": "eveniment de noapte",
         "verdictDay": "nu e eveniment de noapte",
         "endLine": "Startul e înainte de amurg, dar alergarea ține până la {end} și prinde întunericul — tot eveniment de noapte.",
@@ -1435,6 +1434,9 @@
         "description": {
           "title": "Descrierea evenimentului"
         },
+        "whenWhere": {
+          "title": "Când și unde"
+        },
         "when": {
           "title": "Data și ora",
           "timezone": "Fus orar",
@@ -1443,6 +1445,10 @@
         },
         "place": {
           "title": "Locul"
+        },
+        "programmeRules": {
+          "title": "Program, regulament și declarație",
+          "rulesLine": "regulamentul: {state}"
         },
         "programme": {
           "title": "Programul zilei și ce să aduci"
@@ -1463,7 +1469,7 @@
         "conditions": {
           "title": "Condiții de participare",
           "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
-          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Regulamentul» → «Declarația pe propria răspundere»."
+          "declarationUnderRules": "Declarația pe care o semnează participantul se alege în «Program, regulament și declarație» → «Declarația pe propria răspundere»."
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -1666,14 +1672,6 @@
             "notAsked": "nu se cere"
           }
         },
-        "video": {
-          "title": "Filmul",
-          "stored": "un film, dintr-un link vechi",
-          "none": "niciun film separat",
-          "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
-          "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
-          "toDescription": "Mergi la descriere"
-        },
         "declaration": {
           "title": "Declarația pe propria răspundere",
           "newest": "Cea mai nouă versiune aprobată: v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
@@ -1708,7 +1706,7 @@
           "kind": "Tipul",
           "title": "Titlul",
           "description": "Descrierea",
-          "when": "Când",
+          "when": "Când și unde",
           "place": "Unde",
           "course": "Traseul",
           "cost": "Costul",
@@ -1716,9 +1714,8 @@
           "coHosts": "Împreună cu",
           "share": "Distribuie",
           "links": "Linkuri și fișiere",
-          "programme": "Programul",
+          "programme": "Program și regulament",
           "rules": "Regulamentul",
-          "video": "Filmul",
           "startList": "Lista participanților"
         }
       },
@@ -3852,7 +3849,7 @@
               "title": "Corectează textul unui eveniment",
               "steps": [
                 "«Evenimente» → «Editează» pe rândul evenimentului.",
-                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului», «Programul zilei și ce să aduci» sau «Regulamentul».",
+                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului» sau «Program, regulament și declarație» (apoi «Programul zilei și ce să aduci» ori «Regulamentul»).",
                 "Scrie în tabul «Română» și în tabul «English».",
                 "Jos, la un eveniment publicat, bifează «Am înțeles că modific conținut publicat.».",
                 "Apasă «Salvează». Apare imediat pe site, în ambele limbi."
@@ -3994,7 +3991,7 @@
               "title": "Schimbă o setare a evenimentului",
               "steps": [
                 "«Evenimente» → «Editează».",
-                "Deschide cardul: «Data și ora», «Locul», «Traseul», «Cost» sau «Participare și înscrieri». Schimbă ce trebuie.",
+                "Deschide cardul: «Când și unde», «Traseul», «Cost» sau «Participare și înscrieri». Schimbă ce trebuie.",
                 "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
                 "Participanții trebuie să afle? Bifează «Anunță participanții despre schimbare» și scrie nota în ambele limbi.",
                 "Apasă «Salvează». Textele (titlul, descrierea) nu le poți salva: spune-i Administratorului ce e greșit."
@@ -4031,8 +4028,8 @@
                 "Fiecare card e o parte a paginii publice, în ordinea de pe site. Harta de sus, «Pagina, de sus în jos», te duce la fiecare card.",
                 "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
                 "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
-                "«Data și ora», apoi «Locul»: punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
-                "Restul cardurilor după nevoie: «Descrierea evenimentului», «Traseul», «Cost», «Participare și înscrieri», «Programul zilei și ce să aduci», «Regulamentul».",
+                "«Când și unde»: data și ora, apoi punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
+                "Restul cardurilor după nevoie: «Descrierea evenimentului» (un film de pe YouTube se pune aici, cu butonul «YouTube»), «Traseul», «Cost», «Participare și înscrieri», «Program, regulament și declarație».",
                 "«Creează evenimentul» îl salvează ca ciornă (nu apare pe site). «Creează și publică» îl pune direct pe site.",
                 "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou.",
                 "Greșeala obișnuită: tabul «English» necompletat lasă evenimentul fără engleză; sau apeși «Creează evenimentul» crezând că a intrat pe site — rămâne ciornă, nu «Creează și publică»."
@@ -4090,7 +4087,7 @@
                 "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Condiții de participare»: «Declarația pe care o semnează participantul» și «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără).",
+                "«Condiții de participare»: «Vârsta minimă (ani)» (14 dacă nu o schimbi, 0 pentru fără). Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]
