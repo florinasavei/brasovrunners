@@ -4,7 +4,6 @@ import { type EventType, takesRegistrations } from "./event-type";
 import { readEventLinks } from "./links";
 import { hasRouteDescription } from "./route-section";
 import { readScheduleItems } from "./schedule";
-import { youtubeVideoId } from "./video";
 
 /**
  * The event page's sections, top to bottom — the one list the public page is drawn in and the
@@ -14,13 +13,14 @@ import { youtubeVideoId } from "./video";
  * **The page's own order, as a list.** `app/[locale]/events/[slug]/page.tsx` draws the overline,
  * the title, the description, the facts (when, where, the route, the cost, who may enter, the
  * partners), the registration button, the share links, then `#route`, `#links`, `#schedule`,
- * `#rules`, the film and the start list. A section's place here is where the page first draws
+ * `#rules` and the start list — a film is a figure in the description since §NNN, the page's own
+ * film section (§69) gone and its stored links moved into the descriptions (migration `0092`). A section's place here is where the page first draws
  * something its card holds. The page does not import this list — it is drawn by hand, no table of
  * elements (`AGENTS.md` §1.3) — so `tests/unit/events/page-sections.test.ts` reads the page as
  * source and fails the moment the two orders part; that test is what holds them equal. The editor
  * writes its cards out in this order on both pages, and the same test holds it to it too.
  *
- * **Numbers** are the page's: a card is "4 · Data și ora" because it is the fourth thing the page
+ * **Numbers** are the page's: a card is "4 · Când și unde" because it is the fourth thing the page
  * draws that the club writes. An automatic section — the share links, drawn from the page's own
  * address — has no card and no number; the editor's map names it as automatic.
  *
@@ -28,7 +28,7 @@ import { youtubeVideoId } from "./video";
  * at all: the card's title says "apare pe pagină" or "gol, nu apare pe pagină", and the map's dot
  * is filled or empty. A language is enough — both-or-neither (§352) keeps the two together — so a
  * section is drawn when some language's page draws it. The same rules the page's components follow
- * before they return nothing (`EventLinks`, `EventProgramme`, `EventVideo`, `StartList`, …), read
+ * before they return nothing (`EventLinks`, `EventProgramme`, `StartList`, …), read
  * from the columns rather than re-rendered.
  *
  * Pure and free of React, so the public page, the editor, the map island and a test read the same
@@ -50,7 +50,6 @@ export const PAGE_SECTION_IDS = [
   "links",
   "programme",
   "rules",
-  "video",
   "startList",
 ] as const;
 
@@ -74,7 +73,6 @@ export type PageSectionGlyph =
   | "links"
   | "programme"
   | "rules"
-  | "video"
   | "startList";
 
 /** What the predicates read of the event row: the stored columns, nothing computed. */
@@ -98,7 +96,6 @@ export type PageSectionEvent = {
   coHostName: string | null;
   coHostUrl: string | null;
   scheduleItems: unknown;
-  videoUrl: string | null;
   participantListVisibility: string | null;
 };
 
@@ -132,8 +129,10 @@ export type PageSection = {
   /** Whether the page draws it for this event. */
   drawn: (data: PageSectionData) => boolean;
   /**
-   * The section whose editor card holds this one's card (§466): the page draws it in its own place,
-   * but the editor asks it inside another card, so it has no number and no chip on the map.
+   * The section whose editor card holds this one's card (§466, §NNN): the page draws it in its own
+   * place, but the editor asks it inside another card, so it has no number and no chip on the map —
+   * the cost inside «Ce fel de eveniment», the place inside «Când și unde», the rules inside
+   * «Program, regulament și declarație». The holding card is drawn when either is (`cardStates`).
    */
   nestedIn?: PageSectionId;
 };
@@ -149,15 +148,18 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: "title", card: "box-title", anchor: null, glyph: "title", automatic: false, drawn: (data) => inSomeLanguage(data, (text) => written(text.title)) },
   // The long description; with none, the page shows the summary in its place (`EventDescription`).
   { id: "description", card: "box-description", anchor: null, glyph: "description", automatic: false, drawn: (data) => inSomeLanguage(data, (text) => hasDoc(text.bodyJson)) },
-  // "Când" — every event has a date.
+  // "Când" — every event has a date. The editor's «Când și unde» (§NNN; the owner, 2026-09-27: "date
+  // and location can be on the same card") asks the date, the place and the time zone in one card.
   { id: "when", card: "box-when", anchor: null, glyph: "when", automatic: false, drawn: () => true },
   // "Unde": the place, its address and its map — or "to be announced" (§328), which is drawn too.
+  // Asked inside «Când și unde» since §NNN: `#box-place` is the place's part of that card.
   {
     id: "place",
     card: "box-place",
     anchor: null,
     glyph: "place",
     automatic: false,
+    nestedIn: "when",
     drawn: ({ event, texts }) =>
       event.locationToBeAnnounced ||
       written(event.locationName) ||
@@ -222,7 +224,9 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     automatic: false,
     drawn: ({ event }) => readEventLinks(event.links).length > 0 || written(event.stravaEventUrl) || written(event.facebookEventUrl),
   },
-  // The programme (`#schedule`, §96, §117): the timed rows, or the text.
+  // The programme (`#schedule`, §96, §117): the timed rows, or the text. The editor's «Program,
+  // regulament și declarație» (§NNN; the owner, 2026-09-27: "Programul, regulamentul și declarația
+  // la fel pe același card") holds the programme, the rules and the declaration as three cards.
   {
     id: "programme",
     card: "box-programme",
@@ -231,10 +235,16 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     automatic: false,
     drawn: (data) => readScheduleItems(data.event.scheduleItems).length > 0 || inSomeLanguage(data, (text) => hasDoc(text.scheduleJson)),
   },
-  // The rules (`#rules`).
-  { id: "rules", card: "box-rules", anchor: "rules", glyph: "rules", automatic: false, drawn: (data) => inSomeLanguage(data, (text) => hasDoc(text.rulesJson)) },
-  // Last year's film (§69): the stored link an older event carries; a new film is a figure in the description (§266).
-  { id: "video", card: "box-video", anchor: null, glyph: "video", automatic: false, drawn: ({ event }) => youtubeVideoId(event.videoUrl) !== null },
+  // The rules (`#rules`), a card inside «Program, regulament și declarație» since §NNN.
+  {
+    id: "rules",
+    card: "box-rules",
+    anchor: "rules",
+    glyph: "rules",
+    automatic: false,
+    nestedIn: "programme",
+    drawn: (data) => inSomeLanguage(data, (text) => hasDoc(text.rulesJson)),
+  },
   // The public participant list (BR-REQ-039-01): only where the event publishes one.
   //
   // Left as the switch alone, not also `publicListStillOpen` (§421, finding (11) of the fix
@@ -266,6 +276,22 @@ export function pageSectionStates(data: PageSectionData): Array<NumberedPageSect
 }
 
 /**
+ * Each editor card — every section not nested in another's card — with whether the page draws
+ * anything it holds (§NNN): «Când și unde» is drawn when the date or the place is, «Program,
+ * regulament și declarație» when the programme or the rules are. The card's heading and its chip on
+ * the map read this; a nested section's own `isDrawn` stays in `pageSectionStates`.
+ */
+export function cardStates(data: PageSectionData): Array<NumberedPageSection & { isDrawn: boolean }> {
+  const states = pageSectionStates(data);
+  return states
+    .filter((section) => !section.nestedIn)
+    .map((section) => ({
+      ...section,
+      isDrawn: section.isDrawn || states.some((nested) => nested.nestedIn === section.id && nested.isDrawn),
+    }));
+}
+
+/**
  * What the create page's event is before anything is typed: a group run, free (§398), no place,
  * nothing else. The create page shows the same numbers and states from it, so the two pages read
  * alike; its states are those of an event saved as it opens.
@@ -291,7 +317,6 @@ export const BLANK_PAGE_SECTION_DATA: PageSectionData = {
     coHostName: null,
     coHostUrl: null,
     scheduleItems: null,
-    videoUrl: null,
     participantListVisibility: "HIDDEN",
   },
   texts: [],

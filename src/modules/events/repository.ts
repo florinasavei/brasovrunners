@@ -80,13 +80,9 @@ const PUBLIC_COLUMNS = {
   longitude: unlessToBeAnnounced<number | null>(events.longitude),
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
-  // A YouTube link, embedded from its id (BR-REQ-011-01 criterion 9).
-  videoUrl: events.videoUrl,
-  // The club's own copy of that film's thumbnail (`DECISIONS.md` §403): fetched once at save
-  // time and stored under the event's prefix, so the facade shows this address rather than
-  // asking YouTube's image host before the visitor presses play. Null until a fetch has
-  // succeeded for the video currently stored.
-  videoPosterUrl: events.videoPosterUrl,
+  // No `video_url` / `video_poster_url` (§NNN): a film is a figure in the description, where
+  // migration `0092` moved every stored link (BR-REQ-011-01 criterion 9); the two columns are left
+  // unread until a later contract migration drops them (AGENTS.md §7.6).
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
   facebookEventUrl: events.facebookEventUrl,

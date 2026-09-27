@@ -11,9 +11,9 @@ import { describe, expect, it } from "vitest";
  * what drifts — the next field added lands in whichever box is nearest unless something says where
  * boxes go:
  *
- *   Pagina evenimentului, de sus în jos — the type, title and summary, description, date and time,
- *   place, the course, the cost, registration, partners, (the share links, automatic), links and files,
- *   programme, rules, the film, the public list: the page's sections in `PAGE_SECTIONS`' order,
+ *   Pagina evenimentului, de sus în jos — the type, title and summary, description, when and where
+ *   (§NNN), the course, the cost, registration, partners, (the share links, automatic), links and
+ *   files, programme, rules and declaration (§NNN), the public list: the page's sections in `PAGE_SECTIONS`' order,
  *   which `events/page-sections.test.ts` holds both the page and these pages to;
  *   Nu apar pe pagină — the status, promotion, page address;
  *   then Salvare, always open.
@@ -40,16 +40,15 @@ const EDITOR_ORDER = [
   "<KindBox",
   "<TitleSummaryBox",
   "<DescriptionBox",
+  // «Când și unde»: the date and the place in one card (§NNN).
   "<WhenBox",
-  "<PlaceBox",
   "<CourseBox",
   "<RegistrationBox",
   "<CoHostsBox",
   "<AutomaticSection",
   "<LinksBox",
-  "<ProgrammeBox",
-  "<RulesBox",
-  "<VideoBox",
+  // «Program, regulament și declarație»: three cards in one (§NNN).
+  "<ProgrammeRulesBox",
   "<StartListBox",
   't("editor.groups.offPage")',
   "<PromotionBox",
@@ -77,9 +76,11 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       expect(source, page).not.toContain("<StatusBox");
       // The cost is a card inside the first box since §466, drawn by the box, never by the page.
       expect(source, page).not.toContain("<CostBox");
-      for (const card of ["<CourseBox", "<LinksBox", "<StartListBox", "<VideoBox"]) {
+      for (const card of ["<CourseBox", "<LinksBox", "<StartListBox", "<WhenBox", "<ProgrammeRulesBox"]) {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
+      // No film card (§NNN); the place and the rules are drawn by the cards that hold them.
+      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox "]) expect(source, `${page}: ${gone}`).not.toContain(gone);
     }
     // The status: a level-3 card inside the first box, with the id it always had (§448).
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
@@ -141,13 +142,15 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
   });
 
   it("marks the five boxes a change reaches — date, place, programme, registration, status — and no other", () => {
-    for (const box of ["<WhenBox", "<PlaceBox", "<ProgrammeBox", "<RegistrationBox", "<KindBox"]) {
+    // The date and the place are one card since §NNN, «Când și unde»; the programme is inside
+    // «Program, regulament și declarație», which wears the mark for it.
+    for (const box of ["<WhenBox", "<ProgrammeRulesBox", "<RegistrationBox", "<KindBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
     // The first box holds the status again (§448) and wears the mark for it; the course, the
-    // links, the partners, the promotion, the film and the list reach nobody.
-    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<VideoBox", "<StartListBox"]) {
+    // links, the partners, the promotion and the list reach nobody.
+    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox", "<StartListBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }

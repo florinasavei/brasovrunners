@@ -19,7 +19,6 @@ import EventRoute from "@/modules/events/ui/EventRoute";
 import { hasRouteDescription } from "@/modules/events/domain/route-section";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
-import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
@@ -354,9 +353,6 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           <RichText body={event.rulesJson} />
         </Box>
       )}
-
-      {/* Last year's film, when the club has one, loaded only when opened (criterion 9). */}
-      <EventVideo videoUrl={event.videoUrl} posterUrl={event.videoPosterUrl} eventTitle={event.title} />
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       <StartList event={event} page={lista} />

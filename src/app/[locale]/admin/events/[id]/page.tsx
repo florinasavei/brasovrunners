@@ -21,13 +21,11 @@ import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
-import PlaceBox from "@/modules/content/events/ui/boxes/PlaceBox";
-import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
+import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
-import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
-import VideoBox from "@/modules/content/events/ui/boxes/VideoBox";
+import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
 import EventEditorLayout, { AutomaticSection, EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
@@ -331,7 +329,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const gapLabels: PublishGapLabels = {
     boxes: {
       titleSummary: t("editor.boxes.titleSummary.title"),
-      place: t("editor.boxes.place.title"),
+      // The meeting point is asked inside «Când și unde» since §NNN.
+      place: t("editor.boxes.whenWhere.title"),
       address: t("editor.boxes.address.title"),
     },
     fields: {
@@ -801,8 +800,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <KindBox {...box} heading={flow.headings.kind} languages={languages} registered={realCount} risk={risk} notice={notice} />
                   <TitleSummaryBox languages={languages} creating={false} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
-                  <WhenBox {...box} risk={risk} inSeries={inSeries} heading={flow.headings.when} />
-                  <PlaceBox {...box} risk={risk} languages={languages} heading={flow.headings.place} />
+                  <WhenBox {...box} risk={risk} languages={languages} inSeries={inSeries} heading={flow.headings.when} />
                   <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} />
                   <RegistrationBox
                     {...box}
@@ -831,9 +829,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
                   <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
                   <LinksBox {...box} locale={locale} heading={flow.headings.links} />
-                  <ProgrammeBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} />
-                  <RulesBox {...box} languages={languages} heading={flow.headings.rules} declarations={declarations} />
-                  <VideoBox {...box} heading={flow.headings.video} />
+                  <ProgrammeRulesBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} declarations={declarations} />
                   <StartListBox {...box} heading={flow.headings.startList} />
 
                   {/* What makes the page without being a section of it: the marks, the address. The

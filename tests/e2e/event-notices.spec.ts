@@ -106,7 +106,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(page.locator("#event-save-form summary").filter({ hasText: /\b1 înscris\b/ })).toHaveCount(0);
 
     // A new meeting point, in the Locul box — amber now, its sentence saying what a change does.
-    const place = await openEditorBox(page, "Locul");
+    const place = await openEditorBox(page, "Când și unde");
     await expect(place.getByTestId("risk-line")).toContainText("Cei înscriși știu locul");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
     // The English box has a name of its own, so it keeps it until it is told (§362) — and says so,

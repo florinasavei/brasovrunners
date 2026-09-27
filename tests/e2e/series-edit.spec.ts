@@ -101,7 +101,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the Recurență box, and a s
 
     // 08:50 for this date and the following ones (§130): the default now (§350, reversing §240),
     // said in the Salvare box as a radio and a sentence counting the dates the save reaches.
-    await openEditorBox(page, "Data și ora");
+    await openEditorBox(page, "Când și unde");
     await fillTimeField(page, "Ora", "08:50");
     const scope = page.getByTestId("series-scope");
     await expect(scope.getByRole("radio", { name: "Această dată și următoarele" })).toBeChecked();
