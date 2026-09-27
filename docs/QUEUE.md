@@ -9,6 +9,41 @@ Legend: **building** — a change is being implemented, reviewed and fixed on it
 **ready** — reviewed, waiting for the next small release · **waiting on the owner** — a
 decision or a click only the club can make · **released** — on production, with its baseline.
 
+## Release plan (2026-09-27, evening)
+
+What the next releases carry, in the owner's order. A line moves to «Released» below when its baseline is on production.
+
+### BR-V2.13 — landing tonight
+
+- **A family registers in one sitting.** After the form: «Mai înscrii pe cineva cu aceeași adresă?» → «Da, încă o persoană» (the address fixed) or «Nu, gata — trimite-mi emailul». Nothing is sent before «Gata» or the window in «Termene» (10 minutes by default). ONE family email, «Înscriere de familie: N persoane», with one button that confirms everybody and opens the declarations wizard («Declarația 1 din N»). After the signatures ONE email «Confirmat: N persoane» with every person's QR code, desk code and race number. «Toate înscrierile mele» and «Declarațiile de pe această adresă» show the race numbers too. Migration `0099`.
+- **Emails leave on the scheduler's tick**, not right after the request — «Termene» → «Când pleacă emailurile». Every deadline an email starts (the address link, the declaration hold, the waiting-list offer, the family link) counts from the moment the email leaves, once; a held place is never released while its email is still in the queue; every screen says the real wait.
+- **«Setări»** in the main bar: Emailuri, Termene, Contact, Aspect, Costuri, Platformă as one row of tabs; «Sarcini» rows link into the right tab; every old address answers a 308.
+- **The race declaration is two texts from one body** — trail and road/park — the event signs the one its course reads; the minimum age is at least 14 everywhere; «Aprobă textele platformei» approves all six texts in one press. Migration `0098`.
+- **The registration form asks the country before the city** (România by default) and the sex must be chosen.
+- **«Costuri» opens with the total**, one plain sentence per line.
+- **The public participant list** is set inside the «Program, regulament și declarație» card.
+- **«Tradu cardul: RO → EN»** at the end of every card's tab row, beside the whole-editor button; on a phone the glyph alone.
+- **The anti-bot check says every state** under itself and on the send button — «Se verifică…», «Bifează căsuța», «A expirat», «Încearcă din nou» — and never holds a press for a check that gave up.
+- **The newsletter no longer offers «Coduri de reducere»** — discount codes belong to the members' zone (V2.15). Migration `0100` strips the tick from stored subscriptions.
+
+### BR-V2.14 — tomorrow
+
+- **One self-declaration per series of group runs**: a returning runner signs once; it has no end date and is deleted only at their request.
+- **A glyph on every button and every fold**, public site and backoffice (the owner reads icons before words).
+- **Plain words across the rest of the backoffice**: one sentence per field, no explanations that repeat the label.
+- The small leftovers of V2.13's reviews: «Configurație» only under «Setări», the waiting-list offer kept while its email is queued, the ship's merge message.
+
+### BR-V2.15 — the members' zone
+
+- A **Membru** role below Voluntar, with a Zitadel account through the same invitation from «Echipa» (many at once).
+- **/admin/membri**, the only backoffice page a member sees: the club's text from Pagini → «Zona membrilor» (discount codes, offers, useful things) and the next runs.
+- The public page **«Beneficiile membrilor»**, in the menu while it has content, with the button «Intră în zona membrilor» → sign-in.
+- A paragraph in the privacy notice; Zitadel's free-plan limits written down before inviting dozens.
+
+### BR-V2.16 — the FAQ page
+
+- **Pagini** in two groups: «Pagini standard» — Contact, Echipa, Întrebări (and, from V2.15, Beneficii and Zona membrilor) — then «Pagini personalizate» (today's standing pages).
+- **«Întrebări frecvente»** like «Echipa»: the club adds, orders and removes questions with rich-text answers in both languages; on the site as folds with a glyph, grouped by category, deep-linkable, `FAQPage` structured data; in the menu while a question is live.
 ## Building
 
 Since the evening of 2026-09-24 at most four changes are built at once: eleven in parallel exhausted the development machine and every run had to be recovered.
