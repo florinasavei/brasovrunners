@@ -36,11 +36,11 @@ describe("§NNN «Condiții de participare»", () => {
     expect(fold).toContain('t("conditions.heading")');
   });
 
-  it("holds the rules, then the self-declaration, then the photographs notice — each drawn nowhere else", () => {
+  it("holds the rules, then the photographs notice, then the self-declaration — each drawn nowhere else", () => {
     const at = (needle: string) => fold.indexOf(needle);
     expect(at('id="rules"')).toBeGreaterThan(-1);
-    expect(at("<DeclarationOffer ")).toBeGreaterThan(at('id="rules"'));
-    expect(at("<EventPhotosNotice />")).toBeGreaterThan(at("<DeclarationOffer "));
+    expect(at("<EventPhotosNotice />")).toBeGreaterThan(at('id="rules"'));
+    expect(at("<DeclarationOffer ")).toBeGreaterThan(at("<EventPhotosNotice />"));
     for (const needle of ['id="rules"', "<DeclarationOffer ", "<EventPhotosNotice />"]) {
       expect(PAGE.split(needle).length - 1, needle).toBe(1);
     }
@@ -56,11 +56,21 @@ describe("§NNN «Condiții de participare»", () => {
 
   it("names the fold in both languages, and the declaration without «(opțional)»", () => {
     expect(ro.Event.conditions.heading).toBe("Condiții de participare");
-    expect(en.Event.conditions.heading).toBe("Conditions of participation");
+    expect(en.Event.conditions.heading).toBe("Participation rules");
     expect(ro.Event.groupRunDeclaration.heading).toBe("Declarație pe propria răspundere");
     expect(en.Event.groupRunDeclaration.heading).toBe("Self-declaration");
     for (const heading of [ro.Event.groupRunDeclaration.heading, en.Event.groupRunDeclaration.heading]) {
       expect(heading).not.toMatch(/opțional|optional/i);
+    }
+  });
+
+  it("asks for the declaration without calling it optional: no «Dacă vrei», no \"If you wish\"", () => {
+    expect(ro.Event.groupRunDeclaration.line).toBe(
+      "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email, iar platforma clubului o șterge la {days} după alergare.",
+    );
+    expect(en.Event.groupRunDeclaration.line).toBe("Sign the self-declaration for this run: you get it by email, and the club's platform deletes it {days} after the run.");
+    for (const line of [ro.Event.groupRunDeclaration.line, en.Event.groupRunDeclaration.line]) {
+      expect(line).not.toMatch(/Dacă vrei|If you wish/i);
     }
   });
 
@@ -77,6 +87,11 @@ describe("§NNN «Condiții de participare»", () => {
 /**
  * The public pages' buttons. Every file a visitor's page renders a button from — the pages under
  * `app/[locale]` outside the backoffice and `/devs`, and the public modules' own components.
+ *
+ * `PUBLIC_FILES` is kept by hand, and it is the thing to extend: a public component added outside
+ * `events/ui` — the contact form, the gallery, the team page, the newsletter — joins the walk only
+ * when its file is named here (a grep of the other modules on §NNN's day found backoffice buttons
+ * alone).
  */
 const PUBLIC_ROOTS = ["src/app/[locale]", "src/modules/events/ui"];
 const PUBLIC_FILES = [

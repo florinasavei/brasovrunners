@@ -342,10 +342,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
       {/*
-        «Condiții de participare» / "Conditions of participation" (§NNN; the owner, 2026-09-27):
-        the rules, a group run's self-declaration and the photographs notice, under one fold,
-        closed on arrival — the same order the editor's «Program, regulament și declarație» card
-        keeps (§481), right after the programme. Every event page has one: the photographs notice
+        «Condiții de participare» / "Participation rules" (§NNN; the owner, 2026-09-27): the
+        rules, the photographs notice and a group run's self-declaration, in that order, under one
+        fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
         is on all of them (§421), so the fold is never empty.
 
         A native `<details>` in the start list's outlined shape (`StartList`), working without
@@ -388,13 +387,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             </Box>
           )}
 
-          {/* A group run's optional self-declaration (§393), at `#declaratie`: only where the
-              organizer offered it and the club has approved the text of its surface. */}
-          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
-
           {/* Photographs are a legitimate-interest processing, so every event page — not only the
               gallery — says how to object (§323; the photographs amendment's item 6). */}
           <EventPhotosNotice />
+
+          {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
+              organizer offered it and the club has approved the text of its surface. */}
+          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} />
         </Box>
         <OpenFoldFromHash />
       </Box>

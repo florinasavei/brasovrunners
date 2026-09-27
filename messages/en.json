@@ -132,9 +132,9 @@
     },
     "rules": "Event rules",
     "conditions": {
-      "heading": "Conditions of participation"
+      "heading": "Participation rules"
     },
-    "schedule":"Event programme",
+    "schedule": "Event programme",
     "links": {
       "heading": "Links and files",
       "kinds": {
@@ -379,7 +379,7 @@
     "groupRunDeclaration": {
       "heading": "Self-declaration",
       "button": "Sign the declaration",
-      "line": "If you wish, sign the self-declaration for this run; you get it by email, and the club's platform deletes it {days} after the run.",
+      "line": "Sign the self-declaration for this run: you get it by email, and the club's platform deletes it {days} after the run.",
       "page": {
         "back": "Back to {event}",
         "title": "Self-declaration",

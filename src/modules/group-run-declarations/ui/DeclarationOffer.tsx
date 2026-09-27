@@ -19,13 +19,14 @@ import { GROUP_RUN_DECLARATION_RETENTION_DAYS, signingOpen } from "../domain";
  * "for these group runs I should just have an optional 'semnează declarația pe propria răspundere'
  * button that just opens the signing flow").
  *
- * At `#declaratie`, inside the page's closed «Condiții de participare» fold after the rules (§NNN;
- * the owner, 2026-09-27, moving it from under the route's pills): one line saying what happens —
- * the copy by email, and how long the club keeps it — and one small button to the signing page,
- * «Semnează declarația» with a pen before it, under a level-3 heading that names the section.
- * The heading no longer says «(opțional)»: the line under it already says «Dacă vrei», and the
- * fold is the page's quiet corner. Small, but a thumb's 44 pixels tall (BR-REQ-041-01 criterion
- * 6). Nothing at all unless the organizer offered it on a group run of asphalt or
+ * At `#declaratie`, the last part of the page's closed «Condiții de participare» fold, after the
+ * rules and the photographs notice (§NNN; the owner, 2026-09-27, moving it from under the route's
+ * pills): one line saying what happens — the copy by email, and how long the club keeps it — and
+ * one small button to the signing page, «Semnează declarația» with a pen before it, under a
+ * level-3 heading that names the section. Neither the heading nor the line calls it optional any
+ * more — no «(opțional)», no «Dacă vrei»: the club recommends it, and for a trail run the
+ * mountain rescue asks for it. Small — MUI's `size="small"`, the owner's «mai mic» — but a
+ * thumb's 44 pixels tall (BR-REQ-041-01 criterion 6). Nothing at all unless the organizer offered it on a group run of asphalt or
  * trail, the club has an approved text of that kind in force, an approved privacy notice is in
  * force (the signature takes an address and an identity document, and the service refuses it
  * without one, as a registration is refused), and the run can still be signed for. The listing
