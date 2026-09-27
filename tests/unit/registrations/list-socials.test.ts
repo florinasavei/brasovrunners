@@ -80,7 +80,19 @@ describe("§NNN the export says whose socials the list prints", () => {
 describe("§NNN the addresses a public page may print", () => {
   it("prints Strava's own addresses and a well-formed username's profile, and nothing else", () => {
     expect(publicStravaUrl("https://www.strava.com/athletes/12345")).toBe("https://www.strava.com/athletes/12345");
-    expect(publicStravaUrl("https://strava.app.link/AbC123")).toBe("https://strava.app.link/AbC123");
+    expect(publicStravaUrl("https://strava.com/athletes/12345")).toBe("https://www.strava.com/athletes/12345");
+    expect(publicStravaUrl("https://www.strava.com/athletes/12345/")).toBe("https://www.strava.com/athletes/12345");
+    expect(publicStravaUrl("https://www.strava.com/pros/67890")).toBe("https://www.strava.com/pros/67890");
+  });
+
+  it("drops the app's share links (a third party's redirector) and anything not over https (§NNN)", () => {
+    expect(publicStravaUrl("https://strava.app.link/AbC123")).toBeNull();
+    expect(publicStravaUrl("http://www.strava.com/athletes/12345")).toBeNull();
+    expect(publicStravaUrl("http://strava.com/athletes/12345")).toBeNull();
+    expect(publicStravaUrl("https://strava.com.example.test/athletes/1")).toBeNull();
+  });
+
+  it("keeps refusing any other host and a username of the wrong shape", () => {
     expect(publicStravaUrl("https://example.com/athletes/1")).toBeNull();
     expect(publicStravaUrl("javascript:alert(1)")).toBeNull();
     expect(publicStravaUrl(null)).toBeNull();
