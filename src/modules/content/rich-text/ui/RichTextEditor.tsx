@@ -15,11 +15,14 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import BorderAllIcon from "@mui/icons-material/BorderAll";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import BorderClearIcon from "@mui/icons-material/BorderClear";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import BorderHorizontalIcon from "@mui/icons-material/BorderHorizontal";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
+import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
@@ -29,16 +32,19 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import LinkIcon from "@mui/icons-material/Link";
+import LinkOffIcon from "@mui/icons-material/LinkOff";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import RedoIcon from "@mui/icons-material/Redo";
 import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import TableRowsIcon from "@mui/icons-material/TableRows";
+import UploadIcon from "@mui/icons-material/Upload";
 import UndoIcon from "@mui/icons-material/Undo";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import WebAssetIcon from "@mui/icons-material/WebAsset";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import { Extension, mergeAttributes, Node, type Editor } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
@@ -139,6 +145,16 @@ const WRITING_AREA_BOX = { minHeight: 240, p: 2 } as const;
 const ALIGN_ICON = {
   left: FormatAlignLeftIcon,
   center: FormatAlignCenterIcon,
+  right: FormatAlignRightIcon,
+} as const;
+
+/**
+ * A picture's or a film's place in the column, drawn beside the words (§NNN: a glyph on every
+ * button): the whole width as justified text, a side as that side's alignment.
+ */
+const PLACEMENT_ICON = {
+  block: FormatAlignJustifyIcon,
+  left: FormatAlignLeftIcon,
   right: FormatAlignRightIcon,
 } as const;
 
@@ -858,7 +874,7 @@ function RichTextEditorIsland({
           <Box sx={PREVIEW_CONTENT_SX} dangerouslySetInnerHTML={{ __html: preview ?? "" }} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPreview(null)} sx={{ minHeight: 44 }}>
+          <Button onClick={() => setPreview(null)} startIcon={<CloseIcon fontSize="small" />} sx={{ minHeight: 44 }}>
             {labels.previewClose}
           </Button>
         </DialogActions>
@@ -1066,8 +1082,10 @@ function RichTextEditorIsland({
               }}
               sx={{ flexGrow: 1, minWidth: 240 }}
             />
-            <Button onClick={applyYoutube}>{labels.youtubeApply}</Button>
-            <Button color="inherit" onClick={() => setYoutubeDraft(null)}>
+            <Button onClick={applyYoutube} startIcon={<CheckIcon fontSize="small" />}>
+              {labels.youtubeApply}
+            </Button>
+            <Button color="inherit" onClick={() => setYoutubeDraft(null)} startIcon={<CloseIcon fontSize="small" />}>
               {labels.linkCancel}
             </Button>
           </Stack>
@@ -1089,10 +1107,10 @@ function RichTextEditorIsland({
               testId="rich-text-upload-shape"
             />
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" onClick={() => fileInputRef.current?.click()} sx={{ minHeight: 44 }}>
+              <Button variant="contained" onClick={() => fileInputRef.current?.click()} startIcon={<UploadIcon fontSize="small" />} sx={{ minHeight: 44 }}>
                 {labels.imageChoose}
               </Button>
-              <Button color="inherit" onClick={() => setImageBarOpen(false)} sx={{ minHeight: 44 }}>
+              <Button color="inherit" onClick={() => setImageBarOpen(false)} startIcon={<CloseIcon fontSize="small" />} sx={{ minHeight: 44 }}>
                 {labels.linkCancel}
               </Button>
             </Stack>
@@ -1185,9 +1203,12 @@ function RichTextEditorIsland({
               }}
               sx={{ flexGrow: 1, minWidth: 200 }}
             />
-            <Button onClick={applyLink}>{labels.linkApply}</Button>
+            <Button onClick={applyLink} startIcon={<CheckIcon fontSize="small" />}>
+              {labels.linkApply}
+            </Button>
             <Button
               color="inherit"
+              startIcon={<LinkOffIcon fontSize="small" />}
               onClick={() => {
                 editor?.chain().focus().extendMarkRange("link").unsetLink().run();
                 setLinkDraft(null);
@@ -1195,7 +1216,7 @@ function RichTextEditorIsland({
             >
               {labels.linkRemove}
             </Button>
-            <Button color="inherit" onClick={() => setLinkDraft(null)}>
+            <Button color="inherit" onClick={() => setLinkDraft(null)} startIcon={<CloseIcon fontSize="small" />}>
               {labels.linkCancel}
             </Button>
           </Stack>
@@ -1517,7 +1538,7 @@ function RichTextEditorIsland({
                 {labels.imagePanel}
               </Typography>
               <Button size="small" color="inherit" onClick={closeImagePanel} aria-label={labels.imageClose} sx={{ minWidth: 44 }}>
-                ✕
+                <CloseIcon aria-hidden fontSize="small" />
               </Button>
             </Stack>
             {/* The picture's own size, whenever it is selected (§437): what was stored, not what the page draws. */}
@@ -1593,11 +1614,15 @@ function RichTextEditorIsland({
                 }}
                 aria-label={labels.imageAlign}
               >
-                {IMAGE_ALIGNMENTS.map((align) => (
-                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
-                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
-                  </ToggleButton>
-                ))}
+                {IMAGE_ALIGNMENTS.map((align) => {
+                  const PlacementIcon = PLACEMENT_ICON[align];
+                  return (
+                    <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40, gap: 0.5 }}>
+                      <PlacementIcon aria-hidden fontSize="small" />
+                      {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                    </ToggleButton>
+                  );
+                })}
               </ToggleButtonGroup>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                 {labels.imageAlignHelp}
@@ -1630,11 +1655,12 @@ function RichTextEditorIsland({
               />
             )}
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
-              <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
+              <Button color="error" size="small" startIcon={<DeleteIcon fontSize="small" />} onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.imageRemove}
               </Button>
               <Button
                 size="small"
+                startIcon={<CheckIcon fontSize="small" />}
                 onClick={() => {
                   const to = editor?.state.selection.to ?? 0;
                   editor?.chain().focus().setTextSelection(to).run();
@@ -1714,11 +1740,15 @@ function RichTextEditorIsland({
                 }}
                 aria-label={labels.imageAlign}
               >
-                {IMAGE_ALIGNMENTS.map((align) => (
-                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
-                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
-                  </ToggleButton>
-                ))}
+                {IMAGE_ALIGNMENTS.map((align) => {
+                  const PlacementIcon = PLACEMENT_ICON[align];
+                  return (
+                    <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40, gap: 0.5 }}>
+                      <PlacementIcon aria-hidden fontSize="small" />
+                      {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                    </ToggleButton>
+                  );
+                })}
               </ToggleButtonGroup>
             </Box>
             {/*
@@ -1737,6 +1767,7 @@ function RichTextEditorIsland({
             <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
               <Button
                 size="small"
+                startIcon={<UploadIcon fontSize="small" />}
                 onClick={() => posterFileInputRef.current?.click()}
                 disabled={posterState === "uploading"}
                 sx={{ minHeight: 44 }}
@@ -1758,6 +1789,7 @@ function RichTextEditorIsland({
                 <Button
                   size="small"
                   color="inherit"
+                  startIcon={<YouTubeIcon fontSize="small" />}
                   onClick={() => {
                     editor
                       ?.chain()
@@ -1853,11 +1885,12 @@ function RichTextEditorIsland({
               }}
             />
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
-              <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
+              <Button color="error" size="small" startIcon={<DeleteIcon fontSize="small" />} onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.youtubeRemove}
               </Button>
               <Button
                 size="small"
+                startIcon={<CheckIcon fontSize="small" />}
                 onClick={() => {
                   const to = editor?.state.selection.to ?? 0;
                   editor?.chain().focus().setTextSelection(to).run();

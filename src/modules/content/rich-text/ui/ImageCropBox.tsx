@@ -5,6 +5,8 @@ import Button from "@mui/material/Button";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
+import CropIcon from "@mui/icons-material/Crop";
 import { useRef, useState } from "react";
 import {
   CROP_PRESETS,
@@ -256,10 +258,12 @@ export default function ImageCropBox({
           data-testid="rich-text-crop-target"
           sx={{ mb: 1 }}
         >
-          <ToggleButton value="crop" sx={{ minHeight: 44 }}>
+          <ToggleButton value="crop" sx={{ minHeight: 44, gap: 0.5 }}>
+            <CropIcon aria-hidden fontSize="small" />
             {labels.targetCrop}
           </ToggleButton>
-          <ToggleButton value="focus" sx={{ minHeight: 44 }}>
+          <ToggleButton value="focus" sx={{ minHeight: 44, gap: 0.5 }}>
+            <CenterFocusStrongIcon aria-hidden fontSize="small" />
             {labels.targetFocus}
           </ToggleButton>
         </ToggleButtonGroup>

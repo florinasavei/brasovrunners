@@ -43,7 +43,7 @@ export default async function GroupRunDeclarationsPanel({
   const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
   const { cancel } = await confirmWords();
   return (
-    <Panel
+    <Panel glyph="declaration"
       collapsible
       level={3}
       id="box-group-run-declarations"

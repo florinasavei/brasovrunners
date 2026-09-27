@@ -1,3 +1,5 @@
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -17,7 +19,7 @@ import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { orderGuideSections } from "@/modules/staff-identity/domain/guide-order";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -110,6 +112,7 @@ export default async function GuidePage({ params }: Props) {
       {sections.map((section, index) => (
         <Box key={index} component="details" open={index < Math.max(1, mine.length)} sx={BOXED_DISCLOSURE_SX}>
           <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <MenuBookIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {section.title}
             <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
               {section.who}
@@ -123,6 +126,7 @@ export default async function GuidePage({ params }: Props) {
             {section.tasks.map((task, taskIndex) => (
               <Box key={taskIndex} component="details" sx={BOXED_DISCLOSURE_SX} data-testid="guide-task">
                 <Typography component="summary" variant="body1" sx={{ fontWeight: 500 }}>
+                  <ChecklistIcon aria-hidden sx={FOLD_GLYPH_SX} />
                   {task.title}
                 </Typography>
                 <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>

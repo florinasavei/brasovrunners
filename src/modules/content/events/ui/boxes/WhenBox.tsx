@@ -82,7 +82,7 @@ export default async function WhenBox({
   const required = await requiredLine("place", event, languages);
 
   return (
-    <Panel
+    <Panel glyph="when"
       collapsible
       id="box-when"
       title={heading ?? t("editor.boxes.whenWhere.title")}
@@ -156,7 +156,7 @@ export default async function WhenBox({
             <PartHeading id="box-place-heading">{t("editor.boxes.place.title")}</PartHeading>
             <PlaceFields event={event} mayEditSettings languages={languages} />
           </Stack>
-          <Panel collapsible level={3} id="box-timezone" title={t("editor.boxes.when.timezone")} aside={timezoneSummary(words, zone)}>
+          <Panel glyph="timezone" collapsible level={3} id="box-timezone" title={t("editor.boxes.when.timezone")} aside={timezoneSummary(words, zone)}>
             <RecallField
               select
               name="event.timezone"

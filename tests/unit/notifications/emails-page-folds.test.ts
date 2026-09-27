@@ -81,9 +81,9 @@ describe("§336 the emails participants receive: one card of cards", () => {
 
   it("titles each inner card with the message's name and when it goes out, as an h3 under the card's h2", () => {
     const html = render([card("EVENT_REMINDER")]);
-    expect(html).toMatch(/<summary[^>]*><h2[^>]*>Emailurile trimise participanților<span[^>]*>1 mesaje · Română<\/span><\/h2><\/summary>/);
+    expect(html).toMatch(/<summary[^>]*><h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Emailurile trimise participanților<span[^>]*>1 mesaje · Română<\/span><\/h2><\/summary>/);
     expect(html).toMatch(
-      /<summary[^>]*><h3[^>]*>Reminderul dinaintea startului<span[^>]*>cu 2 zile înainte de start<\/span><\/h3><\/summary>/,
+      /<summary[^>]*><h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Reminderul dinaintea startului<span[^>]*>cu 2 zile înainte de start<\/span><\/h3><\/summary>/,
     );
     // The body: the full sentence, the subject, the preview.
     expect(html).toContain(filled(ro.Admin.emails.when.EVENT_REMINDER));
@@ -135,7 +135,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
     for (const type of ["EVENT_UPDATE_NOTICE", "EVENT_CANCELLED"] as const) {
       expect(html).toContain(`id="email-${type}"`);
       expect(html).toMatch(
-        new RegExp(`<h3[^>]*>${escape(ro.Admin.emails.types[type])}<span[^>]*>${escape(ro.Admin.emails.whenShort[type])}</span></h3>`),
+        new RegExp(`<h3[^>]*>(?:<svg[\\s\\S]*?</svg>)?${escape(ro.Admin.emails.types[type])}<span[^>]*>${escape(ro.Admin.emails.whenShort[type])}</span></h3>`),
       );
       expect(html).toContain(filled(ro.Admin.emails.when[type]));
       expect(html).toContain(`Subiect: ${type}`);

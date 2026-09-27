@@ -1,9 +1,10 @@
 "use client";
 
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ValidityProxy from "@/shared/forms/ValidityProxy";
 import { useTwinFold } from "@/shared/ui/LocaleTabPanels";
@@ -106,6 +107,7 @@ function LazyRichTextEditorIsland({
     >
       <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
         <ValidityProxy name={editor.name} label={summary} />
+        <EditNoteIcon aria-hidden sx={FOLD_GLYPH_SX} />
         {summary}
         {isRichTextEmpty(stored) && (
           <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }}>

@@ -52,7 +52,7 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
   const words = mayEdit ? await confirmWords() : null;
 
   return (
-    <Panel level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
+    <Panel glyph="budget" level={headingLevel} id="neon-budget" title={t("title")} intro={t("intro")} aside={t(`level.${level}`)} data-testid="neon-budget">
       <Alert severity={SEVERITY[level]} sx={{ mb: 1.5 }} data-testid="neon-budget-level" data-level={level}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t(`level.${level}`)}

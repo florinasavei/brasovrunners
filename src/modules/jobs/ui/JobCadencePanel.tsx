@@ -55,7 +55,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   const when = (at: Date | null) => (at ? clock(at) : "—");
 
   return (
-    <Panel
+    <Panel glyph="jobs"
       level={level}
       id="job-cadence"
       title={t("tasks.jobCadence.title")}

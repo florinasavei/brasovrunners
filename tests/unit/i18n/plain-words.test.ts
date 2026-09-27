@@ -174,10 +174,10 @@ describe("§511 the «?» itself", () => {
   });
 
   it("follows a panel's one-sentence intro when the panel has more to say", () => {
-    const panel = renderToStaticMarkup(createElement(Panel, { title: "Titlu", intro: "O propoziție.", introMore: "Restul explicației." }));
+    const panel = renderToStaticMarkup(createElement(Panel, { glyph: "help", title: "Titlu", intro: "O propoziție.", introMore: "Restul explicației." }));
     expect(panel).toContain("O propoziție.");
     expect(panel).toContain('aria-label="Restul explicației."');
-    const plain = renderToStaticMarkup(createElement(Panel, { title: "Titlu", intro: "O propoziție." }));
+    const plain = renderToStaticMarkup(createElement(Panel, { glyph: "help", title: "Titlu", intro: "O propoziție." }));
     expect(plain).not.toContain("quiet-help");
   });
 });

@@ -136,7 +136,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     expect(folds).toContain("src/shared/ui/Panel.tsx");
     expect(folds).toContain("src/modules/content/rich-text/ui/LazyRichTextEditor.tsx");
     expect(folds).toContain("src/modules/content/events/ui/SeriesScope.tsx");
-    expect(read("src/modules/content/events/ui/BibDesignPanel.tsx")).toContain("<Panel collapsible level={4}");
+    expect(read("src/modules/content/events/ui/BibDesignPanel.tsx")).toContain('<Panel glyph="bibDesign" collapsible level={4}');
     // The card of messages draws no fold of its own: every card in it is `Panel`.
     expect(read("src/modules/notifications/ui/ParticipantEmailsPanel.tsx")).not.toMatch(FOLD);
   });

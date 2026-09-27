@@ -1,3 +1,6 @@
+import EditIcon from "@mui/icons-material/Edit";
+import NotesIcon from "@mui/icons-material/Subject";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -31,7 +34,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -214,7 +217,10 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
 
       {mayEdit && (
         <Box component="details" id="team-new" sx={BOXED_DISCLOSURE_SX}>
-          <summary>{t("team.add")}</summary>
+          <summary>
+            <PersonAddIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            {t("team.add")}
+          </summary>
           <ActionForm action={createTeamMemberAction} messages={messages} scope="new" data-testid="team-create-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <MemberFields scope="new" member={null} words={t} photoLabels={photoLabels} editing={editing} storage={storage} />
@@ -327,7 +333,10 @@ function PageCard({
         )}
         {mayEdit && (
           <Box component="details" sx={BOXED_DISCLOSURE_SX}>
-            <summary>{t("team.introFold")}</summary>
+            <summary>
+              <NotesIcon aria-hidden sx={FOLD_GLYPH_SX} />
+              {t("team.introFold")}
+            </summary>
             <ActionForm action={saveTeamPageIntroAction} messages={messages} scope="intro" data-testid="team-intro-form">
               <input type="hidden" name="uiLocale" value={locale} />
               {/* The page's own column, so the whole toolbar: a picture, a film, a table (§474). */}
@@ -492,7 +501,10 @@ function MemberCard({
 
       {mayEdit && (
         <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1.5 }}>
-          <summary>{t("team.edit")}</summary>
+          <summary>
+            <EditIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            {t("team.edit")}
+          </summary>
           <ActionForm action={saveTeamMemberAction} messages={messages} scope={scope} data-testid={`team-save-${member.id}`}>
             {hidden}
             <RecallHidden name="expectedVersion" value={member.version} />

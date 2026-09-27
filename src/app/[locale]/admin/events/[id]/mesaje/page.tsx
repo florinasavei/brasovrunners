@@ -199,7 +199,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         <Alert severity="info">{event.registrationMode === "INTERNAL" ? t("participantMessages.nobodyYet") : t("participantMessages.noRegistrationHere")}</Alert>
       )}
 
-      <Panel static id="box-participant-message" title={t("participantMessages.compose")}>
+      <Panel glyph="compose" static id="box-participant-message" title={t("participantMessages.compose")}>
         <ActionForm key={sendId} action={sendParticipantMessageAction} messages={refusal} confirm={sendConfirm} data-testid="participant-message-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
@@ -241,7 +241,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       </Panel>
 
       {/* "Mesaje trimise": read from the sends' audit rows — the group and the count, never who. */}
-      <Panel static id="box-participant-message-history" title={t("participantMessages.history")}>
+      <Panel glyph="history" static id="box-participant-message-history" title={t("participantMessages.history")}>
         {history.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             {t("participantMessages.historyEmpty")}

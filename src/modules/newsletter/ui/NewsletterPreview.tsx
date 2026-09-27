@@ -2,6 +2,7 @@
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -53,10 +54,10 @@ export default function NewsletterPreview({ preview, labels }: Props) {
         {labels.help}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap" }}>
-        <Button type="button" variant="outlined" onClick={() => show("ro")} sx={TAP_TARGET}>
+        <Button type="button" variant="outlined" onClick={() => show("ro")} startIcon={<VisibilityIcon fontSize="small" />} sx={TAP_TARGET}>
           {labels.ro}
         </Button>
-        <Button type="button" variant="outlined" onClick={() => show("en")} sx={TAP_TARGET}>
+        <Button type="button" variant="outlined" onClick={() => show("en")} startIcon={<VisibilityIcon fontSize="small" />} sx={TAP_TARGET}>
           {labels.en}
         </Button>
       </Stack>

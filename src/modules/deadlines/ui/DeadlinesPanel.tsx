@@ -72,7 +72,7 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
   const labels = Object.fromEntries(DEADLINE_KEYS.map((key) => [key, t(`emails.deadlines.fields.${key}`)]));
 
   return (
-    <Panel
+    <Panel glyph="deadlines"
       title={t("emails.deadlines.title")}
       intro={t("emails.deadlines.intro")}
       aside={t("emails.deadlines.aside", {

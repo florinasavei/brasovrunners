@@ -1,5 +1,7 @@
 "use client";
 
+import CheckIcon from "@mui/icons-material/Check";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -88,10 +90,10 @@ export default function ThemeLabForm({
         ))}
       </TextField>
       <Stack direction="row" spacing={1.5}>
-        <Button variant="contained" onClick={() => write(serializeThemePreview(draft))} sx={{ minHeight: 44 }}>
+        <Button variant="contained" onClick={() => write(serializeThemePreview(draft))} startIcon={<CheckIcon fontSize="small" />} sx={{ minHeight: 44 }}>
           {labels.apply}
         </Button>
-        <Button variant="text" onClick={() => write(null)} sx={{ minHeight: 44 }}>
+        <Button variant="text" onClick={() => write(null)} startIcon={<RestartAltIcon fontSize="small" />} sx={{ minHeight: 44 }}>
           {labels.reset}
         </Button>
       </Stack>
