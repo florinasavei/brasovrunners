@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.15-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.16-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.15-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.16-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -124,6 +124,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 13. The event page and the staff preview say the age sentence chosen by `publicAgeRule` after the rules, and say nothing when there is no minimum and no registration here (2026-09-27, `DECISIONS.md` §505).
 14. Every event type has one minimum-age box in the editor's «Regulamentul», and its help says the default and that 0 means no limit, in both languages (2026-09-27, `DECISIONS.md` §509).
 15. The event page and the staff preview say the age sentence chosen by `publicAgeRule` after the rules, and say nothing when there is no minimum and no registration here (2026-09-27, `DECISIONS.md` §509).
+16. Every question, category and the introduction are saved in both languages or neither, and the page is published in both languages at once; a DRAFT page answers 404 (2026-09-27, `DECISIONS.md` §525).
+17. The listing filter reads the old difficulty keys in an address as the migration mapped them: VERY_EASY as EASY and MODERATE as MEDIUM (2026-09-27, `DECISIONS.md` §526).
 
 **Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
@@ -338,6 +340,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 143. A send press held for the check is sent the moment the check passes; a lapsed or unticked check holds it whatever its field still holds, so a stale token is never sent; a check that gave up (blocked, unsupported, or a second failure) holds nothing and releases a held press at once; otherwise the eight-second valve sends it, saying so first (2026-09-27, `DECISIONS.md` §518).
 144. The check's callbacks reach the current attempt after the form re-renders on a refused submission, so the widget keeps saying its state (2026-09-27, `DECISIONS.md` §518).
 145. Every button and every fold header draws a glyph beside its words (aria-hidden, the accessible name unchanged), and the 44-px tap targets hold; a glyph-only button is named for assistive technology. A source walk of every .tsx under src/ fails on a button, toggle, element drawn as a button, or <summary> without one, outside a named exception with its reason.
+146. At 320 px the public FAQ page shows each question as a native fold that works without JavaScript, grouped under its category, with no sideways scroll, and a `#q-…` link opens its question (2026-09-27, `DECISIONS.md` §525).
+147. The difficulty is one level on the club's scale of fifteen: five bands (ușor, mediu, greuț, greu, foarte greu), three steps each, the band derived as ceil(level / 3); the event's pill shows the band and the step («Mediu 2») beside a gauge whose lit segments are the band and whose lit dots are the step, and a screen reader hears «Dificultate: mediu, treapta 2 din 3».
+148. The listing's difficulty filter ticks a band and matches all three of its steps; an event with no stated difficulty matches no difficulty box and shows no difficulty pill.
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -1595,6 +1600,7 @@ way through every step, and none of them is a way around the allocator.
 20. Given a group run with the self-declaration ticked whose surface has no approved, not withdrawn text in force, when the editor renders, then the declaration line says no text is in force and the button does not show, and the card opens for attention (§483). Verification: unit `content/box-summaries.test.ts`, `content/editor-declaration-card.test.ts`.
 21. Given a group run whose minimum age the server refuses, when the form comes back, then the refusal summary names the group run's own box in «Traseul» (`event.groupRunMinAge`), never the race's hidden box.
 22. Given the editor or the create page of an event that takes registrations, when «Vârsta minimă (ani)» is saved, then a value under 14 or over 99 is refused naming the box, and an empty box saves 14. An event saved under §329 with 0 or 12 binds as 14 at every door, sentence, JSON-LD block and declaration (`effectiveMinimumAge`). A duplicate, every date a repeat rule creates and a series edit carry the effective value, so a copy of such a race is stored with 14 (2026-09-27, `DECISIONS.md` §515). Verification: integration `cms/crud.test.ts`, `cms/series-edit.test.ts`, `registrations/minimum-age.test.ts`; unit `registrations/minimum-age.test.ts`; e2e `registration-form.spec.ts`.
+23. The FAQ page's public read is served from the public cache, and every save of the page or of its publish switch expires it, so the next visit shows what was saved (2026-09-27, `DECISIONS.md` §525).
 
 **Verification:** integration `cms/boundary.test.ts`
 
@@ -1710,6 +1716,7 @@ way through every step, and none of them is a way around the allocator.
 99. Given the event editor's start-time box holding «1900» that has not been left yet, when the night line and the series sentence read it, then both read 19:00, and a programme row's typed times are read the same way.
 100. The event editor draws «Lista publică a participanților» (`#box-start-list`) as the last level-3 card inside «Program, regulament și declarație», after the declaration. It has no number and no chip of its own; the numbered cards run 1 to 9, and that card counts as drawn on the page when the public list is published.
 101. Given the editor or the create page of an event that takes registrations, when «Vârsta minimă (ani)» renders, then it takes a whole number from 14 to 99, prefilled with the event's value or 14 (an older event's 0 opens at 14), and a value under 14 is refused naming the box with every value kept. A group run's own box starts at 18 and does not accept less (2026-09-27, `DECISIONS.md` §515, amending criterion 29). Verification: integration `cms/crud.test.ts`, `cms/series-edit.test.ts`; unit `shared/form-constraints.test.ts`; e2e `registration-form.spec.ts`.
+102. The event editor asks the difficulty in «Ce fel de eveniment»: the band select and «Treapta», a segmented 1 · 2 · 3 of native radios in 44-pixel segments each with a dots glyph, side by side from `sm`; a step outside 1–3 or a band outside the five is refused at save.
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
 
@@ -1774,6 +1781,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 43. A team card carries at most twelve typed https links; the save and the database CHECK team_members_links_is_a_short_array_of_https_links hold the same number (MAX_TEAM_LINKS).
 44. «Din galerie» in a rich text finds a stored picture by its file name with accents and case ignored, narrows by the «Folosită în» chips, and inserts the same stored file (the same /api/media address), telling the editor «Din galerie: <name>, W × H px.» — tests/e2e/gallery-picker.spec.ts, mobile and desktop (§485).
 45. A saved page's or event's picker opens on its own place («Această pagină» / «Acest eveniment») listing only the pictures that place uses; an album's picker opens on «Toate» with «Acest album» beside it and takes a stored picture once, saying «… era deja în album.» on a second press — tests/e2e/gallery-picker.spec.ts (§485).
+46. «Întrebări frecvente» is a standard page. It is a 404 while DRAFT. Once published it lists only the questions shown on the site, in the page's own language, grouped under their «Categorie» with uncategorised questions first, under the club's introduction when one is written in both languages. Each question is a native fold with a glyph and a #q-<id8> anchor that opens it. The same questions are published as FAQPage JSON-LD.
+47. The FAQ page is edited and saved as one form: the introduction and every question card, in order, against the page's version. A stale version is a CONFLICT. A question and its answer are required in both languages; a category and the introduction are both languages or neither. An answer may hold pictures but no table.
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 
@@ -2298,6 +2307,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 87. «Adaugă mai mulți membri» takes at most 50 rows in one press. It adds every row as `MEMBER` with its own invitation, or nobody when one row is not an address or one address is on the team with a backoffice role, and the refusal names those rows (2026-09-27, `DECISIONS.md` §524).
 88. After the press, each member's sign-in account is created three at a time, each provider call bounded at 10 seconds. Every member gets one line (created, invited, failed with the reason, or unconfigured), shown on the result page and kept in one `staff.members_invited` audit row by staff row id, never an address. An address already a member is taken again, so pressing again retries a failed account with no second row and no second invitation email (2026-09-27, `DECISIONS.md` §524).
 89. The guide names the members' texts by the sub-navigation's own path, «Pagini» → «Pagini standard» → «Membri», in both languages, pinned by the guide-words test. The sub-navigation has one «Membri» entry for the one page that holds both texts (2026-09-27, `DECISIONS.md` §524).
+90. Only a role that edits the club's content may save the FAQ page, only an Administrator may put a question on the site, take one off, delete one that is on the site or publish the page, and every one of these is asserted on the server (2026-09-27, `DECISIONS.md` §525).
+91. In the backoffice form, Enter in any box is the plain save of the whole page and never moves a question; the arrows keep everything typed (2026-09-27, `DECISIONS.md` §525).
+92. The guide carries «Scara de dificultate a clubului» for the Organizer and the Administrator, in both languages. It describes the five bands and the three steps, quoting only the screen's own words. (tests/unit/staff/guide-words.test.ts)
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 
@@ -2369,6 +2381,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 16. Given an address box on /admin/emails (the contact recipients or the club's copies), when the typed line separates addresses with commas, semicolons, spaces, tabs or line breaks, then each is read as one address, and a save of valid addresses stores them (2026-09-26, `DECISIONS.md` §457). Verification: unit `notifications/club-copies-visible.test.ts`, `contact/recipients.test.ts`.
 17. When the contact form is available and at least one shown contact address resolves (§442), the page also shows every such address as its own mailto: link after the form, in the setting's order, with the localized 'or' between them.
 18. On the contact page the first box sits one gap under the required-fields legend: 8 px on a phone (DENSITY.gapSm) and 16 px from sm.
+19. The public FAQ page carries the shown questions as FAQPage JSON-LD and an Open Graph card, and appears in the sitemap only while it is published with a question on the site (2026-09-27, `DECISIONS.md` §525).
 
 **Verification:** unit `contact/fields.test.ts`, `contact/message.test.ts`, `contact/recipients.test.ts`, `config/env.test.ts`, `diagnostics/configuration.test.ts`, `diagnostics/owner-tasks.test.ts`; integration `contact/service.test.ts`, `contact/recipients.test.ts`; e2e `contact.spec.ts`, `email-plan.spec.ts`; unit `contact/suspicion.test.ts` (11); unit `contact/message.test.ts` and integration `contact/service.test.ts` also cover 11
 

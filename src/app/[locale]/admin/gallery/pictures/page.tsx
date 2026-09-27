@@ -92,6 +92,9 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       case "teamIntro":
         // The team page's introduction (§474): the screen, at the page's own card.
         return <Link href={{ pathname: "/admin/pages/team", hash: "team-page" }}>{t("pictures.usedInTeamIntro")}</Link>;
+      case "faq":
+        // «Întrebări frecvente» (§525): an answer or the introduction — the page's one screen.
+        return <Link href="/admin/pages/faq">{t("pictures.usedInFaq")}</Link>;
       case "membersPage":
         // The members' pages (§524): the screen that holds both texts.
         return <Link href="/admin/pages/members">{t("pictures.usedInMembersPage")}</Link>;

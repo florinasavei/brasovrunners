@@ -6,6 +6,7 @@ import * as declarationAcceptancesSchema from "./schema/declaration-acceptances"
 import * as emailActionTokensSchema from "./schema/email-action-tokens";
 import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventsSchema from "./schema/events";
+import * as faqSchema from "./schema/faq";
 import * as jobRunsSchema from "./schema/job-runs";
 import * as legalDocumentsSchema from "./schema/legal-documents";
 import * as newsletterSchema from "./schema/newsletter";
@@ -35,6 +36,7 @@ export const schema = {
   ...rateLimitSchema,
   ...newsletterSchema,
   ...teamSchema,
+  ...faqSchema,
 };
 type Schema = typeof schema;
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.15-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.16-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.15-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.16-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20309,3 +20309,87 @@ Review round 2. The accounts listing behind Echipa and /admin/tasks (`listZitade
 The «Pagini» sub-navigation has one «Membri» entry for the one page that holds both members' texts as two cards. The guide names the path «Pagini» → «Pagini standard» → «Membri».
 
 Baseline `BR-V2.15-2026-09-27`.
+
+## 525. «Întrebări frecvente» — an FAQ page the club fills, saved as one page, grouped by category
+
+The club gets the same first-timer questions again and again (how to register, what to bring, where we meet). A standing page could hold the words, but not the shape a search engine reads as an `FAQPage`, nor «Echipa»'s two gates. So this is a platform page modelled on «Echipa» (§459, §474), at `/ro/intrebari` and `/en/faq`.
+
+**Data.** Migration `0103_faq_questions` is expand-only and adds the table `faq_questions`. Each row holds:
+- a question, required in Romanian **and** English;
+- an optional «Categorie» (`category_ro` / `category_en`), both languages or neither, enforced by a CHECK;
+- a rich-text answer, required in both languages, kept as its document plus its plain words for the JSON-LD;
+- a position and a «Pe site» switch.
+
+The `faqPage` platform setting holds three things:
+- the page's DRAFT/PUBLISHED state;
+- the club's introduction, rich text, both languages or neither;
+- the page's `version`.
+
+**One save for the whole page (§28).** `/admin/pages/faq` is one form: the introduction and every question card in the page's order, with a spare card at the end for a new question, and one «Salvează pagina».
+- «Copiază și tradu tot: RO → EN» sits once at the top (§482). Each card's Română | English tab row carries «Tradu cardul» (§514). The card boxes post as `faq[n].…`, which the translate allowlist knows.
+- The ↑/↓ arrows are the save's own submit buttons (`move=n:up`), so a move never loses words that were typed.
+- «Pe site» (read only for the Administrator) and «Șterge la salvare» are ticks on each card. A save that puts a question on the site, takes one off or deletes one asks first and names it (§384). Any other save asks nothing.
+- `saveFaqPage` checks the page's version: a colleague's save in between is a CONFLICT. It asserts the roles on the server (BR-REQ-060-01). The Redactor writes, and deletes a hidden question. The Administrator shows questions, deletes one that is on the site, and publishes the page. Publishing leaves the version as it is.
+- Each save writes one `faq_page.saved` audit row naming ids only: added, deleted, shown, hidden. Never the words (§12.12).
+
+**Pictures (§72, §414).** Answers and the introduction may hold links and pictures. An answer may not hold a table: a fold on a phone cannot hold one, and the save refuses it (§270). The orphan sweep (§73), the older-pictures press (§430) and the pictures list all count FAQ answers and the introduction. On the pictures list they appear as the FAQ page.
+
+**The public page.** In order:
+1. The club's introduction, or the catalogue's sentence when there is none.
+2. The questions, grouped under their category headings. Questions with no category come first, under no heading. Each is a native `<details>` fold: a glyph and the question on its 44-pixel line, it works with JavaScript off, and it has a `#q-<id8>` anchor that opens it.
+3. The same questions as `FAQPage` JSON-LD.
+
+The page also has an Open Graph card (§90). It is a 404 while DRAFT, and `noindex` until a question is on the site. It is read from the public cache under `pages` (§333), which every write expires.
+
+**Where it is linked.** While the page is published with a question on the site, one helper (`faqOnSite`) offers it in three places: the header's menu, the footer's «Despre club» fold, and a line on the contact page, «Poate găsești răspunsul la Întrebări frecvente». The same condition puts it in the sitemap.
+
+**Pagini.** A third sub-tab. The list shows «Pagini standard» — Contact (§442, §461), Echipa, Întrebări frecvente — each with its glyph, its state and what of it is on the site, above «Pagini personalizate».
+
+The page's one form starts with a hidden plain submit button (the `hidden` attribute, no name, out of the tab order), so Enter in any box saves the page and never presses a card's ↑/↓, which are the save's own named buttons. A visually hidden 1-px button was tried first and dropped: on a 320-px screen the browser's hit test on «Salvează pagina» landed on the form's Stack instead of the button.
+
+The spare card asks before it puts a question on the site only when a question is typed on it. The introduction's help names what the editor allows (links, pictures, tables) and shows the page's own opening sentence as the one used while the club has written no introduction; the help text no longer says «platforma».
+
+Baseline `BR-V2.16-2026-09-27`.
+
+## 526. The difficulty as the owner's five bands of three steps — «Mediu 2»
+
+**The ask.** On 2026-09-27 the owner asked for five difficulty bands, «ușor, mediu, greuț, greu, foarte greu», each with three steps. Step 1 is the easiest of its band and 3 the hardest, so the scale has fifteen levels. He gave these examples:
+
+- ușor: short and flat, for anyone;
+- mediu 1: the run up Tâmpa;
+- mediu 2: a longer run;
+- mediu 3: long and technical;
+- greuț: from a half marathon up;
+- greu: marathons;
+- foarte greu: ultramarathons and beyond.
+
+This replaces §412's five words (foarte ușor … foarte greu). That scale had no «greuț» and had a «foarte ușor» the owner no longer wants.
+
+**One column holds the fact.** Migration `0104_difficulty_level` is expand-only. It adds `events.difficulty_level smallint` with the CHECK `events_difficulty_level_in_scale` (NULL or 1–15). The band is always derived from the level, as ceil(level / 3), and never stored. The five band keys (EASY, MEDIUM, FAIRLY_HARD, HARD, VERY_HARD) belong to the domain module `events/domain/difficulty.ts`, not to the database enum. The column is nullable on purpose. "The club has not said" is a real state today: the page then shows no pill rather than guessing. Forcing NOT NULL would need a default nobody chose.
+
+**The backfill.** The old words move onto the owner's scale as follows:
+
+| Old word | New level |
+| --- | --- |
+| foarte ușor (VERY_EASY) | 1, «Ușor 1» |
+| ușor (EASY) | 2, «Ușor 2» |
+| mediu (MODERATE) | 5, «Mediu 2» |
+| greu (HARD) | 11, «Greu 2» |
+| foarte greu (VERY_HARD) | 14, «Foarte greu 2» |
+
+The comparison is made as `::text`. A database migrated from further back applies 0078's `ADD VALUE` in the same transaction, and PostgreSQL refuses an enum literal whose value is not yet committed (55P04). The UPDATE touches only rows with no level yet, so a second run changes nothing.
+
+**The old column is retired, not read.** `difficultyLevelOf` reads `difficulty_level` alone. The `event_difficulty` column leaves every public read path: the public columns, the notification rows, the preview page, the page map and the email facts. Every save still writes a best-effort word into it (`legacyDifficultyOf`, the reverse of the backfill; greuț is written as HARD). That way the release before this one, which reads only that column, shows a word near the truth during a rollback. Nothing in this release reads it back. The column leaves the schema in a later contract migration. A public row cached from before this release has no level, so it shows no pill until the next write expires it (§333).
+
+**What a person sees.**
+
+- **The pill** draws the level's gauge (§412's half-dial): the band's segments are lit, the needle stands at the step, and three dots under the hub show the step. Its words are «Mediu 2» / «Medium 2». A screen reader hears «Dificultate: mediu, treapta 2 din 3» / «Difficulty: medium, step 2 of 3» instead: the pill's new `srLabel` hides the visible words from it and puts these in a visually-hidden span.
+- **Emails and the calendar entry** have no gauge, so they say «Mediu, treapta 2 din 3» in words.
+- **The listing's filter** ticks a whole band: «Greuț» matches levels 7–9. The address keeps `?difficulty=` with the new band keys.
+- **The editor** asks the difficulty in «Ce fel de eveniment». The band select («Nespecificat» first, then Ușor … Foarte greu) sits beside «Treapta» from `sm`. «Treapta» is a segmented 1 · 2 · 3 with a dots glyph on each segment. Its radios are native, visually hidden inside 44-px segments, so the choice posts without a script. It starts at 2 and carries the help line «1 = cel mai ușor din categorie, 3 = cel mai greu». The box's closed line ends with «Mediu 2». «Traseul» no longer asks or names the difficulty.
+- **The backoffice guide** carries «Scara de dificultate a clubului» in the owner's words.
+- **The seed** has the Sunday run at «Ușor 1», the Tâmpa run at «Mediu 1» (the owner's own example) and the interval session at «Foarte greu 3».
+
+Between `0104` running and the new build going live, the old build can still save an event, and that event keeps its old level. The reader already handles this: when the level and the band disagree, it takes the band. So the window needs no code, and the next save by the new build writes a matching level. An address bookmarked under §413's four-level keys still filters: `?difficulty=VERY_EASY` reads as EASY and `?difficulty=MODERATE` as MEDIUM, the same mapping the migration applied to the rows.
+
+Baseline `BR-V2.16-2026-09-27`.

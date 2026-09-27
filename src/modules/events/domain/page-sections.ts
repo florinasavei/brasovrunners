@@ -1,5 +1,6 @@
 import { hasRichTextContent, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { readCoHosts } from "./co-hosts";
+import { difficultyLevelOf } from "./difficulty";
 import { type EventType, takesRegistrations } from "./event-type";
 import { readEventLinks } from "./links";
 import { hasRouteDescription } from "./route-section";
@@ -79,7 +80,8 @@ export type PageSectionGlyph =
 export type PageSectionEvent = {
   type: EventType;
   surface: string | null;
-  difficulty: string | null;
+  /** The level on the club's scale of fifteen (§526), the difficulty's one column; absent on a cached row from before it. */
+  difficultyLevel?: number | null;
   distanceMeters: number | null;
   elevationGainMeters: number | null;
   routeUrl: string | null;
@@ -182,7 +184,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     automatic: false,
     drawn: ({ event, texts, night }) =>
       event.surface !== null ||
-      event.difficulty !== null ||
+      difficultyLevelOf(event) !== null ||
       event.distanceMeters !== null ||
       event.elevationGainMeters !== null ||
       written(event.routeUrl) ||
@@ -311,7 +313,7 @@ export const BLANK_PAGE_SECTION_DATA: PageSectionData = {
   event: {
     type: "GROUP_RUN",
     surface: null,
-    difficulty: null,
+    difficultyLevel: null,
     distanceMeters: null,
     elevationGainMeters: null,
     routeUrl: null,

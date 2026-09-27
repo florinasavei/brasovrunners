@@ -40,6 +40,16 @@ export const WITHOUT_GLYPH: ReadonlyArray<{ file: string; words: string; reason:
     reason: "§485: a gallery thumbnail — the picture itself is the button's face.",
   },
   {
+    file: "src/app/[locale]/admin/pages/faq/page.tsx",
+    words: "value={`${index}:up`}",
+    reason: "The FAQ card's order arrow «↑», a submit button of the page's one save: the label is the glyph, as on the other order arrows.",
+  },
+  {
+    file: "src/app/[locale]/admin/pages/faq/page.tsx",
+    words: "value={`${index}:down`}",
+    reason: "The FAQ card's order arrow «↓», a submit button of the page's one save: the label is the glyph, as on the other order arrows.",
+  },
+  {
     file: "src/shared/ui/BuildBadgeLink.tsx",
     words: 'role="button"',
     reason: "§365: the version chip's hidden staff entrance — a double-click or a long press, no visible verb.",

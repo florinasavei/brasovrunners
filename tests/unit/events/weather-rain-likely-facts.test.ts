@@ -64,7 +64,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
     locationName: "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic",
     locationAddress: "Strada Nicolae Labiș, Brașov",
     locationToBeAnnounced: false,
-    difficulty: "EASY",
+    difficultyLevel: 2,
     costType: "FREE",
     costAmount: null,
     costUrl: null,

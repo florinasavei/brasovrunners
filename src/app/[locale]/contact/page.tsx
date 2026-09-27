@@ -11,8 +11,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { unstable_rethrow } from "next/navigation";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { faqOnSite } from "@/modules/content/faq/on-site";
 import {
   cachedBotCheckSiteKey,
   cachedContactFormReaches,
@@ -150,6 +151,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
    * goes into an email the club reads.
    */
   const aboutEvent = about ? await orNull(() => cachedPublishedEventBySlug(locale, about)) : null;
+  // «Poate găsești răspunsul la Întrebări frecvente» (§525), while that page is on the site.
+  const showFaq = await faqOnSite(locale);
 
   const field = (name: "name" | "email" | "message", help?: string) => ({
     id: fieldId(name),
@@ -175,6 +178,18 @@ export default async function ContactPage({ params, searchParams }: Props) {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
         {t("intro")}
+        {showFaq && (
+          <>
+            {" "}
+            {t.rich("faqHint", {
+              faq: (chunks) => (
+                <MuiLink href={getPathname({ locale, href: "/faq" })} sx={inlineLink} data-testid="contact-faq-link">
+                  {chunks}
+                </MuiLink>
+              ),
+            })}
+          </>
+        )}
       </Typography>
 
       {sent ? (

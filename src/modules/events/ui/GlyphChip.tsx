@@ -51,6 +51,7 @@ export default function GlyphChip({
   tooltip,
   sx,
   srSuffix,
+  srLabel,
   closeMark = false,
 }: {
   glyph: GlyphName;
@@ -79,6 +80,12 @@ export default function GlyphChip({
    */
   srSuffix?: string;
   /**
+   * What a screen reader hears in place of `label` (§526): the visible words are hidden from it
+   * and these, visually hidden, stand for them — the difficulty pill shows «Mediu 2» and is heard
+   * as «Dificultate: mediu, treapta 2 din 3».
+   */
+  srLabel?: string;
+  /**
    * A small ✕ after the word, drawn only (`aria-hidden`): the listing's active-filter chip, whose
    * whole link removes that filter (§413) and says so in its own accessible name. Not MUI's
    * `onDelete`, whose icon stops the click from reaching the link around the chip.
@@ -87,9 +94,18 @@ export default function GlyphChip({
 }) {
   const Icon = GLYPHS[glyph];
   const content =
-    srSuffix || closeMark ? (
+    srSuffix || srLabel || closeMark ? (
       <>
-        {label}
+        {srLabel ? (
+          <>
+            <span aria-hidden="true">{label}</span>
+            <Box component="span" sx={srOnlySx}>
+              {srLabel}
+            </Box>
+          </>
+        ) : (
+          label
+        )}
         {srSuffix && <Box component="span" sx={srOnlySx}>{` — ${srSuffix}`}</Box>}
         {closeMark && <CloseIcon aria-hidden="true" sx={{ fontSize: 14, ml: 0.5, verticalAlign: "-2px" }} />}
       </>

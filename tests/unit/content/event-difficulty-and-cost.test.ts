@@ -38,12 +38,12 @@ const parse = (difficulty: unknown, costType: unknown, cost: { costAmount?: unkn
 describe("event difficulty and cost type", () => {
   it("accepts each value of the closed sets", () => {
     // Five since §412: the three of migration `0018` and the two ends migration `0078` added.
-    for (const difficulty of ["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]) {
+    for (const difficulty of ["EASY", "MEDIUM", "FAIRLY_HARD", "HARD", "VERY_HARD"]) {
       expect(parse(difficulty, "FREE").success).toBe(true);
     }
     for (const costType of ["FREE", "PAID", "DONATION"]) {
       // PAID and DONATION each need their own required box filled, tested on its own below.
-      expect(parse("MODERATE", costType, { costAmount: "50 lei", costUrl: "https://example.test/pay" }).success).toBe(true);
+      expect(parse("MEDIUM", costType, { costAmount: "50 lei", costUrl: "https://example.test/pay" }).success).toBe(true);
     }
   });
 
@@ -66,7 +66,7 @@ describe("event difficulty and cost type", () => {
     // It cannot have come from the dropdown that posts this field, so swallowing it would hide
     // a tampered or stale form instead of refusing it.
     expect(parse("EXTREME", "FREE").success).toBe(false);
-    expect(parse("MODERATE", "50 lei").success).toBe(false);
+    expect(parse("MEDIUM", "50 lei").success).toBe(false);
   });
 
   it("refuses the free text these fields used to hold", () => {
@@ -83,10 +83,10 @@ describe("event difficulty and cost type", () => {
  */
 describe("event cost amount and donation link (§343)", () => {
   it("requires the amount for a paid event, and refuses a blank one", () => {
-    const withAmount = parse("MODERATE", "PAID", { costAmount: "50 lei", costUrl: "" });
+    const withAmount = parse("MEDIUM", "PAID", { costAmount: "50 lei", costUrl: "" });
     expect(withAmount.success).toBe(true);
 
-    const blank = parse("MODERATE", "PAID", { costAmount: "", costUrl: "" });
+    const blank = parse("MEDIUM", "PAID", { costAmount: "", costUrl: "" });
     expect(blank.success).toBe(false);
     if (!blank.success) {
       expect(blank.error.issues[0]?.path).toEqual(["costAmount"]);
@@ -94,10 +94,10 @@ describe("event cost amount and donation link (§343)", () => {
   });
 
   it("requires the link for a donation, and refuses a blank one", () => {
-    const withLink = parse("MODERATE", "DONATION", { costAmount: "", costUrl: "https://www.wingsforlifeworldrun.com/en/donate" });
+    const withLink = parse("MEDIUM", "DONATION", { costAmount: "", costUrl: "https://www.wingsforlifeworldrun.com/en/donate" });
     expect(withLink.success).toBe(true);
 
-    const blank = parse("MODERATE", "DONATION", { costAmount: "", costUrl: "" });
+    const blank = parse("MEDIUM", "DONATION", { costAmount: "", costUrl: "" });
     expect(blank.success).toBe(false);
     if (!blank.success) {
       expect(blank.error.issues[0]?.path).toEqual(["costUrl"]);
@@ -105,13 +105,13 @@ describe("event cost amount and donation link (§343)", () => {
   });
 
   it("refuses a cost link that is not https, like every other pasted link", () => {
-    expect(parse("MODERATE", "DONATION", { costAmount: "", costUrl: "http://example.test/donate" }).success).toBe(false);
-    expect(parse("MODERATE", "PAID", { costAmount: "50 lei", costUrl: "not-a-link" }).success).toBe(false);
+    expect(parse("MEDIUM", "DONATION", { costAmount: "", costUrl: "http://example.test/donate" }).success).toBe(false);
+    expect(parse("MEDIUM", "PAID", { costAmount: "50 lei", costUrl: "not-a-link" }).success).toBe(false);
   });
 
   it("keeps the amount optional on a donation and the link optional on a paid event", () => {
-    expect(parse("MODERATE", "DONATION", { costAmount: "", costUrl: "https://example.test/donate" }).success).toBe(true);
-    expect(parse("MODERATE", "PAID", { costAmount: "50 lei", costUrl: "" }).success).toBe(true);
+    expect(parse("MEDIUM", "DONATION", { costAmount: "", costUrl: "https://example.test/donate" }).success).toBe(true);
+    expect(parse("MEDIUM", "PAID", { costAmount: "50 lei", costUrl: "" }).success).toBe(true);
   });
 
   it("does not require either box for a caller not editing the cost fields at all", () => {
@@ -124,7 +124,7 @@ describe("event cost amount and donation link (§343)", () => {
 
   it("refuses an amount longer than 60 characters", () => {
     const tooLong = "x".repeat(61);
-    expect(parse("MODERATE", "PAID", { costAmount: tooLong, costUrl: "" }).success).toBe(false);
-    expect(parse("MODERATE", "PAID", { costAmount: "x".repeat(60), costUrl: "" }).success).toBe(true);
+    expect(parse("MEDIUM", "PAID", { costAmount: tooLong, costUrl: "" }).success).toBe(false);
+    expect(parse("MEDIUM", "PAID", { costAmount: "x".repeat(60), costUrl: "" }).success).toBe(true);
   });
 });

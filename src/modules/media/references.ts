@@ -4,9 +4,11 @@ import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } fr
 import { pageTranslations } from "@/db/schema/pages";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
+import { faqQuestions } from "@/db/schema/faq";
 import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
 import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-settings";
 import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
 import { canEditEventFields, type StaffRole } from "@/modules/staff-identity/domain/roles";
@@ -83,6 +85,12 @@ const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(
  */
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
+/** Whether a question of «Întrebări frecvente» carries the asset in its answer, either language (§525). */
+const inFaqAnswer = sql`(${names(sql`${faqQuestions.answerRoJson}::text`)} OR ${names(sql`${faqQuestions.answerEnJson}::text`)})`;
+
+/** Whether the FAQ page's introduction carries the asset (§525), kept in its platform setting like «Echipa»'s. */
+const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
+
 /**
  * Whether the members' pages carry the asset (§524): «Beneficiile membrilor» and the members' zone,
  * both languages of both in their one `platform_settings` row — read as its text, like the team's.
@@ -104,6 +112,10 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${teamMembers} WHERE ${inTeamBio})
   -- A picture in the team page's introduction (§474), kept in its platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inTeamIntro})
+  -- A picture in an answer of «Întrebări frecvente» (§525), hidden questions included, and in
+  -- the page's introduction.
+  OR EXISTS (SELECT 1 FROM ${faqQuestions} WHERE ${inFaqAnswer})
+  OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
 )`;
@@ -194,7 +206,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "membersPage"; id: string; title: string | null };
+export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -298,6 +310,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
+  // A picture in an answer of «Întrebări frecvente», or in its introduction (§525): one reference, the page.
+  const inFaq = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .where(sql`EXISTS (SELECT 1 FROM ${faqQuestions} WHERE ${inFaqAnswer}) OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})`);
   // A picture in the members' pages (§524).
   const inMembersPages = await db
     .select({ assetId: mediaAssets.id })
@@ -327,6 +344,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamBios) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamIntros) add(row.assetId, { kind: "teamIntro", id: TEAM_PAGE_SETTING_KEY, title: null });
+  for (const row of inFaq) add(row.assetId, { kind: "faq", id: FAQ_PAGE_SETTING_KEY, title: null });
   for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
 
   return assets.map((asset) => ({

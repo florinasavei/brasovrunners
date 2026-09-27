@@ -27,6 +27,7 @@
       "calendar": "Calendar",
       "gallery": "Galerie",
       "team": "Echipa",
+      "faq": "Întrebări",
       "more": "Meniu",
       "contact": "Contact",
       "members": "Membri"
@@ -181,7 +182,9 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — ia o frontală"
     },
-    "difficulty": "Dificultate",
+    "difficultyLevelShort": "{band} {step}",
+    "difficultyLevelSr": "Dificultate: {band}, treapta {step} din {steps}",
+    "difficultyWithStep": "{band}, treapta {step} din {steps}",
     "cost": "Cost",
     "registration": "Înscriere",
     "cancelled": "Anulat",
@@ -302,11 +305,18 @@
       "EVENT_COMPLETED": "Evenimentul s-a încheiat"
     },
     "difficultyValues": {
-      "VERY_EASY": "Foarte ușor",
       "EASY": "Ușor",
-      "MODERATE": "Mediu",
+      "MEDIUM": "Mediu",
+      "FAIRLY_HARD": "Greuț",
       "HARD": "Greu",
       "VERY_HARD": "Foarte greu"
+    },
+    "difficultyBandWords": {
+      "EASY": "ușor",
+      "MEDIUM": "mediu",
+      "FAIRLY_HARD": "greuț",
+      "HARD": "greu",
+      "VERY_HARD": "foarte greu"
     },
     "costValues": {
       "FREE": "Gratuit",
@@ -1056,6 +1066,7 @@
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
+        "difficultyStep": "Treapta",
         "costType": "Cost",
         "checklist": "Ce să aduci — o linie, în emailuri și în calendar",
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
@@ -1144,12 +1155,19 @@
       "delete": "Șterge",
       "deleteHelp": "Duplicatul se creează ca ciornă, cu adrese proprii. Ștergerea e doar pentru un eveniment fără înscrieri; pe cele care au avut loc arhivează-le.",
       "difficultyValues": {
-        "VERY_EASY": "Foarte ușor",
         "EASY": "Ușor",
-        "MODERATE": "Mediu",
+        "MEDIUM": "Mediu",
+        "FAIRLY_HARD": "Greuț",
         "HARD": "Greu",
         "VERY_HARD": "Foarte greu"
       },
+      "difficultySteps": {
+        "step1": "Treapta 1, cea mai ușoară din categorie",
+        "step2": "Treapta 2, la mijlocul categoriei",
+        "step3": "Treapta 3, cea mai grea din categorie"
+      },
+      "difficultySummary": "{band} {step}",
+      "difficultyStepHelp": "1 = cel mai ușor din categorie, 3 = cel mai greu",
       "costValues": {
         "FREE": "Gratuit",
         "PAID": "Cu taxă",
@@ -3128,9 +3146,18 @@
       "bothOrNeither": "scrie-l în ambele limbi sau în niciuna",
       "tabPages": "Paginile clubului",
       "tabTeam": "Echipa",
+      "tabFaq": "Întrebări frecvente",
+      "standardTitle": "Pagini standard",
+      "standardIntro": "Paginile site-ului: adresa și titlul lor sunt fixe, clubul le completează conținutul pe ecranul fiecăreia și le publică atunci când sunt gata.",
+      "standardShown": "{shown} din {total} pe site",
+      "standardOpen": "Deschide",
+      "tabContact": "Contact",
+      "contactForm": "Formularul primește mesaje",
+      "contactNoForm": "Fără formular: pagina arată adresa clubului",
+      "contactAddress": "adresa afișată: {address}",
+      "customTitle": "Pagini personalizate",
       "groupStandard": "Pagini standard",
       "groupCustom": "Pagini personalizate",
-      "tabContact": "Contact",
       "tabMembers": "Membri"
     },
     "appearance": {
@@ -3205,6 +3232,7 @@
       "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți.",
       "usedInTeam": "Pe pagina Echipa: {title}",
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
+      "usedInFaq": "Pe pagina «Întrebări frecvente»",
       "usedInMembersPage": "Pe paginile membrilor"
     },
     "gallery": {
@@ -4279,6 +4307,20 @@
               ]
             },
             {
+              "title": "Scara de dificultate a clubului",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
+                "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
+                "«Ușor»: scurt și pe plat — pentru oricine.",
+                "«Mediu»: 1 e alergarea pe Tâmpa, 2 o alergare mai lungă, 3 una lungă și tehnică.",
+                "«Greuț»: de la semimaraton în sus.",
+                "«Greu»: maratoane.",
+                "«Foarte greu»: ultramaratoane și mai mult.",
+                "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
+                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei."
+              ]
+            },
+            {
               "title": "Engleza dintr-o apăsare",
               "steps": [
                 "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
@@ -4335,6 +4377,20 @@
                 "O dată dintr-o serie: la «Salvează pentru:» alege «Doar această dată», «Această dată și următoarele» sau «Toate datele seriei».",
                 "Apasă «Salvează». Apare imediat pe site, în ambele limbi.",
                 "Greșeala obișnuită: alegi «Doar această dată» când vrei să schimbi toată seria (sau invers) — verifică mesajul de sub «Salvează pentru:» înainte de a apăsa «Salvează»."
+              ]
+            },
+            {
+              "title": "Scara de dificultate a clubului",
+              "steps": [
+                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
+                "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
+                "«Ușor»: scurt și pe plat — pentru oricine.",
+                "«Mediu»: 1 e alergarea pe Tâmpa, 2 o alergare mai lungă, 3 una lungă și tehnică.",
+                "«Greuț»: de la semimaraton în sus.",
+                "«Greu»: maratoane.",
+                "«Foarte greu»: ultramaratoane și mai mult.",
+                "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
+                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei."
               ]
             },
             {
@@ -5030,6 +5086,65 @@
         "row": "Linkul"
       }
     },
+    "faq": {
+      "title": "Pagina «Întrebări frecvente»",
+      "intro": "Întrebările clubului cu răspunsurile lor, în română și engleză, grupate pe categorii. Toată pagina se salvează cu un buton; o întrebare nouă e ascunsă până o pune pe site un Administrator.",
+      "shownCount": "Pe site: {count} din {total} întrebări.",
+      "noneShown": "Nicio întrebare nu este pe site, așa că pagina nu apare în meniul site-ului.",
+      "viewPublic": "Vezi pagina",
+      "readOnly": "Poți citi întrebările; le scrie Redactorul sau Administratorul.",
+      "showIsAdmin": "Scrii și pregătești întrebările; le pune pe site Administratorul.",
+      "empty": "Nu există încă nicio întrebare.",
+      "listLabel": "Întrebările, în ordinea de pe pagină",
+      "visible": "Pe site",
+      "hidden": "Ascunsă",
+      "moveUpNamed": "Mută mai sus: {question}",
+      "moveDownNamed": "Mută mai jos: {question}",
+      "introHeading": "Introducerea paginii",
+      "introHelp": "Opțională, în ambele limbi sau în niciuna, cel mult {max} de caractere; fără ea, pagina începe cu fraza de mai jos. Poate avea linkuri, poze și tabele.",
+      "introDefault": "«{lead}»",
+      "introRo": "Introducerea (română)",
+      "introEn": "Introducerea (engleză)",
+      "questionsHeading": "Întrebările",
+      "questionsHelp": "În ordinea de pe pagină. Săgețile mută un card și salvează pagina; o întrebare nouă se completează în ultimul card.",
+      "newHeading": "Întrebare nouă",
+      "newHelp": "Completează cardul ca să adaugi o întrebare; lăsat gol, nu se adaugă nimic.",
+      "questionRo": "Întrebarea (română)",
+      "questionEn": "Întrebarea (engleză)",
+      "questionHelp": "Un singur rând, cum ar pune-o un alergător. Obligatorie în ambele limbi.",
+      "categoryRo": "Categoria (română)",
+      "categoryEn": "Categoria (engleză)",
+      "categoryHelp": "Opțională, în ambele limbi sau în niciuna: întrebările cu aceeași categorie stau împreună pe pagină, sub ea.",
+      "answerRo": "Răspunsul (română)",
+      "answerEn": "Răspunsul (engleză)",
+      "answerHelp": "Obligatoriu în ambele limbi, cel mult {max} de caractere: paragrafe, liste, linkuri și poze — fără tabele.",
+      "textEmpty": "(gol)",
+      "langRo": "Română",
+      "langEn": "English",
+      "onSite": "Pe site",
+      "remove": "Șterge la salvare",
+      "save": "Salvează pagina",
+      "showTitle": "Pui pe site întrebarea „{question}”?",
+      "showBody": "Pagina se salvează, iar întrebarea și răspunsul ei apar pe pagina «Întrebări frecvente», în ambele limbi, cât timp pagina este publicată.",
+      "showConfirm": "Salvează și pune pe site",
+      "hideTitle": "Scoți de pe site întrebarea „{question}”?",
+      "hideBody": "Pagina se salvează, iar întrebarea rămâne aici, ascunsă; o poți pune la loc oricând.",
+      "hideConfirm": "Salvează și scoate de pe site",
+      "deleteTitle": "Ștergi întrebarea „{question}”?",
+      "deleteBody": "Pagina se salvează, iar întrebarea și răspunsul ei dispar de tot, în ambele limbi.",
+      "deleteConfirm": "Salvează și șterge",
+      "pageHeading": "Pagina",
+      "pagePublished": "Publicată",
+      "pageDraft": "Ciornă",
+      "pagePublishedHelp": "Pagina este pe site, în ambele limbi: {ro} și {en}. Apare în meniu cât timp are cel puțin o întrebare pe site.",
+      "pageDraftHelp": "Pagina nu este pe site: adresa ei răspunde „nu există”, iar meniul nu o arată. Pregătește întrebările, apoi publică pagina.",
+      "publish": "Publică pagina",
+      "unpublish": "Retrage pagina",
+      "publishTitle": "Publici pagina «Întrebări frecvente»?",
+      "publishBody": "Pagina intră pe site în ambele limbi deodată, la {ro} și {en}, cu toate întrebările puse pe site.",
+      "unpublishTitle": "Retragi pagina «Întrebări frecvente»?",
+      "unpublishBody": "Pagina iese de pe site în ambele limbi și dispare din meniu. Întrebările rămân aici; o poți publica din nou oricând."
+    },
     "settingsTabs": {
       "emails": "Emailuri",
       "deadlines": "Termene",
@@ -5079,6 +5194,7 @@
   },
   "Footer": {
     "myRegistrations": "Înscrierile mele",
+    "faq": "Întrebări frecvente",
     "about": {
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",
@@ -6002,6 +6118,7 @@
   "Contact": {
     "title": "Scrie-ne",
     "intro": "O întrebare despre o alergare, o înscriere sau club? Scrie-ne aici — mesajul ajunge direct în căsuța clubului și îți răspundem pe e-mail.",
+    "faqHint": "Poate găsești răspunsul la <faq>Întrebări frecvente</faq>.",
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii.",
     "name": "Numele tău",
     "email": "Adresa ta de e-mail",
@@ -6372,6 +6489,9 @@
       "teamPageIntroSaved": "Introducerea paginii Echipa a fost salvată.",
       "teamPagePublished": "Pagina Echipa este pe site, în ambele limbi.",
       "teamPageUnpublished": "Pagina Echipa a fost retrasă de pe site.",
+      "faqPageSaved": "Pagina «Întrebări frecvente» a fost salvată.",
+      "faqPagePublished": "Pagina «Întrebări frecvente» este pe site, în ambele limbi.",
+      "faqPageUnpublished": "Pagina «Întrebări frecvente» a fost retrasă de pe site.",
       "translationBudget": "Bugetul de traduceri a fost salvat.",
       "translatedAll": {
         "one": "Gata: {count} câmp tradus din română în engleză. Verifică textul și apasă Salvează.",
@@ -6555,6 +6675,13 @@
       "OTHER": "Link"
     },
     "contact": "Vrei să ne ajuți sau ai o întrebare pentru echipă? <contact>Scrie-ne</contact>."
+  },
+  "Faq": {
+    "title": "Întrebări frecvente",
+    "lead": "Ce ne întreabă cei care vin prima dată la {club}: cum te înscrii, ce aduci, unde ne găsești. Apasă pe o întrebare ca să vezi răspunsul.",
+    "empty": "Întrebările clubului apar aici în curând.",
+    "listLabel": "Întrebările și răspunsurile clubului",
+    "contact": "Nu găsești răspunsul? <contact>Scrie-ne</contact>."
   },
   "Translate": {
     "button": "Tradu din română",
