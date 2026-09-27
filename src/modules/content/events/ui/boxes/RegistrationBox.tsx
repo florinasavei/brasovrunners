@@ -66,7 +66,8 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * in this one box, as named cards: the period (the minimum age and the declaration are under «Regulamentul», §505, §448), the confirmation
  * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
  * printing). The public list was the fifth card here (owner requirement 1 of §350); since §406 it is
- * its own card, last, because the page draws it last (`StartListBox`).
+ * its own card, last, because the page draws it last (`StartListBox`), and since §NNN the last card
+ * inside «Program, regulament și declarație».
  *
  * **Only what the chosen mode needs is shown** (`OnlyForMode`): "Pe site" shows the capacity and
  * the cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
@@ -395,8 +396,8 @@ export default async function RegistrationBox({
                       {bibPrint}
                     </Stack>
                   </Panel>
-                  {/* The public list was 8.5 here; it is its own card now, last, where the page
-                      draws it (§406, `StartListBox`). */}
+                  {/* The public list was 8.5 here; it is the last card of «Program, regulament și
+                      declarație» now, where the page draws it (§406, §NNN, `StartListBox`). */}
                 </Stack>
               </OnlyForMode>
             </Stack>

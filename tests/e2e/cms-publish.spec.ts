@@ -126,11 +126,15 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const cost = kind.locator("#box-cost");
     await expect(cost.getByRole("heading", { level: 3, name: /Cost/ })).toBeVisible();
     await expect(cost.locator("summary")).toHaveCount(0);
-    for (const card of ["Linkuri și fișiere", "Lista publică a participanților"]) {
-      const heading = page.getByRole("heading", { level: 2, name: new RegExp(`^(?:\\d+ · )?${card}`) });
-      await expect(heading).toBeVisible();
-      await expect(page.locator("section").filter({ has: heading })).toHaveCount(1);
-    }
+    const linksHeading = page.getByRole("heading", { level: 2, name: /^(?:\d+ · )?Linkuri și fișiere/ });
+    await expect(linksHeading).toBeVisible();
+    await expect(page.locator("section").filter({ has: linksHeading })).toHaveCount(1);
+    // The public list is a card inside «Program, regulament și declarație» since §NNN: for this
+    // reader its level-3 heading and its line, nothing to open.
+    const programme = await openEditorBox(page, "Program, regulament și declarație");
+    const list = programme.locator("#box-start-list");
+    await expect(list.getByRole("heading", { level: 3, name: /Lista publică a participanților/ })).toBeVisible();
+    await expect(list.locator("summary")).toHaveCount(0);
     await expect(kind.getByRole("combobox", { name: /Tip eveniment/ })).toHaveCount(0);
   });
 

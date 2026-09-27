@@ -58,14 +58,13 @@ describe("the create page is the editor's page", () => {
       "<KindBox",
       "<TitleSummaryBox",
       "<DescriptionBox",
-      // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481).
+      // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481) and the public list (§NNN).
       "<WhenBox",
       "<CourseBox",
       "<RegistrationBox",
       "<CoHostsBox",
       "<LinksBox",
       "<ProgrammeRulesBox",
-      "<StartListBox",
       't("editor.groups.offPage")',
       "<PromotionBox",
       "<AddressBox",
@@ -78,8 +77,8 @@ describe("the create page is the editor's page", () => {
       }
       // No box holds another any more: the first box is the type alone (§406, undoing §358's nesting).
       expect(page).not.toContain("</KindBox>");
-      // No film card, and no card of its own for the place or the rules (§481).
-      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox "]) expect(page, gone).not.toContain(gone);
+      // No film card, and no card of its own for the place, the rules (§481) or the public list (§NNN).
+      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<StartListBox"]) expect(page, gone).not.toContain(gone);
     }
   });
 

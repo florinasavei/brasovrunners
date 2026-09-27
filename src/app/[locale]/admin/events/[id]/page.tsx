@@ -24,7 +24,6 @@ import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
 import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
-import StartListBox from "@/modules/content/events/ui/boxes/StartListBox";
 import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
@@ -831,7 +830,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
                   <LinksBox {...box} locale={locale} heading={flow.headings.links} />
                   <ProgrammeRulesBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} declarations={declarations} />
-                  <StartListBox {...box} heading={flow.headings.startList} />
 
                   {/* What makes the page without being a section of it: the marks, the address. The
                       status is in the first card since §448 (a notice over the title only once

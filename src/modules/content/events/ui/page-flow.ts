@@ -14,7 +14,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  * and the page's order are one thing.
  *
  * A card that holds more than one of the page's sections (§481: the date and the place, the
- * programme and the rules; §466: the type and the cost) is one chip and one number, drawn when
+ * programme and the rules; §NNN: the public list with them; §466: the type and the cost) is one chip and one number, drawn when
  * any section it holds is drawn.
  *
  * The card's own words stay its name — the name a refusal, a gap in Publicare and every e2e spec
@@ -23,7 +23,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  */
 
 /** The sections with a numbered card of their own: not the automatic share links, not a section asked inside another card. */
-type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "rules">;
+type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "rules" | "startList">;
 
 /** The box title each section's card wears (`Admin.editor.boxes.<key>.title`). */
 const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
@@ -36,9 +36,9 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   registration: "registration",
   coHosts: "coHosts",
   links: "links",
-  // «Program, regulament și declarație» (§481): three cards in one.
+  // «Program, regulament și declarație» (§481): the programme, the rules, the declaration and,
+  // since §NNN, the public list — four cards in one.
   programme: "programmeRules",
-  startList: "startList",
 };
 
 /** The card whose closed line names a publication gap, by the section it writes (the address is not on the page). */
