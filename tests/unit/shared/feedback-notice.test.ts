@@ -4,6 +4,7 @@ import {
   decodeFlash,
   EMPTY_TOAST_QUEUE,
   encodeFlash,
+  fillFromForm,
   FLASH_COOKIE,
   noticeOf,
   pickConfirm,
@@ -198,6 +199,21 @@ describe("§384 which question a form's values pick", () => {
     const unless = { when: [{ field: "direction", notEquals: "undo" }], title: "in", body: "", confirmLabel: "", cancelLabel: "" };
     expect(pickConfirm(unless, values({ direction: "in" }))?.title).toBe("in");
     expect(pickConfirm(unless, values({ direction: "undo" }))).toBeNull();
+  });
+});
+
+describe("§NNN a typed value named in the question", () => {
+  const values = (fields: Record<string, string>) => (field: string) => fields[field] ?? null;
+  const limit = { title: "t", body: "Limita nouă: {quotaCuHours} ore-CU.", confirmLabel: "", cancelLabel: "", fillFrom: ["quotaCuHours"] };
+
+  it("fills `{field}` from the form at the press — the Neon limit's «Limita nouă: 100 ore-CU.»", () => {
+    expect(fillFromForm(limit, values({ quotaCuHours: " 100 " })).body).toBe("Limita nouă: 100 ore-CU.");
+    expect(fillFromForm(limit, values({ quotaCuHours: "100" })).fillFrom).toBeUndefined();
+  });
+
+  it("leaves a spec without `fillFrom` exactly as it was", () => {
+    const plain = { title: "t", body: "Salvezi {x}?", confirmLabel: "", cancelLabel: "" };
+    expect(fillFromForm(plain, values({ x: "1" }))).toBe(plain);
   });
 });
 

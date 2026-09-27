@@ -291,7 +291,21 @@ export type ConfirmSpec = {
    * submitted without a question — the save that changes nothing outward asks nothing.
    */
   when?: readonly FormCondition[];
+  /**
+   * Fields whose value, as typed at the press, replaces `{name}` in `body` (§NNN): the Neon
+   * limits card says «Limita nouă: 100 ore-CU.» from the box itself — a typed number has no
+   * `when` to match, and the server cannot know it before the press.
+   */
+  fillFrom?: readonly string[];
 };
+
+/** `body` with each `fillFrom` field's posted value in its `{name}`; the spec unchanged without one. */
+export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
+  if (!spec.fillFrom || spec.fillFrom.length === 0) return spec;
+  let body = spec.body;
+  for (const field of spec.fillFrom) body = body.split(`{${field}}`).join((valueOf(field) ?? "").trim());
+  return { ...spec, body, fillFrom: undefined };
+}
 
 export type FormCondition = { field: string; equals?: string; notEquals?: string };
 

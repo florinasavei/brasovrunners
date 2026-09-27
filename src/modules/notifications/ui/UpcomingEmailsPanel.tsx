@@ -55,6 +55,7 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
     <Panel
       title={t("emails.forecast.title")}
       intro={t("emails.forecast.intro")}
+      introMore={t("emails.forecast.introMore")}
       aside={t(`emails.forecast.aside.${countForm(rows.length, locale)}`, { count: rows.length, days: horizonDays })}
       collapsible
       openWhen={openWhen}

@@ -14,6 +14,7 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 type Props = {
   locale: Locale;
@@ -63,7 +64,12 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
             margin: Math.round(BUDGET_AHEAD_MARGIN * 100),
           })}
         </Typography>
-        {budget?.spent && <Typography variant="body2">{t("spentAll")}</Typography>}
+        {budget?.spent && (
+          <Typography variant="body2">
+            {t("spentAll")}
+            <QuietHelp text={t("spentAllMore")} />
+          </Typography>
+        )}
       </Alert>
 
       {meter && budget && (
@@ -83,29 +89,50 @@ export default async function NeonBudgetPanel({ locale, reading, mayEdit = false
             {budget.projectedCuHours === null
               ? t("paceNoLimit", { perDay: hours(budget.cuHoursPerDay) })
               : t("pace", { perDay: hours(budget.cuHoursPerDay), projected: hours(budget.projectedCuHours) })}
-            {budget.runsOutAt && ` ${t("runsOut", { date: day(budget.runsOutAt) })}`}
           </Typography>
+          {budget.runsOutAt && (
+            <Typography variant="body2" data-testid="neon-budget-runs-out">
+              {t("runsOut", { date: day(budget.runsOutAt) })}
+            </Typography>
+          )}
         </>
       )}
 
-      <Typography variant="body2" sx={{ mt: 1.5 }} data-testid="neon-budget-effect">
-        {t("effectLead")}{" "}
-        {effects.jobFloorMinutes > 0 ? t("effect.floor", { minutes: effects.jobFloorMinutes }) : t("effect.none")}
-        {effects.cacheCeilingFactor > 1 && ` ${t("effect.cache", { factor: effects.cacheCeilingFactor })}`}
-        {effects.healthReuseMinutes > 0 && ` ${t("effect.healthReuse", { minutes: effects.healthReuseMinutes })}`}
-        {effects.publicMissRefreshMinutes > 0 && ` ${t("effect.cacheOnly", { minutes: effects.publicMissRefreshMinutes })}`}
-        {` ${t("effect.monitor")}`}
-      </Typography>
+      {/* What the platform does now: one sentence a line (§NNN), the lead on the first. */}
+      <Box sx={{ mt: 1.5 }} data-testid="neon-budget-effect">
+        <Typography variant="body2">
+          {t("effectLead")}{" "}
+          {effects.jobFloorMinutes > 0 ? t("effect.floor", { minutes: effects.jobFloorMinutes }) : t("effect.none")}
+          {effects.jobFloorMinutes > 0 && <QuietHelp text={t("effect.floorMore")} />}
+        </Typography>
+        {effects.cacheCeilingFactor > 1 && <Typography variant="body2">{t("effect.cache", { factor: effects.cacheCeilingFactor })}</Typography>}
+        {effects.healthReuseMinutes > 0 && <Typography variant="body2">{t("effect.healthReuse", { minutes: effects.healthReuseMinutes })}</Typography>}
+        {effects.publicMissRefreshMinutes > 0 && (
+          <Typography variant="body2">
+            {t("effect.cacheOnly")}
+            <QuietHelp text={t("effect.cacheOnlyMore", { minutes: effects.publicMissRefreshMinutes })} />
+          </Typography>
+        )}
+        <Typography variant="body2">{t("effect.monitor")}</Typography>
+      </Box>
 
+      {/* Where the figure came from, in one sentence; the three readings behind the «?». */}
       {meter && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }} data-testid="neon-budget-source" data-source={meter.source}>
-          {t(`source.${meter.source}`)}{" "}
-          {t("readings", {
-            metered: meter.meteredCuHours === null ? t("notRead") : hours(meter.meteredCuHours),
-            operations: meter.operationsCuHours === null ? t("notRead") : hours(meter.operationsCuHours),
-            legacy: hours(meter.legacyCuHours),
-          })}
-          {meter.meteredCuHours === null && ` ${t("meteredNeedsKey")}`}
+          {t(`source.${meter.source}`)}
+          <QuietHelp
+            text={[
+              t("readings", {
+                metered: meter.meteredCuHours === null ? t("notRead") : hours(meter.meteredCuHours),
+                operations: meter.operationsCuHours === null ? t("notRead") : hours(meter.operationsCuHours),
+                legacy: hours(meter.legacyCuHours),
+              }),
+              meter.meteredCuHours === null ? t("meteredNeedsKey") : null,
+            ]
+              .filter(Boolean)
+              // A space, not a line break: the same string is the button's accessible name, which must not carry one.
+              .join(" ")}
+          />
         </Typography>
       )}
 

@@ -1,7 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -80,6 +79,7 @@ import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
 import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
 import type { JobName } from "@/modules/jobs/schedule";
@@ -662,7 +662,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const decisions = moneyDecisions(facts).filter((decision) => decision.state === "open");
   const freshness = priceFreshness(oldestCheckDate(services), now);
 
-  /** How close this service is to its ceiling, in that service's own words. */
+  /**
+   * How close this service is to its ceiling, in that service's own words: one sentence, and —
+   * where the figure needs its arithmetic — the details for the «?» beside it (§NNN).
+   */
   const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
   const neonPerDay = neonCuHoursPerDay(facts);
   // The rates the projection was made at, from the one catalogue, so the sentence quotes what
@@ -671,39 +674,54 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     rate: neonBlock.rates?.usdPerCuHour ?? NEON_LAUNCH_USD_PER_CU_HOUR,
     storageRate: neonBlock.rates?.usdPerGbMonth ?? NEON_LAUNCH_USD_PER_GB_MONTH,
   };
-  const howClose = (row: ServiceRow) => {
+  const howClose = (row: ServiceRow): { text: string; more: string | null } => {
     if (row.headroom.kind === "measured") {
-      const base = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
+      const text = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
         used: row.headroom.used,
         of: row.headroom.of,
         left: registrationsLeft ?? 0,
         plan: volume.planName,
       });
-      // The monthly figure the owner asked for (§88): this month's pace on the next plan.
+      // The monthly figure the owner asked for (§88): this month's pace on the next plan, behind the «?».
       if (row.id === "neon") {
-        return neon.ok && neonMonthly !== null
-          ? `${base} ${t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2), ...neonRates })}`
-          : `${base} ${t("services.neon.monthlyUnknown", neonRates)}`;
+        return {
+          text,
+          more:
+            neon.ok && neonMonthly !== null
+              ? t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2), ...neonRates })
+              : t("services.neon.monthlyUnknown", neonRates),
+        };
       }
-      return base;
+      return { text, more: null };
     }
     if (row.headroom.kind === "derived") {
       // Mailgun with no ceiling at all (§100): the plan's name is the whole of the answer.
-      if (row.id === "mailgun") return t("services.mailgun.closeNone", { plan: volume.planName });
+      if (row.id === "mailgun") return { text: t("services.mailgun.closeNone", { plan: volume.planName }), more: null };
       // Neon on Launch: no ceiling, so "how close" is "what does this month cost" — the
       // projection at the current pace and the daily rate it was made from, named an estimate.
       if (row.id === "neon" && row.variant === "launch") {
         return neon.ok && neonMonthly !== null && neonPerDay !== null
-          ? t("services.neon.launch.close", { cu: Math.round(neon.consumption.cuHours), perDay: neonPerDay, usd: neonMonthly.toFixed(2), ...neonRates })
-          : t("services.neon.launch.closeUnknown", neonRates);
+          ? {
+              text: t("services.neon.launch.close", { cu: Math.round(neon.consumption.cuHours), perDay: neonPerDay, usd: neonMonthly.toFixed(2) }),
+              more: t("services.neon.launch.closeMore", neonRates),
+            }
+          : { text: t("services.neon.launch.closeUnknown"), more: t("services.neon.launch.closeMore", neonRates) };
       }
-      return t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`);
+      return { text: t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`), more: null };
     }
-    return t(`services.${row.id}.closeUnknown`);
+    return { text: t(`services.${row.id}.closeUnknown`), more: null };
   };
   /** The row's fixed sentences, read under the plan's own wording where the plan changes what is true. */
-  const wording = (row: ServiceRow, key: "freeGives" | "ceiling" | "whenCrossed" | "bumpBack") =>
+  const wording = (row: ServiceRow, key: "freeGives" | "ceiling" | "whenCrossed" | "bumpBack" | "more") =>
     t(row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`);
+  // The verdicts and the counts that carry a detail beyond their one sentence (§NNN): their «?».
+  const verdictMore: Partial<Record<typeof verdict, string>> = {
+    paysForUsage: t("freeVerdict.paysForUsageMore"),
+    freeButAtALimit: t("freeVerdict.freeButAtALimitMore"),
+    notFree: t("freeVerdict.notFreeMore"),
+  };
+  const registrationsLeftMore =
+    volume.period === "day" ? t("registrationsLeft.dayMore") : volume.period === "month" ? t("registrationsLeft.monthMore") : null;
 
   return (
     <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -895,11 +913,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
       {panel === "costs" && (
         <>
-        <Divider />
-
         {/*
-          The club's money page (§479): the month first — each provider so far and projected to the
-          month's end, the total above them — because that is what a treasurer opens Costuri for.
+          The club's money page (§479): the month's total first, straight under the tabs (§NNN) —
+          one figure, what the month will have cost by its end — then each provider so far and
+          projected, because that is what a treasurer opens Costuri for.
         */}
         {month && (
           <MonthCostsPanel
@@ -1003,12 +1020,17 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                       )
                       .join(", "),
                   })}
-              {/* A total with a projection in it is not an invoice, and the sentence says so beside the number. */}
-              {paidToday.some((total) => total.estimated) && ` ${t("costToday.estimated")}`}
             </Typography>
+            {/* A total with a projection in it is not an invoice, and the line under it says so (one sentence a line, §NNN). */}
+            {paidToday.some((total) => total.estimated) && (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {t("costToday.estimated")}
+              </Typography>
+            )}
             {next && (
               <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {t(`nextSpend.${next.id}`, { cost: next.nextCost ?? "" })}
+                <QuietHelp text={t(`nextSpend.${next.id}More`)} />
               </Typography>
             )}
           </Alert>
@@ -1018,6 +1040,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               sending confirmations. Understated on purpose — a waitlisted entrant costs more. */}
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {t(`freeVerdict.${verdict}`)}
+            {verdictMore[verdict] && <QuietHelp text={verdictMore[verdict]} />}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {t(`registrationsLeft.${volume.period}`, {
@@ -1026,9 +1049,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               allowance: volume.allowance ?? "",
               plan: volume.planName,
             })}
+            {registrationsLeftMore && <QuietHelp text={registrationsLeftMore} />}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {t("currencyNote", { vat: ROMANIAN_VAT_PERCENT })}
+            <QuietHelp text={t("currencyNoteMore")} />
           </Typography>
         </Box>
 
@@ -1055,6 +1080,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t("servicesIntro")}
+            <QuietHelp text={t("servicesIntroMore")} />
           </Typography>
 
           <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
@@ -1117,17 +1143,33 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                                 })}
                     </strong>
                   </Fact>
-                  <Fact label={t("field.howClose")}>{howClose(row)}</Fact>
+                  <Fact label={t("field.howClose")}>
+                    {(() => {
+                      const close = howClose(row);
+                      return (
+                        <>
+                          {close.text}
+                          {close.more && <QuietHelp text={close.more} />}
+                        </>
+                      );
+                    })()}
+                  </Fact>
                   <Fact label={t("field.nextPlan")}>
                     {row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}
                   </Fact>
                 </Box>
 
+                {/* One sentence a line (§NNN): what is free, the ceiling, what crossing it does — the
+                    row's history, exceptions and arithmetic behind the «?» on the first line. */}
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                   {wording(row, "freeGives")}
+                  <QuietHelp text={wording(row, "more")} />
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  <strong>{wording(row, "ceiling")}</strong> {wording(row, "whenCrossed")}
+                  <strong>{wording(row, "ceiling")}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  {wording(row, "whenCrossed")}
                 </Typography>
 
                 {/* The one genuinely good idea in the table this replaced: a temporary upgrade

@@ -307,7 +307,7 @@ export default async function RegistrationBox({
                           {confirmationDates}
                         </Typography>
                       )}
-                      <BoxNote>{t("editor.confirmationWindowHelp", { hold })}</BoxNote>
+                      <BoxNote more={t("editor.confirmationWindowHelpMore", { hold })}>{t("editor.confirmationWindowHelp")}</BoxNote>
                     </Stack>
                   </Panel>
 

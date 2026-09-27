@@ -12,6 +12,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
@@ -60,7 +61,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
   return (
-    <Panel level={level} title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} data-testid="neon-plan">
+    <Panel level={level} title={t("tasks.neonPlan.title")} intro={t("tasks.neonPlan.intro")} introMore={t("tasks.neonPlan.introMore")} data-testid="neon-plan">
       {/* The plan in force, and what this month looks like on it — the figures a wrong answer would expose. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-plan-in-force">
         {block.plan === "LAUNCH"
@@ -87,6 +88,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("tasks.neonPlan.estimate")}
+        <QuietHelp text={t("tasks.neonPlan.estimateMore")} />
       </Typography>
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
@@ -120,6 +122,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
               size="small"
               slotProps={{ select: { native: true } }}
               helperText={t("tasks.neonPlan.fieldHelp", { checkedOn: formatCalendarDay(NEON_PLANS_CHECKED_ON, { locale, style: "long", position: "inline" }) })}
+              helpMore={t("tasks.neonPlan.fieldHelpMore")}
             >
               {NEON_PLAN_IDS.map((id) => {
                 const entry = NEON_PLANS[id];
@@ -144,6 +147,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
             {/* The December review (§280) is one select on this screen, and the panel says so. */}
             <Typography variant="caption" color="text.secondary">
               {t("tasks.neonPlan.december")}
+              <QuietHelp text={t("tasks.neonPlan.decemberMore")} />
             </Typography>
             <Box>
               <GlyphSubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} icon="save" />
