@@ -143,9 +143,10 @@ describe("§403 the club's own copy of a YouTube poster", () => {
   });
 
   describe("save → poster stored → read model, and the orphan sweep", () => {
-    // The column is unread since §NNN, but it stays until its contract migration, and a poster it
-    // still names is still a picture in use: the sweep keeps it, so a rollback finds it there.
-    it("a poster the event's old film column still names is kept by the sweep", async () => {
+    // The column is unread since §NNN and stays only until its contract migration: migration 0092
+    // carried every stored poster into the description's youtube node, which is what the sweep
+    // reads. A poster only the old column names is a picture no page draws, and goes like one.
+    it("a poster only the event's old film column names is swept like any unreferenced picture", async () => {
       const bytes = await JPEG();
       const now = new Date("2026-09-25T10:00:00Z");
       const posterUrl = await ensureYoutubePoster(db, "dQw4w9WgXcQ", { now, fetchImpl: fetchWithHqdefault(bytes) });
@@ -166,15 +167,39 @@ describe("§403 the club's own copy of a YouTube poster", () => {
         .returning();
       expect(event.videoPosterUrl).toBe(posterUrl);
 
-      // Referenced by the event row it is on: the sweep must not take it.
+      // The event row's column is no reference any more.
       const before = await countMediaAssets(db, now);
       expect(before.total).toBe(1);
-      expect(before.unreferenced).toBe(0);
+      expect(before.unreferenced).toBe(1);
+
+      const deleted = await sweepOrphanAssets(db, new Date(now.getTime() + 8 * 24 * 60 * 60_000));
+      expect(deleted).toBe(1);
+      const gone = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, posterKeyPrefix("dQw4w9WgXcQ")));
+      expect(gone).toHaveLength(0);
+    });
+
+    it("keeps a poster the description's film names, the place migration 0092 moved it to", async () => {
+      const bytes = await JPEG();
+      const now = new Date("2026-09-25T10:00:00Z");
+      const posterUrl = await ensureYoutubePoster(db, "dQw4w9WgXcQ", { now, fetchImpl: fetchWithHqdefault(bytes) });
+      const [event] = await db
+        .insert(events)
+        .values({ type: "GROUP_RUN", eventStatus: "SCHEDULED", timezone: "Europe/Bucharest", startsAt: now, createdAt: now, updatedAt: now })
+        .returning();
+      await db.insert(eventTranslations).values({
+        eventId: event.id,
+        locale: "ro",
+        slug: "film",
+        title: "Film",
+        bodyJson: { type: "doc", content: [{ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", caption: "", poster: posterUrl, posterSource: "youtube" } }] },
+        createdAt: now,
+        updatedAt: now,
+      });
 
       const deleted = await sweepOrphanAssets(db, new Date(now.getTime() + 8 * 24 * 60 * 60_000));
       expect(deleted).toBe(0);
-      const stillThere = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, posterKeyPrefix("dQw4w9WgXcQ")));
-      expect(stillThere).toHaveLength(1);
+      const kept = await db.select().from(mediaAssets).where(eq(mediaAssets.keyPrefix, posterKeyPrefix("dQw4w9WgXcQ")));
+      expect(kept).toHaveLength(1);
     });
 
     it("sweeps a poster once its event no longer points at it, like any other unreferenced picture", async () => {

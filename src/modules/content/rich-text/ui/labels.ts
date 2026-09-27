@@ -153,6 +153,24 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageGalleryLoading: rt("imageGalleryLoading"),
     imageGalleryEmpty: rt("imageGalleryEmpty"),
     imageGalleryClose: rt("linkCancel"),
+    imageGalleryFilter: rt("imageGalleryFilter"),
+    imageGalleryNoMatch: rt("imageGalleryNoMatch"),
+    imageGallerySourceLegend: rt("imageGallerySourceLegend"),
+    imageGallerySources: {
+      all: rt("imageGallerySourceAll"),
+      event: rt("imageGallerySourceEvent"),
+      album: rt("imageGallerySourceAlbum"),
+      page: rt("imageGallerySourcePage"),
+      team: rt("imageGallerySourceTeam"),
+    },
+    // The first chip, for the place the text belongs to (§NNN).
+    imageGalleryHere: {
+      event: rt("imageGalleryHereEvent"),
+      album: rt("imageGalleryHereAlbum"),
+      page: rt("imageGalleryHerePage"),
+    },
+    // Raw, with its placeholders: the island says the picture's name and size itself (§NNN).
+    imageFromGalleryPicked: rt.raw("imageFromGalleryPicked") as string,
     youtube: rt("youtube"),
     youtubeShort: rt("youtubeShort"),
     youtubeUrl: rt("youtubeUrl"),
@@ -164,5 +182,10 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     youtubePosterUploading: rt("youtubePosterUploading"),
     youtubePosterFailed: rt("youtubePosterFailed"),
     youtubePosterUseYoutube: rt("youtubePosterUseYoutube"),
+    youtubePosterFromGallery: rt("youtubePosterFromGallery"),
+    youtubePosterCrop: rt("youtubePosterCrop"),
+    youtubePosterCropHelp: rt("youtubePosterCropHelp"),
+    youtubePosterCropReset: rt("youtubePosterCropReset"),
+    youtubePosterCropWaiting: rt("youtubePosterCropWaiting"),
   };
 }

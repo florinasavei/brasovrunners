@@ -1,12 +1,12 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import type { ImageAlignment, ImageWidthPercent } from "../domain/schema";
+import type { ImageAlignment, ImageCrop, ImageWidthPercent } from "../domain/schema";
 import { youtubeEmbedUrl } from "@/modules/events/domain/video";
 import { coverMagnification, type PictureColumn, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { env } from "@/shared/config/env";
 import VideoFacade from "@/shared/ui/VideoFacade";
-import { imageFigureSx } from "./image-layout";
+import { cardFrameGeometry, imageFigureSx } from "./image-layout";
 
 /**
  * A YouTube film inside an editorial body (`DECISIONS.md` §110, §266, §403).
@@ -31,6 +31,7 @@ export default async function RichTextVideo({
   poster = null,
   posterWidth = null,
   posterHeight = null,
+  posterCrop = null,
   pictures = "page",
   widthPercent = 100,
   align = "block",
@@ -43,6 +44,8 @@ export default async function RichTextVideo({
   /** A club poster's stored size (§414): with it, the poster is drawn from its ladder. */
   posterWidth?: number | null;
   posterHeight?: number | null;
+  /** The part of the poster the club chose for the 16∶9 box (§NNN), as §241's fractions. */
+  posterCrop?: ImageCrop | null;
   /** The column the body is drawn in, as `RichText` says it (`media/ladder.ts`). */
   pictures?: PictureColumn;
   /** The share of the column, as a picture's (§266). */
@@ -61,8 +64,19 @@ export default async function RichTextVideo({
     their one `src`.
   */
   const posterSrcSet = poster ? pictureSrcSet(poster, posterWidth) : undefined;
+  /*
+    The part of the poster the club chose for the 16∶9 box (§NNN): the listing card's own frame
+    arithmetic, since the film's box is the card's shape — the largest 16∶9 rectangle inside the
+    crop, drawn as §241's window. Without a crop, or without the poster's size, the poster covers
+    the box, centred, as it always did.
+  */
+  const framed = poster && posterCrop ? cardFrameGeometry({ crop: posterCrop, width: posterWidth, height: posterHeight }) : null;
   const posterSizes = posterSrcSet
-    ? pictureSizes(pictures, pictures === "card" ? 100 : widthPercent, coverMagnification(posterWidth ?? 0, posterHeight ?? 0, 16 / 9))
+    ? pictureSizes(
+        pictures,
+        pictures === "card" ? 100 : widthPercent,
+        framed ? framed.magnify : coverMagnification(posterWidth ?? 0, posterHeight ?? 0, 16 / 9),
+      )
     : undefined;
 
   return (
@@ -72,6 +86,7 @@ export default async function RichTextVideo({
         posterUrl={poster}
         posterSrcSet={posterSrcSet}
         posterSizes={posterSizes}
+        posterFrame={framed ? { width: framed.geometry.width, left: framed.geometry.left, top: framed.geometry.top } : undefined}
         title={caption || t("video.title")}
         labels={{
           play: caption ? t("video.playNamed", { name: caption }) : t("video.play"),

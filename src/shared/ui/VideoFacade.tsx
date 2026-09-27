@@ -46,6 +46,7 @@ export default function VideoFacade({
   posterUrl,
   posterSrcSet,
   posterSizes,
+  posterFrame,
   title,
   labels,
 }: {
@@ -60,6 +61,12 @@ export default function VideoFacade({
    */
   posterSrcSet?: string;
   posterSizes?: string;
+  /**
+   * The part of the poster the club chose (§NNN), as the window arithmetic the caller computed:
+   * the poster drawn `width` wide and pulled to `left` / `top` inside the 16∶9 box. Absent, the
+   * poster covers the box, centred, as it always has. Plain strings, never an element.
+   */
+  posterFrame?: { width: string; left: string; top: string };
   /** The iframe's accessible title, and the poster image's `alt` (found by re-review: an empty
    *  `alt` left the poster with no text alternative at all). */
   title: string;
@@ -106,7 +113,19 @@ export default function VideoFacade({
                 sizes={posterSizes}
                 alt={title}
                 loading="lazy"
-                sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                sx={
+                  posterFrame
+                    ? {
+                        position: "absolute",
+                        display: "block",
+                        width: posterFrame.width,
+                        height: "auto",
+                        maxWidth: "none",
+                        left: posterFrame.left,
+                        top: posterFrame.top,
+                      }
+                    : { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }
+                }
               />
             )}
             <Box
