@@ -23,7 +23,13 @@ import ro from "../../../messages/ro.json";
  *    texts included — is at most 200 characters, carries no forbidden reference and no
  *    parenthesis of more than 12 words;
  * 2. no string anywhere under `Admin.*` names a §-number, a repository file or a release number:
- *    those are for the people who build the platform, never for the club.
+ *    those are for the people who build the platform, never for the club;
+ * 3. (§NNN, the plain-words pass over the whole backoffice) EVERY string the backoffice shows —
+ *    `Admin.*`, the translate panel, the network page — whatever its key is called (a notice, a
+ *    dialog's body, an error, an email's «când pleacă», a task row, a «?» named `…More`), keeps to
+ *    the same 200 characters and no long parenthesis. Only the numbered steps keep their length:
+ *    the guide's (`Admin.guide.*`) and a task row's «Cum» (`….how.N`, `….howBroken.N`), because
+ *    the guide and the steps are where the detail lives.
  *
  * `ALLOWED_LONG` names the few texts that are long on purpose, each with its reason.
  */
@@ -65,7 +71,20 @@ const ALLOWED_LONG: Record<string, string> = {
   // The photographs amendment's upload rule, verbatim as the privacy notice words it
   // (`event-photos-notice.test.ts` holds the two to the letter): a legal text is not shortened here.
   "Admin.gallery.uploadHelp": "ends with the photographs amendment's upload rule, verbatim, as the notice words it",
+  // The registrations list's «Pași» column legend: the six steps of a registration, one line each,
+  // drawn as the column's «?». Like the token legend, it IS the help; a step cut out is a step unexplained.
+  "Admin.registrations.journey.legend": "the «Pași» column legend names each of a registration's six steps on its own line",
 };
+
+/** The namespaces the backoffice draws: every string in them, not only the help texts (rule 3). */
+const SCREEN_SCOPES = ["Admin", "Translate", "Network"] as const;
+
+/** The numbered steps, where the detail is meant to live: the guide's and a task row's «Cum». */
+const STEP_KEYS: readonly RegExp[] = [/^Admin\.guide\./, /\.how(Broken)?\.\d+$/];
+
+function isStep(key: string): boolean {
+  return STEP_KEYS.some((pattern) => pattern.test(key));
+}
 
 /** Every string under a namespace, with its full dotted key. */
 function leaves(catalogue: Catalogue, scope: string): Array<[string, string]> {
@@ -129,12 +148,21 @@ describe("§NNN the backoffice says one plain sentence per field, the rest behin
       expect(offenders).toEqual([]);
     });
 
-    it(`keeps its allowlist honest: every entry exists, is a help text, and is still long (${locale})`, () => {
-      const all = new Map(HELP_SCOPES.flatMap((scope) => leaves(catalogue, scope)));
+    it(`keeps every string the backoffice shows to ${MAX_HELP} characters and no long parenthesis, steps apart (${locale})`, () => {
+      const offenders = SCREEN_SCOPES.flatMap((scope) => leaves(catalogue, scope))
+        .filter(([key]) => !isStep(key) && !(key in ALLOWED_LONG))
+        .map(([key, text]) => [key, breaches(text)] as const)
+        .filter(([, why]) => why.length > 0)
+        .map(([key, why]) => `${key}: ${why.join("; ")}`);
+      expect(offenders).toEqual([]);
+    });
+
+    it(`keeps its allowlist honest: every entry exists, is guarded, and is still long (${locale})`, () => {
+      const all = new Map([...HELP_SCOPES, ...SCREEN_SCOPES].flatMap((scope) => leaves(catalogue, scope)));
       for (const [key, reason] of Object.entries(ALLOWED_LONG)) {
         expect(reason.length, key).toBeGreaterThan(20);
         expect(all.has(key), key).toBe(true);
-        expect(isHelp(key), key).toBe(true);
+        expect(isHelp(key) || (SCREEN_SCOPES.some((scope) => key.startsWith(`${scope}.`)) && !isStep(key)), key).toBe(true);
         // An entry that now passes the rule is an entry to delete.
         expect(breaches(all.get(key) ?? "").length, key).toBeGreaterThan(0);
       }
@@ -152,6 +180,16 @@ describe("§NNN the backoffice says one plain sentence per field, the rest behin
     // A URL path is a place the club opens; a short parenthesis is a clarification.
     expect(breaches("Deschide /admin/legal (caseta „Într-un pas”).")).toEqual([]);
     expect(breaches("Când se atinge, Neon oprește baza până la începutul perioadei următoare. Recomandat: {hours}.")).toEqual([]);
+  });
+
+  it("exempts only the numbered steps from the whole-backoffice rule", () => {
+    expect(isStep("Admin.guide.sections.4.tasks.2.steps.1")).toBe(true);
+    expect(isStep("Admin.tasks.items.liveEmail.how.3")).toBe(true);
+    expect(isStep("Admin.tasks.items.inviteKey.howBroken.3")).toBe(true);
+    // A task row's own sentence, an email's «când», a dialog's body are screen text, not steps.
+    expect(isStep("Admin.tasks.items.liveEmail.todo")).toBe(false);
+    expect(isStep("Admin.emails.when.ORGANIZER_MESSAGE")).toBe(false);
+    expect(isStep("Admin.registrations.cancelBody")).toBe(false);
   });
 });
 
