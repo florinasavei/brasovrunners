@@ -532,6 +532,37 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
     await page.getByRole("button", { name: /^Cetățenie/ }).click();
     const search = page.getByPlaceholder(/Caută țara/);
     await expect(search).toBeFocused();
+    // Tall enough to read (§NNN, the owner's «pop-up-ul cu cetățenia e minuscul!»): at least eight
+    // whole rows in view, each 44 pixels, the chosen «România» among them; on a phone a sheet at
+    // the screen's bottom with the search box above the list.
+    const listbox = page.getByRole("listbox");
+    await expect(listbox).toBeVisible();
+    await expect(listbox.getByRole("option", { name: /România/ })).toBeInViewport();
+    // Layout boxes (offsetTop, offsetHeight, clientHeight), not the screen's: the popover grows in
+    // with a scale transform, and a row measured mid-animation reads 40 pixels.
+    const visibleRows = await listbox.evaluate((list) => {
+      const rows = Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'));
+      const top = list.scrollTop;
+      const bottom = top + list.clientHeight;
+      return rows.filter((row) => row.offsetTop >= top && row.offsetTop + row.offsetHeight <= bottom).map((row) => row.offsetHeight);
+    });
+    expect(visibleRows.length, "whole rows in view when the list opens").toBeGreaterThanOrEqual(8);
+    for (const height of visibleRows) expect(height).toBeGreaterThanOrEqual(44);
+    // The whole list inside the screen, and the search box above it.
+    await expect(listbox).toBeInViewport({ ratio: 1 });
+    await expect
+      .poll(async () => {
+        const searchBox = await search.boundingBox();
+        const listBox = await listbox.boundingBox();
+        return (listBox?.y ?? 0) - ((searchBox?.y ?? 0) + (searchBox?.height ?? 0));
+      })
+      .toBeGreaterThanOrEqual(-0.5);
+    if (test.info().project.name === "mobile") {
+      const viewport = page.viewportSize();
+      const sheet = async () => listbox.evaluate((list) => list.closest(".MuiPopover-paper")?.getBoundingClientRect().toJSON());
+      await expect.poll(async () => Math.round((await sheet())?.bottom ?? 0)).toBe(viewport?.height);
+      await expect.poll(async () => Math.round((await sheet())?.width ?? 0)).toBe(viewport?.width);
+    }
     await search.fill("germany");
     await page.getByRole("option", { name: /Germania/ }).first().click();
     await expect(nationality).toHaveValue("DE");
