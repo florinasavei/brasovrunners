@@ -29,6 +29,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
@@ -170,7 +171,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               defaultValue={selectedEventId}
               events={events.map((event) => ({
                 id: event.id,
-                label: `${event.title ?? event.id} · ${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })} · ${effectiveMinimumAge(event.minAge)}+`,
+                // A date left blank (§545) is said, never printed as the provisional day stored for it.
+                label: `${event.title ?? event.id} · ${typedStartOrNull(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")} · ${effectiveMinimumAge(event.minAge)}+`,
               }))}
             />
 

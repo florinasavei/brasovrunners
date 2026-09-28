@@ -27,9 +27,12 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 const COOKIE = "br_family_sitting";
 const PURPOSE = "family-sitting";
 
-/** One line per person: the name, a tab, the birth date as typed ("" when none). */
+/**
+ * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, and `w` when
+ * no place was free for them (§543).
+ */
 function peopleLines(people: readonly SittingPerson[]): string {
-  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}`).join("\n");
+  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : ""}`).join("\n");
 }
 
 function peopleOf(lines: string | undefined): SittingPerson[] {
@@ -37,8 +40,8 @@ function peopleOf(lines: string | undefined): SittingPerson[] {
     .split("\n")
     .filter((line) => line.trim() !== "")
     .map((line) => {
-      const [name = "", birthDate = ""] = line.split("\t");
-      return { name, birthDate };
+      const [name = "", birthDate = "", place = ""] = line.split("\t");
+      return place === "w" ? { name, birthDate, waitlist: true } : { name, birthDate };
     });
 }
 
@@ -98,6 +101,8 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
     // When the first form's email leaves (§536), computed once at submit; always 25 characters (§39).
     l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt, value.emailSubmittedAt) : "",
+    // Until when the sitting's places are reserved (§543): the sitting's fixed deadline, never the address's.
+    u: value.reservedUntil ? String(value.reservedUntil.getTime()) : "",
   };
   /*
     The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
@@ -112,7 +117,10 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
   const heldUntil = new Date(Number(opened.x));
   if (!Number.isFinite(heldUntil.getTime())) return null;
   const [typed = "", kept = ""] = (opened.w ?? "").split("\t");
+  const reservedUntil = opened.u ? new Date(Number(opened.u)) : null;
   return {
+    // Absent rather than null on a half with none (before «Da», or written before it was kept).
+    ...(reservedUntil && Number.isFinite(reservedUntil.getTime()) ? { reservedUntil } : {}),
     sittingId: opened.s ? opened.s : null,
     seed: seedOf(opened.r),
     joined: opened.j === "1" ? true : undefined,

@@ -20,6 +20,7 @@ import RecallField from "@/shared/forms/recall";
 import { handsSpareAtConfirm, type SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import FamilyChip from "./FamilyChip";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -68,8 +69,11 @@ export default async function DeskRow({
   readOnly = false,
   minorSigns,
   spare = { kind: "none" },
+  family = [],
 }: {
   row: DeskRegistration;
+  /** The other people on this row's address at the event (§543, `familyOf`): names only, never an address. */
+  family?: readonly string[];
   locale: Locale;
   back: "desk" | "code";
   eventId?: string;
@@ -196,6 +200,8 @@ export default async function DeskRow({
             {row.guardianName && (
               <Chip size="small" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
             )}
+            {/* A family on one address (§543), beside the parent's line: who came with this person — names only (§15.11). */}
+            <FamilyChip label={t("registrations.familyChip")} members={family.map((name) => ({ name }))} testId="desk-family" />
             <Chip
               size="small"
               color={

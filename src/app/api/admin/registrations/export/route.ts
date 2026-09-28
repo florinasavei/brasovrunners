@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
+import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
 import {
@@ -125,6 +126,8 @@ export async function GET(request: Request): Promise<Response> {
   const format = url.searchParams.get("format") === "xlsx" ? "xlsx" : "csv";
   // Which declaration each row signed, and when (§499): both formats, one query for the exported rows.
   const declarations = await listLatestDeclarationAcceptances(db, rows.map((row) => row.id));
+  // The other people on each row's address (§543), the `family` column of both formats: one query.
+  const family = await familyOf(db, rows);
 
   /*
     The export is recorded (§322): who took a file of the club's participants, of which event, in
@@ -176,6 +179,7 @@ export async function GET(request: Request): Promise<Response> {
         termsAcceptedAt: row.termsAcceptedAt,
         declarationVersion: declarations.get(row.id)?.version ?? null,
         declarationSignedAt: declarations.get(row.id)?.acceptedAt ?? null,
+        family: familyColumn(family.get(row.id)),
       })),
       eventTitle ?? "Participants",
     );
@@ -221,6 +225,7 @@ export async function GET(request: Request): Promise<Response> {
       // The declaration signed (§499): blank while none is.
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
+      family: familyColumn(family.get(row.id)),
     })),
   );
 

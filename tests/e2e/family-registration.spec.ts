@@ -218,7 +218,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
   });
 
-  test("§519 one sitting: the first email leaves at once, «Da» opens the sitting with the address kept, «Gata» sends one family message, one press confirms everybody and opens the wizard", async ({ page }) => {
+  test("§519 one sitting: the first email leaves at once, «Da» opens the sitting with the address kept, every form reserves its place (§543), «Gata» sends one family message naming three, one press confirms everybody and opens the wizard", async ({ page }) => {
     test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -271,39 +271,54 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Maria ${lastName}`);
     await expect(page.getByTestId("family-sitting-when")).toContainText("Emailul pleacă când apeși „Gata” sau singur după");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    // «Gata»: one email for both.
+
+    // A third person (§543; the owner: «să rezerv 3 locuri și așa să se calculeze pe site»): «Da» again, then the form.
+    await page.getByTestId("family-sitting-add").getByRole("button", { name: "Da, încă o persoană" }).click();
+    await expect(page).toHaveURL(/family=1/);
+    await hydrated(page);
+    await fillPerson(page, { firstName: "Ion", lastName, birthDate: "1987-02-14" }, null);
+    // The family marker: everybody by first name, three places reserved until the hour, and each name's place.
+    await expect(page.getByTestId("family-sitting-marker")).toHaveText(/^Înscriere de familie: Ana, Maria, Ion — 3 locuri rezervate până (la \d{2}:\d{2}|.+)\.$/);
+    await expect(page.getByTestId("family-sitting-names")).toContainText(`Ion ${lastName} — loc rezervat`);
+    // Stored as a single registration is, each with its place, before any email: a refresh or the backoffice sees three.
+    expect((await registrationsByEmail(email)).map((row) => row.status)).toEqual(["PENDING_EMAIL_CONFIRMATION", "PENDING_EMAIL_CONFIRMATION", "PENDING_EMAIL_CONFIRMATION"]);
+
+    // «Gata»: one email for the three.
     await page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" }).click();
     await expect(page).toHaveURL(/sent=1/, { timeout: 30_000 });
     await expect(page.getByRole("heading", { name: "Aproape gata!" })).toBeVisible();
-    await expect(page.getByTestId("check-email-family")).toContainText(`Ana ${lastName}, Maria ${lastName}`);
+    await expect(page.getByTestId("check-email-family")).toContainText(`Ana ${lastName}, Maria ${lastName}, Ion ${lastName}`);
     await expect(page.getByTestId("family-sitting-offer")).toHaveCount(0);
 
-    // «Înscriere de familie: 2 persoane la …» is the subject; the captured words are the body's.
-    const family = await capturedEmail(page, email, "Confirm și semnez declarațiile (2)");
-    expect(family.text).toContain(`Persoana 1 din 2: Ana ${lastName}`);
-    expect(family.text).toContain(`Persoana 2 din 2: Maria ${lastName}, data nașterii 11 iulie 1990`);
-    expect(family.text).toContain("Confirm și semnez declarațiile (2)");
+    // «Înscriere de familie: 3 persoane la …» is the subject; the captured words are the body's.
+    const family = await capturedEmail(page, email, "Confirm și semnez declarațiile (3)");
+    expect(family.text).toMatch(/Înscriere de familie: Ana, Maria și Ion — 3 locuri rezervate până/);
+    expect(family.text).toContain(`Persoana 1 din 3: Ana ${lastName}`);
+    expect(family.text).toContain(`Persoana 2 din 3: Maria ${lastName}, data nașterii 11 iulie 1990 — loc rezervat`);
+    expect(family.text).toContain(`Persoana 3 din 3: Ion ${lastName}, data nașterii 14 februarie 1987 — loc rezervat`);
+    expect(family.text).toContain("Confirm și semnez declarațiile (3)");
     // The first line says the one button does everything (§536); Ana's own email left before «Da», so one line says this one covers her too.
-    expect(family.text).toContain("Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.");
+    expect(family.text).toContain("Un singur buton: confirmi adresa și cele 3 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.");
     expect(family.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
     expect(family.links.some((href) => href.includes("/inscrieri/ale-mele/"))).toBe(true);
     const link = family.links.find((href) => href.includes("/inregistrari/familie/"));
     expect(link).toBeTruthy();
 
-    // The page lists both; nothing is confirmed by opening it (GET never mutates).
+    // The page lists the three; nothing is confirmed by opening it (GET never mutates).
     await page.goto(link!);
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-people")).toContainText(`Maria ${lastName}`);
-    expect((await registrationsByEmail(email)).map((row) => row.status)).toEqual(["PENDING_EMAIL_CONFIRMATION"]);
+    await expect(page.getByTestId("family-sitting-people")).toContainText(`Ion ${lastName}`);
+    expect((await registrationsByEmail(email)).map((row) => row.status)).toEqual(["PENDING_EMAIL_CONFIRMATION", "PENDING_EMAIL_CONFIRMATION", "PENDING_EMAIL_CONFIRMATION"]);
 
-    // One press: the address and both confirmed, straight into «Declarația 1 din 2».
+    // One press: the address and the three confirmed, straight into «Declarația 1 din 3».
     await page.locator('[name="fitnessAcknowledged"]').check();
     const confirm = page.getByTestId("family-sitting-confirm-button").getByRole("button");
     expect((await confirm.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await confirm.click();
     await expect(page).toHaveURL(/\/inregistrari\/declaratie\//, { timeout: 30_000 });
-    await expect(page.getByText(`Declarația 1 din 2 — Ana ${lastName}`)).toBeVisible();
-    expect((await registrationsByEmail(email)).map((row) => row.status).sort()).toEqual(["PENDING_DECLARATION", "PENDING_DECLARATION"]);
+    await expect(page.getByText(`Declarația 1 din 3 — Ana ${lastName}`)).toBeVisible();
+    expect((await registrationsByEmail(email)).map((row) => row.status).sort()).toEqual(["PENDING_DECLARATION", "PENDING_DECLARATION", "PENDING_DECLARATION"]);
   });
 
   test("a link from an older email that opened the form for another person says it is no longer used", async ({ page }) => {
