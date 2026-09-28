@@ -9,6 +9,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
@@ -43,6 +44,12 @@ type Props = {
    * deadline is `RegistrationSteps`'s longer telling, so the caller may pass its object as is.
    */
   window: { opensDays: number } | null;
+  /**
+   * «Mai înscrii pe cineva cu aceeași adresă?» (§519, §NNN: one question, on this screen), while this
+   * browser's family sitting takes a next form — `FamilySittingNext`, a Server Component rendered by
+   * the page. Right under the heading, before the steps: the one thing to decide here.
+   */
+  offer?: ReactNode;
 };
 
 /**
@@ -66,7 +73,7 @@ type Props = {
  * here as children, never handed to a client component as a prop, which is what fails
  * hydration (`GlyphChip.tsx`).
  */
-export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window }: Props) {
+export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window, offer }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
   const values = {
@@ -108,8 +115,9 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         </Box>
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
         {/*
-          A family sitting (§519): one email for everybody it sent the form for, named as typed on this
-          browser — or, at a window of 0, where each person's email left on its own, the sentence that
+          A family sitting (§519): everybody it sent the form for, named as typed on this browser, and
+          that the newest email names them all with one button (§NNN: an earlier email may have left
+          already) — or, at a window of 0, where each person's email is their own, the sentence that
           says so (the review of 2026-09-27).
         */}
         {familySentence && (
@@ -131,6 +139,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
           </Typography>
         )}
       </Box>
+
+      {offer}
 
       <Box component="section" aria-labelledby="check-email-next">
         <Typography id="check-email-next" component="h3" variant="h3" sx={{ fontSize: "1.125rem", mb: 1.5 }}>

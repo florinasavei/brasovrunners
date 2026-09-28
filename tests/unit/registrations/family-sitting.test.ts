@@ -301,7 +301,7 @@ describe("§519 the family's one confirmation", () => {
 });
 
 describe("§519 the fix round of the second review", () => {
-  it("says one email for the family while the window holds, and each person's own at a window of 0 — in both catalogues", async () => {
+  it("says the newest email names the family while there is a window, and each person's own at a window of 0 — in both catalogues", async () => {
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"] })).toBe("family");
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: false })).toBe("family");
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: true })).toBe("familyEach");
@@ -311,9 +311,14 @@ describe("§519 the fix round of the second review", () => {
     const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
     expect(ro.Registration.done.familyEach).toBe("Fiecare persoană primește emailul ei.");
     expect(en.Registration.done.familyEach).toBe("Each person gets their own email.");
-    expect(ro.Registration.sitting.leadNamed).toBe("Formularul lui {name} pentru {event} a ajuns.");
-    expect(ro.Registration.sitting.when).toContain("de la ultima apăsare");
-    expect(en.Registration.sitting.when).toContain("after your last press");
+    // One question, one answer (§NNN): no «Gata» to press, no promise of an email held for one.
+    expect(ro.Registration.sitting.question).toBe("Mai înscrii pe cineva cu aceeași adresă?");
+    expect(ro.Registration.sitting.addHint).toContain("{window}");
+    expect(en.Registration.sitting.addHint).toContain("{window}");
+    expect(ro.Registration.sitting).not.toHaveProperty("done");
+    expect(en.Registration.sitting).not.toHaveProperty("done");
+    expect(ro.Registration.done.family).toContain("Cel mai nou email");
+    expect(en.Registration.done.family).toContain("The newest email");
   });
 
   it("keeps the browser's half two minutes past the window, and the window the action read", () => {

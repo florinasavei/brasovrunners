@@ -171,9 +171,12 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(line).toHaveCount(1);
     await expect(line).toContainText("S-a înscris din nou cu aceeași adresă");
     await expect(line).toContainText("(Așteaptă confirmarea emailului)");
-    // The same browser, inside its family sitting (§519): nothing new was queued — the held email is the
-    // one that leaves, once, and the line says so rather than "re-sent" or "nothing to re-send".
-    await expect(line).toContainText("„Confirmă adresa de email” așteaptă deja să plece și pleacă o singură dată");
+    /*
+      The same browser, inside its family sitting (§519): the first form's email is never held (§NNN)
+      and had left, so the second is the ordinary re-send, and the line says what was re-sent. (Were the
+      first still waiting to leave, nothing new would be queued and the line would say so instead.)
+    */
+    await expect(line).toContainText(/i-am retrimis „Confirmă adresa de email”|„Confirmă adresa de email” așteaptă deja să plece și pleacă o singură dată/);
     // It is what the person did, so it is not in the team's own trail.
     await expect(page.getByRole("heading", { name: "Ce a făcut echipa" })).toHaveCount(0);
   });

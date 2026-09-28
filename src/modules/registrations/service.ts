@@ -46,7 +46,7 @@ import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmiss
 import { registrationNameKey } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
-import { confirmedSittingOf, holdInSitting, lockLiveSitting, openSitting, queueFamilyConfirmed, settleSitting } from "./family-sitting";
+import { confirmedSittingOf, holdInSitting, lockLiveSitting, openSitting, queueFamilyConfirmed, settleSitting, sittingHasMessageToLeave } from "./family-sitting";
 import { familyHeldDeclaration, SITTING_HELD, sittingEntryFor } from "./domain/family-sitting";
 import { addressHasRoom } from "./domain/address-cap";
 import { familyRegistrationOpen } from "./family-gate";
@@ -908,10 +908,12 @@ export type RegistrationOrigin = {
    * opened, from the browser's sealed half, or null for the first form. It changes what is mailed
    * and nothing else — the decision, the lock, the limit and the throttle are the form's own:
    * - a new registration's verification email, and the confirmation of another person (§446), are
-   *   held until «Gata» or the club's window (`family-sitting.ts`); from the second person on they
-   *   become the one family message;
+   *   the sitting's: due at once — a form's email is never held (§NNN) — and, from the second person
+   *   on, merged with what the sitting still has waiting into the one family message
+   *   (`family-sitting.ts`); only «Da, încă o persoană» holds, until the next form;
    * - the same person as a kept form of this sitting replaces it rather than adding one more;
-   * - a re-send about a registration of this sitting queues nothing: its held message says it.
+   * - a re-send about a registration of this sitting queues nothing while the sitting's message is
+   *   still to leave: that message says it.
    * Everything else — a re-send about a registration outside the sitting, the address at the
    * limit, a verified runner's restart — is sent at once, as without a sitting.
    */
@@ -931,8 +933,6 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
    * `startingDeadline` mark on the message that starts the link (§513), never on a re-send.
    */
   payload: Record<string, unknown> = {},
-  /** Held by a family sitting until «Gata» or the club's window (§519). */
-  notBefore?: Date,
 ): Promise<OutboxRow | null> {
   return enqueueEmail(db, {
     participantId: participant.id,
@@ -943,7 +943,6 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
     payload,
     idempotencyKey: `registration:${registration.id}:verify-requested:${now.toISOString()}`,
     now,
-    ...(notBefore ? { notBefore } : {}),
   });
 }
 
@@ -1417,9 +1416,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       The family sitting (§519): the public form, sent again from the screen after it — «Încă o
       persoană» — for somebody else on the same address. Read under the event's lock, like the
       address's rows above, so two forms of one sitting are one after the other. A sitting that no
-      longer takes forms (sent by «Gata», past its window, of another address) is none: this form
-      opens a new one where it has something to hold. At a window of 0 («Termene») nothing is held:
-      every form's email leaves at once, as before the sitting.
+      longer takes forms (ended on the next form, past its window, of another address) is none: this
+      form opens a new one where it has something to merge. Nothing a form queues is held (§NNN):
+      the sitting only merges, and «Da, încă o persoană» alone holds, until the next form. At a
+      window of 0 («Termene») there is no sitting at all: every form's email is its own.
     */
     const inSitting = origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined && familySittingHolds(settings);
     let sitting =
@@ -1427,7 +1427,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         ? await lockLiveSitting(tx, origin.sitting.id, { eventId: event.id, participantId: participant.id }, now)
         : null;
     const heldUntil = familySittingHeldUntil(now, settings);
-    /** Every public path below ends here: the sitting's window moves on, and the browser keeps its id. */
+    /** Every public path below ends here: the sitting merges, its window moves on, and the browser keeps its id. */
     const finishSitting = async () => {
       if (!sitting) return;
       await settleSitting(tx, sitting, { heldUntil, recipientEmail: participant.deliveryEmail, now });
@@ -1500,7 +1500,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         the address holds here, and the renderer ties it to this entry, so it names the event, the
         participant and this one person, and nothing a stranger typed can reach another inbox.
       */
-      // In a sitting (§519), the kept form joins it, and its message waits with the sitting's others.
+      // In a sitting (§519), the kept form joins it, and its message is merged with the sitting's others.
       if (inSitting && !atCap && !sitting) {
         sitting = await openSitting(tx, {
           eventId: event.id,
@@ -1511,7 +1511,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           now,
         });
       }
-      const holding = inSitting && !atCap && sitting !== null;
+      const joining = inSitting && !atCap && sitting !== null;
       const entry = atCap
         ? null
         : await insertFamilyEntry(tx, {
@@ -1522,7 +1522,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             fields: familyEntryFields(input as unknown as Record<string, unknown>, now),
             expiresAt: emailLinkExpiresAt(now, settings),
             now,
-            sittingId: holding && sitting ? sitting.id : null,
+            sittingId: joining && sitting ? sitting.id : null,
           });
       if (entry) createdDeadlines = [entry.expiresAt];
       const queued = await enqueueEmail(tx, {
@@ -1541,10 +1541,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           : { atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
         now,
-        // Held with the sitting's others until «Gata» or the window (§519); at the limit, at once.
-        ...(holding ? { notBefore: heldUntil } : {}),
       });
-      if (holding && sitting) sitting = await holdInSitting(tx, sitting, { outboxId: queued?.id ?? null });
+      if (joining && sitting) sitting = await holdInSitting(tx, sitting, { outboxId: queued?.id ?? null });
       // The club's record, as for any re-submission (§312): the state found and the message sent —
       // never the name that was typed (§12.12). The registration's timeline reads it as a line.
       await recordAuditEvent(tx, {
@@ -1563,13 +1561,20 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const existing = decision.kind === "resend" || decision.kind === "restart" ? decision.registration : undefined;
 
     /*
-      The same person as a registration this sitting created (§519): its verification email is held
-      with the sitting's others, and says what a re-send would. Nothing more is queued; the club's
-      record still has the line (§312), and says the truth: the held verification email is the one
-      that will leave, once, with the sitting — `held: true` beside its type, so the timeline reads
-      "already waiting to leave" rather than "re-sent" or "nothing to re-send".
+      The same person as a registration this sitting created (§519), while the sitting's message is
+      still to leave: that message says what a re-send would. Nothing more is queued; the club's
+      record still has the line (§312), and says the truth: the waiting message is the one that will
+      leave, once — `held: true` beside its type, so the timeline reads "already waiting to leave"
+      rather than "re-sent" or "nothing to re-send". Once it has left (§NNN: a form's email is never
+      held), the form is the ordinary re-send below.
     */
-    if (existing && isActiveStatus(existing.status) && sitting && sitting.registrationIds.includes(existing.id)) {
+    if (
+      existing &&
+      isActiveStatus(existing.status) &&
+      sitting &&
+      sitting.registrationIds.includes(existing.id) &&
+      (await sittingHasMessageToLeave(tx, sitting))
+    ) {
       await recordAuditEvent(tx, {
         actorStaffUserId: null,
         participantId: participant.id,
@@ -1699,10 +1704,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     }
 
     /*
-      A new registration of a sitting (§519): its verification email waits with the sitting's others,
-      and the sitting — opened by this form when it is the first to hold anything — names it among
-      the registrations its one button confirms. Outside a sitting, the email goes at once. Either
-      way it is the message that starts the link (`startingDeadline`, §NNN): its send re-bases it.
+      A new registration of a sitting (§519): its verification email is due at once, as outside one
+      (§NNN: a form's email is never held), and the sitting — opened by this form when it is the first
+      to keep anything — names it among the registrations its one button confirms and may merge it
+      into the family message, or a «Da» hold it until the next form. Either way it is the message
+      that starts the link (`startingDeadline`, §513): its send re-bases it.
     */
     const holdVerification = async (registration: Registration) => {
       if (!inSitting) {
@@ -1717,7 +1723,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         heldUntil,
         now,
       });
-      const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline({ [SITTING_HELD]: true }), heldUntil);
+      // Marked: should a «Da» hold it, its link's life still counts from its send (`extendHeldVerificationLink`).
+      const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline({ [SITTING_HELD]: true }));
       sitting = await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId: queued?.id ?? null });
     };
 

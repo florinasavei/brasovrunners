@@ -96,7 +96,7 @@ export async function readFamilySittingCookie(): Promise<FamilySittingCookie | n
 export async function writeFamilySittingCookie(value: FamilySittingCookie, path: string, now: Date): Promise<void> {
   const sealed = sealFamilySittingCookie(value);
   if (!sealed) return;
-  // The window's end plus the grace (§519): the automatic «Gata» at that instant still carries the cookie.
+  // The window's end plus the grace (§519): a next form sent at that instant still carries the cookie.
   const maxAge = sittingCookieMaxAgeSeconds(value.heldUntil, now);
   (await cookies()).set(COOKIE, sealed, {
     httpOnly: true,
@@ -107,7 +107,7 @@ export async function writeFamilySittingCookie(value: FamilySittingCookie, path:
   });
 }
 
-/** «Gata» was pressed: the sitting takes no more forms on this browser. */
+/** «Nu mai înscriu pe nimeni» was pressed (§NNN): the sitting takes no more forms on this browser. */
 export async function clearFamilySittingCookie(path: string): Promise<void> {
   (await cookies()).set(COOKIE, "", { httpOnly: true, sameSite: "lax", secure: env.APP_BASE_URL.startsWith("https://"), path, maxAge: 0 });
 }

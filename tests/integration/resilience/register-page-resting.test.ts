@@ -111,17 +111,17 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
-vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({ default: () => createElement("div", { "data-testid": "check-your-email" }) }));
+vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({
+  default: ({ offer }: { offer?: ReactNode }) => createElement("div", { "data-testid": "check-your-email" }, offer),
+}));
 // The family sitting's browser half (§519) and its async screen, stood in for like the parts above.
 vi.mock("@/modules/registrations/family-sitting-cookie", () => ({ readFamilySittingCookie: async () => state.sitting }));
 vi.mock("@/modules/registrations/ui/FamilySittingNext", () => ({
-  default: ({ names, atOnce, sameBirthDate, releaseInMs }: { names: string[]; atOnce: boolean; sameBirthDate: { typed: string } | null; releaseInMs: number }) =>
+  default: ({ atOnce, sameBirthDate }: { atOnce: boolean; sameBirthDate: { typed: string } | null }) =>
     createElement("div", {
       "data-testid": "family-sitting",
-      "data-names": names.join("|"),
       "data-at-once": atOnce ? "yes" : "no",
       "data-same": sameBirthDate?.typed ?? "",
-      "data-release": releaseInMs > 0 ? "later" : "now",
     }),
 }));
 vi.mock("@/modules/resilience/ui/LastGoodNotice", () => ({
@@ -172,7 +172,7 @@ describe("§447 the registration page while the database is away", () => {
     expect(resting).not.toContain(ro.Registration.errors.databaseAwayTitle);
   });
 
-  it("§519 after the form, asks «Mai înscrii pe cineva?» while the sitting holds its email; after «Gata», says to open the inbox", async () => {
+  it("§519 after the form, says to open the inbox and asks «Mai înscrii pe cineva?» while the sitting takes a next form; after «Nu mai înscriu pe nimeni», asks nothing", async () => {
     state.sitting = {
       sittingId: "00000000-0000-4000-8000-0000000000aa",
       eventId: EVENT.id,
@@ -185,14 +185,12 @@ describe("§447 the registration page while the database is away", () => {
       sameBirthDate: { typed: "Ioana Pop", kept: "Maria Pop" },
     };
     const asking = await render({ submitted: "1" });
+    // One screen (§NNN): the inbox's, with the one question inside it — the email is never held for a press.
+    expect(asking).toContain('data-testid="check-your-email"');
     expect(asking).toContain('data-testid="family-sitting"');
-    expect(asking).toContain('data-names="Ana Pop|Maria Pop"');
-    // The form not kept (§493) is said on the screen, and the open screen presses «Gata» when the window ends.
+    // The form not kept (§493) is said on the screen.
     expect(asking).toContain('data-same="Ioana Pop"');
-    expect(asking).toContain('data-release="later"');
-    // «Da, încă o persoană» is a press that starts the window again (§519), not a link; nothing was sent at once.
     expect(asking).toContain('data-at-once="no"');
-    expect(asking).not.toContain('data-testid="check-your-email"');
 
     const sent = await render({ submitted: "1", sent: "1" });
     expect(sent).toContain('data-testid="check-your-email"');
@@ -221,6 +219,9 @@ describe("§447 the registration page while the database is away", () => {
     expect(next).toContain("Până acum: Ana Pop.");
     // How long is left, on the server's clock at this render (§519): ten minutes from now.
     expect(next).toContain("pleacă singur peste 10 minute");
+    // The way out is a press (§NNN): it sends what «Da» held, so it is never a link.
+    expect(next).toContain('data-testid="family-sitting-stop"');
+    expect(next).toContain(ro.Registration.sitting.formStop);
     // The boxes a family shares start filled (§519); the person's own start empty.
     expect(next).toMatch(/name="city"[^>]*value="Brașov"|value="Brașov"[^>]*name="city"/);
     expect(next).toMatch(/name="guardianName"[^>]*value="Ana Pop"|value="Ana Pop"[^>]*name="guardianName"/);

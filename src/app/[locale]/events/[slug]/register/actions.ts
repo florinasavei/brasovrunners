@@ -23,7 +23,6 @@ import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import {
-  AUTO_PRESS_FIELD,
   FAMILY_SITTING_FIELD,
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
@@ -158,7 +157,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
-        // Every public form is a sitting's (§519): its messages wait for «Gata» or the club's window.
+        // Every public form is a sitting's (§519): its email leaves at once (§NNN), and a next form merges with it.
         sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null },
       },
     );
@@ -215,13 +214,13 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
   const minutes = (await currentDeadlines(db)).familySittingMinutes;
-  // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
+  // At a window of 0 there is no sitting (§519): the cookie only keeps the address for the next person.
   const atOnce = minutes <= 0;
   /*
     Always an id of one shape (§39): a sitting that held nothing — a re-send about somebody already
     registered, the address at its limit — gets a random one that names no row. A sealed cookie
     one uuid shorter would otherwise tell whoever typed a stranger's address which case it was.
-    The server finds nothing under it, so «Gata» releases nothing and the next form opens its own.
+    The server finds nothing under it, so «Da» holds nothing and the next form opens its own.
   */
   const heldUntil = sittingCookieUntil(now, minutes);
   await writeFamilySittingCookie(
@@ -243,7 +242,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   // greets the person by first name while it does. Its own short-lived sealed cookie, never
   // the URL: nothing typed goes into one (§14.5).
   // At a window of 0 (§519) each person's email left on its own: the last screen must not promise one.
-  // It lives as long as the sitting's cookie (§519), so the screen keeps its facts when «Gata» fires by itself.
+  // It lives as long as the sitting's cookie (§519), so the screen keeps its facts while it offers the next person.
   await stashSubmittedFacts(
     { email: input.email.trim(), firstName: input.firstName, names, atOnce },
     path,
@@ -253,33 +252,28 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
 }
 
 /**
- * «Gata — trimite emailul» (§519): the sitting's one email leaves now, and this browser's sitting
- * ends. The screen after it is the one that says to open the inbox. Pressed with no sitting — the
- * window had passed, or the sitting held nothing — it is the same screen: the email left, or is
- * leaving, by itself (§39: the answer never depends on what the address holds).
+ * «Nu mai înscriu pe nimeni» on the next form of a sitting (§NNN; once «Gata» on the screen after the
+ * form, §519): what «Da» held leaves now, and this browser's sitting ends. The screen after it says to
+ * open the inbox, and asks nothing more. Pressed with no sitting — the window had passed, or the
+ * sitting held nothing — it is the same screen: the email left, or is leaving, by itself (§39: the
+ * answer never depends on what the address holds).
  */
 export async function releaseFamilySittingAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));
   const slug = text(form, "slug");
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
   const sitting = await readFamilySittingCookie();
-  /*
-    The open screen's own press at the window's end (`PressWhenWindowEnds`, §519): with the browser's
-    half already gone — a phone slower than the cookie's grace — it does nothing and stays where it
-    is. The server releases the sitting at its `held_until` anyway; nothing depends on this press.
-  */
-  if (!sitting && form.get(AUTO_PRESS_FIELD) === "1") return;
   if (sitting?.sittingId) await releaseFamilySitting(getDb(), sitting.sittingId, new Date());
   await clearFamilySittingCookie(path);
   redirect(`${path}?submitted=1&${SITTING_SENT_PARAM}=1`);
 }
 
 /**
- * «Da, încă o persoană» (§519; the review of 2026-09-27: the window lapsed under the parent's hands while
- * the next form was open): a press, never a link — it starts the club's window again from now, on the
- * server's row and every message it holds (`continueFamilySitting`) and on this browser's half, then
- * opens the same form with the address fixed. The form's page says how long is left. A sitting whose
- * email has already left opens the ordinary form, as a lapsed one always did (§39: the same screens).
+ * «Da, încă o persoană» (§519, §NNN): the one press that holds. A press, never a link — the email that
+ * has not left yet waits for the next form, until the club's window from now, on the server's row and
+ * every message it still has waiting (`continueFamilySitting`) and on this browser's half; then the
+ * same form opens with the address fixed. The form's page says how long is left. A sitting past its
+ * window opens the ordinary form, as a lapsed one always did (§39: the same screens).
  */
 export async function continueFamilySittingAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));

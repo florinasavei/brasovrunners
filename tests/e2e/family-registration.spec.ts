@@ -38,9 +38,9 @@ test.describe("§389 §446 a family on one address", () => {
 
   /**
    * One form, sent. `email` null is a family sitting's next form (§519): the address is fixed and not
-   * asked. `done` presses «Gata» after it, so the sitting's one message leaves at once.
+   * asked. Nothing is pressed after it: a form's email is never held (§NNN), it leaves at once.
    */
-  async function fillPerson(page: Page, person: Person, email: string | null, done = true) {
+  async function fillPerson(page: Page, person: Person, email: string | null) {
     const values: Record<string, string> = {
       firstName: person.firstName,
       lastName: person.lastName,
@@ -63,16 +63,15 @@ test.describe("§389 §446 a family on one address", () => {
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page).toHaveURL(/submitted=1/, { timeout: 30_000 });
-    /*
-      «Gata» after each form (§519): these cases are one person per sitting — the email of §446 for
-      each — so each sitting's message leaves at once. The sitting of several people is its own case below.
-    */
-    if (!done) return;
-    await page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" }).click();
-    await expect(page).toHaveURL(/sent=1/, { timeout: 30_000 });
   }
 
   async function publicSubmission(page: Page, person: Person, email: string): Promise<string> {
+    /*
+      These cases are one person per sitting — the email of §446 for each (§519): each form starts
+      as a new visit would, without this browser's sitting. The sitting of several people is its own
+      case below.
+    */
+    await page.context().clearCookies({ name: "br_family_sitting" });
     await page.goto(registerPath);
     await hydrated(page);
     await fillPerson(page, person, email);
@@ -210,7 +209,7 @@ test.describe("§389 §446 a family on one address", () => {
     const rows = await registrationsByEmail(email);
     expect(rows).toHaveLength(1);
     expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([]);
-    // The first form's email was held by its sitting (§NNN) and starts the link; the re-send for the slip does neither.
+    // The first form's email is its sitting's (§519) and starts the link; the re-send for the slip does neither.
     expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ sittingHeld: true, startsDeadline: true }, { anotherPersonHint: true }]);
 
     // The re-sent email, as captured: the sentence, in both halves.
@@ -218,7 +217,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
   });
 
-  test("§519 one sitting, one email: the next person keeps the address, «Gata» sends one family message, one press confirms everybody and opens the wizard", async ({ page }) => {
+  test("§519 one sitting: the first email leaves at once, «Da» opens the next person with the address kept, the family message names both, one press confirms everybody and opens the wizard", async ({ page }) => {
     test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -226,36 +225,41 @@ test.describe("§389 §446 a family on one address", () => {
     const email = `e2e-family-sitting-${suffix}@test.invalid`;
     const lastName = `Pop ${suffix}`;
 
-    // The first form: the screen asks about another person before anything is mailed.
+    // The first form: the inbox's screen, with one question and one answer (§NNN) — no «Gata» to press.
+    await page.context().clearCookies({ name: "br_family_sitting" });
     await page.goto(registerPath);
     await hydrated(page);
-    await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email, false);
-    await expect(page.getByTestId("family-sitting-names")).toContainText(`Ana ${lastName}`);
-    // One honest sentence: on «Gata», or by itself after the club's window, with the time left.
-    await expect(page.getByTestId("family-sitting-when")).toContainText("Emailul pleacă când apeși „Gata” sau singur după");
+    await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
+    await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
+    await expect(page.getByTestId("family-sitting-when")).toContainText("Dacă apeși „Da”, emailul care n-a plecat încă așteaptă formularul următor");
+    // One person's email is never held: it has left without any press.
+    const own = await capturedEmail(page, email, "Am primit o înscriere la");
+    expect(own.text).toContain(`Ana ${lastName}`);
+    // The same screen again, while the sitting takes a next form.
+    await page.goto(`${registerPath}?submitted=1`);
+    await hydrated(page);
     const add = page.getByTestId("family-sitting-add");
     expect((await add.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    // «Da, încă o persoană»: a press that starts the window again, then the same form, the address said back and not asked.
+    // «Da, încă o persoană»: the one press that holds, then the same form, the address said back and not asked.
     await add.getByRole("button", { name: "Da, încă o persoană" }).click();
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-address")).toContainText(email);
     await expect(page.locator('[name="emailConfirm"]')).toHaveCount(0);
-    // How long is left, said on the form itself.
+    // How long is left, said on the form itself, and the way out is a press.
     await expect(page.getByTestId("family-sitting-intro")).toContainText("pleacă singur peste");
+    await expect(page.getByTestId("family-sitting-stop").getByRole("button", { name: "Nu mai înscriu pe nimeni — trimite emailul" })).toBeVisible();
     // The boxes a family shares start as the first form left them; the person's own start empty.
     await expect(page.locator('[name="city"]')).toHaveValue("Brașov");
     await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");
     await expect(page.locator('[name="firstName"]')).toHaveValue("");
-    await fillPerson(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, null, false);
-    await expect(page.getByTestId("family-sitting-names")).toContainText(`Maria ${lastName}`);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-
-    // «Gata»: one email for both.
-    await page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" }).click();
-    await expect(page).toHaveURL(/sent=1/, { timeout: 30_000 });
+    await fillPerson(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" }, null);
+    // The newest email names both; nothing to press for it to leave.
     await expect(page.getByTestId("check-email-family")).toContainText(`Ana ${lastName}, Maria ${lastName}`);
+    await expect(page.getByTestId("family-sitting-add")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     // «Înscriere de familie: 2 persoane la …» is the subject; the captured words are the body's.
     const family = await capturedEmail(page, email, "Confirm și semnez declarațiile (2)");

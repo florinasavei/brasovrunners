@@ -1,6 +1,7 @@
 import BadgeIcon from "@mui/icons-material/Badge";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import GroupsIcon from "@mui/icons-material/Groups";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import ShareIcon from "@mui/icons-material/Share";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -172,9 +173,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another, family, sent } = await searchParams;
   /*
-    The family sitting (§519): the browser's sealed half, when its email has not left yet. After the
-    form it is the screen that asks «Mai înscrii pe cineva cu aceeași adresă?»; with `?family=1` it is
-    the next form, the address fixed. Everything it shows was typed on this browser (§39).
+    The family sitting (§519), the browser's sealed half, while its window takes a next form. After the
+    form, the screen that says to open the inbox asks one question with it (§NNN): «Mai înscrii pe cineva
+    cu aceeași adresă?»; with `?family=1` it is the next form, the address fixed. Everything it shows
+    was typed on this browser (§39).
   */
   const sittingCookie = resting ? null : await readFamilySittingCookie();
   const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
@@ -509,7 +511,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}
-      <RegistrationJourney current={submitted && !sittingScreen ? "confirm" : "details"} />
+      <RegistrationJourney current={submitted ? "confirm" : "details"} />
 
       {/* The five steps and the waiting list, folded: the journey above says where they are,
           this says the whole of it (`DECISIONS.md` §91). */}
@@ -519,27 +521,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         </Box>
       )}
 
-      {sittingScreen && sitting ? (
-        /*
-          «Mai înscrii pe cineva cu aceeași adresă?» (§519) — before anything is mailed: «Încă o
-          persoană» opens the form again with the address fixed, «Gata» sends the one email. The
-          same screen after every form, whatever the address holds (§39).
-        */
-        <FamilySittingNext
-          email={sitting.email}
-          names={sittingNames(sitting.people)}
-          sameBirthDate={sitting.sameBirthDate ?? null}
-          releaseInMs={sitting.heldUntil.getTime() - now.getTime()}
-          firstName={submittedFacts?.firstName ?? null}
-          eventTitle={event.title}
-          atOnce={sitting.atOnce === true}
-          windowMinutes={sitting.windowMinutes ?? null}
-          locale={locale}
-          slug={slug}
-          continueAction={continueFamilySittingAction}
-          releaseAction={releaseFamilySittingAction}
-        />
-      ) : submitted ? (
+      {submitted ? (
         /*
           "Aproape gata, Ana!" — the screen after the form, in `CheckYourEmail.tsx`. It carries
           every fact the receipt it replaced had: the address (§224), the wait in bold and once
@@ -556,6 +538,24 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           slug={slug}
           facts={submittedFacts}
           window={stepsWindow}
+          /*
+            «Mai înscrii pe cineva cu aceeași adresă?» (§519, §NNN) — one question, with one answer,
+            while the sitting takes a next form. The email has left, or leaves on the club's timing:
+            nothing here waits for a press. The same screen after every form, whatever the address
+            holds (§39).
+          */
+          offer={
+            sittingScreen && sitting ? (
+              <FamilySittingNext
+                sameBirthDate={sitting.sameBirthDate ?? null}
+                atOnce={sitting.atOnce === true}
+                windowMinutes={sitting.windowMinutes ?? null}
+                locale={locale}
+                slug={slug}
+                continueAction={continueFamilySittingAction}
+              />
+            ) : undefined
+          }
         />
       ) : (
         <>
@@ -727,8 +727,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
           {/*
-            The next person of a family sitting (§519): who was sent so far, that nothing is mailed
-            yet, and the way back to «Gata» without filling this one in.
+            The next person of a family sitting (§519): who was sent so far, that the email not yet
+            left waits for this form (§NNN: «Da» holds, until this form or the window), and the way out
+            without filling this one in — a press, since it sends what «Da» held.
           */}
           {familyForm && sitting && (
             <Alert severity="success" icon={false} sx={{ mb: 2 }} data-testid="family-sitting-intro">
@@ -736,17 +737,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Typography variant="body2">{t("sitting.formSoFar", { names: sittingNames(sitting.people).join(", ") })}</Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {/*
-                  How long is left, on the server's clock at this render (§519): the email leaves by
-                  itself then unless this form is sent — sending it starts the window again. At a
-                  window of 0 nothing waits: this person's email leaves when the form is sent.
+                  How long is left, on the server's clock at this render (§519): what «Da» held leaves
+                  by itself then unless this form is sent, which sends it merged. At a window of 0
+                  nothing waits: this person's email leaves when the form is sent.
                 */}
                 {sitting.atOnce
                   ? t("sitting.formAtOnce")
-                  : t("sitting.formLeft", { minutes: minutesPhrase(locale, Math.max(1, sittingMinutesLeft(sitting.heldUntil.getTime() - now.getTime()))) })}{" "}
-                <MuiLink href={`${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } })}?submitted=1`} sx={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}>
-                  {t("sitting.formBack")}
-                </MuiLink>
+                  : t("sitting.formLeft", { minutes: minutesPhrase(locale, Math.max(1, sittingMinutesLeft(sitting.heldUntil.getTime() - now.getTime()))) })}
               </Typography>
+              <form action={releaseFamilySittingAction} style={{ marginTop: 8 }} data-testid="family-sitting-stop">
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="slug" value={slug} />
+                <SubmitButton label={t("sitting.formStop")} pendingLabel={t("sitting.formStopPending")} variant="outlined">
+                  <MarkEmailReadIcon />
+                </SubmitButton>
+              </form>
             </Alert>
           )}
           <form action={submitRegistrationAction} id={REGISTRATION_FORM_ID}>

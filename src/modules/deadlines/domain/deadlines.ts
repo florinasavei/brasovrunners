@@ -75,13 +75,13 @@ export type DeadlineRule = {
  *   season's lists up can say so in its notice — the default is a month, because the names are a
  *   disclosure whose purpose (who is coming, who came) is spent soon after the event, and the
  *   registration itself is kept three years for other reasons.
- * - the **family sitting** 0 to 60 minutes, 10 by default (§519): how long the screen after the
- *   form waits for another person on the same address before the one email leaves by itself, when
- *   nobody presses «Gata» — counted again from every form sent and every «Da, încă o persoană».
- *   Ten minutes is a second form filled on a phone; 0 holds nothing, every form's email leaving at
- *   once as before the sitting (the screen still offers the next person, saying the email has
- *   left); an hour is the most a verification email should wait, and the outbox's health reads a
- *   row held longer than that as stalled.
+ * - the **family sitting** 0 to 60 minutes, 10 by default (§519, §NNN): how long a next form is
+ *   taken with the same address, and — after «Da, încă o persoană», the one press that holds — how
+ *   long the email that has not left yet waits for that next form before it leaves by itself;
+ *   counted again from every form sent and every «Da». A form's own email is never held. Ten
+ *   minutes is a second form filled on a phone; 0 is no sitting, every form's email its own (the
+ *   screen still offers the next person); an hour is the most a verification email should wait,
+ *   and the outbox's health reads a row held longer than that as stalled.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -180,9 +180,9 @@ export function emailLinkExpiresAt(now: Date, deadlines: Pick<Deadlines, "confir
 }
 
 /**
- * Until when a family sitting holds its one email back (§519): the club's minutes from the last
- * form sent in it, or the last «Da, încă o persoană». «Gata» sends it before; each further form in the
- * sitting, and each «Da», moves this forward. At 0 the sitting holds nothing (`familySittingHolds`).
+ * Until when a family sitting takes a next form, and what a «Da» held waits for it (§519, §NNN): the
+ * club's minutes from the last form sent in it, or the last «Da, încă o persoană». Each further form,
+ * and each «Da», moves this forward. At 0 there is no sitting (`familySittingHolds`).
  */
 export function familySittingHeldUntil(now: Date, deadlines: Pick<Deadlines, "familySittingMinutes">): Date {
   return new Date(now.getTime() + deadlines.familySittingMinutes * MINUTE);
