@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gt, gte, inArray, isNull, lte, not, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, lte, not, or, sql } from "drizzle-orm";
 import { emailOutbox, type EmailMessageType, type EmailOutboxStatus } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
@@ -39,6 +39,8 @@ export type QueuedMessage = {
   createdAt: Date;
   /** Whether a staff member asked for this one by hand — a resend, rather than the flow. */
   isManualResend: boolean;
+  /** A family sitting's hold, read from the payload's own flag (`sittingHeld` / `familyHeld`), never from timing. */
+  familyHeld: boolean;
 };
 
 /** The statuses that mean "still owed": waiting, mid-flight, or out of retries. */
@@ -78,6 +80,8 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
   limit: number = OUTBOX_QUEUE_LIMIT,
   now: Date = new Date(),
 ): Promise<OutboxQueue> {
+  // The family hold is the payload's own flag (§519): a row Gmail's pace threw back is a retry, not a family.
+  const familyFlag = sql`(${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true'`;
   const rows = await db
     .select({
       id: emailOutbox.id,
@@ -89,6 +93,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       lastError: emailOutbox.lastError,
       createdAt: emailOutbox.createdAt,
       isManualResend: emailOutbox.isManualResend,
+      familyHeld: sql<boolean>`coalesce((${familyFlag}), false)`,
     })
     .from(emailOutbox)
     .where(inArray(emailOutbox.status, UNSENT))
@@ -104,8 +109,8 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
     .select({
       total: count(),
       due: count(sql`case when ${dueWhere} then 1 end`),
-      family: count(sql`case when ${and(later, not(bulk), eq(emailOutbox.attemptCount, 0))} then 1 end`),
-      retry: count(sql`case when ${and(later, not(bulk), gte(emailOutbox.attemptCount, 1))} then 1 end`),
+      family: count(sql`case when ${and(later, not(bulk), familyFlag)} then 1 end`),
+      retry: count(sql`case when ${and(later, not(bulk), not(familyFlag))} then 1 end`),
       reserve: count(sql`case when ${and(later, bulk)} then 1 end`),
       until: sql<Date | string | null>`min(case when ${later} then ${emailOutbox.nextAttemptAt} end)`,
     })

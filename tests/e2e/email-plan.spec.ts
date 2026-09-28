@@ -126,7 +126,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await expect(main.getByTestId("outbox-when-holds")).toContainText("monitorul care apelează site-ul");
     // Every row the queue holds says when it leaves, whatever this database has queued now.
     for (const row of await main.getByTestId("outbox-row-leaves").all()) {
-      await expect(row).toHaveText(/^(Pleacă:|Întârziat:|Ținut până la|Se trimite acum|Nu mai pleacă)/);
+      await expect(row).toHaveText(/^(Pleacă:|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
     }
 
     const form = main.getByTestId("outbox-timing-form");

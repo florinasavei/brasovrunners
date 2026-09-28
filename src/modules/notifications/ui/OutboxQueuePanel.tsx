@@ -104,10 +104,12 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     const at = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
     // A family sitting's hold (§519): a turn in the future and no attempt made yet — not a retry,
     // not the newsletter's reserve. It says the hold's end and the round after it.
-    if (row.nextAttemptAt && row.nextAttemptAt.getTime() > now.getTime() && row.attemptCount === 0 && !isBulkMessage(row.messageType)) {
+    if (row.nextAttemptAt && row.nextAttemptAt.getTime() > now.getTime() && row.familyHeld) {
       return { text: t("emails.queue.leaves.held", { until: when.format(row.nextAttemptAt), at: when.format(at) }), late: false };
     }
-    return { text: t(late ? "emails.queue.leaves.late" : "emails.queue.leaves.at", { at: when.format(at) }), late };
+    return { text: late
+        ? t(mayEdit ? "emails.queue.leaves.late" : "emails.queue.leaves.lateAskAdmin", { at: when.format(at) })
+        : t("emails.queue.leaves.at", { at: when.format(at) }), late };
   };
 
   /*

@@ -3643,6 +3643,7 @@
         "leaves": {
           "at": "Pleacă: {at} (estimat).",
           "late": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau apasă «Trimite acum».",
+          "lateAskAdmin": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau anunță administratorul.",
           "sending": "Se trimite acum.",
           "never": "Nu mai pleacă singur: toate încercările s-au consumat.",
           "held": "Ținut până {until}: o familie încă semnează. Apoi pleacă la trecerea următoare: {at} (estimat)."
@@ -3656,7 +3657,7 @@
           "FAILED": "Oprit după toate încercările"
         },
         "sendNow": {
-          "held": "{count, plural, one {# email rămâne ținut} few {# emailuri rămân ținute} other {# de emailuri rămân ținute}}, primul până {until}: {reasons}.",
+          "held": "Rămân ținute: {count}, primul până {until}: {reasons}.",
           "reasons": {
             "family": "familie care încă semnează: {count}",
             "retry": "reîncercare sau amânare: {count}",

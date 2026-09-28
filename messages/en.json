@@ -3643,6 +3643,7 @@
         "leaves": {
           "at": "Leaves: {at} (estimated).",
           "late": "Late: it should have left already. Next scheduled round: {at}; or press «Send now».",
+          "lateAskAdmin": "Late: it should have left already. Next scheduled round: {at}; or tell the administrator.",
           "sending": "Being sent now.",
           "never": "Will not leave on its own: every attempt is spent.",
           "held": "Held until {until}: a family is still signing. Then leaves on the next round: {at} (estimated)."
@@ -3656,7 +3657,7 @@
           "FAILED": "Stopped after every attempt"
         },
         "sendNow": {
-          "held": "{count, plural, one {# email stays held} other {# emails stay held}}, the first until {until}: {reasons}.",
+          "held": "Still held: {count}, the first until {until}: {reasons}.",
           "reasons": {
             "family": "a family still signing: {count}",
             "retry": "a retry or a deferral: {count}",

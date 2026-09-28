@@ -59,6 +59,7 @@ const QUEUE: Props["queue"] = {
       lastError: null,
       createdAt: new Date("2026-10-01T07:02:00.000Z"),
       isManualResend: false,
+      familyHeld: false,
     },
     {
       id: "b",
@@ -71,6 +72,7 @@ const QUEUE: Props["queue"] = {
       // Five hours ago: no schedule explains it.
       createdAt: new Date("2026-10-01T02:00:00.000Z"),
       isManualResend: false,
+      familyHeld: false,
     },
     {
       id: "c",
@@ -82,6 +84,7 @@ const QUEUE: Props["queue"] = {
       lastError: "550 mailbox unavailable",
       createdAt: new Date("2026-09-30T07:00:00.000Z"),
       isManualResend: false,
+      familyHeld: false,
     },
   ],
 };
@@ -191,7 +194,7 @@ describe("§NNN the queue panel says when the emails leave", () => {
   });
 
   it("says a family's held row waits until its hold ends, then the round after it", async () => {
-    const held = { ...QUEUE.rows[0]!, id: "f", nextAttemptAt: new Date("2026-10-01T08:30:00.000Z") };
+    const held = { ...QUEUE.rows[0]!, id: "f", familyHeld: true, nextAttemptAt: new Date("2026-10-01T08:30:00.000Z") };
     const html = await render("ro", { queue: { ...QUEUE, total: 1, due: 0, held: { total: 1, family: 1, retry: 0, reserve: 0, until: held.nextAttemptAt }, rows: [held] } });
     const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
     // Held until 11:30 club time; the first round at or after it is the 12:00 one.
@@ -211,12 +214,12 @@ describe("§NNN the queue panel says when the emails leave", () => {
     const confirm = form?.props.confirm as { body: string; email: string };
     expect(confirm.email).toBe("Se trimite acum 1 email din coadă.");
     expect(confirm.body).toContain(ro.Admin.confirm.sendNowBody);
-    expect(confirm.body).toMatch(/3 emailuri rămân ținute, primul până [^:]*11:30: familie care încă semnează: 2 · reîncercare sau amânare: 1\.$/);
+    expect(confirm.body).toMatch(/Rămân ținute: 3, primul până [^:]*11:30: familie care încă semnează: 2 · reîncercare sau amânare: 1\.$/);
 
     state.locale = "en";
     const english = await OutboxQueuePanel({ locale: "en", queue, volume: VOLUME, mayEdit: true, delivery: DELIVERY, now: NOW, mayEditTiming: true });
     const englishConfirm = findByTestId(english, "send-now-form")?.props.confirm as { body: string };
-    expect(englishConfirm.body).toMatch(/3 emails stay held, the first until [^:]*11:30: a family still signing: 2 · a retry or a deferral: 1\.$/);
+    expect(englishConfirm.body).toMatch(/Still held: 3, the first until [^:]*11:30: a family still signing: 2 · a retry or a deferral: 1\.$/);
   });
 
   it("offers no «Trimite acum» while nothing is due, and says why", async () => {
@@ -224,5 +227,16 @@ describe("§NNN the queue panel says when the emails leave", () => {
     const html = await render("ro", { queue });
     expect(html).not.toContain("send-now-form");
     expect(html).toContain(ro.Admin.emails.queue.sendNow.nothingDue);
+  });
+});
+
+describe("OutboxQueuePanel for a reader who cannot send (§NNN)", () => {
+  it("tells a late row's reader to tell the administrator, and a Gmail-paced retry is never a family's hold", async () => {
+    const html = await render("ro", { mayEdit: false });
+    expect(html).toContain("sau anunță administratorul.");
+    expect(html).not.toContain("apasă «Trimite acum»");
+    const paced = { ...QUEUE.rows[0]!, id: "p", nextAttemptAt: new Date(NOW.getTime() + 30_000) };
+    const again = await render("ro", { queue: { ...QUEUE, total: 1, due: 0, rows: [paced] } });
+    expect(again).not.toContain("Ținut până");
   });
 });
