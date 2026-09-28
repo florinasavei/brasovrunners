@@ -1892,9 +1892,9 @@
       "roles": {
         "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
-        "MODERATOR": "citește evenimentele, înscrierile, exportul și numerele; trimite mesaje participanților și lucrează la masa din ziua cursei. Nu modifică un eveniment.",
-        "DEV": "pagina tehnică /devs; fără evenimente și fără datele participanților.",
-        "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
+        "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă. Nu creează, nu setează, nu publică un eveniment.",
+        "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
+        "ADMIN": "conduce clubul: creează, setează, publică și anulează evenimentele; plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
@@ -6233,9 +6233,9 @@
     "roleSummary": {
       "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
-      "MODERATOR": "citește evenimentele, înscrierile, exportul și numerele, trimite mesaje participanților, masa din ziua cursei; nu modifică un eveniment",
-      "DEV": "pagina de configurare; fără evenimente și fără date despre participanți",
-      "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
+      "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților; nu modifică un eveniment",
+      "DEV": "pagina de configurare; nu modifică evenimente, fără date despre participanți",
+      "ADMIN": "conduce clubul: creează, setează, publică și anulează evenimentele; plus înscrieri, export, texte legale, echipa, ștergerea unui eveniment",
       "SUPERADMIN": "plus setările tehnice care pot opri serviciul și numirea altui Superadministrator",
       "MEMBER": "zona membrilor de pe site. Fără backoffice"
     },

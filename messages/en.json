@@ -1892,9 +1892,9 @@
       "roles": {
         "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
-        "MODERATOR": "reads the events, the registrations, the export and the numbers; messages the participants and works the race-day desk. Changes no event.",
-        "DEV": "the technical page /devs; no events and no participant data.",
-        "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
+        "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk. Creates, sets up and publishes no event.",
+        "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
+        "ADMIN": "runs the club: creates, sets up, publishes and cancels the events; plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
         "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
         "MEMBER": "the members' area of the site, after signing in. No backoffice."
       },
@@ -6233,9 +6233,9 @@
     "roleSummary": {
       "CONTRIBUTOR": "the race-number desk, and nothing else",
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
-      "MODERATOR": "reads the events, the registrations, the export and the numbers, messages the participants, the race-day desk; changes no event",
-      "DEV": "the configuration page; no events and no participant data",
-      "ADMIN": "runs the club: plus registrations, participants, export, legal texts, the team, deleting an event",
+      "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants; changes no event",
+      "DEV": "the configuration page; changes no event, no participant data",
+      "ADMIN": "runs the club: creates, sets up, publishes and cancels the events; plus registrations, export, legal texts, the team, deleting an event",
       "SUPERADMIN": "plus the technical settings that can stop the service, and naming another Superadministrator",
       "MEMBER": "the members' area of the site. No backoffice"
     },

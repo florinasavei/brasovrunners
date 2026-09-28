@@ -1,5 +1,4 @@
 import DateRangeIcon from "@mui/icons-material/DateRange";
-import OpenIcon from "@mui/icons-material/Visibility";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -84,6 +83,8 @@ export const dynamic = "force-dynamic";
 
 /** The bulk form is the bar above the table (§114) and owns the checkboxes inside the table. */
 const BULK_FORM = "bulk-archive";
+/** The eye of «Deschide» for a reader (§NNN): the one `preview` glyph the row's ⋮ «Previzualizare» draws too (§318). */
+const PreviewGlyph = ACTION_ICONS.preview;
 
 type EventRow = {
   event: EditableEvent;
@@ -768,7 +769,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               data-testid={verbs.edit ? "event-row-edit" : "event-row-open"}
               sx={{ textTransform: "none", minHeight: 40, minWidth: 40, px: { xs: 1, sm: 1.5 }, gap: 0.75 }}
             >
-              {verbs.edit ? <PencilIcon /> : <OpenIcon aria-hidden sx={{ fontSize: 18 }} />}
+              {verbs.edit ? <PencilIcon /> : <PreviewGlyph aria-hidden sx={{ fontSize: 18 }} />}
               <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
                 {verbs.edit ? t("events.edit") : t("events.open")}
               </Box>
