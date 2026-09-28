@@ -86,3 +86,33 @@ export function drainOutboxAfterResponse(): void {
     // Outside a request scope — a script, a test — there is no "after" and nothing to do.
   }
 }
+
+/**
+ * «Trimite acum, fără să aștepte trecerea programată» (§540, amending §513 and §68): the rows one
+ * backoffice press queued — its message and the club's copies of it — sent after the press's
+ * response, **whatever «Când pleacă emailurile» says**, and nothing else of the queue. The same
+ * one-shot `after()` as above, limited to the ids; the allowance was asked before the press queued
+ * anything (`assertRoomToSendNow`). What this cannot send — a transient failure's retry, a spent cap —
+ * stays PENDING for the outbox job, which is woken for it.
+ */
+export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
+  try {
+    after(async () => {
+      try {
+        const [{ sendOutboxRowsNow }, { nextOutboxWork }] = await Promise.all([import("./send-rows-now"), import("@/modules/jobs/next-work")]);
+        const db = getDb();
+        await sendOutboxRowsNow(db, ids, new Date());
+        const left = await nextOutboxWork(db);
+        if (left) wakeJobs("email-outbox", left);
+      } catch (error) {
+        console.error("[email-outbox] send-now drain after response failed", error);
+        wakeJobs("email-outbox");
+      }
+    });
+  } catch {
+    // Outside a request scope: the rows stay PENDING for the outbox job.
+    wakeJobs("email-outbox");
+  }
+}

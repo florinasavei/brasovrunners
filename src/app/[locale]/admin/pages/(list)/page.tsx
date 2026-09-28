@@ -21,9 +21,10 @@ import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/rep
 import { readTeamPageSettings } from "@/modules/content/team/page-settings";
 import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
+import { PAGES_ROW_ROUTE } from "@/modules/content/pages/pages-row";
 import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules/public-cache/reads";
-import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
-import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { canEditEventFields, canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { pageListVerbs } from "@/modules/content/pages/page-list-verbs";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -71,6 +72,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   // Reading the club's pages, not writing them (§208).
   if (!canReadContent(actor.role)) notFound();
+  const mayMove = canEditEventFields(actor.role);
 
   const current = await searchParams;
   const { saved, error } = current;
@@ -93,7 +95,8 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     (§459), «Întrebări frecvente» and «Membri» (§524). Each wears its glyph and says whether it is on the site and
     what of it is, so the list answers "what is live" for every page the club has, standard and
     custom alike. «Contact» is always on the site; its row says what the page offers, and opens
-    the settings behind it for a role that may read them.
+    its own page, `/admin/pages/contact`, like the others — never a «Setări» tab, which switched the
+    main bar away from «Pagini» (the owner, 2026-09-28).
   */
   const contactLine = [
     contactFormReaches ? t("pages.contactForm") : t("pages.contactNoForm"),
@@ -105,7 +108,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "contact",
       icon: <MailOutlineIcon aria-hidden fontSize="small" color="action" />,
-      href: canOpenSettingsTab(actor.role, "contact") ? ("/admin/settings/contact" as const) : null,
+      href: PAGES_ROW_ROUTE.contact,
       title: t("pages.tabContact"),
       published: true,
       line: contactLine,
@@ -113,7 +116,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "team",
       icon: <GroupsIcon aria-hidden fontSize="small" color="action" />,
-      href: "/admin/pages/team" as const,
+      href: PAGES_ROW_ROUTE.team,
       title: t("pages.tabTeam"),
       published: teamSettings.status === "PUBLISHED",
       line: t("pages.standardShown", {
@@ -124,7 +127,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "faq",
       icon: <HelpOutlineIcon aria-hidden fontSize="small" color="action" />,
-      href: "/admin/pages/faq" as const,
+      href: PAGES_ROW_ROUTE.faq,
       title: t("pages.tabFaq"),
       published: faqSettings.status === "PUBLISHED",
       line: t("pages.standardShown", {
@@ -135,7 +138,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "members",
       icon: <CardMembershipIcon aria-hidden fontSize="small" color="action" />,
-      href: "/admin/pages/members" as const,
+      href: PAGES_ROW_ROUTE.members,
       title: t("pages.tabMembers"),
       published: membersSettings.status === "PUBLISHED",
       line: t("members.count", { count: members }),
@@ -284,7 +287,9 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
               {/* The ends have no button rather than a disabled one: there is nothing to
                   explain about an arrow that would move the first page above itself, and a
                   control that never does anything is worse than one that is not there. */}
-              {index > 0 && (
+              {/* The arrows only for a role `movePageInNav` accepts (`canEditEventFields`): a Redactor reads
+                  the list since its layout asks `canReadContent`, and an arrow it would be refused on is noise. */}
+              {mayMove && index > 0 && (
                 <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="pageId" value={row.id} />
@@ -297,7 +302,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                   />
                 </Box>
               )}
-              {index < rows.length - 1 && (
+              {mayMove && index < rows.length - 1 && (
                 <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="pageId" value={row.id} />
@@ -315,60 +320,58 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                 are the Server Actions the menu submits — hidden, because the menu is the
                 control and a form in a table cell is not.
               */}
-              {canEditTexts(actor.role) && (
-                <>
-                  {/* Each verb's form asks its own question (§384); the menu only submits it. */}
-                  <ActionForm
-                    id={`publish-${row.id}`}
-                    action={transitionPageAction}
-                    hidden
-                    confirm={
-                      row.editorialStatus === "PUBLISHED"
-                        ? { title: t("pages.unpublishTitle"), body: t("pages.unpublishBody"), confirmLabel: t("pages.unpublish"), cancelLabel: words.cancel, destructive: true }
-                        : { title: t("pages.publishTitle"), body: t("pages.publishBody"), confirmLabel: t("pages.publish"), cancelLabel: words.cancel }
-                    }
-                  >
-                    <input type="hidden" name="uiLocale" value={locale} />
-                    <input type="hidden" name="pageId" value={row.id} />
-                    <input type="hidden" name="expectedVersion" value={row.version} />
-                    <input type="hidden" name="to" value={row.editorialStatus === "PUBLISHED" ? "DRAFT" : "PUBLISHED"} />
-                  </ActionForm>
-                  <ActionForm
-                    id={`delete-${row.id}`}
-                    action={deletePageAction}
-                    hidden
-                    confirm={{ title: t("pages.deleteTitle", { title: row.title ?? t("pages.untitled") }), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
-                  >
-                    <input type="hidden" name="uiLocale" value={locale} />
-                    <input type="hidden" name="pageId" value={row.id} />
-                  </ActionForm>
-                  <RowMenu
-                    ariaLabel={t("pages.rowActions", { title: row.title ?? t("pages.untitled") })}
-                    items={[
-                      {
-                        kind: "link",
-                        label: t("pages.edit"),
-                        icon: "edit",
-                        href: `${basePath}/${row.id}`,
-                      },
-                      {
-                        kind: "submit",
-                        label: row.editorialStatus === "PUBLISHED" ? t("pages.unpublish") : t("pages.publish"),
-                        icon: row.editorialStatus === "PUBLISHED" ? "unpublish" : "publish",
-                        formId: `publish-${row.id}`,
-                        color: row.editorialStatus === "PUBLISHED" ? "warning" : "primary",
-                      },
-                      {
-                        kind: "submit",
-                        label: t("pages.delete"),
-                        icon: "delete",
-                        formId: `delete-${row.id}`,
-                        color: "error",
-                      },
-                    ] satisfies RowMenuItem[]}
-                  />
-                </>
-              )}
+              {(() => {
+                // Each verb asks the gate its own service asserts (`pageListVerbs`): a Redactor reads
+                // this list and edits a page, but is never shown «Șterge» or «Publică» / «Retrage».
+                const verbs = pageListVerbs(actor.role, row.editorialStatus as EditorialStatus);
+                if (!verbs.edit && !verbs.toggleTo && !verbs.remove) return null;
+                const items: RowMenuItem[] = [];
+                if (verbs.edit) items.push({ kind: "link", label: t("pages.edit"), icon: "edit", href: `${basePath}/${row.id}` });
+                if (verbs.toggleTo) {
+                  items.push({
+                    kind: "submit",
+                    label: verbs.toggleTo === "DRAFT" ? t("pages.unpublish") : t("pages.publish"),
+                    icon: verbs.toggleTo === "DRAFT" ? "unpublish" : "publish",
+                    formId: `publish-${row.id}`,
+                    color: verbs.toggleTo === "DRAFT" ? "warning" : "primary",
+                  });
+                }
+                if (verbs.remove) items.push({ kind: "submit", label: t("pages.delete"), icon: "delete", formId: `delete-${row.id}`, color: "error" });
+                return (
+                  <>
+                    {/* Each verb's form asks its own question (§384); the menu only submits it. */}
+                    {verbs.toggleTo && (
+                      <ActionForm
+                        id={`publish-${row.id}`}
+                        action={transitionPageAction}
+                        hidden
+                        confirm={
+                          verbs.toggleTo === "DRAFT"
+                            ? { title: t("pages.unpublishTitle"), body: t("pages.unpublishBody"), confirmLabel: t("pages.unpublish"), cancelLabel: words.cancel, destructive: true }
+                            : { title: t("pages.publishTitle"), body: t("pages.publishBody"), confirmLabel: t("pages.publish"), cancelLabel: words.cancel }
+                        }
+                      >
+                        <input type="hidden" name="uiLocale" value={locale} />
+                        <input type="hidden" name="pageId" value={row.id} />
+                        <input type="hidden" name="expectedVersion" value={row.version} />
+                        <input type="hidden" name="to" value={verbs.toggleTo} />
+                      </ActionForm>
+                    )}
+                    {verbs.remove && (
+                      <ActionForm
+                        id={`delete-${row.id}`}
+                        action={deletePageAction}
+                        hidden
+                        confirm={{ title: t("pages.deleteTitle", { title: row.title ?? t("pages.untitled") }), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
+                      >
+                        <input type="hidden" name="uiLocale" value={locale} />
+                        <input type="hidden" name="pageId" value={row.id} />
+                      </ActionForm>
+                    )}
+                    <RowMenu ariaLabel={t("pages.rowActions", { title: row.title ?? t("pages.untitled") })} items={items} />
+                  </>
+                );
+              })()}
             </Stack>
           );
         }}

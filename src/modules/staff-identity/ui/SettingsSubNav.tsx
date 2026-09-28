@@ -12,8 +12,8 @@ import {
 } from "../domain/settings-tabs";
 
 /**
- * «Setări»'s one row of secondary tabs (§360, §516): «Emailuri», «Termene», «Contact», «Aspect»,
- * «Costuri», «Anti-robot», and «Configurație» (`/devs`) last — each role offered the tabs its gates
+ * «Setări»'s one row of secondary tabs (§360, §516): «Emailuri», «Termene», «Aspect», «Costuri»,
+ * «Anti-robot», and «Configurație» (`/devs`) last — each role offered the tabs its gates
  * open (`visibleSettingsTabs`, `offersConfigurationTab`), the current one marked with
  * `aria-current`. Every tab page renders this first and nothing above it, `/devs` included: the row
  * is the way between them, and the main bar's «Setări» is the way back — no tab carries an

@@ -189,6 +189,60 @@ describe("§459 the team page's cards", () => {
     expect(await sweepOrphanAssets(db, daysLater(ORPHAN_ASSET_DAYS * 5))).toBe(1);
     expect(await db.select().from(mediaAssets).where(eq(mediaAssets.id, uploaded.assetId))).toEqual([]);
   });
+  it("§541 saves the part of the photograph the card shows, reads it back on both screens, and a card without one reads none", async () => {
+    const picture = await sharp({ create: { width: 1200, height: 800, channels: 3, background: "#3355ff" } }).jpeg().toBuffer();
+    const uploaded = await uploadBodyImage(db, { actorId: actor("ADMIN").id, file: picture, originalFilename: "ana.jpg", now: T0 });
+    const square = { x: 0.1667, y: 0, w: 0.6667, h: 1 };
+
+    const cropped = await createTeamMember(db, {
+      actor: actor("COPYWRITER"),
+      fields: fields({ photoAssetId: uploaded.assetId, photoCrop: JSON.stringify(square) }),
+      now: T0,
+    });
+    // A card saved as before this — no crop posted at all — keeps the whole photograph.
+    const whole = await createTeamMember(db, { actor: actor("COPYWRITER"), fields: fields({ name: "Mihai Ionescu", photoAssetId: uploaded.assetId }), now: T0 });
+    expect(cropped.photoCrop).toEqual(square);
+    expect(whole.photoCrop).toBeNull();
+
+    const admin = await listTeamMembersForAdmin(db);
+    expect(admin.find((member) => member.id === cropped.id)?.photo?.crop).toEqual(square);
+    expect(admin.find((member) => member.id === whole.id)?.photo?.crop).toBeNull();
+
+    for (const card of [cropped, whole]) {
+      await setTeamMemberVisible(db, { actor: actor("ADMIN"), memberId: card.id, expectedVersion: card.version, visible: true });
+    }
+    const shown = await listVisibleTeamMembers(db, "en");
+    expect(shown.find((member) => member.id === cropped.id)?.photo).toMatchObject({ width: 1200, height: 800, crop: square });
+    expect(shown.find((member) => member.id === whole.id)?.photo?.crop).toBeNull();
+
+    // Taking the crop off, or the photograph, clears it; a crop the box could not draw is refused on the photo.
+    const [current] = await db.select().from(teamMembers).where(eq(teamMembers.id, cropped.id));
+    const uncropped = await saveTeamMember(db, {
+      actor: actor("COPYWRITER"),
+      memberId: cropped.id,
+      expectedVersion: current.version,
+      fields: fields({ photoAssetId: uploaded.assetId, photoCrop: "" }),
+    });
+    expect(uncropped.photoCrop).toBeNull();
+    const again = await saveTeamMember(db, {
+      actor: actor("COPYWRITER"),
+      memberId: cropped.id,
+      expectedVersion: uncropped.version,
+      fields: fields({ photoAssetId: "", photoCrop: JSON.stringify(square) }),
+    });
+    expect(again.photoCrop).toBeNull();
+    expect(
+      await refusal(
+        saveTeamMember(db, {
+          actor: actor("COPYWRITER"),
+          memberId: cropped.id,
+          expectedVersion: again.version,
+          fields: fields({ photoAssetId: uploaded.assetId, photoCrop: JSON.stringify({ x: 0.5, y: 0, w: 0.8, h: 1 }) }),
+        }),
+      ),
+    ).toEqual({ code: "VALIDATION_ERROR", fields: ["photoAssetId"] });
+  });
+
   const trail = async (entityId: string) =>
     db
       .select({ action: auditLogs.action, actor: auditLogs.actorStaffUserId, entityType: auditLogs.entityType, metadata: auditLogs.metadataJson })

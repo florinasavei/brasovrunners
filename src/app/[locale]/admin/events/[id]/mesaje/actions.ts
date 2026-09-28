@@ -6,6 +6,8 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { checkOrganizerMessage } from "@/modules/notifications/domain/organizer-message";
+import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
+import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import {
   type ParticipantMessagePreview,
   previewParticipantMessage,
@@ -47,16 +49,23 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
     body: { ro: posted(form, "bodyRo"), en: posted(form, "bodyEn") },
   };
 
+  // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
+  const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+
   let result;
   try {
     const actor = await requireStaff();
     result = await sendParticipantMessage(
       getDb(),
       actor,
-      { eventId, audience: posted(form, "audience"), sendId: posted(form, "sendId"), ...words },
+      { eventId, audience: posted(form, "audience"), sendId: posted(form, "sendId"), delivery, ...words },
       new Date(),
     );
   } catch (error) {
+    // A «now» the day's allowance cannot hold (§80, §540): its own sentence, the boxes as typed.
+    if (error instanceof SendNowRefused) {
+      return { error: sendNowRefusalCode(error), fields: [], values: keptValuesOf(form) };
+    }
     // An unknown placeholder is refused with its name in the sentence, so the organizer knows
     // which `{…}` to correct and not only which box it is in (§247's rule, said the same way).
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
@@ -87,7 +96,13 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
   await flash(
     result.kind === "duplicate"
       ? { kind: "info", key: "participantMessageDuplicate" }
-      : { kind: "success", key: "participantMessageSent", values: { count: String(result.real), test: String(result.test) } },
+      : // Sent now, past the scheduled pass (§540), says so; a list longer than one press sends
+        // (`SEND_NOW_ROW_LIMIT`) says how many leave now and how many at the scheduled pass; queued, as before.
+        delivery === "now" && (result.later ?? 0) > 0
+        ? { kind: "success", key: "participantMessageSentNowPart", values: { count: String(result.sentNow ?? 0), later: String(result.later ?? 0) } }
+        : delivery === "now"
+          ? { kind: "success", key: "participantMessageSentNow", values: { count: String(result.real), test: String(result.test) } }
+          : { kind: "success", key: "participantMessageSent", values: { count: String(result.real), test: String(result.test) } },
   );
   revalidatePath(path);
   redirect(`${path}?${query}#admin-alert`);

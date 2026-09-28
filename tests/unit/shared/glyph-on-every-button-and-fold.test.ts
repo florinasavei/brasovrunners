@@ -244,8 +244,10 @@ describe("§521 a glyph on every button", () => {
   it("gives the confirmation dialog's three answers a glyph each", () => {
     const dialog = read("src/shared/feedback/ConfirmDialog.tsx");
     expect(dialog).toContain('startIcon={<CloseIcon fontSize="small" />}');
-    expect(dialog).toContain('startIcon={<AltRouteIcon fontSize="small" />}');
-    expect(dialog).toContain('startIcon={<CheckIcon fontSize="small" />}');
+    // A resend's two answers (§540) wear the scheduled-send and the send glyph; every other question
+    // its fork and its tick.
+    expect(dialog).toContain('startIcon={spec.choice ? <ScheduleSendIcon fontSize="small" /> : <AltRouteIcon fontSize="small" />}');
+    expect(dialog).toContain('startIcon={spec.choice ? <SendIcon fontSize="small" /> : <CheckIcon fontSize="small" />}');
   });
 });
 

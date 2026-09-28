@@ -658,7 +658,7 @@ export function canManageClubSettings(role: StaffRole): boolean {
  *                                             `canManageRegistrations` for itself
  *     settings       canOpenSettings          `admin/settings/layout.tsx` — «Setări» (§516), each tab
  *                                             its own gate (`settings-tabs.ts`): «Emailuri», «Termene»,
- *                                             «Contact», «Aspect» canReadContent, «Costuri» and
+ *                                             «Aspect» canReadContent, «Costuri» and
  *                                             «Anti-robot» canManageRegistrations; the forms on them ask
  *                                             `canManageClubSettings` or `canManagePlatform` (§450)
  *     tasks          canReadContent           `admin/tasks/page.tsx` — each panel its own gate:
@@ -768,7 +768,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     /*
       «Setări» (§516): the club's settings as one row of tabs — the email page (§250, which had no
       entry at all until the owner's "I am missing the email templates config … in this navbar"),
-      «Termene», «Contact», «Aspect», «Costuri», «Anti-robot». Offered to whoever may open one tab of
+      «Termene», «Aspect», «Costuri», «Anti-robot» («Contact» is «Pagini»'s since 2026-09-28). Offered to whoever may open one tab of
       it (`settings-tabs.ts`); the Redactor opens «Emailuri» for the words (§247).
     */
     settings: canOpenSettings(role),

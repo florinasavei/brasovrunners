@@ -57,6 +57,8 @@ import {
   withdrawConsentAction,
 } from "../actions";
 import { resendRegistrationEmailAction } from "./actions";
+import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
+import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -103,6 +105,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
+  // «Trimite acum» or «Pune la coadă» on a resend (§540): offered only under the scheduled timing.
+  const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // Every verb here asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
@@ -209,7 +213,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Typography>
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {resent && <Alert severity="success">{tr("registrations.resendSent")}</Alert>}
+        {/* Sent now, past the scheduled pass (§540), or queued for it, as before. */}
+        {resent && <Alert severity="success">{resent === "now" ? tr("registrations.resendSentNow") : tr("registrations.resendSent")}</Alert>}
         {saved && <Alert severity="success">{tr("saved")}</Alert>}
       {/* The action redirects with a language-neutral code (AGENTS.md 14.3); this is where it
           becomes a sentence. */}
@@ -295,11 +300,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {mayManage && (
           <ActionForm
             action={resendRegistrationEmailAction}
-            confirm={{ title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel }}
+            confirm={withSendNowChoice(
+              { title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel },
+              sendNow,
+            )}
             data-testid="resend-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
+            {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
             <GlyphButton icon="resend" type="submit" variant="outlined" disabled={!canResend}>
               {tr("registrations.resend")}
             </GlyphButton>
@@ -309,11 +318,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {mayManage && canResendReminder(registration.status, registration.eventStartsAt, new Date()) && (
           <ActionForm
             action={resendRegistrationEmailAction}
-            confirm={{ title: tr("confirm.reminderTitle"), body: tr("confirm.reminderBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.sendReminder"), cancelLabel: words.cancel }}
+            confirm={withSendNowChoice(
+              { title: tr("confirm.reminderTitle"), body: tr("confirm.reminderBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.sendReminder"), cancelLabel: words.cancel },
+              sendNow,
+            )}
             data-testid="reminder-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
+            {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
             <input type="hidden" name="messageType" value="EVENT_REMINDER" />
             <GlyphButton icon="send" type="submit" variant="outlined">
               {tr("registrations.sendReminder")}

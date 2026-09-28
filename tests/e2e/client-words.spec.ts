@@ -68,7 +68,6 @@ test.describe("§353 every island finds its words, and a public page carries onl
       "/ro/admin/settings/emails",
       // «Setări»'s other tabs (§516): the forms that moved, with their islands.
       "/ro/admin/settings/deadlines",
-      "/ro/admin/settings/contact",
       "/ro/admin/settings/appearance",
       "/ro/admin/settings/costs",
       "/ro/admin/settings/platform",
@@ -78,6 +77,8 @@ test.describe("§353 every island finds its words, and a public page carries onl
       "/ro/admin/legal",
       "/ro/admin/legal/new",
       "/ro/admin/pages",
+      // «Pagini» → «Contact»: the two cards that were «Setări» → «Contact», with their islands.
+      "/ro/admin/pages/contact",
       "/ro/admin/pages/new",
       "/ro/admin/gallery",
       "/ro/admin/gallery/new",

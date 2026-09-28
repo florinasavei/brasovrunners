@@ -113,6 +113,17 @@ export function readClubTodoValue(value: unknown): ClubTodoItem[] {
   return sortClubTodo(items);
 }
 
+/**
+ * The row's `seenDefaults` (§538): the ids of the starting lines this list has already been given,
+ * so one the club deleted is never given again. Null for a row written before the field existed —
+ * `mergeClubTodoDefaults` reads that as §438's first nineteen.
+ */
+export function readClubTodoSeenDefaults(value: unknown): string[] | null {
+  const raw = value && typeof value === "object" ? (value as { seenDefaults?: unknown }).seenDefaults : undefined;
+  if (!Array.isArray(raw)) return null;
+  return raw.filter((id): id is string => typeof id === "string" && id.length > 0 && id.length <= 64);
+}
+
 // ---------------------------------------------------------------------------------------------
 // What a form posts
 // ---------------------------------------------------------------------------------------------

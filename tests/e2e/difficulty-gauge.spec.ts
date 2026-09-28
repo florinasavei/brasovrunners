@@ -159,7 +159,8 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     const steps = page.getByRole("radiogroup", { name: "Treapta" });
     await expect(steps).toBeVisible();
     await expect(steps.getByRole("radio")).toHaveCount(3);
-    await expect(steps).toHaveText("123");
+    // The segments' own words: the group's text also carries its legend, «Treapta».
+    await expect(steps.locator("label")).toHaveText(["1", "2", "3"]);
     await expect(steps.locator("svg")).toHaveCount(3);
     await expect(steps.getByRole("radio", { name: /^Treapta 2/ })).toBeChecked();
     // A press on the segment, not on the hidden radio, chooses it.
@@ -171,15 +172,27 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
     await expect(page.getByText("1 = cel mai ușor din categorie, 3 = cel mai greu")).toBeVisible();
-    // The whole scale behind a «?» after the help line and beside the band (§528), one line per band.
+    // The whole scale behind a «?» beside the toggle and beside the band (§528, §537), one line per band.
     for (const testId of ["difficulty-scale-help", "difficulty-band-help"]) {
       const help = page.getByTestId(testId);
       await expect(help).toBeVisible();
       await expect(help).toHaveAttribute("aria-label", /mediu 1: alergarea de pe Tâmpa/);
     }
-    // Side by side with the band from `sm`: the two controls' tops on one row.
+    // Side by side with the band from `sm`, on one centred axis (§537): the select's centre and the
+    // toggle's segments' centre within a few pixels; the help line under the toggle, never beside it.
+    // Below `sm` the two stack, the toggle under the select and as wide as the row.
     const select = await page.getByRole("combobox", { name: "Dificultate" }).boundingBox();
-    const group = await steps.boundingBox();
-    if ((page.viewportSize()?.width ?? 0) >= 600) expect(Math.abs((group?.y ?? 0) - (select?.y ?? 0))).toBeLessThan(40);
+    const segment = await steps.locator("label").first().boundingBox();
+    const control = await page.getByTestId("difficulty-step-control").boundingBox();
+    const row = await page.getByTestId("difficulty-row").boundingBox();
+    const helpLine = await page.getByText("1 = cel mai ușor din categorie, 3 = cel mai greu").boundingBox();
+    const centre = (box: { y: number; height: number } | null) => (box?.y ?? 0) + (box?.height ?? 0) / 2;
+    expect(helpLine?.y ?? 0).toBeGreaterThanOrEqual((segment?.y ?? 0) + (segment?.height ?? 0));
+    if ((page.viewportSize()?.width ?? 0) >= 600) {
+      expect(Math.abs(centre(segment) - centre(select))).toBeLessThan(6);
+    } else {
+      expect(segment?.y ?? 0).toBeGreaterThan((select?.y ?? 0) + (select?.height ?? 0));
+      expect(Math.abs((control?.width ?? 0) - (row?.width ?? 0))).toBeLessThan(2);
+    }
   });
 });

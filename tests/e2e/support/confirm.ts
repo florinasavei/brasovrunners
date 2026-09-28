@@ -15,6 +15,17 @@ export async function confirmDialog(page: Page, name?: string | RegExp): Promise
   await expect(dialog).toBeHidden();
 }
 
+/**
+ * The same dialog's quiet second answer (§482, §540): «Pune la coadă pentru trecerea programată» on
+ * a resend, the outlined button between cancel and confirm.
+ */
+export async function chooseAlternative(page: Page, name?: string | RegExp): Promise<void> {
+  const dialog = name === undefined ? page.getByRole("dialog") : page.getByRole("dialog", { name });
+  await expect(dialog).toBeVisible();
+  await dialog.getByTestId("confirm-dialog-alternative").click();
+  await expect(dialog).toBeHidden();
+}
+
 /** The same dialog, declined: its cancel button, and nothing is sent. */
 export async function cancelDialog(page: Page, name?: string | RegExp): Promise<void> {
   const dialog = name === undefined ? page.getByRole("dialog") : page.getByRole("dialog", { name });

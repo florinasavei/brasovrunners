@@ -14,9 +14,10 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /*
-  «Setări» → «Contact» (§516): where the club is written to — who reads «Scrie-ne» (§164) and the
-  address the site shows and every email answers to (§442). Both actions moved here, unchanged,
-  from `/admin/emails`; they land back on this tab.
+  «Pagini» → «Contact»: where the club is written to — who reads «Scrie-ne» (§164) and the address
+  the site shows and every email answers to (§442). Both actions moved here unchanged, from
+  `/admin/emails` (§516) and then from «Setări» → «Contact» (the owner, 2026-09-28: «ar trebui să
+  rămân în același loc»); they land back on this page, so the «Pagini» row stays under the reader.
 */
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
@@ -33,7 +34,7 @@ function localeOf(form: FormData): Locale {
  */
 export async function updateContactRecipientsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/settings/contact" });
+  const path = getPathname({ locale, href: "/admin/pages/contact" });
   const list = (name: string): string[] => parseAddressList(typeof form.get(name) === "string" ? String(form.get(name)) : "");
 
   try {
@@ -59,7 +60,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
  */
 export async function updateShownContactAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
-  const path = getPathname({ locale, href: "/admin/settings/contact" });
+  const path = getPathname({ locale, href: "/admin/pages/contact" });
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);

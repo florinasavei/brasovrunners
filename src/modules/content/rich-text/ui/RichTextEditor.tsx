@@ -55,19 +55,18 @@ import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
-import { prepareImageUpload } from "@/modules/media/browser-shrink";
 import type { PickerScope, PickerScopeKind, PictureSource } from "@/modules/media/picker";
 import GalleryPicker, { type StoredPicture } from "@/modules/media/ui/GalleryPicker";
-import ImageQualityChoice, { type ImageQualityLabels, readRemembered, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
+import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
 import {
   type ChosenFacts,
   type ChosenFactsLabels,
-  chosenFactsOf,
   describeChosenImage,
   describeStoredImage,
   type StoredFacts,
   type StoredFactsLabels,
 } from "@/modules/media/ui/stored-facts";
+import { uploadPicture } from "@/modules/media/ui/upload-picture";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import ToolbarButton from "@/shared/ui/ToolbarButton";
 import {
@@ -2168,31 +2167,6 @@ function UploadShapeChoice({
       </Typography>
     </Box>
   );
-}
-
-/**
- * One picture up to `/api/admin/media` at the remembered quality (§414): shrunk in the browser
- * only as far as that choice keeps, then the server's answer. Shared by a picture in the text and
- * a film's poster, so the two cannot drift apart again.
- *
- * The choice is read from the store, not from a render: a paste or a drop calls the function
- * Tiptap kept from the first render, whose `imageQuality` is the default whatever was chosen since.
- */
-async function uploadPicture(
-  file: File,
-  onChosen: (facts: ChosenFacts) => void,
-): Promise<{ src: string; width: number; height: number; stored?: StoredFacts }> {
-  const quality = readRemembered();
-  const body = new FormData();
-  // The file's own pixels and weight as soon as it is decoded, then what is sent (§437).
-  const prepared = await prepareImageUpload(file, quality, (chosen) => onChosen({ name: file.name, chosen }));
-  onChosen(chosenFactsOf(file.name, prepared));
-  body.append("file", prepared.blob, file.name.replace(/\.[^.]+$/, "") + ".webp");
-  body.append("originalFilename", file.name);
-  body.append("quality", quality);
-  const response = await fetch("/api/admin/media", { method: "POST", body });
-  if (!response.ok) throw new Error(String(response.status));
-  return (await response.json()) as { src: string; width: number; height: number; stored?: StoredFacts };
 }
 
 /** How many pictures the document holds with nothing for a screen reader to say. */
