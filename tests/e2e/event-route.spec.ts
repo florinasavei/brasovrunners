@@ -119,6 +119,17 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 
+    /*
+      BR-REQ-040-02 on the static route (§NNN): before the publish, a stranger's visit is a 404 —
+      never the other language — and the static route keeps that answer like any page (asked
+      twice, the second is the cache's). The publish below must expire it through its tags.
+    */
+    const beforePublish = await request.get(`/ro/evenimente/${slug}`);
+    expect(beforePublish.status()).toBe(404);
+    const notFoundAgain = await request.get(`/ro/evenimente/${slug}`);
+    expect(notFoundAgain.status()).toBe(404);
+    expect(notFoundAgain.headers()["x-nextjs-cache"]).toBe("HIT");
+
     // Both languages go live together, so the route has to survive the whole editorial flow
     // rather than only a save.
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
@@ -133,6 +144,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
       carries none of the signed-in page's cookies. The page itself is read below by the signed-in
       browser, which the proxy sends to the live twin for the edit button.
     */
+    // The publish expired the cached 404: the first anonymous visit after it is the page.
     const first = await request.get(`/ro/evenimente/${slug}`);
     expect(first.status()).toBe(200);
     const again = await request.get(`/ro/evenimente/${slug}`);

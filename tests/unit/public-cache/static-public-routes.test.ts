@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { PREFETCHED_PATHNAMES, prefetchFor } from "@/i18n/prefetch";
 import { PUBLIC_PAGE_CEILING_SECONDS } from "@/modules/public-cache/page-lifetime";
 
 /**
@@ -69,22 +70,78 @@ const LIVE_TWINS = {
 } as const;
 
 /**
- * Public routes that stay per request, each with its reason. Growing this list is a decision for
- * `DECISIONS.md`, not for this file.
+ * Public routes that stay per request, each with its reason. The rule (§NNN): a public page is
+ * static unless it names here why not. Growing this list is a decision for `DECISIONS.md`, not
+ * for this file.
  */
+const TOKEN_PAGE = "a token page: the address carries a single-use secret, checked against its hash per request and never cached (AGENTS.md §12.8, §14.5)";
 const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/contact/page.tsx": "the form's render time is the bot check's clock (§149), the flash toast (§427) and ?sent/?error",
   "src/app/[locale]/members/page.tsx": "the sign-in button reads the session (§524)",
+  "src/app/[locale]/members-area/page.tsx": "the members' zone reads the session and sends a stranger to the sign-in (§524, AGENTS.md §14.5)",
+  "src/app/[locale]/sign-in/page.tsx": "reads the session, ?to= and ?error= (§26)",
+  "src/app/[locale]/preview/events/[id]/page.tsx": "staff only: a draft shown to whoever the session says may read it (BR-REQ-060-01)",
   "src/app/[locale]/events/[slug]/register/page.tsx": "the registration form: the draft cookie, the family cookie, the render time (§97, §389)",
   "src/app/[locale]/events/[slug]/declaration/page.tsx": "the group run's signing form (§393)",
+  "src/app/[locale]/registrations/mine/page.tsx": "a form that takes an address: ?sent= says its outcome (BR-REQ-036-04)",
+  "src/app/[locale]/registrations/resend/page.tsx": "a form that takes an address: ?sent= and ?event= (BR-REQ-036-02)",
+  "src/app/[locale]/registrations/confirm/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/registrations/declare/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/registrations/family/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/registrations/list/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/registrations/manage/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/registrations/mine/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/newsletter/confirm/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/newsletter/manage/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/events/[slug]/share-image/route.ts": "?shape= — a shared cache keeps it an hour instead",
   "src/app/sitemap.ts": "at the app's root there is no parameter to defer, so a static one would be made at build, with no database in CI",
 };
+
+/** Routes that render nothing of their own: they only throw Next's redirect or its 404. */
+const NEVER_RENDERED: Record<string, string> = {
+  "src/app/[locale]/page.tsx": "a permanent redirect to the listing; the proxy answers /ro and /en before it (§353)",
+  "src/app/[locale]/[...rest]/page.tsx": "notFound() for any path no page claims",
+};
+
+/** Made at build from the environment alone, the same until the next deploy. */
+const BUILT_ONCE: Record<string, string> = {
+  "src/app/robots.ts": "reads only the environment (BR-REQ-070-03)",
+};
+
+/**
+ * Every public route file: a page, a route handler or a metadata picture under `src/app/[locale]/`
+ * (the backoffice `admin/` and `devs/` are staff routes, per request by their own layouts), and the
+ * app root's metadata routes.
+ */
+function publicRouteFiles(): string[] {
+  const routeFile = /\/(page\.tsx|route\.ts|opengraph-image\.tsx|twitter-image\.tsx|icon\.tsx)$/;
+  return [...SOURCES.keys()]
+    .filter((file) => (file.startsWith("src/app/[locale]/") && !/^src\/app\/\[locale\]\/(admin|devs)\//.test(file) && routeFile.test(file)) || /^src\/app\/(robots|sitemap|manifest)\.ts$/.test(file))
+    .sort();
+}
 
 const dynamicOf = (file: string) => /^export const dynamic = "([^"]+)";$/m.exec(source(file))?.[1] ?? null;
 const revalidateOf = (file: string) => /^export const revalidate = (\d+);$/m.exec(source(file))?.[1] ?? null;
 
 describe("§NNN the public routes' segment config", () => {
+  it("names every public route: static, a live twin, per request with its reason, or rendering nothing", () => {
+    const named = [...STATIC_PAGES, ...STATIC_HANDLERS, ...Object.keys(LIVE_TWINS), ...Object.keys(PER_REQUEST), ...Object.keys(NEVER_RENDERED), ...Object.keys(BUILT_ONCE)];
+    // Each named once…
+    expect(named.filter((file, index) => named.indexOf(file) !== index)).toEqual([]);
+    // …and a route nobody named — a new page that would silently be static or per request — fails here.
+    expect(publicRouteFiles()).toEqual([...named].sort());
+  });
+
+  it.each(Object.entries(NEVER_RENDERED))("%s renders nothing: %s", (file) => {
+    expect(dynamicOf(file)).toBeNull();
+    expect(code(file)).toMatch(/\b(notFound|permanentRedirect|redirect)\(/);
+  });
+
+  it.each(Object.entries(BUILT_ONCE))("%s is made at build: %s", (file) => {
+    expect(dynamicOf(file)).toBeNull();
+    expect(code(file)).not.toMatch(/from "next\/headers"|\bsearchParams\b/);
+  });
+
   it.each(STATIC_PAGES)("%s is static, with the public pages' ceiling", (file) => {
     expect(dynamicOf(file)).toBeNull();
     expect(Number(revalidateOf(file))).toBe(PUBLIC_PAGE_CEILING_SECONDS);
@@ -172,11 +229,12 @@ function serverClosure(route: string): Map<string, string[]> {
  */
 const REQUEST_READERS_ALLOWED: Record<string, string> = {
   /*
-    `headers()` only on a red month's cold miss with no copy (§447), and only outside a production
-    server (`next dev`, a test): on a production server it is never called, because in a static
-    render it sets revalidate 0 before throwing and Next answers 500 («Page changed from static to
-    dynamic at runtime»), not the resting page. There the way back is the site's root and the
-    redirect is held a minute. Nothing else in the file touches the request.
+    `headers()` only on a red month's cold miss with no copy (§447), and on a production server
+    only in a render Next answers per request (`renderKind() === "request"`: a live twin, a form, a
+    token page): in a static render it sets revalidate 0 before throwing and Next answers 500
+    («Page changed from static to dynamic at runtime»), not the resting page. There the way back is
+    the site's root and the redirect is held a minute (`tests/unit/resilience/resting-page.test.ts`).
+    Nothing else in the file touches the request.
   */
   "src/modules/resilience/last-good.ts": "the resting page's way back, on a cold miss only",
   /*
@@ -209,5 +267,106 @@ describe("§NNN a static public route never reads the request while it renders",
       .filter(([file]) => file === "src/modules/staff-identity/session.ts")
       .map(([, chain]) => chain.join(" → "));
     expect(readers).toEqual([]);
+  });
+});
+
+/**
+ * The links a static page renders (§NNN). Next prefetches a `<Link>` as soon as it is in view, and a
+ * prefetch of a per-request address — the contact form, «Membri», the register form, a live twin —
+ * starts a function on a visit the CDN otherwise answers alone. So every Next link a static page can
+ * render either names a static page at its bare address literally, or says its `prefetch`: `false`,
+ * or `prefetchFor(href)` (`i18n/prefetch.ts`), which allows only the static pages.
+ */
+describe("§NNN a static public page never prefetches a per-request address", () => {
+  /** Every file a route reaches, server and client alike: the header and the footer are client islands, and their links are what is prefetched. */
+  function wholeClosure(routes: readonly string[]): Set<string> {
+    const seen = new Set(routes);
+    const queue = [...routes];
+    while (queue.length > 0) {
+      const current = queue.shift() as string;
+      for (const specifier of valueImports(source(current))) {
+        const target = resolveImport(current, specifier);
+        if (target && !seen.has(target)) {
+          seen.add(target);
+          queue.push(target);
+        }
+      }
+    }
+    return seen;
+  }
+
+  const STATIC_ROOTS = [...STATIC_PAGES, "src/app/[locale]/layout.tsx", "src/app/[locale]/not-found.tsx", "src/app/[locale]/error.tsx"];
+
+  /** The names a file gives Next's link: `next/link`'s default, or `Link` from `@/i18n/navigation` (MUI's `Link` is a plain `<a>`, never prefetched). */
+  function nextLinkNames(text: string): string[] {
+    const names: string[] = [];
+    for (const match of text.matchAll(/^import\s+(\w+)\s+from\s+"next\/link";/gm)) names.push(match[1]);
+    for (const match of text.matchAll(/^import\s+\{([^}]*)\}\s+from\s+"@\/i18n\/navigation";/gm)) {
+      for (const part of match[1].split(",").map((piece) => piece.trim())) {
+        const named = /^Link(?:\s+as\s+(\w+))?$/.exec(part);
+        if (named) names.push(named[1] ?? "Link");
+      }
+    }
+    return names;
+  }
+
+  /** Every opening JSX element in `text` that renders one of `names`, as written (braces balanced). */
+  function linkElements(text: string, names: readonly string[]): { line: number; element: string }[] {
+    const found: { line: number; element: string }[] = [];
+    for (const match of text.matchAll(/<([A-Z][\w.]*)\b/g)) {
+      let depth = 0;
+      let end = match.index + 1;
+      for (; end < text.length; end += 1) {
+        const char = text[end];
+        if (char === "{") depth += 1;
+        else if (char === "}") depth -= 1;
+        else if (char === ">" && depth === 0 && text[end - 1] !== "=") break;
+      }
+      const element = text.slice(match.index, end + 1);
+      const rendersLink = names.includes(match[1]) || names.some((name) => element.includes(`component={${name}}`));
+      if (rendersLink) found.push({ line: text.slice(0, match.index).split("\n").length, element });
+    }
+    return found;
+  }
+
+  /** A literal href to a static page at its bare address, or to an anchor on this page. */
+  function literallyStatic(element: string): boolean {
+    const plain = /\shref="([^"]*)"/.exec(element)?.[1];
+    if (plain !== undefined) return plain.startsWith("#") || prefetchFor(plain) === undefined;
+    const object = /\shref=\{\{\s*pathname:\s*"([^"]+)"([\s\S]*?)\}\s*\}/.exec(element);
+    if (object) return !/\bquery\b/.test(object[2]) && prefetchFor(object[1]) === undefined;
+    return false;
+  }
+
+  /** Links whose href is an expression but always a static page, each with why. Shrinking this is the point. */
+  const LINKS_TO_STATIC_PAGES: Record<string, string> = {
+    "src/modules/events/ui/CalendarEventChip.tsx": "an event's own page, from getPathname of /events/[slug] (EventCalendar)",
+  };
+
+  it("walks the header, the footer and the link wrappers", () => {
+    const closure = wholeClosure(STATIC_ROOTS);
+    for (const file of ["src/shared/ui/SiteNav.tsx", "src/shared/ui/SiteFooter.tsx", "src/shared/ui/ButtonLink.tsx", "src/shared/ui/ChipLink.tsx", "src/modules/events/ui/RegistrationDoorButton.tsx"]) {
+      expect(closure.has(file), file).toBe(true);
+    }
+  });
+
+  it("every Next link a static page can render names a static page, or says its prefetch", () => {
+    const offenders: string[] = [];
+    for (const file of [...wholeClosure(STATIC_ROOTS)].sort()) {
+      // Comments out, their lines kept, so a line number below is the file's own.
+      const text = source(file).replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, " ")).replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+      const names = nextLinkNames(text);
+      if (names.length === 0 || file in LINKS_TO_STATIC_PAGES) continue;
+      for (const { line, element } of linkElements(text, names)) {
+        const says = /\sprefetch=\{(false|prefetchFor\()/.test(element);
+        if (!says && !literallyStatic(element)) offenders.push(`${file}:${line} ${element.replace(/\s+/g, " ").slice(0, 120)}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("prefetches exactly the static public pages", () => {
+    const pathnameOf = (file: string) => file.replace(/^src\/app\/\[locale\]/, "").replace(/\/page\.tsx$/, "");
+    expect([...PREFETCHED_PATHNAMES].sort()).toEqual(STATIC_PAGES.map(pathnameOf).sort());
   });
 });

@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
 import { cache } from "react";
 
 /**
@@ -38,8 +39,10 @@ import { cache } from "react";
  * the lowest `revalidate` a prerender meets is the page's — and `unstable_cache` follows it: in a
  * prerender it lowers the page's revalidate to its own before it looks anything up (Next 16.3.4,
  * `server/web/spec-extension/unstable-cache.js`, the `prerender-legacy` case). So the lifetime is
- * one tiny cached entry read with that number. In a request-time render (a live twin, a form page)
- * the same call changes nothing: those responses are `no-store` anyway.
+ * one tiny cached entry read with that number. In a request-time render (a live twin, a form page,
+ * a token page, the share picture) the same call would change nothing — those responses are
+ * `no-store` or carry their own header — so it is not made there (`renderKind`): a Data Cache round
+ * trip for nothing, per shorter hold, per view.
  *
  * Outside a production Next server — a test, a script, `next dev`, `next build` — nothing is done:
  * there is no page cache to shorten, and `next build` prerenders no public page (the locale layout
@@ -76,7 +79,7 @@ export async function holdPageUntil(instants: readonly (Date | null | undefined)
 
 /** Keep the page being rendered no longer than `seconds`. Never throws: a lifetime is not worth a page. */
 export async function holdPageFor(seconds: number): Promise<void> {
-  if (!pagesAreCachedHere()) return;
+  if (!pagesAreCachedHere() || renderKind() === "request") return;
   const revalidate = Math.max(1, Math.min(PUBLIC_PAGE_CEILING_SECONDS, Math.ceil(seconds)));
   // Once per render for the shortest hold asked so far: a listing asks once per card's door, and
   // only a shorter hold than one already set changes anything.
@@ -100,6 +103,30 @@ const thisRendersHold = cache((): { seconds: number } => ({ seconds: Number.POSI
  */
 async function lifetimeMark(): Promise<number> {
   return 1;
+}
+
+/**
+ * What Next is doing on this call's behalf (§NNN): making a response it will keep — a static page's
+ * render (ISR, Next's `prerender-legacy` without Cache Components) or a `force-static` handler's —
+ * or answering one request, or neither as far as can be told.
+ *
+ * Next has no public call for it, so this asks the store Next's own `headers()` and
+ * `unstable_cache` ask (`next/dist/server/app-render/work-unit-async-storage.external`, Next 16.3.4;
+ * `tests/unit/public-cache/page-lifetime.test.ts` pins the two type names it reads against the
+ * installed Next). It fails towards today's behaviour: anything it does not recognise — no store, a
+ * cached function's scope, a Next that renamed its types — is `"unknown"`, and every caller treats
+ * `"unknown"` as a render that may be kept (holding it, never reading the request). Only a positive
+ * `"request"` skips a hold or reads a header.
+ */
+export function renderKind(): "kept" | "request" | "unknown" {
+  try {
+    const type: string | undefined = workUnitAsyncStorage.getStore()?.type;
+    if (type === "request") return "request";
+    if (type === "prerender-legacy") return "kept";
+  } catch {
+    // Outside Next, or a Next whose store answers differently: the safe side.
+  }
+  return "unknown";
 }
 
 /** A production Next server, not `next build`: the only place a page is kept by ISR. */

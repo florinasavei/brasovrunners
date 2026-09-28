@@ -8,7 +8,7 @@ import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { DatabaseRestingError, isColdMiss } from "./breaker";
 import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
 import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
-import { DEGRADED_PAGE_SECONDS, holdPageFor, pagesAreCachedHere } from "@/modules/public-cache/page-lifetime";
+import { DEGRADED_PAGE_SECONDS, holdPageFor, pagesAreCachedHere, renderKind } from "@/modules/public-cache/page-lifetime";
 import {
   type Envelope,
   isSnapshotTooOld,
@@ -266,17 +266,18 @@ export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours
  * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
  * a request (a test, a script) there is no header, and the way back is the site's root.
  *
- * On a production server the header is never read, and the way back is the site's root (§NNN): the
- * public pages are static there, and in a static render `headers()` sets the render's revalidate to
- * 0 before it throws, so catching the throw does not undo it — Next then answers 500 («Page changed
- * from static to dynamic at runtime») instead of the resting page. A render cannot ask whether it is
- * static without Next's internals, so the live twins and the form pages lose the way back too, on
- * this one path only (a red month's cold miss with no copy); the resting page's own link still
- * leads home. The redirect is held a minute first, so the CDN never keeps it for a day.
+ * On a production server the header is read only in a render Next answers per request (§NNN): a
+ * live twin, the registration and declaration forms, a token page (`renderKind() === "request"`).
+ * A static page's render never reads it: there `headers()` sets the render's revalidate to 0 before
+ * it throws, so catching the throw does not undo it — Next then answers 500 («Page changed from
+ * static to dynamic at runtime») instead of the resting page. So a static page's way back is the
+ * site's root — its address is the bare page, the same for everyone, and the resting page's own
+ * link leads home — and the redirect is held a minute first, so the CDN never keeps it for a day.
+ * A render Next cannot be asked about (`"unknown"`) is treated as a static one.
  */
 async function sendToRestingPage(): Promise<never> {
   let back: string | null = null;
-  if (pagesAreCachedHere()) {
+  if (pagesAreCachedHere() && renderKind() !== "request") {
     await holdPageFor(DEGRADED_PAGE_SECONDS);
   } else {
     try {

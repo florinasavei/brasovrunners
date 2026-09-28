@@ -193,6 +193,9 @@ export default async function EventDetailPage({ params, query, canEdit = false }
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
   if (!event) notFound();
+  // The event's own dates are told on its own wall clock (`raceWeek`, §78): in another zone its day
+  // turns at that zone's midnight, and the page is made again then too (§NNN).
+  await holdPageUntil([nextWallMidnight(now, event.timezone)], now);
 
   const t = await getTranslations("Event");
   // Each kind of link's own word in this language (§332), for the route section and "Linkuri și fișiere" alike.

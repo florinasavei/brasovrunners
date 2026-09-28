@@ -171,6 +171,9 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // an event whose date is to be announced (§533) is ahead: then the page is not between seasons,
   // and that section, under the cards, is what it has to show.
   const { events, hasUpcoming }: Listing = !listing.hasUpcoming && undatedRows.length > 0 ? { events: [], hasUpcoming: false } : listing;
+  // The race-week countdown counts days on each event's own wall clock (`raceWeek`, §78): an event
+  // kept in another zone turns its day at that zone's midnight, so the page is made again then too (§NNN).
+  await holdPageUntil(events.map((event) => nextWallMidnight(now, event.timezone)), now);
   // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
   // internal event among these rows, the entry its card and its page read too, and nothing for any
   // other row (`readRegistrationDoor`, §409).

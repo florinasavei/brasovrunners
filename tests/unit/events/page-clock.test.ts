@@ -66,4 +66,9 @@ describe("nextWallMidnight", () => {
     expect(nextWallMidnight(new Date("2026-10-24T09:00:00.000Z"), "Europe/Bucharest").toISOString()).toBe("2026-10-24T21:00:00.000Z");
     expect(nextWallMidnight(new Date("2026-10-25T09:00:00.000Z"), "Europe/Bucharest").toISOString()).toBe("2026-10-25T22:00:00.000Z");
   });
+
+  it("is the event's own zone's midnight when the event is kept in another zone, where the countdown turns its day (§78, §NNN)", () => {
+    // 20 November, noon UTC: Bucharest turns the day at 22:00 UTC, Lisbon (UTC+0) two hours later.
+    expect(nextWallMidnight(new Date("2026-11-20T12:00:00.000Z"), "Europe/Lisbon").toISOString()).toBe("2026-11-21T00:00:00.000Z");
+  });
 });

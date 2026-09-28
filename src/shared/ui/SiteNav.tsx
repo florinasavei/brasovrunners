@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import { Link } from "@/i18n/navigation";
+import { prefetchFor } from "@/i18n/prefetch";
 import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 /**
@@ -241,9 +242,13 @@ export default function SiteNav({
               <Box sx={{ width: "1px", height: 20, bgcolor: "divider", mx: { xs: 0.25, sm: 0.5 } }} />
             ) : (
             <>
-            {/* inline-flex so the anchor's box is the 44px entry, not a line of text. */}
+            {/*
+              inline-flex so the anchor's box is the 44px entry, not a line of text. The contact
+              form and «Membri» are rendered per request, so they are not prefetched (§NNN).
+            */}
             <Link
               href={item.href}
+              prefetch={prefetchFor(item.href)}
               style={{ textDecoration: "none", display: "inline-flex" }}
               tabIndex={folded ? -1 : 0}
             >
@@ -319,6 +324,7 @@ export default function SiteNav({
               key={item.key}
               component={Link}
               href={item.href}
+              prefetch={prefetchFor(item.href)}
               selected={item.current}
               onClick={close}
               sx={{ minHeight: 44 }}
