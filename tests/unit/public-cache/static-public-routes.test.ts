@@ -261,6 +261,50 @@ describe("§NNN a static public route never reads the request while it renders",
     expect(serverClosure("src/app/[locale]/live/events/[slug]/page.tsx").has("src/modules/staff-identity/session.ts")).toBe(true);
   });
 
+  /*
+    A fetch with `cache: "no-store"` (or `next: { revalidate: 0 }`), `unstable_noStore()` or
+    `connection()` made while a static page renders marks that render dynamic: Next 16 sets its
+    revalidate to 0 and throws, and at runtime an ISR page answers 500 («Page changed from static to
+    dynamic at runtime») — only inside `unstable_cache` is a no-store fetch harmless, and whether a
+    call sits inside one is not something a source walk can see. So no server file a static route
+    reaches writes any of them (§NNN, a review finding: the weather's stale refresh was a bare
+    no-store fetch). A request that must never be stored names no cache mode inside `unstable_cache`.
+  */
+  const optsOutOfStatic = (file: string) =>
+    /\bcache:\s*["']no-store["']|\brevalidate:\s*0\b|\bunstable_noStore\b|\bconnection\s*\(\s*\)/.test(code(file));
+
+  /** Files a static route reaches that write one, each with why no static render runs it. Shrinking this is the point. */
+  const NO_STORE_ALLOWED: Record<string, string> = {
+    /*
+      Neon's API: `no-store` only on a write (the limits card's PATCH) or on a staff page's own
+      reading (`shared: false`, `/devs`, Costuri). A render meets the file only through the budget
+      governor's background refresh (§447: `peekNeonBudgetLevel` → `readNeonBudget`), which asks
+      `shared: true` — a `next: { revalidate }` fetch the test below pins.
+    */
+    "src/modules/diagnostics/neon.ts": "no-store on writes and staff readings only; the render's reading is the shared one",
+  };
+
+  it.each([...STATIC_PAGES, ...STATIC_HANDLERS, "src/app/[locale]/layout.tsx"])("%s reaches no no-store fetch, noStore() or connection()", (route) => {
+    const offenders = [...serverClosure(route).entries()]
+      .filter(([file]) => optsOutOfStatic(file) && !(file in NO_STORE_ALLOWED) && !/\/actions\.ts$/.test(file) && !/"use server"/.test(source(file)))
+      .map(([, chain]) => chain.join(" → "));
+    expect(offenders).toEqual([]);
+  });
+
+  it("reads Neon's meter from a render only as the shared, revalidated reading", () => {
+    expect(code("src/modules/diagnostics/neon-budget.ts")).toMatch(/readNeonMeter\(env, \{ \.\.\.deps, shared: true \}, now\)/);
+    expect(code("src/modules/diagnostics/neon.ts")).toMatch(/deps\.shared \? \{ next: \{ revalidate: NEON_SHARED_READ_SECONDS \} \} : \{ cache: "no-store" as const \}/);
+  });
+
+  it("walks far enough to meet the forecast's source, and would see a no-store fetch in it", () => {
+    for (const route of ["src/app/[locale]/events/page.tsx", "src/app/[locale]/events/[slug]/page.tsx"]) {
+      expect(serverClosure(route).has("src/modules/weather/source.ts"), route).toBe(true);
+    }
+    expect(optsOutOfStatic("src/modules/weather/source.ts")).toBe(false);
+    // The pattern itself, on the line the review found.
+    expect(/\bcache:\s*["']no-store["']/.test('headers: {}, cache: "no-store",')).toBe(true);
+  });
+
   it.each([...STATIC_PAGES, "src/app/[locale]/layout.tsx"])("%s never asks who is signed in while it renders", (route) => {
     const readers = [...serverClosure(route).entries()]
       .filter(([file]) => !/\/actions\.ts$/.test(file) && !/"use server"/.test(source(file)))

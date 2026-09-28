@@ -13,6 +13,7 @@ import {
 import { GLYPH_BY_KIND, WEATHER_GLYPH_NAMES, WEATHER_KINDS, weatherKind } from "@/modules/weather/domain/wmo";
 import {
   fetchOpenMeteo,
+  forecastHour,
   freshReading,
   isForecastStale,
   MAX_FORECAST_AGE_MS,
@@ -280,6 +281,33 @@ describe("§402 a cached answer too old to trust", () => {
     expect(await weatherForEvent({ startsAt: START }, NOW, { cached, fetch: failing, source: "open-meteo" })).toBeNull();
     expect(await readClubForecast({ cached, fetch: failing, source: "open-meteo", now: NOW.getTime() })).toEqual({ ok: false, reason: "HTTP 503" });
     expect(failing).toHaveBeenCalledTimes(2);
+  });
+
+  it("asks the hour's own cached entry for the fresh answer, never a bare fetch (§NNN)", async () => {
+    const old = { ...forecast(), fetchedAt: NOW.getTime() - 3 * HOUR, weatherCode: forecast().weatherCode.map(() => 0) };
+    const cached = vi.fn(async () => old);
+    const refresh = vi.fn(async () => forecast());
+    const reading = await weatherForEvent({ startsAt: START }, NOW, { cached, refresh, source: "open-meteo" });
+    expect(reading).toMatchObject({ kind: "rain", temperatureC: 13.6 });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    // A failed refresh is no forecast, as a failed fetch is.
+    const failing = vi.fn(async () => {
+      throw new Error("busy");
+    });
+    expect(await weatherForEvent({ startsAt: START }, NOW, { cached, refresh: failing, source: "open-meteo" })).toBeNull();
+  });
+
+  it("keys the fresh answer by the hour: one entry an hour, the next hour a new one", () => {
+    const top = Date.UTC(2026, 8, 24, 9);
+    expect(forecastHour(top)).toBe(forecastHour(top + HOUR - 1));
+    expect(forecastHour(top + HOUR)).toBe(forecastHour(top) + 1);
+  });
+
+  it("sends no cache mode: `cache: \"no-store\"` in a static page's render would make it dynamic (§NNN)", async () => {
+    const fetchImpl = json(answer());
+    await fetchOpenMeteo(fetchImpl, () => NOW.getTime());
+    const init = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+    expect(init.cache).toBeUndefined();
   });
 
   it("asks nothing when the cached entry is inside the bound", async () => {
