@@ -4,6 +4,7 @@ import { jobRuns } from "@/db/schema/job-runs";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { PINGER_CADENCE_MINUTES, pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
+import { plannedCadenceMinutes } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
 import { readDeliveryTiming } from "./delivery-timing";
 import type { DeliveryTiming } from "./domain/delivery-timing";
@@ -28,7 +29,36 @@ export type OutboxDelivery = {
   scheduledWait: { day: number; night: number };
   /** The pinger call at which the outbox job is next expected to run for real (an estimate). */
   nextTickAt: string;
+  /**
+   * When the outbox job last ran for real (§NNN), null when it never has: the queue panel says it
+   * beside the next tick, so "the scheduler has not come since 04:00" is read, not guessed.
+   */
+  lastRunAt: string | null;
+  /**
+   * What holds the scheduled round back now, in minutes (§NNN): the pinger's cadence at this hour,
+   * the Administrator's minimum interval (§334) and the budget governor's floor (§447) — the three
+   * `emailWaitMinutes` takes the longest of, each named on the queue panel so the club can see
+   * which one to change.
+   */
+  holds: { pingerMinutes: number; intervalMinutes: number; governorFloorMinutes: number };
+  /**
+   * The minutes `/api/health` adds to its `overdue` allowance now (§98, §447), from
+   * `outboxOverdueCadenceMinutes` below — the one number the queue panel marks a row late with,
+   * so the panel's red «Întârziat» and the monitor's `overdue` are the same judgement (§NNN).
+   */
+  overdueCadenceMinutes: number;
 };
+
+/**
+ * The interval the outbox job may legitimately leave a row waiting, on top of `/api/health`'s
+ * ninety minutes (§98): the Administrator's minimum interval (§334), the budget governor's floor
+ * (§447) and the interval the last real run planned under, which the pings still honour after the
+ * governor's level has dropped (`plannedCadenceMinutes`) — the longest of the three. One function
+ * for the health check and the queue panel (§NNN), so the two never disagree about a stall.
+ */
+export async function outboxOverdueCadenceMinutes(stated: number, governorFloorMinutes: number, now: Date): Promise<number> {
+  return Math.max(stated, governorFloorMinutes, await plannedCadenceMinutes("email-outbox", now));
+}
 
 /**
  * `governorFloorMinutes` is the budget governor's minimum interval in force now (§447), read once
@@ -61,5 +91,8 @@ export async function readOutboxDelivery<T extends Record<string, unknown>>(
     waitMinutes: emailWaitMinutes({ timing, pingerMinutes, intervalMinutes: stated, governorFloorMinutes }),
     scheduledWait: { day: scheduledAt(day), night: scheduledAt(Math.max(PINGER_CADENCE_MINUTES.night, day)) },
     nextTickAt: nextOutboxTick({ now, pingerMinutes, intervalMinutes, lastRunAt: lastRun?.finishedAt ?? null }).toISOString(),
+    lastRunAt: lastRun?.finishedAt ? lastRun.finishedAt.toISOString() : null,
+    holds: { pingerMinutes, intervalMinutes: stated, governorFloorMinutes },
+    overdueCadenceMinutes: await outboxOverdueCadenceMinutes(stated, governorFloorMinutes, now),
   };
 }

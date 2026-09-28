@@ -1,6 +1,7 @@
-import { asc, count, inArray } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, lte, not, or, sql } from "drizzle-orm";
 import { emailOutbox, type EmailMessageType, type EmailOutboxStatus } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
+import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 
 /**
  * What is actually queued, for the club rather than for a developer (`DECISIONS.md` §243; the
@@ -38,6 +39,8 @@ export type QueuedMessage = {
   createdAt: Date;
   /** Whether a staff member asked for this one by hand — a resend, rather than the flow. */
   isManualResend: boolean;
+  /** A family sitting's hold, read from the payload's own flag (`sittingHeld` / `familyHeld`), never from timing. */
+  familyHeld: boolean;
 };
 
 /** The statuses that mean "still owed": waiting, mid-flight, or out of retries. */
@@ -49,12 +52,36 @@ const UNSENT: readonly EmailOutboxStatus[] = ["PENDING", "PROCESSING", "FAILED"]
  */
 export const OUTBOX_QUEUE_LIMIT = 50;
 
-export type OutboxQueue = { rows: QueuedMessage[]; total: number };
+/**
+ * What «Trimite acum» would send and what it would leave (§NNN): the claim's own rule
+ * (`claimOutboxBatch`) — a `PENDING` row is due when its `next_attempt_at` is empty or passed — so
+ * the confirm names the due ones, not the whole queue. The rest wait on purpose, each for one reason:
+ *
+ * - `family` — a family sitting holds its messages until «Gata» or the club's window (§519): no
+ *   attempt made yet, a turn set in the future;
+ * - `retry` — a retry after a failure, or a deferral (a spent allowance §40, Gmail's cap §443);
+ * - `reserve` — a newsletter or a new-event alert waiting for the allowance's reserve (§445).
+ *
+ * `until` is the earliest of their turns: the first one «Trimite acum» could send if pressed then.
+ */
+export type OutboxHeld = { total: number; family: number; retry: number; reserve: number; until: Date | null };
+
+export type OutboxQueue = {
+  rows: QueuedMessage[];
+  /** Every row still owed — waiting, mid-flight, or out of retries. */
+  total: number;
+  /** `PENDING` rows whose turn has come: what «Trimite acum» sends now, within the day's limit. */
+  due: number;
+  held: OutboxHeld;
+};
 
 export async function readOutboxQueue<T extends Record<string, unknown>>(
   db: Database<T>,
   limit: number = OUTBOX_QUEUE_LIMIT,
+  now: Date = new Date(),
 ): Promise<OutboxQueue> {
+  // The family hold is the payload's own flag (§519): a row Gmail's pace threw back is a retry, not a family.
+  const familyFlag = sql`(${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true'`;
   const rows = await db
     .select({
       id: emailOutbox.id,
@@ -66,6 +93,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       lastError: emailOutbox.lastError,
       createdAt: emailOutbox.createdAt,
       isManualResend: emailOutbox.isManualResend,
+      familyHeld: sql<boolean>`coalesce((${familyFlag}), false)`,
     })
     .from(emailOutbox)
     .where(inArray(emailOutbox.status, UNSENT))
@@ -73,7 +101,31 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
     .orderBy(asc(emailOutbox.createdAt))
     .limit(limit);
 
-  const [total] = await db.select({ value: count() }).from(emailOutbox).where(inArray(emailOutbox.status, UNSENT));
+  const pending = eq(emailOutbox.status, "PENDING");
+  const dueWhere = and(pending, or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)));
+  const later = and(pending, gt(emailOutbox.nextAttemptAt, now));
+  const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
+  const [counts] = await db
+    .select({
+      total: count(),
+      due: count(sql`case when ${dueWhere} then 1 end`),
+      family: count(sql`case when ${and(later, not(bulk), familyFlag)} then 1 end`),
+      retry: count(sql`case when ${and(later, not(bulk), not(familyFlag))} then 1 end`),
+      reserve: count(sql`case when ${and(later, bulk)} then 1 end`),
+      until: sql<Date | string | null>`min(case when ${later} then ${emailOutbox.nextAttemptAt} end)`,
+    })
+    .from(emailOutbox)
+    .where(inArray(emailOutbox.status, UNSENT));
 
-  return { rows, total: total?.value ?? 0 };
+  const family = counts?.family ?? 0;
+  const retry = counts?.retry ?? 0;
+  const reserve = counts?.reserve ?? 0;
+  // A raw `min()` comes back as text on some drivers; the column's own mapping is not applied to it.
+  const until = counts?.until ? new Date(counts.until) : null;
+  return {
+    rows,
+    total: counts?.total ?? 0,
+    due: counts?.due ?? 0,
+    held: { total: family + retry + reserve, family, retry, reserve, until },
+  };
 }

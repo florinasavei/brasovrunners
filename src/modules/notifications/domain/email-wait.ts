@@ -48,3 +48,48 @@ export function nextOutboxTick(input: {
   const floor = minimumIntervalEnd(lastRunAt, intervalMinutes);
   return floor.getTime() > tick.getTime() ? onGrid(floor) : tick;
 }
+
+/** More than a week of real runs a queued row could wait behind: the estimate stops there. */
+const LEAVES_AT_MAX_STEPS = 500;
+
+/**
+ * When one message still in the queue is expected to leave (§NNN): the outbox job's first real run
+ * at or after the row's own turn — its `next_attempt_at` after a retry or a deferral, its creation
+ * otherwise. The next run is `nextTickAt` (above); the runs after it follow one another at the
+ * pinger's cadence, or at the minimum interval when one holds the job back (§334, §447). Under
+ * `immediate` too: a row the request did not send — a retry, a deferral, a batch longer than the
+ * drain — is the outbox job's, like every row under `scheduled`.
+ *
+ * An estimate for a person to read, as `nextOutboxTick` is: a wake (§334) may send a row sooner,
+ * and a skipped ping later. `pingerMinutesAt` is the cadence at a given instant, day or night
+ * (`jobs/quiet-hours.ts#pingerCadenceMinutes`), passed in so this stays pure.
+ */
+export function outboxRowLeavesAt(input: {
+  dueAt: Date;
+  nextTickAt: Date;
+  intervalMinutes: number;
+  pingerMinutesAt: (at: Date) => number;
+}): Date {
+  const { dueAt, nextTickAt, intervalMinutes, pingerMinutesAt } = input;
+  if (dueAt.getTime() <= nextTickAt.getTime()) return nextTickAt;
+  // With no interval every pinger call is a real run: the first call at or after the row's turn.
+  if (intervalMinutes <= 0) {
+    return nextOutboxTick({ now: new Date(dueAt.getTime() - 1), pingerMinutes: pingerMinutesAt(dueAt), intervalMinutes: 0, lastRunAt: null });
+  }
+  // With one, each real run is the first call after the interval measured from the one before.
+  let tick = nextTickAt;
+  for (let step = 0; step < LEAVES_AT_MAX_STEPS && tick.getTime() < dueAt.getTime(); step++) {
+    tick = nextOutboxTick({ now: tick, pingerMinutes: pingerMinutesAt(tick), intervalMinutes, lastRunAt: tick });
+  }
+  return tick;
+}
+
+/**
+ * Whether a waiting row's turn passed so long ago that no schedule explains it (§NNN): the same
+ * threshold `/api/health` calls `overdue` (§98) — ninety minutes past the row's turn, plus the
+ * minimum interval in force — so the queue panel and the monitor never disagree about a stall.
+ * The panel says it on the row, beside the estimate that would otherwise read as a promise.
+ */
+export function outboxRowOverdue(input: { now: Date; dueAt: Date; overdueAfterMs: number; intervalMinutes: number }): boolean {
+  return input.now.getTime() - input.dueAt.getTime() > input.overdueAfterMs + input.intervalMinutes * 60_000;
+}

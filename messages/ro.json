@@ -2329,8 +2329,8 @@
         },
         "scheduler": {
           "title": "Monitoarele de producție pe cron-job.org",
-          "todo": "Monitoare pentru cele două sarcini programate, cu JOB_SECRET-ul mediului: la 15 minute ziua și o dată pe oră noaptea. Lipsește sau întârzie",
-          "done": "Ambele sarcini rulează la timp.",
+          "todo": "Monitoare pentru cele două sarcini programate, cu JOB_SECRET-ul mediului. Acest mediu e apelat la {pingerDay} ziua și la {pingerNight} noaptea. Lipsește sau întârzie",
+          "done": "Ambele sarcini rulează la timp. Acest mediu e apelat la {pingerDay} ziua și la {pingerNight} noaptea.",
           "how": [
             "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
             "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
@@ -3652,8 +3652,39 @@
         "title": "Coada de trimitere",
         "intro": "Ce nu a plecat încă: tipul, destinatarul, când a intrat în coadă, câte încercări și ultimul răspuns al furnizorului. Mesajul se compune abia la trimitere.",
         "count": "În coadă: {count} mesaje.",
-        "facts": "În coadă din {queued} · încercări: {attempts} · următoarea încercare: {next}",
-        "nextAny": "la prima trimitere",
+        "aside": "{waiting} · {state}",
+        "when": {
+          "title": "Când pleacă emailurile",
+          "on": "Emailurile pleacă: la trecerea programată",
+          "off": "Emailurile pleacă: imediat după cerere",
+          "onShort": "la trecerea programată",
+          "offShort": "imediat după cerere",
+          "scheduled": "Emailurile pleacă la trecerea programată a site-ului. Următoarea trecere: {at}. Un email pus în coadă acum așteaptă cel mult {wait}.",
+          "immediate": "Fiecare email pleacă imediat după cererea care l-a pus în coadă. Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
+          "holdsLead": "Ce ține trecerea programată acum: {holds}.",
+          "holds": {
+            "pinger": "monitorul care apelează site-ul, o dată la {wait}",
+            "interval": "«Cât de des verifică site-ul» din Setări → Costuri, cel mult o dată la {wait}",
+            "governor": "frâna de buget a bazei de date, cel mult o dată la {wait}"
+          },
+          "lastRun": "Ultima trecere programată: {at}.",
+          "neverRan": "Nicio trecere programată înregistrată încă.",
+          "turnOff": "Trimite imediat după cerere",
+          "turnOn": "Trimite la trecerea programată",
+          "offTitle": "Emailurile să plece imediat după cerere?",
+          "offBody": "Emailurile din coadă pleacă acum, iar de acum fiecare email pleacă imediat după cererea care l-a pus în coadă. Aceeași setare ca în «Termene». Niciun mesaj nu se pierde.",
+          "onTitle": "Emailurile să plece la trecerea programată?",
+          "onBody": "De acum emailurile pleacă la trecerea programată, în cel mult {wait}. Aceeași setare ca în «Termene». Niciun mesaj nu se pierde."
+        },
+        "facts": "În coadă din {queued} · încercări: {attempts}",
+        "leaves": {
+          "at": "Pleacă: {at} (estimat).",
+          "late": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau apasă «Trimite acum».",
+          "lateAskAdmin": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau anunță administratorul.",
+          "sending": "Se trimite acum.",
+          "never": "Nu mai pleacă singur: toate încercările s-au consumat.",
+          "held": "Ținut până {until}: o familie încă semnează. Apoi pleacă la trecerea următoare: {at} (estimat)."
+        },
         "lastError": "Ultimul răspuns al furnizorului: {error}",
         "manual": "Retrimis manual",
         "more": "Și încă {count} în coadă, neafișate aici.",
@@ -3661,6 +3692,15 @@
           "PENDING": "În așteptare",
           "PROCESSING": "Se trimite acum",
           "FAILED": "Oprit după toate încercările"
+        },
+        "sendNow": {
+          "held": "Rămân ținute: {count}, primul până {until}: {reasons}.",
+          "reasons": {
+            "family": "familie care încă semnează: {count}",
+            "retry": "reîncercare sau amânare: {count}",
+            "reserve": "rezerva pentru newsletter: {count}"
+          },
+          "nothingDue": "Niciun email nu e la rând acum: cele din coadă sunt ținute până la ora lor, se trimit chiar acum sau și-au consumat încercările."
         }
       },
       "copy": {
