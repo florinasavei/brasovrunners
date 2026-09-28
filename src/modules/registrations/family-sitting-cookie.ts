@@ -29,7 +29,7 @@ const PURPOSE = "family-sitting";
 
 /**
  * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, and `w` when
- * no place was free for them (§NNN).
+ * no place was free for them (§543).
  */
 function peopleLines(people: readonly SittingPerson[]): string {
   return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : ""}`).join("\n");
@@ -101,7 +101,7 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
     // When the first form's email leaves (§536), computed once at submit; always 25 characters (§39).
     l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt, value.emailSubmittedAt) : "",
-    // Until when the sitting's places are reserved (§NNN): the sitting's fixed deadline, never the address's.
+    // Until when the sitting's places are reserved (§543): the sitting's fixed deadline, never the address's.
     u: value.reservedUntil ? String(value.reservedUntil.getTime()) : "",
   };
   /*

@@ -5,7 +5,7 @@ import { registrationNameKey } from "./domain/name-key";
 
 /**
  * The fixed key a laptop or a test run keys the slots with when it has neither `AUTH_SECRET` nor
- * `JOB_SECRET` (§NNN, the review of 2026-09-28, round five). Public on purpose, and only ever read
+ * `JOB_SECRET` (§543, the review of 2026-09-28, round five). Public on purpose, and only ever read
  * where no deployed data lives: on qa and production neither secret is a refusal
  * (`shared/config/deployment-secret.ts`). Fixed rather than drawn per process, as the form
  * draft's key is, because a slot outlives the process that wrote it: a development server restarted
@@ -21,7 +21,7 @@ export function familySlotSecret(source: { APP_ENV?: string; AUTH_SECRET?: strin
 }
 
 /**
- * The slot of a family sitting's held place (§NNN, `family_place_holds`): one per person the address
+ * The slot of a family sitting's held place (§543, `family_place_holds`): one per person the address
  * sends at the event, by the runner's name key (`registrationNameKey`, the rule `sameRunner` and the
  * server's own decisions use) — never one per form, and since the review of 2026-09-28, round five,
  * never one per sitting either. So the server, not the browser's half, decides whether a form adds a

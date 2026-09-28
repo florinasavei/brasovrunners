@@ -551,7 +551,16 @@ export const eventFieldsSchema = z
     surface: optionalEnum(EVENT_SURFACES),
     eventStatus: z.enum(["SCHEDULED", "CANCELLED", "COMPLETED"]),
     timezone,
-    startsAtWallTime: z.string().trim().min(1),
+    /**
+     * The start, as `YYYY-MM-DDTHH:mm` — or, from the editor, the date alone, `THH:mm` for an hour
+     * alone, or "" (`admin/actions.ts`). Required, and the box says so (the `html` metadata, as the
+     * meeting point's does), unless it is to be announced (§545, amending §533): with «Data se anunță
+     * mai târziu» both halves may be empty, with «Ora se anunță mai târziu» the hour. The refusal is
+     * the service's (`start.ts#resolveStart`), the one place the switches are known after the save —
+     * a caller that does not post a switch keeps the row's — and the editor drops the `required` while
+     * a switch excuses the box (`StartToBeAnnounced`).
+     */
+    startsAtWallTime: z.string().trim().meta({ html: { required: true } }),
     /**
      * Either an end on the wall clock (the old field, still accepted) or a duration in minutes
      * (`DECISIONS.md` §71: "instead of an end date I should just have a duration"). A week is

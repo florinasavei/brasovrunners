@@ -128,7 +128,7 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
     const event = publicFormEvent(row, row.publishedAt);
     /*
       A kept form that opened a family sitting (§536) holds its place under the sitting's key until the
-      sitting's deadline (§NNN): confirmed from its own email, the hold goes before the person is
+      sitting's deadline (§543): confirmed from its own email, the hold goes before the person is
       allocated, so their own held place is never counted against them.
     */
     // The person's own slot (`familyPlaceSlot`, rounds four and five): whichever sitting held it for them.

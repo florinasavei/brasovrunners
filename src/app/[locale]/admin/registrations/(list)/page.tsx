@@ -206,7 +206,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const [resubmissions, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
-    // The family marker (§NNN): the other people on each row's address at its event, one query per page.
+    // The family marker (§543): the other people on each row's address at its event, one query per page.
     familyOf(db, rows),
     getTranslations("Admin"),
     /*
@@ -325,7 +325,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.kind === "TEST" && (
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
           )}
-          {/* A family on one address (§NNN): who else is registered with it, each a link to their row. */}
+          {/* A family on one address (§543): who else is registered with it, each a link to their row. */}
           <FamilyChip
             label={t("registrations.familyChip")}
             members={(family.get(row.id) ?? []).map((member) => ({

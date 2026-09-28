@@ -30,7 +30,9 @@ describe("§388 the backoffice event list wears the public card's type chip, rou
   it("draws the route's pills under the title through the one shared function and component, never a copy of its own", () => {
     expect(page).toContain('import { buildRoutePills } from "@/modules/events/ui/route-pills"');
     expect(page).toContain('import RoutePills from "@/modules/events/ui/RoutePills"');
-    expect(page).toContain("<RoutePills pills={buildRoutePills(event, tEvent, format)} />");
+    expect(page).toContain(
+      "<RoutePills pills={buildRoutePills({ ...event, startsAt: typedStartShape(event)?.hour ? event.startsAt : null }, tEvent, format)} />",
+    );
     // Once per line, from the next occurrence's own row — a series shares one route.
     expect(page.match(/<RoutePills pills=/g)).toHaveLength(1);
   });

@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 
 /**
- * The family marker (§NNN; the owner, 2026-09-28: «trebuie un marker pentru familie»): a small pill
+ * The family marker (§543; the owner, 2026-09-28: «trebuie un marker pentru familie»): a small pill
  * with the family glyph, the word («Familie» / "Family") and the other people on the same address —
  * each a link when the surface has a page for them (the backoffice registration's siblings).
  *

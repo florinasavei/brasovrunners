@@ -234,7 +234,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 {t("mine.runner", { name: item.registeredName })}
               </Typography>
               {/*
-                The family marker (§NNN; the owner, 2026-09-28: «trebuie un marker pentru familie»): the
+                The family marker (§543; the owner, 2026-09-28: «trebuie un marker pentru familie»): the
                 other people on this address at the same event, from this page's own list — nothing more
                 is read, and nothing about another address (§39).
               */}
@@ -273,7 +273,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 does not answer an offer.
               */}
               {/*
-                A family's reserved place (§NNN), still ahead: the same instant the family's email names,
+                A family's reserved place (§543), still ahead: the same instant the family's email names,
                 so the page and the email agree on whose place is held and until when.
               */}
               {!item.eventCancelled && item.status === "PENDING_EMAIL_CONFIRMATION" && item.holdExpiresAt && item.holdExpiresAt.getTime() > now.getTime() && (

@@ -3,7 +3,7 @@ import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registr
 import type { Database } from "@/db/types";
 
 /**
- * The family marker (§NNN; the owner, 2026-09-28: «trebuie un marker pentru familie... că nu e clar
+ * The family marker (§543; the owner, 2026-09-28: «trebuie un marker pentru familie... că nu e clar
  * cum rezervăm și pare că nu se salvează corect»): the other people registered on the same address
  * at the same event, for every surface that shows a registration — the backoffice list and page, the
  * queue panel, the race-day desk, «Înscrierile mele», the QR page and the export.
@@ -46,7 +46,7 @@ export async function familyOf<T extends Record<string, unknown>>(
   return family;
 }
 
-/** The export's `family` column (§NNN): the other people on the address, «; »-joined, or empty. */
+/** The export's `family` column (§543): the other people on the address, «; »-joined, or empty. */
 export function familyColumn(members: readonly FamilyMember[] | undefined): string {
   return (members ?? []).map((member) => member.name).join("; ");
 }

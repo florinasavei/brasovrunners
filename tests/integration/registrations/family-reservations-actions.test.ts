@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * BR-REQ-031-01, BR-REQ-034-02 — a family sitting's places and screens, driven through the real public
  * actions (`submitRegistrationAction`, `continueFamilySittingAction`) and the sealed cookie they write,
- * never a list of people the test assembles (the review of 2026-09-28, round four; §NNN, §39,
+ * never a list of people the test assembles (the review of 2026-09-28, round four; §543, §39,
  * AGENTS.md §19.4).
  *
  * - **The server decides whether a form adds a person** (finding 3): a fresh address, an address that
@@ -292,7 +292,7 @@ async function prepare(kind: Case, event: Awaited<ReturnType<typeof createEvent>
   }
 }
 
-describe("BR-REQ-031-01 the server decides whether a form adds a person, through the real actions and cookie (§NNN, §39)", () => {
+describe("BR-REQ-031-01 the server decides whether a form adds a person, through the real actions and cookie (§543, §39)", () => {
   /**
    * Ana's form, «Da», Mihai's form; then the browser's own earlier halves replayed — Mihai again on the
    * half from before his form, the press again on the half from before the press, Mihai again on the
@@ -396,7 +396,7 @@ describe("BR-REQ-031-01 the server decides whether a form adds a person, through
   });
 });
 
-describe("BR-REQ-034-02 a form after the sitting's deadline opens a new sitting, and its screen names only its own people (§NNN)", () => {
+describe("BR-REQ-034-02 a form after the sitting's deadline opens a new sitting, and its screen names only its own people (§543)", () => {
   async function lateForm(kind: Case, slug: string, address: string) {
     vi.setSystemTime(START);
     const event = await createEvent(slug);
@@ -444,7 +444,7 @@ describe("BR-REQ-034-02 a form after the sitting's deadline opens a new sitting,
   });
 });
 
-describe("BR-REQ-034-02 a half replayed from after the sitting's deadline adds nothing, for any address (§NNN, round five; §39)", () => {
+describe("BR-REQ-034-02 a half replayed from after the sitting's deadline adds nothing, for any address (§543, round five; §39)", () => {
   /**
    * Ana's form, «Da», Mihai's form, «Da» pressed on until minute 35, then past the deadline (minute 40):
    * Ioana's form opens a new sitting.

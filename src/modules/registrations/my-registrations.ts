@@ -162,7 +162,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
         inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
       ),
     )
-    // A family's people in the order their forms were sent (§NNN), as the family's email lists them.
+    // A family's people in the order their forms were sent (§543), as the family's email lists them.
     .orderBy(asc(events.startsAt), asc(registrations.createdAt), asc(registrations.id));
 
   // "I am here" opens the club's hours before the start (§377), read once for the whole list.

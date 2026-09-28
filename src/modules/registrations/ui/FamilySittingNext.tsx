@@ -21,7 +21,7 @@ type Props = {
   /** Everybody the sitting sent the form for so far, as typed, the latest last. */
   names: readonly string[];
   /**
-   * The family's reserved places (§NNN; the owner, 2026-09-28: «să rezerv 3 locuri și așa să se
+   * The family's reserved places (§543; the owner, 2026-09-28: «să rezerv 3 locuri și așa să se
    * calculeze pe site»): each person with the place their form got, and until when the places are
    * reserved — both from the browser's half, facts about the event and the club's settings (§39).
    * Absent, or `until` null (before «Da», a window of 0, an older half): the screen names no place.
@@ -48,7 +48,7 @@ type Props = {
   continueAction: (form: FormData) => Promise<void>;
   /** «Gata»: the sitting's one email leaves now (`releaseFamilySittingAction`). */
   releaseAction: (form: FormData) => Promise<void>;
-  /** The instant the screen is read at (§NNN): the deadline is compared with it. The request's clock; a test passes its own. */
+  /** The instant the screen is read at (§543): the deadline is compared with it. The request's clock; a test passes its own. */
   now?: Date;
 };
 
@@ -95,13 +95,13 @@ export default async function FamilySittingNext({
   // A form that was not kept (§493) is not «the form for …» that arrived: the plain lead then.
   const latest = sameBirthDate ? null : (names.at(-1) ?? null);
   /*
-    The family marker (§NNN; the owner, 2026-09-28: «trebuie un marker pentru familie... nu e clar cum
+    The family marker (§543; the owner, 2026-09-28: «trebuie un marker pentru familie... nu e clar cum
     rezervăm»): «Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la 12:40», and beside
     each name the place its form got. Only once a place was reserved at all (`until`).
   */
   const deadline = reservation?.until ?? null;
   /*
-    Past the sitting's deadline (§NNN, the review of 2026-09-28, round three): nothing is reserved any
+    Past the sitting's deadline (§543, the review of 2026-09-28, round three): nothing is reserved any
     more — the deadline was fixed by the first form and nothing moved it — so the screen names no
     place and says so, in one sentence, whatever «Da» was pressed since. The deadline is a fact about
     this browser's forms and the club's settings, never the address's (§39).

@@ -126,7 +126,7 @@ export async function GET(request: Request): Promise<Response> {
   const format = url.searchParams.get("format") === "xlsx" ? "xlsx" : "csv";
   // Which declaration each row signed, and when (§499): both formats, one query for the exported rows.
   const declarations = await listLatestDeclarationAcceptances(db, rows.map((row) => row.id));
-  // The other people on each row's address (§NNN), the `family` column of both formats: one query.
+  // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
 
   /*

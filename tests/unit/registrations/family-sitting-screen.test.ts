@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-031-01 — the sitting's screen reads its deadline against the clock (§NNN, the review of
+ * BR-REQ-031-01 — the sitting's screen reads its deadline against the clock (§543, the review of
  * 2026-09-28, round three, finding 2). The deadline is the sitting's, fixed by its first form, and
  * nothing moves it; a «Da» pressed after it reserves nothing. So once it is past, the screen names no
  * place and says so — «Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl
@@ -68,7 +68,7 @@ async function screen(now: Date): Promise<string> {
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
 }
 
-describe("BR-REQ-031-01 the sitting's screen past the sitting's deadline (§NNN)", () => {
+describe("BR-REQ-031-01 the sitting's screen past the sitting's deadline (§543)", () => {
   it("before it: the marker names the reserved places until 13:40, each name with its place", async () => {
     const html = await screen(new Date(FIRST_FORM.getTime() + 20 * 60_000));
     expect(html).toContain("Înscriere de familie: Ana, Mihai, Ioana — 2 locuri rezervate până la 13:40, o persoană pe lista de așteptare.");

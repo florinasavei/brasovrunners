@@ -1,7 +1,7 @@
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 
 /**
- * A family's reserved places, in words (§NNN, amending §446 and §519; the owner, 2026-09-28: «să
+ * A family's reserved places, in words (§543, amending §446 and §519; the owner, 2026-09-28: «să
  * rezerv 3 locuri și așa să se calculeze pe site»). Pure: one phrase for the screen after the form and
  * for the family's one email, so the two never name one deadline two ways.
  *
@@ -24,7 +24,7 @@ export function reservedUntilPhrase(until: Date, now: Date, locale: "ro" | "en")
 }
 
 /**
- * Whether a family's stored reservation still holds (§NNN): its deadline — the sitting's, fixed by its
+ * Whether a family's stored reservation still holds (§543): its deadline — the sitting's, fixed by its
  * first form — is ahead. The same rule as the count's (`repository.ts#familyReservationHolds`), for the
  * email's own words: nothing keeps a place past it, the email's send included (the review of
  * 2026-09-28, round three).

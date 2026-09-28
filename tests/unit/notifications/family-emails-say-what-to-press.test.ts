@@ -55,7 +55,7 @@ describe("§536 a family's one message says the one button does everything", () 
   it("opens with the one line, then one line per person with the birth date in words, the button with the count, and the link's life", () => {
     const message = family();
     const lead = "Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
-    // The family marker first (§NNN), then the one line.
+    // The family marker first (§543), then the one line.
     const block = message.text.split("\n\n")[1].split("\n");
     expect(block[0]).toBe("Înscriere de familie: Ana și Maria.");
     expect(block[1]).toBe(lead);
@@ -71,7 +71,7 @@ describe("§536 a family's one message says the one button does everything", () 
     expect(message.text).not.toContain("emailul anterior");
   });
 
-  // §NNN — each person's place, the reserved places until when, and who the address held before with their state.
+  // §543 — each person's place, the reserved places until when, and who the address held before with their state.
   it("says each person's place and whose places are reserved until when, in both halves, and an earlier person's state", () => {
     const message = family({
       familySittingPeople: [

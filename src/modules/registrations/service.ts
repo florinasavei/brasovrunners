@@ -366,7 +366,7 @@ async function deliveryEmailOf<T extends Record<string, unknown>>(
 /**
  * Whether a newcomer gets a place now (§10.6): the stale holds expired and the waiting list served
  * first, then the one formula — the allocator's own opening, shared by `allocateOrWaitlist` and a
- * family's reservation (`reserveFamilyPlace`, §NNN), so the two can never count differently. The
+ * family's reservation (`reserveFamilyPlace`, §543), so the two can never count differently. The
  * caller holds the event-row lock.
  */
 async function placeForNewcomer<T extends Record<string, unknown>>(
@@ -382,11 +382,11 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
   return { free: hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }), counts, eligibleWaitlisted };
 }
 
-/** What a family's form got (§NNN): a reserved place, or the waiting list once the address is confirmed. */
+/** What a family's form got (§543): a reserved place, or the waiting list once the address is confirmed. */
 export type FamilyPlace = "reserved" | "waitlist";
 
 /**
- * A family's place reserved the moment its form is sent (§NNN, amending §446 and §519; the owner,
+ * A family's place reserved the moment its form is sent (§543, amending §446 and §519; the owner,
  * 2026-09-28: «să rezerv 3 locuri și așa să se calculeze pe site»). The registration stays
  * `PENDING_EMAIL_CONFIRMATION` — nobody's address is confirmed by a form — and its hold, written on
  * the row, is counted by `countOccupied`, so the public count and «12 înscriși din 50 de locuri» drop
@@ -413,7 +413,7 @@ async function reserveFamilyPlace<T extends Record<string, unknown>>(
 }
 
 /**
- * A place held for a family sitting's form that wrote no registration (§NNN, the review of 2026-09-28,
+ * A place held for a family sitting's form that wrote no registration (§543, the review of 2026-09-28,
  * round three; §39, AGENTS.md §19.4): a kept form, a person the address already holds, an address at
  * the club's limit with registrations made elsewhere, or the opening «Da» of a sitting whose first form
  * wrote none. Through the allocator's own opening (`placeForNewcomer`), under the event's lock, as a
@@ -458,7 +458,7 @@ async function holdFamilyPlace<T extends Record<string, unknown>>(
 
 /**
  * Whether a sitting ever sent the person of this slot at the event, live or lapsed, in whichever
- * sitting (§NNN, round five): a place held for them, or — since round six — their record from a form
+ * sitting (§543, round five): a place held for them, or — since round six — their record from a form
  * sent while no place was free (`writeFamilyPlaceMarker`), so the answer is the same on a full event as
  * on one with places. Until the day-late sweep (`purgeLapsedFamilySittings`) or the event's own
  * maintenance clears a lapsed row.
@@ -472,7 +472,7 @@ async function familyPlaceHoldTaken<T extends Record<string, unknown>>(db: Trans
   return row !== undefined;
 }
 
-/** Whether the person of this slot holds a live family place at the event, in whichever sitting (§NNN, round five). */
+/** Whether the person of this slot holds a live family place at the event, in whichever sitting (§543, round five). */
 async function liveFamilyPlaceHoldOf<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, slot: string, now: Date): Promise<boolean> {
   const [live] = await db
     .select({ id: familyPlaceHolds.id })
@@ -483,7 +483,7 @@ async function liveFamilyPlaceHoldOf<T extends Record<string, unknown>>(db: Tran
 }
 
 /**
- * A registration's place in its family sitting (§NNN): its reservation while it waits for the address
+ * A registration's place in its family sitting (§543): its reservation while it waits for the address
  * — taken now through the allocator when it holds none, as a person's held place is (`holdFamilyPlace`)
  * — the place it already holds, or the waiting list it is on, once the address is verified. Null for a
  * registration that is over (cancelled, lapsed), which is nobody's place.
@@ -504,7 +504,7 @@ async function placeOfRegistration<T extends Record<string, unknown>>(
 }
 
 /**
- * The place of the person a sitting's form names (§NNN; the review of 2026-09-28, rounds four and five,
+ * The place of the person a sitting's form names (§543; the review of 2026-09-28, rounds four and five,
  * §39, AGENTS.md §19.4), decided by the server from the address's rows at the event — never by the
  * browser's half, and never by which sitting the half names:
  *
@@ -547,7 +547,7 @@ async function sittingPlaceOf<T extends Record<string, unknown>>(
 }
 
 /**
- * The first form's place at the press that opens the sitting (§NNN): its registration's place
+ * The first form's place at the press that opens the sitting (§543): its registration's place
  * (`placeOfRegistration`) when it wrote one, and otherwise — a kept form, a person the address already
  * holds, a first form that wrote nothing — the person's place as a later form finds it
  * (`sittingPlaceOf`, from the name the browser's half carries for its first form): a live family
@@ -571,7 +571,7 @@ async function placeOfFirstForm<T extends Record<string, unknown>>(
 }
 
 /**
- * «Da, încă o persoană» (§536) with the family's reservations (§NNN): the sitting opened or its window
+ * «Da, încă o persoană» (§536) with the family's reservations (§543): the sitting opened or its window
  * started again (`continueFamilySitting`).
  *
  * **The press that opens the sitting** (`opening`, the first press on this browser) fixes the
@@ -596,7 +596,7 @@ export async function continueFamilySittingAndReserve<T extends Record<string, u
   now: Date,
   /**
    * The press that opens the sitting: the end of the first form's window, and the name its form was
-   * sent for and the address it was sent with, as the browser's half carries them (§NNN) — the two
+   * sent for and the address it was sent with, as the browser's half carries them (§543) — the two
    * only pick the person's slot.
    */
   opening: { firstWindowEnd: Date; firstName?: string | null; email?: string | null } | null = null,
@@ -635,7 +635,7 @@ export async function continueFamilySittingAndReserve<T extends Record<string, u
 }
 
 /**
- * The held place of a registration's own person, released (§NNN, round five): by their slot, in
+ * The held place of a registration's own person, released (§543, round five): by their slot, in
  * whichever sitting. Only on an event where a family sitting held or sent somebody (the review of
  * 2026-09-28, round six): there alone can a slot name this registration's person, and there the slot
  * secret was keyed already, by the sitting that wrote the row. A registration on an event with no such
@@ -653,7 +653,7 @@ async function releaseOwnFamilyPlaceHold<T extends Record<string, unknown>>(db: 
   await repo.releaseFamilyPlaceHold(db, { eventId, slot: familyPlaceSlot(eventId, row.participantId, row.registeredName) });
 }
 
-/** The participant of the address a sitting's half was sent with (§NNN, round five): only to pick a person's slot. */
+/** The participant of the address a sitting's half was sent with (§543, round five): only to pick a person's slot. */
 async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Transaction<T>, email: string | null): Promise<string | null> {
   if (!email) return null;
   let canonical: string;
@@ -694,13 +694,13 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   settings: Deadlines,
 ): Promise<Registration> {
   /*
-    A family's reserved place (§NNN): the sitting's form reserved it under this same lock when it was
+    A family's reserved place (§543): the sitting's form reserved it under this same lock when it was
     sent, and it is counted in `countOccupied` since — so it is this registration's own, given to it
     here rather than counted against it. Read before the sweep below, which clears a lapsed one.
   */
   const reserved = await repo.holdsFamilyReservation(db, registrationId, now);
   /*
-    …and a place a family sitting held for this person without a registration of its own (§NNN, the
+    …and a place a family sitting held for this person without a registration of its own (§543, the
     review of 2026-09-28, round five): a later sitting's form for somebody whose earlier reservation
     had lapsed. It goes before the count, so the person's own held place is never counted against them.
   */
@@ -750,7 +750,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     : await repo.transitionRegistration(db, {
         id: registrationId,
         to: "WAITLISTED",
-        // A family's lapsed reservation, if any, goes (§NNN): nothing is held on the waiting list.
+        // A family's lapsed reservation, if any, goes (§543): nothing is held on the waiting list.
         changes: { waitlistedAt: now, holdExpiresAt: null },
         now,
       });
@@ -1204,7 +1204,7 @@ export type SubmitRegistrationResult = {
    */
   sittingSeed?: SittingSeed | null;
   /**
-   * A family sitting's form (§NNN): the place this form got — `reserved` (its registration's
+   * A family sitting's form (§543): the place this form got — `reserved` (its registration's
    * reservation, or a held place when it wrote no registration), or `waitlist` once the address is
    * confirmed — and the sitting's fixed deadline. Only for the action's sealed cookie. Null outside a
    * sitting, and for a correction of a person typed before, whose place is the one they had.
@@ -1282,13 +1282,13 @@ export type RegistrationOrigin = {
     id: string | null;
     joined: boolean;
     /**
-     * The form names a person this browser has not typed in the sitting yet (§NNN,
+     * The form names a person this browser has not typed in the sitting yet (§543,
      * `isNewSittingPerson`): only such a form takes a place, a correction keeps the one it had.
      */
     newPerson?: boolean;
-    /** How many people this browser sent in the sitting before this form (§NNN): the club's limit counts them. */
+    /** How many people this browser sent in the sitting before this form (§543): the club's limit counts them. */
     people?: number;
-    /** The sitting's deadline as the browser's sealed half carries it (§NNN), for a sitting no row carries yet. */
+    /** The sitting's deadline as the browser's sealed half carries it (§543), for a sitting no row carries yet. */
     reservedUntil?: Date | null;
   };
 };
@@ -1708,13 +1708,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   let sittingResult = null as string | null;
   /** What the first form leaves for «Da, încă o persoană» to open a sitting with (§536), for the same half. */
   let seedResult = null as SittingSeed | null;
-  /** A sitting's form (§NNN): a place free for a newcomer or not, and until when the sitting's places are reserved. */
+  /** A sitting's form (§543): a place free for a newcomer or not, and until when the sitting's places are reserved. */
   let placeResult = null as FamilyPlace | null;
   let reservedUntilResult = null as Date | null;
   /*
     Another adult on a family's address (§389, §421): the consents only that adult can give are not
     kept — the health note, the socials, the public list, the first-person fitness statement. Since
-    §NNN a sitting's form for another person is a registration rather than a kept form, and the same
+    §543 a sitting's form for another person is a registration rather than a kept form, and the same
     rule is applied to what it writes; the adult makes them when they sign their own declaration.
   */
   const withoutAnotherAdultsDetails = (kept: RegistrationEntryDetails): RegistrationEntryDetails => ({
@@ -1838,7 +1838,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const lockedEvent = withLockedRow(event, locked);
     /*
       The id the browser's half carries (§519): the sitting's, or a random one before any sitting row
-      exists — under which the opening «Da» of a first form that wrote nothing held its place (§NNN,
+      exists — under which the opening «Da» of a first form that wrote nothing held its place (§543,
       `family_place_holds`). A form that opens a sitting while such holds are live opens it under that
       id, adopting them and their deadline.
     */
@@ -1847,12 +1847,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const unusedKey = inSitting && !sitting && cookieKey && !(await findSittingById(tx, cookieKey)) ? cookieKey : null;
     /*
       The deadline the browser's half carries (sealed, §39), while no live sitting row does: the opening
-      press's, or the one a form wrote after the last deadline (§NNN, round four) — so a sitting a later
+      press's, or the one a form wrote after the last deadline (§543, round four) — so a sitting a later
       form opens keeps it rather than starting its own from that form. Only while it is still ahead.
     */
     const pressDeadline = inSitting && !sitting && origin.sitting?.reservedUntil && origin.sitting.reservedUntil.getTime() > now.getTime() ? origin.sitting.reservedUntil : null;
     /*
-      The sitting's reservation deadline (§NNN, the review of 2026-09-28, round three): fixed when the
+      The sitting's reservation deadline (§543, the review of 2026-09-28, round three): fixed when the
       sitting opens — the first form's instant, the club's window and hold, capped by the close and the
       start — and moved by nothing afterwards: every later form's place expires at that same instant. A
       sitting the opening press could not open (its first form wrote nothing) carries it in the browser's
@@ -1884,7 +1884,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       if (!inSitting) return;
       reservedUntilResult = reservationUntil;
       /*
-        A form that wrote no registration of its own (§NNN, the review of 2026-09-28, rounds three and
+        A form that wrote no registration of its own (§543, the review of 2026-09-28, rounds three and
         four; §39, AGENTS.md §19.4): a kept form at the address's limit, a person the address already
         holds, a re-send. Its person's place is decided here from the sitting's rows (`sittingPlaceOf`):
         the sitting's registration for them, or their one held place — taken now, or found taken — so a
@@ -1897,7 +1897,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       }
       if (!sitting) return;
       await settleSitting(tx, sitting, { heldUntil, recipientEmail: participant.deliveryEmail, now });
-      // A sitting opened before the deadline was kept (§NNN): this form fixes it, once.
+      // A sitting opened before the deadline was kept (§543): this form fixes it, once.
       if (sitting.reservedUntil === null) await tx.update(familySittings).set({ reservedUntil: reservationUntil }).where(eq(familySittings.id, sitting.id));
       sittingResult = sitting.id;
     };
@@ -1949,7 +1949,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       (decision.atCap || (keptInSitting.length > 0 && !addressHasRoom(rows.filter((row) => isActiveStatus(row.status)).length + keptInSitting.length, cap)));
 
     /*
-      The club's limit, said at the form (§NNN; the brief's «refused with its sentence at the form»):
+      The club's limit, said at the form (§543; the brief's «refused with its sentence at the form»):
       when the people this browser already sent in this sitting fill the limit on their own, the next
       form is refused out loud and nothing is written. Every person it counts was typed on this
       browser, so the refusal says nothing about the address (§39). A limit reached with registrations
@@ -1971,7 +1971,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       */
       const own = Math.max(written, origin.sitting?.people ?? 0);
       /*
-        …and never for a person this address already sent in a sitting at this event (§NNN, the review
+        …and never for a person this address already sent in a sitting at this event (§543, the review
         of 2026-09-28, round five; §39): their row, live or lapsed, is there under their slot, in
         whichever sitting — a held place, or the record of a form sent while no place was free (round
         six), so the answer does not depend on whether a place was taken. A fresh address's form for such
@@ -1987,7 +1987,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     }
 
     /*
-      Another person in a family sitting (§NNN, amending §446 and §519; the owner, 2026-09-28: «în
+      Another person in a family sitting (§543, amending §446 and §519; the owner, 2026-09-28: «în
       ultimul mail primit pentru verificare să am toate înscrierile mele; să rezerv 3 locuri și așa să
       se calculeze pe site» — and «pare că nu se salvează corect»). Since «Da» this browser is registering
       a family, so the form is a registration like the first one, not a kept form: the row is written
@@ -2101,7 +2101,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       (await sittingHasMessageToLeave(tx, sitting))
     ) {
       /*
-        The same name as the sitting's own registration, still waiting for the address (§NNN): the
+        The same name as the sitting's own registration, still waiting for the address (§543): the
         newer form corrects it — a birth date, a phone — as it replaced a kept form before (§519),
         rather than the corrected form being dropped while the screen lists the correction. Another
         adult's own consents stay unkept (§421): a row written without the fitness statement was one.
@@ -2121,7 +2121,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           .where(eq(registrations.id, existing.id));
       }
       /*
-        A correction keeps the person's place (§NNN): reserved while it holds, the waiting list otherwise.
+        A correction keeps the person's place (§543): reserved while it holds, the waiting list otherwise.
         A form the browser's half reads as a new person — a sealed half replayed from before this person's
         form — finds the same registration and adds nothing, and takes a place only where the person holds
         none, exactly as the same form finds a held place (`sittingPlaceOf`, round four; §39).
@@ -2277,11 +2277,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       sitting ??= await newSitting(registration.id);
       const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline({ [SITTING_HELD]: true }), heldUntil);
       sitting = await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId: queued?.id ?? null });
-      // Its place, reserved now (§NNN): the family's count drops by one with every form, not at the press.
+      // Its place, reserved now (§543): the family's count drops by one with every form, not at the press.
       placeResult = await reserveFamilyPlace(tx, lockedEvent, registration.id, now, settings, reservationUntil);
     };
 
-    // Another adult of a family sitting (§NNN, §421): their own consents are not kept.
+    // Another adult of a family sitting (§543, §421): their own consents are not kept.
     const rowDetails = anotherAdult ? withoutAnotherAdultsDetails(details) : details;
     const rowListOptOut = anotherAdult ? true : input.listOptOut;
 
@@ -2313,7 +2313,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // A restart of a Cancelled or Expired registration (AGENTS.md §10.5). Never leapfrogs
       // the waiting list and never lands directly on Confirmed — `allocateOrWaitlist` is the
       // same allocator a first-time registration uses.
-      // Another person in a family sitting always waits for the family's one email (§NNN): a form is not the inbox.
+      // Another person in a family sitting always waits for the family's one email (§543): a form is not the inbox.
       if (!participant.emailVerifiedAt || anotherInSitting) {
         /*
           The link of this cycle lapses from now (§377), with the club's hours in force now. Before
@@ -2326,7 +2326,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           id: existing.id,
           to: "PENDING_EMAIL_CONFIRMATION",
           /*
-            An old hold goes (§NNN): a restarted row waiting for its address holds no place, whatever a
+            An old hold goes (§543): a restarted row waiting for its address holds no place, whatever a
             cancelled declaration hold or offer left in the column — only a family sitting's form reserves
             one, below (`holdVerification`), so a single registration is never counted before its address.
           */
@@ -2352,7 +2352,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // no lock — the one door into the allocator that skipped the serialization point
       // (`DECISIONS.md` §151). Held since the transaction's first statement (§389).
       const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings);
-      // In a sitting (§NNN): the place the allocator gave, or the line — never a held place besides.
+      // In a sitting (§543): the place the allocator gave, or the line — never a held place besides.
       if (inSitting) placeResult = allocated.status === "WAITLISTED" ? "waitlist" : "reserved";
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
       // A hold, a place on the waiting list, or an offer made on the way to somebody else when
@@ -2422,9 +2422,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   });
 
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
-  // A family's reservation lapses too (§NNN): the place goes back to whoever waits.
+  // A family's reservation lapses too (§543): the place goes back to whoever waits.
   if (createdDeadlines !== undefined || reservedUntilResult !== null) {
-    // A sitting's places lapse at its fixed deadline (§NNN): the job is told when.
+    // A sitting's places lapse at its fixed deadline (§543): the job is told when.
     wakeMaintenance(event, now, settings, ...(createdDeadlines ?? []), reservedUntilResult);
   }
 

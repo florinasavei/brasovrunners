@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_TYPES, hasProgramme } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
+import { startBoxValues } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import Panel from "@/shared/ui/Panel";
 import { BLANK, programmeSummary } from "../box-summaries";
@@ -39,8 +40,9 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
     return { date: start.slice(0, 10), time: start.slice(11, 16), endTime: end.slice(11, 16), ro: item.label.ro, en: item.label.en, place: item.place ?? "" };
   });
   // The day a new row opens on (§405): the event's own start date, as its start box shows it —
-  // "" on the create page, where the rows take it once it is typed.
-  const startDate = toWallTimeInput(event?.startsAt ?? null, zone).slice(0, 10);
+  // "" on the create page, where the rows take it once it is typed — and "" for a date left blank
+  // (§545), so no new row opens on the provisional day the platform stored in its place.
+  const startDate = startBoxValues(event?.startsAt ?? null, zone).date;
   const programmeTypes = EVENT_TYPES.filter(hasProgramme);
   const turnUpTypes = EVENT_TYPES.filter((type) => !hasProgramme(type));
 

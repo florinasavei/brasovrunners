@@ -1,5 +1,5 @@
 /**
- * A deployment keys what must outlive its process under its own secret (§NNN; the review of
+ * A deployment keys what must outlive its process under its own secret (§543; the review of
  * 2026-09-28, round five): the family sitting's held places (`modules/registrations/family-place-slot.ts`)
  * with `AUTH_SECRET`, or `JOB_SECRET` where there is no sign-in. On qa and production neither is a
  * refusal, never a fallback — a key drawn per process would change every slot at a restart, and the

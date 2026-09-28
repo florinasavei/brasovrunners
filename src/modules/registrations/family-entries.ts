@@ -217,7 +217,7 @@ export async function registeredOnAddress<T extends Record<string, unknown>>(
 }
 
 /**
- * Who the address held at the event before a family sitting (§NNN): `registeredOnAddress`'s rows,
+ * Who the address held at the event before a family sitting (§543): `registeredOnAddress`'s rows,
  * each with the state the family's message names beside it — confirmed, signing, on the waiting
  * list, or waiting for the address — so a person already confirmed is listed as such and asked
  * nothing again.

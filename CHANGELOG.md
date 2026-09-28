@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.22-2026-09-27
+
+- **A family's places are reserved as its forms are sent** — after «Da, încă o persoană» each form writes that person's registration with a held place, so the site counts three places for three people at once, until one deadline the first form fixes (its window and the club's hold, 40 minutes by default) that nothing moves; a form after it starts a new sitting that lists only its own people, and the screen and the email's page then say the earlier places are no longer reserved; a form that writes no registration holds one counted place per person — or, on a full event, records the person without holding one — decided by the server from every registration and held place of the address at the event whatever sitting took it, so a person holds at most one family place and the count and the club's limit read the same whatever the address holds and however the browser's cookie is replayed, before the deadline or after it; the one email lists everybody with «loc rezervat» or «pe lista de așteptare», one button confirms them all, and a «Familie» marker names the others on every surface that shows a registration; migration `0107`. §543.
+- **The citizenship and telephone-prefix pickers open tall enough to read** — at least eight 44-pixel rows on a desktop, a bottom sheet with the search box pinned on a phone, the chosen country in view; the list had been clipped to a row and a half. §544.
+- **An event without a date or an hour, while it is to be announced** — with «Data se anunță mai târziu» ticked the editor saves the date and the hour empty, with «Ora se anunță mai târziu» the hour; unticked, both are required again, and nothing public ever shows a date that was not typed. §545.
 ## BR-V2.21-2026-09-27
 
 - **The Organizer reads the events and changes none** — creating, editing, publishing, cancelling, duplicating, series and the update notice are the Administrator's; the Organizer opens an event with «Deschide», read-only, keeps «Alocare și tipărire» with the numbers' PDF, the registrations, the export, the desk and the messages to participants, and the role picker says the split. §542.

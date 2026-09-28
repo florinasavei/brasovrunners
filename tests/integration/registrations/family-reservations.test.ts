@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-034-01, BR-REQ-034-02, BR-REQ-036-02, BR-REQ-031-01 — a family sitting reserves every place at
- * once, and its one email lists every registration (§NNN, amending §389, §446, §519 and §536; the owner,
+ * once, and its one email lists every registration (§543, amending §389, §446, §519 and §536; the owner,
  * 2026-09-28, after testing on QA: «ar trebui în ultimul mail primit pentru verificare să am toate
  * înscrierile mele! să rezerv 3 locuri și așa să se calculeze pe site»; and «pare că nu se salvează
  * corect»).
@@ -161,7 +161,7 @@ const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 /**
  * The first form, before «Da» (§536), then «Da» as the action presses it: the browser's half carries the
  * first form's window end and an id — the sitting's, or a random one (§39) — and the first press on the
- * browser fixes the sitting's deadline and gives the first form its place (§NNN).
+ * browser fixes the sitting's deadline and gives the first form its place (§543).
  */
 async function start(event: EventInput, firstName: string, minute: number, overrides: Record<string, unknown> = {}) {
   const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });
@@ -236,7 +236,7 @@ async function confirmPage(link: Awaited<ReturnType<typeof readFamilySittingLink
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
 }
 
-describe("BR-REQ-034-01 a family sitting reserves every place the moment its form is sent (§NNN)", () => {
+describe("BR-REQ-034-01 a family sitting reserves every place the moment its form is sent (§543)", () => {
   it("the owner's scenario: three forms, the count drops by three, the queue panel lists three, the one email names three with their places", async () => {
     const event = await createEvent(50);
     const pressed = await start(event, "Ana", 0);
@@ -340,7 +340,7 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
   });
 });
 
-describe("BR-REQ-031-01 the page the family's email opens says whether the places still hold (§NNN, the review of 2026-09-28, round four)", () => {
+describe("BR-REQ-031-01 the page the family's email opens says whether the places still hold (§543, the review of 2026-09-28, round four)", () => {
   it("before the deadline: reserved, nobody confirmed yet; past it, while the link still lives: the places lapsed, and the press allocates what is free", async () => {
     const event = await createEvent(50);
     const { sittingId } = await start(event, "Ana", 0);
@@ -367,7 +367,7 @@ describe("BR-REQ-031-01 the page the family's email opens says whether the place
   });
 });
 
-describe("BR-REQ-034-02 a family's unconfirmed places go back through the allocator (§NNN)", () => {
+describe("BR-REQ-034-02 a family's unconfirmed places go back through the allocator (§543)", () => {
   it("once the deadline is past, the three places are free again and the waiting list is served", async () => {
     const event = await createEvent(3);
     const { sittingId } = await start(event, "Ana", 0);
@@ -401,7 +401,7 @@ describe("BR-REQ-034-02 a family's unconfirmed places go back through the alloca
   });
 });
 
-describe("BR-REQ-034-02 the deadline is the first form's, and nothing moves it (§NNN, the review of 2026-09-28, round three)", () => {
+describe("BR-REQ-034-02 the deadline is the first form's, and nothing moves it (§543, the review of 2026-09-28, round three)", () => {
   it("one form, then «Da» every five minutes for two hours: the place is back in the count at the first form's deadline", async () => {
     const event = await createEvent(2);
     const opened = await start(event, "Ana", 0);
@@ -470,7 +470,7 @@ describe("BR-REQ-034-02 the deadline is the first form's, and nothing moves it (
   });
 });
 
-describe("BR-REQ-031-01 a form that writes no registration holds a place: the count and the places are the same whatever the address holds (§NNN; §39, AGENTS.md §19.4)", () => {
+describe("BR-REQ-031-01 a form that writes no registration holds a place: the count and the places are the same whatever the address holds (§543; §39, AGENTS.md §19.4)", () => {
   type Case = "fresh" | "holdsTheFirstPerson" | "atItsLimit";
 
   /**
@@ -634,7 +634,7 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
   });
 });
 
-describe("§NNN nothing changes for a single registration, and a person confirmed earlier is said so", () => {
+describe("§543 nothing changes for a single registration, and a person confirmed earlier is said so", () => {
   it("one form with no «Da» reserves nothing: the count is untouched until the address is confirmed", async () => {
     const event = await createEvent(50);
     await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });

@@ -47,7 +47,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const minorSigns = row ? await declarationAsksMinorToSignByLocale(db, new Date(), row.eventId) : { ro: false, en: false };
   // The event's next free desk spare (§444), as on the desk's list.
   const spares = row ? await spareStates(db, [row.eventId]) : {};
-  // Who came with this runner (§NNN), as on the desk's list: names only.
+  // Who came with this runner (§543), as on the desk's list: names only.
   const family = row ? ((await familyOf(db, [row])).get(row.id) ?? []).map((member) => member.name) : [];
 
   return (
