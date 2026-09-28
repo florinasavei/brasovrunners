@@ -56,10 +56,6 @@ export const SETTINGS_TAB_ROUTE = {
   platform: "/admin/settings/platform",
 } as const satisfies Record<SettingsTab, string>;
 
-export function isSettingsTab(value: string | undefined): value is SettingsTab {
-  return (SETTINGS_TABS as readonly string[]).includes(value ?? "");
-}
-
 /** Whether `role` may open one tab. */
 export function canOpenSettingsTab(role: StaffRole, tab: SettingsTab): boolean {
   switch (tab) {

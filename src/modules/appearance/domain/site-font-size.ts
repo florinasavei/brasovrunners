@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * «Mărimea textului» — the public pages' text size, a club setting beside the background tint
- * (§NNN, the shape of §488; the owner: "change the application's global font size, as a setting
+ * (§530, the shape of §488; the owner: "change the application's global font size, as a setting
  * in the backoffice, like the colour").
  *
  * Pure: no database, no environment. The club picks one of four steps; each is a percentage of

@@ -603,7 +603,7 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
     expect(source("src/app/[locale]/admin/settings/appearance/page.tsx")).toMatch(/<SiteTintPanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);
   });
 
-  it("«Mărimea textului» (§NNN) is a club setting: the Administrator's, form included", () => {
+  it("«Mărimea textului» (§530) is a club setting: the Administrator's, form included", () => {
     expect(action("src/app/[locale]/admin/settings/appearance/actions.ts", "updateSiteFontSizeAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/appearance/site-font-size.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
     expect(source("src/app/[locale]/admin/settings/appearance/page.tsx")).toMatch(/<SiteFontSizePanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);

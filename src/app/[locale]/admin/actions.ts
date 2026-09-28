@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { eventListBack } from "@/modules/content/events/list-query";
 import { redirect } from "next/navigation";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { signOut } from "@/auth";
@@ -65,7 +66,7 @@ import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
-import { eraseGroupRunDeclaration } from "@/modules/group-run-declarations/service";
+import { eraseGroupRunDeclaration, eraseGroupRunDeclarations } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -111,7 +112,14 @@ async function backTo(path: string, outcome: Record<string, string | undefined>,
   // `#admin-alert` so the browser lands on the outcome rather than at the top of a long page,
   // where a one-line alert about a save that failed is easy to walk straight past. Every
   // backoffice page gives that id to its alert region; it costs no JavaScript.
-  redirect(query ? `${path}?${query}#admin-alert` : path);
+  redirect(query ? `${path}${path.includes("?") ? "&" : "?"}${query}#admin-alert` : path);
+}
+
+/** The events list as the form was posted from it — its search, state, order and page (§527). */
+function eventListPath(form: FormData, locale: Locale): string {
+  const back = eventListBack(text(form, "back"));
+  const path = getPathname({ locale, href: "/admin" });
+  return back ? `${path}?${back}` : path;
 }
 
 function outcomeOf(error: unknown): { error: string } {
@@ -423,7 +431,8 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
  */
 export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin" });
+  const listPath = eventListPath(form, locale);
+  const glue = listPath.includes("?") ? "&" : "?";
 
   const selected = selectedEventRefs(form);
 
@@ -451,7 +460,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   }
 
   await flashOutcome({ saved: "eventsArchived", archived: String(archived), failed: String(failed) });
-  redirect(`${listPath}?saved=eventsArchived&archived=${archived}&failed=${failed}#admin-alert`);
+  redirect(`${listPath}${glue}saved=eventsArchived&archived=${archived}&failed=${failed}#admin-alert`);
 }
 
 /**
@@ -464,7 +473,8 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
  */
 export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin" });
+  const listPath = eventListPath(form, locale);
+  const glue = listPath.includes("?") ? "&" : "?";
 
   const selected = selectedEventRefs(form);
   if (selected.length === 0) return backTo(listPath, { error: "NOTHING_SELECTED" });
@@ -501,7 +511,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   }
 
   await flashOutcome({ saved: "eventsPublished", published: String(published), failed: String(failed) });
-  redirect(`${listPath}?saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
+  redirect(`${listPath}${glue}saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
 }
 
 /**
@@ -512,7 +522,8 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
  */
 export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin" });
+  const listPath = eventListPath(form, locale);
+  const glue = listPath.includes("?") ? "&" : "?";
 
   const selected = selectedEventRefs(form);
   if (selected.length === 0) return backTo(listPath, { error: "NOTHING_SELECTED" });
@@ -538,7 +549,7 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
   }
 
   await flashOutcome({ saved: "eventsDeleted", deleted: String(deleted), failed: String(failed) });
-  redirect(`${listPath}?saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
+  redirect(`${listPath}${glue}saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
 }
 
 /**
@@ -711,7 +722,7 @@ export async function duplicateEventAction(_previous: FormOutcome | null, form: 
     outcome = outcomeOf(error);
   }
 
-  if (outcome) return backTo(getPathname({ locale, href: "/admin" }), outcome);
+  if (outcome) return backTo(eventListPath(form, locale), outcome);
   return backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
 }
 
@@ -897,8 +908,8 @@ export async function deleteEventAction(_previous: FormOutcome | null, form: For
   }
 
   // Deleted or not, the event list is where there is something to look at — the editor for a
-  // deleted event is a 404.
-  return backTo(getPathname({ locale, href: "/admin" }), outcome);
+  // deleted event is a 404 — and the list as it was left, filtered and ordered (§527).
+  return backTo(eventListPath(form, locale), outcome);
 }
 
 /**
@@ -1027,6 +1038,26 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
     return refused(error, form);
   }
   return backTo(path, { saved: "groupRunDeclarationErased" });
+}
+
+/**
+ * An Administrator erases the ticked signatures of a run in one press (§532): the ids the confirm
+ * dialog counted, one reason, each through the single erase's own path. A set that changed since
+ * the page was drawn is refused whole and says so; the toast names how many went.
+ */
+export async function eraseGroupRunDeclarationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+  let erased: number;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const ids = form.getAll("declarationIds").filter((value): value is string => typeof value === "string");
+    ({ erased } = await eraseGroupRunDeclarations(getDb(), actor, { eventId, ids, reason: text(form, "reason") }, new Date()));
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(path, { saved: "groupRunDeclarationsErased", erased: String(erased) });
 }
 
 /** Adding a colleague (§123). A refused address or name comes back in its box (§315). */

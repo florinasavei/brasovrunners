@@ -49,7 +49,7 @@ export async function updateSiteTintAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * «Mărimea textului» (§NNN): the public pages' text size, one of four steps. A club setting (§450)
+ * «Mărimea textului» (§530): the public pages' text size, one of four steps. A club setting (§450)
  * — the Administrator's at the door, and the service asserts it again. Asked first (§384): every
  * visitor reads at the new size from the next page view.
  */

@@ -1,10 +1,13 @@
+import { eq } from "drizzle-orm";
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -140,6 +143,42 @@ describe("§369 the queue panel's times are the event's own", () => {
       expect(html).not.toContain(inZone(WAITLISTED_AT, CLUB_TIME_ZONE));
       expect(html).not.toContain("18:30");
       expect(html).not.toContain("17:05");
+    });
+  }
+
+  for (const language of ["ro", "en"] as const) {
+    it(`lists an offer whose email is still queued past its stored deadline, as the count holds it, with no deadline yet (§520, ${language})`, async () => {
+      locale = language;
+      const event = await createEvent();
+      await register(event.id, "Ana Popescu", { status: "CONFIRMED", confirmedAt: NOW });
+      // Past its stored deadline an hour ago; its email has not left, so its clock has not started.
+      const stale = new Date(NOW.getTime() - 60 * 60 * 1000);
+      await register(event.id, "Ion Oferta", { status: "WAITLIST_OFFERED", waitlistedAt: WAITLISTED_AT, holdExpiresAt: stale });
+      const [offer] = await db.select().from(registrations).where(eq(registrations.registeredName, "Ion Oferta"));
+      await db.insert(emailOutbox).values({
+        messageType: "WAITLIST_SPOT_OFFER",
+        locale: "ro",
+        registrationId: offer.id,
+        participantId: offer.participantId,
+        recipientEmail: "ion.oferta@example.org",
+        payloadJson: { [STARTS_DEADLINE]: true },
+        idempotencyKey: `offer-${offer.id}`,
+        status: "PENDING",
+      });
+
+      const words = (language === "ro" ? ro : en).Admin.queue;
+      const queued = await renderPanel(event);
+      // Held, listed, and no «until» a time already gone.
+      expect(queued).toContain(words.offeredQueued);
+      expect(queued).toContain("Ion Oferta");
+      expect(queued).not.toContain(words.offered.split("{")[0].trim() + " ");
+      expect(queued).toContain(words.lineTitle.replace("{count}", "1"));
+
+      // Once the email has left, the lapsed offer holds nothing and leaves the line.
+      await db.update(emailOutbox).set({ status: "SENT", sentAt: NOW }).where(eq(emailOutbox.registrationId, offer.id));
+      const sent = await renderPanel(event);
+      expect(sent).not.toContain("Ion Oferta");
+      expect(sent).not.toContain(words.offeredQueued);
     });
   }
 

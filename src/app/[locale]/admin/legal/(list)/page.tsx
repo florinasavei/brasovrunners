@@ -33,7 +33,10 @@ import {
   type InForceWindow,
   isReliedOn,
 } from "@/modules/legal-documents/domain/deletability";
-import { readDeletionFacts } from "@/modules/legal-documents/service";
+import { planDraftApproval, planTemplateRegeneration, readDeletionFacts } from "@/modules/legal-documents/service";
+import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
+import Checkbox from "@mui/material/Checkbox";
+import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { canReadContent } from "@/modules/staff-identity/domain/roles";
@@ -43,8 +46,16 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
+import {
+  approveLegalDraftsAction,
+  deleteLegalVersionAction,
+  regenerateLegalTemplatesAction,
+  withdrawLegalVersionAction,
+} from "../actions";
 import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
+
+/** The form the rows' ticks belong to (`form=`), a GET to `/admin/legal/delete` (§532). */
+const BATCH_DELETE_FORM = "legal-batch-delete";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -205,6 +216,21 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     .filter(([, value]) => !value)
     .map(([name]) => name);
 
+  /*
+    The presses over every text at once (§532), asked of the service's own plans so the box, its
+    confirm dialog and the press name the same versions: which templates now say something no
+    version in force or waiting says, and which drafts one press may approve. Read only for the
+    role that may press them.
+  */
+  const regeneration = mayCreate ? await planTemplateRegeneration(getDb(), facts, now) : [];
+  const toRegenerate = regeneration.filter((item) => item.outcome === "create");
+  const regeneratedWithBlanks = toRegenerate.filter((item) => item.hasPlaceholders);
+  const draftPlan = mayCreate ? await planDraftApproval(getDb()) : [];
+  const readyDrafts = draftPlan.filter((item) => item.outcome === "ready").map((item) => item.row);
+  const heldDrafts = draftPlan.filter((item) => item.outcome !== "ready");
+  const phraseOf = (row: LegalDocumentVersionRow) => confirmationPhrase(row.key, row.version);
+  const keyNames = (keys: readonly LegalDocumentVersionRow["key"][]) => keys.map((key) => t(`legal.keys.${key}`)).join(", ");
+
   const query = parseListQuery(current, {
     // Grouped by document, newest version first — the order the repository already returns and
     // the only one that reads as a version history.
@@ -299,6 +325,167 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     },
   ];
 
+  /*
+    A tick for every row the batch delete would take (§532) — a draft nothing relied on, an
+    approved version with no obstacle — from the same verdict the row's own link reads, so no row
+    offers a tick the service would refuse. `form` on the `<input>` itself, never on the Checkbox
+    (it lands on the wrapping span there and the form posts nothing, §114).
+  */
+  const tickOf = (version: LegalDocumentVersionRow) => {
+    if (!mayDestroy) return null;
+    const deletable = version.isApproved
+      ? deletionObstacle(factsOf(version)) === null
+      : !isReliedOn({
+          acceptances: version.acceptanceCount,
+          events: version.eventCount,
+          privacyAcknowledgements: version.privacyAcknowledgementCount,
+        });
+    if (!deletable) return null;
+    return (
+      <Checkbox
+        name="id"
+        value={version.id}
+        slotProps={{
+          input: {
+            form: BATCH_DELETE_FORM,
+            "aria-label": t("legal.batch.tick", { version: confirmationPhrase(version.key, version.version) }),
+          },
+        }}
+        sx={CHECKBOX_TAP_TARGET}
+        data-testid="legal-batch-tick"
+      />
+    );
+  };
+
+  const verbsOf = (version: LegalDocumentVersionRow) => {
+    const reliance = relianceOf(version);
+    const relied = isReliedOn({
+      acceptances: reliance.signatures,
+      events: reliance.events,
+      privacyAcknowledgements: reliance.acknowledgements,
+    });
+    // The service's verdict on deleting this row, and the first reason if it is no.
+    const obstacle = deletionObstacle(factsOf(version));
+
+    const reason = (message: string) => (
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ maxWidth: 280, textAlign: "right" }}
+      >
+        {message}
+      </Typography>
+    );
+
+    /*
+      An approved version is never deleted (§46) — but one nobody has relied on, that is
+      not the text the site is serving, can be withdrawn: out of every list and every
+      resolution, still on the record, still holding its number.
+
+      The obstacle is the service's own (`deletionObstacle`), so the sentence the row
+      gives and the refusal the server would give name the same thing. The first two
+      stop both verbs, because withdrawal asks the same question (`dependantObstacle`).
+    */
+    if (version.isApproved) {
+      if (obstacle?.kind === "referenced") {
+        return reason(t("legal.removeBlockedReferenced", reliance));
+      }
+      if (obstacle?.kind === "inForce") return reason(t("legal.removeBlockedCurrent"));
+
+      /*
+        Deletable, so the row says both verbs and what each one costs (§151).
+
+        Withdrawal first and as the button, deletion second and as a link: one of them
+        keeps everything and the other keeps nothing, and the reversible one should be
+        the larger target. The link goes to a screen rather than opening a dialog,
+        because what deletion means — permanent, and the number retired with it — is
+        three sentences and a typed phrase, not a `confirm()`.
+
+        A withdrawn version has no withdraw button left, only the date it went and the
+        delete link: it is the row the owner asked about, already out of circulation and
+        still in the way.
+
+        A terms version somebody registered or signed under keeps its withdraw button
+        and loses the link: withdrawal keeps the words, so it is still open to it, and
+        deletion would destroy text somebody may have accepted — the row says that, with
+        the count and the dates, instead of a link to a page that would refuse (§316).
+      */
+      return (
+        <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
+          {version.withdrawnAt ? (
+            reason(
+              t("legal.withdrawnOn", {
+                date: formatDay(version.withdrawnAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
+              }),
+            )
+          ) : !mayDestroy ? (
+            // Withdrawing is the Administrator's, like deleting beside it (§222, §450): the
+            // service asserts it, so a reader is shown no button — and the sentence
+            // below already says what deleting would mean, once.
+            null
+          ) : (
+            <ActionForm
+              action={withdrawLegalVersionAction}
+              confirm={{ title: t("legal.withdrawTitle"), body: t("legal.withdrawBody"), confirmLabel: t("legal.withdraw"), cancelLabel: words.cancel, destructive: true }}
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="versionId" value={version.id} />
+              {/*
+                Warning rather than error, and the word is "retrage" rather than
+                "șterge", because this button does not destroy anything — saying
+                otherwise in the one place somebody reads before pressing would be the
+                wrong kind of honest.
+              */}
+              <GlyphButton icon="unpublish" type="submit" size="small" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
+                {t("legal.withdraw")}
+              </GlyphButton>
+            </ActionForm>
+          )}
+          {obstacle?.kind === "termsAccepted" ? (
+            reason(
+              t("legal.deleteBlockedTermsAccepted", {
+                count: obstacle.registrations,
+                window: span(obstacle.window),
+              }),
+            )
+          ) : (
+            <>
+              {mayDestroy && (
+                <Link
+                  href={{
+                    pathname: "/admin/legal/[id]/delete",
+                    params: { id: version.id },
+                  }}
+                >
+                  {t("legal.deletePermanently")}
+                </Link>
+              )}
+              {reason(t("legal.deleteMeans", { version: version.version }))}
+            </>
+          )}
+        </Stack>
+      );
+    }
+
+    if (relied) return reason(t("legal.deleteBlockedReferenced", reliance));
+
+    // A draft nothing relied on can go, and only by the role the service lets (§222).
+    if (!mayDestroy) return reason(t("legal.deleteMeans", { version: version.version }));
+
+    return (
+      <ActionForm
+        action={deleteLegalVersionAction}
+        confirm={{ title: t("legal.deleteTitle"), body: t("legal.deleteBody"), confirmLabel: t("legal.delete"), cancelLabel: words.cancel, destructive: true }}
+      >
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="versionId" value={version.id} />
+        <GlyphButton icon="delete" type="submit" size="small" variant="outlined" color="error" sx={{ minHeight: 44 }}>
+          {t("legal.delete")}
+        </GlyphButton>
+      </ActionForm>
+    );
+  };
+
   return (
     <Stack spacing={3}>
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
@@ -319,10 +506,22 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         {saved === "platformApproved" && (
           <Alert severity="success">{t("legal.platformApproved", { count: Number(current.approved ?? "0") })}</Alert>
         )}
+        {saved === "legalTemplatesRegenerated" && (
+          <Alert severity="success">{t("legal.batch.regenerated", { count: Number(current.created ?? "0") })}</Alert>
+        )}
+        {saved === "legalDraftsApproved" && (
+          <Alert severity="success">{t("legal.batch.draftsApproved", { count: Number(current.approved ?? "0") })}</Alert>
+        )}
+        {saved === "legalVersionsDeleted" && (
+          <Alert severity="success">{t("legal.batch.deleted", { count: Number(current.deleted ?? "0") })}</Alert>
+        )}
         {saved &&
           saved !== "legalVersionDeleted" &&
           saved !== "legalVersionWithdrawn" &&
           saved !== "legalVersionErased" &&
+          saved !== "legalTemplatesRegenerated" &&
+          saved !== "legalDraftsApproved" &&
+          saved !== "legalVersionsDeleted" &&
           saved !== "platformApproved" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
@@ -445,6 +644,135 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         </Box>
       )}
 
+      {/*
+        Every text at once (§532): drafts from the platform's current templates, then the drafts
+        approved in one press. Two presses on purpose — nothing reaches the site from a template
+        without the club reading the draft first (§46) — each behind the §384 confirm dialog that
+        names the texts. What cannot be approved together is said with its reason, never hidden.
+      */}
+      {mayCreate && (
+        <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="legal-batch-tools">
+          <Typography variant="h3" sx={{ fontSize: "1.05rem", mb: 1 }}>
+            {t("legal.batch.toolsTitle")}
+          </Typography>
+          <Stack spacing={2}>
+            {toRegenerate.length > 0 ? (
+              <ActionForm
+                action={regenerateLegalTemplatesAction}
+                confirm={{
+                  title: t("legal.batch.regenerateTitle", { count: toRegenerate.length }),
+                  body: t("legal.batch.regenerateBody", { texts: keyNames(toRegenerate.map((item) => item.key)) }),
+                  confirmLabel: t("legal.batch.regenerate", { count: toRegenerate.length }),
+                  cancelLabel: words.cancel,
+                }}
+                data-testid="legal-regenerate-form"
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                {toRegenerate.map((item) => (
+                  <input key={item.key} type="hidden" name="key" value={item.key} />
+                ))}
+                <Stack spacing={1}>
+                  <Typography variant="body2">
+                    {t("legal.batch.regenerateIntro", { texts: keyNames(toRegenerate.map((item) => item.key)) })}
+                  </Typography>
+                  {regeneratedWithBlanks.length > 0 && (
+                    <Typography variant="body2" color="warning.main">
+                      {t("legal.batch.regenerateBlanks", { texts: keyNames(regeneratedWithBlanks.map((item) => item.key)) })}
+                    </Typography>
+                  )}
+                  <Box>
+                    <GlyphSubmitButton
+                      label={t("legal.batch.regenerate", { count: toRegenerate.length })}
+                      pendingLabel={t("legal.batch.regeneratePending")}
+                      icon="template"
+                      variant="outlined"
+                      size="medium"
+                    />
+                  </Box>
+                </Stack>
+              </ActionForm>
+            ) : (
+              <Typography variant="body2" color="text.secondary" data-testid="legal-regenerate-uptodate">
+                {t("legal.batch.upToDate")}
+              </Typography>
+            )}
+
+            {readyDrafts.length > 0 && (
+              <ActionForm
+                action={approveLegalDraftsAction}
+                confirm={{
+                  title: t("legal.batch.approveTitle", { count: readyDrafts.length }),
+                  body: t("legal.batch.approveBody", { versions: readyDrafts.map(phraseOf).join(", ") }),
+                  confirmLabel: t("legal.batch.approve", { count: readyDrafts.length }),
+                  cancelLabel: words.cancel,
+                  destructive: true,
+                }}
+                data-testid="legal-approve-drafts-form"
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                {readyDrafts.map((row) => (
+                  <input key={row.id} type="hidden" name="versionId" value={row.id} />
+                ))}
+                <Stack spacing={1}>
+                  <Typography variant="body2">
+                    {t("legal.batch.approveIntro", { versions: readyDrafts.map(phraseOf).join(", ") })}
+                  </Typography>
+                  <Box>
+                    <GlyphSubmitButton
+                      label={t("legal.batch.approve", { count: readyDrafts.length })}
+                      pendingLabel={t("legal.batch.approvePending")}
+                      icon="approve"
+                      variant="contained"
+                      size="medium"
+                    />
+                  </Box>
+                </Stack>
+              </ActionForm>
+            )}
+            {heldDrafts.length > 0 && (
+              <Box data-testid="legal-drafts-held">
+                <Typography variant="body2" color="text.secondary">
+                  {t("legal.batch.heldIntro")}
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 3 }}>
+                  {heldDrafts.map((item) => (
+                    <Typography component="li" variant="body2" color="text.secondary" key={item.row.id}>
+                      {phraseOf(item.row)} — {t(`legal.batch.held.${item.outcome}`)}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/*
+              The rows' ticks belong to this form (`form=` on each checkbox, §114's lesson): a GET
+              to the batch screen, which lists what goes and what cannot, and asks the phrase and
+              the reason when an approved version is among them. Without JavaScript as well.
+            */}
+            {mayDestroy && (
+              <Box
+                component="form"
+                id={BATCH_DELETE_FORM}
+                method="get"
+                action={getPathname({ locale, href: "/admin/legal/delete" })}
+              >
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {t("legal.batch.deleteIntro")}
+                </Typography>
+                <GlyphSubmitButton
+                  label={t("legal.batch.deleteTicked")}
+                  pendingLabel={t("legal.batch.deleteTicked")}
+                  icon="delete"
+                  variant="outlined"
+                  color="error"
+                  size="medium"
+                />
+              </Box>
+            )}
+          </Stack>
+        </Box>
+      )}
+
       {versions.length === 0 ? (
         <Alert severity="warning">{mayCreate ? t("legal.emptyCanCreate") : t("legal.empty")}</Alert>
       ) : (
@@ -471,134 +799,12 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
             sortBy: (column) => t("list.sortBy", { column }),
           }}
           empty={<Alert severity="warning">{t("legal.empty")}</Alert>}
-          rowActions={(version) => {
-            const reliance = relianceOf(version);
-            const relied = isReliedOn({
-              acceptances: reliance.signatures,
-              events: reliance.events,
-              privacyAcknowledgements: reliance.acknowledgements,
-            });
-            // The service's verdict on deleting this row, and the first reason if it is no.
-            const obstacle = deletionObstacle(factsOf(version));
-
-            const reason = (message: string) => (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ maxWidth: 280, textAlign: "right" }}
-              >
-                {message}
-              </Typography>
-            );
-
-            /*
-              An approved version is never deleted (§46) — but one nobody has relied on, that is
-              not the text the site is serving, can be withdrawn: out of every list and every
-              resolution, still on the record, still holding its number.
-
-              The obstacle is the service's own (`deletionObstacle`), so the sentence the row
-              gives and the refusal the server would give name the same thing. The first two
-              stop both verbs, because withdrawal asks the same question (`dependantObstacle`).
-            */
-            if (version.isApproved) {
-              if (obstacle?.kind === "referenced") {
-                return reason(t("legal.removeBlockedReferenced", reliance));
-              }
-              if (obstacle?.kind === "inForce") return reason(t("legal.removeBlockedCurrent"));
-
-              /*
-                Deletable, so the row says both verbs and what each one costs (§151).
-
-                Withdrawal first and as the button, deletion second and as a link: one of them
-                keeps everything and the other keeps nothing, and the reversible one should be
-                the larger target. The link goes to a screen rather than opening a dialog,
-                because what deletion means — permanent, and the number retired with it — is
-                three sentences and a typed phrase, not a `confirm()`.
-
-                A withdrawn version has no withdraw button left, only the date it went and the
-                delete link: it is the row the owner asked about, already out of circulation and
-                still in the way.
-
-                A terms version somebody registered or signed under keeps its withdraw button
-                and loses the link: withdrawal keeps the words, so it is still open to it, and
-                deletion would destroy text somebody may have accepted — the row says that, with
-                the count and the dates, instead of a link to a page that would refuse (§316).
-              */
-              return (
-                <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
-                  {version.withdrawnAt ? (
-                    reason(
-                      t("legal.withdrawnOn", {
-                        date: formatDay(version.withdrawnAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
-                      }),
-                    )
-                  ) : !mayDestroy ? (
-                    // Withdrawing is the Administrator's, like deleting beside it (§222, §450): the
-                    // service asserts it, so a reader is shown no button — and the sentence
-                    // below already says what deleting would mean, once.
-                    null
-                  ) : (
-                    <ActionForm
-                      action={withdrawLegalVersionAction}
-                      confirm={{ title: t("legal.withdrawTitle"), body: t("legal.withdrawBody"), confirmLabel: t("legal.withdraw"), cancelLabel: words.cancel, destructive: true }}
-                    >
-                      <input type="hidden" name="uiLocale" value={locale} />
-                      <input type="hidden" name="versionId" value={version.id} />
-                      {/*
-                        Warning rather than error, and the word is "retrage" rather than
-                        "șterge", because this button does not destroy anything — saying
-                        otherwise in the one place somebody reads before pressing would be the
-                        wrong kind of honest.
-                      */}
-                      <GlyphButton icon="unpublish" type="submit" size="small" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
-                        {t("legal.withdraw")}
-                      </GlyphButton>
-                    </ActionForm>
-                  )}
-                  {obstacle?.kind === "termsAccepted" ? (
-                    reason(
-                      t("legal.deleteBlockedTermsAccepted", {
-                        count: obstacle.registrations,
-                        window: span(obstacle.window),
-                      }),
-                    )
-                  ) : (
-                    <>
-                      {mayDestroy && (
-                        <Link
-                          href={{
-                            pathname: "/admin/legal/[id]/delete",
-                            params: { id: version.id },
-                          }}
-                        >
-                          {t("legal.deletePermanently")}
-                        </Link>
-                      )}
-                      {reason(t("legal.deleteMeans", { version: version.version }))}
-                    </>
-                  )}
-                </Stack>
-              );
-            }
-
-            if (relied) return reason(t("legal.deleteBlockedReferenced", reliance));
-
-            // A draft nothing relied on can go, and only by the role the service lets (§222).
-            if (!mayDestroy) return reason(t("legal.deleteMeans", { version: version.version }));
-
-            return (
-              <ActionForm
-                action={deleteLegalVersionAction}
-                confirm={{ title: t("legal.deleteTitle"), body: t("legal.deleteBody"), confirmLabel: t("legal.delete"), cancelLabel: words.cancel, destructive: true }}
-              >
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="versionId" value={version.id} />
-                <GlyphButton icon="delete" type="submit" size="small" variant="outlined" color="error" sx={{ minHeight: 44 }}>
-                  {t("legal.delete")}
-                </GlyphButton>
-              </ActionForm>
-            );
-          }}
+          rowActions={(version) => (
+            <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", alignItems: "center" }}>
+              {verbsOf(version)}
+              {tickOf(version)}
+            </Stack>
+          )}
         />
       )}
 

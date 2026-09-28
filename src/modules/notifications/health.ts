@@ -4,9 +4,8 @@ import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
-import { plannedCadenceMinutes } from "@/modules/jobs/schedule-cache";
 import { checkGmailHealth, type GmailHealth } from "./email-transport";
-import { type OutboxDelivery, readOutboxDelivery } from "./outbox-delivery";
+import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } from "./outbox-delivery";
 
 /**
  * "Can the club still send email?" — the answer `/api/health` and `/admin/tasks` give
@@ -106,7 +105,8 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     before, still inside ninety plus the interval (`tests/unit/jobs/schedule-alignment.test.ts`).
   */
   const { minutes: stated } = await readJobCadence(db);
-  const cadenceMinutes = Math.max(stated, governorFloorMinutes, await plannedCadenceMinutes("email-outbox", now));
+  // The same number the queue panel marks a row late with (§529, `outbox-delivery.ts`).
+  const cadenceMinutes = await outboxOverdueCadenceMinutes(stated, governorFloorMinutes, now);
   const overdueAfterMs = OVERDUE_AFTER_MS + cadenceMinutes * 60_000;
   const overdueBefore = new Date(now.getTime() - overdueAfterMs);
   const failedSince = new Date(now.getTime() - FAILED_WINDOW_MS);

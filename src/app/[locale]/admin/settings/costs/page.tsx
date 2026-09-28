@@ -252,7 +252,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
 
   /**
    * How close this service is to its ceiling, in that service's own words: one sentence, and —
-   * where the figure needs its arithmetic — the details for the «?» beside it (§NNN).
+   * where the figure needs its arithmetic — the details for the «?» beside it (§511).
    */
   const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
   const neonPerDay = neonCuHoursPerDay(facts);
@@ -302,7 +302,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   /** The row's fixed sentences, read under the plan's own wording where the plan changes what is true. */
   const wording = (row: ServiceRow, key: "freeGives" | "ceiling" | "whenCrossed" | "bumpBack" | "more") =>
     t(row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`);
-  // The verdicts and the counts that carry a detail beyond their one sentence (§NNN): their «?».
+  // The verdicts and the counts that carry a detail beyond their one sentence (§511): their «?».
   const verdictMore: Partial<Record<typeof verdict, string>> = {
     paysForUsage: t("freeVerdict.paysForUsageMore"),
     freeButAtALimit: t("freeVerdict.freeButAtALimitMore"),
@@ -325,7 +325,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
       </Box>
 
       {/*
-        The club's money page (§479): the month's total first, straight under the tabs (§NNN) —
+        The club's money page (§479): the month's total first, straight under the tabs (§511) —
         one figure, what the month will have cost by its end — then each provider so far and
         projected, because that is what a treasurer opens Costuri for.
       */}
@@ -426,7 +426,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
                     .join(", "),
                 })}
           </Typography>
-          {/* A total with a projection in it is not an invoice, and the line under it says so (one sentence a line, §NNN). */}
+          {/* A total with a projection in it is not an invoice, and the line under it says so (one sentence a line, §511). */}
           {paidToday.some((total) => total.estimated) && (
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               {t("costToday.estimated")}
@@ -552,7 +552,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
                 <Fact label={t("field.nextPlan")}>{row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}</Fact>
               </Box>
 
-              {/* One sentence a line (§NNN): what is free, the ceiling, what crossing it does — the
+              {/* One sentence a line (§511): what is free, the ceiling, what crossing it does — the
                   row's history, exceptions and arithmetic behind the «?» on the first line. */}
               <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                 {wording(row, "freeGives")}

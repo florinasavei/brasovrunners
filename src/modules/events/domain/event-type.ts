@@ -111,7 +111,7 @@ export function hasAgeRule(event: { type: EventType; registrationMode: "NONE" | 
  *   cu acordul unui părinte.» (`minimumAndConsent`): there is no registration here for a parent to
  *   make, so the sentence names the consent, not a door that does not exist. Eighteen and over,
  *   the minimum alone (`minimumOnly`).
- * - Never under fourteen (§NNN, `effectiveMinimumAge`): an event saved with 0 under §329 reads as
+ * - Never under fourteen (§515, `effectiveMinimumAge`): an event saved with 0 under §329 reads as
  *   fourteen, so every event states a minimum.
  */
 export type PublicAgeRuleVariant = AgeRuleVariant | "minimumAndConsent";

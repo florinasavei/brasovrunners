@@ -1,8 +1,10 @@
 import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { type CountForm } from "@/i18n/count-form";
 import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
@@ -12,6 +14,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import { ERASE_REASON_MAX } from "../domain";
 import type { GroupRunDeclarationListRow } from "../repository";
 
@@ -26,6 +29,12 @@ import type { GroupRunDeclarationListRow } from "../repository";
  * moment only: the identity document and the address are in the PDF, which the route writes to
  * the trail. The Administrator may erase one, with a reason (§67, §88): the service refuses anybody
  * else whatever this screen drew.
+ *
+ * Or several (§532; the owner, 2026-09-28: «batch delete și la declarații, cu confirmarea numărului
+ * șters»): a tick per row, one reason, «Șterge cele bifate». The ticks belong to the batch form
+ * below the list by `form=` — each row already holds its own erase form, and forms cannot nest —
+ * and the dialog counts them at the press («Ștergi 2 declarații semnate pentru «…»?»). What is
+ * posted is the ids counted; the service refuses the whole press if that set is no longer the run's.
  */
 export default async function GroupRunDeclarationsPanel({
   eventId,
@@ -34,6 +43,8 @@ export default async function GroupRunDeclarationsPanel({
   rows,
   mayErase,
   eraseAction,
+  batchEraseAction,
+  runTitle,
 }: {
   eventId: string;
   locale: Locale;
@@ -41,9 +52,25 @@ export default async function GroupRunDeclarationsPanel({
   rows: readonly GroupRunDeclarationListRow[];
   mayErase: boolean;
   eraseAction: ActionFormAction;
+  batchEraseAction: ActionFormAction;
+  /** The run's name, for the batch dialog: «… pentru «Alergarea de joi»?». */
+  runTitle: string;
 }) {
   const t = await getTranslations("Admin");
   const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
+  // The batch form's refusals: a set that changed meanwhile says so, not "somebody else saved".
+  const batchMessages =
+    mayErase && rows.length > 0
+      ? await refusalMessages({ reason: t("groupRunDeclarations.reason"), declarationIds: t("groupRunDeclarations.ticked") }).then((words) => ({
+          ...words,
+          errors: { ...words.errors, CONFLICT: t("groupRunDeclarations.batchChanged") },
+        }))
+      : null;
+  const batchForm = `grd-batch-${eventId}`;
+  // The three counted forms, with the run named now and `{count}` left for the press.
+  const bodyForms = Object.fromEntries(
+    Object.entries(t.raw("groupRunDeclarations.batchEraseBody") as Record<CountForm, string>).map(([form, words]) => [form, words.split("{run}").join(runTitle)]),
+  ) as Record<CountForm, string>;
   const { cancel } = await confirmWords();
   return (
     <Panel glyph="declaration"
@@ -64,7 +91,19 @@ export default async function GroupRunDeclarationsPanel({
           rows.map((row) => (
             <Box key={row.id} data-testid="group-run-declaration-row" sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
-                <Typography sx={{ fontWeight: 600, flex: 1 }}>{row.typedName}</Typography>
+                <Stack direction="row" sx={{ alignItems: "center", flex: 1, minWidth: 0 }}>
+                  {/* The batch form's tick, on the `<input>` itself — a `form` on the Checkbox lands on MUI's span. */}
+                  {mayErase && batchMessages && (
+                    <Checkbox
+                      name="declarationIds"
+                      value={row.id}
+                      slotProps={{ input: { form: batchForm, "aria-label": t("groupRunDeclarations.tick", { name: row.typedName }) } }}
+                      sx={CHECKBOX_TAP_TARGET}
+                      data-testid="group-run-declaration-tick"
+                    />
+                  )}
+                  <Typography sx={{ fontWeight: 600 }}>{row.typedName}</Typography>
+                </Stack>
                 {/* Signed for the whole series (§523): the one signature every date of the run lists. */}
                 {row.series && <Chip size="small" variant="outlined" label={t("groupRunDeclarations.series")} sx={{ alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="group-run-declaration-series" />}
                 <Typography variant="body2" color="text.secondary">
@@ -117,6 +156,51 @@ export default async function GroupRunDeclarationsPanel({
               )}
             </Box>
           ))
+        )}
+        {mayErase && batchMessages && (
+          <ActionForm
+            id={batchForm}
+            action={batchEraseAction}
+            messages={batchMessages}
+            // The one dialog (§384), its body counted from the ticks at the press (`bodyCount`).
+            confirm={{
+              title: t("groupRunDeclarations.batchEraseTitle"),
+              body: bodyForms.other,
+              bodyCount: { field: "declarationIds", forms: bodyForms, locale },
+              confirmLabel: t("groupRunDeclarations.batchErase"),
+              cancelLabel: cancel,
+              destructive: true,
+            }}
+            scope="grd-batch"
+            data-testid="group-run-declarations-batch"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={eventId} />
+            <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
+              <Typography variant="body2" color="error" sx={{ fontWeight: 600 }}>
+                {t("groupRunDeclarations.batchTitle")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {t("groupRunDeclarations.batchHelp")}
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" } }}>
+                <RecallField
+                  name="reason"
+                  label={t("groupRunDeclarations.reason")}
+                  helperText={t("groupRunDeclarations.reasonHelp")}
+                  required
+                  size="small"
+                  slotProps={{ htmlInput: { maxLength: ERASE_REASON_MAX } }}
+                  sx={{ flex: 1 }}
+                />
+                <Box>
+                  <GlyphButton icon="erase" type="submit" variant="contained" color="error" size="small" sx={{ minHeight: 44 }}>
+                    {t("groupRunDeclarations.batchErase")}
+                  </GlyphButton>
+                </Box>
+              </Stack>
+            </Box>
+          </ActionForm>
         )}
       </Stack>
     </Panel>

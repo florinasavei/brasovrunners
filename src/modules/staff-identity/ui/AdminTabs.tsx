@@ -55,7 +55,7 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   registrations: ListAltIcon,
   tasks: ChecklistIcon,
   legal: GavelIcon,
-  // «Setări» (§516): the sliders — «Configurație» (/devs) is one of its tabs, with no gear of its own in the bar since §NNN.
+  // «Setări» (§516): the sliders — «Configurație» (/devs) is one of its tabs, with no gear of its own in the bar since §520.
   settings: TuneIcon,
   // The club's news to the people who asked for it (§445): a paper, not an envelope.
   newsletter: NewspaperIcon,

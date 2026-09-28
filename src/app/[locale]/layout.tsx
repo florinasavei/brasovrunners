@@ -137,7 +137,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   // «Aspectul site-ului» (§488): the club's tint for the public pages, from the public cache, as
   // one rule on MUI's page-colour variable — nothing at all for the default.
   const tintStyle = siteTintStyle(await cachedSiteTint());
-  // «Mărimea textului» (§NNN): the club's text size for the public pages, the same way — one rule
+  // «Mărimea textului» (§530): the club's text size for the public pages, the same way — one rule
   // on the root font size, nothing at all for the default.
   const fontSizeStyle = siteFontSizeStyle(await cachedSiteFontSize());
 

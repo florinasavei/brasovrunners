@@ -62,6 +62,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   withdrawInterestAction: [],
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
+  eraseGroupRunDeclarationsAction: ["batchEraseAction"],
   assignBibNumbersAction: ["assignAction"],
   // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],
@@ -94,6 +95,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   sendOutboxNowFromEmailsAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
+  // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.
+  regenerateLegalTemplatesAction: [],
+  approveLegalDraftsAction: [],
   approveLegalVersionAction: [],
   deleteLegalVersionAction: [],
   withdrawLegalVersionAction: [],
@@ -132,7 +136,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateShownContactAddressAction: [],
   // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
   updateSiteTintAction: [],
-  // The public pages' text size (§NNN): every visitor reads at the new size from the next page view.
+  // The public pages' text size (§530): every visitor reads at the new size from the next page view.
   updateSiteFontSizeAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
@@ -150,6 +154,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateAddressCapAction: [],
   // «Când pleacă emailurile» (§513): every message the platform sends from now on leaves by it.
   updateDeliveryTimingAction: [],
+  // The same setting as the queue panel's switch (§529): off, the queue leaves now.
+  updateDeliveryTimingFromEmailsAction: [],
   // A line of the club's checklist deleted (§438): gone for the whole team, with no undo.
   deleteClubTodoAction: [],
   // «Tradu din română»'s daily character budget (§464): what the club may spend from now on.
@@ -181,6 +187,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
+  deleteLegalVersionsAction:
+    "guarded by a typed phrase (DELETE <n>) when an approved version is ticked, the typing is the question; drafts alone ask in the §384 dialog (§532)",
   previewParticipantMessageAction: "a preview; sends nothing",
   previewNewsletterAction: "the newsletter composer's preview (§445); sends nothing, stores nothing",
   lookUpPersonAction: "reads; changes nothing",
