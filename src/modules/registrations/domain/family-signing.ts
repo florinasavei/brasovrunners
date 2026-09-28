@@ -139,10 +139,28 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
  * five states, and a person signed whose signature found no free place says the waiting list
  * rather than «semnată» alone. Pure, so both languages' words are unit-tested.
  */
-export type FamilyStepWordsKey = FamilyStepState | "waitlisted";
+export type FamilyStepWordsKey = FamilyStepState | "waitlisted" | "cancelled";
 
+/**
+ * A person withdrawn from the wizard with «Renunț la înscrierea pentru …» (§NNN) is a closed step
+ * whose registration is cancelled: the line says «înscriere anulată», never the vaguer «nu mai
+ * așteaptă semnătura» a lapsed hold gets.
+ */
 export function familyStepWordsKey(step: Pick<FamilyStep, "state" | "status">): FamilyStepWordsKey {
+  if (step.status === "CANCELLED" && step.state !== "signed") return "cancelled";
   return step.state === "signed" && step.status === "WAITLISTED" ? "waitlisted" : step.state;
+}
+
+/**
+ * The signing button's words (§NNN, amending §471; the owner, 2026-09-28: «altfel nu scrie»):
+ * «Semnează și treci la următoarea persoană» only while another person's declaration follows in
+ * this sitting; on the last one, and on a single declaration, just «Semnează». A key under
+ * `Registrations`, so both languages are tested together.
+ */
+export type SignActionKey = "declare.family.nextAction" | "declare.sign";
+
+export function signActionKey(steps: readonly FamilyStep[] | null): SignActionKey {
+  return steps && hasNextFamilyStep(steps) ? "declare.family.nextAction" : "declare.sign";
 }
 
 /**

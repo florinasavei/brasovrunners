@@ -609,7 +609,8 @@
           "health_viewed": "Emergency details and health note opened",
           "consent_withdrawn": "Consent withdrawn",
           "declaration_downloaded": "Signed declaration downloaded (PDF)",
-          "sent_now": "Sent now, past the scheduled round"
+          "sent_now": "Sent now, past the scheduled round",
+          "cancelled_by_participant": "Cancelled by the participant, from their own link"
         }
       },
       "locale": {
@@ -4977,7 +4978,7 @@
                 "Fill in the form. For a race: «Read the race conditions», scroll to the end, then «I have read them and I agree». Tick the terms too.",
                 "Press «Submit registration». If something is missing, «Still missing:» appears above the button with each item — tap one and it takes you there.",
                 "In the email press «Confirm your email». The link is valid for {confirmation}.",
-                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign and confirm».",
+                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign».",
                 "They get the confirmation with the QR code and the race number, plus the signed declaration as a PDF.",
                 "Check in the backoffice: «Registrations» → search the name → the status «Confirmată» (confirmed)."
               ]
@@ -5812,9 +5813,9 @@
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
       "addPending": "Opening the form…",
-      "addHint": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
-      "addHintOn": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
-      "addHintLeft": "If you press “Yes”, the next email waits at most {window} after the last form and covers everybody.",
+      "addHint": "If you register one more person by {at}, the email waits for their form, at most {window}, and you get one email for everybody.",
+      "addHintOn": "If you register one more person by {at}, the email waits for their form, at most {window}, and you get one email for everybody.",
+      "addHintLeft": "If you register one more person, the next email waits at most {window} after the last form and covers everybody.",
       "addHintAtOnce": "Each person gets their own email.",
       "done": "No, done — send me the email",
       "doneAtOnce": "No, I am done",
@@ -5847,7 +5848,8 @@
       "placeReserved": "place reserved",
       "placeWaitlist": "on the waiting list, once confirmed",
       "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all.",
-      "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then."
+      "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then.",
+      "addLink": "Register one more person with this address"
     }
   },
   "Registrations": {
@@ -5881,9 +5883,10 @@
           "current": "now",
           "next": "next",
           "closed": "no longer waiting for a signature",
-          "later": "later"
+          "later": "later",
+          "cancelled": "registration cancelled"
         },
-        "nextAction": "Sign and go to the next one",
+        "nextAction": "Sign and go to the next person",
         "skipAction": "I'll sign later",
         "skipHelp": "Nothing changes in this person's registration: their declaration can also be signed from the link emailed for them, until the deadline.",
         "doneLater": "A declaration left for later is signed from the link emailed for that person, until the deadline.",
@@ -5896,12 +5899,18 @@
           "noNumber": "Race number: none yet",
           "waitlisted": "On the waiting list: an email comes if a place frees up.",
           "later": "Later: sign from the link emailed for this person.",
-          "closed": "No longer waiting for a signature."
-        }
+          "closed": "No longer waiting for a signature.",
+          "cancelled": "The registration is cancelled, and the place is free again."
+        },
+        "withdraw": "Withdraw the registration for {name}",
+        "withdrawHelp": "The place is released, and the address gets a confirmation email.",
+        "withdrawTitle": "Withdraw the registration for {name}?",
+        "withdrawBody": "The registration for {name} at {event} is cancelled and the place is released. It cannot be undone: to register again, send the form again.",
+        "withdrawConfirm": "Yes, withdraw",
+        "withdrawBack": "No, go back"
       },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
-      "action": "Sign and confirm",
       "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",
       "changed": "The declaration was updated while you were reading it. Nothing was recorded. Below is the current text — please read it and sign again.",
@@ -5965,7 +5974,8 @@
         "PASSPORT": "Passport",
         "RESIDENCE_PERMIT": "Residence permit",
         "OTHER": "Other document"
-      }
+      },
+      "sign": "Sign"
     },
     "list": {
       "title": "The public participant list",
@@ -5999,9 +6009,6 @@
       "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
       "listTitle": "Your registrations",
       "empty": "You have no active registration at the moment.",
-      "code": "Access code",
-      "bib": "Race number",
-      "bibProvisional": "Provisional number. It is settled when registration closes, and you get it by email then.",
       "cancel": "Withdraw from this registration",
       "cancelledTitle": "Registration cancelled",
       "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",
@@ -6044,12 +6051,10 @@
     "manage": {
       "title": "Manage your registration",
       "prompt": "You can cancel this registration. The place will be released immediately.",
-      "action": "Cancel registration",
       "done": "Your registration has been cancelled.",
       "eventStarted": "This event has already started; the registration can no longer be cancelled.",
       "eventCancelled": "The event has been cancelled; there is nothing you need to do.",
       "doneTitle": "Registration cancelled",
-      "declarationPdf": "The declaration you signed (PDF)",
       "raceDayTitle": "On race day",
       "codeIntro": "Show this code at the number pickup desk. It is in your confirmation email too.",
       "qrAlt": "Your QR code {code}",
@@ -6057,7 +6062,18 @@
       "selfCheckInHelp": "You can do this from {checkin} before the start. You still pick up your number at the desk.",
       "selfCheckInDone": "You are marked as here. Pick up your number at the desk.",
       "selfCheckInClosed": "Check-in opens on {date}.",
-      "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out."
+      "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out.",
+      "signedSent": "The signed declaration was sent to you by email.",
+      "signedPaper": "The declaration was signed on paper.",
+      "familyTitle": "The registrations on this address",
+      "familyIntro": "Each person has their own QR code and their own race number.",
+      "personCancel": "Cancel the registration for {name}",
+      "cancelTitle": "Cancel the registration for {name}?",
+      "cancelBody": "The registration for {name} at {event} is cancelled and the place is released. The address gets a confirmation email.",
+      "cancelConfirm": "Yes, cancel",
+      "cancelBack": "No, go back",
+      "doneOthers": "This link has been used. For the other people on the address, ask for a new link from “My registrations”.",
+      "qrTitle": "The QR code for {name}"
     },
     "spent": {
       "event": "For the event: {event}",
@@ -6153,6 +6169,10 @@
       "nobodyTitle": "Nobody was registered",
       "nobody": "We registered nobody; the details sent have been deleted.",
       "nobodyRefused": "We registered nobody on the list."
+    },
+    "qr": {
+      "number": "Race number: {number}",
+      "code": "Access code: {code}"
     }
   },
   "Devs": {
@@ -6597,7 +6617,8 @@
       "declarationConfirmed": "Declaration signed: your registration is confirmed.",
       "declarationWaitlisted": "Declaration signed: you are on the waiting list.",
       "familySignNothingLeft": "No declaration is left to sign for this event: the list below shows where each registration stands.",
-      "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person."
+      "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person.",
+      "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email."
     },
     "toast": {
       "saved": "Saved.",

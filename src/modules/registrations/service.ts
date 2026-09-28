@@ -3071,6 +3071,9 @@ export async function undoCheckIn<T extends Record<string, unknown>>(
   return updated;
 }
 
+/** Where a participant cancelled their own registration from (§NNN): audit metadata, never a name. */
+export type ParticipantCancelDoor = "MANAGE_LINK" | "MY_REGISTRATIONS" | "FAMILY_WIZARD";
+
 export async function unregister<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForRegistration,
@@ -3083,7 +3086,16 @@ export async function unregister<T extends Record<string, unknown>>(
    * to a person who asked to be forgotten — a message the erasure would delete a moment later,
    * or that a drain between the two would already have sent.
    */
-  options: { notify?: boolean } = {},
+  options: {
+    notify?: boolean;
+    /**
+     * The door a participant cancelled through (§NNN): their own manage link, «Înscrierile mele», or
+     * «Renunț la înscrierea pentru …» in the family's wizard. Given, the cancellation writes one audit
+     * row with no staff actor — the state it left and the door, never a name (AGENTS.md §12.12) — so
+     * the club's timeline says the person withdrew themselves, as it says a staff cancellation.
+     */
+    via?: ParticipantCancelDoor;
+  } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
@@ -3112,6 +3124,18 @@ export async function unregister<T extends Record<string, unknown>>(
       throw new DomainError("CONFLICT", "this registration changed state concurrently");
     }
 
+    if (source === "PARTICIPANT" && options.via) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: null,
+        participantId: cancelled.participantId,
+        action: "registration.cancelled_by_participant",
+        entityType: "registration",
+        entityId: cancelled.id,
+        metadata: { from: current.status, via: options.via },
+        now,
+      });
+    }
+
     if (options.notify !== false) {
       await enqueueEmail(tx, {
         participantId: cancelled.participantId,
@@ -3119,7 +3143,12 @@ export async function unregister<T extends Record<string, unknown>>(
         messageType: "REGISTRATION_CANCELLED",
         locale: cancelled.locale,
         recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
-        payload: {},
+        /*
+          The state the registration left (§NNN): the message says a held place was released, or that
+          the person left the waiting list — «Înscrierea pentru <nume> … a fost anulată», one per
+          person, whoever pressed it.
+        */
+        payload: { previousStatus: current.status },
         idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
         now,
       });

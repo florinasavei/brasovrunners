@@ -343,7 +343,8 @@ export async function consumeAndCancelFromMyRegistrations<T extends Record<strin
       throw new DomainError("NOT_FOUND", "not one of this participant's registrations");
     }
     const event = await loadEvent(tx, registration.eventId);
-    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now);
+    // The audit row and the per-person cancellation email (§NNN) ride on `unregister`, whichever door.
+    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MY_REGISTRATIONS" });
     return { ok: true as const, registration: updated };
   });
 }

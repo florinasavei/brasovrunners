@@ -609,7 +609,8 @@
           "health_viewed": "Urgențele și nota medicală deschise",
           "consent_withdrawn": "Consimțământ retras",
           "declaration_downloaded": "Declarația semnată descărcată (PDF)",
-          "sent_now": "Trimis acum, ocolind trecerea programată"
+          "sent_now": "Trimis acum, ocolind trecerea programată",
+          "cancelled_by_participant": "Anulată de participant, din linkul propriu"
         }
       },
       "locale": {
@@ -4977,7 +4978,7 @@
                 "Completează formularul. La o cursă: «Citește condițiile concursului», derulează până la capăt, apoi «Am citit și sunt de acord». Bifează și termenii.",
                 "Apasă «Trimite înscrierea». Dacă lipsește ceva, deasupra butonului apare «Mai lipsesc:» cu fiecare lucru — atinge-l și te duce la el.",
                 "În email apasă «Confirmă adresa de email». Linkul e valabil {confirmation}.",
-                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează și confirmă».",
+                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează».",
                 "Primește confirmarea cu codul QR și numărul de concurs, plus declarația semnată ca PDF.",
                 "Verifică în backoffice: «Înscrieri» → caută numele → starea «Confirmată»."
               ]
@@ -5812,9 +5813,9 @@
       "question": "Mai înscrii pe cineva cu aceeași adresă?",
       "add": "Da, încă o persoană",
       "addPending": "Se deschide formularul…",
-      "addHint": "Dacă apeși „Da” până la {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
-      "addHintOn": "Dacă apeși „Da” până {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
-      "addHintLeft": "Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.",
+      "addHint": "Dacă înscrii încă o persoană până la {at}, emailul îi așteaptă formularul, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintOn": "Dacă înscrii încă o persoană până {at}, emailul îi așteaptă formularul, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintLeft": "Dacă înscrii încă o persoană, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.",
       "addHintAtOnce": "Fiecare persoană primește emailul ei.",
       "done": "Nu, gata — trimite-mi emailul",
       "doneAtOnce": "Nu, am terminat",
@@ -5847,7 +5848,8 @@
       "placeReserved": "loc rezervat",
       "placeWaitlist": "pe lista de așteptare, după confirmare",
       "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
-      "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci."
+      "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci.",
+      "addLink": "Înscriu încă o persoană cu această adresă"
     }
   },
   "Registrations": {
@@ -5869,7 +5871,6 @@
       "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
       "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
       "typedName": "Scrie numele complet ca semnătură",
-      "action": "Semnează și confirmă",
       "privacyLink": "Nota de confidențialitate",
       "doneConfirmed": "Înscrierea a fost confirmată.",
       "changed": "Declarația a fost actualizată în timp ce o citeai. Nu s-a înregistrat nimic. Mai jos este textul actual — te rugăm să îl citești și să semnezi din nou.",
@@ -5948,9 +5949,10 @@
           "current": "acum",
           "next": "urmează",
           "closed": "nu mai așteaptă semnătura",
-          "later": "mai târziu"
+          "later": "mai târziu",
+          "cancelled": "înscriere anulată"
         },
-        "nextAction": "Semnează și treci la următoarea",
+        "nextAction": "Semnează și treci la următoarea persoană",
         "skipAction": "Semnez mai târziu",
         "skipHelp": "Nimic nu se schimbă la înscrierea acestei persoane: declarația ei se poate semna și din linkul primit pe email pentru ea, până la termen.",
         "doneLater": "O declarație lăsată pentru mai târziu se semnează din linkul primit pe email pentru acea persoană, până la termen.",
@@ -5963,9 +5965,17 @@
           "noNumber": "Număr de concurs: încă fără număr",
           "waitlisted": "Pe lista de așteptare: primește un email dacă se eliberează un loc.",
           "later": "Mai târziu: semnează din linkul primit pe email pentru această persoană.",
-          "closed": "Nu mai așteaptă semnătura."
-        }
-      }
+          "closed": "Nu mai așteaptă semnătura.",
+          "cancelled": "Înscrierea a fost anulată, iar locul s-a eliberat."
+        },
+        "withdraw": "Renunț la înscrierea pentru {name}",
+        "withdrawHelp": "Locul se eliberează, iar adresa primește un email de confirmare.",
+        "withdrawTitle": "Renunți la înscrierea pentru {name}?",
+        "withdrawBody": "Înscrierea pentru {name} la {event} se anulează și locul se eliberează. Nu se poate reveni: pentru o înscriere nouă, trimiți formularul din nou.",
+        "withdrawConfirm": "Da, renunț",
+        "withdrawBack": "Nu, înapoi"
+      },
+      "sign": "Semnează"
     },
     "list": {
       "title": "Lista publică de participanți",
@@ -5999,9 +6009,6 @@
       "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "listTitle": "Înscrierile tale",
       "empty": "Nu ai nicio înscriere activă în acest moment.",
-      "code": "Cod de acces",
-      "bib": "Număr de concurs",
-      "bibProvisional": "Număr provizoriu. Se stabilește definitiv la închiderea înscrierilor și îl primești atunci pe email.",
       "cancel": "Renunț la această înscriere",
       "cancelledTitle": "Înscrierea a fost anulată",
       "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
@@ -6044,12 +6051,10 @@
     "manage": {
       "title": "Gestionează înscrierea",
       "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",
-      "action": "Anulează înscrierea",
       "done": "Înscrierea a fost anulată.",
       "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
       "eventCancelled": "Evenimentul a fost anulat; nu trebuie să faci nimic.",
       "doneTitle": "Înscriere anulată",
-      "declarationPdf": "Declarația pe care ai semnat-o (PDF)",
       "raceDayTitle": "În ziua cursei",
       "codeIntro": "Arată acest cod la masa de ridicare a numerelor. Îl ai și în emailul de confirmare.",
       "qrAlt": "Codul tău QR {code}",
@@ -6057,7 +6062,18 @@
       "selfCheckInHelp": "Poți face asta începând cu {checkin} înainte de start. Numărul îl ridici tot de la masă.",
       "selfCheckInDone": "Ești marcat prezent. Ridică-ți numărul de la masă.",
       "selfCheckInClosed": "Marcarea prezenței se deschide din {date}.",
-      "selfCheckInFailed": "Nu am putut marca prezența. Spune la masă, se rezolvă acolo."
+      "selfCheckInFailed": "Nu am putut marca prezența. Spune la masă, se rezolvă acolo.",
+      "signedSent": "Declarația semnată ți-a fost trimisă pe email.",
+      "signedPaper": "Declarația a fost semnată pe hârtie.",
+      "familyTitle": "Înscrierile de pe această adresă",
+      "familyIntro": "Fiecare persoană are codul ei QR și numărul ei de concurs.",
+      "personCancel": "Anulează înscrierea pentru {name}",
+      "cancelTitle": "Anulezi înscrierea pentru {name}?",
+      "cancelBody": "Înscrierea pentru {name} la {event} se anulează și locul se eliberează. Adresa primește un email de confirmare.",
+      "cancelConfirm": "Da, anulează",
+      "cancelBack": "Nu, înapoi",
+      "doneOthers": "Linkul acesta s-a folosit. Pentru celelalte persoane de pe adresă, cere un link nou din „Înscrierile mele”.",
+      "qrTitle": "Codul QR pentru {name}"
     },
     "spent": {
       "event": "Pentru evenimentul: {event}",
@@ -6153,6 +6169,10 @@
       "nobodyTitle": "Nu am înscris pe nimeni",
       "nobody": "Nu am înscris pe nimeni; datele trimise s-au șters.",
       "nobodyRefused": "Nu am înscris pe nimeni din listă."
+    },
+    "qr": {
+      "number": "Număr de concurs: {number}",
+      "code": "Cod de acces: {code}"
     }
   },
   "Devs": {
@@ -6597,7 +6617,8 @@
       "declarationConfirmed": "Declarație semnată: înscrierea ta e confirmată.",
       "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare.",
       "familySignNothingLeft": "Nu mai este nicio declarație de semnat la acest eveniment: lista de mai jos arată unde este fiecare înscriere.",
-      "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană."
+      "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană.",
+      "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare."
     },
     "toast": {
       "saved": "Salvat.",

@@ -92,7 +92,8 @@ describe("the club's own wording (§247)", () => {
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     // The Romanian half is the club's; the English half is still the platform's (§96, §247).
     expect(message.subject).toContain("Îți anulăm locul la");
-    expect(message.subject).toContain("Your registration has been cancelled");
+    // Whose registration, when the row names one (§NNN); this hand-made row names nobody.
+    expect(message.subject).toContain("The registration at the event has been cancelled");
     expect(message.text).toContain("locul tău a fost anulat");
     expect(message.text).toContain("Ne vedem data viitoare.");
     // The sign-off and the card are the platform's, whatever the club wrote.
