@@ -24,6 +24,8 @@ import {
   PARTICIPANT_MESSAGE_AUDIENCES,
 } from "@/modules/notifications/domain/organizer-message";
 import { countParticipantMessageAudiences, listParticipantMessages } from "@/modules/notifications/participant-messages";
+import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
+import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import ParticipantMessageComposer, { type ComposerAudience } from "@/modules/notifications/ui/ParticipantMessageComposer";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
@@ -135,15 +137,22 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     number — `countParticipantMessageAudiences`, the count the send itself queues from. One spec
     per radio choice, picked by the `audience` the form posts, so the dialog is the group's own.
   */
-  const sendConfirm = audiences.map((choice) => ({
-    when: [{ field: "audience", equals: choice.value }],
-    title: choice.confirmTitle,
-    body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
-    // No "0 participants" for a group of test rows alone: the test line says who is written to.
-    ...(choice.real > 0 ? { email: words.email(choice.real) } : {}),
-    confirmLabel: t("participantMessages.confirmSend"),
-    cancelLabel: words.cancel,
-  }));
+  // «Trimite acum» or «Pune la coadă» (§540): under the scheduled timing, the send asks which.
+  const sendNow = await sendNowChoiceFor(db, locale);
+  const sendConfirm = audiences.map((choice) =>
+    withSendNowChoice(
+      {
+        when: [{ field: "audience", equals: choice.value }],
+        title: choice.confirmTitle,
+        body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
+        // No "0 participants" for a group of test rows alone: the test line says who is written to.
+        ...(choice.real > 0 ? { email: words.email(choice.real) } : {}),
+        confirmLabel: t("participantMessages.confirmSend"),
+        cancelLabel: words.cancel,
+      },
+      sendNow,
+    ),
+  );
   const languageRo = tSite("languageName.ro");
   const languageEn = tSite("languageName.en");
   const placeholderList = ORGANIZER_MESSAGE_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
@@ -204,6 +213,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
           <input type="hidden" name="sendId" value={sendId} />
+          {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
           <ParticipantMessageComposer
             eventId={event.id}
             audiences={audiences}

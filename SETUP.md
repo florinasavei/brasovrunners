@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.19-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -682,7 +682,7 @@ mail, and storing people's messages at a third party for nothing is not a featur
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
 Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
-is right, because every email the site sent carried `Reply-To: contact@…` until `BR-V2.04`; since then (§462) the Reply-To defaults to the Gmail in `CONTACT_SMTP_USER` unless the club saves «Adresa de contact afișată» on «Setări» → «Contact» (`/admin/settings/contact#shown-contact-address`, since §516), so the Route matters for the older emails and for a club that chooses the mailbox. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
+is right, because every email the site sent carried `Reply-To: contact@…` until `BR-V2.04`; since then (§462) the Reply-To defaults to the Gmail in `CONTACT_SMTP_USER` unless the club saves «Adresa de contact afișată» on «Pagini» → «Contact» (`/admin/pages/contact#shown-contact-address`; «Setări» → «Contact» from §516 until 2026-09-28), so the Route matters for the older emails and for a club that chooses the mailbox. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
 is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
 as a PDF at signing. One more message per registration on Mailgun's allowance. **Since
 `DECISIONS.md` §244 this is a setting instead**: «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → "Copiile clubului", where an
@@ -1276,7 +1276,7 @@ Locally the development switcher is the provider, so nothing is sent and the ale
 QA rather than the club's address (checked 2026-09-22). `CONTACT_SMTP_USER`,
 `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` were written on 2026-09-20 and predate the builds
 now serving. The procedure below is kept for a new app password — Google shows one once — and for
-the part that stays the club's, which is who receives a message («Setări» → «Contact», `/admin/settings/contact`, §516).
+the part that stays the club's, which is who receives a message («Pagini» → «Contact», `/admin/pages/contact`).
 
 Five minutes, once, in the club's Google account and on Vercel (`DECISIONS.md` §149). The
 "Scrie-ne" page is built and works on every laptop (the message is captured, nothing is
@@ -1299,7 +1299,7 @@ club names — which is why a colleague's Yahoo can be on the list.
    all. Set it if you want the form to work before anybody opens the backoffice.
 4. Redeploy both projects.
 5. In the app — the part the club owns, and the part that changes without a developer:
-   «Setări» → «Contact» (`/admin/settings/contact#contact-recipients`, §516) → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
+   «Pagini» → «Contact» (`/admin/pages/contact#contact-recipients`) → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
    receive each message, comma-separated; **Copie (Cc)** = anybody who should get a copy and
    be visible to the others (the administrator colleague's Yahoo, say); **Copie ascunsă (Bcc)** = anybody who
    should get a copy without the others seeing it — an archive mailbox, say (§293) → Salvează. The sentence above the boxes
@@ -1326,7 +1326,7 @@ club names — which is why a colleague's Yahoo can be on the list.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
    §310)
 
-To take the form away, clear the recipients on «Setări» → «Contact» (`/admin/settings/contact`) and leave `CONTACT_FORM_TO`
+To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
 back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,
 which is more than a club receives; the form's own limit is five an hour per sender.

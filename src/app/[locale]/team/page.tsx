@@ -15,7 +15,9 @@ import { teamMetaDescription } from "@/modules/content/team/meta-description";
 import { type PublicTeamLink, type PublicTeamMember, type PublicTeamPage, teamPageOnSite } from "@/modules/content/team/repository";
 import { teamLinkKindWords } from "@/modules/content/team/ui/kind-words";
 import TeamLinkGlyph from "@/modules/content/team/ui/TeamLinkGlyph";
-import { coverMagnification, pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
+import { teamPhotoFrame } from "@/modules/content/team/ui/team-photo-frame";
+import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
+import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { cachedTeamPage } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
@@ -142,16 +144,14 @@ export default async function TeamPage({ params }: Props) {
           {members.map((member, index) => (
             <Card key={member.id} component="li" variant="outlined" sx={riseIn(index)}>
               {member.photo && (
-                // eslint-disable-next-line @next/next/no-img-element -- our own WebP ladder, sized on upload (§414)
-                <img
+                // Our own WebP ladder, sized on upload (§414), in the crop the club drew — or, with
+                // none, the square it always was (§541). The name is right under it: `alt` is empty.
+                <TeamPhotoImage
                   src={member.photo.thumbUrl}
                   {...photoWidths(member.photo)}
-                  width={member.photo.width}
-                  height={member.photo.height}
-                  // The name is right under it; announcing it twice helps nobody.
-                  alt=""
+                  photo={member.photo}
                   loading={index < 4 ? "eager" : "lazy"}
-                  style={{ display: "block", width: "100%", height: "auto", aspectRatio: "1 / 1", objectFit: "cover", objectPosition: "50% 25%" }}
+                  testId="team-photo"
                 />
               )}
               <CardContent sx={{ p: { xs: DENSITY.cardPadTop, sm: 2 }, "&:last-child": { pb: { xs: DENSITY.cardPadTop, sm: 3 } } }}>
@@ -218,11 +218,12 @@ function MemberLinks({ links, label, kindWords: words }: { links: readonly Publi
 
 /**
  * The photo's `srcset` and `sizes` (§414), or neither: a card is a column of the grid — the album
- * grid's `tile` widths, two, three and four to a row — cut to a square, so a landscape photograph
- * is drawn wider than its card by its ratio. A picture from before the ladder keeps its thumbnail.
+ * grid's `tile` widths, two, three and four to a row — and the photograph is drawn wider than its
+ * card by what the frame magnifies: the crop's `1 / w`, or a square's cover (`teamPhotoFrame`,
+ * §541). A picture from before the ladder keeps its thumbnail.
  */
 function photoWidths(photo: NonNullable<PublicTeamMember["photo"]>): { srcSet?: string; sizes?: string } {
   const srcSet = pictureSrcSet(photo.webUrl, photo.width);
   if (!srcSet) return {};
-  return { srcSet, sizes: pictureSizes("tile", 100, coverMagnification(photo.width, photo.height, 1)) };
+  return { srcSet, sizes: pictureSizes("tile", 100, teamPhotoFrame(photo).magnify) };
 }

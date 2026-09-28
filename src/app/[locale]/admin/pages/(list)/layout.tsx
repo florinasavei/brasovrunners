@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { isEditorial } from "@/modules/staff-identity/domain/roles";
+import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function SectionLayout({ children }: { children: ReactNode }) {
   const actor = await requireStaff();
-  if (!isEditorial(actor.role)) notFound();
+  // The page's own gate (`canReadContent`, §208) and the «Pagini» tab's: a Redactor who sees the tab
+  // reaches the list. It was `isEditorial` (Organizer and up), so a Redactor pressed the tab into a
+  // 404. The writes keep their own gates in the actions.
+  if (!canReadContent(actor.role)) notFound();
 
   return <>{children}</>;
 }

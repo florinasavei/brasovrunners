@@ -13,6 +13,7 @@ import { routing } from "@/i18n/routing";
 import { findPageForEditor } from "@/modules/content/pages/repository";
 import { describeIncompletePageLocales } from "@/modules/content/pages/service";
 import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
+import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -99,6 +100,9 @@ export default async function EditPagePage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
+      {/* «Pagini»'s row, «Paginile clubului» marked: one page's editor stays in the section (`pagesRowEntryOf`). */}
+      <PagesSubNav locale={locale} active="pages" />
+
       <Typography variant="body2">
         <Link href="/admin/pages">{t("pages.backToList")}</Link>
       </Typography>

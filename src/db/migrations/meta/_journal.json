@@ -726,8 +726,15 @@
     {
       "idx": 103,
       "version": "7",
+      "when": 1790589320586,
+      "tag": "0106_team_photo_crop",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
       "when": 1790598016841,
-      "tag": "0106_family_place_holds",
+      "tag": "0107_family_place_holds",
       "breakpoints": true
     }
   ]

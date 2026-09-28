@@ -1,5 +1,5 @@
 {
-  "id": "30dfd09c-4b45-4a99-88a5-68c80289aa56",
+  "id": "fcaccb76-7798-43ed-84b3-411f7441a6e0",
   "prevId": "50b75104-52cc-4009-91cc-d231374f9a21",
   "version": "7",
   "dialect": "postgresql",
@@ -1755,114 +1755,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.family_place_holds": {
-      "name": "family_place_holds",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "event_id": {
-          "name": "event_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sitting_key": {
-          "name": "sitting_key",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "slot": {
-          "name": "slot",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "family_place_holds_key_slot_unique": {
-          "name": "family_place_holds_key_slot_unique",
-          "columns": [
-            {
-              "expression": "sitting_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "slot",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "family_place_holds_event_expires_idx": {
-          "name": "family_place_holds_event_expires_idx",
-          "columns": [
-            {
-              "expression": "event_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "expires_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "family_place_holds_event_id_events_id_fk": {
-          "name": "family_place_holds_event_id_events_id_fk",
-          "tableFrom": "family_place_holds",
-          "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.family_sittings": {
       "name": "family_sittings",
       "schema": "",
@@ -1942,12 +1834,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
-        },
-        "reserved_until": {
-          "name": "reserved_until",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -5224,6 +5110,12 @@
         "photo_media_asset_id": {
           "name": "photo_media_asset_id",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "photo_crop": {
+          "name": "photo_crop",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },

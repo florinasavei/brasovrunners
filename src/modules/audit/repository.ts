@@ -35,6 +35,11 @@ export type AuditAction =
   | "registration.deleted_by_staff"
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
   | "registration.resend_rate_limited"
+  /**
+   * A resend sent at once, past the scheduled pass (§540): the staff member (the actor), the outbox
+   * row's id and its message type — never the address or a body.
+   */
+  | "registration.sent_now"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"
   // The desk's spare numbers reserved by a print (§444): the range, never a name.
@@ -242,6 +247,13 @@ export type AuditAction =
    */
   | "legal_document.deleted"
   /**
+   * A draft made from the platform's template by «Regenerează din șablon» — one text's press on
+   * its card, or «Regenerează toate» (§532, §539). One row per draft: the key and the version it
+   * was given, so "who regenerated the privacy notice, and when" has an answer. Nothing is in
+   * force by it; approving stays its own press.
+   */
+  | "legal_document.regenerated"
+  /**
    * «Echipa» (§459): a card added, written, shown or taken off, moved, or deleted, and the page
    * published, taken off or its introduction saved. The card's id, never its words or the
    * person's name (§12.12): the row says who put a person's photograph on the site, and when.
@@ -277,6 +289,12 @@ export type AuditAction =
    * The result page reads its report back from this row.
    */
   | "staff.members_invited"
+  /**
+   * «Retrimite invitația» sent at once, past the scheduled pass (§540): the staff member who pressed
+   * (the actor), the invited row (the entity), the outbox row's id and its message type — never the
+   * address.
+   */
+  | "staff.invitation_sent_now"
   /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the

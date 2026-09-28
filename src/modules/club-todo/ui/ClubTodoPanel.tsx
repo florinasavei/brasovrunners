@@ -27,12 +27,13 @@ import {
   filterClubTodo,
   isClubTodoOverdue,
 } from "@/modules/club-todo/domain/club-todo";
-import { CLUB_TODO_OWNER_SUGGESTIONS } from "@/modules/club-todo/domain/starting-list";
+import { CLUB_TODO_OWNER_SUGGESTIONS, clubTodoDefaultView } from "@/modules/club-todo/domain/starting-list";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -127,7 +128,10 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
 
   const row = (item: ClubTodoItem, index: number, siblings: readonly ClubTodoItem[]) => {
     const overdue = isClubTodoOverdue(item, today);
-    const label = shortText(item.text);
+    // A starting line the club has not edited (§538): its words in the reader's language, and the editor it names.
+    const view = clubTodoDefaultView(item, locale);
+    const text = view?.text ?? item.text;
+    const label = shortText(text);
     return (
       <Box
         component="li"
@@ -180,8 +184,15 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
                 ...(item.done ? { textDecoration: "line-through", color: "text.secondary" } : {}),
               }}
             >
-              {item.text}
+              {text}
             </Typography>
+            {view && !item.done && (
+              <Box sx={{ mt: 0.75 }}>
+                <GlyphButtonLink href={view.href} icon="edit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="club-todo-link">
+                  {view.link}
+                </GlyphButtonLink>
+              </Box>
+            )}
             {(item.owner || item.due || item.done) && (
               <Stack direction="row" sx={{ mt: 0.75, flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
                 {item.owner && <Chip size="small" variant="outlined" label={t("clubTodo.owner", { owner: item.owner })} />}

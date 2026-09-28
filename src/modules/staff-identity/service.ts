@@ -1,7 +1,11 @@
 import { z } from "zod";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { recordAuditEvent } from "@/modules/audit/repository";
+import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
+import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domain/send-at-once";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { assertRoomToSendNow, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canAssignRole, canManageMember, canManageStaff, isBackofficeRole, isSuperadmin, STAFF_ROLES, type StaffRole } from "./domain/roles";
 import { MEMBER_ROWS_MAX, type MemberRow } from "./domain/member-rows";
@@ -194,14 +198,42 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
   actor: StaffUser,
   email: string,
   now = new Date(),
+  /**
+   * «now» sends it after this response, past the scheduled pass (§540), as a registration's resend
+   * does; «queue», the default, leaves it to «Când pleacă emailurile».
+   */
+  delivery: DeliveryChoice = "queue",
 ): Promise<StaffUser> {
   assertAdministrator(actor);
   const member = await findStaffUserByEmail(db, email);
   if (!member) throw new DomainError("NOT_FOUND", "no such staff user");
   assertMayManage(actor, member);
   if (member.firstSignedInAt) throw new DomainError("CONFLICT", "this person has signed in already; there is nothing to invite them to");
-  await db.transaction((tx) => enqueueStaffInvitation(tx, actor, member, now, true));
+  // Inside the day's allowance, asked before anything is queued (§80, §540): a refusal leaves nothing.
+  if (delivery === "now") await assertRoomToSendNow(db, [invitationMessageType(member)], now);
+  const key = await db.transaction(async (tx) => {
+    const queued = await enqueueStaffInvitation(tx, actor, member, now, true, delivery);
+    // The press on the audit trail (§540): who, which message, and that it passed the round.
+    if (delivery === "now" && queued.id) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        action: "staff.invitation_sent_now",
+        entityType: "staff_user",
+        entityId: member.id,
+        metadata: { outboxId: queued.id, messageType: invitationMessageType(member), bypassedSchedule: true },
+        now,
+      });
+    }
+    return queued.key;
+  });
+  // The invitation, after this response, whatever «Când pleacă emailurile» says (§540).
+  if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, key));
   return member;
+}
+
+/** A club member is invited to the members' zone, never to "the team that runs the site" (§524). */
+function invitationMessageType(member: StaffUser): "STAFF_INVITATION" | "MEMBER_INVITATION" {
+  return isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION";
 }
 
 async function enqueueStaffInvitation<T extends Record<string, unknown>>(
@@ -210,21 +242,26 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
   member: StaffUser,
   now: Date,
   isManualResend = false,
-): Promise<void> {
-  await enqueueEmail(tx, {
+  delivery: DeliveryChoice = "queue",
+): Promise<{ id: string | null; key: string }> {
+  const key = `staff:${member.id}:invitation:${now.toISOString()}`;
+  const queued = await enqueueEmail(tx, {
     participantId: null,
     registrationId: null,
-    // A club member is invited to the members' zone, never to "the team that runs the site"
-    // (§524): the same row, the same sign-in, its own words.
-    messageType: isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION",
+    // The same row, the same sign-in, its own words (§524).
+    messageType: invitationMessageType(member),
     locale: member.preferredLocale,
     recipientEmail: member.email,
-    payload: { displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName },
-    idempotencyKey: `staff:${member.id}:invitation:${now.toISOString()}`,
+    // Marked for the queue panel's «Pleacă acum» on a press that sends now (§540).
+    payload: markedForNow({ displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName }, delivery),
+    idempotencyKey: key,
     requestedByStaffUserId: actor.id,
     isManualResend,
     now,
+    // Sent now by the press's own drain after the transaction (§540), not by the timing's.
+    drainAfter: delivery !== "now",
   });
+  return { id: queued?.id ?? null, key };
 }
 
 export async function changeStaffRole<T extends Record<string, unknown>>(

@@ -25,6 +25,9 @@ export const MOVED_BACKOFFICE_PATHS: readonly MovedPath[] = [
   { from: "/admin/pages/appearance", to: "/admin/settings/appearance" },
   { from: "/admin/tasks", panel: "costs", to: "/admin/settings/costs" },
   { from: "/admin/tasks", panel: "botCheck", to: "/admin/settings/platform" },
+  // «Contact» left «Setări» for «Pagini», the row it is pressed from (the owner, 2026-09-28: «ar
+  // trebui să rămân în același loc»): the same two cards, at the standard pages' own address.
+  { from: "/admin/settings/contact", to: "/admin/pages/contact" },
 ];
 
 /**
@@ -58,8 +61,8 @@ export function resolveMovedBackofficePath(pathname: string, search: string): { 
 type MovedFragment = { page: string; hash: string; to: string };
 
 export const MOVED_FRAGMENTS: readonly MovedFragment[] = [
-  { page: "/admin/settings/emails", hash: "contact-recipients", to: "/admin/settings/contact" },
-  { page: "/admin/settings/emails", hash: "shown-contact-address", to: "/admin/settings/contact" },
+  { page: "/admin/settings/emails", hash: "contact-recipients", to: "/admin/pages/contact" },
+  { page: "/admin/settings/emails", hash: "shown-contact-address", to: "/admin/pages/contact" },
   { page: "/admin/settings/emails", hash: "deadlines", to: "/admin/settings/deadlines" },
 ];
 

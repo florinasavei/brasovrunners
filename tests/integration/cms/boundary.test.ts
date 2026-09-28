@@ -210,6 +210,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/newsletter",
       "/admin/pages",
       "/admin/pages/[id]",
+      // «Contact» (§442): who reads «Scrie-ne» and the shown address, a standard page since 2026-09-28.
+      "/admin/pages/contact",
       // «Întrebări frecvente»'s questions (§525): one screen, written here by hand, like «Echipa»'s.
       "/admin/pages/faq",
       // The members' pages (§524): one screen for both texts, by hand.
@@ -226,7 +228,6 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // email page and «Aspect» (§488) moved in, and answer 308 from their old addresses.
       "/admin/settings",
       "/admin/settings/appearance",
-      "/admin/settings/contact",
       "/admin/settings/costs",
       "/admin/settings/deadlines",
       "/admin/settings/emails",
@@ -386,6 +387,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       questions (`deletionObstacle`, `isReliedOn`) and destroys it through the body
       `deleteApprovedVersion` uses — audit row, retired number. The three `plan…`/`template…`
       names read.
+
+      §539 adds one reader and no writer: `readLegalOverview` reads each text's state for the
+      cards and «Versiune nouă».
     */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
@@ -399,6 +403,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "planDraftApproval",
       "planTemplateRegeneration",
       "readDeletionFacts",
+      "readLegalOverview",
       "regenerateFromTemplates",
       "templateTranslations",
       "updateDraftVersion",

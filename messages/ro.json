@@ -608,7 +608,8 @@
           "resubmitted": "S-a înscris din nou cu aceeași adresă",
           "health_viewed": "Urgențele și nota medicală deschise",
           "consent_withdrawn": "Consimțământ retras",
-          "declaration_downloaded": "Declarația semnată descărcată (PDF)"
+          "declaration_downloaded": "Declarația semnată descărcată (PDF)",
+          "sent_now": "Trimis acum, ocolind trecerea programată"
         }
       },
       "locale": {
@@ -757,7 +758,8 @@
       "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare.",
       "socialsOnList": "și pe lista publică, lângă nume",
       "resubmittedHeld": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — „{message}” așteaptă deja să plece și pleacă o singură dată",
-      "familyChip": "Familie"
+      "familyChip": "Familie",
+      "resendSentNow": "Emailul pleacă acum, fără să aștepte trecerea programată."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -997,7 +999,12 @@
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
       "deliveryTimingBody": "Se aplică de acum fiecărui email trimis de site, și celor aflate deja în coadă. Niciun mesaj nu se pierde.",
       "inviteMembersTitle": "Adaugi membrii?",
-      "inviteMembersBody": "Fiecare adresă din listă primește rolul Membru și, pe email, invitația de intrare. După ce își pune parola, un membru intră doar în zona membrilor de pe site — niciodată în backoffice."
+      "inviteMembersBody": "Fiecare adresă din listă primește rolul Membru și, pe email, invitația de intrare. După ce își pune parola, un membru intră doar în zona membrilor de pe site — niciodată în backoffice.",
+      "sendNowChoice": {
+        "now": "Trimite acum, fără să aștepte trecerea programată",
+        "queue": "Pune la coadă pentru trecerea programată",
+        "note": "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
+      }
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1038,7 +1045,8 @@
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
       "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
-      "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare."
+      "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare.",
+      "SEND_NOW_ALLOWANCE_SPENT": "Nu s-a trimis nimic: limita planului Mailgun pe azi este atinsă. Alege «Pune la coadă»; emailul pleacă după resetare."
     },
     "editor": {
       "startsAt": "Începutul evenimentului",
@@ -2023,7 +2031,6 @@
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
       "newFromTemplateIntro": "Precompletat cu textul din șablon. Mai rămân de completat, în ambele limbi, între paranteze unghiulare: {blanks}. Salvează ciorna, apoi aprob-o din pagina ei.",
-      "templatesIntro": "Sau pornește de la șablon:",
       "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{participantIdDocument}}' (actul lui de identitate, tastat la semnare), '{{guardian}}' și '{{guardianIdDocument}}' (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), '{{idDocument}}' (actul celui care declară — al părintelui, pentru un minor), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{minimumAge}}' (vârsta minimă a evenimentului, cu unitatea), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
       "newVersion": "Versiune nouă",
@@ -2043,7 +2050,6 @@
       "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
       "termsRegistrations": "Înscrieri cât a fost în vigoare: {count}",
       "termsRegistrationsSoFar": "Înscrieri de când e în vigoare: {count}",
-      "tableCaption": "Versiunile documentelor legale, cu starea și ce depinde de fiecare",
       "delete": "Șterge ciorna",
       "deletePending": "Se șterge…",
       "deleteTitle": "Ștergi ciorna?",
@@ -2061,9 +2067,9 @@
           "legalName": "Denumirea juridică",
           "registrationNumber": "CIF",
           "registeredAddress": "Sediul",
-          "contactEmail": "Email de contact — adresa afișată, din Setări → Contact"
+          "contactEmail": "Email de contact — adresa afișată, din Pagini → Contact"
         },
-        "contactFactMissing": "EMAIL_REPLY_TO, sau Gmail-ul clubului în «Adresa de contact afișată», pe Setări → Contact",
+        "contactFactMissing": "EMAIL_REPLY_TO, sau Gmail-ul clubului în «Adresa de contact afișată», pe Pagini → Contact",
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, aprobi aceste texte în numele clubului: intră în vigoare pe site, iar o corectare e o versiune nouă. Le poți citi înainte, mai jos.",
@@ -2078,13 +2084,12 @@
       "withdrawn": "Retrasă",
       "withdrawnOn": "Retrasă {date}",
       "withdrawnNotice": "Versiunea a fost retrasă {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
-      "showWithdrawn": "Arată și versiunile retrase ({count})",
-      "hideWithdrawn": "Ascunde versiunile retrase",
       "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
       "startFrom": {
         "title": "Pornește de la șablon",
-        "intro": "Alege documentul și primești textul complet, cu datele clubului deja scrise. Îl citești, îl schimbi cât vrei, apoi îl aprobi.",
-        "orBlank": "Sau scrie de la zero în formularul de mai jos."
+        "orBlank": "Sau scrie de la zero în formularul de mai jos.",
+        "help": "1. Alege șablonul (sau Regenerează toate) · 2. Citește, completează și «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare.",
+        "regenerateAll": "Regenerează toate ({count})"
       },
       "tokens": {
         "title": "Câmpurile care se completează singure",
@@ -2204,7 +2209,71 @@
         "draftsApproved": "Gata: ciorne aprobate ({count}), în vigoare de acum.",
         "deleted": "Gata: versiuni șterse ({count}).",
         "deleteDrafts": "Șterge ciornele ({count})"
-      }
+      },
+      "kinds": {
+        "inForce": "În vigoare: versiunea {version} din {date}",
+        "noneInForce": "Nicio versiune în vigoare",
+        "draftWaiting": "O ciornă așteaptă aprobarea: versiunea {version}",
+        "draftPending": "Ciornă în așteptare: versiunea {version}",
+        "templateNew": "Șablon nou",
+        "templateNewHint": "Textul în vigoare nu are cuvintele șablonului de acum. Regenerează, citește și aprobă.",
+        "versions": "Versiunile",
+        "versionsCount": {
+          "one": "{count} versiune",
+          "few": "{count} versiuni",
+          "other": "{count} de versiuni"
+        },
+        "regenerate": "Regenerează din șablon",
+        "regeneratePending": "Se face ciorna…",
+        "regenerateTitle": "Faci o ciornă nouă pentru {kind}?",
+        "regenerateBody": "O ciornă nouă pentru {kind}, din șablon, versiunea {version}; textul în vigoare nu se schimbă până nu o aprobi.",
+        "unchanged": "Textul în vigoare are deja cuvintele șablonului.",
+        "draftExists": "O ciornă așteaptă deja: aprob-o sau șterge-o, apoi poți regenera.",
+        "blanks": "În ciornă vor rămâne câmpuri de completat, de forma '<'…>.",
+        "empty": "Nicio versiune pentru acest filtru."
+      },
+      "stateLabel": {
+        "inForce": "În vigoare",
+        "superseded": "Înlocuită"
+      },
+      "groups": {
+        "general": "Documente generale",
+        "race": "Declarații de cursă",
+        "groupRun": "Declarații pentru alergările de grup"
+      },
+      "shortKeys": {
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Termeni",
+        "EVENT_DECLARATION": "Cursă trail",
+        "EVENT_DECLARATION_ROAD": "Cursă asfalt / parc",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
+        "GROUP_RUN_DECLARATION_TRAIL": "Grup trail"
+      },
+      "filter": {
+        "label": "Filtrează versiunile",
+        "statesLabel": "Starea:",
+        "kindsLabel": "Textul:",
+        "states": {
+          "all": "Toate",
+          "inForce": "În vigoare",
+          "drafts": "Ciorne",
+          "superseded": "Înlocuite",
+          "withdrawn": "Retrase"
+        },
+        "allKinds": "Toate textele",
+        "count": {
+          "one": "{count} versiune din {total}",
+          "few": "{count} versiuni din {total}",
+          "other": "{count} de versiuni din {total}"
+        },
+        "none": "Nicio versiune nu se potrivește filtrului.",
+        "clear": "Arată toate versiunile"
+      },
+      "steps": {
+        "title": "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…>, apoi «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare",
+        "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
+      },
+      "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare"
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -2369,8 +2438,8 @@
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
             "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
-            "Dacă vrei să citești mai întâi: sub casetă, „Pornește de la șablon” → deschide fiecare, citește, apoi apasă butonul din casetă.",
-            "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
+            "Ca să citești întâi: pe cardul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
+            "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
         },
@@ -2573,7 +2642,7 @@
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
             "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
+            "În aplicație: Pagini → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
             "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
             "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
@@ -2596,8 +2665,8 @@
           "todo": "Nota în vigoare nu descrie stadiile listei publice de participanți, așa că lista arată doar participanții confirmați, până când clubul aprobă o notă care le descrie.",
           "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea despre lista publică descrie stadiile.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie stadiile.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din șabloanele lor, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
         },
@@ -2606,8 +2675,8 @@
           "todo": "Nota în vigoare nu descrie încă Strava și Instagram pe lista publică, deci nu apar nimănui până clubul aprobă o notă nouă.",
           "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
@@ -2617,8 +2686,8 @@
           "todo": "Nota în vigoare nu descrie încă newsletterul, așa că pagina de contact nu arată abonarea la noutăți și nu păstrăm nicio adresă pentru el, până când clubul aprobă o notă care îl descrie.",
           "done": "Nota în vigoare descrie newsletterul: pagina de contact arată abonarea, cu temele alese și confirmarea pe email.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, pagina de contact arată „Abonează-te la noutăți”, fără altă setare.",
             "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
         },
@@ -2627,8 +2696,8 @@
           "todo": "Nota în vigoare nu descrie încă pagina Echipa, care arată numele și fotografiile oamenilor din echipă și ale voluntarilor. Aprobă o notă nouă înainte să publici pagina.",
           "done": "Nota în vigoare descrie pagina Echipa: ce arată, pe ce temei și cum se scoate un card.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea 4 descrie pagina Echipa.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 4 descrie pagina Echipa.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Rândul se închide singur când nota intră în vigoare.",
             "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”.",
             "Aceeași notă nouă descrie, în secțiunea 12, și conturile membrilor clubului (zona membrilor): aprob-o înainte să inviți primii membri din Echipa → „Adaugă mai mulți membri”."
           ]
@@ -2663,7 +2732,7 @@
           "todo": "Cel puțin o declarație de concurs (trail, șosea sau parc) nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează trail.",
           "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
           "how": [
-            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere — cursă trail” → „Pornește de la șablon”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere — cursă trail” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
             "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
             "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
@@ -2674,7 +2743,7 @@
           "todo": "Declarațiile alergărilor de grup în vigoare acoperă o singură dată, deci alergătorul semnează la fiecare dată. Șablonul nou acoperă toată seria (sau alergarea de o zi); aprobă-l.",
           "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
           "how": [
-            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Pornește de la șablon”. Citește textul, completează datele clubului, salvează ciorna, apoi „Aprobă”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
             "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp este activă, iar după retragere cel mult trei ani.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
@@ -3097,7 +3166,17 @@
       "delete": "Șterge",
       "deleting": "Se șterge…",
       "deleteTitle": "Ștergi rândul?",
-      "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi."
+      "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi.",
+      "defaults": {
+        "teamPage": {
+          "text": "Scrie pagina Echipa: Pagini → Echipa → introducerea → «Salvează»; pentru fiecare persoană «Adaugă o persoană» → «Adaugă cardul» → «Pune pe site» → «Publică pagina».",
+          "link": "Deschide pagina Echipa"
+        },
+        "faqPage": {
+          "text": "Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → întrebările și răspunsurile, în română și engleză, cu «Pe site» bifat la fiecare → «Salvează pagina» → «Publică pagina».",
+          "link": "Deschide pagina Întrebări frecvente"
+        }
+      }
     },
     "richText": {
       "bold": "Îngroșat",
@@ -3794,15 +3873,12 @@
         "title": "Coada de trimitere",
         "intro": "Ce nu a plecat încă: tipul, destinatarul, când a intrat în coadă, câte încercări și ultimul răspuns al furnizorului. Mesajul se compune abia la trimitere.",
         "count": "În coadă: {count} mesaje.",
-        "aside": "{waiting} · {state}",
         "when": {
           "title": "Când pleacă emailurile",
-          "on": "Emailurile pleacă: la trecerea programată",
-          "off": "Emailurile pleacă: imediat după cerere",
-          "onShort": "la trecerea programată",
-          "offShort": "imediat după cerere",
-          "scheduled": "Emailurile pleacă la trecerea programată a site-ului. Următoarea trecere: {at}. Un email pus în coadă acum așteaptă cel mult {wait}.",
-          "immediate": "Fiecare email pleacă imediat după cererea care l-a pus în coadă. Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
+          "stateOn": "Emailurile pleacă la trecerea programată; următoarea: {at}.",
+          "stateOff": "Emailurile pleacă imediat după cererea care le-a pus în coadă.",
+          "scheduled": "Un email pus în coadă acum așteaptă cel mult {wait}.",
+          "immediate": "Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
           "holdsLead": "Ce ține trecerea programată acum: {holds}.",
           "holds": {
             "pinger": "monitorul care apelează site-ul, o dată la {wait}",
@@ -3825,7 +3901,8 @@
           "lateAskAdmin": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau anunță administratorul.",
           "sending": "Se trimite acum.",
           "never": "Nu mai pleacă singur: toate încercările s-au consumat.",
-          "held": "Ținut până {until}: o familie încă semnează. Apoi pleacă la trecerea următoare: {at} (estimat)."
+          "held": "Ținut până {until}: o familie încă semnează. Apoi pleacă la trecerea următoare: {at} (estimat).",
+          "leavesNow": "Pleacă acum, fără să aștepte trecerea programată."
         },
         "lastError": "Ultimul răspuns al furnizorului: {error}",
         "manual": "Retrimis manual",
@@ -4186,7 +4263,8 @@
           "immediate": "Imediat după cerere"
         },
         "save": "Salvează trimiterea",
-        "saved": "Momentul trimiterii emailurilor a fost salvat."
+        "saved": "Momentul trimiterii emailurilor a fost salvat.",
+        "bypassHelp": "Asta e pentru emailurile automate. O retrimitere sau un mesaj din backoffice poate pleca imediat: la apăsare alegi «Trimite acum»."
       },
       "familyConfirmed": {
         "name": "Înscriere confirmată — familie (mai multe persoane)",
@@ -4233,8 +4311,8 @@
                 "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici.",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
-                "«Galerie» și «Pagini».",
-                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Contact», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
+                "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
+                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
@@ -4686,7 +4764,7 @@
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
                 "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la lista de așteptare.",
-                "Nu a primit emailul: «Retrimite emailul».",
+                "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
               ]
@@ -4764,7 +4842,7 @@
                 "«Echipa» e a Administratorului și a Superadministratorului. Rolul Superadministrator și rândul unui Superadministrator le schimbă doar un Superadministrator.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
-                "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
+                "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
               ]
             },
@@ -4840,7 +4918,7 @@
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
                 "«Documente legale» → «Versiune nouă».",
-                "Sub «Pornește de la șablon» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere — cursă trail», «Declarație pe propria răspundere — cursă pe asfalt / în parc», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
+                "Sub «Pornește de la șablon» alege documentul, din «Documente generale», «Declarații de cursă» sau «Declarații pentru alergările de grup». Sub fiecare buton scrie ce e în vigoare; «Șablon nou» arată că textul în vigoare nu are cuvintele șablonului de acum.",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
                 "Citește tot și apasă «Salvează ciorna».",
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",
@@ -4852,10 +4930,10 @@
               "title": "Textele legale ale clubului",
               "steps": [
                 "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
-                "Textele al căror șablon s-a schimbat, toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane» și confirmă. Se face câte o ciornă pentru fiecare; nimic nu intră încă în vigoare.",
-                "Deschide fiecare ciornă din tabel, citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
+                "Un singur text: pe cardul lui din «Documente legale» apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
+                "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
-                "Un singur text de refăcut: «Documente legale» → «Versiune nouă» → sub «Pornește de la șablon» alege-l, apoi pașii de la „Aprobă o versiune nouă a unui text legal”.",
+                "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau trail) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
@@ -5291,7 +5369,9 @@
       "photoUploading": "Se încarcă…",
       "photoFailed": "Fotografia nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
       "photoNone": "Fără fotografie",
-      "photoHelp": "Arată cel mai bine o fotografie pătrată sau de portret: pe site se decupează pătrat, cu fața în partea de sus. Se păstrează când salvezi cardul.",
+      "photoHelp": "După ce alegi fotografia, alegi partea care se vede pe card. Fără decupaj, cardul o arată pătrat, cu fața în partea de sus. Se păstrează când salvezi cardul.",
+      "photoCrop": "Decupaj — ce se vede pe card",
+      "photoCropHelp": "Pornește pătrat (1:1), ca un portret. Poți alege alt format sau trage un dreptunghi peste fotografie. Săgețile îl mută; Shift cu ele îl redimensionează.",
       "pageHeading": "Pagina",
       "pagePublished": "Publicată",
       "pageDraft": "Ciornă",
@@ -5386,7 +5466,6 @@
     "settingsTabs": {
       "emails": "Emailuri",
       "deadlines": "Termene",
-      "contact": "Contact",
       "appearance": "Aspect",
       "costs": "Costuri",
       "platform": "Anti-robot",
@@ -6192,15 +6271,15 @@
       },
       "contactFormSmtp": {
         "title": "Formularul de contact",
-        "body": "Trimite prin SMTP, din Gmailul clubului, nu prin Mailgun. Destinatarii vin din Setări → Contact, altfel din CONTACT_FORM_TO; eticheta de alături spune de unde."
+        "body": "Trimite prin SMTP, din Gmailul clubului, nu prin Mailgun. Destinatarii vin din Pagini → Contact, altfel din CONTACT_FORM_TO; eticheta de alături spune de unde."
       },
       "contactFormNoRecipients": {
         "title": "Formularul de contact",
-        "body": "Poate trimite, dar nu are cui: nici Setări → Contact, nici CONTACT_FORM_TO nu au o adresă. Până se scrie un destinatar pe Setări → Contact, „Scrie-ne” arată adresa clubului."
+        "body": "Poate trimite, dar nu are cui: nici Pagini → Contact, nici CONTACT_FORM_TO nu au o adresă. Până se scrie un destinatar pe Pagini → Contact, „Scrie-ne” arată adresa clubului."
       },
       "contactFormOff": {
         "title": "Formularul de contact",
-        "body": "„Scrie-ne” arată adresa clubului în loc de formular: lipsesc CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se aleg pe Setări → Contact."
+        "body": "„Scrie-ne” arată adresa clubului în loc de formular: lipsesc CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se aleg pe Pagini → Contact."
       }
     },
     "rateLimits": "Limite de frecvență",
@@ -6800,9 +6879,9 @@
         "other": "{count} de declarații semnate au fost șterse."
       },
       "legalTemplatesRegenerated": {
-        "one": "{count} ciornă nouă din șablon.",
-        "few": "{count} ciorne noi din șabloane.",
-        "other": "{count} de ciorne noi din șabloane."
+        "one": "{count} ciornă creată din șablon.",
+        "few": "{count} ciorne create din șabloane.",
+        "other": "{count} de ciorne create din șabloane."
       },
       "legalDraftsApproved": {
         "one": "{count} ciornă aprobată și în vigoare.",
@@ -6813,6 +6892,19 @@
         "one": "{count} versiune ștearsă.",
         "few": "{count} versiuni șterse.",
         "other": "{count} de versiuni șterse."
+      },
+      "resentNow": "Emailul pleacă acum, fără să aștepte trecerea programată.",
+      "reminderSentNow": "Reminderul pleacă acum, fără să aștepte trecerea programată.",
+      "reinvitedNow": "Invitația pleacă acum, fără să aștepte trecerea programată.",
+      "participantMessageSentNow": {
+        "one": "Emailul pleacă acum către {count} participant, fără să aștepte trecerea programată.",
+        "few": "Emailul pleacă acum către {count} participanți, fără să aștepte trecerea programată.",
+        "other": "Emailul pleacă acum către {count} de participanți, fără să aștepte trecerea programată."
+      },
+      "participantMessageSentNowPart": {
+        "one": "Emailul pleacă acum către {count} participant; ceilalți {later} pleacă la trecerea programată.",
+        "few": "Emailul pleacă acum către primii {count} participanți; ceilalți {later} pleacă la trecerea programată.",
+        "other": "Emailul pleacă acum către primii {count} de participanți; ceilalți {later} pleacă la trecerea programată."
       }
     }
   },

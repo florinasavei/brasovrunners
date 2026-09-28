@@ -11,8 +11,10 @@ const {
   offerHint,
   emailHasLeft,
   openEmailLeavesAt,
+  openEmailSubmittedAt,
   peopleAfterYes,
   sealEmailLeavesAt,
+  shortScreenEmailLeft,
   compareFamilyOrder,
   doneFamilySentence,
   familyHeldDeclaration,
@@ -443,6 +445,21 @@ describe("§536 no sitting without a press", () => {
     expect(openEmailLeavesAt(sealEmailLeavesAt(pass))).toEqual(pass);
     expect(openEmailLeavesAt("x")).toBeUndefined();
     expect(openEmailLeavesAt("")).toBeUndefined();
+  });
+
+  it("under «imediat» seals the submit instant in the same 25 characters, so a reload can say the email left (§540)", () => {
+    const immediate = { ...cookie, seed: registrationSeed, emailLeavesAt: null, emailSubmittedAt: NOW };
+    const opened = openFamilySittingCookie(sealFamilySittingCookie(immediate)!);
+    expect(opened?.emailLeavesAt).toBeNull();
+    expect(opened?.emailSubmittedAt).toEqual(NOW);
+    expect(sealEmailLeavesAt(null, NOW)).toHaveLength(25);
+    expect(sealFamilySittingCookie(immediate)!.length).toBe(sealFamilySittingCookie({ ...immediate, emailLeavesAt: new Date(NOW.getTime() + 60_000) })!.length);
+    // The epoch an older half sealed is no instant: the old «pleacă acum».
+    expect(openEmailSubmittedAt(sealEmailLeavesAt(null))).toBeUndefined();
+    expect(openEmailSubmittedAt(sealEmailLeavesAt(new Date(NOW.getTime() + 60_000)))).toBeUndefined();
+    expect(shortScreenEmailLeft({ leavesAt: null, submittedAt: NOW, now: new Date(NOW.getTime() + 3_000) })).toBe(false);
+    expect(shortScreenEmailLeft({ leavesAt: null, submittedAt: NOW, now: new Date(NOW.getTime() + 60 * 60_000) })).toBe(true);
+    expect(shortScreenEmailLeft({ leavesAt: null, now: new Date(NOW.getTime() + 60 * 60_000) })).toBe(false);
   });
 
   it("lists after «Da» only the people the sitting's email covers (the review of 2026-09-28)", () => {
