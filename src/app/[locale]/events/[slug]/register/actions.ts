@@ -11,7 +11,9 @@ import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { publicFormEvent } from "@/modules/registrations/public-form-event";
-import { submitRegistration } from "@/modules/registrations/service";
+import { continueFamilySittingAndReserve, type FamilyPlace, submitRegistration } from "@/modules/registrations/service";
+import { computeFamilyReservationExpiry } from "@/modules/registrations/domain/hold-deadlines";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { botCheckIsOn, honeypotIsOn } from "@/modules/registrations/bot-check";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { BOT_CHECK_SIGNAL_FIELD, botCheckSignalsFrom, TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
@@ -33,10 +35,11 @@ import {
   sittingCookieUntil,
   sittingNames,
   sittingSharedValues,
+  withLatestPlace,
   withSittingPerson,
 } from "@/modules/registrations/domain/family-sitting";
 import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
-import { continueFamilySitting, releaseFamilySitting } from "@/modules/registrations/family-sitting";
+import { releaseFamilySitting } from "@/modules/registrations/family-sitting";
 import type { SittingSeed } from "@/modules/registrations/domain/family-sitting";
 import { familySittingHeldUntil } from "@/modules/deadlines/domain/deadlines";
 import { cachedEmailLeavesAt } from "@/modules/public-cache/reads";
@@ -131,6 +134,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const continuing = familyMode && liveSitting !== null && liveSitting.joined === true && sameMailbox(liveSitting.email, input.email);
   let sittingId: string | null = null;
   let seed: SittingSeed | null = null;
+  let sittingPlace: FamilyPlace | null = null;
 
   try {
     /*
@@ -175,6 +179,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     );
     sittingId = result.sittingId ?? (continuing ? (liveSitting?.sittingId ?? null) : null);
     seed = continuing ? null : (result.sittingSeed ?? null);
+    sittingPlace = continuing ? (result.sittingPlace ?? null) : null;
   } catch (error) {
     if (isDomainError(error)) {
       // Field names, never values: nothing a participant typed goes into a URL, which is
@@ -224,9 +229,12 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   */
   const prior = continuing && liveSitting ? liveSitting : null;
   const typedPerson = withSittingPerson(prior?.people ?? [], { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
+  // The place this form got (§NNN): a reserved one, or the waiting list once the address is confirmed.
+  if (continuing && !typedPerson.sameBirthDate) typedPerson.people = withLatestPlace(typedPerson.people, sittingPlace);
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
-  const minutes = (await currentDeadlines(db)).familySittingMinutes;
+  const deadlines = await currentDeadlines(db);
+  const minutes = deadlines.familySittingMinutes;
   // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
   const atOnce = minutes <= 0;
   /*
@@ -258,6 +266,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       emailLeavesAt,
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
+      // Until when the sitting's places are reserved (§NNN): from the club's settings and the event, the same for every address (§39).
+      reservedUntil: continuing && !atOnce ? familyReservedUntil(publicEvent, heldUntil, deadlines) : null,
     },
     path,
     now,
@@ -319,16 +329,24 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
   if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
     const deadlines = await currentDeadlines(db);
     const holding = !sitting.atOnce && deadlines.familySittingMinutes > 0;
-    const opened = holding
-        ? await continueFamilySitting(
+    /*
+      The press also reserves the places (§NNN): the first form's registration, taken into the sitting
+      now, and every one after it, until the club's hold after the window's new end.
+    */
+    const continued = holding
+        ? await continueFamilySittingAndReserve(
             db,
             { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
             familySittingHeldUntil(now, deadlines),
             now,
           )
         : null;
+    const opened = continued?.sittingId ?? null;
     // The names this browser lists name only the people the sitting's email covers (`peopleAfterYes`).
-    const { people, seedSpent } = peopleAfterYes({ holding, seed: sitting.seed, opened, people: sitting.people });
+    const { people: listed, seedSpent } = peopleAfterYes({ holding, seed: sitting.seed, opened, people: sitting.people });
+    // The first form's place (§NNN), reserved by this first «Da» — or the waiting list when none was free.
+    const firstPlace = sitting.seed && continued && continued.places.length > 0 ? continued.places[0] : null;
+    const people = firstPlace && listed.length > 0 ? [{ ...listed[0], waitlist: firstPlace === "waitlist" ? true : undefined }, ...listed.slice(1)] : listed;
     const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
     await writeFamilySittingCookie(
       {
@@ -343,6 +361,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
         atOnce: deadlines.familySittingMinutes <= 0,
         windowMinutes: deadlines.familySittingMinutes,
         sameBirthDate: null,
+        // The same for every address (§39): the club's hold after the window's new end, capped by the event.
+        reservedUntil: holding ? familyReservedUntil(event, heldUntil, deadlines) : null,
       },
       path,
       now,
@@ -363,6 +383,17 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     }
   }
   redirect(`${path}?${FAMILY_SITTING_PARAM}=1`);
+}
+
+/**
+ * Until when a family sitting's places are reserved (§NNN): the club's hold after the window's end,
+ * capped by the event's close and start — the instant the server wrote on the rows, worked out here
+ * from the same public facts so the browser's half reads the same for every address (§39).
+ */
+function familyReservedUntil(event: { registrationClosesAt: Date | null; startsAt: Date | null }, heldUntil: Date, deadlines: Deadlines): Date {
+  // A start to be announced takes no registration at all (§533); the hold alone then, uncapped.
+  const eventStartsAt = event.startsAt ?? new Date(heldUntil.getTime() + 24 * 60 * 60_000);
+  return computeFamilyReservationExpiry({ from: heldUntil, registrationClosesAt: event.registrationClosesAt, eventStartsAt, deadlines });
 }
 
 /** The same mailbox, as the address's identity compares them (§10.4); a typo is simply another address. */

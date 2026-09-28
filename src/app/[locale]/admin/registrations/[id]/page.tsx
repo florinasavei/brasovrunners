@@ -38,6 +38,8 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
+import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import { familyOf } from "@/modules/registrations/family-marker";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -87,7 +89,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     listAuditTrail(db, "registration", id),
@@ -99,6 +101,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
     */
     registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date(), registration.eventId) : false,
+    // The family marker (§NNN): the other people on this address at the event, each a link to their page.
+    familyOf(db, [registration]).then((members) => members.get(registration.id) ?? []),
   ]);
 
   const { resent, saved, error, health } = await searchParams;
@@ -228,6 +232,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
+        <FamilyChip
+          label={tr("registrations.familyChip")}
+          members={family.map((member) => ({
+            name: member.name,
+            href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
+          }))}
+        />
         {/* Mailgun bounced or the recipient complained (§76): the reason, so somebody calls. */}
         {registration.emailRejectedReason && (
           <Chip

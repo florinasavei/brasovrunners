@@ -12,6 +12,7 @@ import { findRegistrationByCheckinCode } from "@/modules/registrations/admin-rep
 import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
+import { familyOf } from "@/modules/registrations/family-marker";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
@@ -46,6 +47,8 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const minorSigns = row ? await declarationAsksMinorToSignByLocale(db, new Date(), row.eventId) : { ro: false, en: false };
   // The event's next free desk spare (§444), as on the desk's list.
   const spares = row ? await spareStates(db, [row.eventId]) : {};
+  // Who came with this runner (§NNN), as on the desk's list: names only.
+  const family = row ? ((await familyOf(db, [row])).get(row.id) ?? []).map((member) => member.name) : [];
 
   return (
     <Stack spacing={3}>
@@ -61,7 +64,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
       </div>
       {row ? (
         <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
-          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} />
+          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} />
         </Stack>
       ) : (
         <Alert severity="warning">{t("desk.unknownCode")}</Alert>

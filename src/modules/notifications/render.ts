@@ -48,14 +48,21 @@ import {
   linkFamilyEntryToken,
   personOfEntry,
   registeredOnAddress,
+  registeredOnAddressWithStates,
 } from "@/modules/registrations/family-entries";
+import { reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
+import { events } from "@/db/schema/events";
+import { countEligibleWaitlisted, countOccupied } from "@/modules/registrations/repository";
+import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
   extendHeldVerificationLink,
   extendSittingLinks,
   findSittingById,
+  lengthenReservationsFromSend,
   linkSittingToken,
   sittingEarlierEmailSent,
+  sittingPendingRegistrations,
   sittingPeople,
   sittingStillOpen,
 } from "@/modules/registrations/family-sitting";
@@ -728,9 +735,20 @@ async function renderRow(
   if (typeof sittingId === "string") {
     const found = await findSittingById(db, sittingId);
     const people = found && sittingStillOpen(found, now) ? await sittingPeople(db, found, now) : null;
+    // A person with no reservation (none was free, or it lapsed) waits for a place only while the event is full (§NNN).
+    const full = people && people.registrations.some((person) => person.holdExpiresAt === null) ? await eventIsFull(db, found!.eventId, now) : false;
     const listed = people
       ? [
-          ...people.registrations.map((person) => ({ name: person.registeredName, birthDate: person.birthDate ?? "" })),
+          /*
+            Each registration's place (§NNN): reserved by its form while the reservation holds — its email
+            is this one, still leaving, so a stored reservation holds now — or the waiting list once the
+            address is confirmed. A kept form holds no place and says neither.
+          */
+          ...people.registrations.map((person) => ({
+            name: person.registeredName,
+            birthDate: person.birthDate ?? "",
+            place: person.holdExpiresAt !== null ? ("reserved" as const) : full ? ("waitlist" as const) : undefined,
+          })),
           ...people.entries.map((entry) => {
             const person = personOfEntry(entry);
             return { name: person.legalName, birthDate: person.birthDate?.slice(0, 10) ?? "" };
@@ -741,6 +759,8 @@ async function renderRow(
       familySitting = found;
       data.familySittingPeople = listed;
       data.familyRegistered = await registeredOnAddress(db, found.eventId, found.participantId, found.registrationIds);
+      // …and with their state (§NNN): a person confirmed before is said so, and asked nothing again.
+      data.familyRegisteredStates = await registeredOnAddressWithStates(db, found.eventId, found.participantId, found.registrationIds);
       data.addressCap = (await readAddressCap(db)).cap.registrationsPerAddress;
       // Somebody listed already got an email of their own before «Da» (§536): one line says this button covers them too.
       if (
@@ -787,7 +807,8 @@ async function renderRow(
         registrations and kept forms still live, and the sitting, move to the club's email-link window
         from now — the form was sent a window and a pinger's wait ago.
       */
-      familySitting = await extendSittingLinks(db, familySitting, emailLinkExpiresAt(now, settings), now);
+      // …and every place it reserved lasts the club's hold from this send, as the message says (§NNN).
+      familySitting = await extendSittingLinks(db, familySitting, emailLinkExpiresAt(now, settings), now, settings.holdMinutes);
       /*
         The family's one link (§519): single use, hashed at rest, minted here at send time (§12.8,
         §14.5), scoped to the registration the sitting names and tied to the sitting by the token's
@@ -817,6 +838,8 @@ async function renderRow(
       });
       data.familyMineUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/registrations/mine/[token]", params: { token: mine.secret } } })}`;
     }
+    // Until when the places are reserved (§NNN), read after the send lengthened them.
+    await describeFamilyReservations(db, familySitting, data, locale, now);
   } else if (purpose === "REGISTER_ANOTHER_PERSON") {
     if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
       /*
@@ -901,6 +924,8 @@ async function renderRow(
       purpose === "VERIFY_REGISTRATION_EMAIL" && registration && (row.payloadJson as Record<string, unknown> | null)?.[SITTING_HELD] === true
         ? await extendHeldVerificationLink(db, registration.id, emailLinkExpiresAt(now, settings), now)
         : null;
+    // A one-person sitting's reserved place (§NNN) lasts the club's hold from this send, as a family's does.
+    if (heldLink && registration) await lengthenReservationsFromSend(db, registration.eventId, [registration.id], settings.holdMinutes, now);
     const placeUntil =
       purpose === "COMPLETE_DECLARATION"
         ? (eventStartsAt ?? holdExpiresAt)
@@ -1185,6 +1210,38 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
+}
+
+/**
+ * Whether a newcomer would find no place now (§NNN): the allocator's own formula, read as the public
+ * count reads it (`readPublicAvailability`'s counts), for the family message's «pe lista de așteptare».
+ * An uncapped event is never full.
+ */
+async function eventIsFull(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
+  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event || event.capacity === null) return false;
+  const occupied = computeOccupied(await countOccupied(db, eventId, now));
+  const waiting = await countEligibleWaitlisted(db, eventId);
+  return computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted: waiting }) === 0;
+}
+
+/**
+ * Until when a family's places are reserved (§NNN), for the family's one message in both its
+ * languages: the latest reservation among the people it names, read as it stands — after the send
+ * lengthened it to the club's hold from now. Nothing when nobody listed holds one.
+ */
+async function describeFamilyReservations(
+  db: RendererDb,
+  sitting: FamilySitting,
+  data: TemplateData,
+  locale: Locale,
+  now: Date,
+): Promise<void> {
+  const held = (await sittingPendingRegistrations(db, sitting)).flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt.getTime()] : []));
+  if (held.length === 0) return;
+  const until = new Date(Math.max(...held));
+  data.familyReservedUntilFormatted = reservedUntilPhrase(until, now, locale);
+  data.familyReservedUntilFormattedOther = reservedUntilPhrase(until, now, otherLocale(locale));
 }
 
 function otherLocale(locale: Locale): Locale {

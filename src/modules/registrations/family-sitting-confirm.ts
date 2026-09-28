@@ -105,7 +105,8 @@ function listPeople(people: Awaited<ReturnType<typeof sittingPeople>>, now: Date
       key: `r:${row.id}`,
       name: row.registeredName,
       birthDate: row.birthDate ?? "",
-      adultEntry: false,
+      // Another adult's registration from a sitting's form (§NNN) kept none of their own consents (§421).
+      adultEntry: anotherAdultRow(row, now),
       optional: false,
     })),
     ...people.entries.map((entry) => {
@@ -119,6 +120,15 @@ function listPeople(people: Awaited<ReturnType<typeof sittingPeople>>, now: Date
       };
     }),
   ];
+}
+
+/**
+ * A registration a sitting's form wrote for another adult (§NNN): an adult with no fitness statement
+ * of their own on the row — the form's first person made theirs; a third party cannot make it for an
+ * adult (§421). The press asks the address holder's acknowledgement for them, as for a kept form.
+ */
+function anotherAdultRow(row: { birthDate: string | null; fitnessDeclaredAt: Date | null }, now: Date): boolean {
+  return row.fitnessDeclaredAt === null && adultOnTheFamilyForm(row.birthDate, now);
 }
 
 /** Why one person of the family did not join at the press — a marker the page turns into a sentence, never a value. */
@@ -158,7 +168,10 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
     const included = people.entries.filter((entry) => input.includedKeys.includes(`e:${entry.id}`));
     const left = people.entries.filter((entry) => !input.includedKeys.includes(`e:${entry.id}`));
     // The adults' own consents were never kept (§421): the holder acknowledges they give them at signing.
-    if (!input.fitnessAcknowledged && included.some((entry) => adultOnTheFamilyForm(personOfEntry(entry).birthDate, now))) {
+    if (
+      !input.fitnessAcknowledged &&
+      (included.some((entry) => adultOnTheFamilyForm(personOfEntry(entry).birthDate, now)) || people.registrations.some((row) => anotherAdultRow(row, now)))
+    ) {
       throw new DomainError("VALIDATION_ERROR", "the address holder's acknowledgement for another adult is missing", ["fitnessAcknowledged"]);
     }
 

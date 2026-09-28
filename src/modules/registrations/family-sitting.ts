@@ -10,6 +10,9 @@ import { isUuid } from "@/shared/ids";
 import { FAMILY_HELD, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
+import { events } from "@/db/schema/events";
+import { computeFamilyReservationExpiry } from "./domain/hold-deadlines";
+import { lengthenFamilyReservations } from "./repository";
 
 /**
  * The database's half of a family sitting (§519): the rows `submitRegistration` writes and reads
@@ -93,6 +96,10 @@ export async function sittingPendingRegistrations<T extends Record<string, unkno
       birthDate: registrations.birthDate,
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       createdAt: registrations.createdAt,
+      // Another adult's row keeps no fitness statement of theirs (§421, §NNN): the press asks the holder's tick.
+      fitnessDeclaredAt: registrations.fitnessDeclaredAt,
+      // The family's reservation (§NNN): the email and its page say each person's place.
+      holdExpiresAt: registrations.holdExpiresAt,
     })
     .from(registrations)
     .where(and(inArray(registrations.id, [...sitting.registrationIds]), eq(registrations.status, "PENDING_EMAIL_CONFIRMATION")))
@@ -466,8 +473,11 @@ export async function extendSittingLinks<T extends Record<string, unknown>>(
   sitting: FamilySitting,
   until: Date,
   now: Date,
+  /** The club's declaration hold (§377): the family's reservations last it from this send (§NNN). */
+  holdMinutes?: number,
 ): Promise<FamilySitting> {
   return db.transaction(async (tx) => {
+    if (holdMinutes !== undefined) await lengthenReservationsFromSend(tx, sitting.eventId, sitting.registrationIds, holdMinutes, now);
     if (sitting.registrationIds.length > 0) {
       await tx
         .update(registrations)
@@ -489,6 +499,26 @@ export async function extendSittingLinks<T extends Record<string, unknown>>(
     const [row] = await tx.update(familySittings).set({ expiresAt: until }).where(eq(familySittings.id, sitting.id)).returning();
     return row ?? { ...sitting, expiresAt: until };
   });
+}
+
+/**
+ * The family's one email is leaving (§NNN): each place it reserved lasts the club's hold from this
+ * send, as the email says — only a reservation that still holds (its email was queued until now, so
+ * it did), lengthened and never shortened (`lengthenFamilyReservations`).
+ */
+export async function lengthenReservationsFromSend<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  registrationIds: readonly string[],
+  holdMinutes: number,
+  now: Date,
+): Promise<Date | null> {
+  if (registrationIds.length === 0) return null;
+  const [event] = await db.select({ startsAt: events.startsAt, registrationClosesAt: events.registrationClosesAt }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event) return null;
+  const until = computeFamilyReservationExpiry({ from: now, registrationClosesAt: event.registrationClosesAt, eventStartsAt: event.startsAt, deadlines: { holdMinutes } });
+  await lengthenFamilyReservations(db, registrationIds, until, now);
+  return until;
 }
 
 export async function findSittingById<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<FamilySitting | undefined> {

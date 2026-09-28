@@ -146,3 +146,23 @@ export function computeWaitlistOfferExpiry(params: {
     eventStartsAt: params.eventStartsAt,
   });
 }
+
+/**
+ * Until when a family's place is reserved (§NNN): the club's declaration hold («Termene»,
+ * `holdMinutes`) counted from the instant the family's one email leaves — `from` is the sitting's
+ * window end while the email is held, and the send itself once it leaves — capped by the close and
+ * the start like every hold. While the email is still queued the reservation holds whatever this
+ * says (`repository.ts#familyReservationAwaitingItsEmail`).
+ */
+export function computeFamilyReservationExpiry(params: {
+  from: Date;
+  registrationClosesAt: Date | null;
+  eventStartsAt: Date;
+  deadlines: Pick<Deadlines, "holdMinutes">;
+}): Date {
+  return capHoldExpiry({
+    naiveExpiresAt: declarationHoldEndsAt(params.from, params.deadlines),
+    registrationClosesAt: params.registrationClosesAt,
+    eventStartsAt: params.eventStartsAt,
+  });
+}

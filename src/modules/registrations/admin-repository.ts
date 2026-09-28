@@ -14,7 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { alias } from "drizzle-orm/pg-core";
-import { offerAwaitingItsFirstEmail } from "./repository";
+import { familyReservationAwaitingItsEmail, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -26,6 +26,8 @@ import { offerAwaitingItsFirstEmail } from "./repository";
 
 export type RegistrationListRow = {
   id: string;
+  /** The address (§389): the family marker names the other rows of it at the event (§NNN). */
+  participantId: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
@@ -307,6 +309,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
   const query = db
     .select({
       id: registrations.id,
+      participantId: registrations.participantId,
       status: registrations.status,
       kind: registrations.kind,
       source: registrations.source,
@@ -519,6 +522,8 @@ export type RegistrationDetail = {
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
+  /** The address (§389): the family marker names the other rows of it at the event (§NNN). */
+  participantId: string;
   eventId: string;
   eventTitle: string | null;
   clubMemberDeclared: boolean;
@@ -602,6 +607,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       source: registrations.source,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
+      participantId: registrations.participantId,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
@@ -810,6 +816,8 @@ export async function listLatestDeclarationAcceptances<T extends Record<string, 
  */
 export type DeskRegistration = {
   id: string;
+  /** The address's row id — never the address itself (§15.11): the family marker groups by it (§NNN). */
+  participantId: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
   registeredName: string;
@@ -857,6 +865,7 @@ export type DeskRegistration = {
 
 const DESK_COLUMNS = {
   id: registrations.id,
+  participantId: registrations.participantId,
   status: registrations.status,
   kind: registrations.kind,
   registeredName: registrations.registeredName,
@@ -1155,6 +1164,28 @@ export function termsLineKindFor(registration: {
  * `repository.ts#offerAwaitingItsFirstEmail`): an offer whose email has not left yet still holds
  * its place past its stored deadline, so the panel lists it as `countOccupied` counts it.
  */
+/**
+ * The places families reserved at their forms (§NNN), for the queue panel: each registration still
+ * waiting for its address whose reservation holds (`familyReservationHolds`), its deadline, and
+ * whether the family's one email is still queued — its deadline then moves when the email leaves.
+ * In the order the forms were sent.
+ */
+export async function listFamilyReservationsForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date) {
+  return db
+    .select({
+      id: registrations.id,
+      participantId: registrations.participantId,
+      eventId: registrations.eventId,
+      kind: registrations.kind,
+      registeredName: registrations.registeredName,
+      holdExpiresAt: registrations.holdExpiresAt,
+      emailQueued: sql<boolean>`${familyReservationAwaitingItsEmail()}`,
+    })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), familyReservationHolds(now)))
+    .orderBy(asc(registrations.submittedAt), asc(registrations.id));
+}
+
 export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date) {
   return db
     .select({

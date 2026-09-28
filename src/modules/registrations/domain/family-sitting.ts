@@ -37,6 +37,13 @@ export const AUTO_PRESS_FIELD = "autoPress";
 export const SITTING_SENT_PARAM = "sent";
 
 /**
+ * The refusal a sitting's next form meets when this browser's own people already fill the club's
+ * limit per address (§NNN, amending §519): said at the form, because every person it counts was
+ * typed on this browser (§39). A marker, never a value (§14.5).
+ */
+export const SITTING_AT_CAP = "sittingAtCap";
+
+/**
  * The payload mark of a verification email a sitting held (§519): rendered, its link's life is
  * counted from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a
  * value. Written only when the message is held — by a form after «Da», or by «Da» itself taking the
@@ -288,10 +295,40 @@ export type FamilySittingCookie = {
   shared?: Readonly<Record<string, string>>;
   /** The last form named another person on the birth date of one typed before it (`withSittingPerson`). */
   sameBirthDate?: { typed: string; kept: string } | null;
+  /**
+   * Until when the sitting's places are reserved (§NNN): the club's hold after the window's end, as
+   * the server wrote it with the last form or «Da». A club setting and the event's, never the
+   * address's (§39). Absent before «Da» and on a half written before it was kept.
+   */
+  reservedUntil?: Date | null;
 };
 
-/** One person of the sitting, as this browser typed them: the name, and the birth date ("YYYY-MM-DD", or ""). */
-export type SittingPerson = { name: string; birthDate: string };
+/**
+ * The family marker's facts on the screen after a sitting's form (§NNN; the owner, 2026-09-28:
+ * «trebuie un marker pentru familie... nu e clar cum rezervăm»): the first names this browser typed,
+ * how many have a reserved place and how many will wait for one — all from the browser's own half.
+ */
+export function sittingReservationFacts(people: readonly SittingPerson[]): { firstNames: string[]; reserved: number; waiting: number } {
+  return {
+    firstNames: people.map((person) => person.name.trim().split(/\s+/)[0] || person.name),
+    reserved: people.filter((person) => !person.waitlist).length,
+    waiting: people.filter((person) => person.waitlist === true).length,
+  };
+}
+
+/** The last person of the list with the place their form got (§NNN), the others as they were. */
+export function withLatestPlace(people: readonly SittingPerson[], place: "reserved" | "waitlist" | null | undefined): SittingPerson[] {
+  if (!place || people.length === 0) return [...people];
+  const last = people.at(-1)!;
+  return [...people.slice(0, -1), { ...last, waitlist: place === "waitlist" ? true : undefined }];
+}
+
+/**
+ * One person of the sitting, as this browser typed them: the name, and the birth date ("YYYY-MM-DD",
+ * or ""). `waitlist` (§NNN): no place was free when their form was sent, so they join the waiting
+ * list when the address is confirmed — a fact about the event, never about the address (§39).
+ */
+export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean };
 
 /** The names, in the order the screen lists them. */
 export function sittingNames(people: readonly SittingPerson[]): string[] {

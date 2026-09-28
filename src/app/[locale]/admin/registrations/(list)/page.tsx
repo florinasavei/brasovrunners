@@ -32,6 +32,8 @@ import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
+import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import { familyOf } from "@/modules/registrations/family-marker";
 import { canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -200,8 +202,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, t, minorSigns] = await Promise.all([
+  const [resubmissions, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
+    // The family marker (§NNN): the other people on each row's address at its event, one query per page.
+    familyOf(db, rows),
     getTranslations("Admin"),
     /*
       Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
@@ -317,6 +321,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.kind === "TEST" && (
             <Chip size="small" color="warning" label={t("registrations.testKind")} />
           )}
+          {/* A family on one address (§NNN): who else is registered with it, each a link to their row. */}
+          <FamilyChip
+            label={t("registrations.familyChip")}
+            members={(family.get(row.id) ?? []).map((member) => ({
+              name: member.name,
+              href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: member.id } } }),
+            }))}
+          />
           {/* BR-REQ-031-06. "Declared" in both languages, because this is what the person wrote
               about themselves and not something the club checked. */}
           {row.clubMemberDeclared && (
