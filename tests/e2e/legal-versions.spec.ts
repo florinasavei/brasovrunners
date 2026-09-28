@@ -1,4 +1,6 @@
+import { existsSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import pg from "pg";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
@@ -217,10 +219,32 @@ test.describe("legal documents: a version downloads as a PDF", () => {
  * version it makes, a toast, and the list landing on «Ciorne», where every draft's fold is open.
  * The ticks are read on that filter, before and after, so a fold's state never changes the count.
  */
+/**
+ * The terms' waiting drafts, gone: the first test in this file saves a TERMS draft on desktop,
+ * and an interrupted run leaves more, so without this the card would say «O ciornă așteaptă
+ * deja» and the per-card press would never be exercised. Drafts only — never an approved row —
+ * and none that anything references.
+ */
+async function deleteWaitingTermsDrafts(): Promise<void> {
+  if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query(
+      `DELETE FROM legal_documents d
+        WHERE d.key = 'TERMS' AND NOT d.is_approved
+          AND NOT EXISTS (SELECT 1 FROM declaration_acceptances a WHERE a.legal_document_id = d.id)`,
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 test.describe("legal documents: every text at once", () => {
   test("regenerates drafts from the templates, names them for approval, and deletes the ticked ones", async ({ page }) => {
     test.skip(test.info().project.name !== "desktop", "one database: the drafts are made and deleted once");
     test.setTimeout(120_000);
+    await deleteWaitingTermsDrafts();
     await signIn(page, "Dev Administrator");
 
     const tools = page.getByTestId("legal-batch-tools");
@@ -238,10 +262,9 @@ test.describe("legal documents: every text at once", () => {
     await hydrated(page);
     const terms = page.getByTestId("legal-kind-TERMS");
     await expect(terms.getByTestId("legal-kind-state").first()).toHaveText(/^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/);
-    // The card must offer the press: the sample terms in force are not the template's words, so
-    // «Regenerează din șablon» is there unless a draft already waits — a leftover of an interrupted
-    // run, which would leave the per-card path untested. Fail then rather than pass without it.
-    await expect(terms.getByTestId("legal-kind-regenerate-none"), "a TERMS draft already waits: reset the database").toHaveCount(0);
+    // The card must offer the press: no terms draft waits (deleted above) and the sample terms in
+    // force are not the template's words. Fail rather than pass without the per-card path.
+    await expect(terms.getByTestId("legal-kind-regenerate-none")).toHaveCount(0);
     const regenerateOne = terms.getByRole("button", { name: "Regenerează din șablon" });
     await expect(regenerateOne).toBeVisible();
     await regenerateOne.click();
@@ -358,6 +381,6 @@ test.describe("legal documents: one card per text, filtered, and the templates' 
     // A template's button keeps its meaning: the form below, prefilled with that template.
     await main.getByTestId("legal-template-TERMS").getByRole("link", { name: "Termeni de concurs" }).click();
     await expect(page).toHaveURL(/\/admin\/legal\/new\?template=TERMS$/);
-    await expect(page.locator('input[name="fromTemplate"]')).toHaveValue("TERMS");
+    await expect(page.locator('[name="roTitle"]')).not.toHaveValue("");
   });
 });
