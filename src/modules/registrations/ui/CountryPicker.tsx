@@ -1,10 +1,11 @@
 "use client";
 
-import Autocomplete from "@mui/material/Autocomplete";
+import Autocomplete, { autocompleteClasses } from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Popover from "@mui/material/Popover";
 import type { PopperProps } from "@mui/material/Popper";
 import TextField from "@mui/material/TextField";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { type ReactNode, useMemo, useState } from "react";
 import Flag from "@/shared/ui/Flag";
 import { OPTION_GLYPH_SX, OPTION_LABEL_SX } from "@/shared/ui/select-option";
@@ -92,13 +93,102 @@ function withEnglishNames(countries: readonly SearchableCountry[], mode: Country
  *
  * Only `className` and the children travel; the popper's own positioning props (`anchorEl`,
  * `open`, `disablePortal`, a measured `style.width`) mean nothing to a div in the flow.
+ *
+ * `position: static` is the fix of §NNN. MUI styles its popper slot — ours included, since the
+ * slot is rendered `as` this div inside MUI's own styled popper — with `position: absolute` when
+ * `disablePortal` is set. Out of the flow, the list gave the popover's paper no height: the
+ * paper (MUI's `overflow: auto`) was as tall as the search box alone and clipped the list under
+ * it to about a row and a half with a scrollbar — the owner's «pop-up-ul cu cetățenia e
+ * minuscul!». Back in the flow, the paper is as tall as the search box and the list together.
  */
-function InlineList(props: PopperProps) {
-  return <div className={props.className}>{props.children as ReactNode}</div>;
+export function InlineList(props: PopperProps) {
+  return (
+    <div className={props.className} style={INLINE_LIST_STYLE}>
+      {props.children as ReactNode}
+    </div>
+  );
 }
 
+/** In the flow and, in the sheet, the flexible middle that hands the list its height. */
+export const INLINE_LIST_STYLE = {
+  position: "static",
+  display: "flex",
+  flexDirection: "column",
+  flex: "1 1 auto",
+  minHeight: 0,
+} as const;
+
 /** 44 pixels a row: a thumb picks a country out of a list of them (BR-REQ-041-01 criterion 6). */
-const OPTION_SX = { minHeight: 44 } as const;
+export const PICKER_ROW_PX = 44;
+
+/** Never fewer rows than this in view on a desktop (§NNN). */
+export const PICKER_MIN_ROWS = 8;
+
+/** The listbox's own padding, top plus bottom (MUI's `8px 0`). */
+const LISTBOX_PADDING_PX = 16;
+
+/**
+ * Where the picker is a bottom sheet rather than a popover under the field: below `sm` (a phone
+ * held upright) and on a screen too short for eight rows under a search box (a phone on its
+ * side), where a popover would scroll its own search box away.
+ */
+export const SHEET_MEDIA_QUERY = "(max-width:599.95px), (max-height:519.95px)";
+
+/** A bottom sheet's height: most of the screen, the page still showing above it. */
+const SHEET_HEIGHT = "85vh";
+
+/**
+ * The popover's paper. On a desktop, under the field and as wide as a country name needs; as a
+ * sheet, the screen's width at its bottom, the search box pinned at the top and the list taking
+ * the rest (the flex column hands the listbox its height, so the list is the one that scrolls).
+ */
+export function pickerPaperSx(sheet: boolean) {
+  if (!sheet) return { width: "min(22rem, calc(100vw - 32px))" } as const;
+  return {
+    top: "auto",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    maxWidth: "100%",
+    height: SHEET_HEIGHT,
+    maxHeight: SHEET_HEIGHT,
+    "@supports (height: 1dvh)": { height: "85dvh", maxHeight: "85dvh" },
+    borderRadius: "16px 16px 0 0",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  } as const;
+}
+
+/**
+ * The list itself. Every row 44 pixels (MUI's own rule — 48 on a phone, `auto` from `sm` — sits
+ * on `.MuiAutocomplete-listbox .MuiAutocomplete-option`, which an `sx` on the row cannot beat,
+ * so the height is set from the listbox). On a desktop, at least eight rows in view and 40 % of
+ * the screen when that is more; in the sheet, whatever the sheet leaves under the search box.
+ */
+export function pickerListboxSx(sheet: boolean) {
+  const rows = { [`& .${autocompleteClasses.option}`]: { minHeight: PICKER_ROW_PX } };
+  if (sheet) return { ...rows, flex: "1 1 auto", minHeight: 0, maxHeight: "none" } as const;
+  return { ...rows, maxHeight: `max(40vh, ${PICKER_MIN_ROWS * PICKER_ROW_PX + LISTBOX_PADDING_PX}px)` } as const;
+}
+
+/** The Autocomplete's own paper inside ours: flat, and in the sheet the list's flexible parent. */
+function innerPaperSx(sheet: boolean) {
+  return sheet ? ({ flex: "1 1 auto", minHeight: 0, display: "flex", flexDirection: "column" } as const) : undefined;
+}
+
+/**
+ * Puts the chosen country in the middle of the list as it opens — "România" is the 180th row.
+ * MUI scrolls a highlighted row just into view; the middle shows its neighbours too. Only the
+ * list scrolls, never the page.
+ */
+export function centerChosenOption(root: ParentNode | null) {
+  const listbox = root?.querySelector<HTMLElement>('[role="listbox"]');
+  const chosen = listbox?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+  if (!listbox || !chosen) return;
+  listbox.scrollTop = Math.max(0, chosen.offsetTop - (listbox.clientHeight - chosen.offsetHeight) / 2);
+}
 
 /** The overlay button's look: the whole field's box, transparent, one 44-pixel-plus target. */
 export const PICKER_BUTTON_SX = {
@@ -115,9 +205,10 @@ export const PICKER_BUTTON_SX = {
 } as const;
 
 /**
- * A popover under the field, the search box focused, the list under it filtering as letters (or,
- * for a telephone, digits) are typed. Choosing a country hands its code back; Escape or a tap
- * outside leaves the country as it was.
+ * A popover under the field — on a phone a sheet at the bottom of the screen (§NNN) — the search
+ * box focused, the list under it filtering as letters (or, for a telephone, digits) are typed,
+ * the chosen country in view. Choosing a country hands its code back; Escape or a tap outside
+ * leaves the country as it was.
  */
 export function CountryPicker({
   mode,
@@ -148,19 +239,24 @@ export function CountryPicker({
   const [query, setQuery] = useState("");
   const options = useMemo(() => withEnglishNames(countries, mode), [countries, mode]);
   const selected = options.find((country) => country.code === value) ?? null;
+  // The picker mounts on a tap, never on the server, so the first render already knows the screen.
+  const sheet = useMediaQuery(SHEET_MEDIA_QUERY, { noSsr: true });
   return (
     <Popover
       open={open}
       anchorEl={anchorEl}
+      // As a sheet the paper is placed by its own `bottom: 0`, not under the field.
+      anchorReference={sheet ? "none" : "anchorEl"}
       onClose={onDismiss}
       anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-      transformOrigin={{ vertical: "top", horizontal: "left" }}
+      transformOrigin={sheet ? { vertical: "bottom", horizontal: "center" } : { vertical: "top", horizontal: "left" }}
       // The field puts focus where it belongs once the popover is gone.
       disableRestoreFocus
       slotProps={{
-        paper: { sx: { width: "min(22rem, calc(100vw - 32px))" } },
-        // A fresh search each time it opens.
+        paper: { sx: pickerPaperSx(sheet) },
         transition: {
+          onEntering: (node: HTMLElement) => centerChosenOption(node),
+          // A fresh search each time it opens.
           onExited: () => {
             setQuery("");
             onExited();
@@ -173,6 +269,8 @@ export function CountryPicker({
         disablePortal
         disableClearable
         autoHighlight
+        // The search box's own block: pinned at the top, only the list under it scrolls.
+        sx={{ flex: "0 0 auto" }}
         options={options}
         // Always a country: both fields always hold one, and the list holds the one shown.
         value={selected ?? options[0]}
@@ -205,7 +303,6 @@ export function CountryPicker({
                 rest.onClick?.(event);
                 if (country.code === value) onChoose(country.code);
               }}
-              sx={OPTION_SX}
             >
               <CountryOptionRow country={country} />
             </Box>
@@ -213,8 +310,8 @@ export function CountryPicker({
         }}
         slots={{ popper: InlineList }}
         slotProps={{
-          paper: { elevation: 0, square: true },
-          listbox: { sx: { maxHeight: "min(50vh, 20rem)" } },
+          paper: { elevation: 0, square: true, sx: innerPaperSx(sheet) },
+          listbox: { sx: pickerListboxSx(sheet) },
         }}
         renderInput={(params) => (
           <TextField
