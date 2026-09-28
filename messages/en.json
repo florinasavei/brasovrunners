@@ -2047,9 +2047,9 @@
           "legalName": "Legal name",
           "registrationNumber": "CIF",
           "registeredAddress": "Registered seat",
-          "contactEmail": "Contact email — the address shown, from Settings → Contact"
+          "contactEmail": "Contact email — the address shown, from Pages → Contact"
         },
-        "contactFactMissing": "EMAIL_REPLY_TO, or the club's Gmail under «Contact address shown», on Settings → Contact",
+        "contactFactMissing": "EMAIL_REPLY_TO, or the club's Gmail under «Contact address shown», on Pages → Contact",
         "missing": "not set",
         "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
         "consequence": "Pressing it, you approve these texts for the club: they take effect on the site, and a correction is a new version. You can read them first, below.",
@@ -2559,7 +2559,7 @@
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters.",
             "(CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: Settings → Contact → “Who receives the contact messages” → write the addresses under “To” and, if you like, a copy under “Copy (Cc)”.",
+            "In the app: Pages → Contact → “Who receives the contact messages” → write the addresses under “To” and, if you like, a copy under “Copy (Cc)”.",
             "A copy nobody on the message sees goes under “Hidden copy (Bcc)” → Save.",
             "Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
@@ -4219,8 +4219,8 @@
                 "«Events»: every club event; «New event» and «Edit» are here.",
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
                 "«Race day»: the number pickup desk, on a phone.",
-                "«Gallery» and «Pages».",
-                "«Settings»: «Emails» (what participants receive, the Mailgun plan), «Deadlines», «Contact», «Appearance», «Costs», «Anti-bot» and, at the end of the row, «Configuration» (for the Technical role and the Administrators).",
+                "«Gallery» and «Pages» (the standard pages — «Contact», «The team», «FAQ», «Members» — and the club's own pages).",
+                "«Settings»: «Emails» (what participants receive, the Mailgun plan), «Deadlines», «Appearance», «Costs», «Anti-bot» and, at the end of the row, «Configuration» (for the Technical role and the Administrators).",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
                 "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
                 "«Staff» and «Guide» (this page)."
@@ -5370,7 +5370,6 @@
     "settingsTabs": {
       "emails": "Emails",
       "deadlines": "Deadlines",
-      "contact": "Contact",
       "appearance": "Appearance",
       "costs": "Costs",
       "platform": "Anti-bot",
@@ -6154,15 +6153,15 @@
       },
       "contactFormSmtp": {
         "title": "Contact form",
-        "body": "Sends over SMTP from the club's Gmail, not through Mailgun. Recipients come from Settings → Contact, else from CONTACT_FORM_TO; the label beside this says which."
+        "body": "Sends over SMTP from the club's Gmail, not through Mailgun. Recipients come from Pages → Contact, else from CONTACT_FORM_TO; the label beside this says which."
       },
       "contactFormNoRecipients": {
         "title": "Contact form",
-        "body": "It can send, but to nobody: neither Settings → Contact nor CONTACT_FORM_TO holds an address. Until a recipient is set on Settings → Contact, “Write to us” shows the club's address."
+        "body": "It can send, but to nobody: neither Pages → Contact nor CONTACT_FORM_TO holds an address. Until a recipient is set on Pages → Contact, “Write to us” shows the club's address."
       },
       "contactFormOff": {
         "title": "Contact form",
-        "body": "“Write to us” shows the club's address instead of the form: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password) are missing. Recipients are set on Settings → Contact."
+        "body": "“Write to us” shows the club's address instead of the form: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password) are missing. Recipients are set on Pages → Contact."
       }
     },
     "rateLimits": "Rate limits",

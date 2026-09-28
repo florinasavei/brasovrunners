@@ -12,20 +12,25 @@ import { Link } from "@/i18n/navigation";
 import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 /**
- * The platform's own sections, in the order the owner asked for them (§251): "Events, Calendar,
- * Contact, then separators and the rest of the custom pages".
+ * The platform's own sections — the one list that orders the public menu, the row and the ☰ menu
+ * alike (the footer's fold carries links, not this list). The owner's order (§NNN, after §251):
+ * «Evenimente · Calendar · Contact · Echipa · Întrebări frecvente», then the rule and
+ * the club's own pages in their own order.
  *
  * The gallery sits with them rather than with the club's pages, because it is a section this
  * application ships and not something an organizer wrote — and it is offered only when a
  * published album exists (`showGallery`): a section with nothing behind it is a signpost to an
- * empty room. "Scrie-ne" (BR-REQ-070-04, §149) is last of the four and offered only while the
- * page has something to offer (`showContact`): the form, or the club's address as a link.
+ * empty room. It keeps its slot just before «Echipa»; «Membri» keeps its slot right after
+ * «Întrebări frecvente». "Scrie-ne" (BR-REQ-070-04, §149) is offered only while the page has
+ * something to offer (`showContact`): the form, or the club's address as a link.
  */
 const SECTIONS = [
   { segment: "events", href: "/events" },
   // The club's month, on its own page since §251: the front page is "what is on next", and a
   // grid of squares belongs a press away rather than above the next run.
   { segment: "calendar", href: "/calendar" },
+  // Third, as the owner asked (§262 already wanted it on a phone's row beside the first two).
+  { segment: "contact", href: "/contact" },
   { segment: "gallery", href: "/gallery" },
   // «Echipa» (§459): a page this application ships, like the gallery, so it sits with the
   // sections and not with the club's pages — offered while a card is on the site (`showTeam`).
@@ -36,7 +41,6 @@ const SECTIONS = [
   // «Membri» (§524): «Beneficiile membrilor» and its sign-in — offered while the page is published
   // with its words (`offersMembersEntry`, `showMembers`).
   { segment: "members", href: "/members" },
-  { segment: "contact", href: "/contact" },
 ] as const;
 
 export type NavPage = { slug: string; title: string };

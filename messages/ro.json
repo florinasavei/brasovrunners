@@ -2047,9 +2047,9 @@
           "legalName": "Denumirea juridică",
           "registrationNumber": "CIF",
           "registeredAddress": "Sediul",
-          "contactEmail": "Email de contact — adresa afișată, din Setări → Contact"
+          "contactEmail": "Email de contact — adresa afișată, din Pagini → Contact"
         },
-        "contactFactMissing": "EMAIL_REPLY_TO, sau Gmail-ul clubului în «Adresa de contact afișată», pe Setări → Contact",
+        "contactFactMissing": "EMAIL_REPLY_TO, sau Gmail-ul clubului în «Adresa de contact afișată», pe Pagini → Contact",
         "missing": "nesetat",
         "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
         "consequence": "Apăsând, aprobi aceste texte în numele clubului: intră în vigoare pe site, iar o corectare e o versiune nouă. Le poți citi înainte, mai jos.",
@@ -2559,7 +2559,7 @@
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
             "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
+            "În aplicație: Pagini → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
             "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
             "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
@@ -4219,8 +4219,8 @@
                 "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici.",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
-                "«Galerie» și «Pagini».",
-                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Contact», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
+                "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
+                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
@@ -5370,7 +5370,6 @@
     "settingsTabs": {
       "emails": "Emailuri",
       "deadlines": "Termene",
-      "contact": "Contact",
       "appearance": "Aspect",
       "costs": "Costuri",
       "platform": "Anti-robot",
@@ -6154,15 +6153,15 @@
       },
       "contactFormSmtp": {
         "title": "Formularul de contact",
-        "body": "Trimite prin SMTP, din Gmailul clubului, nu prin Mailgun. Destinatarii vin din Setări → Contact, altfel din CONTACT_FORM_TO; eticheta de alături spune de unde."
+        "body": "Trimite prin SMTP, din Gmailul clubului, nu prin Mailgun. Destinatarii vin din Pagini → Contact, altfel din CONTACT_FORM_TO; eticheta de alături spune de unde."
       },
       "contactFormNoRecipients": {
         "title": "Formularul de contact",
-        "body": "Poate trimite, dar nu are cui: nici Setări → Contact, nici CONTACT_FORM_TO nu au o adresă. Până se scrie un destinatar pe Setări → Contact, „Scrie-ne” arată adresa clubului."
+        "body": "Poate trimite, dar nu are cui: nici Pagini → Contact, nici CONTACT_FORM_TO nu au o adresă. Până se scrie un destinatar pe Pagini → Contact, „Scrie-ne” arată adresa clubului."
       },
       "contactFormOff": {
         "title": "Formularul de contact",
-        "body": "„Scrie-ne” arată adresa clubului în loc de formular: lipsesc CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se aleg pe Setări → Contact."
+        "body": "„Scrie-ne” arată adresa clubului în loc de formular: lipsesc CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se aleg pe Pagini → Contact."
       }
     },
     "rateLimits": "Limite de frecvență",
