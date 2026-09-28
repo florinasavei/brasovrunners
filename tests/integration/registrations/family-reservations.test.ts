@@ -43,6 +43,11 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
+// The slot's key, watched (round six): a single registration's allocation never computes a slot.
+vi.mock("@/modules/registrations/family-place-slot", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/modules/registrations/family-place-slot")>();
+  return { ...real, familyPlaceSlot: vi.fn(real.familyPlaceSlot) };
+});
 // The family's confirmation page, rendered with the real catalogues (round four: past the deadline it says the places lapsed).
 vi.mock("next-intl/server", async (importOriginal) => {
   const { createTranslator } = await import("next-intl");
@@ -69,6 +74,7 @@ const { familyOf } = await import("@/modules/registrations/family-marker");
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
 const { default: FamilySittingConfirm } = await import("@/modules/registrations/ui/FamilySittingConfirm");
 const { NextIntlClientProvider } = await import("next-intl");
+const { familyPlaceSlot } = await import("@/modules/registrations/family-place-slot");
 const catalogues = {
   ro: (await import("../../../messages/ro.json")).default,
   en: (await import("../../../messages/en.json")).default,
@@ -637,6 +643,42 @@ describe("§NNN nothing changes for a single registration, and a person confirme
     expect(ana.holdExpiresAt).toBeNull();
     expect(await available(event, at(0))).toBe(50);
     expect(await db.select().from(familySittings)).toHaveLength(0);
+  });
+
+  it("a single registration's allocation never keys the family slot secret, even where the secret would refuse (round six)", async () => {
+    const event = await createEvent(50);
+    await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
+    const [ana] = await rows();
+    // As on qa or production with neither AUTH_SECRET nor JOB_SECRET: keying a slot throws.
+    vi.mocked(familyPlaceSlot).mockClear();
+    vi.mocked(familyPlaceSlot).mockImplementation(() => {
+      throw new Error("APP_ENV=production requires AUTH_SECRET or JOB_SECRET");
+    });
+    try {
+      const allocated = await confirmEmail(db, event, ana.id, at(1));
+      expect(allocated.status).toBe("PENDING_DECLARATION");
+      expect(familyPlaceSlot).not.toHaveBeenCalled();
+    } finally {
+      vi.mocked(familyPlaceSlot).mockReset();
+      const real = await vi.importActual<typeof import("@/modules/registrations/family-place-slot")>("@/modules/registrations/family-place-slot");
+      vi.mocked(familyPlaceSlot).mockImplementation(real.familyPlaceSlot);
+    }
+  });
+
+  it("on an event where a family sitting holds somebody, the allocation still releases that person's held place (round six)", async () => {
+    const event = await createEvent(50);
+    // Mihai's own single registration, and a place a family sitting of the address held for him (`holdFamilyPlace`).
+    await submitRegistration(db, event, submission("Mihai", at(1)), at(1), "REAL", PUBLIC);
+    const [mihai] = await rows();
+    await db.insert(familyPlaceHolds).values({ eventId: event.id, sittingKey: randomUUID(), slot: familyPlaceSlot(event.id, mihai.participantId, "Mihai Pop"), expiresAt: at(40) });
+    const before = await available(event, at(2));
+    expect(before).toBe(49);
+    vi.mocked(familyPlaceSlot).mockClear();
+    const allocated = await confirmEmail(db, event, mihai.id, at(2));
+    expect(allocated.status).toBe("PENDING_DECLARATION");
+    expect(familyPlaceSlot).toHaveBeenCalled();
+    // His held place went as his registration took one: the count moved by nothing.
+    expect(await available(event, at(2))).toBe(before);
   });
 
   it("the family's email lists who the address held before with their state, and asks nothing of them again", async () => {

@@ -5294,6 +5294,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "holds_place": {
+          "name": "holds_place",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",

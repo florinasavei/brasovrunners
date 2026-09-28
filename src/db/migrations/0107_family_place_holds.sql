@@ -4,6 +4,7 @@ CREATE TABLE "family_place_holds" (
 	"sitting_key" uuid NOT NULL,
 	"slot" text NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
+	"holds_place" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

@@ -427,6 +427,12 @@ async function reserveFamilyPlace<T extends Record<string, unknown>>(
  * is the person's, and the form adds nothing, as a fresh address's form for a person it already
  * reserved adds nothing. A lapsed one under this sitting's key is taken again through the allocator,
  * exactly as a fresh address's lapsed reservation would be (`reserveFamilyPlace`).
+ *
+ * With no place free the person is still recorded under the slot, holding nothing
+ * (`writeFamilyPlaceMarker`, the review of 2026-09-28, round six; §39): a fresh address's form on a
+ * full event writes a waiting registration, and this row is its counterpart, so the club's limit counts
+ * the people this browser sent from the server's own rows for every address, whether a place was free
+ * or not. A later form for the person, once a place is free, turns it into a counted hold.
  */
 async function holdFamilyPlace<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -442,14 +448,20 @@ async function holdFamilyPlace<T extends Record<string, unknown>>(
     .delete(familyPlaceHolds)
     .where(and(eq(familyPlaceHolds.sittingKey, hold.sittingKey), eq(familyPlaceHolds.slot, hold.slot), lte(familyPlaceHolds.expiresAt, now)));
   const { free } = await placeForNewcomer(db, event, now, settings);
-  if (!free) return "waitlist";
-  return (await repo.writeFamilyPlaceHold(db, { eventId: event.id, sittingKey: hold.sittingKey, slot: hold.slot, until }, now)) ? "reserved" : "waitlist";
+  const row = { eventId: event.id, sittingKey: hold.sittingKey, slot: hold.slot, until };
+  if (!free) {
+    await repo.writeFamilyPlaceMarker(db, row, now);
+    return "waitlist";
+  }
+  return (await repo.writeFamilyPlaceHold(db, row, now)) ? "reserved" : "waitlist";
 }
 
 /**
- * Whether a sitting ever held a place for the person of this slot at the event, live or lapsed, in
- * whichever sitting (§NNN, round five): until the day-late sweep (`purgeLapsedFamilySittings`) or the
- * event's own maintenance clears a lapsed row.
+ * Whether a sitting ever sent the person of this slot at the event, live or lapsed, in whichever
+ * sitting (§NNN, round five): a place held for them, or — since round six — their record from a form
+ * sent while no place was free (`writeFamilyPlaceMarker`), so the answer is the same on a full event as
+ * on one with places. Until the day-late sweep (`purgeLapsedFamilySittings`) or the event's own
+ * maintenance clears a lapsed row.
  */
 async function familyPlaceHoldTaken<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, slot: string): Promise<boolean> {
   const [row] = await db
@@ -465,7 +477,7 @@ async function liveFamilyPlaceHoldOf<T extends Record<string, unknown>>(db: Tran
   const [live] = await db
     .select({ id: familyPlaceHolds.id })
     .from(familyPlaceHolds)
-    .where(and(eq(familyPlaceHolds.eventId, eventId), eq(familyPlaceHolds.slot, slot), gt(familyPlaceHolds.expiresAt, now)))
+    .where(and(eq(familyPlaceHolds.eventId, eventId), eq(familyPlaceHolds.slot, slot), eq(familyPlaceHolds.holdsPlace, true), gt(familyPlaceHolds.expiresAt, now)))
     .limit(1);
   return live !== undefined;
 }
@@ -622,8 +634,16 @@ export async function continueFamilySittingAndReserve<T extends Record<string, u
   });
 }
 
-/** The held place of a registration's own person, released (§NNN, round five): by their slot, in whichever sitting. */
+/**
+ * The held place of a registration's own person, released (§NNN, round five): by their slot, in
+ * whichever sitting. Only on an event where a family sitting held or sent somebody (the review of
+ * 2026-09-28, round six): there alone can a slot name this registration's person, and there the slot
+ * secret was keyed already, by the sitting that wrote the row. A registration on an event with no such
+ * row — every single registration's, the common case — reads nothing more and never keys the secret,
+ * so a deployment missing it can never fail inside the allocator.
+ */
 async function releaseOwnFamilyPlaceHold<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, registrationId: string): Promise<void> {
+  if (!(await repo.eventHasFamilyPlaceHolds(db, eventId))) return;
   const [row] = await db
     .select({ participantId: registrations.participantId, registeredName: registrations.registeredName })
     .from(registrations)
@@ -1944,18 +1964,21 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       const holdsKey = sitting?.id ?? cookieKey;
       const written = (sitting ? (await sittingPendingRegistrations(tx, sitting)).length : 0) + (holdsKey ? (await repo.liveFamilyPlaceHolds(tx, holdsKey, now)).count : 0);
       /*
-        …and never fewer than the people this browser sent in the sitting (its sealed half): on a full
-        event a form holds no place, so the rows alone would count a fresh address's waiting people and
-        not an address that already holds some. The larger of the two, so a replayed half bounds nothing less.
+        …and never fewer than the people this browser sent in the sitting (its sealed half). The rows
+        count them already, a full event included — a person sent while no place was free is recorded
+        under their slot, holding nothing (`writeFamilyPlaceMarker`, round six) — so the half only bounds
+        from below: a replayed half counts nothing less.
       */
       const own = Math.max(written, origin.sitting?.people ?? 0);
       /*
         …and never for a person this address already sent in a sitting at this event (§NNN, the review
-        of 2026-09-28, round five; §39): their held place, live or lapsed, is there under their slot, in
-        whichever sitting. A fresh address's form for such a person is their registration's re-send,
-        which the limit never refuses, so a replayed half — from before a sitting's deadline or after it
-        — is refused for no address. The form then adds nothing, or takes the lapsed place once again,
-        as the fresh address's re-send does (`sittingPlaceOf`).
+        of 2026-09-28, round five; §39): their row, live or lapsed, is there under their slot, in
+        whichever sitting — a held place, or the record of a form sent while no place was free (round
+        six), so the answer does not depend on whether a place was taken. A fresh address's form for such
+        a person is their registration's re-send, which the limit never refuses, so a replayed half —
+        from before a sitting's deadline or after it, on a full event or not — is refused for no address.
+        The form then adds nothing, or takes the lapsed place once again, as the fresh address's re-send
+        does (`sittingPlaceOf`).
       */
       const sentBefore = await familyPlaceHoldTaken(tx, event.id, familyPlaceSlot(event.id, participant.id, legalName));
       if (!sentBefore && !addressHasRoom(own, cap)) {

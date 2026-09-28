@@ -333,17 +333,22 @@ describe("BR-REQ-031-01 the server decides whether a form adds a person, through
 
     vi.setSystemTime(minutes(6));
     await record("Ioana", await post(slug, "Ioana", address));
+    // Mihai once more, on the half that now names three people: a re-send, which the limit refuses for no address (round six).
     vi.setSystemTime(minutes(7));
+    await record("Mihai again, the sitting at the limit", await post(slug, "Mihai", address));
+    vi.setSystemTime(minutes(8));
     await record("Luca, over the limit", await post(slug, "Luca", address));
-    const holds = await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.eventId, event.id));
-    return { steps, holds: holds.length };
+    const rows = await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.eventId, event.id));
+    // Counted holds, and the people sent while no place was free (recorded, holding nothing).
+    return { steps, holds: rows.filter((row) => row.holdsPlace).length, sent: rows.filter((row) => !row.holdsPlace).length };
   }
 
   it("a fresh address, one that holds the first person and one at its limit: the same count, the same screen, after every step", async () => {
     const fresh = await family("fresh", "cros-nou", "noua@example.ro");
-    expect(fresh.steps.map((step) => step.count)).toEqual([50, 50, 49, 48, 48, 48, 48, 47, 47]);
+    expect(fresh.steps.map((step) => step.count)).toEqual([50, 50, 49, 48, 48, 48, 48, 47, 47, 47]);
     expect(fresh.steps.at(-1)!.redirect).toContain("error=VALIDATION_ERROR&fields=sittingAtCap");
-    const last = fresh.steps.at(-2)!;
+    expect(fresh.steps.at(-2)!.redirect).toContain("submitted=1");
+    const last = fresh.steps.find((step) => step.step === "Ioana")!;
     expect(last.screen).toContain("Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la");
     expect(last.screen.match(/ — loc rezervat</g)).toHaveLength(3);
     // No held place on a fresh address: every person's place is their own registration's.
@@ -363,13 +368,16 @@ describe("BR-REQ-031-01 the server decides whether a form adds a person, through
     // One held place per person, never one per form: Ana alone on the holding address, all three on the full one.
     expect(holds.holds).toBe(1);
     expect(limit.holds).toBe(3);
+    expect([fresh.sent, holds.sent, limit.sent]).toEqual([0, 0, 0]);
   });
 
   it("on a full event every case reads «pe lista de așteptare», holds nothing and is refused alike at the limit", async () => {
     const fresh = await family("fresh", "cros-nou", "noua@example.ro", true);
-    expect(fresh.steps.map((step) => step.count)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(fresh.steps.map((step) => step.count)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     expect(fresh.steps.at(-1)!.redirect).toContain("error=VALIDATION_ERROR&fields=sittingAtCap");
-    const last = fresh.steps.at(-2)!;
+    // Mihai sent again with the sitting at the limit: a re-send on the fresh address, and on every other (round six; §39).
+    expect(fresh.steps.at(-2)!.redirect).toContain("submitted=1");
+    const last = fresh.steps.find((step) => step.step === "Ioana")!;
     expect(last.screen).toContain("Înscriere de familie: Ana, Mihai, Ioana — 3 persoane pe lista de așteptare.");
     expect(last.screen.match(/ — pe lista de așteptare, după confirmare</g)).toHaveLength(3);
     expect(last.screen).not.toContain("loc rezervat");
@@ -383,6 +391,8 @@ describe("BR-REQ-031-01 the server decides whether a form adds a person, through
       }
       expect(other.holds).toBe(0);
     }
+    // Nothing counted anywhere; the addresses whose forms wrote no registration recorded whom they sent.
+    expect([fresh.sent, holds.sent, limit.sent]).toEqual([0, 1, 3]);
   });
 });
 
@@ -481,7 +491,7 @@ describe("BR-REQ-034-02 a half replayed from after the sitting's deadline adds n
 
     // At most one live family place per person: no slot held twice, and no held place beside a reservation.
     const now = new Date();
-    const liveHolds = (await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.eventId, event.id))).filter((row) => row.expiresAt > now);
+    const liveHolds = (await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.eventId, event.id))).filter((row) => row.holdsPlace && row.expiresAt > now);
     const reserved = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter(
       (row) => row.status === "PENDING_EMAIL_CONFIRMATION" && row.holdExpiresAt !== null && row.holdExpiresAt > now,
     );

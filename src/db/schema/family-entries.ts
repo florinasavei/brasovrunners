@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { emailActionTokens } from "./email-action-tokens";
 import { events } from "./events";
 import { locale } from "./locale";
@@ -86,11 +86,16 @@ export type FamilySitting = typeof familySittings.$inferSelect;
  * - `sitting_key` is the id the browser's sealed half carries (§519): a sitting's id, or the random
  *   one it carries before any sitting row exists (a first form that wrote nothing). A form that opens
  *   a sitting under that random id adopts the holds by it.
- * - `slot` makes a hold one per person of the sitting (`family-place-slot.ts`: a keyed digest of the
- *   sitting's key and the runner's name key, never the name), however often a form or the press is
- *   replayed; `press` only for a person with no name to key.
+ * - `slot` makes a hold one per person the address sends at the event (`family-place-slot.ts`: a keyed
+ *   digest of the event, the participant's id and the runner's name key, never the name), however
+ *   often a form or the press is replayed.
  * - `expires_at` is the sitting's `reserved_until`: the hold lapses with the family's reservations, or
  *   goes when the family's email is confirmed.
+ * - `holds_place` is false for a person the sitting sent while no place was free (the review of
+ *   2026-09-28, round six; §39): the row then counts nowhere — not in `countOccupied`, not as a held
+ *   place — and only records, as a fresh address's waiting registration does, that this browser sent
+ *   the person in the sitting, so the club's limit counts them the same for every address. A form for
+ *   the person once a place is free turns it into a counted hold (`writeFamilyPlaceHold`).
  */
 export const familyPlaceHolds = pgTable(
   "family_place_holds",
@@ -102,6 +107,7 @@ export const familyPlaceHolds = pgTable(
     sittingKey: uuid("sitting_key").notNull(),
     slot: text("slot").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    holdsPlace: boolean("holds_place").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
