@@ -56,6 +56,12 @@ export function difficultyBandOf(level: number): DifficultyBand {
   return DIFFICULTY_BANDS[Math.ceil(level / DIFFICULTY_STEPS.length) - 1];
 }
 
+/** The first and the last level of a band: «Greuț» is 7–9 — what a band's filter box ticks, and what its tooltip names (§NNN). */
+export function difficultyBandLevels(band: DifficultyBand): { from: number; to: number } {
+  return { from: difficultyLevel(band, DIFFICULTY_STEPS[0]), to: difficultyLevel(band, DIFFICULTY_STEPS[DIFFICULTY_STEPS.length - 1]) };
+}
+
+
 /** The step a level is inside its band, 1 … 3. */
 export function difficultyStepOf(level: number): DifficultyStep {
   assertLevel(level);

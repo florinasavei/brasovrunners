@@ -183,8 +183,10 @@
       "ics": "{label}: {times} — bring a headlamp"
     },
     "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Difficulty: {band}, step {step} of {steps}",
+    "difficultyLevelSr": "Difficulty: {band} {step} — level {level} of {levels}",
     "difficultyWithStep": "{band}, step {step} of {steps}",
+    "difficultyLevelTooltip": "{band} {step} — level {level} of {levels}",
+    "difficultyBandTitle": "{band}: levels {from}–{to} of {levels}",
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
@@ -1193,6 +1195,16 @@
       },
       "difficultySummary": "{band} {step}",
       "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
+      "difficultyScale": {
+        "EASY": "easy: short, flat, for anyone",
+        "MEDIUM1": "medium 1: the run up Tâmpa",
+        "MEDIUM2": "medium 2: the longer runs",
+        "MEDIUM3": "medium 3: long and technical",
+        "FAIRLY_HARD": "fairly hard: from a half marathon up",
+        "HARD": "hard: marathons",
+        "VERY_HARD": "very hard: ultramarathons and beyond",
+        "steps": "in every band 1 = the easiest, 3 = the hardest"
+      },
       "costValues": {
         "FREE": "Free",
         "PAID": "Paid",
@@ -4336,13 +4348,10 @@
               "steps": [
                 "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
                 "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "«Easy»: short and flat — for anyone.",
-                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
-                "«Fairly hard»: from a half marathon up.",
-                "«Hard»: marathons.",
-                "«Very hard»: ultramarathons and beyond.",
+                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
                 "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
+                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
               ]
             },
             {
@@ -4409,13 +4418,10 @@
               "steps": [
                 "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
                 "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "«Easy»: short and flat — for anyone.",
-                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
-                "«Fairly hard»: from a half marathon up.",
-                "«Hard»: marathons.",
-                "«Very hard»: ultramarathons and beyond.",
+                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
                 "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
+                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
               ]
             },
             {
