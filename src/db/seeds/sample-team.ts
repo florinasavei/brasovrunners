@@ -3,13 +3,8 @@ import { getDb } from "@/db/client";
 import { teamMembers } from "@/db/schema/team";
 
 /**
- * «Echipa»'s sample cards (§459), for every environment but production: two hidden placeholder
- * people, «Prenume Nume», with a role in both languages, so the backoffice screen and the page can
- * be walked on QA without anybody's real name or photograph. The page itself is left as it is —
- * DRAFT unless somebody published it — and the cards stay hidden until an Administrator shows them.
- *
- * Never deletes: it adds the two cards only while the table is empty, so a re-seed keeps whatever
- * the club typed. Refuses production, as every seed does (AGENTS.md §7.7).
+ * «Echipa»'s sample cards (§459): two hidden «Prenume Nume» cards, so QA can be walked with nobody's
+ * real name. Only into an empty table; refuses production (AGENTS.md §7.7).
  */
 export const SAMPLE_TEAM_NAME = "Prenume Nume";
 

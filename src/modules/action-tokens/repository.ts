@@ -13,24 +13,15 @@ import {
 } from "./domain/token-state";
 
 /**
- * Issuing, reading and consuming email action tokens (BR-REQ-036-02; AGENTS.md §12.8, §13.2).
+ * Email action tokens (BR-REQ-036-02; AGENTS.md §12.8, §13.2). Priority-1 code (`docs/PRACTICES.md` §198).
  *
- * Priority-1 code — `docs/PRACTICES.md` §198. Read every line.
- *
- * Three entry points, and which one a route uses is a security decision, not a convenience:
- *
+ * Which entry point a route uses is a security decision:
  *   issueActionToken       writes a token and kills the previous ones for that scope.
  *   readActionTokenContext what a GET may do. Runs in a read-only transaction.
  *   consumeActionToken     what a POST does. One statement, single use, no second winner.
  *
- * `now` is always a parameter and never `new Date()` inside a rule. Expiry is a business
- * deadline (`docs/PRACTICES.md`: time-dependent logic takes an injected clock), and a test
- * that has to sleep to observe expiry is a test nobody runs.
- *
- * Every function is generic over the caller's schema, like `modules/content/events/repository.ts`:
- * `notifications/render.ts` issues a token from inside the outbox's own transaction, which has
- * no reason to know this module's schema shape ahead of time, and a fixed one here would not
- * structurally match a caller's differently-scoped fixed schema.
+ * `now` is always injected: expiry is a business deadline. Generic over the caller's schema
+ * because `notifications/render.ts` issues tokens inside the outbox's own transaction.
  */
 
 /** What a caller may see about a token. Never the hash, and never the secret. */
@@ -45,11 +36,8 @@ export type ActionTokenContext = {
 export type ActionTokenResult = { ok: true; token: ActionTokenContext } | TokenRejection;
 
 /**
- * The secret and the row it belongs to.
- *
- * `secret` is returned exactly once, to the code that puts it in an email, and is
- * unrecoverable afterwards — nothing stored can produce it again. It must not be logged, must
- * not be returned from a route handler, and must not be written to any table (§14.5).
+ * `secret` is returned exactly once, to the code that emails it, and is unrecoverable afterwards.
+ * Never log it, return it from a route or store it (§14.5).
  */
 export type IssuedActionToken = { secret: string; token: ActionTokenContext };
 
@@ -71,21 +59,11 @@ const CONTEXT_COLUMNS = {
 };
 
 /**
- * Issue a token for one purpose and one scope, invalidating the previous active ones.
+ * Issue a token for one purpose and scope, invalidating the previous live ones in the same
+ * transaction, so a resend never leaves two working links (BR-REQ-036-02 criterion 5).
  *
- * BR-REQ-036-02 criterion 5. A participant who asks for a second confirmation email must not
- * end up with two working links: they will click whichever email their client shows first,
- * and staff resending a link expect the old one to stop working. The invalidation and the
- * insert are one transaction, so there is no instant in which both are live.
- *
- * `db` may be an open transaction — and normally is. The registration workflow (§15.1) writes
- * the registration, this token and the outbox row together or not at all, so this function
- * joining the caller's transaction is the ordinary case; Drizzle opens a savepoint when it is
- * already inside one.
- *
- * The scope matched here is exactly the predicate of the partial unique indexes on the table.
- * If the two ever drift, the insert below fails loudly rather than leaving a second live
- * token behind.
+ * `db` is normally the caller's open transaction (registration, token and outbox row together,
+ * §15.1). The scope matched mirrors the partial unique indexes; if they drift, the insert fails.
  */
 export async function issueActionToken<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -102,8 +80,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
   if (expiresAt.getTime() <= now.getTime()) {
     throw new ActionTokenError("the expiry must be in the future");
   }
-  // Mirrors the CHECK constraint, so the caller gets a named domain error instead of a
-  // driver error, and so the rule is stated where a reader of this module can see it.
+  // Mirrors the CHECK constraint, as a named domain error.
   if ((purpose === "MANAGE_PROFILE") !== (registrationId === null)) {
     throw new ActionTokenError(
       "MANAGE_PROFILE is scoped to a participant and every other purpose to one registration",
@@ -115,11 +92,9 @@ export async function issueActionToken<T extends Record<string, unknown>>(
 
   const token = await db.transaction(async (tx) => {
     /*
-      The one purpose whose earlier links stay live (§420): each "register another person" email
-      (§389) promises its own link for the club's email-link window, and a family fills the form
-      once per person before opening the inbox. The address's limit is counted under the event's
-      lock whenever one is used, and each is single use, so several live links cannot add a
-      registration the limit refuses. The partial unique index leaves this purpose out to match.
+      The one purpose whose earlier links stay live (§420): each family link (§389) promises its
+      own window. Each is single use and the address's limit is counted under the event's lock,
+      so several live links cannot exceed it. The partial unique index excludes this purpose too.
     */
     if (purpose !== "REGISTER_ANOTHER_PERSON") {
       await tx
@@ -148,9 +123,8 @@ export async function issueActionToken<T extends Record<string, unknown>>(
         purpose,
         tokenHash,
         expiresAt,
-        // Written explicitly rather than left to `now()`: the CHECK compares this column with
-        // `expires_at`, and comparing an application clock with a database clock would make
-        // a token issued with a one-minute expiry depend on clock skew between two hosts.
+        // Explicit, not `now()`: the CHECK compares it with `expires_at`, and mixing the
+        // application's and the database's clocks would make short expiries depend on skew.
         createdAt: now,
       })
       .returning(CONTEXT_COLUMNS);
@@ -162,20 +136,9 @@ export async function issueActionToken<T extends Record<string, unknown>>(
 }
 
 /**
- * What a GET handler may know, without changing anything (BR-REQ-036-02 criterion 4).
- *
- * The page behind an email link shows the participant what they are about to do and a button
- * that POSTs. It must reach this function and nothing else, because mail providers fetch
- * links before a human sees them: Gmail, Outlook and corporate link scanners all do. A GET
- * that confirmed a registration would be confirmed by a scanner, for a participant who never
- * clicked, and a single-use token would be spent before it was ever seen.
- *
- * The read-only transaction is what makes that structural rather than a promise — PostgreSQL
- * refuses any write inside it. See `src/db/read-only.ts`.
- *
- * Not implemented here, and required by §13.2 before this is reachable from a route:
- * rate-limited validation attempts. The token space is not guessable, but an unbounded
- * endpoint that hashes and queries per request is still a free amplifier.
+ * What a GET handler may know, without changing anything (BR-REQ-036-02 criterion 4). Mail
+ * providers and link scanners fetch links before a human does, so a GET must never spend or act
+ * on a token. The read-only transaction makes that structural (`src/db/read-only.ts`).
  */
 export async function readActionTokenContext<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -183,8 +146,7 @@ export async function readActionTokenContext<T extends Record<string, unknown>>(
 ): Promise<ActionTokenResult> {
   const { secret, purpose, now } = params;
 
-  // A malformed value is answered exactly like a wrong one: the response must not tell a
-  // stranger whether their guess had the right shape.
+  // A malformed value is answered like a wrong one: no hint about the shape.
   if (!isWellFormedTokenSecret(secret)) return TOKEN_NOT_FOUND;
 
   const tokenHash = hashTokenSecret(secret);
@@ -219,29 +181,14 @@ export async function readActionTokenContext<T extends Record<string, unknown>>(
 }
 
 /**
- * The scope of a token that has *already been spent*, and nothing else.
+ * The scope of an *already spent* token, so a status page can say where the person is
+ * (`registrations/domain/link-status.ts`). Separate from `readActionTokenContext`, whose
+ * contract is "may be acted on".
  *
- * Separate from `readActionTokenContext` on purpose. That function's contract is "this token
- * may be acted on"; this one's is "this token was used, and here is whose registration it
- * belonged to", which is the only thing a status page needs in order to read the current state
- * and say where the person is (`registrations/domain/link-status.ts`).
- *
- * Three properties, all load-bearing:
- *
- * 1. **It answers for exactly one rejection reason.** Anything other than `ALREADY_USED` —
- *    including a purpose mismatch, which must stay indistinguishable from a token that does
- *    not exist — returns null. The evaluation is re-run here rather than trusted from the
- *    caller, so a caller that passed the wrong reason cannot widen the disclosure.
- * 2. **It is still a read.** Same read-only transaction as the context read; PostgreSQL
- *    refuses a write inside it, so a mail scanner fetching a spent link changes nothing.
- * 3. **It reveals no more than the link already did.** The row was found by an exact match on
- *    a SHA-256 of 32 random bytes, so the caller is holding the secret from the email, and
- *    what comes back is the scope that secret was issued against — not the address, not the
- *    name, not another participant.
- *
- * Called only on the path where the context read already returned `ALREADY_USED`, so the extra
- * query is not on the hot path, and the per-link throttle the route charged for this request
- * still bounds how often it can run.
+ * - Answers only for `ALREADY_USED`, re-evaluated here; anything else (a purpose mismatch
+ *   included, which must look like a missing token) returns null.
+ * - Still a read-only transaction.
+ * - Reveals only the scope the holder's secret was issued for — no address, no name.
  */
 export type SpentActionTokenScope = {
   participantId: string;
@@ -287,18 +234,10 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
 }
 
 /**
- * Spend a token. One statement, one winner (BR-REQ-036-02 criteria 2, 3 and the single-use
- * half of criterion 1's purpose).
- *
- * Every condition — the hash, the purpose, not used, not invalidated, not expired — is in the
- * WHERE clause of one UPDATE. That is deliberate and it is the whole design: a read followed
- * by a write would let two requests both read "unused" and both proceed, which for a
- * waiting-list offer means two people accept one place. PostgreSQL evaluates the predicate
- * against the row it locks, so the second UPDATE matches nothing and returns no row. This
- * holds for concurrent requests on separate connections, which is what production has.
- *
- * The classification query afterwards runs only when nothing was updated. It exists to give
- * the log a reason; the caller still shows the participant one generic message (§13.2).
+ * Spend a token: every condition in the WHERE of one UPDATE, so two concurrent requests cannot
+ * both win — PostgreSQL re-evaluates the predicate on the locked row (BR-REQ-036-02 criteria
+ * 2, 3). The follow-up query runs only on failure, to give the log a reason; the participant
+ * still sees one generic message (§13.2).
  */
 export async function consumeActionToken<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -340,7 +279,6 @@ export async function consumeActionToken<T extends Record<string, unknown>>(
   if (!row) return TOKEN_NOT_FOUND;
 
   const evaluation = evaluateActionToken(row, purpose, now);
-  // The UPDATE refused it, so an `ok` here would mean the two rule statements disagree —
-  // report the row as invalid rather than telling the caller something the write did not do.
+  // The UPDATE refused it, so `ok` here means the two rule statements disagree: report invalid.
   return evaluation.ok ? { ok: false, code: "TOKEN_INVALID", reason: "NOT_FOUND" } : evaluation;
 }
