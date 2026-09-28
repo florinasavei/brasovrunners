@@ -4,22 +4,15 @@ import { COLOR } from "@/theme/brand";
 export type TintPreviewWords = {
   /** The header strip's word — the site's name, as the header carries it. */
   header: string;
-  /** The card's line. */
   card: string;
   /** A line of body text straight on the page colour. */
   text: string;
 };
 
 /**
- * A public page in miniature on a chosen page colour (§488, «Aspectul site-ului»): the header
- * strip on the header's white, a card on the card's white, and a line of body and muted text on
- * the tint itself — the three things the owner asked to see before the confirm.
- *
- * Drawn in the light scheme's own colours (`COLOR`) whatever scheme the backoffice is in, because
- * the tint applies to the light scheme only. No hooks and no `"use client"`: the Server Component
- * panel draws it for every preset, and the «Personalizat» island draws it live from the typed
- * colour. Strings only in its props (§370). Decorative for a screen reader — the option's name and
- * help say what it is.
+ * A public page in miniature on a page colour (§488): header, card, body and muted text. Always in
+ * the light scheme's `COLOR`s, since the tint is light-only. No hooks, so both the server panel and
+ * the client island draw it; string props only (§370). `aria-hidden`: the option's words name it.
  */
 export default function TintPreview({ page, words }: { page: string; words: TintPreviewWords }) {
   return (

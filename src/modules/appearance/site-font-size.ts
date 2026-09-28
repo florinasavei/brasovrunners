@@ -13,11 +13,7 @@ import {
   type SiteFontSizeSetting,
 } from "./domain/site-font-size";
 
-/**
- * «Mărimea textului» (§530): one `platform_settings` row, written by an Administrator under
- * «Setări» → «Aspect», audited, read by the locale layout through the public cache (§333).
- * No migration: the settings table takes any key (§100).
- */
+/** «Mărimea textului» (§530): one audited `platform_settings` row (§100), read through the public cache (§333). */
 
 export const SITE_FONT_SIZE_SETTING_KEY = "siteFontSize";
 /** The audit row's fixed entity id for this key — one per key, never reused (`…e011` is the tint). */
@@ -36,10 +32,7 @@ export async function readSiteFontSize<T extends Record<string, unknown>>(db: Da
   return { setting: parseSiteFontSize(row.value), updatedAt: row.updatedAt };
 }
 
-/**
- * Saves the size. A club setting (§450): the Administrator's, asserted here as well as at the
- * action. Expires the public cache's settings, so the next page view is drawn at the new size.
- */
+/** Administrator-only (§450), asserted here as well as at the action. */
 export async function updateSiteFontSize<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -73,7 +66,7 @@ export async function updateSiteFontSize<T extends Record<string, unknown>>(
       now,
     });
   });
-  // Every public page reads the size from the public cache (§333).
+  // §333.
   revalidatePublicContent("settings");
   return { setting: next, updatedAt: now };
 }

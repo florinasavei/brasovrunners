@@ -3,39 +3,14 @@ import { SITE_TINT } from "@/theme/brand";
 import { HEX_COLOR, judgeTint } from "./tint-contrast";
 
 /**
- * «Aspectul site-ului» — the public pages' background tint (§488; the owner: a setting for the
- * site's light background, "a slight shade of blue (club colours)").
+ * «Aspectul site-ului» — the public pages' background tint (§488). Pure. A preset from `SITE_TINT`
+ * or a `#rrggbb` that passes `tint-contrast.ts`.
  *
- * Pure: no database, no environment. The club picks one of the presets in `SITE_TINT`
- * (`theme/brand.ts`, the only file allowed to name a colour) or «Personalizat», a `#rrggbb` it
- * types — refused unless body and muted text clear AA on it and a white card still reads as a
- * card (`tint-contrast.ts`). Stored as `{ tint: "<preset>" }` or `{ tint: "custom", hex }`.
- *
- * How it reaches the page: the locale layout draws one small stylesheet (`siteTintStyle`) that
- * sets MUI's own page-colour variable, `--mui-palette-background-default`, and its channel twin,
- * on `<body>` — the variable `CssBaseline` paints the page with, and the only thing in `src/` that
- * reads `background.default`. One variable, set on the server, so the first paint is already
- * tinted and no client code runs for it. Why MUI's variable rather than a `--br-page-bg` of our
- * own that the theme would read: MUI's variable is already the one the page is painted with, in
- * both schemes; a second variable would mean the light scheme's theme reading
- * `var(--br-page-bg, …)` while the dark one did not — a change to the theme for one consumer.
- * Overriding the one variable at the point of use leaves the theme object and the dark scheme
- * exactly as they were, and a unit test pins the variable's name against `theme.vars`, so a
- * rename in MUI fails loudly rather than silently dropping the tint.
- *
- * - **Light only.** The selector names `:root:not([data-dark])`: the dark scheme (§93) keeps its
- *   own page colour, and with JavaScript off (no `data-light` yet) the light default still takes
- *   the tint.
- * - **Public pages only.** `body:not(:has([data-backoffice]))`: the backoffice shell and its
- *   resting notice carry the marker, so staff always work on the platform's neutral paper.
- * - **Unlayered.** MUI's styles live in a CSS layer (`modularCssLayers`), so this plain rule wins
- *   over `CssBaseline`'s without a specificity contest.
- * - **The default draws nothing.** `paper` is the theme's own colour; a database without a row
- *   renders byte for byte what it rendered before this setting existed.
- * - **Nothing typed reaches the `<style>` text unchecked.** A custom colour is `#` and six hex
- *   digits, lower-cased, checked again as the rule is drawn.
+ * The layout overrides MUI's own page-colour variable on `<body>` (server-drawn, no client code);
+ * a test pins its name against `theme.vars`. Light scheme only, public pages only, unlayered so it
+ * beats `CssBaseline`'s layered rule. The default draws nothing, and only a checked hex ever
+ * reaches the `<style>` text.
  */
-
 export const SITE_TINT_PRESETS = ["paper", "faintBlue", "lightBlue", "blueGrey"] as const satisfies readonly (keyof typeof SITE_TINT)[];
 export type SiteTintPreset = (typeof SITE_TINT_PRESETS)[number];
 
@@ -64,10 +39,7 @@ export const siteTintSchema = z.union([
     .strict(),
 ]);
 
-/**
- * Where the tint applies: the light scheme, and never inside the backoffice (see above). A browser
- * without `:has()` drops the whole rule and shows the plain paper — accepted (§488).
- */
+/** Light scheme, never the backoffice. Without `:has()` the rule is dropped — accepted (§488). */
 export const SITE_TINT_SELECTOR = ":root:not([data-dark]) body:not(:has([data-backoffice]))";
 
 /** MUI's page colour, as `theme.vars.palette.background.default` names it (pinned by a test). */
@@ -83,7 +55,6 @@ export function hexChannel(hex: string): string {
     .join(" ");
 }
 
-/** The colour a setting paints the page with. */
 export function siteTintColor(setting: SiteTintSetting): string {
   return setting.tint === CUSTOM_SITE_TINT ? setting.hex : SITE_TINT[setting.tint];
 }
@@ -93,11 +64,7 @@ export function describeSiteTint(setting: SiteTintSetting): string {
   return setting.tint === CUSTOM_SITE_TINT ? `${CUSTOM_SITE_TINT} ${setting.hex}` : setting.tint;
 }
 
-/**
- * The stylesheet the layout draws for a setting, or `null` for the default — which is the theme's
- * own colour and needs no rule at all — and `null` for anything that is not `#rrggbb`, so no text
- * but a checked colour is ever written into the `<style>` element.
- */
+/** The layout's stylesheet, or `null` for the default or anything not `#rrggbb` (never unchecked text in `<style>`). */
 export function siteTintStyle(setting: SiteTintSetting): string | null {
   if (setting.tint === DEFAULT_SITE_TINT) return null;
   const hex = siteTintColor(setting).toLowerCase();
@@ -105,11 +72,7 @@ export function siteTintStyle(setting: SiteTintSetting): string | null {
   return `${SITE_TINT_SELECTOR}{${PAGE_COLOR_VARIABLE}:${hex};${PAGE_COLOR_VARIABLE}Channel:${hexChannel(hex)}}`;
 }
 
-/**
- * A stored value this code can read, or the default — never a throw over a page colour. A custom
- * colour that no longer keeps the two rules (a row written by hand, a rule tightened later) is read
- * as the default too: the page is never drawn in a colour the service would refuse today.
- */
+/** The stored value, or the default — never a throw; a custom colour the rules now refuse reads as the default. */
 export function parseSiteTint(value: unknown): SiteTintSetting {
   const parsed = siteTintSchema.safeParse(value);
   if (!parsed.success) return DEFAULT_SITE_TINT_SETTING;

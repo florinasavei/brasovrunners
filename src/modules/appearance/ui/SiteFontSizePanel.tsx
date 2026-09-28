@@ -20,18 +20,13 @@ type Props = {
   state: SiteFontSizeState;
   /** Administrator only (§450); the action and the service refuse anybody else. */
   mayEdit: boolean;
-  /** Why the fold opens on arrival (§336). */
+  /** §336. */
   openWhen?: FoldOpenWhen;
 };
 
 /**
- * «Mărimea textului» (§530): the public pages' text size — four steps, each a percentage of the
- * reader's own root size.
- *
- * The shape of «Aspectul site-ului» (§488) beside it: a Server Component, one form, a radio per
- * step — each with a line of the site's text drawn at that step's size, so the choice is seen,
- * not guessed from a name — Save behind the §384 confirmation. No client island: the sample
- * sizes are fixed per step. A role that may not change it reads the choice in force.
+ * «Mărimea textului» (§530), shaped like §488's panel: a radio per step with a sample line at that
+ * size; Save behind the §384 confirmation. Read-only for other roles.
  */
 export default async function SiteFontSizePanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
@@ -91,7 +86,7 @@ export default async function SiteFontSizePanel({ locale, state, mayEdit, openWh
                           {t(`fontSize.sizes.${size}.name`)}
                           {size === DEFAULT_SITE_FONT_SIZE ? ` · ${t("fontSize.default")}` : ""}
                         </Typography>
-                        {/* The site's body text at this step, in pixels: the backoffice itself stays at the platform's size. */}
+                        {/* In pixels: the backoffice itself never takes the setting. */}
                         <Box component="span" sx={{ display: "block", fontSize: px, lineHeight: 1.5 }} data-testid={`site-font-size-sample-${size}`}>
                           {t("fontSize.sample")}
                         </Box>

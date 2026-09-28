@@ -1,19 +1,10 @@
 import { COLOR } from "@/theme/brand";
 
 /**
- * The two rules a page colour has to keep (§488, «Aspectul site-ului»), as plain arithmetic — no
- * zod, no database — so the service refuses a «Personalizat» colour with them and the backoffice's
- * colour island says the same verdict live while the Administrator types, from one source.
- *
- * - **Readable:** body text (`COLOR.ink`) and muted text (`COLOR.inkMuted`) at WCAG 2.1 AA,
- *   4.5 : 1 or more, on the page colour.
- * - **Light enough:** the white cards (`COLOR.surface`) stay a card on it — at most
- *   `MAX_CARD_STEP` : 1 between the card and the page. Past that the page reads as a coloured
- *   wash and the tint is a dark theme by the back door; the dark scheme has its own colours (§93).
- *
- * The presets in `SITE_TINT` (`theme/brand.ts`) are held to the same two rules by `brand.test.ts`.
+ * The two rules a page colour keeps (§488), shared by the service and the live backoffice check:
+ * `COLOR.ink` and `COLOR.inkMuted` at AA (4.5 : 1) on it, and a white card at most `MAX_CARD_STEP`
+ * away — darker is a dark theme by the back door (§93). `brand.test.ts` holds the presets to them.
  */
-
 /** A page colour as the club may type it: `#rrggbb`, six hex digits, nothing else. */
 export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
@@ -44,10 +35,7 @@ export function contrastRatio(a: string, b: string): number {
 /** Why a page colour is refused, or `null` when it keeps both rules. */
 export type TintVerdict = "notAColour" | "unreadable" | "tooDark" | null;
 
-/**
- * The verdict on a typed page colour. "Unreadable" is checked first, because it is the rule the
- * reader cares about; a colour that fails it is almost always too dark as well.
- */
+/** "Unreadable" first: the rule the reader cares about, and it usually implies "tooDark". */
 export function judgeTint(hex: string): TintVerdict {
   if (!HEX_COLOR.test(hex)) return "notAColour";
   if (contrastRatio(COLOR.ink, hex) < MIN_TEXT_CONTRAST || contrastRatio(COLOR.inkMuted, hex) < MIN_TEXT_CONTRAST) {

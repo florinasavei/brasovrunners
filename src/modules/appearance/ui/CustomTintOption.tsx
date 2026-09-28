@@ -11,7 +11,6 @@ import TintPreview, { type TintPreviewWords } from "./TintPreview";
 type Props = {
   /** The colour the box opens with: the custom colour in force, else the platform's paper. */
   initialHex: string;
-  /** Whether «Personalizat» is the choice in force. */
   defaultChecked: boolean;
   words: {
     name: string;
@@ -30,14 +29,10 @@ type Props = {
 };
 
 /**
- * «Personalizat» (§488): the one option the Administrator types — `#rrggbb` in a text box, with the
- * browser's own colour picker beside it — and the page in miniature redrawn as they type, with the
- * verdict of the same two rules the service refuses by (`tint-contrast.ts`): body and muted text at
- * AA, and a white card still a card. The server decides; this only says it early.
- *
- * A client island because it is live; strings and plain values in its props only (§370). The text
- * box is the field that posts (`hex`); the picker is unnamed and writes into it. Typing or picking
- * selects the option, so nobody types a colour and saves the preset that was ticked.
+ * «Personalizat» (§488): a typed `#rrggbb` plus the browser's picker, with the live preview and the
+ * `tint-contrast.ts` verdict; the server still decides. Plain props only (§370). The text box posts
+ * `hex`; the unnamed picker writes into it. Typing or picking ticks this option, so a typed colour
+ * is never saved under a preset.
  */
 export default function CustomTintOption(props: Props) {
   // Re-mounted on every refusal, so the box shows the colour that was sent, not the one it held.

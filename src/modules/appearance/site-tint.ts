@@ -17,11 +17,7 @@ import {
 } from "./domain/site-tint";
 import { judgeTint } from "./domain/tint-contrast";
 
-/**
- * «Aspectul site-ului» (§488): one `platform_settings` row, written by an Administrator under
- * Pagini → «Aspect», audited, read by the locale layout through the public cache (§333).
- * No migration: the settings table takes any key (§100).
- */
+/** «Aspectul site-ului» (§488): one audited `platform_settings` row (§100), read through the public cache (§333). */
 
 export const SITE_TINT_SETTING_KEY = "siteTint";
 /** The audit row's fixed entity id for this key — one per key, never reused (`…e00a` is the shown contact address). */
@@ -29,11 +25,7 @@ export const SITE_TINT_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e011
 
 export type SiteTintState = { setting: SiteTintSetting; updatedAt: Date | null };
 
-/**
- * The markers a refused «Personalizat» colour carries beside its box's name, so the action can say
- * which rule it broke in words rather than "check what you entered" (the `UNDER_MINIMUM_AGE`
- * pattern, §321). Markers, not boxes: the action drops them from the field list.
- */
+/** Refusal markers naming the broken rule; not boxes — the action drops them from the field list (§321's pattern). */
 export const SITE_TINT_REFUSAL = { unreadable: "tintUnreadable", tooDark: "tintTooDark" } as const;
 
 /** The tint in force: the default with no row (`updatedAt: null`), or with a value this code cannot read. */
@@ -47,10 +39,7 @@ export async function readSiteTint<T extends Record<string, unknown>>(db: Databa
   return { setting: parseSiteTint(row.value), updatedAt: row.updatedAt };
 }
 
-/**
- * Saves the tint. A club setting (§450): the Administrator's, asserted here as well as at the
- * action. Expires the public cache's settings, so the next page view is drawn in the new colour.
- */
+/** Administrator-only (§450), asserted here as well as at the action. */
 export async function updateSiteTint<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -102,7 +91,7 @@ export async function updateSiteTint<T extends Record<string, unknown>>(
       now,
     });
   });
-  // Every public page reads the tint from the public cache (§333).
+  // §333.
   revalidatePublicContent("settings");
   return { setting: next, updatedAt: now };
 }

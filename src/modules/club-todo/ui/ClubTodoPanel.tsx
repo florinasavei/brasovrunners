@@ -40,36 +40,30 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
 type Props = {
   locale: Locale;
-  /** The whole list, in its order; the panel filters it. */
+  /** The whole list; the panel filters it. */
   items: readonly ClubTodoItem[];
-  /** `canEditClubTodo` — the Organizer and the Administrators; `changeClubTodo` asserts it again. */
+  /** `canEditClubTodo`; `changeClubTodo` asserts it again. */
   mayEdit: boolean;
-  /** The owner `?for=` named, as the list writes it, or undefined for everybody. */
+  /** From `?for=`; undefined for everybody. */
   owner: string | undefined;
-  /** Today on the club's calendar, `YYYY-MM-DD` — what "overdue" is measured against. */
+  /** `YYYY-MM-DD` on the club's calendar, for "overdue". */
   today: string;
-  /** A refused one-button form's code (`?error=`), already translated. */
+  /** `?error=`, already translated. */
   error?: string;
 };
 
 const OWNERS_LIST_ID = "club-todo-owners";
 
-/** A line's words cut for an accessible name: "Bifează: Intră în backoffice…" rather than a paragraph read aloud. */
+/** Short accessible names, not a paragraph read aloud. */
 function shortText(text: string): string {
   const flat = text.replace(/\s+/g, " ").trim();
   return flat.length > 80 ? `${flat.slice(0, 79)}…` : flat;
 }
 
 /**
- * «De făcut» — the club's own checklist (§438). A Server Component of forms, like every other
- * panel on `/admin/tasks`: a tick, ↑ and ↓ are one button each in a form of their own, so the
- * list works with JavaScript off (§265), and every verb posts to a Server Action that asks
- * `changeClubTodo` — the role is decided there, never by which buttons this draws (BR-REQ-060-01).
- *
- * The open lines first, in the club's order; the done ones inside a closed fold «Arată terminate»,
- * struck through, with who ticked them and when. «Adaugă un rând» is a closed fold above the
- * list, and every line keeps its own «Modifică» fold — the words, «pentru cine», the day, and
- * «Șterge», which asks first (§384). Folds start closed (§336).
+ * «De făcut» (§438): one form per button, so it works without JavaScript (§265); the role is
+ * decided by `changeClubTodo`, not by what this draws (BR-REQ-060-01). Open lines first, done ones
+ * in a closed fold; «Șterge» asks first (§384); folds start closed (§336).
  */
 export default async function ClubTodoPanel({ locale, items, mayEdit, owner, today, error }: Props) {
   const t = await getTranslations("Admin");
@@ -79,13 +73,13 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
   const open = shown.filter((item) => !item.done);
   const done = shown.filter((item) => item.done);
   const owners = clubTodoOwners(items);
-  // What «pentru cine» offers: the names the owner gave, then every other name already on the list.
+  // Suggestions first, then every other name on the list.
   const suggestions = [...new Set([...CLUB_TODO_OWNER_SUGGESTIONS, ...owners])];
 
   const hrefFor = (who: string | undefined) =>
     getPathname({ locale, href: { pathname: "/admin/tasks", query: { panel: "todo", ...(who ? { for: who } : {}) } } });
 
-  /** The hidden fields every form carries: the language to land back in and the filter to keep. */
+  /** Every form's hidden fields: the locale and the filter. */
   const context = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
@@ -93,7 +87,6 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
     </>
   );
 
-  /** The three boxes, for «Adaugă» and every «Modifică». */
   const fields = (item: ClubTodoItem | null) => (
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
       <RecallField
@@ -128,7 +121,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
 
   const row = (item: ClubTodoItem, index: number, siblings: readonly ClubTodoItem[]) => {
     const overdue = isClubTodoOverdue(item, today);
-    // A starting line the club has not edited (§538): its words in the reader's language, and the editor it names.
+    // §538.
     const view = clubTodoDefaultView(item, locale);
     const text = view?.text ?? item.text;
     const label = shortText(text);
@@ -146,7 +139,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
               {context}
               <input type="hidden" name="itemId" value={item.id} />
               <input type="hidden" name="done" value={item.done ? "0" : "1"} />
-              {/* One button, 44 pixels, the box it draws the state: a tick is one press on a phone. */}
+              {/* One 44-px button: a tick is one press on a phone. */}
               <Box
                 component="button"
                 type="submit"
@@ -218,7 +211,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
             )}
           </Box>
 
-          {/* ↑ and ↓ among the open lines shown: none at an end, rather than an arrow that does nothing (the pages list's rule). */}
+          {/* No arrow at an end rather than one that does nothing. */}
           {mayEdit && !item.done && (
             <Stack spacing={0.5} sx={{ flexShrink: 0 }}>
               {index > 0 && (
@@ -289,7 +282,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
         {t("clubTodo.counts", { open: open.length, done: done.length })}
       </Typography>
 
-      {/* «Pentru cine»: the names on the list, each a link 44 px tall (the «Club» panel's chips, §150). */}
+      {/* 44-px links, like the «Club» panel's chips (§150). */}
       {owners.length > 0 && (
         <Stack component="nav" aria-label={t("clubTodo.filterLabel")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>

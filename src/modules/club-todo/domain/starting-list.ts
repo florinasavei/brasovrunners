@@ -3,30 +3,14 @@ import ro from "../../../../messages/ro.json";
 import { CLUB_TODO_MAX_ITEMS, type ClubTodoItem } from "./club-todo";
 
 /**
- * The list «De făcut» starts from, until somebody first changes it (§438).
- *
- * The owner's two messages of 2026-09-26 to the two people who run the club while he is away —
- * the Administrator's twelve steps and the Organizer's seven — in their order, each line as he
- * wrote it, with two things taken out because this repository is public: **no address** (the
- * club's Gmail is «adresa de Gmail a clubului») and **no URL** (a page is named by its path in the
- * backoffice, `/ro/admin`, never by its host — AGENTS.md §8). The lines that say "after 10
- * October" carry that day as their due date, and the Mailgun-plan line carries the date the
- * owner named for the switch to the paid plan.
- *
- * Read only while the `clubTodo` row does not exist: the first write stores this list with the
- * change on it, and from then on the row is the list — a deleted starting line never comes back.
- * The ids are fixed so a tick on a line of this list, pressed before anything was stored, finds
- * the same line in the list the write starts from.
+ * The list «De făcut» starts from until the first write stores it (§438): the Administrator's and
+ * the Organizer's steps, with no address and no host in them — the repository is public (AGENTS.md
+ * §8). Ids are fixed so a press made before anything was stored finds its line.
  */
 
-/**
- * What «pentru cine» offers before anybody types one; any other name is kept as typed. Roles, not
- * first names: the repository is public (§483), and a list is the Administrator's or the Organizer's
- * whoever holds the role this year.
- */
+/** «Pentru cine» suggestions; roles, not first names — the repository is public (§483). */
 export const CLUB_TODO_OWNER_SUGGESTIONS: readonly string[] = ["Administrator", "Organizator"];
 
-/** When the lists were written: the `createdAt` of every starting line. */
 const WRITTEN_AT = "2026-09-26T12:00:00.000Z";
 const AFTER_THE_TENTH = "2026-10-10";
 const MAILGUN_PLAN_SWITCH = "2026-11-01";
@@ -90,16 +74,9 @@ const ORGANIZER: ReadonlyArray<readonly [text: string, due?: string]> = [
 ];
 
 /**
- * The lines added to the starting list after it was first written (§538, amending §438) — the
- * owner, 2026-09-28: «actualizează lista de TODOs pentru Administrator să facă pagina de Echipa și
- * Întrebări frecvente». Unlike the nineteen above, each one reaches a club whose list is already
- * stored: `mergeClubTodoDefaults` adds it once, by its id, and the row remembers that it did
- * (`seenDefaults`), so a line the club ticked stays ticked and a line it deleted stays deleted.
- *
- * The words are the catalogue's (`Admin.clubTodo.defaults.*`, both languages, held by the plain-words
- * test), and the stored `text` is the Romanian — the list's own language (§438). While the line
- * still says those words, the panel shows the reader's language and a link to the editor; once
- * somebody edits it, it is the club's line like any other.
+ * Lines added after §438 (§538), which also reach an already-stored list: `mergeClubTodoDefaults`
+ * adds each once and records it in `seenDefaults`. Words from `Admin.clubTodo.defaults.*`, stored
+ * in Romanian; shown in the reader's language with a link until somebody edits them.
  */
 export type ClubTodoDefaultKey = "teamPage" | "faqPage";
 
@@ -107,21 +84,17 @@ type AddedDefault = {
   id: string;
   key: ClubTodoDefaultKey;
   owner: string;
-  /** The editor the line sends the reader to — a backoffice path, never a host (AGENTS.md §8). */
+  /** A backoffice path, never a host (AGENTS.md §8). */
   href: "/admin/pages/team" | "/admin/pages/faq";
-  /** When the line was written: its `createdAt`. */
+  /** Its `createdAt`. */
   since: string;
-  /**
-   * The §438 line this one replaces, if any: gone from the fresh pre-fill, and taken off a stored
-   * list when this line arrives — only while it still says §438's words and is unticked.
-   */
+  /** A §438 line this replaces: dropped from a fresh list, and from a stored one while untouched. */
   replaces?: string;
 };
 
 /**
- * §438's line 11 («Pagina «Echipa»: … → «Publică»») says what `start-admin-team-page` says, with
- * the old button words. It stays in `ADMINISTRATOR`, so the ids after it keep their number and the
- * merge can recognise its unedited words, but a fresh list no longer starts with it.
+ * Superseded by `start-admin-team-page`; kept in `ADMINISTRATOR` so later ids keep their numbers
+ * and the merge recognises its unedited words.
  */
 const OLD_TEAM_PAGE_ID = "start-admin-11";
 
@@ -170,10 +143,7 @@ function addedLine(entry: AddedDefault, order: number): ClubTodoItem {
   };
 }
 
-/**
- * §438's pre-fill as it was first written: the nineteen lines a list stored before §538 started
- * from, line 11 included — what the merge and its tests read a stored row against.
- */
+/** §438's original nineteen lines, line 11 included — what a pre-§538 row is read against. */
 export function firstClubTodo(): ClubTodoItem[] {
   const administrator = lines("Administrator", "admin", ADMINISTRATOR, 1);
   return [...administrator, ...lines("Organizator", "organizer", ORGANIZER, administrator.length + 1)];
@@ -181,11 +151,7 @@ export function firstClubTodo(): ClubTodoItem[] {
 
 const REPLACED_IDS: ReadonlySet<string> = new Set(ADDED_DEFAULTS.flatMap((entry) => (entry.replaces ? [entry.replaces] : [])));
 
-/**
- * The twenty starting lines: the Administrator's eleven (§438's twelve without line 11, which the
- * team-page line replaces) and the two pages (§538), then the Organizer's seven — every id and
- * every word of the lines kept unchanged.
- */
+/** The fresh list: the Administrator's lines minus replaced ones, the §538 lines, then the Organizer's. */
 export function startingClubTodo(): ClubTodoItem[] {
   const administrator = lines("Administrator", "admin", ADMINISTRATOR, 1).filter((item) => !REPLACED_IDS.has(item.id));
   const added = ADDED_DEFAULTS.map((entry) => addedLine(entry, 0));
@@ -193,16 +159,10 @@ export function startingClubTodo(): ClubTodoItem[] {
   return [...administrator, ...added, ...organizer].map((item, index) => ({ ...item, order: index + 1 }));
 }
 
-/**
- * What §438's pre-fill gave a stored list: the nineteen ids. One of them missing from a row written
- * before §538 was deleted by the club, and stays deleted; only the lines added since are new to it.
- */
+/** A pre-§538 row missing one of these ids had it deleted by the club; it stays deleted. */
 const FIRST_DEFAULT_IDS: readonly string[] = firstClubTodo().map((item) => item.id);
 
-/**
- * Every starting line's id, the replaced line 11 included: what a stored row has seen once
- * `mergeClubTodoDefaults` has run on it, so a replaced line is never given to it again.
- */
+/** Every starting id, replaced ones included: a merged row's `seenDefaults`. */
 export const CLUB_TODO_DEFAULT_IDS: readonly string[] = [...new Set([...FIRST_DEFAULT_IDS, ...startingClubTodo().map((item) => item.id)])];
 
 /** A replaced §438 line is taken off only while nobody touched it: its first words, unticked. */
@@ -214,22 +174,16 @@ function untouchedFirstLine(items: readonly ClubTodoItem[], id: string): ClubTod
 
 export type ClubTodoMerge = {
   items: ClubTodoItem[];
-  /** Every default id the row has now seen — what the next write stores beside the items. */
+  /** Stored by the next write. */
   seenDefaults: string[];
-  /** The lines this merge added: none on a list that already has them, or had and lost them. */
   added: ClubTodoItem[];
-  /** The §438 lines this merge took off because a line that replaces them arrived, untouched. */
   removed: ClubTodoItem[];
 };
 
 /**
- * A stored list with the defaults it has never seen added at its end, once each (§538). `seen` is
- * the row's `seenDefaults`, or null for a row written before it existed (read as §438's nineteen).
- * Idempotent: a line already on the list, or seen and since deleted, is never added again.
- * A list at `CLUB_TODO_MAX_ITEMS` gets nothing more (the cap the add operation holds), and a
- * default it could not take stays unseen, so it arrives once the club makes room. A default that
- * replaces a §438 line takes that line off as it arrives, only while the line is unticked and says
- * §438's words — so the two never stand side by side, and the club's own edit or tick is kept.
+ * Appends the defaults a stored list has never seen, once each (§538); `seen` null means §438's
+ * nineteen. Idempotent. At `CLUB_TODO_MAX_ITEMS` a default stays unseen until there is room. A
+ * replacing default removes its old line only while that line is unticked and unedited.
  */
 export function mergeClubTodoDefaults(items: readonly ClubTodoItem[], seen: readonly string[] | null): ClubTodoMerge {
   const known = new Set(seen ?? FIRST_DEFAULT_IDS);
@@ -241,7 +195,6 @@ export function mergeClubTodoDefaults(items: readonly ClubTodoItem[], seen: read
   const unadded = new Set<string>();
   for (const entry of ADDED_DEFAULTS) {
     if (known.has(entry.id) || present.has(entry.id)) continue;
-    // The line it replaces leaves as it arrives — an edited or ticked copy is the club's and stays.
     const replaced = entry.replaces ? untouchedFirstLine(kept, entry.replaces) : undefined;
     if (kept.length - (replaced ? 1 : 0) + added.length >= CLUB_TODO_MAX_ITEMS) {
       unadded.add(entry.id);
@@ -258,10 +211,7 @@ export function mergeClubTodoDefaults(items: readonly ClubTodoItem[], seen: read
   return { items: [...kept, ...added], seenDefaults, added, removed };
 }
 
-/**
- * A default line as the reader sees it: its words in their language and the editor it opens —
- * or null for any other line, and for a default the club has edited (it is then the club's words).
- */
+/** A §538 default in the reader's language with its editor link; null for other or edited lines. */
 export function clubTodoDefaultView(
   item: Pick<ClubTodoItem, "id" | "text">,
   locale: string,

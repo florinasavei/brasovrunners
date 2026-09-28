@@ -23,20 +23,13 @@ type Props = {
   state: SiteTintState;
   /** Administrator only (§450); the action and the service refuse anybody else. */
   mayEdit: boolean;
-  /** Why the fold opens on arrival (§336): «Setări» → «Aspect» is this card alone (§516). */
+  /** §336. */
   openWhen?: FoldOpenWhen;
 };
 
 /**
- * «Aspectul site-ului» (§488): the public pages' light background — one of the presets drawn from
- * the club's colours (`SITE_TINT` in `theme/brand.ts`) or «Personalizat», a colour typed as
- * `#rrggbb` and refused unless text stays readable on it and it stays light.
- *
- * The shape of «Adresa de contact afișată» (§442): a Server Component, one form, a radio per
- * choice — each with the page in miniature on that colour (`TintPreview`: the header, a card, a
- * line of text), so the choice is seen, not guessed from a name — Save behind the §384
- * confirmation. «Personalizat» is the one client island (`CustomTintOption`), live as the colour
- * is typed. A role that may not change it reads the choice in force and who changes it.
+ * «Aspectul site-ului» (§488): a radio per preset, each with a `TintPreview`, plus the live
+ * «Personalizat» island; Save behind the §384 confirmation. Read-only for other roles.
  */
 export default async function SiteTintPanel({ locale, state, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
