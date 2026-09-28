@@ -2,29 +2,10 @@ import { bodyToText, textToBody } from "./body-text";
 import { parseInline } from "./inline";
 
 /**
- * The bridge between what the club sees and what a legal document stores (`DECISIONS.md` §279;
- * the owner, 2026-09-22: "this declaration must be WYSIWYG").
- *
- * ## Why the stored shape does not change
- *
- * `body_json` is `{ sections: [{ heading?, paragraphs }] }`, and it is the thing that is hashed
- * (`content-hash.ts`), approved, merged per person and drawn into the PDF the participant signs.
- * The club's three texts are approved on production against exactly those bytes. So the editor
- * is a *view*: it reads the stored text into a document, and it writes the same plain text back
- * into the same hidden field the textarea used. The server, the hash, the public page and the
- * PDF are untouched, and a version approved before this existed opens and saves identically.
- *
- * That is also what makes this safe to ship two months before the race: nothing downstream of
- * the form learns a new shape, and `editor-doc.test.ts` proves the round trip for the three
- * templates the club actually approved.
- *
- * ## What the editor may therefore contain
- *
- * Exactly what the format already carries, and nothing else: a heading, a paragraph, a line
- * break inside a paragraph, a link, and a picture on a line of its own. **No bold, no italic,
- * no lists** — not because they would be hard to draw, but because the stored body has nowhere
- * to put them, and an editor offering a button whose result is silently dropped on save is
- * worse than one that never offered it.
+ * The WYSIWYG editor's document to and from the stored plain text (§279). The editor is only a
+ * view: it posts the same text the textarea did, so the hash, page and PDF are unchanged and
+ * approved versions round-trip (`editor-doc.test.ts`). It holds only what the format carries —
+ * headings, paragraphs, line breaks, links, a picture on its own line; no bold, italic or lists.
  */
 
 export type LegalInline =
@@ -43,15 +24,13 @@ function inlineOf(paragraph: string): LegalInline[] {
   const runs: LegalInline[] = [];
   for (const part of parseInline(paragraph)) {
     if (part.kind === "image") {
-      // A picture among words — rare, and the page draws it inline. The editor keeps it as the
-      // mark it is written as rather than losing it to a node it cannot sit beside.
+      // A picture among words stays its written mark; an image node cannot sit inline.
       runs.push({ type: "text", text: `![${part.alt}](${part.src})` });
       continue;
     }
     const { text } = part;
     const marks = part.kind === "link" ? [{ type: "link" as const, attrs: { href: part.href } }] : undefined;
-    // A single newline inside a paragraph is a break the author wrote (`body-text.ts`), and in
-    // the editor it is Shift+Enter — so it is a node, not a character inside a run.
+    // A single newline is the author's line break (Shift+Enter): a node, not a character.
     const pieces = text.split("\n");
     pieces.forEach((piece, index) => {
       if (index > 0) runs.push({ type: "hardBreak" });
@@ -70,8 +49,7 @@ export function textToEditorDoc(text: string): LegalEditorDoc {
     }
     for (const paragraph of section.paragraphs) {
       const parts = parseInline(paragraph);
-      // The same rule the public page draws by: a paragraph that is one picture and nothing
-      // else is the picture, so the editor shows it rather than its address.
+      // As on the public page, a paragraph that is only a picture is the picture.
       if (parts.length === 1 && parts[0].kind === "image") {
         content.push({ type: "image", attrs: { src: parts[0].src, alt: parts[0].alt } });
         continue;
@@ -82,7 +60,6 @@ export function textToEditorDoc(text: string): LegalEditorDoc {
   return { type: "doc", content };
 }
 
-/** One run back to the text it was written as. */
 function runToText(run: LegalInline): string {
   if (run.type === "hardBreak") return "\n";
   const href = run.marks?.find((mark) => mark.type === "link")?.attrs.href;
@@ -98,18 +75,12 @@ function blockToText(block: LegalBlock): string {
     case "paragraph":
       return (block.content ?? []).map(runToText).join("");
     default:
-      // A node this format has nowhere to put — the toolbar offers none, and one arriving from
-      // a paste is dropped here rather than written into a document somebody signs.
+      // A node the format cannot hold (e.g. from a paste) is dropped.
       return "";
   }
 }
 
-/**
- * The document back to the text the form posts — the same field, in the same format, as the
- * textarea wrote. Blank blocks are dropped rather than stored: `textToBody` would drop them on
- * the next read anyway, and a body whose text does not survive a save is what makes a content
- * hash move for no reason anybody can see.
- */
+/** The document back to the posted text. Blank blocks are dropped, as `textToBody` would, so the hash stays stable. */
 export function editorDocToText(doc: unknown): string {
   if (!isLegalEditorDoc(doc)) return "";
   return bodyToText(
@@ -123,7 +94,6 @@ export function editorDocToText(doc: unknown): string {
   );
 }
 
-/** Is this the document shape above? The editor's own value, coming back through a form field. */
 export function isLegalEditorDoc(value: unknown): value is LegalEditorDoc {
   return (
     typeof value === "object" &&

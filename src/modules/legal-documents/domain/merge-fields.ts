@@ -4,46 +4,22 @@ import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
- * The club's deadlines as merge fields (§377), for any of the three texts — unlike the fields
- * below, which only a declaration signed by one person for one event can fill. The platform's
- * templates of the terms and the privacy notice state the email link, the hold, the offer and the
- * reminder through these, so the words follow "Termene" instead of freezing today's numbers into
- * an approved text. They merge when the text is shown (`deadlineMergeValues`); the approved
- * template and its hash are untouched, as for every field (§12.5).
- *
- * **The reminder is a clause, not a number** (`reminderClause`): the club may send none by default
- * (zero), and "un memento cu 0 ore înainte" would promise a message that never goes. So the field
- * carries the whole clause with its leading comma — ", un memento cu 2 zile înainte (sau cât alege
- * evenimentul)", hedged because an event may choose its own — and, when
- * the default is none, a clause with no number that still covers an event sending its own
- * (`reminderClause` below): "confirmări, legături, lista de așteptare{{reminderClause}} și cel
- * mult o mulțumire…". A field given "" is still left out cleanly (`OMITTABLE_MERGE_FIELDS`).
- *
- * **`{{publicListPeriod}}`** (§421) is how long a public participant list stays up after the
- * event before it closes by itself — "30 de zile", the unit included like `{{holdMinutes}}` — so
- * the notice names the club's period and never a number of its own.
+ * The club's deadlines as merge fields (§377), for any legal text; merged when shown, so the
+ * approved template and its hash are untouched (AGENTS.md §12.5). `reminderClause` is a whole
+ * clause with its leading comma, so a zero default never promises "0 hours before".
+ * `publicListPeriod` is the public list's life after the event (§421), unit included.
  */
 export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderClause", "publicListPeriod"] as const;
 
 /**
- * The fields whose empty value is an answer rather than a gap: given as "", they leave nothing
- * in the text — no dotted blank, no emphasis. Given no value at all they still show the blank,
- * like every other field, so a text previewed without the setting reads as unfilled.
+ * Given "", these leave nothing in the text; given no value, they show the blank like any field,
+ * so a preview without the setting reads as unfilled.
  */
 export const OMITTABLE_MERGE_FIELDS: ReadonlySet<string> = new Set(["reminderClause"]);
 
 /**
- * The reminder as the clause the legal texts take, in one language. Each event may pick its own
- * reminder — 24, 48 or 72 hours, or none — so the club's default is never stated as a promise a
- * single event can break: an approved notice serves every event.
- *
- * - A default above zero names the lead and hedges it for the event's own choice: ", un memento cu
- *   2 zile înainte (sau cât alege evenimentul)" / ", a reminder 2 days before (or as the event
- *   chooses)".
- * - A default of none (zero) does **not** drop the clause — a notice listing no reminder among the
- *   messages "we send only" would be a claim one event breaks — and says, with no number,
- *   ", un memento înainte de start, dacă evenimentul trimite unul" / ", a reminder before the start
- *   where the event sends one" — never "0 ore", never a dotted blank.
+ * The reminder clause. Events may choose their own reminder, so the club default is hedged; a zero
+ * default still mentions a reminder "where the event sends one", never "0 ore" or a blank.
  */
 export function reminderClause(locale: string, reminderHours: number): string {
   if (reminderHours <= 0) {
@@ -53,11 +29,7 @@ export function reminderClause(locale: string, reminderHours: number): string {
   return locale === "en" ? `, a reminder ${lead} before (or as the event chooses)` : `, un memento cu ${lead} înainte (sau cât alege evenimentul)`;
 }
 
-/**
- * The deadline fields' values in one language: the same words the emails and the pages use
- * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", ", un memento cu 2 zile
- * înainte (sau cât alege evenimentul)", "30 de zile".
- */
+/** The deadline fields in one language, in the emails' and pages' words (`duration-words.ts`). */
 export function deadlineMergeValues(
   locale: string,
   deadlines: Pick<Deadlines, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours" | "publicListDays">,
@@ -72,84 +44,40 @@ export function deadlineMergeValues(
 }
 
 /**
- * The privacy notice's marker for the public list's states (§396, amending §32 and §143), and
- * the words it is filled with.
- *
- * Since §396 the public participant list may say, beside each name, where the registration
- * stands — "Confirmat", "Înscris, în așteptarea confirmării", "Pe lista de așteptare" — and it
- * lists the pending and the waiting too, not only the confirmed. That is a wider disclosure than
- * the one the club's approved notice describes, so it is the notice that switches it on, the way
- * §330's declaration switches the minor's signature on: the platform's template names
- * `{{participantListStates}}` in the sentence that describes the list, and the list shows the
- * states only while the notice in force names it (`describesListStates`). A notice approved
- * before it does not, and the list under it is exactly what it was — confirmed names, no words.
- *
- * The field is filled, when the notice is shown, with the three words themselves, quoted
- * (`registrations/list-state-words.ts#listStatesClause`), from the same catalogue the
- * list reads — so the approved sentence and the page cannot name different words.
+ * The notice's marker for the public list's states (§396, amending §32, §143): filled with the
+ * three state words (`listStatesClause`), and the switch — the list shows states and the pending
+ * and waiting only while the notice in force names it (`describesListStates`).
  */
 export const LIST_STATES_MERGE_FIELD = "participantListStates";
 
 /**
- * The privacy notice's marker for the socials beside a name on the public list (§500, widening
- * §106, which kept the Strava link and the Instagram username off the site). The same two-in-one
- * as the states above: filled, when the notice is shown, with the words of the form's own tick,
- * quoted (`registrations/list-socials-words.ts`), and the switch — the form offers that tick, the
- * service keeps it, and the list prints a runner's Strava and Instagram only while the notice in
- * force, in every language, names it (`describesListSocials`). A runner's tick is kept only when
- * the notice they were given names it, so a tick is always consent to a text that described it.
+ * The notice's marker for the socials on the public list (§500, widening §106): filled with the
+ * form's tick words, and the switch (`describesListSocials`). A tick is kept only when the
+ * runner's own notice named it.
  */
 export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 
 /**
- * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
- * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
- * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
- * cel puțin {{minimumAge}}." — filled from the event at signing and in the PDF.
- *
- * **An event with no minimum (zero) has no such sentence.** The field is then given "", and a
- * paragraph naming a field of `PARAGRAPH_MERGE_FIELDS` given "" is left out whole
- * (`dropsParagraph`): "Declar că am cel puțin ." is no sentence, and "cel puțin 0 ani" is a
- * statement about nothing. The registry had no conditional form, only `OMITTABLE_MERGE_FIELDS`,
- * which drops the field's words and keeps the sentence around them; this is the paragraph's
- * version of it. Given no value at all, the paragraph stays with its dotted blank, like every
- * field on a text previewed without an event.
- *
- * Since §515 every declaration states it — both race texts open with it, and the group runs' one
- * sentence of age is it — and no event gives "" any more: a race's is never under fourteen
- * (`effectiveMinimumAge`), a group run's never under eighteen (`groupRunMinimumAge`). The drop
- * stays for a caller that passes zero, so a sentence about no age is still never printed.
+ * The event's minimum age (§329, §440), unit included (`yearsPhrase`: "20 de ani"). Given "", the
+ * paragraph naming it is dropped whole (`dropsParagraph`); since §515 no event gives "" (races ≥ 14,
+ * group runs ≥ 18), but a caller passing zero still prints no sentence about no age.
  */
 export const MINIMUM_AGE_MERGE_FIELD = "minimumAge";
 
-/**
- * `{{minimumAge}}`'s value: the event's minimum in words with its unit, or "" for none — the
- * answer that drops the sentence naming it (`dropsParagraph`), never "0 ani".
- */
+/** "" for none, which drops the sentence (`dropsParagraph`), never "0 ani". */
 export function minimumAgeMergeValue(minAge: number, locale: string): string {
   return minAge > 0 ? yearsPhrase(minAge, locale) : "";
 }
 
 /**
- * A group run's series (§523; the owner, 2026-09-27: "one self-declaration per series of group runs:
- * a returning runner signs once"), as the fields of the group-run declarations' **series sentence**:
- * `{{series}}` — the run's name —, `{{seriesRhythm}}` — «în fiecare marți, la 18:30» / «every
- * Tuesday at 18:30» — and `{{seriesPlace}}` — where it usually starts. Filled at signing from the
- * dates §113 groups, and kept on the row (`signed_facts`) for the PDF.
- *
- * **One text, two sentences.** A group-run declaration serves a weekly run and a one-off run alike,
- * so the template carries both: the series sentence, naming these fields, and the **one-off
- * sentence**, naming `{{event}}` and `{{eventDate}}` and no series field. The renderer picks one by
- * what it fills: a run that is one of a series gets the series values and loses the one-off
- * sentence (`dropsParagraph`: a paragraph naming `{{eventDate}}` and no series field, while
- * `{{series}}` has a value); a one-off run gets "" for the series fields, and the series sentence
- * goes as `{{minimumAge}}`'s does. A text that names no series field (every version approved before
- * §523, and the race's) is given no series value at all (`seriesMergeValues` in the group-run
- * module), so nothing of it is dropped. The approved text and its hash are untouched (§12.5).
+ * A group run's series (§523): name, rhythm and usual place, filled at signing from the dates §113
+ * groups and kept in `signed_facts`. The template carries a series sentence and a one-off sentence;
+ * `dropsParagraph` keeps the one that fits. A text naming no series field gets no series values,
+ * so nothing is dropped (AGENTS.md §12.5).
  */
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
-/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`). */
+/** The fields whose "" drops the paragraph naming them. */
 export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS]);
 
 const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
@@ -157,11 +85,8 @@ const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
 const filled = (value: string | null | undefined): boolean => typeof value === "string" && value.trim() !== "";
 
 /**
- * The series sentence's second shape (§523): it names `{{series}}` and `{{seriesRhythm}}` but no
- * `{{seriesPlace}}` — the sentence without «cu plecare de obicei din …», for a run whose place is not
- * written. The platform's text carries both shapes; a place keeps the first and drops this one, no
- * place ("" for `{{seriesPlace}}`, only when the text has this shape — `seriesMergeValues`) drops the
- * first and keeps this one, so the text never loses both.
+ * The series sentence without its place clause (§523): kept only when `{{seriesPlace}}` is "", so
+ * exactly one shape survives.
  */
 export function isPlacelessSeriesSentence(paragraph: string): boolean {
   const names = new Set(Array.from(paragraph.matchAll(FIELD_PATTERN), (match) => match[1]));
@@ -169,11 +94,9 @@ export function isPlacelessSeriesSentence(paragraph: string): boolean {
 }
 
 /**
- * Whether a paragraph is left out of a merged text: it names a paragraph field answered with "" —
- * or it is the one-off sentence of a run that is one of a series (`SERIES_MERGE_FIELDS`): it names
- * `{{eventDate}}` and no series field, while `{{series}}` has a value — or it is the series sentence
- * without the place clause (`isPlacelessSeriesSentence`) while `{{seriesPlace}}` has a value, the
- * shape with the place being the one kept then.
+ * A paragraph is left out when it names a paragraph field given "", when it is the one-off sentence
+ * (`{{eventDate}}`, no series field) of a series run, or the placeless series sentence while a
+ * place is filled.
  */
 export function dropsParagraph(paragraph: string, values: MergeValues): boolean {
   let namesSeries = false;
@@ -189,46 +112,23 @@ export function dropsParagraph(paragraph: string, values: MergeValues): boolean 
 }
 
 /**
- * The privacy notice's marker for the newsletter (§445), the same two-in-one as the list's states
- * above: filled, when the notice is shown, with the topics a subscriber may choose — the pop-up's
- * own words, from the same catalogue (`newsletter/topic-words.ts`) — and the switch. The contact
- * page offers the newsletter only while the notice in force, in every language, names it
- * (`describesNewsletter`): an address is personal data taken under consent, and nothing is
- * collected before the notice the club approved describes what happens to it (§146's rule).
+ * The notice's marker for the newsletter (§445): filled with the topics, and the switch — no address
+ * is collected before the approved notice describes it (`describesNewsletter`, §146).
  */
 export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
 
 /**
- * The privacy notice's marker for «Echipa» (§459): the team page shows staff and volunteers' names
- * and photographs, which is personal data, so the notice says so. Filled with the page's name in
- * the reader's language, quoted, from the catalogue the page reads (`content/team/notice-words.ts`);
- * and `/admin/tasks` and `/admin/pages/team` ask whether the notice in force names it
- * (`describesTeamPage`), so the club is told to approve a notice that describes the page.
+ * The notice's marker for «Echipa» (§459), whose names and photos are personal data; `/admin/tasks`
+ * and `/admin/pages/team` check it (`describesTeamPage`).
  */
 export const TEAM_PAGE_MERGE_FIELD = "teamPage";
 
 /**
- * The blanks in a declaration (`DECISIONS.md` §95).
- *
- * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
- * ……, declar că particip pe proprie răspundere la concursul …………, care va avea loc în data de
- * …………, în locația …………". A version approved in `/admin/legal` is one fixed text — its hash is
- * what a signature binds to — so the blanks are named fields inside that text, filled in when
- * the declaration is shown to one person for one event and again when it is printed: the
- * template is signed, the fill-ins are recorded beside it, and neither can drift from the other.
- *
- * A short, closed list. Anything else the club wants in the text — the organiser's legal name,
- * the rules — is the text's own words. A field with no value renders as the dotted blank the
- * paper form has, which is what a blank declaration printed for the desk should show.
- *
- * The identity documents, since a minor's declaration is signed by the minor and the parent
- * together (§330), are three fields that pair with the three names:
- * - `idDocument` — the **declarant's** (`{{declarant}}`): the adult's own, the parent's for a
- *   minor. Unchanged, so every text the club already approved reads as it did.
- * - `participantIdDocument` — the participant's own (`{{participant}}`): the adult's, which is
- *   the same document as `idDocument`, or the minor's.
- * - `guardianIdDocument` — the parent's or guardian's (`{{guardian}}`), and like `{{guardian}}`
- *   an em dash for an adult.
+ * The blanks in a legal text (§95): named fields inside the approved, hashed text, filled when shown
+ * or printed for one person and event. A closed list; an unfilled field renders as the paper form's
+ * dotted blank. Identity documents (§330): `idDocument` is the declarant's (the parent's for a
+ * minor; older texts read unchanged), `participantIdDocument` the participant's own,
+ * `guardianIdDocument` the guardian's (an em dash for an adult).
  */
 export const MERGE_FIELDS = [
   "participant",
@@ -250,11 +150,7 @@ export const MERGE_FIELDS = [
   TEAM_PAGE_MERGE_FIELD,
 ] as const;
 
-/**
- * The fields that name an identity document. A text naming any of them asks for the documents at
- * signing — one for an adult; for a minor the parent's, and the minor's as well when the text asks
- * the minor to sign (`asksForMinorSignature`, §95, §330); a text naming none asks for none.
- */
+/** A text naming any of these asks for identity documents at signing (§95, §330). */
 export const ID_DOCUMENT_FIELDS = ["idDocument", "participantIdDocument", "guardianIdDocument"] as const;
 
 export type MergeField = (typeof MERGE_FIELDS)[number];
@@ -266,7 +162,7 @@ export const BLANK = "…………………";
 
 const FIELD_PATTERN = /\{\{\s*([a-zA-Z]+)\s*\}\}/g;
 
-/** Substitute every `{{field}}` in one string; an unknown name is left as written. */
+/** An unknown name is left as written. */
 export function mergeText(text: string, values: MergeValues): string {
   return mergeTextSegments(text, values)
     .map((segment) => segment.text)
@@ -274,26 +170,9 @@ export function mergeText(text: string, values: MergeValues): string {
 }
 
 /**
- * One piece of merged text, and whether it came out of a `{{field}}` (`DECISIONS.md` §225).
- *
- * The owner: "în declarație trebuie să fac bold la datele care sunt din binding (datele
- * participantului, datele concursului)". He is right, and the reason is not decoration. A
- * declaration is one fixed approved text with a handful of blanks filled in for one person and
- * one race; what the signer has to check before signing is exactly the filled-in part — their
- * own name, their identity document, the race and its date. Everything around it is the same
- * for everybody and was approved once. Setting the fill-ins apart is the difference between
- * reading a contract and checking a form.
- *
- * `mergeText` above is this function joined back together, so the two cannot disagree about
- * what a merge produces.
- *
- * **The dotted blank counts as filled**, because it occupies a `{{field}}` too: on the blank
- * paper form the desk prints, the places somebody must write by hand are then the emphasised
- * ones, which is what a paper form does with a rule under a gap.
- *
- * None of this touches `content_sha256`. The hash is computed over the **unmerged** template
- * (§12.5, §46), which is what a signature binds to; this is a rendering of that template and
- * changes nothing that was approved or signed.
+ * One piece of merged text, and whether it came from a `{{field}}` — so the signer's filled-in
+ * parts can be bold (§225). The dotted blank counts as filled: it is where the paper form is
+ * written by hand. The hash is over the unmerged template, untouched (AGENTS.md §12.5, §46).
  */
 export type MergedSegment = { text: string; filled: boolean };
 
@@ -304,12 +183,11 @@ export function mergeTextSegments(text: string, values: MergeValues): MergedSegm
   for (const match of text.matchAll(FIELD_PATTERN)) {
     const name = match[1];
     const at = match.index ?? 0;
-    // An unknown name is left as written, and left plain: it is not a blank anybody filled.
+    // Unknown names stay as written, unemphasised.
     if (!isMergeField(name)) continue;
     if (at > index) segments.push({ text: text.slice(index, at), filled: false });
     const value = values[name];
     index = at + match[0].length;
-    // An omittable field answered with nothing leaves nothing (`OMITTABLE_MERGE_FIELDS`).
     if (value === "" && OMITTABLE_MERGE_FIELDS.has(name)) continue;
     segments.push({ text: value && value.trim() ? value.trim() : BLANK, filled: true });
   }
@@ -318,7 +196,7 @@ export function mergeTextSegments(text: string, values: MergeValues): MergedSegm
   return segments;
 }
 
-/** Takes the stored `body_json` as is — an unreadable body merges to no sections, as the renderer shows none. */
+/** An unreadable body merges to no sections, as the renderer shows none. */
 export function mergeLegalBody(body: unknown, values: MergeValues): LegalDocumentBody {
   const sections = isLegalDocumentBody(body) ? body.sections : [];
   return {
@@ -342,64 +220,36 @@ export function mergeFieldsIn(body: unknown): Set<MergeField> {
   return found;
 }
 
-/** Whether a body asks for an identity document at all (`ID_DOCUMENT_FIELDS`). */
 export function asksForIdDocument(body: unknown): boolean {
   const fields = mergeFieldsIn(body);
   return ID_DOCUMENT_FIELDS.some((field) => fields.has(field));
 }
 
 /**
- * Whether a body asks a minor to sign beside the parent or guardian, with the minor's own
- * identity document (§330): it does when it names `{{participantIdDocument}}`, the minor's own
- * document on a minor's declaration.
- *
- * The production gate for the two-signer declaration. A text the club approved before it — the
- * parent declares, with the parent's document (`{{declarant}}`, `{{idDocument}}`, §108) — does
- * not name the field, and neither does the privacy notice approved beside it describe a minor's
- * own identity number; collecting one under that notice would be data nobody was told about
- * (GDPR art. 13). So the minor is asked only once the club approves a declaration that names the
- * field — the platform's template does, and so does the notice written beside it — and a minor's
- * declaration under an older text is signed exactly as it was: once, by the parent, with one
- * document.
- *
- * `{{guardianIdDocument}}` alone does not switch it on: it is the parent's document, which the
- * parent types as the declarant anyway. Pure, like everything in this file: the page asks it of
- * the text it shows, and the service of the text it binds the signature to.
+ * The gate for the two-signer minor's declaration (§330): only a text naming
+ * `{{participantIdDocument}}` asks for the minor's own document. Under an older text (and the notice
+ * approved beside it, GDPR art. 13) the parent alone signs, with one document, as before.
  */
 export function asksForMinorSignature(body: unknown): boolean {
   return mergeFieldsIn(body).has("participantIdDocument");
 }
 
-/**
- * Whether a privacy notice describes the public list's states (§396): it does when it names
- * `{{participantListStates}}`, anywhere the merge would fill it. The gate for showing them, and
- * the pending and waiting groups, on every public list at once — one mechanism, the same shape
- * as `asksForMinorSignature` (§330): the club's approval of a text is the switch, with no setting
- * and no deploy. Pure; the caller asks it of the notice in force.
- */
+/** The switch for the list's states (§396): the approved notice in force names the field; no setting. */
 export function describesListStates(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_STATES_MERGE_FIELD);
 }
 
-/**
- * Whether a privacy notice describes the socials beside a name on the public list (§500): it names
- * `{{participantListSocials}}`. The gate for the form's tick, for keeping it, and for printing the
- * socials — the club's approval of such a text is the switch, as for the states (§396). Pure.
- */
+/** The switch for the list's socials (§500): the form's tick, keeping it, and printing them. */
 export function describesListSocials(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_SOCIALS_MERGE_FIELD);
 }
 
-/**
- * Whether a privacy notice describes the newsletter (§445): it names `{{newsletterTopics}}`. The
- * gate for the contact page's pop-up and for every subscription the service takes — the club's
- * approval of such a text is the switch, as for the list's states (§396).
- */
+/** The switch for the newsletter pop-up and every subscription (§445). */
 export function describesNewsletter(body: unknown): boolean {
   return mergeFieldsIn(body).has(NEWSLETTER_MERGE_FIELD);
 }
 
-/** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */
+/** §459. */
 export function describesTeamPage(body: unknown): boolean {
   return mergeFieldsIn(body).has(TEAM_PAGE_MERGE_FIELD);
 }

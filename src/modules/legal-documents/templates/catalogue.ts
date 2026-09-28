@@ -8,17 +8,9 @@ import { privacyNoticeEn, privacyNoticeRo } from "./privacy-notice";
 import { termsEn, termsRo } from "./terms";
 
 /**
- * The platform's own texts for the three documents (`DECISIONS.md` §95): a privacy notice
- * that describes what this application actually does (GDPR art. 13, Legea 190/2018), terms
- * for a free event platform, and the club's declaration with its merge fields. Complete —
- * the only blanks are the club's legal name, address, registration number and contact
- * address, marked <LIKE THIS> — so that approving them in `/admin/legal` is reading, filling
- * four facts and pressing approve, not drafting.
- *
- * Two readers: the seed, which wraps each in a not-approved banner for every environment but
- * production; and `/admin/legal/new?template=<key>`, which prefills a draft with the text as
- * is. Neither is an interface that writes legal text (`AGENTS.md` §11.1): the club still
- * reads, edits and approves, and what it approves is fixed by its hash.
+ * The platform's own legal texts (§95), complete but for the club's four facts marked
+ * <LIKE THIS>. Read by the seed (with a not-approved banner outside production) and by
+ * `/admin/legal/new?template=<key>`; the club still reads and approves (AGENTS.md §11.1).
  */
 export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: string; body: LegalDocumentBody }>> = {
   PRIVACY_NOTICE: {
@@ -29,8 +21,7 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Termeni și condiții", body: termsRo },
     en: { title: "Terms and conditions", body: termsEn },
   },
-  // The race's two declarations, one body with a risk section per course (§515): the trail one keeps
-  // the key every signature so far was recorded under.
+  // One body with a risk section per course (§515); trail keeps the key older signatures carry.
   EVENT_DECLARATION: {
     ro: { title: "Declarație pe propria răspundere — cursă trail", body: declarationTrailRo },
     en: { title: "Self-declaration — trail race", body: declarationTrailEn },
@@ -55,16 +46,9 @@ export function isLegalDocumentKey(value: string): value is LegalDocumentKey {
 }
 
 /**
- * What "start from the platform's text" puts in the draft (`/admin/legal/new?template=<key>`,
- * §95, §190): the template in both languages, with the club facts the deployment knows written in
- * (§132) and nothing else touched.
- *
- * A function of its own so the one promise it makes can be tested (§357): every `{{field}}` of
- * the template reaches the draft as a field — the merge happens when the declaration is shown,
- * signed or printed, never here — and every club-fact `<PLACEHOLDER>` the environment does not
- * know stays standing for the Administrator to type. A fact the environment does know is its
- * value, which is §132's answer to "have them already filled in", not a value written into the
- * template: it comes from the Vercel project, and it is the club's own.
+ * What "start from the platform's text" puts in the draft (§95, §190): the template with the
+ * known club facts written in (§132) and nothing else — every `{{field}}` stays a field, merged
+ * only when shown, signed or printed (§357).
  */
 export function templatePrefill(
   key: LegalDocumentKey,

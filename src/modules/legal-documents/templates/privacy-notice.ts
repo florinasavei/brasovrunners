@@ -1,81 +1,23 @@
 /**
- * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
- * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>.
- * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.
+ * The platform's privacy notice (§95, §323, counsel-reviewed §418, §534); the only blanks are the
+ * club's four facts, marked <LIKE THIS>. A template edit changes nothing in effect until the club
+ * approves a new version. No hardcoded value (§357): what stays written in is the authority's
+ * contact (GDPR art. 13(2)(d)) and the platform's processors and retention periods — the latter are
+ * the club's commitment, never merge fields.
  *
- * Rewritten by the GDPR transparency pass (§323): every item the platform keeps now has its
- * purpose next to it, the emergency contact and the club team are covered, the club's own
- * mailboxes and their copies are named, retention is listed item by item, and the rights say
- * what a person can do alone and what they ask for. A template edit changes nothing in
- * effect: production keeps the version the club approved until it approves a new one in
- * `/admin/legal`.
+ * Merge fields: the deadlines from "Termene" (§377; `{{reminderClause}}` is a whole clause so a
+ * zero default never reads "0 hours before") and `{{publicListPeriod}}` (`publicListDays`). Four are
+ * also switches — the feature works only while the notice in force names them:
+ * `{{participantListStates}}` (§396, `describesListStates`), `{{participantListSocials}}` (§500,
+ * `describesListSocials`), `{{newsletterTopics}}` (§445, `describesNewsletter`) and `{{teamPage}}`
+ * (§459, read by `/admin/tasks`).
  *
- * No hardcoded value (§357): the club is named only by the four club-fact placeholders; the tick
- * a member gives is described ("the tick saying you are a member of the group"), not quoted with
- * the club's name in it — and it says "group", as the form does, because the tick is a claim
- * (§48) about running with the group, not membership of the association (§189). What stays
- * written in is not the club's or an event's: the supervisory authority's statutory contact
- * (art. 13(2)(d) GDPR wants it) and the platform's own processors, their regions and its
- * retention periods, which are the same for every event.
- *
- * The hold, the offer and the reminder are merge fields — `{{holdMinutes}}`, `{{offerHours}}`,
- * `{{reminderClause}}` — filled from the club's "Termene" when the notice is shown (§377). The
- * reminder is a whole clause rather than a number, so that a club sending none by default (zero)
- * reads "un memento înainte de start, dacă evenimentul trimite unul" — an event may still send one
- * — instead of promising "un memento cu 0 ore înainte". The retention periods
- * (three years, seven days, thirty days…) are not merge fields: they are the club's legal
- * commitment, written in the text it approves, and no setting may move them.
- *
- * `{{participantListStates}}` in section 4 is two things at once (§396): the three words the
- * public list prints beside a name, filled from the catalogue when the notice is shown, and the
- * switch — the list shows the states, the pending and the waiting list only while the notice in
- * force names it (`describesListStates`), the way §330's declaration switches the minor's
- * signature on.
- *
- * `{{participantListSocials}}` in section 4 (§500, widening §106) is the same two-in-one for the
- * Strava link and the Instagram username beside a name: the form's own tick, quoted, filled from
- * the catalogue, and the switch — the form offers that tick, the service keeps it, and the list
- * prints them only while the notice in force names it (`describesListSocials`), and only for a
- * runner whose own notice named it. Section 2's "pe site le publicăm doar dacă alegi asta" points
- * at it; the withdrawal it names — deleting the socials, or leaving the list — clears the tick.
- *
- * `{{newsletterTopics}}` in section 5 is the same two-in-one for the newsletter (§445): the topics
- * the contact page's pop-up offers, filled from the catalogue when the notice is shown, and the
- * switch — the pop-up appears, and the service takes an address, only while the notice in force in
- * every language names it (`describesNewsletter`). Section 7 carries the subscriber's retention.
- *
- * **Production-ready per the counsel review of 2026-09-25 (§418).** A family registration says
- * where another person's data comes from and that only the person gives the consents (art. 14);
- * the mandatory fitness tick is named as data concerning health, kept as evidence under art.
- * 9(2)(f); the emergency contact goes at seven days; who sees the identity document is said in
- * full; the group-run declaration rests on legitimate interest, carries no identity document and
- * its archive copy is named; the processors' locations are no longer overstated; §7 is brought in
- * line with all of it, with an incident hold; §8 has the art. 12(3) extension and restriction.
- *
- * **The group-run declaration kept by its purpose (§534, the counsel's second pass of 2026-09-28).**
- * Sections 3 and 7 say what the declaration's own text says: kept while it is needed for the runs it
- * applies to; once withdrawn at the signer's request, used for no later run, a copy kept only as long
- * as a legal claim needs it, the three-year limitation period in view — never «three years from the
- * signing», which was untrue of a declaration still active.
- *
- * `{{teamPage}}` in section 4 (§459) is the team page's name in the reader's language and the
- * marker `/admin/tasks` reads: a notice that names it describes the page's cards and photographs.
- *
- * `{{publicListPeriod}}` (§4, §7) is the public list's ceiling after the event, filled like the
- * deadlines from the "Termene" setting `publicListDays` (`deadlineMergeValues`). The promises below
- * are kept by the code: the list closes by itself after `{{publicListPeriod}}` (checked at request
- * time, `publicListStillOpen`); §4's pending and waiting names are shown only for
- * registrations made under a notice that names `{{participantListStates}}`; the emergency contact
- * is cleared seven days after the event (`jobs/retention.ts`); on a family link for another adult
- * the health note, the list tick and Strava/Instagram are neither asked nor kept (§2, §389); and,
- * from the same review, a line on every event page about photographs (`Event.photosNotice`).
- * §2's "primul dintre ele spune de unde avem datele și trimite la această notă" (art. 14(3)(b))
- * is also the code chain's: it names the `VERIFY_REGISTRATION_EMAIL` amendment, which has not
- * shipped, so the club approves this text only once that first family-link message carries it.
- * TODO(legal-soon): §5's "Anunță-mă" keeps its email-only withdrawal until the form has its own
- * "Retrage adresa" button — then the amendment's sentence replaces it. §6's mailbox sentence stays the
- * Gmail one until the club moves its mailbox to a provider that signs a processing contract — then
- * it is rewritten in /admin/legal at approval (an organisational step, not a template change).
+ * Promises the code keeps: the list closes after `{{publicListPeriod}}` (`publicListStillOpen`);
+ * the emergency contact is cleared at seven days (`jobs/retention.ts`); a family link for another
+ * adult asks no health note, list tick or socials (§389); `Event.photosNotice` on every event page.
+ * §2's art. 14(3)(b) sentence needs the unshipped `VERIFY_REGISTRATION_EMAIL` amendment first.
+ * TODO(legal-soon): §5's "Anunță-mă" withdrawal waits for a "Retrage adresa" button; §6's mailbox
+ * sentence changes at approval once the club's mailbox provider signs a processing contract.
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
 

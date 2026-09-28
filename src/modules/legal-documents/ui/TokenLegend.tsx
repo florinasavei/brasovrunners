@@ -5,26 +5,10 @@ import FieldLegend from "@/shared/ui/FieldLegend";
 import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates/tokens";
 
 /**
- * What each `{{token}}` in the declaration becomes, beside the box where the text is written
- * (`DECISIONS.md` §190).
- *
- * The list was already in the body field's helper text — one long sentence under a twelve-row
- * textarea, which is where a reader's eye does not go. As a table it answers the two questions
- * somebody writing a declaration actually has: *is this token real*, and *what will a runner see
- * in its place*. The example is a real value rather than a description, because "the participant's
- * registered name" and "Ana Popescu" are not equally easy to check against a draft.
- *
- * A Server Component, and each token is plain text inside a `<code>`: selecting and copying one
- * is the browser's job, and a click-to-insert control would be a client island owning a textarea
- * this form deliberately keeps native. The rows are `shared/ui/FieldLegend`, the layout the
- * emails' legend shares (§373, email follow-up).
- *
- * `usedIn` marks the ones the current draft already carries — so a text that lost `{{eventDate}}`
- * in an edit says so on the page rather than at the first signature.
- *
- * The example is in both languages where they differ (§369): the form writes the Romanian and
- * the English text on one screen, and each becomes its own words at a signature. The reader's
- * language first, the other after it, each marked with its `lang`.
+ * What each `{{token}}` in the declaration becomes, with a real example value (§190), in the
+ * reader's language first and the other where it differs (§369). Tokens the current draft
+ * carries are marked, so a lost one shows before the first signature. Server-rendered; copying
+ * a `<code>` token is the browser's job.
  */
 export default async function TokenLegend({ body }: { body?: string }) {
   const t = await getTranslations("Admin.legal");

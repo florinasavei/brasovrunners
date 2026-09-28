@@ -3,21 +3,10 @@ import { joinContactAddresses } from "@/modules/contact/domain/shown-address";
 import type { Env } from "@/shared/config/env";
 
 /**
- * The club's own facts, filled into the platform's legal templates before the club reads them
- * (`DECISIONS.md` §132): what the deployment knows is written in; what it does not stays a
- * visible `<PLACEHOLDER>` for the Administrator to replace before approving.
- *
- * The facts come from the environment, never from this file: the repository is public (§98),
- * a registered seat is somebody's address, and the club's domain is kept out of `src/` for
- * the same reason (§8). `CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER` and
- * `CLUB_REGISTERED_ADDRESS` are on the Vercel projects; the contact address is
- * `EMAIL_REPLY_TO`, the mailbox every email already says to reply to. The seed's sample texts
- * keep every blank: a sample must not look approved.
- *
- * Since §442 the contact address is the one the club chose to show on `/admin/emails` («Adresa de
- * contact afișată»): the mailbox, the club's Gmail, or both — «a sau b» in the Romanian text,
- * "a or b" in the English one. An approved text keeps the address it was approved with; a change
- * of the setting reaches the legal texts through a new version started from the platform's text.
+ * The club's own facts, filled into the platform's legal templates (§132); an unknown one stays
+ * a visible `<PLACEHOLDER>`. They come from the environment, never this file — the repository
+ * is public (§98, AGENTS.md §8). The contact address is the one shown on the site (§442); an
+ * approved text keeps the address it was approved with. The seed's samples keep every blank.
  */
 export type ClubFacts = {
   legalName?: string | null;

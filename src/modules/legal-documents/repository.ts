@@ -24,14 +24,9 @@ import {
 } from "./domain/merge-fields";
 
 /**
- * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
- *
- * There is no update function here, on purpose. A version referenced by an acceptance is
- * immutable (§12.5), and nothing in this module ever changes a row once inserted — the only
- * writers are `service.ts`'s seed path and, eventually, whoever authors the migration that
- * records the club's real approved wording. There is no path from a request handler to a write
- * here at all, which is what makes "no CMS screen edits legal text" true structurally rather
- * than by review.
+ * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5). No update
+ * function, on purpose: a version is immutable once inserted, so no request handler can edit legal
+ * text (AGENTS.md §11.1).
  */
 
 export type CurrentLegalDocument = {
@@ -46,18 +41,10 @@ export type CurrentLegalDocument = {
 };
 
 /**
- * The version of `key` that is current for `locale` at `now` — the highest `version` that is
- * approved, not withdrawn, and whose `effective_at` has passed (§12.5: "resolved by
- * `effective_at`").
- *
- * Used both by the public legal routes and by registration (BR-REQ-053-01: registration
- * refuses when this returns nothing).
- *
- * `withdrawn_at IS NULL` is what makes withdrawal mean anything: a withdrawn version keeps its
- * row, its number and its words, and stops being offered anywhere. It can never be the version
- * this returns *today* — the one in force is refused withdrawal — but it can be one the club
- * approved ahead of its effective date and thought better of, which without this filter would
- * quietly become the public text on the day it was dated for.
+ * The version of `key` in force for `locale` at `now`: the highest approved, not withdrawn, whose
+ * `effective_at` has passed (AGENTS.md §12.5). Registration refuses without one (BR-REQ-053-01).
+ * The `withdrawn_at` filter keeps a version approved ahead of its date and then withdrawn from
+ * taking effect on its day.
  */
 export async function findCurrentApprovedDocument<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -98,13 +85,9 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
 }
 
 /**
- * The declaration a race's participant signs (§515): the text in force of the event's kind — trail
- * or road, by the version the organizer picked, else by the course (`raceDeclarationKeysFor`) — and
- * the trail text while a road race has no road text approved. Every place that shows, signs, prints
- * or asks about a race's declaration reads it here, so the page, the signature, the paper and the
- * desk cannot name two different texts. Undefined while nothing is in force, as
- * `findCurrentApprovedDocument` is, and for an event id that does not exist the trail text's
- * answer — the one text every race may fall back to.
+ * The declaration a race's participant signs (§515), per `raceDeclarationKeysFor`. Every screen,
+ * signature, paper and desk reads it here so none can name a different text. An unknown event gets
+ * the trail text's answer.
  */
 export async function findEventDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -126,16 +109,9 @@ export async function findEventDeclaration<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the declaration in effect in `locale` asks a minor to sign beside the parent, with the
- * minor's own document (§330, `asksForMinorSignature`) — false while no declaration is approved,
- * since then nothing is signed at all.
- *
- * For the screens that say what a minor's paper must carry before the press (the desk, the
- * registration's page, the event's printable form): they ask the text in the registration's
- * language, the one `signDeclaration` and the paper confirmation bind to, so the sentence and what
- * the press records agree. With the event, its own declaration (§515, `findEventDeclaration`);
- * without one — a list whose rows span events — the trail text, which every race falls back to and
- * which, from the platform's templates, asks exactly what the road text asks.
+ * Whether the declaration in force asks a minor to sign beside the parent (§330); false while none
+ * is approved. Asked in the registration's language, as `signDeclaration` binds. Without an event
+ * (a list spanning events), the trail text's answer.
  */
 export async function declarationAsksMinorToSign<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -150,10 +126,8 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
 }
 
 /**
- * Whether the club has an approved group-run declaration in force for each surface (§393) — what
- * the editor's "Declarație opțională pe propria răspundere" asks before it lets itself be ticked —
- * and, since §448, the version it names as the text in force, or null for none. Asked in Romanian:
- * both languages are required before a version can be approved (§46).
+ * The group-run declaration version in force per surface, or null (§393, §448). Asked in Romanian:
+ * approval requires both languages (§46).
  */
 export async function groupRunDeclarationsInForce<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -167,10 +141,8 @@ export async function groupRunDeclarationsInForce<T extends Record<string, unkno
 }
 
 /**
- * Whether both race declarations (§515) have a version in force, in every language, written from
- * the platform's shared body — the one that states the event's minimum age through `{{minimumAge}}`
- * and has no under-14 flow. What `/admin/tasks` asks for its «Declarațiile de concurs» row; false
- * while either kind has none, which for the road text means its races sign the trail one.
+ * Both race declarations are in force in every language from the shared body that names
+ * `{{minimumAge}}` (§515) — `/admin/tasks`' «Declarațiile de concurs» row.
  */
 export async function raceDeclarationsCurrent<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const texts = await Promise.all(
@@ -180,11 +152,8 @@ export async function raceDeclarationsCurrent<T extends Record<string, unknown>>
 }
 
 /**
- * Whether the group-run declarations in force say what they cover (§523): every approved group-run
- * text in force, in every language, names `{{series}}` — the platform's series sentence and one-off
- * sentence, written for one signature per series. Null while no group-run text is in force (the
- * editor asks for approving one, §393); false while one in force is older. What `/admin/tasks` asks
- * for its «Declarațiile alergărilor de grup: o semnătură pe serie» row.
+ * Every group-run text in force, in every language, names `{{series}}` (§523); null while none is
+ * in force. `/admin/tasks`' series row.
  */
 export async function groupRunDeclarationsSeriesCurrent<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean | null> {
   const texts = await Promise.all(
@@ -195,7 +164,7 @@ export async function groupRunDeclarationsSeriesCurrent<T extends Record<string,
   return inForce.every((document) => mergeFieldsIn(document.body).has("series"));
 }
 
-/** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */
+/** Per language, for a list whose rows are in either (§330). */
 export async function declarationAsksMinorToSignByLocale<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
@@ -206,10 +175,8 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 }
 
 /**
- * `declarationAsksMinorToSignByLocale` for each event of a list whose rows span events (the
- * registrations list, §515): each race signs its own kind of declaration, trail or road
- * (`findEventDeclaration`), and the two approved texts may ask differently — so each row reads its
- * own event's answer, never the trail text's on behalf of every race. One read per distinct event.
+ * Per event, for a list spanning events (§515): each race's own declaration may ask differently.
+ * One read per distinct event.
  */
 export async function declarationAsksMinorToSignByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -222,70 +189,40 @@ export async function declarationAsksMinorToSignByEvent<T extends Record<string,
 }
 
 /**
- * Whether the privacy notice in force describes the public list's states (§396,
- * `describesListStates`) — in **every** language, because the list is one list: a runner who
- * registered in English was told what the English notice says, and a state shown beside their
- * name must be one that notice describes. False while no notice is approved, as it must be.
- *
- * For the backoffice (`/admin/legal`, `/admin/tasks`); a public page asks the same question
- * through the public cache (`public-cache/reads.ts#cachedListStatesDisclosed`).
+ * The notice in force describes the list's states (§396) in every language — the list is one list.
+ * Backoffice read; public pages use `cachedListStatesDisclosed`.
  */
 export async function noticeDescribesListStates<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
 }
 
-/**
- * Whether the privacy notice in force describes the socials beside a name on the public list
- * (§500, `describesListSocials`) — in every language, like `noticeDescribesListStates`. For
- * `/admin/tasks`; a public page asks through the public cache (`cachedListSocialsDisclosed`).
- */
+/** Same for the socials (§500); public pages use `cachedListSocialsDisclosed`. */
 export async function noticeDescribesListSocials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
 }
 
-/**
- * Whether the privacy notice in force describes the newsletter (§445, `describesNewsletter`) — in
- * **every** language, because one pop-up serves both and a subscriber in either was told only what
- * their language's notice says. False while no notice is approved. The backoffice's and the
- * service's read; the contact page asks through the public cache (`cachedNewsletterOffered`).
- */
+/** Same for the newsletter (§445); the contact page uses `cachedNewsletterOffered`. */
 export async function noticeDescribesNewsletter<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
 }
 
-/**
- * Whether the privacy notice in force describes «Echipa» (§459) — in every language, like
- * `noticeDescribesListStates`. For `/admin/tasks` and the team page's backoffice screen.
- */
+/** Same for «Echipa» (§459). */
 export async function noticeDescribesTeamPage<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesTeamPage(notice.body));
 }
 
 /**
- * The lowest version of an approved, not withdrawn privacy notice that describes the public list's
- * states in **every** language (`describesListStates`), or null when none does (§421, narrowing
- * §396).
+ * The lowest approved, not withdrawn notice version describing the list's states in every language,
+ * or null (§421, narrowing §396). Only registrations that recorded this version or later are shown
+ * as pending or waiting; the confirmed list is unchanged.
  *
- * The line between two kinds of consent. A runner who ticked «Vreau să apar» under a notice that
- * described the list as confirmed names only agreed to that, and nothing wider; a runner whose
- * registration recorded this version or a later one (`registrations.privacy_notice_version`) was
- * told about the states. So the pending and waiting groups list only the second kind — the
- * confirmed list is what every notice described, and is unchanged. Approved ahead of its date
- * counts too: nobody can have registered under a later number before it took effect.
- *
- * **Assumes the marker, once approved, is never dropped from a later version** (§421, finding
- * (10) of the fix round on `feat/registration-consent-and-terms`). The gate this feeds
- * (`registrations/repository.ts`) is `privacy_notice_version >= this lowest version`, which is
- * only correct if every version from here on also describes the states. A club that approved v5
- * with the marker, v6 without it and v7 with it again would have v6's registrants gated in —
- * shown as pending or waiting though the notice they read never named the states. Nothing in
- * `/admin/legal` stops that today; it is a documented assumption, not an enforced one. If it ever
- * needs to be exact, return the *set* of approved versions that describe it and filter the gate
- * with `inArray(privacyNoticeVersion, set)` instead of a single lower bound.
+ * Assumes the marker, once approved, is never dropped by a later version: the gate is
+ * `privacy_notice_version >= this`. Nothing in `/admin/legal` enforces it; to be exact, return the
+ * set of versions and gate with `inArray` instead.
  */
 export async function findFirstStatesNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   const rows = await db
@@ -307,12 +244,8 @@ export async function findFirstStatesNoticeVersion<T extends Record<string, unkn
 }
 
 /**
- * Every instant at which `findCurrentApprovedDocument(key, …)` can change its answer without a
- * write: the effective dates of the approved, not withdrawn versions of `key` (`DECISIONS.md`
- * §333). The same three conditions as that query, so the two cannot disagree about which dates
- * matter; the public cache keys the text in force by the stretch `now` is in
- * (`public-cache/clock.ts`), which is how a version approved today for next month takes effect
- * on the day without anybody saving anything.
+ * The instants at which `findCurrentApprovedDocument` can change its answer without a write (§333),
+ * by the same conditions; the public cache keys the text in force by them (`public-cache/clock.ts`).
  */
 export async function listEffectiveDates<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -326,14 +259,9 @@ export async function listEffectiveDates<T extends Record<string, unknown>>(
 }
 
 /**
- * Which row of `key` is in force at `now`, as an id — the question withdrawal has to answer.
- *
- * The same predicate as `findCurrentApprovedDocument` with the translation join taken out, and
- * that difference is the whole reason it exists rather than being answered by calling that one.
- * The joined version asks "what does the public page render in this language", and a version
- * with no `ro` translation answers *nothing* there — which, asked as "may this be withdrawn",
- * would say yes about the very row the site is serving in the other language. The unjoined
- * question has one answer per key and errs towards refusing.
+ * The id in force for `key` at `now`, for withdrawal. Unjoined on purpose: the translation join
+ * would answer nothing for a version missing one locale, and wrongly allow withdrawing the row
+ * served in the other.
  */
 export async function findCurrentApprovedVersionId<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -358,14 +286,8 @@ export async function findCurrentApprovedVersionId<T extends Record<string, unkn
 }
 
 /**
- * The highest version of a key, whatever its approval state — what "the next version" counts
- * from. A version number is never reused (`docs/RUNBOOKS.md` § Legal document version), so this
- * is the only safe way to ask for one.
- *
- * A withdrawn version still counts, and that is the point of withdrawing rather than deleting.
- * `registrations.privacy_notice_version` is a plain integer with no foreign key; if version 4
- * were removed and the next draft became 4 again, every registration that recorded "notice 4"
- * would become a consent to words written after it was given. The number stays taken.
+ * The highest version of a key in any state. Withdrawn versions count: registrations refer to
+ * notice versions by plain integer, so a number is never reused (`docs/RUNBOOKS.md`).
  */
 export async function findLatestVersion<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -385,22 +307,9 @@ export async function findLatestVersion<T extends Record<string, unknown>>(
 }
 
 /**
- * The number the next draft of `key` gets — the one answer to "which version is this"
- * (`DECISIONS.md` §151).
- *
- * `max(version) + 1` over the surviving rows is no longer enough, because a row can now stop
- * existing: an approved version nothing relied on can be deleted outright, and if its number
- * came back the words it was published under would be reissued to different text. Every
- * registration carries `privacy_notice_version` as a plain integer with no foreign key, so
- * nothing in the database would notice and nothing in the application could tell afterwards.
- *
- * So the answer is the higher of two things: the largest version still present, and the largest
- * one ever destroyed (`legal_document_numbering`). Deleting the top version therefore skips its
- * number permanently; deleting a middle one changes nothing, because the surviving maximum is
- * already above the floor.
- *
- * Read in one place and used in one place — `createDraftVersion`. A second caller computing
- * `max + 1` for itself is exactly how the floor would be forgotten.
+ * The next draft's number (§151): the higher of the largest surviving version and the largest ever
+ * deleted (`legal_document_numbering`), so a deleted number never returns. Only
+ * `createDraftVersion` may call it.
  */
 export async function nextVersionNumber<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -417,14 +326,8 @@ export async function nextVersionNumber<T extends Record<string, unknown>>(
 }
 
 /**
- * Take a version number out of circulation for good, as part of the transaction that destroys
- * the row carrying it.
- *
- * `GREATEST` rather than an assignment, so the floor can only ever rise: two deletions
- * committing in either order leave the same number behind, and a stale write cannot lower a
- * floor a later deletion already raised. The row is created on first use — a document nothing
- * has ever been deleted from has no row here at all, which is also what makes this table
- * readable as "these keys have lost a version".
+ * Retire a version number, inside the transaction that deletes its row. `GREATEST`, so the floor
+ * only rises whatever order deletions commit in; the row is created on first use.
  */
 export async function retireVersionNumber<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -445,15 +348,9 @@ export async function retireVersionNumber<T extends Record<string, unknown>>(
 }
 
 /**
- * Every approved version of a key, newest first, with its title in one locale — what the event
- * editor offers when an organizer picks the declaration a participant will sign.
- *
- * A *selection*, never an edit: §11.1 keeps legal text out of the CMS entirely, and nothing
- * here or in the editor can change a word of one of these rows.
- *
- * Withdrawn versions are gone from the list, and no event loses its selected value by it: an
- * event pointing at a version is one of the three counts that refuse withdrawal, so a withdrawn
- * version is by construction one nothing here had chosen.
+ * Approved versions of a key, newest first, for the event editor's declaration choice — a selection,
+ * never an edit (AGENTS.md §11.1). Withdrawn ones are omitted; no event can point at one, since an
+ * event's choice refuses withdrawal.
  */
 export async function listApprovedVersions<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -485,11 +382,7 @@ export async function listApprovedVersions<T extends Record<string, unknown>>(
     .orderBy(desc(legalDocuments.version));
 }
 
-/**
- * The approved versions of both race declarations (§515), for the editor's «Declarația pe care o
- * semnează participantul»: the trail ones first, then the road ones, each newest first — each with
- * its key, so the choice says which kind of course it is for.
- */
+/** Both race declarations' approved versions (§515): trail then road, each newest first. */
 export async function listApprovedRaceDeclarations<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: Locale,
@@ -501,13 +394,8 @@ export async function listApprovedRaceDeclarations<T extends Record<string, unkn
 }
 
 /**
- * Every version of every key, for the backoffice — approved or not, with both locales'
- * titles and a count of the registrations that already reference it.
- *
- * The reference count is the whole reason this exists rather than `listApprovedVersions`.
- * §12.5 makes a referenced version immutable, and a screen that shows the text without
- * showing whether anybody has signed against it invites exactly the edit that rule forbids.
- * Reading it here means the answer is a fact on the page, not a warning in a document.
+ * Every version of every key for the backoffice, with both titles and the reference counts — so the
+ * screen shows who relies on a version (AGENTS.md §12.5).
  */
 export type LegalDocumentVersionRow = {
   id: string;
@@ -516,39 +404,17 @@ export type LegalDocumentVersionRow = {
   isApproved: boolean;
   effectiveAt: Date;
   approvedByStaffUserId: string | null;
-  /**
-   * The fingerprint of both translations (`computeContentHash`) — what «Regenerează din șabloane»
-   * compares a template's text with, so a press never makes a draft of words already in force or
-   * already waiting as a draft (§532).
-   */
+  /** `computeContentHash`, compared by «Regenerează din șabloane» (§532). */
   contentSha256: string;
-  /**
-   * When the club took this version out of circulation, or `null` — the one reader that keeps
-   * withdrawn rows rather than filtering them out.
-   *
-   * Everything else in this module excludes them, which is what withdrawal *is*. This screen is
-   * the exception on purpose: the row still exists, it still holds its number, and the club has
-   * to be able to see that — a version that vanished from every list including the one that
-   * administers it would look deleted, which is precisely the impression this mechanism exists
-   * to avoid giving.
-   */
+  /** The one reader that keeps withdrawn rows, so a withdrawn version never looks deleted. */
   withdrawnAt: Date | null;
   withdrawnByStaffUserId: string | null;
   locales: string[];
   acceptanceCount: number;
   eventCount: number;
   /**
-   * Registrations that recorded this version's *number* as the privacy notice they
-   * acknowledged — or, for a terms version, as the terms they accepted (`terms_version`, §421) —
-   * the reliance the database cannot see.
-   *
-   * `registrations.privacy_notice_version` is a plain `integer` with no foreign key, as are
-   * `results_consent_version` and `health_consent_version`. So a privacy notice hundreds of
-   * people acknowledged looks, to `acceptanceCount` and `eventCount`, exactly like one nobody
-   * has ever touched — and PostgreSQL would raise nothing at all if it were deleted. Only
-   * `EVENT_DECLARATION` versions get a `declaration_acceptances` row; this is the equivalent
-   * count for the other key, and it is the reason withdrawing a notice people registered under
-   * is refused.
+   * Registrations that recorded this version's number as notice or terms (§421). These columns are
+   * plain integers with no foreign key, so the database cannot see this reliance.
    */
   privacyAcknowledgementCount: number;
 };
@@ -568,18 +434,14 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       withdrawnAt: legalDocuments.withdrawnAt,
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
-      // Every signature against this version: a race's acceptances, and a group run's optional
-      // self-declarations (§393) — both are somebody relying on these exact words.
+      // A race's acceptances and a group run's self-declarations (§393).
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
-      // Matched on the version *number*, per key, because that is the only shape this reference
-      // has: there is no id to join on. The terms since §421: a registration records the terms
-      // version its tick named (`terms_version`), so a terms version somebody accepted is relied
-      // on exactly as a notice somebody acknowledged — refused withdrawal and deletion alike. Rows
-      // from before the column record none; the in-force window (§316) still answers for them.
+      // By number, per key — there is no id to join on. Terms since §421; older rows are answered
+      // by the in-force window (§316).
       privacyAcknowledgementCount: sql<number>`(
         select count(*)::int from ${registrations}
         where (
@@ -607,40 +469,13 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
 }
 
 /**
- * How many registrations of this environment agreed to "the terms" while a version was in force —
- * the evidence a terms version has instead of a count (`DECISIONS.md` §316).
+ * Registrations that agreed to "the terms" while a version was in force — a terms version's
+ * evidence for rows without `terms_version` (§316). A registration counts if its form submission or
+ * a declaration signature (which also agrees to the terms, read widely) falls in the window.
  *
- * A registration records `privacy_notice_version` and never a terms version, so nothing points at
- * a TERMS row. But agreeing leaves an instant behind, and whatever was in force at that instant is
- * what was agreed to; so "did anybody accept version 2" is "did any registration agree inside
- * version 2's window", and that needs no new column. There are two such instants, and a
- * registration counts once if either falls inside:
- *
- * - **The form, submitted.** The terms box is ticked when the form is posted.
- * - **The declaration, signed.** Its text says "Sunt de acord cu termenii, condițiile și
- *   regulamentul evenimentului" — "I agree with the event's terms, conditions and rules" — and
- *   each signing is a `declaration_acceptances` row with its own `accepted_at`, usually days after
- *   the form (the participation window, §104). A registration submitted under version 1 whose
- *   declaration was signed under version 2 agreed to "the terms" under version 2 as well. Whether
- *   that sentence means the platform's terms or only the event's own rules is not something the
- *   code can settle, so it is read the wide way: counting it can refuse a version nobody meant,
- *   and not counting it could pass one somebody signed under. Paper signatures recorded at the
- *   desk count the same way; they carry the same sentence.
- *
- * **Every submission this table can still see, and a little more.** A registration's first
- * submission is `created_at` (and `submitted_at`, set with it); each re-submission of a cancelled
- * or expired row rewrites `privacy_acknowledged_at` to its own instant. A restart in between two
- * others is overwritten and leaves no trace — so a row whose earliest and latest submissions
- * *straddle* the window counts too, because one of its lost restarts may have fallen inside it.
- * That can refuse a version nobody in fact accepted; it cannot pass one somebody did. Signatures
- * need no such allowance: every one keeps its row.
- *
- * **Every kind and every source.** A `TEST` registration on QA ticked the same box as a real one,
- * and a staff-entered registration was entered under the terms in force; neither is a count the
- * club is given as a figure about its participants (§30), so counting them costs nothing and
- * leaving them out would be the one way to be wrong. An erased registration is gone, its
- * declaration acceptance with it (§44), and is not counted, exactly as it is not counted for the
- * privacy notice.
+ * Errs towards refusing deletion: a restart overwrites earlier submission instants, so a row whose
+ * earliest and latest submissions straddle the window counts. Every kind and source counts (TEST
+ * and staff entries included, §30); erased registrations are gone (§44).
  */
 export async function countRegistrationsAgreeingWithin<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -653,8 +488,7 @@ export async function countRegistrationsAgreeingWithin<T extends Record<string, 
   const latest = sql`greatest(${registrations.createdAt}, ${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`;
   const submittedWithin = sql`(${latest} >= ${from}${until ? sql` and ${earliest} < ${until}` : sql``})`;
 
-  // Correlated on the registration, so a row with several signatures — a re-signed declaration —
-  // is still one registration. `declaration_acceptances_registration_accepted_at_idx` answers it.
+  // One per registration however many signatures; `declaration_acceptances_registration_accepted_at_idx`.
   const signedWithin = sql`exists (
     select 1 from ${declarationAcceptances}
     where ${declarationAcceptances.registrationId} = ${registrations.id}
@@ -669,12 +503,7 @@ export async function countRegistrationsAgreeingWithin<T extends Record<string, 
   return row?.count ?? 0;
 }
 
-/**
- * One version's text in every locale it has, for reading in the backoffice.
- *
- * Approved or not: an unapproved draft is exactly what somebody needs to look at before
- * approving it, and refusing to render one would make the approval a decision taken blind.
- */
+/** One version's text in every locale, drafts included — they are read before approval. */
 export async function findVersionWithTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,
@@ -698,8 +527,7 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       version: legalDocuments.version,
       isApproved: legalDocuments.isApproved,
       effectiveAt: legalDocuments.effectiveAt,
-      // Read but never filtered on: this is the page somebody lands on from the withdrawn fold,
-      // and a version that renders as though nothing happened to it would be a lie of omission.
+      // Read, never filtered: the withdrawn fold links here.
       withdrawnAt: legalDocuments.withdrawnAt,
       contentSha256: legalDocuments.contentSha256,
     })

@@ -1,26 +1,8 @@
 /**
- * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
- * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>. The
- * deadlines it states are merge fields — `{{confirmationHours}}`, `{{holdMinutes}}`,
- * `{{offerHours}}` — filled from the club's "Termene" when the page is shown (§377), so the text
- * says the numbers the platform keeps.
- * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.
- *
- * No hardcoded value (§357): no town is written in — the courts are "the Romanian courts competent
- * under the Code of Civil Procedure", with a consumer's own domicile named as a choice — and the
- * club's hold (§377) says the participation window's deadline where an event has one (§104) — a
- * sentence true of one event and false of the next is a value, not a rule.
- *
- * **Production-ready per the counsel review of 2026-09-25 (§418).** Registering on the site is free
- * and a fee, where there is one, is the event page's; on another organiser's event the club only
- * publishes (§1). The unusual clauses — §3 cancelling or changing, §4 stopping or excluding, §5
- * liability, §10 law and court — are accepted expressly by a separate box (Civil Code art. 1203).
- * The family flow (§389) is allowed in §2 and nobody signs for another adult (§8). §5 is written
- * around attribution (art. 1349–1352, 1355, 1371, 1373), never as a waiver for injury. §7 describes
- * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
- * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.
- *
- * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§421).
+ * The platform's terms (§95); the only blanks are the club's four facts, marked <LIKE THIS>, and
+ * the deadlines are merge fields filled from "Termene" (§377). No hardcoded value (§357).
+ * Counsel-reviewed (§418): the text's §3, §4, §5 and §10 are accepted by a separate box (Civil
+ * Code art. 1203) — `Registration.terms.accept`, recorded as `registrations.terms_version` (§421).
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
 

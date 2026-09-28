@@ -3,18 +3,11 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { LEGAL_DOCUMENT_KEYS } from "./keys";
 
 /**
- * `/admin/legal` and «Versiune nouă» as the owner reads them (§539, amending §532, §393, §95;
- * the owner, 2026-09-28: which text is in force, which draft waits, and where «regenerate» is).
- *
- * Pure — the rows in, the answer out — so the grouping, the filter, the card's sentence and the
- * fold's opening are one answer on both pages and are tested without a database.
+ * `/admin/legal` and «Versiune nouă»: grouping, filter, card lines and fold state (§539). Pure, so
+ * both pages share one answer.
  */
 
-/**
- * The texts in three groups, in one fixed order — the order `LEGAL_DOCUMENT_KEYS` already lists
- * them (a unit test holds the two equal): the texts every registration rests on, the race's two
- * declarations, the group runs' two optional ones (§393, §515).
- */
+/** Three groups in `LEGAL_DOCUMENT_KEYS` order (a unit test holds them equal); §393, §515. */
 export const LEGAL_KIND_GROUPS = [
   { id: "general", keys: ["PRIVACY_NOTICE", "TERMS"] },
   { id: "race", keys: ["EVENT_DECLARATION", "EVENT_DECLARATION_ROAD"] },
@@ -35,16 +28,9 @@ export type OverviewVersion = {
 };
 
 /**
- * One version's state, in the owner's words:
- *
- * - `inForce` — the text the site serves now (`findCurrentApprovedVersionId`'s row);
- * - `draft` — not approved yet;
- * - `superseded` — approved, not withdrawn, and not the one in force: a newer one took its place
- *   (approval sets `effectiveAt` to its own moment, so an approved version above the one in
- *   force cannot wait for a later date);
- * - `withdrawn` — taken out of circulation, the row and its number kept (§46, §53).
- *
- * A deleted version has no row at all (§151): nothing is left to list, only its retired number.
+ * `superseded` is approved, not withdrawn and not in force — approval sets `effectiveAt` to its own
+ * moment, so none waits for a later date. `withdrawn` keeps its row and number (§46, §53); a
+ * deleted version has no row (§151).
  */
 export type LegalVersionState = "inForce" | "draft" | "superseded" | "withdrawn";
 
@@ -54,7 +40,7 @@ export function versionState(row: Pick<OverviewVersion, "id" | "isApproved" | "w
   return row.id === inForceId ? "inForce" : "superseded";
 }
 
-/** The chip row's states, in its order. `all` is the plain address. */
+/** The chip row's states, in order. */
 export const LEGAL_STATE_FILTERS = ["all", "inForce", "drafts", "superseded", "withdrawn"] as const;
 export type LegalStateFilter = (typeof LEGAL_STATE_FILTERS)[number];
 
@@ -70,9 +56,8 @@ export type LegalListFilter = { state: LegalStateFilter; kind: LegalDocumentKey 
 export const NO_LEGAL_FILTER: LegalListFilter = { state: "all", kind: null };
 
 /**
- * The filter from the address (§413's shape: the address is the only memory, and the chips are
- * plain links, so it works without JavaScript). `?state=drafts&kind=TERMS`. An unknown value is
- * ignored; the old `?withdrawn=1` — the withdrawn fold's link before this — still means «Retrase».
+ * The filter from the address, working without JavaScript (§413): `?state=drafts&kind=TERMS`.
+ * Unknown values are ignored; the legacy `?withdrawn=1` still means «Retrase».
  */
 export function parseLegalListFilter(params: Readonly<Record<string, string | string[] | undefined>>): LegalListFilter {
   const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -87,7 +72,7 @@ export function parseLegalListFilter(params: Readonly<Record<string, string | st
   return { state, kind };
 }
 
-/** The address of a filter, the defaults left out, so there is one address per state. */
+/** Defaults left out, so there is one address per state. */
 export function legalListQuery(filter: LegalListFilter): Record<string, string> {
   return {
     ...(filter.state === "all" ? {} : { state: filter.state }),
@@ -95,7 +80,7 @@ export function legalListQuery(filter: LegalListFilter): Record<string, string> 
   };
 }
 
-/** Whether the filter narrows the list at all — the reason a matching card's fold opens (§336 `inUse`). */
+/** Opens a matching card's fold (§336 `inUse`). */
 export function isNarrowing(filter: LegalListFilter): boolean {
   return filter.state !== "all" || filter.kind !== null;
 }
@@ -106,13 +91,12 @@ export function matchesLegalFilter(
   filter: LegalListFilter,
 ): boolean {
   if (filter.kind !== null && row.key !== filter.kind) return false;
-  // «Toate» is every version still offered or waiting — never a withdrawn one. The point of
-  // withdrawing is to get a version out of the way, so «Retrase» is the one place it shows.
+  // «Toate» never shows a withdrawn version; only «Retrase» does.
   if (filter.state === "all") return state !== "withdrawn";
   return STATE_OF_FILTER[filter.state] === state;
 }
 
-/** The rows the filter keeps, in the order they came (the repository's: per key, newest first). */
+/** Keeps the input order. */
 export function filterLegalVersions<R extends OverviewVersion>(
   rows: readonly R[],
   inForceIds: Readonly<Partial<Record<LegalDocumentKey, string>>>,
@@ -121,20 +105,14 @@ export function filterLegalVersions<R extends OverviewVersion>(
   return rows.filter((row) => matchesLegalFilter(row, versionState(row, inForceIds[row.key]), filter));
 }
 
-/** One text's rows grouped under it, newest first, whatever order they came in. */
+/** Newest first. */
 export function versionsOfKind<R extends OverviewVersion>(rows: readonly R[], key: LegalDocumentKey): R[] {
   return rows.filter((row) => row.key === key).sort((a, b) => b.version - a.version);
 }
 
 /**
- * What a text's card says about it before anything is opened:
- *
- * - `inForce` — the version the site serves and the day it took effect, or null;
- * - `waitingDraft` — the draft waiting to be read and approved: the newest draft numbered above
- *   every approved version still offered — §532's `draftExists` rule, so the card and
- *   «Regenerează» agree on what "a draft waits" means. A draft below an offered approved
- *   version would never take effect (`behind`) and waits for nothing;
- * - `total` — every version of the text, withdrawn ones included.
+ * A text's card summary. `waitingDraft` uses §532's `draftExists` rule (a draft above every offered
+ * approved version), so the card and «Regenerează» agree; `total` includes withdrawn versions.
  */
 export type LegalKindSummary = {
   key: LegalDocumentKey;
@@ -156,13 +134,7 @@ export function kindSummary(key: LegalDocumentKey, rows: readonly OverviewVersio
   };
 }
 
-/**
- * The card's header, as message keys under `Admin.legal.kinds` and their values — the page
- * formats the date, so this stays free of the locale:
- *
- * - «În vigoare: versiunea 3 din 4 sept. 2026» / «Nicio versiune în vigoare»;
- * - and, when one waits, «O ciornă așteaptă aprobarea: versiunea 4».
- */
+/** The card's header lines as `Admin.legal.kinds` message keys; the page formats the date. */
 export type KindLine =
   | { key: "inForce"; version: number; effectiveAt: Date }
   | { key: "noneInForce" }
@@ -178,11 +150,7 @@ export function kindHeadline(summary: LegalKindSummary): KindLine[] {
   return lines;
 }
 
-/**
- * Why a text's versions fold opens on arrival (§336): **attention** when a draft waits for
- * approval or no version is in force — the two things to act on — and **inUse** when a filter
- * narrows the list and this text has rows it keeps. Closed otherwise.
- */
+/** Fold opens (§336) for attention — a waiting draft or nothing in force — or when a narrowing filter keeps rows. */
 export function kindFoldOpens(summary: LegalKindSummary, filter: LegalListFilter, matching: number): FoldOpenWhen {
   return {
     attention: summary.waitingDraft !== null || summary.inForce === null,
@@ -191,14 +159,8 @@ export function kindFoldOpens(summary: LegalKindSummary, filter: LegalListFilter
 }
 
 /**
- * Whether the text in force differs by its words from the filled template (§532's `unchanged`
- * test) — the «Șablon nou» chip on «Versiune nouă» (§539, the owner, 2026-09-28).
- *
- * - With nothing in force, no: the state line already says «Nicio versiune în vigoare».
- * - Otherwise the text in force is compared by its words with the template's, the club's facts
- *   written in — the same test §532's `regenerationOutcome` calls `unchanged`. A text the club
- *   edited after starting from a template reads as older than it until a draft from the template
- *   is approved; no fingerprint of the template is stored, so no migration is needed for it.
+ * The «Șablon nou» chip (§539): the text in force differs from the filled template (§532's
+ * `unchanged` test). A club-edited text reads as older; false when nothing is in force.
  */
 export function templateIsNewer(
   inForce: Pick<OverviewVersion, "contentSha256"> | undefined,

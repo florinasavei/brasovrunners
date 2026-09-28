@@ -1,27 +1,14 @@
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 
 /**
- * What stands between an approved legal version and its deletion, as pure functions every caller
- * asks — the service before it destroys anything, the delete screen before it offers the form, and
- * the list before it offers the link (`DECISIONS.md` §203, §290, §316).
- *
- * **One rule, three callers.** Twice now a screen and the service have disagreed about this: §290
- * found the delete screen promising "nimic nu depinde de ea" about a version the service refused,
- * and the list kept offering "Șterge definitiv" beside "Nefolosit încă" for a terms version the
- * same service would refuse — the owner pressed it three times ("Still can't delete these
- * docs..."). A screen that carries a *copy* of the obstacle list is a screen that drifts, so the
- * list is here, once, and the screens render whatever it answers.
+ * What stands between an approved legal version and its deletion (§203, §290, §316). One rule for
+ * the service, the delete screen and the list, so the screens never carry a drifting copy.
  */
 
 /**
- * How many things stand on a version's words (`DECISIONS.md` §53).
- *
- * Deliberately wider than the two foreign keys. A privacy notice is referenced by *number* from
- * `registrations` — `privacy_notice_version`, `results_consent_version` and
- * `health_consent_version` are plain integers with no foreign key, and so, for a terms version,
- * is `terms_version` (§421) — so a notice hundreds of people
- * acknowledged is invisible to the acceptance and event counts alike, and the database would raise
- * nothing at all if it were removed.
+ * How many things stand on a version's words (§53). Wider than the foreign keys: `registrations`
+ * refers to notice and terms versions by plain integer with no foreign key (§421), so the database
+ * would not stop their deletion.
  */
 export type VersionReliance = {
   acceptances: number;
@@ -33,7 +20,7 @@ export function isReliedOn(reliance: VersionReliance): boolean {
   return reliance.acceptances > 0 || reliance.events > 0 || reliance.privacyAcknowledgements > 0;
 }
 
-/** The facts about one version that decide when it was in force — a backoffice row carries them. */
+/** The facts that decide when a version was in force. */
 export type VersionTimeline = {
   id: string;
   key: LegalDocumentKey;
@@ -43,31 +30,14 @@ export type VersionTimeline = {
   withdrawnAt: Date | null;
 };
 
-/**
- * When a version was the one in force: from `from` up to, not including, `until`. `until` is null
- * while it still is.
- */
+/** `[from, until)`; `until` is null while still in force. */
 export type InForceWindow = { from: Date; until: Date | null };
 
 /**
- * The stretch of time during which `version` was the text in force for its key, as of `now`, or
- * null if it never was.
- *
- * "In force at *t*" is `findCurrentApprovedVersionId`'s rule asked of the past: the highest
- * approved version whose `effective_at` has arrived and which had not been withdrawn by *t*. So
- * a version is in force from its `effective_at` until the first of: its own withdrawal, or a
- * *higher* approved version taking effect — minus any stretch in which such a higher version was
- * itself in force and later withdrawn (a sweep rather than a single successor, so an odd history
- * cannot fool it).
- *
- * What cannot be seen is a higher version that has since been **deleted**: its row is gone, so it
- * cannot shorten this one's window. That errs the right way — the window comes out longer, more
- * registrations fall inside it, and the verdict can only move towards refusing.
- *
- * Returned as one span, first moment to last. In any history this platform can produce the
- * version in force only ever moves upwards — the text in force can be neither withdrawn nor
- * deleted — so the span has no gaps; if seeded data ever gave it one, counting across the gap
- * again errs towards refusing.
+ * When `version` was in force for its key, as of `now`, or null: `findCurrentApprovedVersionId`'s
+ * rule asked of the past — from its `effective_at`, minus every stretch a higher approved version
+ * covered, until its own withdrawal. A deleted higher version cannot shorten the window, and the
+ * result is one span even across a gap; both err towards refusing deletion.
  */
 export function inForceWindow(
   version: VersionTimeline,
@@ -92,7 +62,6 @@ export function inForceWindow(
       continue;
     }
     const [coveredFrom, coveredUntil] = active(later);
-    // Withdrawn before its own date: it never covered a single instant.
     if (coveredFrom >= coveredUntil) continue;
     pieces = pieces.flatMap(([from, until]): Array<[number, number]> => {
       if (coveredUntil <= from || coveredFrom >= until) return [[from, until]];
@@ -102,8 +71,7 @@ export function inForceWindow(
     });
   }
 
-  // Only what has already happened: a stretch that begins after `now` is a promise, and nobody
-  // can have accepted a text that has not taken effect.
+  // Nobody can have accepted a text that has not taken effect yet.
   const moment = now.getTime();
   const happened = pieces.filter(([from, until]) => from < until && from <= moment);
   if (happened.length === 0) return null;
@@ -114,20 +82,18 @@ export function inForceWindow(
 }
 
 /**
- * What a terms version's window shows: how many registrations agreed to "the terms" while it was
- * the text in force — submitted the form, or signed the declaration, inside the window
- * (`countRegistrationsAgreeingWithin`). Null for the other two keys, and for a terms version that
- * was never in force.
+ * Registrations that submitted or signed while a terms version was in force
+ * (`countRegistrationsAgreeingWithin`); null for other keys or a version never in force.
  */
 export type TermsReliance = { window: InForceWindow; registrations: number };
 
-/** Everything the deletion rule reads about one version, gathered by `readDeletionFacts`. */
+/** Gathered by `readDeletionFacts`. */
 export type DeletionFacts = {
   isApproved: boolean;
   acceptanceCount: number;
   eventCount: number;
   privacyAcknowledgementCount: number;
-  /** The version the site serves right now — `findCurrentApprovedVersionId`. */
+  /** `findCurrentApprovedVersionId`. */
   inForce: boolean;
   terms: TermsReliance | null;
 };
@@ -142,12 +108,8 @@ export type DeletionObstacle =
   | { kind: "termsAccepted"; registrations: number; window: InForceWindow };
 
 /**
- * Something stands on these words, or the site is serving them (`DECISIONS.md` §46, §53, §151).
- *
- * The question withdrawal and deletion share, asked in one place so the two verbs cannot come to
- * disagree about what "unused" means. Zero signatures is not "unused" for a notice; it is what the
- * notice of a quiet week looks like, while every visitor to the public page is reading it — which
- * is why the version in force is refused whatever the counts say.
+ * Something stands on these words, or the site serves them (§46, §53, §151). Shared by withdrawal
+ * and deletion; the version in force is refused whatever the counts, since visitors read it.
  */
 export function dependantObstacle(
   facts: Pick<
@@ -173,27 +135,13 @@ export function dependantObstacle(
 }
 
 /**
- * The first reason an approved version may not be deleted, in the order the reader should hear
- * them — or null, and then the service deletes it.
+ * The first reason an approved version may not be deleted, or null:
  *
- * 1. **A draft** is answered by naming its own verb, which needs no typed confirmation and retires
- *    no number.
- * 2. **The shared question** — a signature, an event, a registration that recorded the number, or
- *    the text in force — before anything narrower, because withdrawing is the step that moves.
- * 3. **A terms version somebody accepted.** Since §421 a registration records the terms version
- *    its tick named (`terms_version`), and that count is step 2's, like a notice's
- *    acknowledgements. Rows written before the column record none, so for them — and for the
- *    declaration's own "sunt de acord cu termenii", and a restart that overwrote an earlier
- *    number — the window below still answers. What *can* be shown is
- *    when it was accepted: the terms are agreed to at the instant the form is submitted, and again
- *    when the declaration — "sunt de acord cu termenii, condițiile și regulamentul evenimentului"
- *    — is signed, and whatever was in force at that instant is what was agreed to. So the question
- *    is whether any registration did either inside its window (`TermsReliance`). None, and nobody
- *    ever agreed to anything under those words — it may go like any other unused version. One,
- *    and deletion would destroy text somebody may have accepted, leaving only a hash.
- *
- * §203 refused every terms version that had *ever* been in force, because it had no evidence at
- * all; this replaces that refusal with the evidence, without a migration.
+ * 1. a draft — it has its own verb;
+ * 2. the shared `dependantObstacle`;
+ * 3. a terms version accepted inside its window in force (`TermsReliance`): rows before §421's
+ *    `terms_version`, and the declaration's own terms clause, record no number, so the window
+ *    answers for them. Replaces §203's blanket refusal.
  */
 export function deletionObstacle(facts: DeletionFacts): DeletionObstacle | null {
   if (!facts.isApproved) return { kind: "draft" };

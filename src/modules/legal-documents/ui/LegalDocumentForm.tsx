@@ -23,21 +23,10 @@ export type LegalDocumentFormValues = {
 };
 
 /**
- * One form for writing a legal document, used to create a version and to correct a draft.
- *
- * Both languages on one screen rather than a tab each: they must both exist before the version
- * can be approved (BR-REQ-040-02 forbids falling back to the other), and a form that lets
- * somebody finish one and leave is a form that produces half a document.
- *
- * The body is written in `LegalBodyEditor` — what the club sees is what the page and the signed
- * PDF will show (§279) — and it posts the same plain text the textarea posted, under the same
- * field name: `## ` for a heading, a blank line between paragraphs, `[words](url)` for a link.
- * The stored shape, the content hash and the action are untouched, which is what makes the
- * already-approved texts on production safe to open in it.
- *
- * A refusal — a language left empty — comes back with both texts still in their boxes and the
- * summary naming the language (§315). A legal text is tens of kilobytes, so it is the action's
- * returned state that carries it, never a cookie.
+ * One form to create a version or correct a draft. Both languages on one screen, since both
+ * must exist before approval (BR-REQ-040-02). `LegalBodyEditor` posts the same plain text a
+ * textarea would (§279), so stored shape and hash are unchanged. A refusal returns the texts
+ * through the action's state, never a cookie — they are tens of kilobytes (§315).
  */
 export default async function LegalDocumentForm({
   action,
@@ -58,7 +47,6 @@ export default async function LegalDocumentForm({
   /** Editing an existing version cannot change which document it is. */
   keyLocked?: boolean;
   submitLabel: string;
-  /** The button while the save is in flight. */
   pendingLabel: string;
   /** "Fill in first: {field}" — the button's sentence while a box is missing (§315). */
   incompleteHint: string;
@@ -99,9 +87,7 @@ export default async function LegalDocumentForm({
         {/* A disabled select posts nothing, and the action still needs to know the key. */}
         {keyLocked && <input type="hidden" name="key" value={values?.key} />}
 
-        {/* What every `{{token}}` becomes, beside the boxes rather than under them (§190).
-            Shown whatever the document is, because the key can still be changed above and a
-            legend that appears only after the choice is a legend nobody sees in time. */}
+        {/* Shown for every key: the key can still change above (§190). */}
         <TokenLegend body={values ? bodyToText(values.ro.body) : undefined} />
 
         {(["ro", "en"] as const).map((locale) => (
@@ -116,7 +102,6 @@ export default async function LegalDocumentForm({
                 required
                 defaultValue={values?.[locale].title ?? ""}
               />
-              {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
               <LegalBodyEditor
                 name={`${locale}Body`}
                 label={t("bodyField")}

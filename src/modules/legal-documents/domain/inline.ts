@@ -1,7 +1,6 @@
 /**
- * Links and pictures inside a legal paragraph (`DECISIONS.md` §127; the owner: "I must be
- * able to put pictures and links in these documents"). The body stays plain text — that is
- * what is hashed, signed and merged — and two marks everybody knows are read out of it:
+ * Links and pictures inside a legal paragraph (§127). The body stays plain text — that is
+ * what is hashed, signed and merged — and two marks are read out of it:
  *
  *     [the words](https://…)     a link; https, mailto or a path on this site
  *     ![what it shows](https://…)   a picture, on a line of its own; https only

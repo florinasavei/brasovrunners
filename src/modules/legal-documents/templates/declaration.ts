@@ -2,66 +2,24 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 
 /**
  * The race's two declarations — trail (`EVENT_DECLARATION`) and road or park
- * (`EVENT_DECLARATION_ROAD`) — built from one shared body (§515).
+ * (`EVENT_DECLARATION_ROAD`) — from one shared body (§95, §418, §515). Each text is
+ * `opening + riskSection + sharedDuties + closing`, so everything but the risks is written once.
  *
- * **Where it comes from.** The club's paper declaration (`DECISIONS.md` §95), with the blanks as
- * merge fields (`domain/merge-fields.ts`) so one approved version serves every event of its kind:
- * the participant, the identity documents, the event, its date, its place and its minimum age are
- * filled in when the declaration is shown, signed and printed. Rewritten per the counsel review of
- * 2026-09-25 (§418), and per the owner's review of 2026-09-27 (§515), which asked for:
+ * - Minimum age 14 with no flow below it; the event's own minimum is `{{minimumAge}}`; 14–17 sign
+ *   with a parent's or guardian's approval (Civil Code art. 41(2)).
+ * - Liability without an absolute waiver (art. 1351–1352, 1355, 1371): every "the organiser does
+ *   not answer" sentence carries "to the extent the law allows".
+ * - Only equipment the event's rules call mandatory may refuse a start.
+ * - Data and signature as the privacy notice says, the same in both texts.
  *
- * 1. **No participant under fourteen, and no flow for one.** The absolute minimum is fourteen; an
- *    event may ask more (`events.min_age`, never under fourteen since §515). The text opens with the
- *    event's own minimum through `{{minimumAge}}` — "Declar că am cel puțin {{minimumAge}} împliniți
- *    la data evenimentului" — and says that from 14 to 17 the minor signs and the parent or guardian
- *    approves and signs beside them (Civil Code art. 41(2)), and that nobody under the event's
- *    minimum takes part. The old sentence "for a minor under 14 the legal representative signs alone"
- *    and the kit rule for "a minor participant under 14" are gone: there is no such participant.
- * 2. **Two texts, one body.** A road or park race is not a mountain race: its declaration keeps every
- *    shared section — the participant and their document, the minimum age, minors of 14–17, the
- *    acceptance of risk, the organiser's liability, health, dropping out and being stopped, fair play,
- *    belongings, the kit, photographs, the data, the electronic signature and the archive — and
- *    swaps the trail's risks (mountain ground, roots, rocks, mud, wild animals and sheepdogs, slow
- *    help, trail shoes, protected areas) for the road's and the park's (asphalt, concrete, tartan,
- *    paving; kerbs, potholes, manhole covers, wet and slippery surfaces; bends and narrow sections;
- *    crowding and contact with other runners; pedestrians, cyclists and scooters; traffic where the
- *    course is not fully closed; no sudden change of direction and no blocking the course). The
- *    shared sections live here once — `opening`, `sharedDuties`, `closing` — and each text is
- *    `opening + riskSection + sharedDuties + closing`, so the data, the liability, the signature, the
- *    minors and the retention cannot drift apart between the two.
- * 3. **Liability without an absolute waiver**, the line terms §5 draws: the runner accepts the
- *    inherent risks; the organiser answers under the law for what is attributable to it and not for
- *    what is not (art. 1351–1352); the runner's own conduct reduces or removes it as the law says
- *    (art. 1371); accepting a risk is no waiver of compensation (art. 1355(4)); nothing limits what the
- *    law does not let be limited — intent, gross fault, harm to the body or health (art. 1355(1)–(3)).
- *    Every sentence that says the organiser does not answer for something carries "în limitele
- *    permise de lege" / "to the extent the law allows".
- * 4. **Wild animals in general words** (the trail only), the owner's own sentence: keep the distance,
- *    neither provoke nor feed, follow the organiser and the authorities, 112 in an emergency.
- * 5. **Substances**, the owner's sentence: alcohol, drugs "or other substances that impair my ability
- *    to take part safely" — not "medicines that lower my attention".
- * 6. **Mandatory against recommended equipment**: the start may be refused only for lacking what the
- *    event's own rules declare mandatory; what they recommend stays a recommendation.
- * 7. **The data and the signature the same in both**, and as the privacy notice says: three years'
- *    archive, the identity documents' series and number in the platform at most seven days after the
- *    event, the archive copies with the documents masked, the text's fingerprint, the moment and the
- *    signer's name, a simple electronic signature, an adult signing personally, and for 14–17 the
- *    minor with the parent's or guardian's approval and signature.
- *
- * **A Romanian lawyer should read both before the club approves them.** These notes are the
- * platform's reading of the Civil Code, not legal advice; the club approves and relies on the texts in
- * `/admin/legal`, and the liability paragraph is the one to ask about first.
- *
- * **No hardcoded value (§357).** One approved text serves every event of its kind, so nothing names an
- * event, a place, a date, a distance or the event's minimum age — those are merge fields — and the club
- * only by the footnote's placeholder. The ages 14 and 17 are the Civil Code's, the same for every event.
- * `tests/unit/legal-documents/no-hardcoded-values.test.ts` holds every template to it.
+ * A Romanian lawyer should read both before approval — the liability paragraph first. No hardcoded
+ * value (§357; `tests/unit/legal-documents/no-hardcoded-values.test.ts`); 14 and 17 are the Code's.
  */
 
 /** Who signs, for which event, at what age — the same in both texts. */
 const openingRo = [
   "Subsemnatul/a {{participant}}, posesor/posesoare al/a actului de identitate {{participantIdDocument}}, declar că particip pe propria răspundere la evenimentul {{event}}, care va avea loc {{eventDate}}, în locația {{eventLocation}}. Declar că datele și cele afirmate în această declarație sunt adevărate, că am citit cu atenție regulamentul și detaliile evenimentului de pe pagina lui de pe site-ul clubului și că sunt de acord cu acestea. Știu că, dacă cele declarate nu sunt adevărate, răspund eu pentru urmările acestui fapt.",
-  // The event's own minimum (§329), never under fourteen (§515), with its unit: "16 ani", "20 de ani".
+  // §329, never under 14 (§515); filled with its unit: "16 ani", "20 de ani".
   "Declar că am cel puțin {{minimumAge}} împliniți la data evenimentului.",
   "Dacă participantul are între 14 și 17 ani inclusiv, declarația este semnată de participant și încuviințată de părintele sau tutorele legal, care o semnează alături de el: {{guardian}}, posesor/posesoare al/a actului de identitate {{guardianIdDocument}}. Prin semnătura sa, părintele sau tutorele legal își dă încuviințarea prealabilă ca minorul să participe și să semneze această declarație (art. 41 alin. (2) din Codul civil). Persoanele care nu au împlinit vârsta minimă stabilită pentru eveniment nu pot participa.",
   "Particip de bunăvoie, știind că alergarea presupune riscuri inerente, pe care nici organizatorul*, nici eu nu le putem înlătura în întregime și pe care le enumăr mai jos. Le accept în cunoștință de cauză și îmi asum obligațiile de mai jos. Această acceptare nu înseamnă, prin ea însăși, că renunț la dreptul de a fi despăgubit (art. 1355 alin. (4) din Codul civil) și nu înlătură niciun drept pe care legea nu îmi permite să îl limitez. Organizatorul răspunde, potrivit legii, pentru prejudiciile care îi sunt imputabile. Nu răspunde, în limitele permise de lege, pentru prejudiciile care nu îi sunt imputabile: cele datorate exclusiv faptei mele, nerespectării de către mine a regulamentului, a indicațiilor organizatorului ori a obligațiilor din această declarație, faptei unui terț pentru care organizatorul nu este ținut să răspundă, forței majore sau cazului fortuit (art. 1351 și art. 1352 din Codul civil). Dacă la prejudiciu a contribuit și fapta mea, răspunderea organizatorului se reduce sau, după caz, se înlătură, potrivit legii (art. 1371 din Codul civil). Nimic din această declarație nu înlătură și nu limitează răspunderea organizatorului pentru prejudiciile cauzate cu intenție sau din culpă gravă ori pentru vătămarea integrității corporale sau a sănătății, în afara cazurilor prevăzute de lege (art. 1355 alin. (1)–(3) din Codul civil). Răspund, potrivit legii, pentru prejudiciile pe care le cauzez altor persoane.",
@@ -70,18 +28,14 @@ const openingRo = [
 
 const openingEn = [
   "I, {{participant}}, holder of identity document {{participantIdDocument}}, declare that I take part at my own risk in the event {{event}}, which takes place on {{eventDate}} at {{eventLocation}}. I declare that the information and statements in this declaration are true, that I have read the event's rules and details carefully on its page on the club's website and that I agree with them. I know that if what I declare is not true, I answer for the consequences.",
-  // The event's own minimum (§329), never under fourteen (§515), with its unit: "16 years".
+  // §329, never under 14 (§515); filled with its unit: "16 years".
   "I declare that I am at least {{minimumAge}} old on the day of the event.",
   "If the participant is aged between 14 and 17 inclusive, this declaration is signed by the participant and approved by the parent or legal guardian, who signs it beside them: {{guardian}}, holder of identity document {{guardianIdDocument}}. By signing, the parent or legal guardian gives prior approval to the minor taking part and signing this declaration (art. 41(2) of the Romanian Civil Code). Persons who have not reached the minimum age set for the event may not take part.",
   "I take part of my own free will, knowing that running carries inherent risks, which neither the organiser* nor I can remove entirely and which I list below. I accept them knowingly and take on the obligations below. This acceptance is not, by itself, a waiver of my right to compensation (art. 1355(4) of the Romanian Civil Code), and it removes no right the law does not allow me to limit. The organiser is liable, under the law, for harm attributable to it. It is not responsible, to the extent the law allows, for harm not attributable to it: harm due solely to my own conduct, to my failure to follow the event's rules, the organiser's instructions or the obligations in this declaration, to the act of a third party for whom the organiser is not answerable, or to force majeure or a fortuitous event (art. 1351 and art. 1352 of the Civil Code). Where my own conduct contributed to the harm, the organiser's liability is reduced or, as the case may be, removed, under the law (art. 1371 of the Civil Code). Nothing in this declaration excludes or limits the organiser's liability for harm caused intentionally or through gross negligence, or for harm to bodily integrity or health, except where the law provides (art. 1355(1)–(3) of the Civil Code). I am liable, under the law, for harm I cause to others.",
   "• I will follow the event's rules and the instructions of the organiser and the course marshals;",
 ];
 
-/**
- * The trail's risks (§357's list, the owner's wild-animal sentence of §515): mountain and forest
- * ground, animals, the mountain's weather and slow help, the trail's own equipment, roads crossed,
- * protected areas.
- */
+/** The trail's risks (§357, §515). */
 const trailRisksRo = [
   "• Cunosc și accept riscurile participării la o alergare pe trasee montane sau de pădure: teren accidentat, condiții meteo schimbătoare, accidentare sau agravarea unei afecțiuni preexistente;",
   "• Știu că traseul poate avea porțiuni abrupte, rădăcini, pietre, noroi, frunze ude, gheață sau zăpadă și accept riscul de cădere, alunecare, entorsă, tăieturi sau lovituri; îmi adaptez ritmul la teren și la condiții;",
@@ -102,11 +56,7 @@ const trailRisksEn = [
   "• In protected natural areas I keep to the marked trails and leave no waste behind;",
 ];
 
-/**
- * The road's and the park's risks (§515): hard and slippery surfaces and what breaks them, bends and
- * narrow sections, crowding and contact, other people on the course, traffic, the conduct that keeps
- * the course safe for everybody, the road's own equipment.
- */
+/** The road's and the park's risks (§515). */
 const roadRisksRo = [
   "• Cunosc și accept riscurile participării la o alergare pe șosea sau în parc: suprafețe dure, condiții meteo schimbătoare, aglomerație, accidentare sau agravarea unei afecțiuni preexistente;",
   "• Știu că traseul poate trece pe asfalt, beton, tartan sau pavele și poate avea borduri, gropi, capace de canal, denivelări, suprafețe ude sau alunecoase, curbe și porțiuni înguste, și accept riscul de cădere, alunecare, entorsă, tăieturi sau lovituri; îmi adaptez ritmul la suprafață și la condiții;",
@@ -125,7 +75,7 @@ const roadRisksEn = [
   "• I know I need footwear suited to the surface and, for runs that take place or end after dark, reflective elements and, where the course is not lit, a headlamp;",
 ];
 
-/** The runner's duties every course shares: weather, equipment, health, pace, substances, fair play, belongings, the kit. */
+/** The runner's duties every course shares. */
 const sharedDutiesRo = [
   "• Știu că vremea se poate schimba — căldură, frig, ploaie, furtună, fulgere — și că după lăsarea întunericului vizibilitatea scade; accept că organizatorul poate modifica, scurta, opri sau anula evenimentul pentru siguranța participanților;",
   "• Știu că efortul pe căldură, frig, vânt sau ploaie poate duce la deshidratare, epuizare termică sau hipotermie: beau apă, mă echipez pentru vreme și mă opresc la primele semne;",
@@ -150,7 +100,7 @@ const sharedDutiesEn = [
   "• The race kit is collected in person and is not passed on, against an identity document named in this declaration: the participant's or, for a participant aged 14–17, theirs or that of the parent or legal guardian who signed beside them.",
 ];
 
-/** Ownership, photographs, minors brought along, the data, the signature and who the organiser is — the same in both texts. */
+/** Photographs, the data, the signature and the organiser — shared. */
 const closingRo = [
   "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
   "Am luat la cunoștință că la eveniment se fac fotografii și filmări, iar pe cele făcute de organizator sau în numele lui acesta le poate publica pentru a povesti evenimentul, în condițiile descrise în nota de confidențialitate — unde este descris și cum pot cere oricând să nu apar. Sunt de acord cu termenii și condițiile clubului, în versiunea acceptată la înscriere, și cu regulamentul evenimentului.",
@@ -171,15 +121,14 @@ const closingEn = [
 
 const body = (paragraphs: string[]): LegalDocumentBody => ({ sections: [{ paragraphs }] });
 
-/** `EVENT_DECLARATION` — a race on mountain or forest trails, and every race while no road text is approved. */
+/** Also every race while no road text is approved. */
 export const declarationTrailRo: LegalDocumentBody = body([...openingRo, ...trailRisksRo, ...sharedDutiesRo, ...closingRo]);
 export const declarationTrailEn: LegalDocumentBody = body([...openingEn, ...trailRisksEn, ...sharedDutiesEn, ...closingEn]);
 
-/** `EVENT_DECLARATION_ROAD` — a race on the road or in a park: asphalt, concrete, tartan, paving. */
 export const declarationRoadRo: LegalDocumentBody = body([...openingRo, ...roadRisksRo, ...sharedDutiesRo, ...closingRo]);
 export const declarationRoadEn: LegalDocumentBody = body([...openingEn, ...roadRisksEn, ...sharedDutiesEn, ...closingEn]);
 
-/** The shared body and the two risk sections, for the test that holds each part to one place. */
+/** For the test that holds each part to one place. */
 export const RACE_DECLARATION_PARTS = {
   ro: { opening: openingRo, trail: trailRisksRo, road: roadRisksRo, shared: sharedDutiesRo, closing: closingRo },
   en: { opening: openingEn, trail: trailRisksEn, road: roadRisksEn, shared: sharedDutiesEn, closing: closingEn },
