@@ -18,6 +18,7 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
+import { signedOnPageWords } from "@/modules/group-run-declarations/pdf";
 
 /**
  * §393 — the group runs' optional self-declarations: three kinds of declaration, two new templates,
@@ -175,19 +176,123 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("says it is optional, that it registers nobody, and how long the platform and the archive keep it", () => {
+  /*
+    §NNN, the counsel's second pass (point 6): kept by its purpose, never by a count from the signing.
+    The active declaration while it is needed for the runs it covers; withdrawn at the signer's request,
+    used for no later run, a copy kept only as long as a legal claim needs it, the three-year limitation
+    period in view, then deleted. «Three years from the signing» was untrue of a declaration still active.
+  */
+  it("says it is optional, that it registers nobody, and keeps it by its purpose, never three years from the signing (§NNN)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
-      expect(TEXTS[surface].ro.join(" ")).toMatch(/este opțională și nu este o condiție/);
-      expect(TEXTS[surface].ro.join(" ")).toMatch(/Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului/);
-      // From the signing (§523): a declaration that covers every date of the run names no one run to count from.
-      expect(TEXTS[surface].ro.join(" ")).toMatch(/copia din arhiva clubului se păstrează trei ani de la semnare/);
-      expect(TEXTS[surface].en.join(" ")).toMatch(/optional and is not a condition/);
-      expect(TEXTS[surface].en.join(" ")).toMatch(/keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address/);
-      expect(TEXTS[surface].en.join(" ")).toMatch(/kept for three years from the signing/);
+      const roText = TEXTS[surface].ro.join(" ");
+      const enText = TEXTS[surface].en.join(" ");
+      expect(roText).toMatch(/este opțională și nu este o condiție/);
+      expect(roText).toContain("Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică.");
+      expect(roText).toContain(
+        "Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare; o copie poate fi păstrată și după aceea, doar pe perioada necesară constatării, exercitării sau apărării unor drepturi, ținând seama de termenul general de prescripție de trei ani (art. 2517 din Codul civil); după expirarea acestei perioade, copia se șterge.",
+      );
+      expect(enText).toMatch(/optional and is not a condition/);
+      expect(enText).toContain("The active declaration is kept as long as it is needed to manage my taking part in the runs it applies to.");
+      expect(enText).toContain("If I ask for its withdrawal, at the club's contact address, it is no longer used for any later run;");
+      expect(enText).toContain("with the general three-year limitation period in view (art. 2517 of the Romanian Civil Code); at the end of that period, the copy is deleted.");
       for (const locale of ["ro", "en"] as const) {
-        expect(TEXTS[surface][locale].join(" "), `${surface} ${locale}`).not.toMatch(/trei ani de la alergare|three years from the run/);
+        expect(TEXTS[surface][locale].join(" "), `${surface} ${locale}`).not.toMatch(
+          /trei ani de la (alergare|semnare)|three years from the (run|signing)|fără termen de încetare|with no end date/,
+        );
       }
     }
+  });
+
+  /*
+    §NNN — the counsel's second pass of 2026-09-28, point by point, in both languages and on both
+    surfaces: health as the runner's own assessment and never the organiser's certificate, the
+    organiser's no medical assessment right after it, no medical question, «nu un serviciu de ghidaj
+    (montan)» said once, «momentul semnării» and never a time stamp, and no «în nicio situație».
+  */
+  describe("§NNN the counsel's second pass", () => {
+    const health = {
+      trail: {
+        ro: "• Declar că, din câte cunosc, starea mea de sănătate îmi permite să particip la o alergare pe teren montan și că nu cunosc existența unei afecțiuni sau recomandări medicale care să îmi interzică un astfel de efort. Îmi asum responsabilitatea de a-mi evalua starea înaintea fiecărei participări și de a nu participa sau de a mă opri dacă apar simptome ori o stare care face continuarea nesigură;",
+        en: "• I declare that, to the best of my knowledge, my state of health allows me to take part in a run on mountain terrain",
+      },
+      asphalt: {
+        ro: "• Declar că, din câte cunosc, starea mea de sănătate îmi permite să particip la o alergare de grup pe drumuri publice",
+        en: "• I declare that, to the best of my knowledge, my state of health allows me to take part in a group run on public roads",
+      },
+    } as const;
+    const noMedical = {
+      ro: "• Organizatorul nu efectuează și nu poate efectua o evaluare medicală a participanților; responsabilitatea de a aprecia dacă starea proprie permite participarea aparține fiecărui participant;",
+      en: "• The organiser does not and cannot carry out a medical assessment of the participants;",
+    } as const;
+
+    it("states health as the runner's own assessment, the organiser's no medical assessment right after it (points 3–4)", () => {
+      for (const surface of ["asphalt", "trail"] as const) {
+        for (const locale of ["ro", "en"] as const) {
+          const text = TEXTS[surface][locale];
+          const at = text.findIndex((p) => p.startsWith(health[surface][locale]));
+          expect(at, `${surface} ${locale}`).toBeGreaterThan(-1);
+          expect(text[at + 1], `${surface} ${locale}`).toContain(noMedical[locale]);
+          expect(text.join(" "), `${surface} ${locale}`).not.toMatch(/Starea mea de sănătate îmi permite|nu am boli|My state of health allows|I have no illness/);
+        }
+      }
+      expect(TEXTS.trail.ro).toContain(health.trail.ro);
+    });
+
+    it("keeps the health statement under art. 9(2)(f) and asks nothing about a diagnosis, a treatment or a history (point 5)", () => {
+      for (const surface of ["asphalt", "trail"] as const) {
+        expect(TEXTS[surface].ro.join(" ")).toContain("afirmația despre sănătate, doar pentru constatarea, exercitarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR)");
+        expect(TEXTS[surface].en.join(" ")).toContain("the statement about my health only for the establishment, exercise or defence of legal claims (art. 9(2)(f) GDPR)");
+        expect(TEXTS[surface].ro.join(" ")).not.toMatch(/diagnostic|tratament|istoric medical/i);
+        expect(TEXTS[surface].en.join(" ")).not.toMatch(/diagnos|treatment|medical history/i);
+      }
+    });
+
+    it("keeps art. 1355(4) and art. 1371, and never frees the organiser in every case (points 7, 15)", () => {
+      for (const surface of ["asphalt", "trail"] as const) {
+        expect(TEXTS[surface].ro.join(" ")).toContain("art. 1355 alin. (4) din Codul civil");
+        expect(TEXTS[surface].ro.join(" ")).toContain("art. 1371 din Codul civil");
+        expect(TEXTS[surface].en.join(" ")).toContain("art. 1355(4) of the Romanian Civil Code");
+        expect(TEXTS[surface].en.join(" ")).toContain("art. 1371 of the Civil Code");
+        expect(TEXTS[surface].ro.join(" ")).not.toMatch(/în nicio situație|în niciun caz/);
+        expect(TEXTS[surface].en.join(" ")).not.toMatch(/in no event|under no circumstances|in any situation/);
+      }
+    });
+
+    it("says it is a group run, not a guiding service, once, in the opening (points 8–9)", () => {
+      const service = { asphalt: { ro: "un serviciu de ghidaj", en: "a guiding service" }, trail: { ro: "un serviciu de ghidaj montan", en: "a mountain guiding service" } } as const;
+      for (const surface of ["asphalt", "trail"] as const) {
+        const ro = TEXTS[surface].ro.join(" ");
+        const en = TEXTS[surface].en.join(" ");
+        expect(ro).toContain(`Este o alergare de grup, nu ${service[surface].ro} și nu presupune supravegherea individuală a fiecărui participant.`);
+        expect(ro).toContain("Organizatorul* stabilește și anunță ora, locul și traseul, aleargă împreună cu participanții și poate da indicații generale de siguranță.");
+        expect(en).toContain(`It is a group run, not ${service[surface].en}, and it does not involve the individual supervision of each participant.`);
+        expect(ro.match(/ghidaj|ghidată/g), `${surface} ro`).toHaveLength(1);
+        expect(en.match(/guid(ing|ed)/g), `${surface} en`).toHaveLength(1);
+        expect(ro).not.toMatch(/tură ghidată/);
+        expect(en).not.toMatch(/guided tour/);
+      }
+      expect(TEXTS.asphalt.ro.join(" ")).not.toMatch(/montan/);
+    });
+
+    it("names «momentul semnării» and never a time stamp (point 14)", () => {
+      for (const surface of ["asphalt", "trail"] as const) {
+        const ro = TEXTS[surface].ro.join(" ");
+        const en = TEXTS[surface].en.join(" ");
+        expect(ro).toContain("momentul semnării ({{signedAt}})");
+        expect(en).toContain("the moment of signing ({{signedAt}})");
+        expect(ro).not.toMatch(/marc(a|ă|ii) temporal/i);
+        expect(en).not.toMatch(/time ?stamp/i);
+        expect(ro).toContain("semnătură electronică simplă");
+        expect(en).toContain("simple electronic signature");
+      }
+    });
+
+    it("the PDF's signing line names «momentul semnării» and no time stamp either (point 14)", () => {
+      expect(signedOnPageWords("ro", "joi, 1 oct. 2026, la 11:00")).toContain("momentul semnării");
+      expect(signedOnPageWords("en", "Thursday, 1 Oct 2026, at 11:00")).toContain("the moment of signing");
+      expect(signedOnPageWords("ro", "x")).not.toMatch(/marc(a|ă|ii) temporal/i);
+      expect(signedOnPageWords("en", "x")).not.toMatch(/time ?stamp/i);
+    });
   });
 
   /*
@@ -205,19 +310,27 @@ describe("§393 the two templates", () => {
       expect(TEXTS[surface].ro[0]).toContain("particip la alergarea de grup descrisă mai jos");
       expect(TEXTS[surface].ro[0]).not.toMatch(/\{\{(event|eventDate|series)\}\}/);
       expect(roText).toContain("înainte de fiecare alergare îi citesc detaliile pe pagina ei");
+      // The validity in the counsel's words (§NNN, points 1–2): the whole series, signed once, from the
+      // date of signing, until withdrawn or replaced — the run of the signing day included («începând cu»).
       expect(roText).toContain(
-        "Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}}, cu plecare de obicei din {{seriesPlace}} — la care particip de la semnare, fără termen de încetare: nu o semnez din nou la fiecare alergare.",
+        "Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}}, cu plecare de obicei din {{seriesPlace}} — și nu trebuie semnată din nou la fiecare alergare.",
+      );
+      expect(roText).toContain(
+        "Declarația se aplică alergărilor din această serie la care particip începând cu data semnării și rămâne valabilă până când este retrasă sau înlocuită cu o versiune nouă.",
       );
       expect(roText).toContain("aflu acest lucru de pe pagina acelei date, iar declarația se aplică și ei");
-      expect(roText).toContain("Rămâne valabilă până când cer ștergerea ei; dacă organizatorul aprobă o versiune nouă a textului, mi se cere să o semnez din nou.");
+      expect(roText).toContain("Dacă organizatorul aprobă o versiune nouă a declarației, participantului i se va cere să o semneze din nou.");
       expect(roText).toContain("Declarația este pentru alergarea de grup {{event}}, {{eventDate}}, cu plecare din {{eventLocation}}.");
       expect(TEXTS[surface].en[0]).toContain("I take part in the group run described below");
       expect(enText).toContain("before each run I read its details on its page");
       expect(enText).toContain(
-        "This declaration is valid for every run of the series {{series}} — {{seriesRhythm}}, usually starting from {{seriesPlace}} — that I take part in from the moment I sign it, with no end date: I do not sign it again for each run.",
+        "This declaration is valid for every run of the series {{series}} — {{seriesRhythm}}, usually starting from {{seriesPlace}} — and need not be signed again for each run.",
+      );
+      expect(enText).toContain(
+        "The declaration applies to the runs of this series that I take part in from the date of signing onwards, and remains valid until it is withdrawn or replaced by a new version.",
       );
       expect(enText).toContain("I learn it from that date's page, and the declaration applies to that date too");
-      expect(enText).toContain("It stays valid until I ask for its deletion; if the organiser approves a new version of the text, I am asked to sign it again.");
+      expect(enText).toContain("If the organiser approves a new version of the declaration, the participant will be asked to sign it again.");
       expect(enText).toContain("This declaration is for the group run {{event}} on {{eventDate}}, starting from {{eventLocation}}.");
       // The one-off sentence names no series field, the series sentence no date: the renderer keeps one.
       // The series sentence in two shapes (§523): with the usual place, and without it for a run whose
@@ -251,11 +364,11 @@ describe("§393 the two templates", () => {
     const enText = paragraphs(privacyNoticeEn).join(" ");
     expect(roText).toContain("Dacă o semnezi din nou pe același text, nu păstrăm a doua: îți retrimitem copia.");
     expect(roText).toContain(
-      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci; pe amândouă le ștergem doar la cererea ta.",
+      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci, până când ne ceri să o ștergem (secțiunea 8).",
     );
     expect(enText).toContain("If you sign it again on the same text, we keep no second one: we resend your copy.");
     expect(enText).toContain(
-      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then; we delete both only at your request.",
+      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then, until you ask us to erase it (section 8).",
     );
     for (const text of [roText, enText]) expect(text).not.toMatch(/o înlocuiește pe cea veche|replaces the old one/);
   });
@@ -263,10 +376,10 @@ describe("§393 the two templates", () => {
   // A signature covers every date of a repeating run only once the text names {{series}} (§523).
   it("the privacy notice hedges the whole-series signature to the declaration's text (§523)", () => {
     expect(paragraphs(privacyNoticeRo).join(" ")).toContain(
-      "O semnezi o singură dată pentru o alergare care se repetă, când textul declarației prevede asta: acoperă atunci fiecare dată a ei, fără termen.",
+      "O semnezi o singură dată pentru o alergare care se repetă, când textul declarației prevede asta: acoperă atunci fiecare dată a ei, până când o retragi sau este înlocuită cu o versiune nouă.",
     );
     expect(paragraphs(privacyNoticeEn).join(" ")).toContain(
-      "You sign it once for a run that repeats, where the declaration's text says so: it then covers every date of it, with no end date.",
+      "You sign it once for a run that repeats, where the declaration's text says so: it then covers every date of it, until you withdraw it or it is replaced by a new version.",
     );
   });
 
@@ -313,9 +426,9 @@ describe("§393 the two templates", () => {
 });
 
 describe("§393 the public offer line states the retention truthfully", () => {
-  it("says the club keeps it while the signer comes to the runs and deletes it when they ask (§503), with no number of days", () => {
-    expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp vii la alergări și o șterge când îi ceri/);
-    expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it while you keep coming to the runs and deletes it when you ask/);
+  it("says the club keeps it while it is needed and stops using it at the signer's withdrawal (§503, §NNN), with no number of days", () => {
+    expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei/);
+    expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal/);
     expect(ro.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|zile/);
     expect(en.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|days/);
   });

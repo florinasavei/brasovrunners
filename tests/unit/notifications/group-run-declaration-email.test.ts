@@ -47,13 +47,17 @@ describe("§393 the group run's declaration messages", () => {
       // The legitimate-interest, three-year choice, from the sweep's own constant, and the objection.
       const ro = durationPhrase("ro", RETENTION.registrationsYearsAfterEvent, "years");
       const en = durationPhrase("en", RETENTION.registrationsYearsAfterEvent, "years");
-      // From the signing (§523): a series' declaration covers every run of it, so no one run counts.
-      expect(email.text).toContain(`Păstreaz-o în căsuța clubului ${ro} de la semnare`);
-      expect(email.text).toContain(`Keep it in the club's mailbox for ${en} from the signing`);
+      // Kept while the declaration is active, then at most the limitation period from the withdrawal
+      // (§NNN, the counsel's second pass) — never "three years from the signing" (§523's words).
+      expect(email.text).toContain("Păstreaz-o în căsuța clubului cât timp declarația este activă");
+      expect(email.text).toContain("Keep it in the club's mailbox while the declaration is active");
+      expect(email.text).toContain(`copia de aici o mai păstrezi cel mult ${ro} de la retragere`);
+      expect(email.text).toContain(`keep this copy for at most ${en} from the withdrawal`);
+      expect(email.text).not.toMatch(/de la semnare|from the signing/);
       expect(email.text).toContain("dacă alergătorul se opune");
-      // Kept while the runner comes to the runs, deleted when they ask (§503), never a number of days.
-      expect(email.text).toContain("cât timp alergătorul vine la alergări; când cere ștergerea ei");
-      expect(email.text).toContain("while the runner keeps coming to the runs; when they ask for it to be deleted");
+      // The platform's row while the runner comes to the runs, erased at their withdrawal (§503), never a number of days.
+      expect(email.text).toContain("cât timp declarația este activă; când alergătorul cere retragerea ei");
+      expect(email.text).toContain("while the declaration is active; when the runner asks for its withdrawal");
       expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);
     }
   });

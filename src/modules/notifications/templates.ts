@@ -1092,8 +1092,8 @@ const T = {
           : `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
         // One declaration for every run of the series (§523): a returning runner signs it once.
         d.groupRunSeries
-          ? `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.`
-          : `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.`,
+          ? `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`
+          : `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`,
       ],
       // The signer's own link (§523): the run's page says there that they have signed.
       action: "Vezi pe pagina alergării",
@@ -1108,11 +1108,13 @@ const T = {
           ? `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru seria de alergări de grup ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Este valabilă pentru toate alergările seriei.`
           : `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}.`,
         /*
-          The legitimate-interest, three-year choice of the notice, and the right to object (§419) —
-          counted from the signing since §523: a series' declaration covers every run of it, so "from
-          the run" named no one day.
+          The legitimate-interest choice of the notice, and the right to object (§419) — kept while the
+          declaration is active and, after the runner asks for its withdrawal, at most the three-year
+          limitation period (§NNN, the counsel's second pass, replacing §523's "three years from the
+          signing", untrue of a declaration still active). Counted from the withdrawal: any claim
+          arises at a run it covered, all of which came before.
         */
-        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la semnare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp alergătorul vine la alergări; când cere ștergerea ei, o ștergi de acolo, cu motivul, și copia de aici.`,
+        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului cât timp declarația este activă, ca în nota de confidențialitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp declarația este activă; când alergătorul cere retragerea ei, o ștergi de acolo, cu motivul, iar copia de aici o mai păstrezi cel mult ${archivePeriod("ro")} de la retragere (termenul general de prescripție), apoi o ștergi, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1591,8 +1593,8 @@ const T = {
           ? `Attached is the self-declaration you signed for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`
           : `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
         d.groupRunSeries
-          ? `Signing it was optional and registers you for nothing: come to the run as usual. The declaration is valid for every run of the series, so you do not sign it again for the next ones; if the organiser approves a new version of the text, the run's page asks you for it again. The club keeps the declaration while you keep coming to the runs and deletes it when you ask.`
-          : `Signing it was optional and registers you for nothing: come to the run as usual. The club keeps the declaration while you keep coming to the runs and deletes it when you ask.`,
+          ? `Signing it was optional and registers you for nothing: come to the run as usual. The declaration is valid for every run of the series, so you do not sign it again for the next ones; if the organiser approves a new version of the text, the run's page asks you for it again. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`
+          : `Signing it was optional and registers you for nothing: come to the run as usual. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`,
       ],
       action: "See it on the run's page",
     },
@@ -1604,7 +1606,7 @@ const T = {
         d.groupRunSeries
           ? `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. It is valid for every run of the series.`
           : `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
-        `The club's archive copy. Keep it in the club's mailbox for ${archivePeriod("en")} from the signing, as the privacy notice says, then delete it from here, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, while the runner keeps coming to the runs; when they ask for it to be deleted, erase it there, with the reason, and this copy too.`,
+        `The club's archive copy. Keep it in the club's mailbox while the declaration is active, as the privacy notice says. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, while the declaration is active; when the runner asks for its withdrawal, erase it there, with the reason, and keep this copy for at most ${archivePeriod("en")} from the withdrawal (the general limitation period), then delete it, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner.`,
       ],
     },
     clubConfirmationNotice: {

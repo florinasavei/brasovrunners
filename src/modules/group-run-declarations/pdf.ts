@@ -12,11 +12,15 @@ import { readSignedFacts } from "./series";
 /**
  * How a group-run declaration was signed, under the signature (§393): on the run's own page, not
  * from a link sent by email — the race's words (`signedByLink`) would say something untrue. The
- * same record beneath it: typed name, tick, instant, the text's fingerprint (§86).
+ * same record beneath it: typed name, tick, the moment of signing, the text's fingerprint (§86).
+ *
+ * «Momentul semnării», as the platform records it, never a time stamp (§NNN, the counsel's point 14):
+ * the text it signs says the same, and the Romanian law is cited by its number alone, so no title
+ * beside the moment reads as a qualified eIDAS time stamp.
  */
 const SIGNED_ON_PAGE: Record<Locale, string> = {
-  ro: "Semnat electronic {when}, pe pagina alergării de pe site-ul clubului: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea.",
-  en: "Signed electronically on {when}, on the run's page on the club's website: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them.",
+  ro: "Semnat electronic {when}, pe pagina alergării de pe site-ul clubului: nume tastat, bifă explicită de acceptare, momentul semnării, așa cum l-a înregistrat platforma clubului, și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
+  en: "Signed electronically on {when}, on the run's page on the club's website: typed name, explicit acceptance tick, the moment of signing as the club's platform recorded it, and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
 };
 
 export function signedOnPageWords(locale: Locale, when: string): string {
