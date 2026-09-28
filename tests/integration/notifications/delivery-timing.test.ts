@@ -13,7 +13,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-10-01T10:00:00.000Z");
 
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
-// Switched off, the queue leaves after the response (§NNN): the drain is counted, never run here.
+// Switched off, the queue leaves after the response (§529): the drain is counted, never run here.
 const drained = vi.hoisted(() => ({ calls: 0 }));
 vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => void drained.calls++ }));
 
@@ -117,7 +117,7 @@ describe("BR-REQ-060-01 the delivery timing is a «Termene» setting, the Admini
     expect(await db.select().from(auditLogs)).toHaveLength(1);
   });
 
-  it("§NNN sends what the round was holding when switched off, and only then", async () => {
+  it("§529 sends what the round was holding when switched off, and only then", async () => {
     const admin = await staff("ADMIN");
     drained.calls = 0;
     await updateDeliveryTiming(db, admin, { timing: "scheduled" }, NOW);

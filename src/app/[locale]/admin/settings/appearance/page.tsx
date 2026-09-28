@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
- * Two settings: the site's light background tint and, since §NNN, its text size. Read by whoever reads the club's content;
+ * Two settings: the site's light background tint and, since §530, its text size. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
  */

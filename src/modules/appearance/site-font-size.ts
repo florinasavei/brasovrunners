@@ -14,7 +14,7 @@ import {
 } from "./domain/site-font-size";
 
 /**
- * «Mărimea textului» (§NNN): one `platform_settings` row, written by an Administrator under
+ * «Mărimea textului» (§530): one `platform_settings` row, written by an Administrator under
  * «Setări» → «Aspect», audited, read by the locale layout through the public cache (§333).
  * No migration: the settings table takes any key (§100).
  */

@@ -4,7 +4,7 @@ import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 
 /**
- * §NNN — the queue panel says when each waiting message is expected to leave: the outbox job's
+ * §529 — the queue panel says when each waiting message is expected to leave: the outbox job's
  * first real run at or after the row's own turn (its creation, or its next attempt after a retry or
  * a deferral), the runs after the next one spaced by the pinger or by the minimum interval; and a
  * row whose turn passed longer ago than `/api/health`'s `overdue` threshold is late.
@@ -14,7 +14,7 @@ import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 const NEXT_TICK = new Date("2026-10-01T07:15:00.000Z");
 const at15 = () => 15;
 
-describe("§NNN outboxRowLeavesAt — one queued row's departure", () => {
+describe("§529 outboxRowLeavesAt — one queued row's departure", () => {
   it("is the next real run for a row whose turn has come", () => {
     const leaves = outboxRowLeavesAt({ dueAt: new Date("2026-10-01T07:02:00.000Z"), nextTickAt: NEXT_TICK, intervalMinutes: 0, pingerMinutesAt: at15 });
     expect(leaves.toISOString()).toBe(NEXT_TICK.toISOString());
@@ -53,7 +53,7 @@ describe("§NNN outboxRowLeavesAt — one queued row's departure", () => {
   });
 });
 
-describe("§NNN outboxRowOverdue — the same threshold as the health check's `overdue`", () => {
+describe("§529 outboxRowOverdue — the same threshold as the health check's `overdue`", () => {
   const now = new Date("2026-10-01T10:00:00.000Z");
   const { OVERDUE_AFTER_MS } = EMAIL_HEALTH_THRESHOLDS;
 

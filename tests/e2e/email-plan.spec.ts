@@ -82,7 +82,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // registrations (§289) — so the Organizer has them now, where a Moderator had neither.
     await expect(main.getByRole("heading", { name: "Coada de trimitere" })).toBeVisible();
     await expect(main.getByRole("button", { name: "Trimite acum", exact: false })).toHaveCount(0);
-    // When the queue leaves (§NNN) is read by whoever reads the queue; the switch is the Administrator's.
+    // When the queue leaves (§529) is read by whoever reads the queue; the switch is the Administrator's.
     await expect(main.getByTestId("outbox-when-state")).toBeVisible();
     await expect(main.getByTestId("outbox-when-next")).toContainText(/Următoarea trecere|Fiecare email pleacă imediat/);
     await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
@@ -106,7 +106,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await expect(main.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)")).toHaveCount(0);
   });
 
-  test("an Administrator reads when the emails leave and switches the sending both ways (§NNN)", async ({ page }) => {
+  test("an Administrator reads when the emails leave and switches the sending both ways (§529)", async ({ page }) => {
     /*
       The owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face on/off
       la acea setare". The queue panel opens with the timing, the next round and what holds it back;

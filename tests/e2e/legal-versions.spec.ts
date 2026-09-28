@@ -197,7 +197,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
 });
 
 /**
- * BR-REQ-053-02 (§NNN) — every text at once: «Regenerează din șabloane» makes the drafts,
+ * BR-REQ-053-02 (§532) — every text at once: «Regenerează din șabloane» makes the drafts,
  * «Aprobă ciornele» names them before anything is in force, and «Șterge versiunile bifate» takes
  * the ticked rows — the ticks belong to a GET form by `form=` — to `/admin/legal/delete`, which
  * lists them and deletes them behind the §384 dialog, the toast saying how many went.

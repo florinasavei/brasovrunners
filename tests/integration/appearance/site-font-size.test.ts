@@ -16,7 +16,7 @@ const cache = vi.hoisted(() => ({ revalidatePublicContent: vi.fn() }));
 vi.mock("@/modules/public-cache/cache", () => cache);
 
 /**
- * §NNN — «Mărimea textului» under «Setări» → «Aspect»: one `platform_settings` row, the
+ * §530 — «Mărimea textului» under «Setări» → «Aspect»: one `platform_settings` row, the
  * Administrator's (§450), audited, one of four steps and nothing else.
  */
 const NOW = new Date("2026-09-28T09:00:00.000Z");

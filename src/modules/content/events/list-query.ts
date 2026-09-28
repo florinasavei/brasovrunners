@@ -2,7 +2,7 @@ import { groupSeries } from "@/modules/events/domain/series";
 import { foldForSearch } from "@/modules/registrations/country-search";
 
 /**
- * The backoffice events list's own state (§NNN): a search, a state and an order, read from the
+ * The backoffice events list's own state (§527): a search, a state and an order, read from the
  * address and written back to it, and nowhere else — the model is the public listing's filters
  * (§413, `events/domain/listing-filter.ts`): a GET form with no script writes these parameters,
  * every link the server builds carries them, and a hand-edited value falls back rather than
@@ -100,7 +100,7 @@ export function eventListParams(query: EventListQuery): Record<string, string | 
 const BACK_PER_PAGE = ["25", "50"];
 
 /**
- * The list's address as a Server Action carries it back (§NNN): the forms on the list post it as
+ * The list's address as a Server Action carries it back (§527): the forms on the list post it as
  * a hidden `back`, and the action redirects there, so an archive from «Ciorne», page 2, lands on
  * «Ciorne», page 2. What comes in is a form field, so it is read through the same parser as the
  * address and only the list's own keys survive — `q`, `state`, `sort`, `dir`, `page`,

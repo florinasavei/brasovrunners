@@ -25,7 +25,7 @@ type Props = {
 };
 
 /**
- * «Mărimea textului» (§NNN): the public pages' text size — four steps, each a percentage of the
+ * «Mărimea textului» (§530): the public pages' text size — four steps, each a percentage of the
  * reader's own root size.
  *
  * The shape of «Aspectul site-ului» (§488) beside it: a Server Component, one form, a radio per

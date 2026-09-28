@@ -35,7 +35,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * The versions ticked on `/admin/legal`, deleted in one press (§NNN).
+ * The versions ticked on `/admin/legal`, deleted in one press (§532).
  *
  * A screen and not only a dialog, for the reasons `/admin/legal/[id]/delete` gives: an approved
  * version's deletion is a typed phrase and a reason, a refusal must land where the phrase is

@@ -1015,7 +1015,7 @@ describe("§440 a group run's minimum age at the signing door", () => {
   });
 });
 
-describe("§NNN erasing the ticked ones in one press", () => {
+describe("§532 erasing the ticked ones in one press", () => {
   /** Three people sign the same run; their three row ids, in signing order. */
   async function threeSignatures(eventId: string): Promise<string[]> {
     const ids: string[] = [];

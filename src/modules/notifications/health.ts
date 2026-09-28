@@ -105,7 +105,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     before, still inside ninety plus the interval (`tests/unit/jobs/schedule-alignment.test.ts`).
   */
   const { minutes: stated } = await readJobCadence(db);
-  // The same number the queue panel marks a row late with (§NNN, `outbox-delivery.ts`).
+  // The same number the queue panel marks a row late with (§529, `outbox-delivery.ts`).
   const cadenceMinutes = await outboxOverdueCadenceMinutes(stated, governorFloorMinutes, now);
   const overdueAfterMs = OVERDUE_AFTER_MS + cadenceMinutes * 60_000;
   const overdueBefore = new Date(now.getTime() - overdueAfterMs);

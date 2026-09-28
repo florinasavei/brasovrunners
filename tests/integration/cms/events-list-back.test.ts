@@ -5,7 +5,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-051-01 (`DECISIONS.md` §NNN) — archiving from a filtered, ordered, paged events list
+ * BR-REQ-051-01 (`DECISIONS.md` §527) — archiving from a filtered, ordered, paged events list
  * lands back on that list: the bulk form posts the list's query string as `back`, and the
  * action's redirect carries it, with only the list's own keys, before its outcome.
  */
@@ -29,7 +29,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 
 const { bulkArchiveEventsAction } = await import("@/app/[locale]/admin/actions");
 
-describe("§NNN archive from a filtered list → back on the filtered list", () => {
+describe("§527 archive from a filtered list → back on the filtered list", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face
+ * §529 — the owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face
  * on/off la acea setare". The queue panel on «Setări» → «Emailuri» opens with when the queue leaves
  * — the switch's state, the outbox job's next and last real run, what holds the scheduled round
  * back — and every row says its own departure, late in red past the health check's threshold. The
@@ -112,7 +112,7 @@ async function render(locale: "ro" | "en", overrides: Partial<Props> = {}): Prom
   return renderToStaticMarkup(element as ReactElement).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the queue panel says when the emails leave", () => {
+describe("§529 the queue panel says when the emails leave", () => {
   it("names the switch's state, the next and the last round, and what holds the round back, in Romanian", async () => {
     const html = await render("ro");
     expect(html).toContain(ro.Admin.emails.queue.when.on);
@@ -230,7 +230,7 @@ describe("§NNN the queue panel says when the emails leave", () => {
   });
 });
 
-describe("OutboxQueuePanel for a reader who cannot send (§NNN)", () => {
+describe("OutboxQueuePanel for a reader who cannot send (§529)", () => {
   it("tells a late row's reader to tell the administrator, and a Gmail-paced retry is never a family's hold", async () => {
     const html = await render("ro", { mayEdit: false });
     expect(html).toContain("sau anunță administratorul.");

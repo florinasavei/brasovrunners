@@ -30,7 +30,7 @@ import type { GroupRunDeclarationListRow } from "../repository";
  * the trail. The Administrator may erase one, with a reason (§67, §88): the service refuses anybody
  * else whatever this screen drew.
  *
- * Or several (§NNN; the owner, 2026-09-28: «batch delete și la declarații, cu confirmarea numărului
+ * Or several (§532; the owner, 2026-09-28: «batch delete și la declarații, cu confirmarea numărului
  * șters»): a tick per row, one reason, «Șterge cele bifate». The ticks belong to the batch form
  * below the list by `form=` — each row already holds its own erase form, and forms cannot nest —
  * and the dialog counts them at the press («Ștergi 2 declarații semnate pentru «…»?»). What is

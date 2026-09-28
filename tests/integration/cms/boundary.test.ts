@@ -201,7 +201,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // number goes with it, and the phrase to type — a screen, like the event erase one,
       // written here by hand.
       "/admin/legal/[id]/delete",
-      // The ticked versions deleted in one press (§NNN): the same guarded service, by hand.
+      // The ticked versions deleted in one press (§532): the same guarded service, by hand.
       "/admin/legal/delete",
       "/admin/legal/new",
       // The network check (§436): what a staff member's network lets through, written by hand.
@@ -318,7 +318,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     for (const route of legalRoutes) {
       expect(route, `${route} must not edit a version in place`).not.toMatch(/\/edit$/);
     }
-    // Two deletion screens since §NNN — one version, and the ticked ones in one press — and both
+    // Two deletion screens since §532 — one version, and the ticked ones in one press — and both
     // are the guarded kind: the batch deletes through `deleteVersionsInBatch`, which asks each
     // version the single delete's own question (`legal/batch.test.ts`).
     expect(
@@ -380,7 +380,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       for the same reason withdrawal cannot, and it cannot reach anything anybody accepted.
     */
     /*
-      §NNN adds no writer either, for `approvePlatformTemplates`' reason: `regenerateFromTemplates`
+      §532 adds no writer either, for `approvePlatformTemplates`' reason: `regenerateFromTemplates`
       is `createDraftVersion` per key, `approveDrafts` is `approveVersion` per draft (in one
       transaction), and `deleteVersionsInBatch` asks each version the single deletes' own
       questions (`deletionObstacle`, `isReliedOn`) and destroys it through the body

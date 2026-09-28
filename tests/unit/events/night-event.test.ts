@@ -267,7 +267,7 @@ const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 function pillLabels(fragment: string): string[] {
   return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</g)].map((match) => match[1]);
 }
-/** The sun's tooltips: every chip's but the difficulty's, which names its level of fifteen since §NNN. */
+/** The sun's tooltips: every chip's but the difficulty's, which names its level of fifteen since §528. */
 function tooltips(fragment: string): string[] {
   return allTooltips(fragment).filter((title) => !/ — (?:nivelul \d+ din|level \d+ of) \d+/.test(title));
 }
@@ -314,7 +314,7 @@ describe("§394 the event page's facts", () => {
     expect(route).toBeDefined();
     expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu 2", "8 km", "250 m D+", "Noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
-    // The difficulty's own tooltip, before it in the row (§NNN).
+    // The difficulty's own tooltip, before it in the row (§528).
     expect(allTooltips(route!.dd)).toEqual(["Mediu 2 — nivelul 5 din 15", "Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");

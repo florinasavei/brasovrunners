@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-060-01, BR-REQ-040-04 (`DECISIONS.md` §NNN) — the backoffice events list is searched,
+ * BR-REQ-060-01, BR-REQ-040-04 (`DECISIONS.md` §527) — the backoffice events list is searched,
  * filtered by state and ordered from one row above the list, a GET form in the address.
  *
  * On both projects, the 320-px phone included: the row is on the page on arrival (never behind a
@@ -10,7 +10,7 @@ import { signIn } from "./support/featured-event";
  * the one select's value in the address, the count line says «N din M evenimente», and nothing
  * scrolls sideways. Reads the seed only, so the two projects sharing a database cannot collide.
  */
-test.describe("§NNN the backoffice events list: search, state, order", () => {
+test.describe("§527 the backoffice events list: search, state, order", () => {
   test("searches without accents, orders by one select and keeps it in the address", async ({ page }) => {
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin");

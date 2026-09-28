@@ -522,7 +522,7 @@ export async function cachedSiteTint(): Promise<SiteTintSetting> {
 }
 
 /**
- * «Mărimea textului» (§NNN): the text size every public page is drawn at, read by the locale layout
+ * «Mărimea textului» (§530): the text size every public page is drawn at, read by the locale layout
  * beside the tint and cached for the same reason — a save expires it (`updateSiteFontSize`). When
  * the database cannot answer, the last good copy (§447), then the platform's own size.
  */

@@ -73,7 +73,7 @@ export default async function KindBox({
   // The level on the club's scale of fifteen (§526), as the two controls show it: its band and its step.
   const level = event ? difficultyLevelOf(event) : null;
   const band = level === null ? null : difficultyBandOf(level);
-  // The club's whole scale, one line per band in the owner's words (§526, §NNN), behind a «?» beside
+  // The club's whole scale, one line per band in the owner's words (§526, §528), behind a «?» beside
   // the band and after «Treapta»'s help: a newline is a line in the tooltip (§257).
   const difficultyScale = DIFFICULTY_SCALE_LINES.map((line) => t(`editor.difficultyScale.${line}`)).join("\n");
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
@@ -129,7 +129,7 @@ export default async function KindBox({
           {/* How hard (§526): the band and its step, side by side from `sm` — the level on the
               club's scale of fifteen, which «Ghid» explains. */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-            {/* The whole scale behind a «?» beside the band too (§NNN): the band is the first choice. */}
+            {/* The whole scale behind a «?» beside the band too (§528): the band is the first choice. */}
             <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
               <GlyphSelect
                 name="event.difficulty"
@@ -176,5 +176,5 @@ export default async function KindBox({
   );
 }
 
-/** The «?»'s lines, in order: «Ușor», «Mediu» per step, the other bands, what a step means — the owner's words (§NNN), which «Ghid» points to. */
+/** The «?»'s lines, in order: «Ușor», «Mediu» per step, the other bands, what a step means — the owner's words (§528), which «Ghid» points to. */
 const DIFFICULTY_SCALE_LINES = ["EASY", "MEDIUM1", "MEDIUM2", "MEDIUM3", "FAIRLY_HARD", "HARD", "VERY_HARD", "steps"] as const;

@@ -298,7 +298,7 @@ export type ConfirmSpec = {
    */
   fillFrom?: readonly string[];
   /**
-   * The body counted from the form as posted (§NNN): «Ștergi 2 declarații semnate…» for the
+   * The body counted from the form as posted (§532): «Ștergi 2 declarații semnate…» for the
    * signatures ticked at the press — the ticks exist only in the browser. Replaces `body` once the
    * dialog opens (`resolveBodyCount`); with nothing ticked there is no question to ask, and the
    * press goes to the server, which refuses it.

@@ -134,7 +134,7 @@ function allOf(form: FormData, name: string): string[] {
 }
 
 /**
- * «Regenerează din șabloane» (§NNN): a new draft of every text whose platform template says
+ * «Regenerează din șabloane» (§532): a new draft of every text whose platform template says
  * something the text in force and the drafts waiting do not — drafts only, nothing approved. The
  * keys are the ones the confirm dialog named. Administrator (§450), here and in the service.
  */
@@ -155,7 +155,7 @@ export async function regenerateLegalTemplatesAction(_previous: FormOutcome | nu
 }
 
 /**
- * «Aprobă toate ciornele» (§NNN): the drafts the confirm dialog named, approved in one
+ * «Aprobă toate ciornele» (§532): the drafts the confirm dialog named, approved in one
  * transaction by `approveVersion` — all or none. Administrator (§450), here and in the service.
  */
 export async function approveLegalDraftsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -174,7 +174,7 @@ export async function approveLegalDraftsAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * The ticked versions deleted in one press, from `/admin/legal/delete` (§NNN): drafts as one
+ * The ticked versions deleted in one press, from `/admin/legal/delete` (§532): drafts as one
  * draft is, approved versions as one approved version is — the phrase (`DELETE <n>`) and the
  * reason asked once for all of them, an audit row each. A refusal stays on the batch screen,
  * with the reason back in its box and the phrase to type again, as `deleteApprovedLegalVersionAction`

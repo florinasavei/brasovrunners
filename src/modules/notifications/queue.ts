@@ -53,7 +53,7 @@ const UNSENT: readonly EmailOutboxStatus[] = ["PENDING", "PROCESSING", "FAILED"]
 export const OUTBOX_QUEUE_LIMIT = 50;
 
 /**
- * What «Trimite acum» would send and what it would leave (§NNN): the claim's own rule
+ * What «Trimite acum» would send and what it would leave (§529): the claim's own rule
  * (`claimOutboxBatch`) — a `PENDING` row is due when its `next_attempt_at` is empty or passed — so
  * the confirm names the due ones, not the whole queue. The rest wait on purpose, each for one reason:
  *

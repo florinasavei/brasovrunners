@@ -578,7 +578,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               {t("groupRunDeclarations.erased")}
             </Alert>
           )}
-          {/* The ticked signatures erased in one press (§NNN): how many, the trail as for one. */}
+          {/* The ticked signatures erased in one press (§532): how many, the trail as for one. */}
           {saved === "groupRunDeclarationsErased" && (
             <Alert severity="success" data-testid="group-run-declarations-erased">
               {t(`groupRunDeclarations.batchErased.${countForm(countOf(erased), locale)}`, { count: countOf(erased) })}

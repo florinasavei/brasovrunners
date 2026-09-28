@@ -519,7 +519,7 @@ export type LegalDocumentVersionRow = {
   /**
    * The fingerprint of both translations (`computeContentHash`) — what «Regenerează din șabloane»
    * compares a template's text with, so a press never makes a draft of words already in force or
-   * already waiting as a draft (§NNN).
+   * already waiting as a draft (§532).
    */
   contentSha256: string;
   /**

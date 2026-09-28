@@ -95,7 +95,7 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   // again at its next ping rather than at the end of the quiet it last promised (§334).
   wakeJobs("email-outbox");
   /*
-    Switched off (§NNN): what the scheduled round was holding leaves now, after this response, the
+    Switched off (§529): what the scheduled round was holding leaves now, after this response, the
     way every email leaves from here on — not at the tick the queue panel had just named. One
     batch, the drain's own (§68); anything past it or deferred is the outbox job's, woken above.
   */

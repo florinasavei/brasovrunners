@@ -56,7 +56,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
     The line as the allocator counts it (§348, `domain/waitlist.ts#waitlistLength`): everybody
     waiting, and the offers still open — an offer before its deadline, or one whose email is still
     queued (§520: its clock starts when the email leaves, so `countOccupied` keeps counting it past
-    the stored deadline; listed here since §NNN). An offer past its deadline with its email gone holds nothing any more,
+    the stored deadline; listed here since §531). An offer past its deadline with its email gone holds nothing any more,
     so it is not listed either — or the panel would show a row the title does not count, and an
     "offer until" a time already gone.
   */

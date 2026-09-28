@@ -297,7 +297,7 @@ export async function eraseGroupRunDeclaration<T extends Record<string, unknown>
 }
 
 /**
- * The ticked signatures of one run erased in one press (§NNN; the owner, 2026-09-28: «să pot face
+ * The ticked signatures of one run erased in one press (§532; the owner, 2026-09-28: «să pot face
  * batch delete și la declarații, cu confirmarea numărului șters»).
  *
  * Each one exactly as `eraseGroupRunDeclaration` erases one — the same `eraseSignature`: its audit

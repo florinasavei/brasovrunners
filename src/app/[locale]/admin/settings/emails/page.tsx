@@ -148,7 +148,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
     readEmailVolumeToday(db, now),
-    // The page's one "now": the due and the held rows «Trimite acum» names (§NNN) are counted at it.
+    // The page's one "now": the due and the held rows «Trimite acum» names (§529) are counted at it.
     maySeeQueue ? readOutboxQueue(db, OUTBOX_QUEUE_LIMIT, now) : null,
     // Who receives a signed declaration and who is told about a confirmation (§244, §245):
     // participant data again, so the same gate as the queue.
@@ -175,7 +175,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       pinger's cadence, the Administrator's interval and the governor's floor (§447) — the budget's
       reading is this instance's memo, the same one /admin/tasks reads. «Termene» says the same wait
       beside its «Când pleacă emailurile» setting, and the queue panel opens with it — the next and
-      the last real run, what holds the round back, each row's departure and the switch (§NNN).
+      the last real run, what holds the round back, each row's departure and the switch (§529).
     */
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
   ]);
@@ -333,7 +333,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           mayEdit={maySendNow}
           delivery={outboxDelivery}
           now={now}
-          // «Trimitere programată» on/off (§NNN): the «Termene» setting, the Administrator's (§513).
+          // «Trimitere programată» on/off (§529): the «Termene» setting, the Administrator's (§513).
           mayEditTiming={mayEditEmail}
           openWhen={{ saved: saved === "outboxSent" || saved === "deliveryTiming", refused: Boolean(error) }}
         />

@@ -107,7 +107,7 @@ function row(html: string, label: string) {
  * is the chip's own first text — the difficulty pill's visually-hidden «— Dificultate» follows it
  * in a span of its own (`GlyphChip`'s `srSuffix`), so the visible word is still what this reads.
  * `[^>]*?` before the class: a chip with a tooltip — the night pill's, the difficulty's since
- * §NNN — carries `data-has-tooltip` first. */
+ * §528 — carries `data-has-tooltip` first. */
 function chips(fragment: string) {
   return [...fragment.matchAll(/<div [^>]*?class="(MuiChip-root[^"]*)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, classes, inner]) => ({
     outlined: classes.includes("MuiChip-outlined"),

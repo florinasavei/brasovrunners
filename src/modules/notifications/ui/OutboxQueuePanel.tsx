@@ -27,7 +27,7 @@ type Props = {
   /** "Trimite acum" is the Administrator's (§80); the queue itself is read by whoever may read the registrations (§291). */
   mayEdit: boolean;
   /**
-   * When the queue leaves (§NNN, from `outbox-delivery.ts`): the timing, the next real run of the
+   * When the queue leaves (§529, from `outbox-delivery.ts`): the timing, the next real run of the
    * outbox job, the last one and what holds the scheduled round back — the same reading
    * `/api/health` carries (§513).
    */
@@ -35,7 +35,7 @@ type Props = {
   /** The instant the page read the queue and the delivery at, so every row is estimated from one "now". */
   now: Date;
   /**
-   * Whether the reader may switch the scheduled round on and off (§NNN): the Administrator's club
+   * Whether the reader may switch the scheduled round on and off (§529): the Administrator's club
    * setting (`canManageClubSettings`, §513), asserted again by the action and the service.
    */
   mayEditTiming: boolean;
@@ -52,7 +52,7 @@ type Props = {
  * `/devs`. On race morning the useful question is "is Ana's confirmation stuck, and why", and
  * this is the screen that answers it.
  *
- * **When it leaves (§NNN; the owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile
+ * **When it leaves (§529; the owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile
  * și să pot face on/off la acea setare").** Under the scheduled default (§513) a queue waiting for
  * the tick is normal, and on QA — pinged hourly, with a two-hour minimum interval — it waited up to
  * three hours with nothing on this screen saying so: it read as "the emails no longer leave". So
@@ -86,7 +86,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   ];
 
   /*
-    One row's departure, in words (§NNN). A row being sent is "now"; a row that spent its retries
+    One row's departure, in words (§529). A row being sent is "now"; a row that spent its retries
     goes nowhere on its own; a waiting row leaves at the outbox job's first real run at or after its
     own turn — and when that turn is further back than health's `overdue` allows, it is late, said
     in red: the estimate would otherwise read as a promise the scheduler is not keeping. A newsletter
@@ -97,7 +97,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
     const dueAt = row.nextAttemptAt ?? row.createdAt;
     // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
-    // adds to its ninety minutes, the planned interval included — one judgement, two screens (§NNN).
+    // adds to its ninety minutes, the planned interval included — one judgement, two screens (§529).
     const late =
       !isBulkMessage(row.messageType) &&
       outboxRowOverdue({ now, dueAt, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: delivery.overdueCadenceMinutes });
@@ -113,7 +113,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   };
 
   /*
-    What «Trimite acum» sends and what it leaves (§NNN): the claim's own rule — the due rows go, within
+    What «Trimite acum» sends and what it leaves (§529): the claim's own rule — the due rows go, within
     the day's limit; the held ones stay until their turn, each for its reason, counted apart.
   */
   const heldReasons = (["family", "retry", "reserve"] as const)
@@ -139,7 +139,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       data-testid="outbox-queue"
     >
       {/*
-        When the queue leaves (§NNN): the switch's state, the next and the last real run, and what
+        When the queue leaves (§529): the switch's state, the next and the last real run, and what
         holds the round back. Said to every reader of the queue; the switch is the Administrator's.
       */}
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }} data-testid="outbox-when">
@@ -168,7 +168,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
         </Typography>
         {mayEditTiming && (
           /*
-            The switch (§NNN): the «Termene» setting (§513), one press to the other value, asking
+            The switch (§529): the «Termene» setting (§513), one press to the other value, asking
             first (§384) with what the press changes — switched off, the queue leaves now.
           */
           <ActionForm
@@ -204,7 +204,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
             to send and room to send it, because a disabled button cannot say why. And only to
             the role that may press it (§291): for the Organizer the count above is the whole
             answer, and the else-branch's "allowance spent" would be an answer to a question they
-            were never offered. "Something to send" is a due row (§NNN): a queue held entirely —
+            were never offered. "Something to send" is a due row (§529): a queue held entirely —
             a family still signing, a retry, the newsletter's reserve — sends nothing on a press,
             and the sentence says so instead. */}
         {!mayEdit ? null : queue.due > 0 && (volume.remaining === null || volume.remaining > 0) ? (

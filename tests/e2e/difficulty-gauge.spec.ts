@@ -44,7 +44,7 @@ async function expectGauge(pill: Locator, band: number, step?: number) {
   await expect(gauge.locator('[data-testid="difficulty-step-off"]')).toHaveCount(3 - step);
 }
 
-test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a tap (§NNN)", () => {
+test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a tap (§528)", () => {
   test.use({ hasTouch: true, viewport: { width: 320, height: 720 } });
   const SENTENCE = "Mediu 1 — nivelul 4 din 15";
 
@@ -171,7 +171,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
     await expect(page.getByText("1 = cel mai ușor din categorie, 3 = cel mai greu")).toBeVisible();
-    // The whole scale behind a «?» after the help line and beside the band (§NNN), one line per band.
+    // The whole scale behind a «?» after the help line and beside the band (§528), one line per band.
     for (const testId of ["difficulty-scale-help", "difficulty-band-help"]) {
       const help = page.getByTestId(testId);
       await expect(help).toBeVisible();

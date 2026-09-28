@@ -203,7 +203,7 @@ export default function ActionFormIsland({
     });
     if (!spec) return;
     const valuesOf = (field: string) => data.getAll(field).filter((value): value is string => typeof value === "string");
-    // A body that counts the ticks (§NNN): with none ticked, nothing to ask — the server refuses.
+    // A body that counts the ticks (§532): with none ticked, nothing to ask — the server refuses.
     const ticked = resolveBodyCount(spec, valuesOf);
     if (!ticked) return;
     event.preventDefault();

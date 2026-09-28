@@ -15,7 +15,7 @@ import type { GlyphName } from "./glyphs";
 
 /**
  * A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary
- * (§112), its words, and — the night pill's (§394) and the difficulty's (§NNN) — a tooltip that says why. `srSuffix`
+ * (§112), its words, and — the night pill's (§394) and the difficulty's (§528) — a tooltip that says why. `srSuffix`
  * adds extra words a screen reader reads right after `label`, never shown, while the visible
  * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
@@ -138,7 +138,7 @@ export function routePillParts(
  * catalogue (`Event.difficultyValues`, `difficultyBandWords`, `difficultyLevelShort`,
  * `difficultyLevelSr`), never a string written here.
  *
- * **The tooltip names the level of fifteen (§NNN)** — «Mediu 2 — nivelul 5 din 15» — the band and
+ * **The tooltip names the level of fifteen (§528)** — «Mediu 2 — nivelul 5 din 15» — the band and
  * step the pill shows, then the gauge's position in numbers; never an example, which would say a
  * non-Tâmpa «Mediu 1» is the Tâmpa run (the examples live in the backoffice «?» and «Ghid» only).
  * A screen reader hears it once, in `srLabel` — «Dificultate: mediu 2 — nivelul 5 din 15» — so no

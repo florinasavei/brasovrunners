@@ -53,7 +53,7 @@ export function nextOutboxTick(input: {
 const LEAVES_AT_MAX_STEPS = 500;
 
 /**
- * When one message still in the queue is expected to leave (§NNN): the outbox job's first real run
+ * When one message still in the queue is expected to leave (§529): the outbox job's first real run
  * at or after the row's own turn — its `next_attempt_at` after a retry or a deferral, its creation
  * otherwise. The next run is `nextTickAt` (above); the runs after it follow one another at the
  * pinger's cadence, or at the minimum interval when one holds the job back (§334, §447). Under
@@ -85,7 +85,7 @@ export function outboxRowLeavesAt(input: {
 }
 
 /**
- * Whether a waiting row's turn passed so long ago that no schedule explains it (§NNN): the same
+ * Whether a waiting row's turn passed so long ago that no schedule explains it (§529): the same
  * threshold `/api/health` calls `overdue` (§98) — ninety minutes past the row's turn, plus the
  * minimum interval in force — so the queue panel and the monitor never disagree about a stall.
  * The panel says it on the row, beside the estimate that would otherwise read as a promise.

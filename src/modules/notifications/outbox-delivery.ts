@@ -30,12 +30,12 @@ export type OutboxDelivery = {
   /** The pinger call at which the outbox job is next expected to run for real (an estimate). */
   nextTickAt: string;
   /**
-   * When the outbox job last ran for real (§NNN), null when it never has: the queue panel says it
+   * When the outbox job last ran for real (§529), null when it never has: the queue panel says it
    * beside the next tick, so "the scheduler has not come since 04:00" is read, not guessed.
    */
   lastRunAt: string | null;
   /**
-   * What holds the scheduled round back now, in minutes (§NNN): the pinger's cadence at this hour,
+   * What holds the scheduled round back now, in minutes (§529): the pinger's cadence at this hour,
    * the Administrator's minimum interval (§334) and the budget governor's floor (§447) — the three
    * `emailWaitMinutes` takes the longest of, each named on the queue panel so the club can see
    * which one to change.
@@ -44,7 +44,7 @@ export type OutboxDelivery = {
   /**
    * The minutes `/api/health` adds to its `overdue` allowance now (§98, §447), from
    * `outboxOverdueCadenceMinutes` below — the one number the queue panel marks a row late with,
-   * so the panel's red «Întârziat» and the monitor's `overdue` are the same judgement (§NNN).
+   * so the panel's red «Întârziat» and the monitor's `overdue` are the same judgement (§529).
    */
   overdueCadenceMinutes: number;
 };
@@ -54,7 +54,7 @@ export type OutboxDelivery = {
  * ninety minutes (§98): the Administrator's minimum interval (§334), the budget governor's floor
  * (§447) and the interval the last real run planned under, which the pings still honour after the
  * governor's level has dropped (`plannedCadenceMinutes`) — the longest of the three. One function
- * for the health check and the queue panel (§NNN), so the two never disagree about a stall.
+ * for the health check and the queue panel (§529), so the two never disagree about a stall.
  */
 export async function outboxOverdueCadenceMinutes(stated: number, governorFloorMinutes: number, now: Date): Promise<number> {
   return Math.max(stated, governorFloorMinutes, await plannedCadenceMinutes("email-outbox", now));

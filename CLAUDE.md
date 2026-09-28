@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.16-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.17-2026-09-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.16-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.17-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -344,6 +344,7 @@ sections and in `CHANGELOG.md`.
 - **Batch 37 (2026-09-27, `BR-V2.14`):** the V2.13 leftovers — «Configurație» only under «Setări», fragment addresses hop to their tab, the waiting-list offer kept while its email is queued, the family form carries the country, the ship tolerates a merge in progress, the family confirmation previewed (§520) · a glyph on every button and every fold header, public site and backoffice, guarded by a source-walk test (§521) · the plain-words pass over the whole backoffice — one sentence per fact, at most 200 characters, detail behind «?», enforced by the test (§522) · one self-declaration per person per series of group runs — no expiry, ended only by the signer's request or a new text version; the templates, the paper form, the notice and the PDF written for the recurring run; migration `0101` (§523).
 - **Batch 38 (2026-09-27, `BR-V2.15`):** the members' zone — a «Membru» role below the volunteer with the same Zitadel sign-in and no backoffice, the public «Beneficiile membrilor» page with the sign-in button, one members-only page behind the sign-in, bulk invitations; migration `0102` (§524).
 - **Batch 39 (2026-09-27, `BR-V2.16`):** «Întrebări frecvente» — a platform page the club fills with questions and rich-text answers in both languages, native folds with deep links, `FAQPage` structured data; Pagini in «standard» and «personalizate» groups; migration `0103` (§525) · the difficulty as five bands × three steps — ușor, mediu, greuț, greu, foarte greu, each 1·2·3 — one level column backfilled from the old five values, the gauge with step dots, the club's scale in the guide; migration `0104` (§526).
+- **Batch 40 (2026-09-27, `BR-V2.17`):** the backoffice events list searched by name, filtered by state — viitoare, încheiate, ciorne, publicate, arhivate, anulate — and sorted by date, name or state, all in the address and without JavaScript (§527) · every difficulty gauge says its exact level of fifteen in a tooltip — «Ușor 2 — nivelul 2 din 15» — and a «?» in the editor explains the club's scale with its own examples (§528) · the outbox panel says when the emails leave — the next scheduled run, each row's own time — and carries the on/off switch for scheduled delivery (§529) · «Mărimea textului» — the public pages' text size as a club setting, Mic / Normal / Mare / Foarte mare, the owner's own change from his phone (§530) · the cleanup after the night — the queue and the map brought to the truth, the review leftovers of V2.13–V2.16 (the offer rule in the queue panel, the glyph guard, plain words over toasts and steps), dead exports and orphan keys (§531) · every legal text regenerated from its template in one press, every draft approved in one press, versions deleted in bulk under the existing rules (§532).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price under «Setări» → «Costuri» (§516, §41,

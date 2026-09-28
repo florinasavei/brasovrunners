@@ -142,7 +142,7 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
 }
 
 /**
- * The queue panel's switch (§NNN): «Trimitere programată» on or off, beside the rows it decides
+ * The queue panel's switch (§529): «Trimitere programată» on or off, beside the rows it decides
  * the departure of. The same setting, service and gates as «Când pleacă emailurile» in «Termene»
  * (§513) — the Administrator at the door and in the service, one closed choice the schema decides,
  * audited — landing back on the queue it has just changed. Switched off, the service also sends

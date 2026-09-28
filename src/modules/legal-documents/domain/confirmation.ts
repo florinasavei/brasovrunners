@@ -43,7 +43,7 @@ export function confirmationPhrase(key: LegalDocumentKey, version: number): stri
 }
 
 /**
- * The phrase for deleting several approved versions at once (§NNN), e.g. `DELETE 3`.
+ * The phrase for deleting several approved versions at once (§532), e.g. `DELETE 3`.
  *
  * One phrase per version would be `GDPR 2, GDPR 3, TERMS 1, …` typed on a phone, and the owner's
  * ask was one press for the club's testing leftovers. What the typed phrase must still do is make

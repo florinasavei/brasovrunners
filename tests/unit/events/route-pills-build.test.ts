@@ -135,7 +135,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
 
   // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
   // what the eye and a screen reader are given — the visible «Mediu 2», hidden from the reader, and
-  // the visually-hidden «Dificultate: mediu 2 — nivelul 5 din 15» in its place (§526, §NNN).
+  // the visually-hidden «Dificultate: mediu 2 — nivelul 5 din 15» in its place (§526, §528).
   it.each([
     // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three steps each.
     ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor 1 — nivelul 1 din 15", "Ușor, treapta 1 din 3"],
@@ -160,7 +160,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     expect(pills[0]!.plain).toBe(plain);
     const html = renderToStaticMarkup(RoutePills({ pills }));
     // The visible words, hidden from a screen reader; the heard words, once, in a span clipped to
-    // one pixel — the level of fifteen inside them, never repeated after them (§NNN).
+    // one pixel — the level of fifteen inside them, never repeated after them (§528).
     expect(html).toContain(`<span aria-hidden="true">${shown}</span>`);
     expect(html).toContain(`>${heard}<`);
     expect(html.split(heard.slice(heard.indexOf("—")))).toHaveLength(2);

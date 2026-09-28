@@ -26,15 +26,12 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The cleanup after the night | `chore/v217-cleanup-after-the-night` | `BR-V2.17` |
-| The difficulty's tooltip and the editor's scale | `feat/difficulty-tooltip-and-backoffice-help` | `BR-V2.17` |
-| The event list's search, state filter and sort | `feat/backoffice-events-search-sort-state` | `BR-V2.17` |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.16` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.17` |
 
 ## Next, queued
 
@@ -68,6 +65,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.17` | the backoffice events list searched by name, filtered by state — viitoare, încheiate, ciorne, publicate, arhivate, anulate — and sorted by date, name or state, all in the address and without JavaScript (§527) · every difficulty gauge says its exact level of fifteen in a tooltip — «Ușor 2 — nivelul 2 din 15» — and a «?» in the editor explains the club's scale with its own examples (§528) · the outbox panel says when the emails leave — the next scheduled run, each row's own time — and carries the on/off switch for scheduled delivery (§529) · «Mărimea textului» — the public pages' text size as a club setting, Mic / Normal / Mare / Foarte mare, the owner's own change from his phone (§530) · the cleanup after the night — the queue and the map brought to the truth, the review leftovers of V2.13–V2.16 (the offer rule in the queue panel, the glyph guard, plain words over toasts and steps), dead exports and orphan keys (§531) · every legal text regenerated from its template in one press, every draft approved in one press, versions deleted in bulk under the existing rules (§532) |
 | `BR-V2.16` (2026-09-28 03:06) | «Întrebări frecvente» — a platform page the club fills with questions and rich-text answers in both languages, native folds with deep links, `FAQPage` structured data; Pagini in «standard» and «personalizate» groups; migration `0103` (§525) · the difficulty as five bands × three steps — ușor, mediu, greuț, greu, foarte greu, each 1·2·3 — one level column backfilled from the old five values, the gauge with step dots, the club's scale in the guide; migration `0104` (§526) |
 | `BR-V2.15` (2026-09-28 02:28) | the members' zone — a «Membru» role below the volunteer with the same Zitadel sign-in and no backoffice, the public «Beneficiile membrilor» page with the sign-in button, one members-only page behind the sign-in, bulk invitations; migration `0102` (§524) |
 | `BR-V2.14` (2026-09-28 01:50) | the V2.13 leftovers — «Configurație» only under «Setări», fragment addresses hop to their tab, the waiting-list offer kept while its email is queued, the family form carries the country, the ship tolerates a merge in progress, the family confirmation previewed (§520) · a glyph on every button and every fold header, public site and backoffice, guarded by a source-walk test (§521) · the plain-words pass over the whole backoffice — one sentence per fact, at most 200 characters, detail behind «?», enforced by the test (§522) · one self-declaration per person per series of group runs — no expiry, ended only by the signer's request or a new text version; the templates, the paper form, the notice and the PDF written for the recurring run; migration `0101` (§523) |

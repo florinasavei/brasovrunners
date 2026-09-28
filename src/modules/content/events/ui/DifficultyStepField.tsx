@@ -41,7 +41,7 @@ export default function DifficultyStepField({
 }: {
   name: string;
   defaultStep: DifficultyStep;
-  /** `scale`: the club's whole scale in words (§NNN), behind a «?» after the help line. */
+  /** `scale`: the club's whole scale in words (§528), behind a «?» after the help line. */
   words: { label: string; help: string; scale?: string; choices: Record<`step${DifficultyStep}`, string> };
 }) {
   const recall = useRecall();
@@ -100,7 +100,7 @@ export default function DifficultyStepField({
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
         <span id={helpId}>{words.help}</span>
-        {/* The whole scale behind a «?» (§NNN, the §511 way): fifteen levels and the club's examples —
+        {/* The whole scale behind a «?» (§528, the §511 way): fifteen levels and the club's examples —
             outside the radio group's description, which stays the one short line. */}
         {words.scale && <QuietHelp text={words.scale} size={14} testId="difficulty-scale-help" />}
       </Typography>

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type BatchVersion, deletionOrder, draftApprovalOutcome, regenerationOutcome } from "@/modules/legal-documents/domain/batch";
 import { batchConfirmationPhrase, matchesBatchConfirmation } from "@/modules/legal-documents/domain/confirmation";
 
-/** BR-REQ-053-02 (§NNN) — the plans behind the presses over every legal text at once. */
+/** BR-REQ-053-02 (§532) — the plans behind the presses over every legal text at once. */
 const row = (overrides: Partial<BatchVersion> & Pick<BatchVersion, "id" | "version">): BatchVersion => ({
   key: "TERMS",
   isApproved: false,

@@ -18,7 +18,7 @@ import {
 } from "@/modules/content/events/list-query";
 
 /**
- * BR-REQ-060-01, BR-REQ-040-04 (`DECISIONS.md` §NNN): the backoffice events list is searched,
+ * BR-REQ-060-01, BR-REQ-040-04 (`DECISIONS.md` §527): the backoffice events list is searched,
  * filtered by state and ordered by one select, from the address, by a GET form that works
  * without JavaScript, every word in both catalogues.
  */
@@ -246,7 +246,7 @@ describe("the events list page wires it (source)", () => {
   });
 });
 
-describe("§NNN the list's address through an action's `back`", () => {
+describe("§527 the list's address through an action's `back`", () => {
   it("round-trips the list's own keys and nothing else", () => {
     const address = "q=tampa&state=DRAFT&sort=title-asc&dir=asc&page=2&perPage=50";
     expect(eventListBack(address)).toBe(address);

@@ -21,7 +21,7 @@ function startGlyph(Glyph: ComponentType<{ "aria-hidden"?: "true"; sx?: object }
 }
 
 /**
- * The backoffice events list's three controls (§NNN) — the search, the state and the order — as
+ * The backoffice events list's three controls (§527) — the search, the state and the order — as
  * one row inside the page's GET form. A client component only because each field wears its glyph
  * as an adornment, and an icon element may not be handed across the server/client boundary
  * (§370); every prop here is a string. What posts is plain: a search box and two **native**

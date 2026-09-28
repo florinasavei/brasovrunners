@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type ConfirmSpec, resolveBodyCount } from "@/shared/feedback/notice";
 
 /**
- * §NNN — a confirm dialog whose body counts the ticks at the press: «Ștergi 2 declarații semnate
+ * §532 — a confirm dialog whose body counts the ticks at the press: «Ștergi 2 declarații semnate
  * pentru «Tura pe munte»?». The ticks exist only in the browser, so the server hands the three
  * counted forms and the dialog picks one when it opens; with nothing ticked there is nothing to ask.
  */
@@ -21,7 +21,7 @@ const spec: ConfirmSpec = {
 };
 const ticked = (values: string[]) => (field: string) => (field === "declarationIds" ? values : []);
 
-describe("§NNN a dialog that counts the ticks", () => {
+describe("§532 a dialog that counts the ticks", () => {
   it("names the exact number ticked, in the right Romanian form, each id once", () => {
     expect(resolveBodyCount(spec, ticked(["a"]))?.body).toBe("Ștergi 1 declarație semnată pentru «Tura»? Nu se poate recupera.");
     expect(resolveBodyCount(spec, ticked(["a", "b", "b"]))?.body).toBe("Ștergi 2 declarații semnate pentru «Tura»? Nu se pot recupera.");

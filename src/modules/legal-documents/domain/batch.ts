@@ -3,7 +3,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { confirmationPhrase } from "./confirmation";
 
 /**
- * The three presses over many versions at once on `/admin/legal` (§NNN): regenerate every text
+ * The three presses over many versions at once on `/admin/legal` (§532): regenerate every text
  * from its template, approve the drafts, delete a ticked selection. Pure — the rows in, a plan
  * out — so what the page offers, what its confirm dialog names and what the service does are one
  * answer, and it is tested without a database.

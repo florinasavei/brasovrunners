@@ -732,7 +732,7 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
 /**
  * The destruction itself, inside the caller's transaction and after its `assertDeletable`: the
  * audit row, the retired number, the delete — one body for the single delete and the batch
- * (§151, §NNN), so the batch cannot be the copy that forgets the number.
+ * (§151, §532), so the batch cannot be the copy that forgets the number.
  */
 async function destroyApprovedVersion<T extends Record<string, unknown>>(
   tx: Database<T>,
@@ -875,7 +875,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
 /**
  * A key's platform template as the two translations a draft is made of: the same prefill as
  * "start from the platform's text" — the fields kept, the facts written in (§357) — read by the
- * one press (§132) and by «Regenerează din șabloane» (§NNN), so both hash the same words.
+ * one press (§132) and by «Regenerează din șabloane» (§532), so both hash the same words.
  */
 export function templateTranslations(key: LegalDocumentKey, facts: ClubFacts): LegalDocumentTranslationInput[] {
   const prefill = templatePrefill(key, facts);
@@ -890,7 +890,7 @@ export type RegenerationPlanItem = {
 };
 
 /**
- * What «Regenerează din șabloane» would do with every text of the catalogue (§NNN), read-only:
+ * What «Regenerează din șabloane» would do with every text of the catalogue (§532), read-only:
  * the page shows it, its confirm dialog names the `create` keys, and the press asks it again
  * of the rows as they are then.
  */
@@ -914,7 +914,7 @@ export async function planTemplateRegeneration<T extends Record<string, unknown>
 }
 
 /**
- * Every legal text regenerated from the platform's current template, in one press (§NNN): a new
+ * Every legal text regenerated from the platform's current template, in one press (§532): a new
  * **draft** per key whose template now says something neither the text in force nor a draft
  * waiting says. The templates moved several times in a week (§418, §515, §523), and each move
  * was six rounds of "Versiune nouă → pornește de la textul platformei → Salvează".
@@ -977,7 +977,7 @@ async function versionHasPlaceholders<T extends Record<string, unknown>>(db: Dat
 }
 
 /**
- * Every draft, with what «Aprobă toate ciornele» would do with it (`draftApprovalOutcome`, §NNN):
+ * Every draft, with what «Aprobă toate ciornele» would do with it (`draftApprovalOutcome`, §532):
  * read-only, for the page, its confirm dialog and the press.
  */
 export async function planDraftApproval<T extends Record<string, unknown>>(db: Database<T>): Promise<DraftApprovalItem[]> {
@@ -1004,7 +1004,7 @@ function assertDraftsReady(plan: readonly DraftApprovalItem[], ids: readonly str
 }
 
 /**
- * The drafts the page listed, approved in one press (§NNN) — each by `approveVersion`, the
+ * The drafts the page listed, approved in one press (§532) — each by `approveVersion`, the
  * one-version verb, in one transaction: all of them or none.
  *
  * `versionIds` is what the confirm dialog named, and every one must still be `ready` when the
@@ -1066,7 +1066,7 @@ function batchObstacle(row: LegalDocumentVersionRow, facts: DeletionFacts): Doma
 }
 
 /**
- * Several versions deleted in one press (§NNN): drafts as `deleteDraftVersion` deletes one (§53),
+ * Several versions deleted in one press (§532): drafts as `deleteDraftVersion` deletes one (§53),
  * approved versions as `deleteApprovedVersion` does (§151, §316) — the same obstacles, the same
  * audit row per version written first, the same retired number — in one transaction, all or none.
  *

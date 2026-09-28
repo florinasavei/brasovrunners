@@ -124,7 +124,7 @@ export default async function ListingFilterPanel({
 
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
     const Icon = GLYPHS[glyph(group, value)];
-    // A band's gauge names the levels it ticks on hover (§NNN): «Greuț: nivelurile 7–9 din 15». A
+    // A band's gauge names the levels it ticks on hover (§528): «Greuț: nivelurile 7–9 din 15». A
     // native `title`, not MUI's `Tooltip`, so the panel stays a Server Component that works without
     // a script; the band's word is what a screen reader hears, as before.
     const title = group === "difficulty" && isDifficultyBand(value) ? bandTitle(value) : undefined;

@@ -24,7 +24,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-053-02 (§NNN) — every text at once on `/admin/legal`: drafts regenerated from the
+ * BR-REQ-053-02 (§532) — every text at once on `/admin/legal`: drafts regenerated from the
  * platform's templates, the drafts approved in one press, the ticked versions deleted in one
  * press. Each is the one-version verb asked of several, under the same guards.
  */
@@ -66,7 +66,7 @@ async function fieldsOf(operation: Promise<unknown>): Promise<readonly string[]>
   }
 }
 
-describe("every legal text at once (§NNN)", () => {
+describe("every legal text at once (§532)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

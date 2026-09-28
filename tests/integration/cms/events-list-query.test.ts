@@ -5,13 +5,13 @@ import { listEventsForBackoffice } from "@/modules/content/events/repository";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, BR-REQ-040-04 (`DECISIONS.md` §NNN) — the backoffice events list's search, state
+ * BR-REQ-060-01, BR-REQ-040-04 (`DECISIONS.md` §527) — the backoffice events list's search, state
  * and order over real rows: `listEventsForBackoffice` as the page fetches it, then
  * `arrangeEventList` as the page arranges it. A weekly series with dates behind and ahead, a
  * finished series, a draft, an archived race, a called-off race and one marked completed — every
  * state and every order asked once.
  */
-describe("§NNN the backoffice events list over seeded events and a series", () => {
+describe("§527 the backoffice events list over seeded events and a series", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const NOW = new Date("2026-10-01T09:00:00Z");

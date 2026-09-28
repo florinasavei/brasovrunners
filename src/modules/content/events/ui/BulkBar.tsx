@@ -40,7 +40,7 @@ export default function BulkBar({
 }: {
   formId: string;
   uiLocale: string;
-  /** The list's own query string, posted as `back` so the action returns to it (§NNN). */
+  /** The list's own query string, posted as `back` so the action returns to it (§527). */
   back?: string;
   publish: Action;
   archive: Action;

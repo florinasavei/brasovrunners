@@ -184,7 +184,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   }));
 
   /*
-    The search, the state and the order, from the address (§NNN) — a GET form writes them, so the
+    The search, the state and the order, from the address (§527) — a GET form writes them, so the
     list is a place to bookmark and it works with JavaScript off. `arrangeEventList` narrows the
     dates, groups what is left — the same title and type is the same event again, one line with
     the dates folded inside it (§113) — and orders the lines, the nearest date first unless the
@@ -194,7 +194,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const listParams = eventListParams(listQuery);
   const narrowed = eventListNarrowed(listQuery);
   const inUse = eventListQueryInUse(listQuery);
-  // Posted by every action form on the list, so the action's redirect returns here (§NNN).
+  // Posted by every action form on the list, so the action's redirect returns here (§527).
   const back = eventListBack(current);
   // The M of «N din M evenimente»: the lines with nothing narrowing them.
   const allLineCount = countEventLines(rows);
@@ -217,7 +217,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   );
 
   // The page and its size, as every backoffice list reads them. The order is the form's one
-  // select, never a column heading's (§NNN): two ways to say one thing would disagree.
+  // select, never a column heading's (§527): two ways to say one thing would disagree.
   const query = parseListQuery(current, { sortable: [], defaultSort: "startsAt", defaultPerPage: 100 });
   const pageLines = lines.slice(query.offset, query.offset + query.limit);
 
@@ -608,7 +608,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       </Stack>
 
       {/*
-        Search, state and order (§NNN): one row above the list, never folded — a plain GET form
+        Search, state and order (§527): one row above the list, never folded — a plain GET form
         with native selects, so the list's state is the address — bookmarked, kept across a
         Server Action's redirect back (the forms post it as `back`), and working with JavaScript off, like the registrations
         list's filters and the public listing's (§413). Every control wears its glyph.

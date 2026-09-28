@@ -364,7 +364,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     webhookUrl: `${env.APP_BASE_URL}/api/webhooks/mailgun`,
     baseUrl: env.APP_BASE_URL,
     /*
-      The monitors row's cadence (§NNN): this environment's own pinger, by day and at night, from
+      The monitors row's cadence (§529): this environment's own pinger, by day and at night, from
       `PINGER_CADENCE_MINUTES` — QA reads "o oră", production "15 minute" — never a literal, so the
       row says why QA's emails wait longer than production's.
     */

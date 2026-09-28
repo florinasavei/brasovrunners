@@ -115,7 +115,7 @@ async function backTo(path: string, outcome: Record<string, string | undefined>,
   redirect(query ? `${path}${path.includes("?") ? "&" : "?"}${query}#admin-alert` : path);
 }
 
-/** The events list as the form was posted from it — its search, state, order and page (§NNN). */
+/** The events list as the form was posted from it — its search, state, order and page (§527). */
 function eventListPath(form: FormData, locale: Locale): string {
   const back = eventListBack(text(form, "back"));
   const path = getPathname({ locale, href: "/admin" });
@@ -905,7 +905,7 @@ export async function deleteEventAction(_previous: FormOutcome | null, form: For
   }
 
   // Deleted or not, the event list is where there is something to look at — the editor for a
-  // deleted event is a 404 — and the list as it was left, filtered and ordered (§NNN).
+  // deleted event is a 404 — and the list as it was left, filtered and ordered (§527).
   return backTo(eventListPath(form, locale), outcome);
 }
 
@@ -1038,7 +1038,7 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
 }
 
 /**
- * An Administrator erases the ticked signatures of a run in one press (§NNN): the ids the confirm
+ * An Administrator erases the ticked signatures of a run in one press (§532): the ids the confirm
  * dialog counted, one reason, each through the single erase's own path. A set that changed since
  * the page was drawn is refused whole and says so; the toast names how many went.
  */

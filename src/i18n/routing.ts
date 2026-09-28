@@ -232,7 +232,7 @@ export const routing = defineRouting({
      */
     "/admin/legal/[id]/delete": "/admin/legal/[id]/delete",
     /**
-     * The versions ticked on the list, deleted in one press (§NNN): what goes, what cannot and
+     * The versions ticked on the list, deleted in one press (§532): what goes, what cannot and
      * why, one reason and one phrase (`DELETE <n>`) for the approved ones. `?id=…` once per tick.
      */
     "/admin/legal/delete": "/admin/legal/delete",

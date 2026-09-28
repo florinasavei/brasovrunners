@@ -14,13 +14,13 @@ import {
 import { theme } from "@/theme/theme";
 
 /**
- * §NNN — «Mărimea textului»: four steps, drawn by the locale layout as one rule on the root font
+ * §530 — «Mărimea textului»: four steps, drawn by the locale layout as one rule on the root font
  * size, for the public pages only and in both schemes.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 
-describe("§NNN the site's text size", () => {
+describe("§530 the site's text size", () => {
   it("offers four steps, smallest first, «Normal» the platform's own size and the default", () => {
     expect(SITE_FONT_SIZES).toEqual(["small", "normal", "large", "xlarge"]);
     expect(Object.keys(SITE_FONT_SIZE_PERCENT)).toEqual([...SITE_FONT_SIZES]);

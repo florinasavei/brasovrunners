@@ -54,7 +54,7 @@ import {
 } from "../actions";
 import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 
-/** The form the rows' ticks belong to (`form=`), a GET to `/admin/legal/delete` (§NNN). */
+/** The form the rows' ticks belong to (`form=`), a GET to `/admin/legal/delete` (§532). */
 const BATCH_DELETE_FORM = "legal-batch-delete";
 
 type Props = {
@@ -217,7 +217,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     .map(([name]) => name);
 
   /*
-    The presses over every text at once (§NNN), asked of the service's own plans so the box, its
+    The presses over every text at once (§532), asked of the service's own plans so the box, its
     confirm dialog and the press name the same versions: which templates now say something no
     version in force or waiting says, and which drafts one press may approve. Read only for the
     role that may press them.
@@ -326,7 +326,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   ];
 
   /*
-    A tick for every row the batch delete would take (§NNN) — a draft nothing relied on, an
+    A tick for every row the batch delete would take (§532) — a draft nothing relied on, an
     approved version with no obstacle — from the same verdict the row's own link reads, so no row
     offers a tick the service would refuse. `form` on the `<input>` itself, never on the Checkbox
     (it lands on the wrapping span there and the form posts nothing, §114).
@@ -645,7 +645,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       )}
 
       {/*
-        Every text at once (§NNN): drafts from the platform's current templates, then the drafts
+        Every text at once (§532): drafts from the platform's current templates, then the drafts
         approved in one press. Two presses on purpose — nothing reaches the site from a template
         without the club reading the draft first (§46) — each behind the §384 confirm dialog that
         names the texts. What cannot be approved together is said with its reason, never hidden.

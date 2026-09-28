@@ -435,7 +435,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     expect(refused.status()).toBe(403);
   });
 
-  test("the Administrator ticks the signatures left and erases them in one press, the dialog naming the count (§NNN)", async ({ page }) => {
+  test("the Administrator ticks the signatures left and erases them in one press, the dialog naming the count (§532)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
