@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.22-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -19506,146 +19506,21 @@ The column's default of 14 (§329) now reaches every type's page, so every exist
 
 Baseline `BR-V2.12-2026-09-27`.
 
-## 506. A held send button is sent the moment Turnstile answers, every time
+## 506. Withdrawn — a duplicate of §502
 
-**2026-09-27. Amends §285 and §304; follows §185, §205 and §216.** The owner, on QA and production (`BR-V2.10`), with the registration form showing «Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde» under a widget that already said «Success!»: «Am rămas în acest state! ce se întâmplă???» The press had been held for Cloudflare's token (§285). The token arrived, and nothing sent the form.
+The `BR-V2.12` landing wrote §502 a second time under this number. §502 is the decision; the code cites it.
 
-**Where it came from.** Two releases, not the latest:
-- **`BR-V1.45-2026-09-22` (§285).** It added `tokenMissing`, a state fed by a MutationObserver and a listener on the form's `input`, and an eight-second valve counted from when the button was drawn. The valve disconnected the observer for good, but the `input` listener kept measuring. Anybody who typed after the page's eighth second while the widget had no token set `tokenMissing` back to true, and nothing was left to set it false. That covers a widget still thinking, a challenge to tick, a reset after a refusal (§185) and a token being refreshed. The next press was held, the widget said «Success!», and the valve had already been spent.
-- **`BR-V1.55-2026-09-23` (§304).** Its replay of a held press was latched once per mount. The button survives the redirect that shows a refusal, so a second held press after a refused attempt was never replayed.
-- **§489 (`BR-V2.09`) was ruled out.** It moved the widget's two constants into `domain/turnstile-widget.ts` and changed no held-press logic. §491 and §493 did not touch it either.
+## 507. Withdrawn — a duplicate of §503
 
-**Decision.**
-- **The press asks the form, at the moment of the press,** whether Cloudflare's field holds a token (`botCheckUnanswered`). No state is kept that could go stale. A widget never drawn at all (a blocked script) is waited for only in the page's first eight seconds, as §285 had it. After that a press goes straight through, and the server takes a missing token for the check not running (§216).
-- **A held press waits for the token, or for eight seconds counted from that press,** whichever comes first. Then it calls `requestSubmit(button)`, exactly as if the finger had landed now, and never while a request is already in flight. Every held press gets its own valve and its own replay: nothing is used up by the first one.
-- **Two signals say the token is there, and each is enough on its own:**
-  - Cloudflare's success callback. `TurnstileWidget` passes a `callback` to `render` that dispatches a bubbling `TURNSTILE_TOKEN_EVENT` from its own element. The button reads the field on the **next task** after that event, not inside Cloudflare's callback, so a script that calls back before it writes the field is not left to the valve.
-  - A MutationObserver on the `value` attribute. Cloudflare's field is `<input type="hidden">`, whose value mode in the HTML standard is "default": its `.value =` write *is* an attribute change, which the observer sees. On a text box it would not be, and there the callback alone carries the token.
+The `BR-V2.12` landing wrote §503 a second time under this number. §503 is the decision; the code cites it.
 
-The form's own `input` is watched as well, for somebody typing while held. Only the success callback is handed to Cloudflare: an `error-callback` would change how its widget retries, and a held press has its own valve.
-- **Nothing changes for somebody whose check answered before the press:** the press goes straight through, once, with no held sentence.
+## 508. Withdrawn — a duplicate of §504
 
-**Proof.** The suite gains a second server over the same build, with the anti-bot check on and Cloudflare's published test keys (a site key that always passes, and the secret that accepts only its dummy token; never the club's keys). Only `tests/e2e/registration-turnstile.spec.ts` uses it. A stand-in for `api.js` lets the spec decide when the check answers and in what order.
+The `BR-V2.12` landing wrote §504 a second time under this number. §504 is the decision; the code cites it.
 
-A held press is also sent by its valve, with the token by then. So every "sent when it answers" case times the request: within three seconds of the answer, and before the valve could have fired. The cases:
-- the owner's case, a press after the page's eighth second;
-- a check answered before the press: never held, exactly one request;
-- the observer alone: a hidden field written with no callback;
-- the callback alone: a field the observer cannot see, called back before it is written. With the old synchronous read this case fails at 4.5 s, for the valve;
-- that field's control: written with no callback, so only the valve sends it, at 7.5 s or later;
-- a refused attempt, then a second held press;
-- a check that never answers: sent by the valve and accepted (§205);
-- with `E2E_REAL_TURNSTILE=1`, Cloudflare's real test widget arriving four seconds after the press, timed against the press. It is never run in CI, since it depends on a third party.
+## 509. Withdrawn — a duplicate of §505
 
-`held-press-is-sent.test.ts` holds the source-level lines: the read at the press, the per-press valve with no once-per-mount latch, the three watchers, and the next-task read after the callback.
-
-One held press per form. The registration form carries two send buttons that wait for Cloudflare's token: the main one and, after a too-fast refusal, «Retrimite» (§324). Each held its own press, and each replayed it when the token landed. That meant two `requestSubmit` calls on one form and two POSTs of one registration: the person saw a success and then the second request's refusal. The hold now belongs to the form (`src/shared/ui/held-press.ts`, a WeakMap keyed by the form that names the pressed button). The first press claims it. Any other press on that form while it is held is swallowed and shows the same sentence under its own button. The release (the token, the valve, or the pressed button unmounting) submits at most once, and only from the button that owns the hold.
-
-A widget that is drawn but has no token, such as an interactive challenge nobody has ticked, now holds every press for the full eight seconds however old the page is. Before, a press after the page's eighth second went straight through without a token. That is why the waiting sentence now asks the person to tick the box when one appears.
-
-Baseline `BR-V2.12-2026-09-27`.
-
-## 507. A group run's self-declaration is kept while the signer comes to the runs, and deleted when they ask
-
-**Decided 2026-09-27, the owner's words:** «clubul o păstrează cât timp vii la alergări și o șterge când îi ceri». This amends §393's seven days and §418's retention paragraph.
-
-**Why.** The optional group-run self-declaration is the club's evidence that a runner was told the run's risks and took them on. Deleting it seven days after the run threw that evidence away while the runner was still coming to the runs. The retention is bound to a purpose, not a number of days: the declaration is kept while the signer takes part in the club's runs (art. 5(1)(e) GDPR storage limitation). It is deleted at the signer's request, sent to the club's contact address. The legal basis is still legitimate interest (art. 6(1)(f)), and art. 9(2)(f) for the health statement. The signer may object at any time (notice section 8).
-
-**What the code does.**
-- `jobs/retention.ts` no longer deletes `group_run_declarations` rows or their outbox messages. `GROUP_RUN_DECLARATION_RETENTION_DAYS` and the step "group-run-declarations" are gone.
-- A declaration leaves by the Administrator's erase, on the signer's request. The erase is deliberate, per row, and audited: the audit row names who and why, never who was erased (BR-REQ-037-06's rule). A declaration also leaves with its event.
-- A new step, "group-run-identity-documents", clears only an identity document typed under a text approved before §418 took `{{idDocument}}` off. It runs seven days after the run, as the race's does. The number lives in `group-run-declarations/domain.ts` (`GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS`), and the signing page's help reads it from there.
-- The outbox rows follow the ordinary 90-day windows, because they carry no registration.
-- A signed legal version stays undeletable while its signature is kept, and becomes deletable after the erase. This closes §393's "Open".
-
-**What unchanged.** The club's archive-mailbox copy is still kept three years from the run (art. 2517 Codul civil), and sooner on an objection. The race's seven-day identity document, health note and emergency contact are untouched.
-
-**Every sentence follows, in both languages, in one voice («clubul … când îi ceri»):**
-- the run page's offer line
-- the backoffice fold's help
-- the signer's email and the club's archive email
-- both group-run declaration templates: «Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului»
-- the privacy notice's sections 3 and 7: «cât timp participi la alergările clubului, sau până ne ceri s-o ștergem»
-
-No text states a number of days for the platform copy.
-
-**For the club.** The texts in force on production say seven days until the club approves new versions of the two group-run declarations and the privacy notice from the platform's templates.
-
-Baseline `BR-V2.12-2026-09-27`.
-
-## 508. A release tests one tree once, and ship times itself
-
-**Context.** The owner measured a release at 50–60 minutes. Most of it was the same files tested again and again. The landing commit's pre-commit hook ran `yarn check` for about ten minutes. Then CI tested the tree four times: on the batch pull request's merge ref, on the push to `qa` from merging it, on the `qa → main` release pull request, and on the push to `main`. Each run took about twelve minutes, and `yarn ship` waited on three of them in a row.
-
-**Decision.**
-
-- **One tree, tested once.** `docs-check.yml` gets a first job, `tested-tree`. It computes `HEAD^{tree}` and asks whether a run of this workflow, on a branch of this repository, already uploaded an unexpired artifact named `tested-tree-<tree>`. A run uploads that artifact only when `docs-check` and every e2e shard passed.
-  - If the tree has a record, `docs-check` and `e2e-shard` are skipped by their own `if:`. A job skipped by a condition reports Success to a required check, while a skipped workflow would stay Pending ([GitHub: handling skipped but required checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks)). So the workflow has no path or branch filter, and only its jobs skip.
-  - Any different tree finds no record and runs everything: `qa` moved, a conflict was resolved, one byte changed anywhere, including this workflow file.
-  - Any failure of the lookup counts as "not tested". The job carries `continue-on-error`, so a lookup that fails for checkout or runner reasons cannot turn a green run red and stop a ship.
-  - `workflow_dispatch` with `full` (true by default) tests a tree again.
-  - This covers the qa push, the release pull request and the main push in one mechanism, rather than a condition written only for `qa → main`.
-- **Who the record trusts.** A fork's record is refused, because a fork runs its own copy of the file and could upload any name. A branch of this repository also runs its own copy and could record a tree it never tested. That is trusted, because pushing a branch here needs write access, which could change the workflow on `qa` anyway. The check keeps strangers out; it does not police collaborators.
-- **Pull requests** run eight shards of both projects, with `fail-fast: false` kept. The `docs-check` job's build stays, because "Verify the app serves on PORT" (BR-REQ-101-01) serves it. The two required check names, `docs-check` and `e2e`, are unchanged, and a test holds that neither job has a `name:` override.
-- **`yarn ship`:**
-  - It finds the `qa` push's run with `gh run list --commit <sha> --event push` and polls its status until the run completes. An empty conclusion counts as not green.
-  - It opens the release pull request only after that run is green, so the release PR's own run finds the tree tested and skips. `judgeChecks` already treats SKIPPED and NEUTRAL as green.
-  - It skips the migration step only when `git diff origin/main origin/qa -- src/db/migrations` is empty, which is the same test as `migrate.yml`'s `paths` filter. It still approves a waiting migration run and still refuses a failed one.
-  - It prints each step's m:ss and a total, at the end and at any stop, and appends one JSON line to `SHIP_TIMES_FILE` (default in the temp directory), so the next measurement is a file rather than a stopwatch.
-  - The one Google-Fonts rerun is gone. Since §460 the fonts are the repository's own files through `next/font/local`, so the build no longer fetches from Google and that flake cannot happen.
-- **Landing a batch** (`docs/DISPATCHER.md`): after `yarn docs:land --apply` and the hand edits, the landing commit is `yarn docs:check` followed by `git commit --no-verify`. CI runs the full `yarn check` on the batch pull request minutes later, and every merged branch already passed the hook. The risk is a red batch PR instead of a red hook, fixed by a fix round. The hook still runs for every other commit.
-
-**Consequences.**
-
-- The first release after this lands gains nothing from the skip, because its batch PR ran the old workflow and recorded no tree. From the next one, a release whose `qa` did not move between the batch merge and the release tests its tree once.
-- The skip itself is proven only on GitHub. The unit tests hold the workflow's shape and ship's judgement.
-
-A tested-tree record is trusted for twenty-four hours at most. `tested-tree` accepts an artifact only if its `created_at` is within the last 86 400 seconds, and the record uploads with `retention-days: 1`, the shortest GitHub keeps one. The end-to-end seed builds its events relative to today, so a tree tested days ago has not been tested against today's dates. A release ships a tree tested the same day; an older tree is tested again in full. Why the workflow always runs and only its jobs skip is GitHub's own documented behaviour: a job skipped by its `if:` reports success to a required check, while a workflow skipped by a path or branch filter leaves the check pending (https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks).
-
-The landing commit's `--no-verify` is written into the rules and not left as a dispatcher habit. AGENTS.md §6.3 and SETUP.md § Contributing name it as the one documented exception: every branch in the batch already passed the hook, `yarn docs:check` runs first, and CI runs the full `yarn check` on the batch pull request minutes later. Every other commit keeps the hook.
-
-`yarn ship` prints each step's duration the moment it ends and the total at the end or at a stop, so a release in progress shows where its time goes.
-
-Baseline `BR-V2.12-2026-09-27`.
-
-## 509. The minimum age is one box in «Regulamentul» for every type, and the page says it in «Condiții de participare»
-
-The owner, 2026-09-27 19:30: «tot în 2.12 trebuie să pot seta vârsta minimă de participare la regulament pentru orice tip de eveniment».
-
-**What it was.** The minimum age was two boxes, and the save picked one by the type:
-
-- the race's, under «Participare și înscrieri» › «Condiții de participare» (§329);
-- a group run's own `event.groupRunMinAge`, in «Traseul» (§440, §495).
-
-A type that registers elsewhere or not at all had no box on screen. The event page said the age only where the club takes the registrations, as a «Vârstă» row of the facts (§410).
-
-**The editor.** There is now one `event.minAge`, labelled «Vârsta minimă de participare» / «Minimum age to take part». It sits after the rules' language tabs, in «Program, regulament și declarație» › «Regulamentul» (§448, §481), for every type.
-
-- Its help is the owner's sentence: «0 = fără limită. Sub 18 ani, înscrierea se face de un părinte.»
-- A group run keeps §440's note under it: its self-declaration is for adults.
-- A role without settings rights reads the number instead of the box. The server refuses its change regardless (BR-REQ-060-01).
-- The rules card's closed line says «vârsta minimă 14 ani» / «fără vârstă minimă».
-- The registration card keeps one line saying where the age and the declaration went.
-- The reader (`eventFieldsFrom`) reads `minAge` for every type. The group-run special case and its refusal name are gone.
-- No migration: the service already stored `min_age` for every type, and a series carries it by scope as before.
-
-**The page.** The age is no longer a row of the facts. It is said inside «Condiții de participare» (§498), under an `h3` «Vârstă», after the rules and before the photographs notice. The age is a condition of taking part, so it is read with the rules, where the editor now asks for it. The sentence is `publicAgeRule`'s:
-
-- where the club takes the registrations, the registration form's own sentence (§410), so the page and the form cannot disagree;
-- anywhere else — a group run, an event registered at another organizer's or taking none — «Vârsta minimă: N ani. Sub 18 ani, participarea se face cu acordul unui părinte.», with the minimum alone from eighteen. There is no registration there for a parent to make, so the sentence names the parent's consent, not a door that does not exist;
-- for 0 where nobody registers here, nothing.
-
-The structured data states `typicalAgeRange` wherever minAge > 0.
-
-**Visible on shipping.** Every existing event carries the column default of 14. Production's weekly group run, which never set an age, will therefore say «Vârsta minimă: 14 ani. Sub 18 ani, participarea se face cu acordul unui părinte.» in its «Condiții de participare», and its JSON-LD will say `typicalAgeRange` "14-", unless the club sets 0. The doors are unchanged: the form, the desk, a staff entry and the group-run declaration still count the same number (`effectiveMinimumAge`).
-
-Amends §329, §410, §440, §448, §481, §498.
-
-The staff preview (`/preview/events/[id]`) says the minimum age as the public page does: `EventAgeRule`, after the rules, the same `publicAgeRule`, since the facts no longer carry a «Vârstă» row.
-
-The column's default of 14 (§329) now reaches every type's page, so every existing group run and external event says «Vârsta minimă: 14 ani» until the club changes it. This is deliberate: the owner asked for the age on every type. The editor's help under the box says so: «Implicit 14; pune 0 pentru fără limită.», with the number read from `MIN_PARTICIPANT_AGE`.
-
-Baseline `BR-V2.12-2026-09-27`.
+The `BR-V2.12` landing wrote §505 a second time under this number. §505 is the decision; the code cites it.
 
 ## 510. The country of residence before the city; «Sex» asks for an answer
 
@@ -20885,3 +20760,138 @@ Baseline `BR-V2.20-2026-09-27`.
 Roles are unchanged: writing a card stays with the Redactor and the Administrator, checked on the server (BR-REQ-060-01).
 
 Baseline `BR-V2.20-2026-09-27`.
+
+## 542. The Organizer reads the events and changes none of them
+
+**The owner, 2026-09-28:** «Organizatorul nu ar trebui să poată edita evenimentele...»
+
+**Decision.** Every write to an event is the Administrator's (and the Superadministrator's): creating, saving the settings, a series' dates, publishing, unpublishing, archiving, cancelling, the update notice, duplicating, repeating, the pictures and links, the participation window, the bib band and the featured mark. The Redactor keeps the words and «Trimite spre verificare», as §103 gave them. Amends §103 and §204 (the Organizer configured any event the Administrator created), §289 (reading against changing now holds for the event as well as its registrations) and §450 (the Administrator runs the club — its events included).
+
+**How it is asserted.** On the server, through the existing helpers, tightened rather than joined by new checks: `canEditEventFields` is `atLeast(role, "ADMIN")` (it was `isEditorial`), which every event save, the series, the cancellation and the notice already ask; a new `canTransitionEvent` is the table's answer for a role that writes the event's words or settings, so the Organizer and the Tehnic make no move on an event while pages and albums keep the plain `TRANSITIONS` table. Pages, albums and the picture library had borrowed `canEditEventFields` for their own settings; they ask `isEditorial` now, so nothing about them moved. `canMessageParticipants` read `canEditEventFields`; it reads `isEditorial && canReadRegistrations`, so the Organizer keeps «Trimite un mesaj participanților» (§364) and the newsletter (§445).
+
+**What the Organizer keeps, unchanged:** the events list and every event's editor as a read-only view, the registrations list and each registration's page, the export and the race numbers (§289), the queue, the emergency sheet, the race-day desk (§67), the messages to participants and the newsletter, the tasks page's reads. The thank-you after a race, the bib allocation and the spare bibs were already the Administrator's (`canManageRegistrations`) and stay so; the reminder sends itself.
+
+**The screen is honest.** The list's verbs come from one pure function, `eventListVerbs` (the pattern of `pageListVerbs`, §537): the Organizer gets «Deschide» with the eye in place of the pencil «Editează», no «Eveniment nou», no ticks or bulk bar, and a ⋮ of links only — preview, registrations, emergency sheet. The editor opens read-only with one sentence, «Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.», no «Salvare» card and no «Copiază și tradu tot». The «Salvarea ta schimbă doar setările» sentence is gone: the only roles that save the settings also write the texts, so it could no longer be shown. A read-only view, not a 404, because the Redactor's editor already works that way for the settings and the Organizer's queue, numbers and message card live on that page. The guide's Organizator and Administrator sections say the new split in the buttons' words.
+
+**The Tehnic** sits between the Organizer and the Administrator on the ladder, so the threshold takes the event away from it too, and that is decided rather than left open: «Tehnic» is diagnostics (`canEditTexts` already keeps it out of every text), and a role that may not see who registered should not be the one who moves their race. The guide said it «poate corecta setările unui eveniment» and no longer does; the role picker on `/admin/staff` and the `/devs` summary now describe the Organizer as reading the events, the registrations, the export and the numbers, messaging the participants and working the desk without changing an event, and the Tehnic as the technical page alone — no events and no participant data. BUSINESS.md's role table says the same.
+
+**What a reader keeps inside the editor.** A card that is not a setting of the event stays for the role that reads it: «Participare și înscrieri» shows the reader «Setările le schimbă Administratorul.» and, under it, «Alocare și tipărire» — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only for a role that reads the registrations (§289), so the Organizer has it and the Redactor does not. The numbers' routes already asked `canReadRegistrations`; «Alocă numerele» and the spares stay the Administrator's (`canManageRegistrations`). The list's «Deschide» draws the one `preview` glyph of `action-icons.ts`, the eye the row's ⋮ «Previzualizare» already wears (§318).
+
+**The role picker says the split.** `/admin/staff` and the `/devs` summary: the Organizer is «înscrierile și ziua cursei» — reads the events, the registrations, the export and the numbers, messages the participants, works the desk, and creates, sets up and publishes no event; the Tehnic is the technical page, no event and no participant data; the Administrator «conduce clubul: creează, setează, publică și anulează evenimentele», then the registrations, the legal texts, the emails, the plans and the team.
+
+Baseline `BR-V2.21-2026-09-27`.
+
+## 543. A family sitting reserves every place as its forms are sent, until one deadline its first form fixes, and its one email lists every registration (amending §389, §446, §519 and §536)
+
+**The owner, 2026-09-28 11:45**, after registering three people in one sitting on QA: «cumva flow-ul de înscriere în familie tot nu e ok... ar trebui în ultimul mail primit pentru verificare să am toate înscrierile mele! să rezerv 3 locuri și așa să se calculeze pe site». And at 11:50: «trebuie un marker pentru familie... că nu e clar cum rezervăm și pare că nu se salvează corect».
+
+**What was stored before this change.** A PGlite test played his scenario: Ana's form, «Da, încă o persoană», Mihai's form, Ioana's form, then «Nu mai înscriu pe nimeni». After each of the three forms the database held one registration row (Ana, `PENDING_EMAIL_CONFIRMATION`, no hold) and the others as kept forms (0, then 1, then 2). The public count stayed at 50 of 50 throughout. There was one held outbox row, and the browser's half named the three. The one email did name all three, but the site counted none of them, and a refresh, a second device or the backoffice saw one person. That is the «nu se salvează corect» he saw.
+
+**Decision: every form sent after «Da» is a registration, and reserves its place at once.** From «Da» on, the next form for another person on the same address is no longer a kept form (§446). It writes that person's registration now, in the state a single registration starts in (`PENDING_EMAIL_CONFIRMATION`), held with the sitting's one email (§519). The form also reserves the person's place through the allocator's own opening, under the event row's lock: stale holds expired and the waiting list served first, then the one formula. There is no second formula. The press of «Da» that opens the sitting gives the first form its place, when it takes that form into the sitting (§536). No later press reserves anything. The reservation is the row's `hold_expires_at` on a `PENDING_EMAIL_CONFIRMATION` row, counted by `countOccupied`. So `readPublicAvailability`, «12 înscriși din 50 de locuri» and the queue panel drop by one with every form.
+
+**How long a reservation holds: one deadline per sitting, fixed by its first form (the review of 2026-09-28, round three).** The press that opens the sitting works out the deadline once. It is the first form's instant plus the club's sitting window, plus the club's declaration hold («Termene», 30 minutes by default), capped by the close and the start like every hold. The first form's window end comes from the browser's sealed half, and is never later than the press's own. The deadline is stored on the sitting (`family_sittings.reserved_until`) and on every place the sitting reserves. Every later form's place expires at that same instant. Nothing moves it: not a form, not a «Da» press, not the family's email leaving, and not the outbox job's lateness. The ceiling is the first form plus 40 minutes by default, whatever happens after. Past it the place is free again, even while the family's email is still queued. The maintenance job clears the lapsed reservation when somebody waits, and the allocator offers the place to the waiting list as it does for any lapsed hold. The registration itself stays, waiting for its address, and is allocated like any other when the address is confirmed. When the address is confirmed while the reservation holds, the place is the person's own, never counted against them.
+
+**Past the deadline the sitting takes no more forms.** A form sent after it opens a new sitting with its own deadline, counted from that form, even inside the window the last press started. A «Da» press after it neither reserves anything nor holds the old sitting's email back. The first round let every form lengthen the sitting's reservations, and the second round let the email's send move them by the job's lateness. Both are gone, because each let a place be held without inbox proof for longer than the first form's own window and hold. A PGlite case proves it: one form and a «Da» every five minutes for two hours leave the event back at its capacity from minute 40 on.
+
+**A form that writes no registration holds a counted place (§39, AGENTS.md §19.4; round three).** Inside a sitting a form can still write nothing: the address at the club's limit with registrations made elsewhere (a kept form at the limit, §389), or a person the address already holds (a re-send). So can the first form of a sitting, when it was kept (§446) or re-sent and the opening «Da» takes it in. Round two's screen named no place for such a person. That, together with the public count, told a stranger who typed an address whether the address already held somebody. They could send a form, press «Da» and watch «N înscriși din M» drop for a fresh address and stay put for a held one.
+
+Now such a form takes one counted place of its own, a row of `family_place_holds`. The row holds an event, the browser's sitting id, a slot and the sitting's deadline, and no person or address. It is taken through the same allocator opening, under the event lock, and counted by `countOccupied` exactly as a reserved registration is. It lasts until the sitting's deadline or the family's confirmation, whichever comes first. The confirmation deletes the sitting's holds before it allocates anybody, so nobody's own held place counts against them. A kept form confirmed from its own email releases the opening press's hold the same way. Since round four a held place is one per person of the sitting, not one per form or press (below), so a replayed half adds nothing. A first form that wrote nothing has no sitting row yet. Its hold is kept under the random id the browser already carries, and the form that opens the sitting takes that id and the deadline the press wrote into the sealed half.
+
+The screen says «loc rezervat» for that person too, and the marker counts them. With no place free both cases read «pe lista de așteptare». The email, which only the address reads, keeps §446's line for a kept person. At the form, the club's limit counts the sitting's registrations and holds, and never fewer than the people this browser sent. So a fresh address and one that already holds people are refused at the same form. A PGlite case runs three addresses: a fresh one, one that already holds the first person, and one at its limit with three others. With places free and on a full event it finds the same count after every form, the same places, the same refusal of the fourth person and the same rendered screen. Migration `0107` only adds: the `family_place_holds` table and `family_sittings.reserved_until`.
+
+**A full event.** With no place free, the form reserves nothing and holds nothing, and the person joins the waiting list when the address is confirmed. The screen and the email say so. With the event full and its waiting list closed, the form is refused at the form, as a single registration's is (§348).
+
+**The one email lists every registration.** The family's message now opens with the family marker, in both halves: «Înscriere de familie: Ana, Mihai și Ioana — 3 locuri rezervate până la 13:40.», with «o persoană pe lista de așteptare» when there is one. Each person's line says their place: «— loc rezervat până la 13:40» or «— pe lista de așteptare, după confirmare». The time is the sitting's deadline; a reservation already past it is not named. Who the address held at the event before the sitting is listed with their state (confirmat, semnează declarația, pe lista de așteptare, așteaptă confirmarea adresei) and is asked nothing again. That includes a person of the sitting who confirmed from an earlier email of their own. The one button confirms the address and every registration of the sitting, and the §471 wizard signs their declarations one by one. The body says that someone who should not be registered is withdrawn from «Toate înscrierile mele» after confirming. It also says that the reserved places free themselves if nobody confirms. The family's confirmation page says the places are reserved and nobody is confirmed yet, while the deadline is ahead (round four, below). Only a kept first form (§446) can still be unticked there.
+
+**The screen after each form** reads from the browser's own half: «Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la 13:40.», each name with its place. One sentence follows: each place is reserved the moment its form is sent, and the button in the email confirms them all. The half keeps each person's place (reserved, or the waiting list) and the sitting's deadline. Both are facts about this browser's forms, the club's settings and the event. The screen reads the deadline against the clock (round three). Once it is past, the screen names no place and says «Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci.» («The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then.»). A correction of a name typed before keeps the place that person had.
+
+**The club's limit per address** («Termene», default 4) still counts. When the people this sitting sent fill it, the next form is refused at the form with its sentence, and nothing is written. A limit reached with registrations from elsewhere is still told to the address alone, by its email (§389).
+
+**Another adult's consents** stay theirs (§421). A sitting's row for another adult keeps no health note, socials, public-list tick or fitness statement. The confirmation page asks the address holder's acknowledgement for them, as it did for a kept form.
+
+**A «Familie» marker** names the other people on the same address at the same event, with the family glyph, on every surface that shows a registration. On the backoffice registrations list and on the registration's page it links to each sibling. It is also on the queue panel's «locuri rezervate de familii» rows, beside the parent's line on the race-day desk (names only, §15.11), on «Înscrierile mele» and on the race-day QR page. The export's last column, `family`, carries it in the CSV and the spreadsheet. The queue panel gives each family place's deadline, fixed by the family's first form, and says whether the family's email has left, which moves nothing. One line counts the held places for forms that wrote no registration, naming nobody. «Înscrierile mele» also says «Loc rezervat până …» for a reserved place, and lists a family in the order the forms were sent. The family's verification message has no club copy (§419). The family's confirmation and its club copy name everybody, as before.
+
+**Unchanged.** A single registration reserves nothing before its address is confirmed. A restart back to `PENDING_EMAIL_CONFIRMATION` now clears whatever hold a cancelled row left in the column, so no stale deadline can count as a reservation. The desk, the test kind and the sealed cookie's fixed shape (§39) are unchanged; `kind` is in no condition of the reservation or the hold (§30). The two-connection concurrency suite is untouched, because a reservation and a hold are written only through the allocator opening it already proves.
+
+**Refused.** Reserving a single registration's place at its form: it would change §10.6's count for everybody, and one form could then hold a place for 48 hours without an inbox. A new message type for a lapsed reservation, or a reminder before it lapses: the place returns silently, as a lapsed declaration hold's does, and the family's email already says the reserved places free themselves. Anything that moves the deadline, even a little, a late email included: whatever may move it, repeated, moves it without bound. A fake registration standing in for a form that wrote nothing: it would appear on lists and exports and could be allocated.
+
+**One held place per person, and the server decides it (the review of 2026-09-28, round four; §39, AGENTS.md §19.4).** Round three still let the browser's sealed half decide whether a form added a person. A stranger could replay their own earlier half: the half from before a form, or the one from before «Da». Then a fresh address and one that already held the person went different ways, and the counts differed. Now the server decides from its rows. A form in a sitting first looks for the person among the sitting's registrations, by the runner's name key. If they are not there, it looks for their one held place. Only if neither exists does it take a place, through the allocator under the event lock. The hold's slot is a keyed digest of the sitting's id and the name key, made with the deployment's secret bound to this purpose (`family-place-slot.ts`). It is never the name, and it cannot be matched to one without the secret. A name that folds to nothing keeps the press's single slot. A lapsed hold under the same slot is deleted and taken again, as a lapsed registration's reservation would be. The browser's half can only hold back: a form it reads as a correction, or as another name on a birth date already typed, takes nothing, for every address. It never adds a place.
+
+A PGlite case drives the real public actions, `submitRegistrationAction` and `continueFamilySittingAction`, and reads the sealed cookie they write. It runs three addresses: a fresh one, one that already holds the first person, and one at its limit. Each goes through Ana's form, «Da», Mihai's form, Mihai again on the half from before his form, «Da» again on the half from before the press, Mihai on the half that press wrote, Ioana, then Luca over the limit. After every step the public count, the redirect, the browser's half and the screen the register page renders from the cookie are the same, with places free and on a full event.
+
+**A form after the deadline starts clean.** The earlier people's places lapsed with the old sitting's deadline, so the new sitting's half lists neither them nor their places. The screen after that form names only the people of the new sitting, reserved until its own deadline. It never shows the lapsed people as reserved again. Before that form, the screen of the old half still says «Locurile nu mai sunt rezervate.».
+
+**The page the family's email opens says whether the places still hold.** The link lives for the club's email-link window (48 hours by default) and the places only until the sitting's deadline. Past the deadline the page says «De pe adresa … s-a trimis formularul pentru …. Locurile nu mai sunt rezervate: confirmă oricum și fiecare primește un loc dacă mai e liber, altfel unul pe lista de așteptare.» («… The places are no longer reserved: confirm anyway, and each person gets a place if one is still free, or else one on the waiting list.»). The press still allocates what is free. The migration is numbered `0107`, after V2.20's `0106_team_photo_crop`.
+
+**One family place per person at a time, whatever sitting took it (the review of 2026-09-28, round five; §39, AGENTS.md §19.4).** Round four found the person only among the current sitting's registrations and its own held places. A half replayed from after a sitting's deadline names a new sitting, so the person's earlier registration or hold was not found, and a second place could be held beside a live one. Now a sitting's form looks for the person among every registration of the address at the event, by the name key, and every held place of theirs at the event, in whichever sitting it was taken. A live reservation on their registration, or a live held place, is their place, and the form adds nothing. Only when neither is live does the form take a place under the current sitting. So a person holds at most one family place at a time. Once that place has lapsed with its sitting's deadline, the next sitting's form takes it again once, for every address alike, whichever form the address held the person in.
+
+The slot is now one per person the address sends at the event: a keyed digest of the event, the participant's id and the name key, no longer of the sitting's id. It still names nobody. When a registration is allocated, whether from the family's email or its own link, the person's held place goes first, in whichever sitting it was taken. So a person held again by a later sitting is never counted against themselves.
+
+The club's limit per address, said at the form, is not said for a person this address already sent in a sitting at the event. That person has a held place, live or lapsed, under their slot. A fresh address's form for them is their registration's re-send, which the limit never refuses. Without this, an address at its limit was refused where a fresh one was not, on a replay of a person already sent. A PGlite case drives the real actions and cookie through Ana, «Da», Mihai and «Da» until minute 35, then Ioana past the deadline, then these replays: Mihai twice on the half from past the deadline, Ioana on the half from before it, and Ana twice. It runs a fresh address, one that already holds Ana, and one at its limit, with places free and on a full event. The count, the redirect, the half and the screen are the same after every step. Nobody is held twice.
+
+One limit remains. A lapsed held place is swept a day after its deadline, or sooner by the event's maintenance when somebody waits. After that the server no longer knows that an address at its limit sent that person, while a fresh address's registration for them stays. Past that point the two can differ once, at the limit.
+
+**The slot's key survives a restart (round five).** The slot was digested under the form draft's secret. With neither `AUTH_SECRET` nor `JOB_SECRET` set, that secret is drawn once per process, so a development server restarted mid-sitting changed every slot. Now the slot uses `AUTH_SECRET`, or `JOB_SECRET`, or else a fixed development key that is public on purpose. On qa and production, neither secret means a refusal (`shared/config/deployment-secret.ts`) and never that key. A deployment that signs staff in cannot start without `AUTH_SECRET` already. `.env.example` says so beside `JOB_SECRET`.
+
+**A person sent while no place was free is recorded too (the review of 2026-09-28, round six; §39, AGENTS.md §19.4).** Round five skipped the club's limit for a person the address had already sent only when it found a held place under their slot. On a full event no place is held, so an address at its limit was refused on a re-send of a person already sent — Mihai once more, on a half that already counts the limit — while a fresh address's form for him was his registration's re-send, which the limit never refuses. Now such a form still writes a row under the person's slot, with `holds_place` false. It holds no place and counts in no capacity, public-cache instant or maintenance wake; it records only that this browser sent the person in the sitting, as a fresh address's waiting registration does. The limit counts the sitting's registrations and these rows alike, and a person with a row, live or lapsed, is not refused, on a full event or not. A form for the person once a place is free turns the row into a counted hold. Migration `0107`, still this branch's own, gains the column. The three-address PGlite case now sends Mihai once more after Ioana, with the sitting at the limit, and reads the same redirect, count, half and screen for every address, with places free and on a full event; without the row, the full event's case fails at that step.
+
+**A single registration's allocation keys nothing (round six).** Round five released the person's held place on every allocation. That computed the slot, keyed under the deployment's secret, for every single registration too, and on qa or production without `AUTH_SECRET` and `JOB_SECRET` it would have thrown inside the allocator. Now the release first asks whether the event has any row of `family_place_holds`. On an event with none, which is every single registration's, it reads nothing more and never keys the secret. Where a sitting wrote a row, it keyed the secret then, so the secret exists. A PGlite case confirms a single registration with the slot function made to throw, and finds it allocated and the slot never computed; another finds a held place still released on an event that has one.
+
+Baseline `BR-V2.22-2026-09-27`.
+
+## 544. The country pickers open tall enough to read, and as a sheet on a phone
+
+The owner, 2026-09-28, with a screenshot of «Cetățenie *» on the registration form, the list open on «Afganistan», half of «Africa de Sud» and a scrollbar: «pop-up-ul cu cetățenia e minuscul!». This amends §463.
+
+**The cause.** MUI's Autocomplete renders its popper slot `as` our `InlineList` inside its own styled popper, and that styled popper carries `position: absolute` whenever `disablePortal` is set. Our list was therefore out of the popover's flow: the popover's paper (MUI's `overflow: auto`, `max-height: calc(100% - 32px)`) was only as tall as the search box, and it clipped the absolutely placed list under it to about a row and a half, with the paper's own scrollbar. The list's own `max-height` (`min(50vh, 20rem)`) was never the limit. A second, quieter fault: the rows' `min-height: 44px` sat on the row's `sx`, which MUI's `.MuiAutocomplete-listbox .MuiAutocomplete-option` rule outranks, so from `sm` up the rows were `auto` — about 36 px — although §463 says 44.
+
+**Decision.** One fix in the one shared `CountryPicker`, so the citizenship and the telephone prefix both get it:
+- `InlineList` is `position: static` again: the paper is as tall as the search box and the list together.
+- On a desktop the list shows at least eight rows: `max-height: max(40vh, 368px)` (eight 44-pixel rows and the list's padding), under the field as before.
+- Below `sm`, or on a screen shorter than 520 px (a phone on its side, where a popover would scroll its own search box away), the picker is a bottom sheet: the popover placed by `anchorReference="none"` at the screen's bottom, full width, 85 % of the screen's height, rounded top corners; the search box pinned at the top and the list taking the rest, the list alone scrolling.
+- Every row is 44 px everywhere, set from the listbox so it outranks MUI's rule (BR-REQ-041-01 criterion 6).
+- As the list opens, the chosen country is scrolled to the middle of the list (only the list scrolls, never the page) — «România» is far down an alphabetical list.
+
+**Kept.** The typed search of §463, the keyboard navigation, the native `<select>` that posts and serves a reader without JavaScript, and every word. No dependency, no migration.
+
+**Refused.** A separate Drawer for phones: a second surface would be a second focus and close path to keep in step; the one Popover changes only its placement. A fixed height in rows on the phone: the sheet uses the screen it has.
+
+Baseline `BR-V2.22-2026-09-27`.
+
+## 545. The start's date and hour may be left empty while they are to be announced (amending §533)
+
+**The owner** (2026-09-28, a screenshot of «4 · Când și unde» with both switches ticked and the «Ora *» box red): «în V2.23 trebuie să pot să nu pun data și ora evenimentului! momentan am validare pe asta». §533 hid a start the organizer had typed; it still made them type one.
+
+**Decision.** The switches now excuse the boxes, by one rule (`content/events/start.ts#startBoxesRequired`, read by the service and by the editor's boxes alike):
+
+- «Data se anunță mai târziu» ticked: the date and the hour are both optional;
+- «Ora se anunță mai târziu» alone: the date stays required, the hour is optional;
+- neither: both are required, as before. An empty date is refused naming `startsAt` (the date box, «Începutul evenimentului»), an empty hour beside a typed date naming `startsAtTime` (the same label), through §47's summary.
+
+Whatever is typed is kept, as §533 keeps a provisional start: an hour without a date, or a date without an hour.
+
+**How an empty part is stored: a provisional start, no migration.** `starts_at` stays NOT NULL for §533's reason: the jobs, the emails and the allocator read it, and each would have to decide what an event without a start means. A nullable column (or a new "left blank" column) was refused for that reason and because it needs a migration. The platform fills the empty part itself (`events/domain/provisional-start.ts`, the one module that writes and reads it):
+
+- **no date**: the day `9999-01-01` on the event's own calendar, with the typed hour if any. No job's window reaches it: the reminder and the declaration's last call count back from the start, the participation window opens days before it, the thank-you needs a start behind it, and race week is the last days before it;
+- **no hour**: the typed day at noon and one second (`12:00:01`). The time box types whole minutes, so a second past the minute is a value nobody can type. It means "left blank" and nothing else, and noon keeps the day the same on every clock. A caller's seconds are dropped, and a typed date on the provisional day is refused.
+
+The editor's boxes read the provisional parts back as empty (`startBoxValues`), never as a date or an hour.
+
+**Nothing new reaches the public.** Every public read already withholds the start while either switch is on (`UNDATED_PUBLIC_COLUMNS`, §533), and the save refuses an empty box once the switch is off. So the provisional value is in no page, email, JSON-LD, `.ics`, feed, calendar month, forecast, night pill or countdown. The sitemap still lists the page. Registration stays «în curând» (§533), so no door lets anybody in.
+
+**The boxes that depend on the start.** The duration is kept whatever is blank: it is a length, not a time. «Startul cursei» (and an end typed on the clock) is compared with the start, so it is refused, naming its box, while the start's date or hour is blank. Type it once the start is known.
+
+**The editor says it honestly.** The start's boxes and the two switches are one client island (`StartToBeAnnounced`, the place switch's shape from §328), so the asterisk and `required` follow the switches as they are ticked. Only once the island runs: the server's HTML carries no `required` on the two boxes, because a switch ticked before the press could not lift a static attribute. With JavaScript off, the create page (switches off by default) would otherwise never let an empty start through. There the server's rule (`resolveStart`) is the only one, and it refuses an empty box the switches do not excuse, naming it through §47's summary. The switch help text says the boxes may stay empty. The closed card's line says «Data se anunță mai târziu» with no date, or the day alone for a blank hour. The backoffice list's date cell says «Data se anunță mai târziu», and so do the staff pickers that name an event by its date (a staff entry, the desk, an album), the heading of the participant-messages page and the emergency sheet. The erase page says the event's date is to be announced later instead of naming one. A blank hour is printed as the day alone on each of them (`typedStartShape`). A bib prints no date while the date is blank (`bibEventDate`): the sample in the editor's «Înscriere» card, the printed sheet and the desk's picture alike, although the design's date is on by default. The backoffice list's route pills get no start while the date or the hour is blank, so no «Noapte» pill names the sunset of the provisional day. The programme's new rows, the night line, the confirmation window's dates and the repeat form invent nothing from the provisional value.
+
+**Verified** by `tests/unit/content/start-left-blank.test.ts` (the rule per switch state, the refusal's box, the round trip of every blank shape, every typed hour of a day across a clock change) and `tests/integration/cms/start-left-blank.test.ts`:
+
+- saved with empty boxes and published;
+- withheld from every public read in both languages, with no `9999` and no `12:00:01` in them;
+- on no dated list, even one asked for the provisional month; the sitemap lists it;
+- no reminder, participation confirmation, new-event alert, maintenance email or forecast row, even with rows seeded past every door, now and five years on; the thank-you refused;
+- the switch off with empty boxes refused, naming «Începutul evenimentului»;
+- the time switch alone: the day shown, no hour anywhere.
+
+The unit test also checks that a bib's date for a race without one is empty and never `9999`, that a blank hour prints the day alone, and that the server-rendered boxes carry no `required` whatever the saved switches. The browser walk is `tests/e2e/start-left-blank.spec.ts`.
+
+Baseline `BR-V2.22-2026-09-27`.

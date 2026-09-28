@@ -9,7 +9,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
   allowedTransitions,
   canCreatePage,
-  canEditEventFields,
+  isEditorial,
   canEditTexts,
   canTransition,
   type EditorialStatus,
@@ -25,8 +25,9 @@ import { pageFieldsSchema, type PageFieldsInput } from "./fields";
  * The editorial machinery is `events`': the same `editorial_status` enum, the same
  * `allowedTransitions` and `canTransition`, the same role predicates. "May this person publish"
  * has one answer in this product, and a second copy of that answer for pages is a second place
- * for it to be wrong. `canEditEventFields` and `canCreateEvent` are named for events and read
- * oddly here; renaming them is a change to code that is about to run a real registration window,
+ * for it to be wrong. `canCreateEvent` is named for events and reads
+ * oddly here (its settings gate is `isEditorial` since §542 made `canEditEventFields` the
+ * Administrator's); renaming it is a change to code that is about to run a real registration window,
  * so it is noted and deliberately not done today.
  *
  * The body converter is the legal-document editor's (`domain/body-text.ts`). Second occurrence,
@@ -307,7 +308,7 @@ export async function deletePage<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; pageId: string },
 ): Promise<void> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not delete a page`);
   }
 
@@ -337,7 +338,7 @@ export async function movePageInNav<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; pageId: string; direction: "up" | "down" },
 ): Promise<void> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not reorder the navigation`);
   }
 

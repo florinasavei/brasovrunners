@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
@@ -24,6 +25,7 @@ import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/re
 import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
+import { familyOf } from "@/modules/registrations/family-marker";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -84,6 +86,8 @@ export default async function DeskPage({ params, searchParams }: Props) {
   // The next free desk spare of each event on the page (§444) — one, or two when a code found a
   // runner of another event — read once for every row.
   const spares = rows.length > 0 ? await spareStates(db, rows.map((row) => row.eventId)) : {};
+  // Who came with whom (§543): the other people on each row's address, names only, one query.
+  const family = await familyOf(db, rows);
 
   const codeHrefTemplate = getPathname({
     locale,
@@ -139,7 +143,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.title ?? event.id} ·{" "}
-                    {formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })}
+                    {typedStartOrNull(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")}
                   </option>
                 ))}
               </TextField>
@@ -218,6 +222,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
               readOnly={closed}
               minorSigns={minorSigns}
               spare={spares[row.eventId]}
+              family={(family.get(row.id) ?? []).map((member) => member.name)}
             />
           ))}
         </Stack>

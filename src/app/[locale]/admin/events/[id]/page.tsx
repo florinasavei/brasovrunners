@@ -118,6 +118,7 @@ import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { seriesHorizonEnd, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -512,6 +513,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Stack>
         </Box>
 
+        {/* A role that changes nothing on the event (§542: the Organizer, the Tehnic) reads it —
+            the queue, the numbers and the message to the participants still work below. */}
+        {!maySaveAnything && (
+          <Alert severity="info" data-testid="editor-read-only">
+            {t("editor.readOnly")}
+          </Alert>
+        )}
+
         <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
           {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
           {saved === "bibsAssigned" && (
@@ -732,8 +741,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <input type="hidden" name="eventId" value={event.id} />
                         <RepeatToggle name="repeatOn" label={t("editor.repeatOn")}>
                           <RepeatFields
-                            ownWeekday={wallClockWeekday(event.startsAt, event.timezone)}
-                            startTime={toWallTimeInput(event.startsAt, event.timezone).slice(11, 16)}
+                            // Neither the provisional day's weekday nor its hour for a part left blank (§545).
+                            ownWeekday={typedStartOrNull(event) ? wallClockWeekday(event.startsAt, event.timezone) : undefined}
+                            startTime={startBoxValues(event.startsAt, event.timezone).time}
                             draftSource={!live}
                           />
                           <Box sx={{ mt: 2 }}>
@@ -798,8 +808,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   />
                   {/* «Copiază și tradu tot: RO → EN» (§464, §482): every English box of this form from its
                       Romanian twin, the layout kept, in one press — a question only when English
-                      words already written would be replaced; nothing saved until Salvează. */}
-                  <TranslateAllButton />
+                      words already written would be replaced; nothing saved until Salvează. Not for
+                      a role that saves nothing here (§542): there is no box for it to fill. */}
+                  {maySaveAnything && <TranslateAllButton />}
                   {/* The page, top to bottom (§406): each card where the page draws the first thing
                       it holds, numbered and headed by whether the page shows it — the order of
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
@@ -850,12 +861,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   {maySaveAnything && (
                     <Panel glyph="save" static id="box-save" title={t("editor.boxes.save.title")}>
                       <Stack spacing={2}>
-                        {/* What this save covers, for the role whose save covers half the form. */}
-                        {maySaveSettings && !mayEditSomeText && (
-                          <Typography variant="body2" color="text.secondary">
-                            {t("editor.saveCoversSettingsOnly")}
-                          </Typography>
-                        )}
                         {/* A date of a series: which dates, in words, "this and the following" first. */}
                         {inSeries && maySaveSettings && <SeriesScopeBox locale={locale} />}
                         {/* Whether the participants hear about this save (§331), with the count. */}

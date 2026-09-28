@@ -169,7 +169,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
       const reviewed = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: created.id,
         expectedVersion: created.version,
         to: "IN_REVIEW",
@@ -277,7 +277,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         },
       });
       const reviewed = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: source.id,
         expectedVersion: source.version,
         to: "IN_REVIEW",

@@ -11,7 +11,7 @@ import type { Locale } from "@/i18n/routing";
 import { FAQ_PAGE_SETTING_KEY } from "@/modules/content/faq/page-settings";
 import { MEMBERS_PAGE_SETTING_KEY } from "@/modules/content/members/page-settings";
 import { TEAM_PAGE_SETTING_KEY } from "@/modules/content/team/page-settings";
-import { canEditEventFields, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { isEditorial, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./storage";
 
@@ -365,7 +365,7 @@ export async function deleteMediaAsset<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: { id: string; role: StaffRole }; assetId: string },
 ): Promise<void> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not delete a picture`);
   }
   const [asset] = await db

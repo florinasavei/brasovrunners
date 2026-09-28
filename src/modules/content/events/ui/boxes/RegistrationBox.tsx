@@ -7,6 +7,7 @@ import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/module
 import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
@@ -150,7 +151,8 @@ export default async function RegistrationBox({
   */
   const hold = minutesPhrase(locale, clubDeadlines.holdMinutes);
   const confirmationDates = (() => {
-    if (!event) return null;
+    // No dates to count back from while the date is left blank (§545): never the provisional day's.
+    if (!event || !typedStartOrNull(event)) return null;
     if (!confirmationWindow(event)) return t("editor.boxes.confirmation.datesOff", { hold });
     const values = {
       date: summaryDate(event.startsAt, zone, locale, "inline"),
@@ -180,7 +182,13 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        <SettingsReadOnly />
+        // A reader keeps what is not a setting of the event (§542): the race numbers' allocation and
+        // printing — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only
+        // for a role that reads the registrations (§289: the Organizer, not the Redactor).
+        <Stack spacing={2}>
+          <SettingsReadOnly />
+          {bibPrint}
+        </Stack>
       ) : (
         <Stack spacing={2}>
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>

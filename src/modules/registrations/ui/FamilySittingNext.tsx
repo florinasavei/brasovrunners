@@ -1,3 +1,4 @@
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -9,7 +10,9 @@ import { getTranslations } from "next-intl/server";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { AUTO_PRESS_FIELD, sittingMinutesLeft } from "../domain/family-sitting";
+import { countForm } from "@/i18n/count-form";
+import { AUTO_PRESS_FIELD, type SittingPerson, sittingMinutesLeft, sittingReservationFacts } from "../domain/family-sitting";
+import { reservedUntilWords } from "../domain/family-reservation";
 import PressWhenWindowEnds from "./PressWhenWindowEnds";
 
 type Props = {
@@ -17,6 +20,13 @@ type Props = {
   email: string;
   /** Everybody the sitting sent the form for so far, as typed, the latest last. */
   names: readonly string[];
+  /**
+   * The family's reserved places (§543; the owner, 2026-09-28: «să rezerv 3 locuri și așa să se
+   * calculeze pe site»): each person with the place their form got, and until when the places are
+   * reserved — both from the browser's half, facts about the event and the club's settings (§39).
+   * Absent, or `until` null (before «Da», a window of 0, an older half): the screen names no place.
+   */
+  reservation?: { people: readonly SittingPerson[]; until: Date | null };
   /** The form just sent named another person on the birth date of one typed before (§493), and was not kept. */
   sameBirthDate: { typed: string; kept: string } | null;
   /** How long until the window ends, by the server's clock: the open screen presses «Gata» then. */
@@ -38,6 +48,8 @@ type Props = {
   continueAction: (form: FormData) => Promise<void>;
   /** «Gata»: the sitting's one email leaves now (`releaseFamilySittingAction`). */
   releaseAction: (form: FormData) => Promise<void>;
+  /** The instant the screen is read at (§543): the deadline is compared with it. The request's clock; a test passes its own. */
+  now?: Date;
 };
 
 /**
@@ -63,6 +75,7 @@ type Props = {
 export default async function FamilySittingNext({
   email,
   names,
+  reservation,
   sameBirthDate,
   releaseInMs,
   firstName,
@@ -73,6 +86,7 @@ export default async function FamilySittingNext({
   slug,
   continueAction,
   releaseAction,
+  now = new Date(),
 }: Props) {
   const t = await getTranslations("Registration");
   const windowWords = minutesPhrase(locale, windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
@@ -80,6 +94,39 @@ export default async function FamilySittingNext({
   const left = minutesPhrase(locale, Math.max(1, sittingMinutesLeft(releaseInMs)));
   // A form that was not kept (§493) is not «the form for …» that arrived: the plain lead then.
   const latest = sameBirthDate ? null : (names.at(-1) ?? null);
+  /*
+    The family marker (§543; the owner, 2026-09-28: «trebuie un marker pentru familie... nu e clar cum
+    rezervăm»): «Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la 12:40», and beside
+    each name the place its form got. Only once a place was reserved at all (`until`).
+  */
+  const deadline = reservation?.until ?? null;
+  /*
+    Past the sitting's deadline (§543, the review of 2026-09-28, round three): nothing is reserved any
+    more — the deadline was fixed by the first form and nothing moved it — so the screen names no
+    place and says so, in one sentence, whatever «Da» was pressed since. The deadline is a fact about
+    this browser's forms and the club's settings, never the address's (§39).
+  */
+  const lapsed = deadline !== null && deadline.getTime() <= now.getTime();
+  const until = lapsed ? null : deadline;
+  const facts = reservation ? sittingReservationFacts(reservation.people) : null;
+  const places: string[] = [];
+  if (facts && until) {
+    const words = reservedUntilWords(until, now, locale);
+    const untilWords = t(words.key === "reservedToday" ? "sitting.untilToday" : "sitting.untilOn", { at: words.at });
+    if (facts.reserved > 0) places.push(`${t(`sitting.reserved.${countForm(facts.reserved, locale)}`, { count: facts.reserved })} ${untilWords}`);
+    if (facts.waiting > 0) places.push(t(`sitting.waiting.${countForm(facts.waiting, locale)}`, { count: facts.waiting }));
+  }
+  const marker =
+    facts && facts.firstNames.length > 0
+      ? places.length > 0
+        ? t("sitting.markerPlaces", { names: facts.firstNames.join(", "), places: places.join(", ") })
+        : t("sitting.marker", { names: facts.firstNames.join(", ") })
+      : null;
+  const placeOf = (index: number): string | null => {
+    const person = until ? reservation?.people[index] : undefined;
+    if (!person) return null;
+    return person.waitlist ? t("sitting.placeWaitlist") : t("sitting.placeReserved");
+  };
 
   return (
     <Stack spacing={3} data-testid="family-sitting">
@@ -137,13 +184,32 @@ export default async function FamilySittingNext({
             {email}
           </Box>
         </Typography>
+        {marker && (
+          <Typography variant="body1" sx={{ mt: 1, fontWeight: 700, display: "flex", alignItems: "flex-start", gap: 0.75 }} data-testid="family-sitting-marker">
+            <FamilyRestroomIcon fontSize="small" aria-hidden="true" sx={{ mt: 0.25 }} />
+            <span>{marker}</span>
+          </Typography>
+        )}
         <Box component="ol" sx={{ m: 0, mt: 1, pl: 3 }} data-testid="family-sitting-names">
           {names.map((name, index) => (
-            <Typography component="li" key={`${index}-${name}`} sx={{ fontWeight: 700 }}>
-              {name}
+            <Typography component="li" key={`${index}-${name}`}>
+              <Box component="span" sx={{ fontWeight: 700 }}>
+                {name}
+              </Box>
+              {placeOf(index) && <Box component="span" color="text.secondary">{` — ${placeOf(index)}`}</Box>}
             </Typography>
           ))}
         </Box>
+        {places.length > 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {t("sitting.reservedHelp")}
+          </Typography>
+        )}
+        {lapsed && (
+          <Typography variant="body2" sx={{ mt: 1, fontWeight: 700 }} data-testid="family-sitting-lapsed">
+            {t("sitting.reservationLapsed")}
+          </Typography>
+        )}
       </Box>
 
       <Box>
