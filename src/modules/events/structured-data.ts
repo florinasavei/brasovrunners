@@ -263,7 +263,7 @@ export function sportsEventJsonLd(
     /*
       Who may enter (§329): schema.org's own spelling of an open-ended range, "14-". Wherever
       the page states a minimum — every type since §505 (`publicAgeRule`) — with the number that
-      binds, never under fourteen since §NNN (`effectiveMinimumAge`).
+      binds, never under fourteen since §515 (`effectiveMinimumAge`).
     */
     typicalAgeRange: `${effectiveMinimumAge(event.minAge)}-`,
     // No `remainingAttendeeCapacity`: criterion 3 requires it to equal the free-place count

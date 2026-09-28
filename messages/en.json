@@ -43,7 +43,6 @@
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
-    "pastNotice": "This event has already taken place.",
     "featured": "Featured event",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
     "pastCountFiltered": "Past, filtered ({count})",
@@ -112,14 +111,12 @@
     "photosNotice": "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or <contact>write to us</contact> and we take the photo down, no reason needed. Details in the <privacy>privacy notice</privacy>.",
     "date": "Date",
     "startTime": "Start time",
-    "gatheringTime": "Gathering time",
     "gatheringAt": "gather at {time}",
     "raceStartAt": "start at {time}",
     "gatheringAtBold": "gather at <strong>{time}</strong>",
     "raceStartAtBold": "start at <strong>{time}</strong>",
     "when": "When",
     "where": "Where",
-    "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
     "share": {
       "title": "Share:",
@@ -533,7 +530,6 @@
       "backToList": "Back to registrations",
       "resend": "Resend email",
       "resendSent": "The email has been queued again.",
-      "resendNothingToSend": "There is nothing to resend for this status.",
       "timeline": "Timeline",
       "submitted": "Submitted",
       "emailConfirmed": "Email confirmed",
@@ -783,9 +779,7 @@
       "tableCaption": "The club's events, with their status, date and number of registrations",
       "selectEvent": "Select \"{title}\"",
       "bulkArchiveTitle": "Archive the ticked events",
-      "bulkArchiveHelp": "Archiving takes an event off the site without deleting anything. An event somebody else has edited in the meantime is not archived, so their change is not lost.",
       "bulkArchiveAction": "Archive the ticked ones",
-      "bulkArchivePending": "Archiving…",
       "eventsArchivedDone": {
         "one": "{count} event archived.",
         "few": "{count} events archived.",
@@ -797,7 +791,6 @@
         "other": "{count} could not be archived."
       },
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
-      "deleteBlockedShort": "{count} registrations",
       "eventsRepeatedOne": "The series is running: {dates} created now, up to {until} — the next {horizon}. The site creates the rest by itself, always {horizon} ahead, until the chosen date or for ever.",
       "eventsRepeatedMany": "The series is running: {dates} created now, up to {until} — the next {horizon}. The site creates the rest by itself, always {horizon} ahead, until the chosen date or for ever.",
       "seriesDraftsOne": "{dates} in draft, not on the site:",
@@ -1011,7 +1004,6 @@
       "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added."
     },
     "editor": {
-      "eventSection": "Event details",
       "startsAt": "Event start",
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
@@ -1042,7 +1034,6 @@
       "acknowledgeLive": "I understand that I am editing published content.",
       "acknowledgeLiveHint": "Tick that you understand you are changing published content to be able to save.",
       "saving": "Saving…",
-      "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
       "costHelp": "What a participant pays; the site collects no money. If the place is given only once paid, choose “Paid” and add the payment link.",
@@ -1075,9 +1066,7 @@
         "scheduleNotes": "Notes under the programme",
         "routeDescription": "Route / training description"
       },
-      "sharedFieldHelp": "The same in both languages. Filled in once.",
       "tabIncomplete": "incomplete",
-      "settingsSection": "Settings",
       "save": "Save",
       "publicationSection": "Publication",
       "newTitle": "New event",
@@ -1109,7 +1098,6 @@
       "eventStatus": "Event status",
       "timezone": "Time zone",
       "endsAt": "Event end",
-      "endsAtHelp": "Optional. Leave empty when the club has stated only a start.",
       "distanceMeters": "Distance",
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
@@ -1129,7 +1117,6 @@
         "series": "In a series, each date follows its own day's sunset: the winter dates are night events, the summer ones are not.",
         "help": "Automatic: a night event when any part of it falls after dusk or before dawn. Shown on the card, the page, the calendar and the reminder email."
       },
-      "registrationSection": "Registration",
       "registrationMode": "Registration mode",
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
       "capacity": "Capacity",
@@ -1229,10 +1216,8 @@
         "FORTNIGHTLY": "Every two weeks",
         "MONTHLY": "Monthly"
       },
-      "repeatCount": "How many editions",
       "repeat": "Create the dates",
       "timeOfDay": "Time",
-      "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
       "repeatWeekdaysHelp": "This event's day is always in the series; tick other days too, say Wednesday for a Sunday run.",
       "weekdays": {
@@ -1391,7 +1376,7 @@
       "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}",
       "notice": {
         "notify": "Tell participants about the change",
-        "count": "Participants who would get the “Updated details” email: {count}, only if the place, date, time or programme changed, or you write a note. Messages: {messages} ({allowance}).",
+        "count": "Participants who would get the “Updated details” email: {count}, only if the place, date, time or programme changed, or you write a note. Messages, the club's copies included: {messages} ({allowance}).",
         "countNone": "Nobody is registered for this date right now, so the box sends no email.",
         "countSeries": "If the change also reaches other dates of the series, their participants are told too, once each, about their own date.",
         "note": "What changed (optional)",
@@ -1404,7 +1389,7 @@
         "cancelReason": "Why the event is cancelled",
         "cancelReasonHelp": "Required, in both languages · plain text, at most {max} characters each. Each participant gets it in the language they registered in; it also appears in the audit log, with your name.",
         "cancelNotify": "Tell the participants that the event is cancelled",
-        "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
+        "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages, the club's copies included: {messages} ({allowance}).",
         "cancelCountNone": "Nobody is registered right now, so no email goes out.",
         "allowanceDay": "the {plan} plan: {remaining} left today",
         "allowanceMonth": "the {plan} plan: {remaining} left this month",
@@ -2700,6 +2685,7 @@
       "olderPictures": {
         "title": "Older pictures, without phone sizes",
         "intro": "Old pictures have one large file, which a phone downloads whole. The button makes their small sizes, at most {perPress} per press.",
+        "introMore": "A picture that fails stays counted and is tried again at every press. The old file stays until you delete the picture; then it goes too.",
         "left": {
           "one": "{count} picture left without sizes.",
           "few": "{count} pictures left without sizes.",
@@ -6460,9 +6446,9 @@
         "other": "{count} pictures got their phone sizes; left: {left}."
       },
       "picturesLadderedFailed": {
-        "one": "{count} picture got its phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
-        "few": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
-        "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
+        "one": "{count} picture got its phone sizes; failed: {failed} — a missing file or not a picture, see “Pictures”; left: {left}.",
+        "few": "{count} pictures got their phone sizes; failed: {failed} — a missing file or not a picture, see “Pictures”; left: {left}.",
+        "other": "{count} pictures got their phone sizes; failed: {failed} — a missing file or not a picture, see “Pictures”; left: {left}."
       },
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",

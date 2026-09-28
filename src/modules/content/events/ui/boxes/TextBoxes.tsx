@@ -213,7 +213,7 @@ export async function RulesBox({
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = await getLocale();
-  // Never under fourteen (§NNN): an event saved with less under §329 opens at fourteen, which the box accepts.
+  // Never under fourteen (§515): an event saved with less under §329 opens at fourteen, which the box accepts.
   const minAge = effectiveMinimumAge(event?.minAge);
   const aside = [rulesSummary(words, languages.map(summaryOf)), minAgeSummary(words, minAge, locale)].join(words.separator);
   return (

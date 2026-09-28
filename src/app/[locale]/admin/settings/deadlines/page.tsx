@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * «Setări» → «Termene» (§377, its own tab since §516 — it was a fold on `/admin/emails`): every
- * participant-facing deadline, the per-address limit (§389) and «Când pleacă emailurile» (§NNN).
+ * participant-facing deadline, the per-address limit (§389) and «Când pleacă emailurile» (§513).
  * Read by whoever reads the club's content; changed by the Administrator (`canManageClubSettings`,
  * §450), which the actions and the services assert again. The messages whose when-lines state these numbers are one tab over,
  * «Emailuri», and read them from the same setting.
@@ -47,9 +47,9 @@ export default async function AdminDeadlinesPage({ params, searchParams }: Props
   const [deadlines, addressCap, deliveryTiming, outboxDelivery] = await Promise.all([
     readDeadlines(db),
     readAddressCap(db),
-    // «Când pleacă emailurile» (§NNN): on the scheduler's tick or right after the request.
+    // «Când pleacă emailurile» (§513): on the scheduler's tick or right after the request.
     readDeliveryTiming(db),
-    // How long a scheduled email waits (§NNN), for the setting's own words: the pinger's cadence, the
+    // How long a scheduled email waits (§513), for the setting's own words: the pinger's cadence, the
     // Administrator's interval and the governor's floor (§447), as «Emailuri» reads it for its forecast.
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
   ]);

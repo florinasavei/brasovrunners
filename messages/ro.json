@@ -43,7 +43,6 @@
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
-    "pastNotice": "Acest eveniment a avut deja loc.",
     "featured": "Evenimentul principal",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
     "pastCountFiltered": "Din trecut, după filtre ({count})",
@@ -112,14 +111,12 @@
     "photosNotice": "La evenimentele clubului se pot face fotografii și filmări, pe care clubul le publică în galerie și pe canalele sale. Nu vrei să apari? Spune-i fotografului sau <contact>scrie-ne</contact> și scoatem fotografia, fără să ne spui de ce. Detalii în <privacy>nota de confidențialitate</privacy>.",
     "date": "Data",
     "startTime": "Ora de start",
-    "gatheringTime": "Ora de întâlnire",
     "gatheringAt": "întâlnire la {time}",
     "raceStartAt": "start la {time}",
     "gatheringAtBold": "întâlnire la <strong>{time}</strong>",
     "raceStartAtBold": "start la <strong>{time}</strong>",
     "when": "Când",
     "where": "Unde",
-    "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
     "share": {
       "title": "Dă mai departe:",
@@ -533,7 +530,6 @@
       "backToList": "Înapoi la înscrieri",
       "resend": "Retrimite emailul",
       "resendSent": "Emailul a fost pus în coadă din nou.",
-      "resendNothingToSend": "Nu există niciun email de retrimis pentru această stare.",
       "timeline": "Cronologie",
       "submitted": "Trimisă",
       "emailConfirmed": "Email confirmat",
@@ -783,9 +779,7 @@
       "tableCaption": "Evenimentele clubului, cu starea, data și numărul de înscrieri",
       "selectEvent": "Selectează „{title}”",
       "bulkArchiveTitle": "Arhivează evenimentele bifate",
-      "bulkArchiveHelp": "Arhivarea scoate evenimentul de pe site fără să șteargă nimic. Un eveniment modificat între timp de altcineva nu se arhivează, ca să nu se piardă modificarea lui.",
       "bulkArchiveAction": "Arhivează cele bifate",
-      "bulkArchivePending": "Se arhivează…",
       "eventsArchivedDone": {
         "one": "{count} eveniment arhivat.",
         "few": "{count} evenimente arhivate.",
@@ -797,7 +791,6 @@
         "other": "{count} nu au putut fi arhivate."
       },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
-      "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până {until} — următoarele {horizon}. Restul le creează site-ul singur, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit.",
       "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până {until} — următoarele {horizon}. Restul le creează site-ul singur, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit.",
       "seriesDraftsOne": "{dates} în ciornă, nu e pe site:",
@@ -1011,7 +1004,6 @@
       "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni."
     },
     "editor": {
-      "eventSection": "Detaliile evenimentului",
       "startsAt": "Începutul evenimentului",
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
@@ -1042,7 +1034,6 @@
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
       "acknowledgeLiveHint": "Bifează că ai înțeles că modifici conținut publicat ca să poți salva.",
       "saving": "Se salvează…",
-      "saveTranslation": "Salvează textul",
       "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
       "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
       "costHelp": "Ce plătește un participant; site-ul nu încasează bani. Dacă locul se primește doar după plată, alege „Cu taxă” și pune linkul de plată.",
@@ -1075,9 +1066,7 @@
         "scheduleNotes": "Note sub program",
         "routeDescription": "Descriere traseu / antrenament"
       },
-      "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "tabIncomplete": "incomplet",
-      "settingsSection": "Setări",
       "save": "Salvează",
       "publicationSection": "Publicare",
       "newTitle": "Eveniment nou",
@@ -1109,7 +1098,6 @@
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
       "endsAt": "Sfârșitul evenimentului",
-      "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
       "distanceMeters": "Distanță",
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
@@ -1129,7 +1117,6 @@
         "series": "Într-o serie, fiecare dată urmează apusul zilei ei: datele de iarnă sunt de noapte, cele de vară nu.",
         "help": "Automat: e de noapte când o parte a evenimentului cade după amurg sau înainte de zori. Se arată pe card, pe pagină, în calendar și în emailul de reamintire."
       },
-      "registrationSection": "Înscriere",
       "registrationMode": "Modul de înscriere",
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
       "capacity": "Număr de locuri",
@@ -1229,10 +1216,8 @@
         "FORTNIGHTLY": "La două săptămâni",
         "MONTHLY": "Lunar"
       },
-      "repeatCount": "Câte ediții",
       "repeat": "Creează datele",
       "timeOfDay": "Ora",
-      "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
       "repeatWeekdaysHelp": "Ziua acestui eveniment e mereu în serie; bifează și alte zile, de exemplu miercuri pentru o tură de duminică.",
       "weekdays": {
@@ -1391,7 +1376,7 @@
       "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}",
       "notice": {
         "notify": "Anunță participanții despre schimbare",
-        "count": "Participanți care ar primi emailul „Detalii actualizate”: {count}, doar dacă s-a schimbat locul, data, ora sau programul, ori scrii un mesaj. Mesaje: {messages} ({allowance}).",
+        "count": "Participanți care ar primi emailul „Detalii actualizate”: {count}, doar dacă s-a schimbat locul, data, ora sau programul, ori scrii un mesaj. Mesaje, cu tot cu copiile pentru club: {messages} ({allowance}).",
         "countNone": "Nu e nimeni înscris acum la această dată, așa că bifa nu trimite niciun email.",
         "countSeries": "Dacă modificarea ajunge și la alte date ale seriei, sunt anunțați și participanții acelor date, fiecare o singură dată, despre data lui.",
         "note": "Ce s-a schimbat (opțional)",
@@ -1404,7 +1389,7 @@
         "cancelReason": "Motivul anulării",
         "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
         "cancelNotify": "Anunță participanții că evenimentul a fost anulat",
-        "cancelCount": "Participanți care ar primi emailul „Eveniment anulat”: {count}. Mesaje cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
+        "cancelCount": "Participanți care ar primi emailul „Eveniment anulat”: {count}. Mesaje, cu tot cu copiile pentru club: {messages} ({allowance}).",
         "cancelCountNone": "Nu e nimeni înscris acum, așa că nu pleacă niciun email.",
         "allowanceDay": "planul {plan}: încă {remaining} azi",
         "allowanceMonth": "planul {plan}: încă {remaining} luna aceasta",
@@ -2700,6 +2685,7 @@
       "olderPictures": {
         "title": "Imaginile vechi, fără mărimi pentru telefon",
         "intro": "Pozele vechi au un singur fișier mare, pe care telefonul îl descarcă întreg. Butonul le face mărimile mici, cel mult {perPress} la o apăsare.",
+        "introMore": "O imagine care nu reușește rămâne numărată și se reîncearcă la fiecare apăsare. Fișierul vechi rămâne până ștergi imaginea; atunci se șterge și el.",
         "left": {
           "one": "A rămas {count} imagine fără mărimi.",
           "few": "Au rămas {count} imagini fără mărimi.",
@@ -6460,9 +6446,9 @@
         "other": "{count} de imagini au primit mărimile pentru telefon; rămase: {left}."
       },
       "picturesLadderedFailed": {
-        "one": "{count} imagine a primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
-        "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
-        "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
+        "one": "{count} imagine a primit mărimile pentru telefon; nereușite: {failed} — fișier lipsă sau care nu e o imagine, vezi «Imagini»; rămase: {left}.",
+        "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} — fișier lipsă sau care nu e o imagine, vezi «Imagini»; rămase: {left}.",
+        "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} — fișier lipsă sau care nu e o imagine, vezi «Imagini»; rămase: {left}."
       },
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
       "shownContactAddress": "Adresa de contact afișată a fost salvată.",

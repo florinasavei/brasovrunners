@@ -132,6 +132,9 @@ sections and in `CHANGELOG.md`.
   language under it (both languages or neither, only for EXTERNAL + PAID), the ics cost line, JSON-LD `offers.url` at the organizer's form.
 - **The partners as a block** (§401): «Împreună cu» on the event page is a collapsible block with the partner cards inside; the listing's filter row keeps a step of space above the grid and offers a «Colaborare» / «Partnership» chip while a partnered event is on the calendar.
 - **The weather** (§402, §416, the pill among the route pills with an umbrella §429): the forecast for the event's date and start hour at the event's own place (the map link's coordinates, else the typed «Coordonate», else the club's), from Open-Meteo (free, keyless, fetched on the server and cached an hour), on the event page within seven days and in the reminder — since §469 one line on both (the sky, the start hour's degrees, «ploaie probabilă N %» only when rain is likely), the cards' pill unchanged; nothing when unavailable.
+- **The difficulty scale** (§526, replacing §412's five words): five bands — ușor, mediu, greuț, greu, foarte greu — of three steps each, fifteen levels in one `events.difficulty_level` column (NULL shows no pill); the gauge draws the band and the step as dots, the emails and the calendar say «Mediu, treapta 2 din 3», the listing's filter ticks a whole band, and «Ghid» explains the club's scale.
+- **«Întrebări frecvente» / "FAQ"** (§525): `/ro/intrebari`, `/en/faq`, a platform page like «Echipa» — questions and rich-text answers in both languages, grouped by an optional category, each a native fold with its own deep link, `FAQPage` structured data; in the menu only once the page is published and a question is on the site.
+- **The members' zone** (§524): «Beneficiile membrilor» at `/ro/membri` is public and carries the sign-in button; the members-only page is `/ro/zona-membri` (`/en/members-area`), outside `/admin`, `noindex`, opened by any signed-in account — a member sees it and nothing of the backoffice.
 - **A film's poster and volume** (§403; a film is a node in the description since §481; the corner glyph and the HD hint §478): the club's own stored copy of a YouTube thumbnail before the click (nothing from Google until then), a server-rendered facade that works without JavaScript, a mute/volume bar after the click.
 - The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
@@ -155,7 +158,7 @@ sections and in `CHANGELOG.md`.
   before**: for an event further away than its participation window (per event — 0 as the second number means the place never expires before the start (§407) — default asked
   7 days before, due 2 days before), the place is held until the deadline and the declaration —
   the confirmation — is asked at once and again when the window opens; inside the window and
-  on a weekly run, the thirty-minute hold (§104). **Every such deadline is the club's "Termene" setting** on `/admin/emails` since `BR-V1.86` (§377, the recommended values and the one-press fill §456; 30 min / 24 h / 48 h by default), the reminder per event or the club's.
+  on a weekly run, the thirty-minute hold (§104). **Every such deadline is the club's "Termene" setting** — «Setări» → «Termene» since §516 — since `BR-V1.86` (§377, the recommended values and the one-press fill §456; 30 min / 24 h / 48 h by default), the reminder per event or the club's.
 - The lifecycle (audited 2026-09-25, §420: no dead offer after the close, a number only for a confirmed address, every family link live, the desk race refused), one allocator for the click and the job, proven under real concurrency
   (`tests/concurrency/capacity.test.ts`); the 30-minute hold, the waiting list and its
   24-hour offers, self-unregistration, the maintenance job (`AGENTS.md` §10.5–§10.6, §40, §68). Test registrations
@@ -170,6 +173,7 @@ sections and in `CHANGELOG.md`.
 - A **family on one address** (§389; the declarations as one wizard §471): the form sent again with another name creates nothing and emails the address a single-use link
   to register the other person, the address fixed; the club's limit per address is in "Termene" (default 4); each person confirms, signs
   and gets their own QR code. It is on since `BR-V1.94` (migration `0073` dropped `registrations_event_participant_unique`; §390).
+- **A family in one sitting** (§519, amending §389, §446 and §471): after the form the screen asks «Mai înscrii pe cineva cu aceeași adresă?», the next form keeps the address and the shared boxes, and nothing is mailed until «Gata» or the «Termene» window; from the second person on it is one email with every person and one button that confirms them all and opens the declarations wizard; «Toate înscrierile mele» shows each person's declaration. Migration `0096`.
 - A **group run may offer an optional self-declaration** by surface, asphalt or trail (§393): a checkbox in «Traseul» (on by itself for
   trail), a named section with one button on the run's page, the same signing parts as the race declaration (typed identity document, a hand
   signature, the runner's language), the PDF to the signer and the club's archive with the document masked, seven days' retention, never a
@@ -185,18 +189,19 @@ sections and in `CHANGELOG.md`.
 
 - 27 message types (`email_outbox.email_message_type`; the newsletter, its confirmation and the new-event alert since §445) — the organizer's **update notice**, sent only when they tick "Anunță participanții", and the **cancellation** with its reason are the newest; a cancelled event goes quiet (§331) — bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
-  more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
+  more", the PDF — and every one previewed on «Setări» → «Emailuri» (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
   only on production — QA `allowlist`, local `capture` — and live outside production is refused
   at startup (§37, `AGENTS.md` §16). The outbox drains after the request that
   queued it and on the scheduler (§68); a spent Mailgun allowance defers, never discards (§40).
   The club's copy of a participant's message is a separate "[Copie club]" message per address, with no token, QR or attachment, and Mailgun open and click tracking are off on every message (§320). The reminder before the start (the club's lead or the event's own, 48 hours by default, §377), the thank-you after (§81–§83); the participation confirmation
   when the window opens (§104); the number given by hand (§105).
+- **Emails leave on the scheduler's tick** (§513, amending §68): on QA and production a queued message waits for the next outbox run (15 minutes by day, an hour at night, longer under the budget governor) instead of leaving after the request; «Setări» → «Termene» → «Când pleacă emailurile» switches it back (Administrator); the screens after the form, the resend and the newsletter pop-up say the real wait, and a deadline an email carries runs from its send, not its queueing.
 - **The confirmed email, the reminder and the declaration request carry one facts block** (§392): Când (with the weekday), Unde (the place
   in that language, the address, the map), Program (the timed rows), Traseu (the page's own route words), Cost (only when not free), Linkuri
   (the page's anchors by the page's own rules, `#links` only when the section exists) — one function, drawn once per language half, in place
   of §81's bold line; the club's copy keeps it without the QR.
-- **The Mailgun plan is a setting** on `/admin/emails` — Free, Basic, Foundation, Scale or
+- **The Mailgun plan is a setting** on «Setări» → «Emailuri» — Free, Basic, Foundation, Scale or
   typed ceilings — and every "how much can we still send" figure and the cost table follow it
   (§100). **The club is told when email stops**: `/api/health` answers 503 for anything but
   `ok`, with an `email` block; a cron-job.org monitor with failure notifications is the alarm
@@ -209,6 +214,8 @@ sections and in `CHANGELOG.md`.
   Zitadel sign-in (§26); `STAFF_AUTH_MODE`: `provider` deployed, `dev-switcher` locally and in
   tests, `disabled` answers 404 to every staff route (`AGENTS.md` §13.1). `/admin/guide` opens the reader's
   own sections first (§103).
+- **Members** (§524): a seventh role, `MEMBER` (rank 0, below the volunteer), is a `staff_users` row added on «Echipa» — one by one or «Adaugă mai mulți membri» for a list — invited by Zitadel with the same key; `requireStaff` answers null for it, so every backoffice page, action and route refuses a member as it refuses a stranger. Its texts are «Pagini» → «Pagini standard» → «Membri», published by an Administrator.
+- **«Setări»** (§516): one main-bar entry with tabs at `/admin/settings/<tab>` — «Emailuri», «Termene», «Contact», «Aspect», «Costuri», «Anti-robot» (named «Platformă» until §522), then «Configurație» (`/devs`) as the last tab and its only way in (§520); every club setting lives there (the Mailgun plan, the deadlines, who reads the contact form and the shown address, the site's tint, the money and Neon's limits, the anti-robot switch); «Sarcini» keeps «Club», «De făcut» and «Aplicația», each row linking to the tab and card where it is done; every old address (`/admin/emails`, `/admin/tasks?panel=costs` …) answers a 308.
 - The whole of an event in one form and one save, both languages together, versions on the
   row and the translations (§28, §36, §64, §70, §71); recurring events published as a series;
   the ⋮ menu; the queue panel with the waiting list in order (§92); the participation window's
@@ -225,7 +232,7 @@ sections and in `CHANGELOG.md`.
 - **What wakes the database, and the brakes on it** («Costuri» as the money page — the month so far, the projection, the database's configuration: §479) (the metered figure, the budget governor and the suspended mode: §447) (the bill is time awake, §327): anonymous public
   traffic reads rows from Next's data cache, expired by every write that changes them (§333); a job
   ping with nothing due answers without the database, and the Administrator may set a minimum
-  interval between real runs on `/admin/tasks` → Costuri (§334); the "Limitele bazei de date" card
+  interval between real runs on «Setări» → «Costuri» (§334, §516); the "Limitele bazei de date" card
   reads and sets Neon's size ceiling and monthly quota, and `/api/health` warns at 80% of it (§335).
 - Backoffice folds start closed and open themselves only for a refusal, a save, a warning or the
   address's `#` (§336); `/admin/emails` is one card of cards. The telephone is one box with a flag
@@ -416,7 +423,7 @@ it is the authority, this is the summary):
 11. ~~The contact form's Gmail~~ — done 2026-09-20: `CONTACT_SMTP_USER`,
     `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
     the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who
-    receives a message is `/admin/emails` → "Cine primește mesajele de contact".
+    receives a message is «Setări» → «Contact» → "Cine primește mesajele de contact" (§516).
 12. **The race itself, and this is the launch item.** Production publishes the weekly group run
     and nothing else: the 21 November race has no event there, so nobody can register for it.
     It is one save in `/admin/events` — the event, its capacity, its participation window, its
@@ -436,6 +443,16 @@ it is the authority, this is the summary):
     Since `BR-V1.96` (§393, §396) the template also describes the optional group-run declaration and the public list's states — one new version covers all of it.
 15. ~~**The family flow's contract release, `BR-V1.94`**~~ — done 2026-09-25 (§390): — one contract-only migration drops `registrations_event_participant_unique`;
     the flow is on wherever migration `0073` ran; production got it with this release. What is left is item 14, the notice.
+16. **Approve the legal texts again, from the new templates** — first on QA, then on production. Since `BR-V2.13`–`BR-V2.15`
+    the templates carry the trail and the road race declarations (§515), the group-run declarations for a whole series (§523)
+    and a privacy notice that describes the members' zone (§524). `/admin/legal` → «Aprobă acum textele care lipsesc…» approves
+    in one press every text that has no approved version; a text already in force is «Versiune nouă» → «Pornește de la șablon»,
+    one at a time. A Romanian lawyer should read the declarations first. This covers items 8 and 14 too.
+17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
+    event in `/admin/events` and choose the band and «Treapta» on the fifteen-step scale; the guide («Ghid») explains the scale.
+18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,
+    which departs from the brief: §524); add the first members on «Echipa» → «Adaugă mai mulți membri» (after the notice of item 16);
+    write «Pagini» → «Pagini standard» → «Membri» and «Întrebări frecvente» (§525) in both languages, then publish them.
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

@@ -73,10 +73,19 @@ const PASSED_ON: ReadonlyArray<{ file: string; expression: string; wrapper: stri
   { file: "src/modules/events/ui/ShareLinks.tsx", expression: "icon", wrapper: "anchor" },
 ];
 
+/**
+ * A fold's own arrow — or MUI's `ListItemIcon`, which is only the box a glyph sits in — ends in
+ * `Icon` but says nothing about the subject (§521: "the arrow says the fold opens; the glyph says
+ * what is inside"). A header that draws only one of these has no glyph. `ListItemIcon`'s children
+ * are still read: the glyph inside it counts.
+ */
+const NOT_A_GLYPH = /^(?:ExpandMore\w*|ExpandLess\w*|Chevron\w*|ArrowDropDown\w*|ArrowDropUp\w*|KeyboardArrow\w*|ListItemIcon)$/;
+
 /** Whether a JSX subtree draws a glyph; `passedOn` names the expressions a wrapper hands on. */
 function drawsGlyph(node: ts.Node, passedOn: ReadonlySet<string>): boolean {
   if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
     const tag = node.tagName.getText();
+    if (NOT_A_GLYPH.test(tag)) return false;
     if (/Icon$/.test(tag) || tag === "Glyph" || tag === "svg" || /^GLYPHS\./.test(tag)) return true;
   }
   if (ts.isJsxExpression(node) && node.expression && ts.isIdentifier(node.expression) && passedOn.has(node.expression.text)) return true;
@@ -243,6 +252,18 @@ describe("§521 a glyph on every button", () => {
 describe("§521 a glyph on every fold header", () => {
   it("finds no <summary> without a glyph, anywhere under src/", () => {
     expect(FILES.flatMap(foldsWithoutGlyph)).toEqual([]);
+  });
+
+  it("does not count the fold's own arrow, or an empty ListItemIcon, as its glyph", () => {
+    const summary = (inner: string) =>
+      ts.createSourceFile("x.tsx", `const x = <summary>${inner}</summary>;`, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    for (const arrow of ["<ExpandMoreIcon />", "<ChevronRightIcon fontSize=\"small\" />", "<ArrowDropDownIcon />", "<KeyboardArrowDownIcon />", "<ListItemIcon />"]) {
+      expect(drawsGlyph(summary(`${arrow}Detalii`), NOTHING_PASSED_ON), arrow).toBe(false);
+    }
+    // The arrow and a subject glyph: the subject counts.
+    expect(drawsGlyph(summary("<ExpandMoreIcon /><RouteIcon aria-hidden />Traseul"), NOTHING_PASSED_ON)).toBe(true);
+    // A glyph inside ListItemIcon still counts: the box is not the picture, what it holds is.
+    expect(drawsGlyph(summary("<ListItemIcon><EventIcon /></ListItemIcon>Evenimente"), NOTHING_PASSED_ON)).toBe(true);
   });
 
   it("requires a glyph on every Panel card, by the type, and draws it inside the heading", () => {

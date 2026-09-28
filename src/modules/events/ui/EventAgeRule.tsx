@@ -12,7 +12,7 @@ import { type EventType, publicAgeRule } from "../domain/event-type";
  *
  * The sentence is `publicAgeRule`'s: where the club takes the registrations, the form's own
  * sentence (the page and the form cannot disagree); anywhere else the minimum with the parent's
- * consent below eighteen; never under fourteen (`effectiveMinimumAge`, §NNN). A `h3` like the
+ * consent below eighteen; never under fourteen (`effectiveMinimumAge`, §515). A `h3` like the
  * fold's other parts, so it stays in a screen reader's list of headings. A Server Component.
  */
 export default async function EventAgeRule({

@@ -26,7 +26,7 @@ import ro from "../../../messages/ro.json";
  *    those are for the people who build the platform, never for the club;
  * 3. (§522, the plain-words pass over the whole backoffice) EVERY string the backoffice shows —
  *    `Admin.*`, the translate panel, the network page, the developers' page `/devs` (`Devs.*`),
- *    the Costuri budget card (`Budget.*`) and the backoffice's own error page (`STAFF_ERROR_KEYS`,
+ *    the Costuri budget card (`Budget.*`), the toasts (`Feedback.*`) and the backoffice's own error page (`STAFF_ERROR_KEYS`,
  *    named one by one because the rest of `Error.*` serves the public pages) — whatever its key is
  *    called (a notice, a dialog's body, an error, an email's «când pleacă», a task row, a «?»
  *    named `…More`, a guide's title or intro), keeps to the same 200 characters and no
@@ -88,8 +88,12 @@ const ALLOWED_LONG: Record<string, string> = {
   "Admin.registrations.journey.legend": "the «Pași» column legend names each of a registration's six steps on its own line",
 };
 
-/** The namespaces the backoffice draws: every string in them, not only the help texts (rule 3). */
-const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs", "Budget"] as const;
+/**
+ * The namespaces the backoffice draws: every string in them, not only the help texts (rule 3).
+ * `Feedback` is the toasts (§384, §427): a toast is read in the second it shows, so it keeps to the
+ * same rule, on the backoffice and on the few public flows that land on one.
+ */
+const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs", "Budget", "Feedback"] as const;
 
 /**
  * The staff-facing keys of `Error.*`, drawn by `AdminErrorPage` and `AdminRestingNotice`. Named one
@@ -217,8 +221,9 @@ describe("§511 the backoffice says one plain sentence per field, the rest behin
       expect(offenders).toEqual([]);
     });
 
-    it(`checks the backoffice's own error page, and only its staff keys (${locale})`, () => {
+    it(`checks the backoffice's own error page, and only its staff keys, and the toasts (${locale})`, () => {
       const keys = screenLeaves(catalogue).map(([key]) => key);
+      expect(keys.filter((key) => key.startsWith("Feedback.")).length).toBeGreaterThan(100);
       for (const key of STAFF_ERROR_KEYS) expect(keys).toContain(`Error.${key}`);
       // The public error page's words are not the backoffice's.
       expect(keys).not.toContain("Error.body");
