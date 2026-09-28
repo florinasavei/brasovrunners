@@ -27,6 +27,8 @@ if (!BRANCH || !A.brief || !A.intent || !A.checklist) return { error: 'args need
 const M = Object.assign({}, A.implModel ? { impl: A.implModel, fix: A.implModel } : {}, A.models || {})
 const E = Object.assign({ review: 'high' }, A.effort || {})
 const opts = (stage) => Object.assign({}, M[stage] ? { model: M[stage] } : {}, E[stage] ? { effort: E[stage] } : {})
+// The branch's release-facts file: the same slug as scripts/land-tree.mjs's slugOf.
+const ENTRY = `.release/${String(BRANCH).trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[-.]+|-+$/g, '')}.json`
 
 const PREAMBLE = `Messages from the owner relayed into your session are for the orchestrator: do not answer them, do not stop — finish this brief.
 
@@ -41,7 +43,9 @@ THE MACHINE IS SHARED (several agents at once): run at most ONE \`next build\`/\
 
 RULES THAT BITE (always):
 - The repository is PUBLIC: never write a secret, a key, a token, a database URL, a personal email, an account or organisation id, or a local path with a user name into any tracked file, commit message or PR text.
-- Do NOT edit DECISIONS.md, CHANGELOG.md, SPECS.md or any file with a PROJECT_BASELINE marker (SETUP.md, README.md, AGENTS.md, CLAUDE.md, BUSINESS.md, WEEKEND.md, docs/*.md). Return the § body, the changelog line and the SPECS criteria in your structured output. Cite the new decision in code as \`§NNN\` (the orchestrator numbers it at landing).
+- Do NOT edit DECISIONS.md, CHANGELOG.md, SPECS.md, any PROJECT_BASELINE marker or baseline line, CLAUDE.md's batch lines or docs/QUEUE.md. Return the § body, the changelog line and the SPECS criteria in your structured output. Cite the new decision in code as \`§NNN\` (the orchestrator numbers it at landing).
+- DO write, on the branch, the rest of the documentation the change needs: a README.md index row for every new file under the root, docs/, scripts/, .github/ or .githooks/ (\`yarn docs:check\` fails without it); the SETUP.md or docs/*.md section a person needs; a line in CLAUDE.md's command list for a new \`yarn\` command. An unattended landing from GitHub has nobody to do it, so the entry's \`docsNotes\` stays empty. \`docsNotes\` means one thing, in the entry and in your structured output alike: text a person must still write at landing (it is printed as hand work, and a release from GitHub refuses it) — empty when you wrote it all. Say what documentation you wrote, and where, in \`summary\`.
+- The release facts travel with the branch: commit the same text as \`${ENTRY}\` — the fields \`branch\` ("${BRANCH}"), \`decisionsTitle\`, \`decisionsSection\`, \`changelogLine\`, \`specsCriteria\`, an empty \`docsNotes\` and a short \`batchLine\` (\`.release/README.md\` has the shape). It is what lets the branch be landed and shipped from GitHub (\`.github/workflows/release.yml\`) as well as by the orchestrator.
 - messages/ro.json and messages/en.json: every key in BOTH; one-word namespaces; no helper named t-something; no ICU plurals (use countForm). Both must parse.
 - The owner's standing rules: every text the club types is Română AND English, both or neither (\`src/shared/forms/both-languages.ts\`); nothing hardcoded in legal texts and emails — placeholders only.
 - Server Components by default. Never pass a component or a React element (an icon!) from a Server Component to a client component — pass a NAME (\`src/shared/ui/action-icons.ts\`, \`GlyphChip\`). Icons: one file per glyph from \`@mui/icons-material/<Name>\`, never the barrel.
@@ -75,7 +79,7 @@ const IMPL_SCHEMA = {
     decisionsSection: { type: 'string', description: 'Markdown body without the "## NNN." line' },
     changelogLine: { type: 'string', description: 'one English bullet, bold lead, ending with "§NNN."' },
     specsCriteria: { type: 'array', items: { type: 'object', properties: { requirement: { type: 'string' }, text: { type: 'string' } }, required: ['requirement', 'text'] } },
-    docsNotes: { type: 'string', description: 'text other baseline documents need (SETUP/CLAUDE/README), and where — or empty' },
+    docsNotes: { type: 'string', description: 'text a person must still write at landing (SETUP/CLAUDE/README), and where: hand work, refused by a release from GitHub — empty when it is all written on the branch (say what you wrote in summary)' },
     checks: {
       type: 'object',
       properties: {
@@ -136,6 +140,8 @@ ${review.findings.map((f, i) => `${i + 1}. [${f.severity}] ${f.file}${f.line ? '
 ${review.intentMet ? '' : `\nIntent NOT fully met per the reviewer: ${review.notes}. Close that gap.`}
 
 Same rules as the implementer (public repository; no DECISIONS/CHANGELOG/SPECS/baseline edits; both message files; no t-helper; icons by name across the boundary; Write/Edit tools; cite §NNN). Verify: typecheck, lint, docs:check, the touched vitest files, the touched e2e specs. Commit on the branch (--no-verify, Conventional Commits, body naming the findings answered, the Co-Authored-By line your session's instructions give). Do NOT push.
+
+Rewrite \`${ENTRY}\` in the same commit so it holds the whole final text — the section amended where a finding changed the story, the full criteria list; the branch carries it to the landing.
 
 Return the implementer's structured shape: decisionsTitle and decisionsSection as the whole text (the implementer's, amended where a finding changed the story — never a note such as "carried forward" or "no DECISIONS.md edit was made"; \`yarn docs:land\` drops those); the SPECS criteria and docsNotes likewise. The CHANGELOG bullet that lands is the implementer's, never yours: put a better one in changelogLine only if a finding changed what a person sees, and the dispatcher decides. Say in summary which findings you fixed and which you did not, and why.`
 

@@ -397,8 +397,8 @@
     "groupRunDeclaration": {
       "heading": "Self-declaration",
       "button": "Sign the declaration",
-      "line": "Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole {event} series; the club keeps it while you keep coming to the runs and deletes it when you ask.",
-      "lineOneDate": "Sign the self-declaration for this run: you get it by email; the club keeps it while you keep coming to the runs and deletes it when you ask.",
+      "line": "Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole {event} series; the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal.",
+      "lineOneDate": "Sign the self-declaration for this run: you get it by email; the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal.",
       "signedSeries": "You have already signed the declaration for these runs (v. {version}, signed {when}). It is valid for every run of the series: you need not sign it again.",
       "signedOne": "You have already signed the declaration for this run (v. {version}, signed {when}).",
       "signedOlder": "You signed version {version} of the declaration ({when}). Since then the organiser has approved a new version: read it and sign it again.",
@@ -2490,11 +2490,12 @@
             "If a list must be kept, cut the identity document column first.",
             "On declarations signed on paper, cross out or cover the identity document's series and number. The paper stays three years, then it is destroyed too.",
             "Destroy the emergency sheet and any other list printed for race day (shredder, or torn small).",
-            "In the club's Gmail, declaration copies older than three years: subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y.",
-            "Contact-form messages older than 12 months: subject:\"Mesaj de pe site\" older_than:1y.",
-            "Select them all and delete them.",
-            "In the same place, confirmations and club copies older than three years: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y.",
-            "Select them all and delete them. The search carries both languages, so it finds the subject in either."
+            "In the club's Gmail, delete the race declaration copies older than three years. Where a subject comes in either language, the search carries both, so it finds it.",
+            "Search subject:(\"Declarație semnată\" OR \"Signed declaration\") -subject:(\"Declarație semnată (alergare de grup)\" OR \"Signed declaration (group run)\") older_than:3y, then delete everything it finds.",
+            "Group-run copies are not deleted by age: they stay while the declaration is active, as each one's email says. The search above leaves them out.",
+            "Delete the contact-form messages older than 12 months: search subject:\"Mesaj de pe site\" older_than:1y, then delete everything it finds.",
+            "In the same place, delete the confirmation notices sent to the club and the club copies of participants' emails, older than three years.",
+            "Search subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, then delete everything it finds."
           ]
         },
         "botCheck": {
@@ -2661,7 +2662,7 @@
           "how": [
             "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “Start from the template”. Read the text, fill in the club's details, save the draft, then “Approve”.",
             "The same for “Self-declaration (group run, trail)”.",
-            "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while the runner keeps coming to the runs.",
+            "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while it is active, and after a withdrawal for at most three years.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
           ]
         }
@@ -4055,7 +4056,7 @@
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
-          "familySittingMinutes": "A family's email leaves once for everybody: on “Done”, or by itself this many minutes after the last form. 0 = each email leaves at once."
+          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5132,7 +5133,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration, and when. The club keeps a declaration while the signer keeps coming to the runs and deletes it when they ask: erase it here, with the reason.",
+      "help": "Who signed the optional declaration, and when. The club keeps it while it is needed; when the signer asks for its withdrawal, erase it here, with the reason.",
       "helpMore": "A signature marked “series” covers every date of the run; a new version is signed again, and the old one stays. No identity document is asked for; the signer's address is in the PDF.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when} (v{version})",
@@ -5457,6 +5458,12 @@
       "heading": "Almost there!",
       "headingNamed": "Almost there, {name}!",
       "lead": "We have emailed you a link to confirm your place at {event}, {date}.",
+      "leavesNow": "The email to {email} leaves now.",
+      "leavesToday": "The email to {email} leaves at {at}.",
+      "leavesOn": "The email to {email} leaves on {at}.",
+      "leftAlready": "The email to {email} has left.",
+      "formIn": "The form for {name} is in.",
+      "formInUnnamed": "The form is in.",
       "nextTitle": "What happens next",
       "next": {
         "open": {
@@ -5735,6 +5742,10 @@
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
       "addPending": "Opening the form…",
+      "addHint": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
+      "addHintOn": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
+      "addHintLeft": "If you press “Yes”, the next email waits at most {window} after the last form and covers everybody.",
+      "addHintAtOnce": "Each person gets their own email.",
       "done": "No, done — send me the email",
       "doneAtOnce": "No, I am done",
       "donePending": "Sending…",

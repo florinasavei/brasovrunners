@@ -204,8 +204,10 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
 
-    // The check-your-email screen greets by the first name `fillRequired` typed (§224).
-    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+    // The check-your-email screen names the person `fillRequired` typed (§224) — once, in the line
+    // under the plain heading on the short screen after a first form (the review of 2026-09-28).
+    await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
+    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
   });
 
   test("a tick given under terms that changed comes back unticked, says so, and the next tick is taken", async ({ page }) => {
@@ -240,7 +242,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await page.locator('[name="termsAccepted"]').check();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
-    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
   });
 
   test("refuses a paste into the second address box, and offers a way through", async ({ page }) => {
@@ -828,7 +830,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
-    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
   });
 
   test("does not render a field name it does not recognize", async ({ page }) => {
@@ -1188,7 +1190,7 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
 
       await page.waitForTimeout(HUMAN_PAUSE_MS);
       await page.getByRole("button", { name: "Trimite înscrierea" }).click();
-      await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
     } finally {
       await retireRulesEvent(page, editorUrl);
     }

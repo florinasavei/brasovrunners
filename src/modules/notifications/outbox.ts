@@ -111,8 +111,9 @@ export type EnqueueEmailParams = {
   drainAfter?: boolean;
   /**
    * Not before this instant (§519): a family sitting holds its messages back until «Gata» or the
-   * club's window, as `next_attempt_at` — the column the claim already waits on, so nothing else
-   * about the row changes. The club's copies of the message wait with it. Absent: due at once.
+   * club's window, and a family's confirmation or declaration requests wait for the wizard, as
+   * `next_attempt_at` — the column the claim already waits on, so nothing else about the row
+   * changes. The club's copies of the message wait with it. Absent: due at once.
    */
   notBefore?: Date;
 };

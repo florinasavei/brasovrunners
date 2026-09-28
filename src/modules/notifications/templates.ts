@@ -739,6 +739,11 @@ export type TemplateData = {
    * Set, the message is the family's: its subject, its facts box, its button and its words.
    */
   familySittingPeople?: ReadonlyArray<{ name: string; birthDate: string }>;
+  /**
+   * Somebody the family message names already got an email of their own, which left before «Da» took
+   * them in (§536, `sittingEarlierEmailSent`): one line says this message's button covers them too.
+   */
+  familyEarlierSent?: boolean;
   /** «Toate înscrierile mele» beside the family's button (§77, §519): the address's own page, its own token. */
   familyMineUrl?: string;
   /**
@@ -933,16 +938,23 @@ const T = {
       contact: "Scrie-ne",
     },
     verify: {
-      subject: "Confirmă adresa de email",
+      // The event in the subject (§536): a parent with two races open sees which one this is.
+      subject: (d: TemplateData) => `Confirmă adresa — ${d.eventTitle ?? "eveniment"}`,
       /*
-        The first message to whoever the form named (§419; GDPR art. 12(1), 14(2)(f), 14(3)(b)): whose
-        registration it is, where the data came from, how long the link lasts and that the
-        registration lapses without it — a family member registered on this address (§389) reads it
-        first, and the privacy notice is the footer's link.
+        What to press and what follows, in the first line (§536; the owner, 2026-09-28): confirming the
+        address runs the allocator (`allocateOrWaitlist`), which gives a place — then the declaration
+        and the QR code (no registration without a declaration, §29) — or the waiting list when the
+        event is full by then; the renderer cannot know which, so the line promises the declaration
+        only «if there is still a place» and is true of both outcomes (the review of 2026-09-28). Then the
+        first message to whoever the form named (§419; GDPR art. 12(1), 14(2)(f), 14(3)(b)): whose
+        registration it is, how long the link lasts and that the registration lapses without it,
+        where the data came from — a family member registered on this address (§389) reads it
+        first, and the privacy notice is the footer's link. The event's facts block (§392) follows.
       */
       body: (d: TemplateData) => [
-        `Am primit o înscriere la ${d.eventTitle ?? "eveniment"} pe numele ${d.participantName}, trimisă cu această adresă de email. Pentru a continua, confirmă adresa.`,
-        `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)}; dacă nu confirmi adresa până atunci, înscrierea expiră.`,
+        "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.",
+        `Am primit o înscriere la ${d.eventTitle ?? "eveniment"} pe numele ${d.participantName}, trimisă cu această adresă de email.`,
+        `Linkul e valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)}; fără confirmare, înscrierea expiră.`,
         `Datele din înscriere ni le-a trimis cine a completat formularul cu această adresă. Dacă nu ${d.participantName} l-a completat, arată-i acest mesaj: cum folosim datele scrie în nota de confidențialitate, la linkul de la sfârșitul mesajului. Dacă ${d.participantName} nu vrea să participe, nu confirma: înscrierea expiră singură.`,
         "Dacă nu ai solicitat această înscriere, poți ignora acest mesaj.",
       ],
@@ -1092,8 +1104,8 @@ const T = {
           : `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
         // One declaration for every run of the series (§523): a returning runner signs it once.
         d.groupRunSeries
-          ? `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.`
-          : `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.`,
+          ? `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`
+          : `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`,
       ],
       // The signer's own link (§523): the run's page says there that they have signed.
       action: "Vezi pe pagina alergării",
@@ -1108,11 +1120,13 @@ const T = {
           ? `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru seria de alergări de grup ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Este valabilă pentru toate alergările seriei.`
           : `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}.`,
         /*
-          The legitimate-interest, three-year choice of the notice, and the right to object (§419) —
-          counted from the signing since §523: a series' declaration covers every run of it, so "from
-          the run" named no one day.
+          The legitimate-interest choice of the notice, and the right to object (§419) — kept while the
+          declaration is active and, after the runner asks for its withdrawal, at most the three-year
+          limitation period (§534, the counsel's second pass, replacing §523's "three years from the
+          signing", untrue of a declaration still active). Counted from the withdrawal: any claim
+          arises at a run it covered, all of which came before.
         */
-        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la semnare, ca în nota de confidențialitate, apoi șterge-o de aici, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp alergătorul vine la alergări; când cere ștergerea ei, o ștergi de acolo, cu motivul, și copia de aici.`,
+        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului cât timp declarația este activă, ca în nota de confidențialitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp declarația este activă; când alergătorul cere retragerea ei, o ștergi de acolo, cu motivul, iar copia de aici o mai păstrezi cel mult ${archivePeriod("ro")} de la retragere (termenul general de prescripție), apoi o ștergi, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1377,6 +1391,22 @@ const T = {
      */
     familySitting: {
       subject: (d: TemplateData) => `Înscriere de familie: ${peoplePhrase("ro", d.familySittingPeople?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
+      /*
+        The first line (§536; the owner, 2026-09-28): the one button does everything. Confirming runs the
+        allocator per person, so the declarations are promised only to whoever still has a place — a
+        full event puts the rest on the waiting list (the review of 2026-09-28). The count is a number
+        in the sentence, its Romanian form from `countForm` as everywhere here (§341).
+      */
+      lead: (count: number) =>
+        count <= 1
+          ? "Un singur buton: confirmi adresa și înscrierea, apoi, dacă mai e loc, semnezi declarația."
+          : `Un singur buton: confirmi adresa și cele ${count}${countForm(count, "ro") === "other" ? " de" : ""} înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.`,
+      /*
+        When somebody listed already got an email of their own before «Da» (§536): that email's
+        button still works for that one person, so this says only what is true — this one covers
+        everybody, that registration included.
+      */
+      earlier: "Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.",
       facts: (f: FamilySittingFactsInput): FamilyFact[] => [
         ...(f.event ? [{ label: "Evenimentul", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
         ...f.people.map((person, index) => ({
@@ -1387,20 +1417,13 @@ const T = {
           ],
         })),
         ...(f.registered.length > 0 ? [{ label: "Înscriși deja cu această adresă", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
-        {
-          label: "Ce se întâmplă dacă apeși",
-          value: [
-            { text: "confirmi adresa și toate înscrierile deodată", bold: true },
-            { text: "; semnezi apoi declarațiile pe loc, una după alta, iar fiecare persoană primește propriul loc și propriul cod QR, pe această adresă" },
-          ],
-        },
+        // What the press does is the message's first line now (§536), so the box keeps only facts.
         { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
         ...(f.cap !== undefined
           ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
           : []),
       ],
       body: (): string[] => [
-        "Formularul de înscriere a fost trimis de pe această adresă pentru persoanele de mai sus. Nu am înscris încă pe nimeni: un singur buton confirmă adresa și toată familia.",
         "Cineva din listă nu trebuie înscris? Îl debifezi pe pagina care se deschide. Dacă nu tu ai trimis formularul, ignoră mesajul: nu se înscrie nimeni, iar datele se șterg singure când linkul expiră.",
         "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
       ],
@@ -1410,9 +1433,14 @@ const T = {
     /** A family's one confirmation (§519): everybody's QR code, desk code and race number, one block each. */
     familyConfirmed: {
       subject: (d: TemplateData) => `Confirmat: ${peoplePhrase("ro", d.familyConfirmed?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
+      /*
+        One line of intro (§536; the owner, 2026-09-28), then one block per person. The club's copy
+        (§320) carries no desk code and no QR, so its line names only what it shows.
+      */
       body: (d: TemplateData): string[] => [
-        `Înscrierile de mai jos la ${d.eventTitle ?? "eveniment"} sunt confirmate. Vă așteptăm!`,
-        "La masa de înscrieri, fiecare persoană arată codul QR de sub numele ei sau spune codul.",
+        d.clubCopy
+          ? `Toți cei de mai jos sunt înscriși la ${d.eventTitle ?? "eveniment"}; sub fiecare nume, numărul de concurs.`
+          : `Toți cei de mai jos sunt înscriși la ${d.eventTitle ?? "eveniment"}; sub fiecare nume, numărul, codul și QR-ul de arătat la masă.`,
         ...(d.eventChecklist ? [`Ce să aduceți: ${d.eventChecklist}`] : []),
       ],
       words: {
@@ -1485,10 +1513,11 @@ const T = {
       contact: "Write to us",
     },
     verify: {
-      subject: "Confirm your email address",
+      subject: (d: TemplateData) => `Confirm your address — ${d.eventTitle ?? "the event"}`,
       body: (d: TemplateData) => [
-        `We have received a registration for ${d.eventTitle ?? "an event"} in the name of ${d.participantName}, sent with this email address. To continue, confirm the address.`,
-        `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)}; if you do not confirm your address by then, the registration expires.`,
+        "Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.",
+        `We have received a registration for ${d.eventTitle ?? "an event"} in the name of ${d.participantName}, sent with this email address.`,
+        `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)}; without a confirmation, the registration expires.`,
         `The details in this registration were sent to us by whoever filled in the form with this address. If that was not ${d.participantName}, show them this message: how we use the details is in the privacy notice, linked at the end of this message. If ${d.participantName} does not want to take part, do not confirm: the registration lapses by itself.`,
         "If you did not request this registration, you can ignore this message.",
       ],
@@ -1591,8 +1620,8 @@ const T = {
           ? `Attached is the self-declaration you signed for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`
           : `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
         d.groupRunSeries
-          ? `Signing it was optional and registers you for nothing: come to the run as usual. The declaration is valid for every run of the series, so you do not sign it again for the next ones; if the organiser approves a new version of the text, the run's page asks you for it again. The club keeps the declaration while you keep coming to the runs and deletes it when you ask.`
-          : `Signing it was optional and registers you for nothing: come to the run as usual. The club keeps the declaration while you keep coming to the runs and deletes it when you ask.`,
+          ? `Signing it was optional and registers you for nothing: come to the run as usual. The declaration is valid for every run of the series, so you do not sign it again for the next ones; if the organiser approves a new version of the text, the run's page asks you for it again. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`
+          : `Signing it was optional and registers you for nothing: come to the run as usual. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`,
       ],
       action: "See it on the run's page",
     },
@@ -1604,7 +1633,7 @@ const T = {
         d.groupRunSeries
           ? `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. It is valid for every run of the series.`
           : `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
-        `The club's archive copy. Keep it in the club's mailbox for ${archivePeriod("en")} from the signing, as the privacy notice says, then delete it from here, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, while the runner keeps coming to the runs; when they ask for it to be deleted, erase it there, with the reason, and this copy too.`,
+        `The club's archive copy. Keep it in the club's mailbox while the declaration is active, as the privacy notice says. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, while the declaration is active; when the runner asks for its withdrawal, erase it there, with the reason, and keep this copy for at most ${archivePeriod("en")} from the withdrawal (the general limitation period), then delete it, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1849,6 +1878,11 @@ const T = {
     ],
     familySitting: {
       subject: (d: TemplateData) => `Family registration: ${peoplePhrase("en", d.familySittingPeople?.length ?? 1)} for ${d.eventTitle ?? "the event"}`,
+      lead: (count: number) =>
+        count <= 1
+          ? "One button: you confirm the address and the registration, then, if there is still a place, sign the declaration."
+          : `One button: you confirm the address and the ${count} registrations, then sign, one by one, the declarations of those who still have a place.`,
+      earlier: "This email covers everybody: the button below also confirms the registration from the earlier email.",
       facts: (f: FamilySittingFactsInput): FamilyFact[] => [
         ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
         ...f.people.map((person, index) => ({
@@ -1859,20 +1893,12 @@ const T = {
           ],
         })),
         ...(f.registered.length > 0 ? [{ label: "Already registered with this address", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
-        {
-          label: "What happens if you press",
-          value: [
-            { text: "you confirm the address and every registration at once", bold: true },
-            { text: "; you then sign the declarations right away, one after the other, and each person gets their own place and their own QR code, at this address" },
-          ],
-        },
         { label: "Deadline", value: [{ text: "the link is valid for " }, { text: f.hours, bold: true }, { text: " and can be used once" }] },
         ...(f.cap !== undefined
           ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
           : []),
       ],
       body: (): string[] => [
-        "The registration form was sent from this address for the people above. Nobody is registered yet: one button confirms the address and the whole family.",
         "Someone on the list should not be registered? Untick them on the page that opens. If you did not send the form, ignore this message: nobody is registered, and the details are deleted by themselves when the link expires.",
         "Only register someone with their consent, and tell them how we use their data: the privacy notice is at the link at the end of this message.",
       ],
@@ -1882,8 +1908,9 @@ const T = {
     familyConfirmed: {
       subject: (d: TemplateData) => `Confirmed: ${peoplePhrase("en", d.familyConfirmed?.length ?? 1)} for ${d.eventTitle ?? "the event"}`,
       body: (d: TemplateData): string[] => [
-        `The registrations below for ${d.eventTitle ?? "the event"} are confirmed. See you there!`,
-        "At the registration desk, each person shows the QR code under their name or says the code.",
+        d.clubCopy
+          ? `Everybody below is registered for ${d.eventTitle ?? "the event"}; under each name, the race number.`
+          : `Everybody below is registered for ${d.eventTitle ?? "the event"}; under each name, the number, the code and the QR code to show at the desk.`,
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
       ],
       words: {
@@ -2298,7 +2325,14 @@ export function buildTemplateContent(
         outlined box, the values bold (§468; the owner: "trebuie să avem bold pe chestiile
         importante"), so the parent sees at a glance which event and which person the button is for.
       */
-      // A family sitting's facts (§519): everybody joining now, each on a line of the one outlined box.
+      /*
+        A family sitting's first line (§536): the one button does everything — and, when somebody listed
+        already got an email of their own before «Da», that this one covers them too. Then its facts
+        (§519): everybody joining now, each on a line of the one outlined box.
+      */
+      ...(familySittingShape
+        ? [copy.familySitting.lead(familySittingPeople.length), ...(data.familyEarlierSent ? [copy.familySitting.earlier] : [])]
+        : []),
       ...(familySittingShape
         ? [
             familyFactsPart(
@@ -2522,9 +2556,17 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
  * declaration request — which, for a race with a participation window, is the participation
  * confirmation itself (§104), sent at once and again when the window opens. And the newsletter's
  * new-event alert (§445): a subscriber deciding whether to come reads the same when, where,
- * programme, route, cost and links as a runner who registered, from the same function.
+ * programme, route, cost and links as a runner who registered, from the same function. And the
+ * verification email (§536; the owner, 2026-09-28): the first message says which event, when and
+ * where, under the one line that says what to press.
  */
-const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION", "NEW_EVENT_ALERT"]);
+const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
+  "VERIFY_REGISTRATION_EMAIL",
+  "REGISTRATION_CONFIRMED",
+  "EVENT_REMINDER",
+  "COMPLETE_DECLARATION",
+  "NEW_EVENT_ALERT",
+]);
 
 /**
  * The messages that are not to a participant about their own data (§323), and so carry no

@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords } from "@/i18n/dates";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
@@ -85,7 +85,8 @@ export default async function PrivacyNoticePage({ params }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
             {t("inForce", {
               version: document.version,
-              date: formatDay(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+              // The whole date, the month in words, no weekday (§534).
+              date: formatDateInWords(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE }),
             })}
           </Typography>
           {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text

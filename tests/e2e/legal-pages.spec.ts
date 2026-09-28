@@ -14,7 +14,7 @@ test.describe("BR-REQ-053-01 the legal pages' version line and section anchors",
   test("the privacy notice says its version and date, and its sections carry ids", async ({ page }) => {
     await page.goto("/ro/confidentialitate");
     const main = page.locator("main");
-    await expect(main.getByText(/^Versiunea \d+, în vigoare din .+$/)).toBeVisible();
+    await expect(main.getByText(/^Versiunea \d+, în vigoare din \d{1,2} \p{L}+ \d{4}$/u)).toBeVisible();
     await expect(main.locator("h2#s1")).toBeVisible();
     // A link to a section lands on it.
     await page.goto("/ro/confidentialitate#s2");
@@ -23,7 +23,7 @@ test.describe("BR-REQ-053-01 the legal pages' version line and section anchors",
 
   test("the terms say the same, in English too", async ({ page }) => {
     await page.goto("/en/terms");
-    await expect(page.locator("main").getByText(/^Version \d+, in force since .+$/)).toBeVisible();
+    await expect(page.locator("main").getByText(/^Version \d+, in force since \d{1,2} \p{L}+ \d{4}$/u)).toBeVisible();
     await expect(page.locator("main h2#s1")).toBeVisible();
   });
 });

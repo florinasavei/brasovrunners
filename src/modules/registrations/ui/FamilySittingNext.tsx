@@ -41,8 +41,10 @@ type Props = {
 };
 
 /**
- * «Mai înscrii pe cineva cu aceeași adresă?» — the screen after the form, before anything is mailed
- * (§519; the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»).
+ * «Mai înscrii pe cineva cu aceeași adresă?» — the sitting's screen, after «Da, încă o persoană» (§519;
+ * the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»). Since §536 it
+ * follows every form sent after «Da», and «Da» pressed and come back; the first form's screen is the
+ * inbox's own, with the one question (`FamilySittingOffer`), because nothing waits before «Da».
  *
  * First one honest sentence (the review of 2026-09-27: the screen said «nothing until you press
  * „Gata”» and, two lines later, that the email leaves by itself): the email leaves on «Gata» or by
