@@ -479,7 +479,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
                       : tr("registrations.bibSettled", { number: registration.bibNumber })}
                 </Typography>
-                {registration.bibPrintedAt === null && (
+                {/* Replacing a number already emailed is the Administrator's (§NNN); filling a gap is any desk role's. */}
+                {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
                   /* The box spans the section. A refused number comes back in its box with the fold open (§315). */
                   <Box sx={{ alignSelf: "stretch" }}>
                     <ActionForm

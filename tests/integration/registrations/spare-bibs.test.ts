@@ -467,7 +467,7 @@ describe("§444 BR-REQ-037-07 the desk hands a spare", () => {
     const holder = await enter(event, "holder@example.org", { fastTrack: true, at: later(1) });
     const typist = await enter(event, "typist@example.org", { fastTrack: true, at: later(2) });
     expect(holder.bibNumber).not.toBeNull();
-    expect(await refusalOf(setBibNumberByStaff(db, volunteer, typist.id, holder.bibNumber as number, later(3)))).toEqual({
+    expect(await refusalOf(setBibNumberByStaff(db, admin, typist.id, holder.bibNumber as number, later(3)))).toEqual({
       code: "CONFLICT",
       fields: ["bibNumber"],
     });

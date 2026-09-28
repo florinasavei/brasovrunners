@@ -3792,7 +3792,7 @@
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
         "DECLARATION_ARCHIVE": "With the signed declaration, to the club's declarations mailbox, for real registrations only. The identity document is masked.",
-        "BIB_ASSIGNED": "When someone sets a confirmed registration's number by hand. Once after this release, also to the confirmed who keep their earlier number. With the QR code.",
+        "BIB_ASSIGNED": "When someone sets a confirmed registration's number by hand. With the QR code.",
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
         "REGISTRATION_OPENED": "When registration opens, once, to every address left at “Tell me” on the event's page.",
         "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",

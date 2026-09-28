@@ -190,7 +190,7 @@ describe("§331 a cancelled event allocates nothing and mails nothing on its own
     const before = await allQueued();
 
     const run = await runRegistrationMaintenance(db, AFTER_CLOSE);
-    expect(run.bibsSettled).toBe(0);
+    expect(run.legacyNumbersKept).toBe(0);
     expect(run.eventsProcessed).toBe(0);
     expect(await queuedOf("BIB_ASSIGNED")).toBe(0);
     expect(await allQueued()).toBe(before);

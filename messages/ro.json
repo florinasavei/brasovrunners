@@ -3792,7 +3792,7 @@
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța clubului pentru declarații, doar pentru înscrieri reale. Actul de identitate apare mascat.",
-        "BIB_ASSIGNED": "Când cineva dă de mână numărul unei înscrieri confirmate. O dată, după această versiune, și celor confirmați care își păstrează numărul de dinainte. Cu codul QR.",
+        "BIB_ASSIGNED": "Când cineva dă de mână numărul unei înscrieri confirmate. Cu codul QR.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
         "REGISTRATION_OPENED": "Când se deschid înscrierile, o dată, către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului.",
         "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token.",

@@ -51,7 +51,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * Race numbers shown before §NNN that a confirmed registration keeps, told to the runner this run
    * (`releaseLegacyHeldNumbers`) — once per database, zero on every run after the first.
    */
-  bibsSettled: number;
+  legacyNumbersKept: number;
   /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
   familyEntriesPurged: number;
   /**
@@ -164,7 +164,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * Queued after the data step's own transaction, and one per registration ever, by its own key,
    * so a retried run sends nothing twice.
    */
-  let bibsSettled = 0;
+  let legacyNumbersKept = 0;
   try {
     await db.transaction(async (tx) => {
       for (const row of kept.filter((item) => item.raceAhead)) {
@@ -178,7 +178,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
           idempotencyKey: AUTOMATIC_SEND_KEYS.bibs(row.registrationId),
           now,
         });
-        if (inserted) bibsSettled += 1;
+        if (inserted) legacyNumbersKept += 1;
       }
     });
   } catch {
@@ -324,7 +324,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     remindersQueued,
     confirmationsQueued,
     interestsNotified,
-    bibsSettled,
+    legacyNumbersKept,
     familyEntriesPurged,
     retryableErrorCount,
   };

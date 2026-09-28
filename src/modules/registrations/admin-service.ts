@@ -614,6 +614,17 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   if (bibNumber === null) {
     throw new DomainError("VALIDATION_ERROR", "a confirmed registration keeps its race number; type another one to change it");
   }
+  /*
+    Replacing a number the runner was already emailed retires it for good (§NNN), so it is a change
+    to a registration, the Administrator's (`canManageRegistrations`, §289) — not a desk verb. The
+    desk keeps filling the gap: a confirmed row with no number yet takes one from any desk role.
+  */
+  if (current.bibNumber !== null && !canManageRegistrations(actor.role)) {
+    throw new DomainError(
+      "FORBIDDEN",
+      `role ${actor.role} may not replace a confirmed registration's race number; AGENTS.md §10.2 reserves it to ADMIN`,
+    );
+  }
   // A number that is on paper stays on it (§311): moving it would leave the printed bib pointing at nobody.
   if (current.bibNumber !== null && current.bibPrintedAt !== null) {
     throw new DomainError("VALIDATION_ERROR", "this race number is already printed; it cannot be changed");

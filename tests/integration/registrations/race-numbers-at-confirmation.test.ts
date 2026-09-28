@@ -9,7 +9,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
-import { confirmRegistrationByStaff } from "@/modules/registrations/admin-service";
+import { confirmRegistrationByStaff, setBibNumberByStaff } from "@/modules/registrations/admin-service";
 import { pickBibNumber, releaseLegacyHeldNumbers } from "@/modules/registrations/bibs";
 import { buildRegistrationsCsv, type RegistrationCsvRow } from "@/modules/registrations/csv";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
@@ -202,6 +202,32 @@ describe("BR-REQ-038-01 §NNN a race number only once a registration is confirme
     expect([onPaper.status, onPaper.bibNumber]).toEqual(["CONFIRMED", 2]);
   });
 
+  it("lets only an Administrator replace a confirmed number; any desk role fills a gap; nobody clears one", async () => {
+    const event = await createEvent();
+    const ana = await submit(event, "Ana", NOW);
+    const bogdan = await submit(event, "Bogdan", later(1));
+    expect((await confirmOnline(event, ana.id, "Ana", later(5))).bibNumber).toBe(1);
+    const [admin] = await db
+      .insert(staffUsers)
+      .values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .returning();
+    const codeOf = (attempt: Promise<unknown>) => attempt.then(() => "OK", (error: { code?: string }) => error.code);
+
+    // Ana was emailed 1: a volunteer may not retire it, and nothing is written.
+    expect(await codeOf(setBibNumberByStaff(db, volunteer, ana.id, 9, later(6)))).toBe("FORBIDDEN");
+    expect((await reread(ana.id)).bibNumber).toBe(1);
+    // Nor clear it, whoever asks.
+    expect(await codeOf(setBibNumberByStaff(db, admin, ana.id, null, later(6)))).toBe("VALIDATION_ERROR");
+    expect((await reread(ana.id)).bibNumber).toBe(1);
+    // The Administrator replaces it; 1 is retired.
+    expect((await setBibNumberByStaff(db, admin, ana.id, 9, later(7))).bibNumber).toBe(9);
+
+    // A confirmed row with no number (confirmed before §87): the volunteer fills the gap.
+    await confirmOnline(event, bogdan.id, "Bogdan", later(8));
+    await db.update(registrations).set({ bibNumber: null }).where(eq(registrations.id, bogdan.id));
+    expect((await setBibNumberByStaff(db, volunteer, bogdan.id, 12, later(9))).bibNumber).toBe(12);
+  });
+
   it("shows an empty export cell before the confirmation and the number after it", async () => {
     const event = await createEvent();
     const ana = await submit(event, "Ana", NOW);
@@ -361,7 +387,7 @@ describe("BR-REQ-038-01 §NNN a race number only once a registration is confirme
       expect([kept, signing, unproved, gone].map((row) => raceNumberOf(row))).toEqual([null, null, null, null]);
 
       const run = await runRegistrationMaintenance(db, later(1));
-      expect(run.bibsSettled).toBe(1);
+      expect(run.legacyNumbersKept).toBe(1);
 
       const after = await Promise.all([kept, signing, unproved, gone].map((row) => reread(row.id)));
       expect(after.map((row) => [row.bibNumber, row.provisionalBibNumber])).toEqual([
@@ -380,7 +406,7 @@ describe("BR-REQ-038-01 §NNN a race number only once a registration is confirme
       // Idempotent: a second run finds nothing and sends nothing.
       expect(await releaseLegacyHeldNumbers(db, later(2))).toEqual({ kept: [], cleared: 0 });
       const second = await runRegistrationMaintenance(db, later(3));
-      expect(second.bibsSettled).toBe(0);
+      expect(second.legacyNumbersKept).toBe(0);
       expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "BIB_ASSIGNED"))).toHaveLength(1);
     });
 

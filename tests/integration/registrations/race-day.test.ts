@@ -264,7 +264,7 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
     const event = await createInternalEvent(10);
     const { registration } = await enter(event, "numbered@example.org", { fastTrack: true });
     expect(registration.bibNumber).toBe(1);
-    await setBibNumberByStaff(db, volunteer, registration.id, 7, NOW);
+    await setBibNumberByStaff(db, admin, registration.id, 7, NOW);
 
     const [numbered] = await db.select().from(registrations).where(eq(registrations.id, registration.id));
     expect(numbered.bibNumber).toBe(7);
@@ -444,7 +444,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, null, NOW))).toBe("VALIDATION_ERROR");
     // On paper, it stays on paper (§311).
     await db.update(registrations).set({ bibPrintedAt: NOW }).where(eq(registrations.id, a.registration.id));
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, 9, NOW))).toBe("VALIDATION_ERROR");
+    expect(await codeOf(setBibNumberByStaff(db, admin, a.registration.id, 9, NOW))).toBe("VALIDATION_ERROR");
 
     const unchanged = await findRegistrationById(db, a.registration.id);
     expect(unchanged?.bibNumber).toBe(1);
@@ -461,13 +461,13 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     expect(await codeOf(setBibNumberByStaff(db, volunteer, waiting.registration.id, 7, NOW))).toBe("VALIDATION_ERROR");
 
     // A preferential number, chosen among the free ones, replaces the one the confirmation gave.
-    const given = await setBibNumberByStaff(db, volunteer, confirmed.registration.id, 7, NOW);
+    const given = await setBibNumberByStaff(db, admin, confirmed.registration.id, 7, NOW);
     expect(given.bibNumber).toBe(7);
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 7, NOW))).toBe("CONFLICT");
+    expect(await codeOf(setBibNumberByStaff(db, admin, other.registration.id, 7, NOW))).toBe("CONFLICT");
     // 1 was sent to the runner with the confirmation: retired, never given again.
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 1, NOW))).toBe("CONFLICT");
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 0, NOW))).toBe("VALIDATION_ERROR");
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 1.5, NOW))).toBe("VALIDATION_ERROR");
+    expect(await codeOf(setBibNumberByStaff(db, admin, other.registration.id, 1, NOW))).toBe("CONFLICT");
+    expect(await codeOf(setBibNumberByStaff(db, admin, other.registration.id, 0, NOW))).toBe("VALIDATION_ERROR");
+    expect(await codeOf(setBibNumberByStaff(db, admin, other.registration.id, 1.5, NOW))).toBe("VALIDATION_ERROR");
     expect(await suggestFreeBibNumbers(db, event.id, 1, 3)).toEqual([3, 4, 5]);
 
     // The runner is told the new number, once.
