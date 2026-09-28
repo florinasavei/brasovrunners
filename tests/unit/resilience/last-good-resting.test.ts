@@ -11,10 +11,12 @@ const budget = vi.hoisted(() => ({
 }));
 
 vi.mock("@/shared/config/env", () => ({ env: { APP_ENV: "test", STORAGE_MODE: "fake", APP_BASE_URL: "https://example.test" } }));
-vi.mock("@/modules/diagnostics/neon-budget", () => ({
-  readNeonBudget: async () => {
+/* The level this instance last read (`budget-level.ts`, §NNN): never a request to Neon from a page's render. */
+vi.mock("@/modules/diagnostics/budget-level", () => ({
+  lastKnownBudget: () => {
     budget.calls += 1;
-    return budget.reading;
+    const { level, budget: spent, meter } = budget.reading;
+    return spent || meter ? { level, spent: spent?.spent ?? false, periodEnd: meter?.periodEnd ?? null, at: 0 } : null;
   },
 }));
 

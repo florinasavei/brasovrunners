@@ -23,8 +23,9 @@ import { readSwipe, type SwipeStep, swipeAxis } from "../domain/calendar-swipe";
  *
  * The step is `router.push` with the address the arrow carries, `scroll: false` so the reader stays
  * where they are on the page, inside a transition so the month on screen stays — dimmed, `aria-busy`
- * — until the next one is ready (§166, §413). Nothing is prefetched here: the arrows' own links
- * already are, and every extra request is a database awake (§327). Under reduced motion nothing
+ * — until the next one is ready (§166, §413). Nothing is prefetched here, and since §NNN the arrows'
+ * own links are not either: a stepped address is the calendar's live twin, and a prefetch of it is
+ * a function started on a visit the CDN answers alone (and a database awake, §327). Under reduced motion nothing
  * slides; the swipe still steps.
  */
 export default function CalendarSwipe({

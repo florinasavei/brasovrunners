@@ -1,6 +1,7 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Box from "@mui/material/Box";
 import { Link } from "@/i18n/navigation";
+import { prefetchFor } from "@/i18n/prefetch";
 import type { ComponentProps } from "react";
 
 /**
@@ -45,6 +46,7 @@ export default function LegalLink({
   return (
     <Link
       href={href}
+      prefetch={prefetchFor(href)}
       target="_blank"
       rel="noreferrer"
       aria-label={`${typeof children === "string" ? children : ""} — ${newTabLabel}`.trim()}

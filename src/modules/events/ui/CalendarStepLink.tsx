@@ -24,6 +24,10 @@ import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
  * `getPathname`, so it carries its locale prefix and re-prefixing it would produce
  * `/ro/ro/evenimente`. The rendered element is still a plain `<a href="…">` with the whole
  * query in it, which is what a crawler follows and what `event-pages.spec.ts` reads.
+ *
+ * Never prefetched (§NNN): its href carries `?month=` or `?year=`, which is the calendar's live
+ * twin, rendered per request — two prefetches per visit would start two functions on a page the
+ * CDN otherwise answers alone. The press waits for its answer; the runner says it is travelling.
  */
 export default function CalendarStepLink({
   href,
@@ -36,7 +40,7 @@ export default function CalendarStepLink({
   direction: "previous" | "next";
 }) {
   return (
-    <IconButton component={Link} href={href} aria-label={label} sx={{ minHeight: 44, minWidth: 44 }}>
+    <IconButton component={Link} href={href} prefetch={false} aria-label={label} sx={{ minHeight: 44, minWidth: 44 }}>
       <StepGlyph direction={direction} />
       {/* The runner's styles, drawn with the page, so the press adds none (§371). */}
       <RunnerLoaderStyles size={24} color="inherit" />

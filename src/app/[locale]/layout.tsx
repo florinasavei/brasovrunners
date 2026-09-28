@@ -108,8 +108,16 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
+/**
+ * No locale is prerendered at build (§NNN, amending §333): the public pages are static, and a page
+ * made at build would be made from the build's database — CI has none — and filed under no cache
+ * tag (`publicRead` reads straight through during `next build`), so no write could ever expire it.
+ * An empty list is Next's own way of saying "make each page on its first visit, then keep it"
+ * (ISR, `generateStaticParams` → "all paths at runtime"). The locale is still checked below: an
+ * unknown one is a 404, and `/ro` and `/en` themselves are the proxy's 308 (§353).
+ */
+export function generateStaticParams(): { locale: string }[] {
+  return [];
 }
 
 export async function generateMetadata(): Promise<Metadata> {

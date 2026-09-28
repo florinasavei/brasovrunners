@@ -26,6 +26,9 @@ import { clubNightEvent } from "@/modules/events/night-event";
 import { readRegistrationDoors } from "@/modules/events/ui/registration-door";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { readWithLastGood } from "@/modules/resilience/last-good";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { nextWallMidnight } from "@/modules/events/domain/page-clock";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
@@ -43,19 +46,26 @@ import { headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{
-    month?: string | string[];
-    year?: string | string[];
-    type?: string | string[];
-    view?: string | string[];
-    partner?: string | string[];
-    surface?: string | string[];
-    difficulty?: string | string[];
-    distance?: string | string[];
-    cost?: string | string[];
-    night?: string | string[];
-    registration?: string | string[];
-  }>;
+  /**
+   * The address's query — passed only by the live twin (`app/[locale]/live/events/page.tsx`), which
+   * the proxy sends a filtered visit to (§NNN). This static route never reads Next's `searchParams`:
+   * reading it would render every visit per request again.
+   */
+  query?: Promise<ListingQuery>;
+};
+
+type ListingQuery = {
+  month?: string | string[];
+  year?: string | string[];
+  type?: string | string[];
+  view?: string | string[];
+  partner?: string | string[];
+  surface?: string | string[];
+  difficulty?: string | string[];
+  distance?: string | string[];
+  cost?: string | string[];
+  night?: string | string[];
+  registration?: string | string[];
 };
 
 /**
@@ -66,15 +76,17 @@ type Props = {
 const isNight = (event: PublicEventPage) => event.startsAt !== null && clubNightEvent({ ...event, startsAt: event.startsAt }).night;
 
 /**
- * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
- * snapshot would show a run as scheduled after it was called off. It also keeps the database
- * out of the build, which is what lets CI build without one.
+ * Static, made on its first visit and kept by the CDN (§NNN, amending §333): the bare listing is
+ * the same for every anonymous visitor. It is made again when a write expires what it shows (the
+ * rows' own tags, §333), when its clock says it reads differently — the next event ending, a
+ * registration door opening or closing, midnight (`public-cache/page-lifetime.ts`) — and at the
+ * latest after a day. Nothing is prerendered at build (the locale layout generates no params), so
+ * CI still builds without a database. A filtered visit (`?type=…`) is the live twin's
+ * (`live/events/page.tsx`), rendered per request.
  *
- * Per request is not per query any more (§333): the rows come from the public cache, which every
- * event save expires and which is keyed by the moment the next event ends — so the page reads the
- * address and the clock afresh on every visit, and the database only when something changed.
+ * A literal, as Next requires: `PUBLIC_PAGE_CEILING_SECONDS` (a test holds the two equal).
  */
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 
 /**
@@ -115,9 +127,9 @@ async function loadListing(locale: EventLocale, now: Date) {
 
 type Listing = Awaited<ReturnType<typeof loadListing>>;
 
-export default async function EventsPage({ params, searchParams }: Props) {
+export default async function EventsPage({ params, query: asked }: Props) {
   const { locale } = await params;
-  const query = await searchParams;
+  const query: ListingQuery = (await asked) ?? {};
   // The filters (§413, amending §133/§401): every group the panel offers, OR within a group and AND
   // across groups, read off the address — `?type=RACE` and `?partner=1` mean what they always meant.
   const filter = parseListingFilter(query);
@@ -130,6 +142,8 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
+  // The countdown and every "în 3 zile" are the day's (§76, §78): the static page is made again at midnight (§NNN).
+  await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);
 
   /*
     **One cached read, awaited here, before anything is rendered** (§413, amending §166 for this
@@ -157,6 +171,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // an event whose date is to be announced (§533) is ahead: then the page is not between seasons,
   // and that section, under the cards, is what it has to show.
   const { events, hasUpcoming }: Listing = !listing.hasUpcoming && undatedRows.length > 0 ? { events: [], hasUpcoming: false } : listing;
+  // The race-week countdown counts days on each event's own wall clock (`raceWeek`, §78): an event
+  // kept in another zone turns its day at that zone's midnight, so the page is made again then too (§NNN).
+  await holdPageUntil(events.map((event) => nextWallMidnight(now, event.timezone)), now);
   // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
   // internal event among these rows, the entry its card and its page read too, and nothing for any
   // other row (`readRegistrationDoor`, §409).

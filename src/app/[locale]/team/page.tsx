@@ -29,8 +29,12 @@ import { headingRule } from "@/theme/surfaces";
 
 type Props = { params: Promise<{ locale: string }> };
 
-/** Per request, like every public page; the page and its cards come from the public cache (§333). */
-export const dynamic = "force-dynamic";
+/**
+ * Static, made on its first visit and kept by the CDN (§NNN, amending §333); a save of the page or
+ * its cards expires it through the rows' own tag, and a day is the ceiling. A literal, as Next
+ * requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+ */
+export const revalidate = 86400;
 
 /** The card's smaller type on a phone, where two cards share a row. */
 const SMALL_TEXT = { xs: "0.8125rem", sm: "0.875rem" } as const;

@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
+import { liveTwinPathname, mayBeSignedIn } from "@/i18n/live-twin";
 import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
@@ -96,6 +97,26 @@ export default function proxy(request: NextRequest) {
     if (retarget) {
       target.pathname = retarget;
       response.headers.set("location", target.toString());
+    }
+  }
+
+  /*
+    The listing, the calendar and an event page are static for an anonymous visitor at their bare
+    address (§NNN): the CDN answers them. A request whose query the page reads (a filter, a month,
+    `?lista=`), or an event page asked with a session cookie (the staff "edit" button, §135), is
+    rewritten to the page's live twin under `/<locale>/live/…`, rendered per request as before — the
+    visitor's address unchanged. next-intl has already resolved the route: its rewrite names the
+    internal path (`/ro/events/…` for `/ro/evenimente/…`), and its request headers ride along.
+  */
+  if (!location) {
+    const internal = new URL(response.headers.get("x-middleware-rewrite") ?? url.href, url);
+    const twin = liveTwinPathname(internal.pathname, url.searchParams, mayBeSignedIn(request.cookies.getAll().map((cookie) => cookie.name)));
+    if (twin) {
+      const target = new URL(twin, url);
+      target.search = url.search;
+      const headers = new Headers(response.headers);
+      headers.delete("x-middleware-next");
+      return NextResponse.rewrite(target, { headers });
     }
   }
 
