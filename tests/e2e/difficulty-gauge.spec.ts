@@ -159,7 +159,8 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     const steps = page.getByRole("radiogroup", { name: "Treapta" });
     await expect(steps).toBeVisible();
     await expect(steps.getByRole("radio")).toHaveCount(3);
-    await expect(steps).toHaveText("123");
+    // The segments' own words: the group's text also carries its legend, «Treapta».
+    await expect(steps.locator("label")).toHaveText(["1", "2", "3"]);
     await expect(steps.locator("svg")).toHaveCount(3);
     await expect(steps.getByRole("radio", { name: /^Treapta 2/ })).toBeChecked();
     // A press on the segment, not on the hidden radio, chooses it.

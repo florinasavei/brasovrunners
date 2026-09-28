@@ -143,7 +143,7 @@ export default function DifficultyStepField({
             beside its select (§NNN) — outside the radio group's description, the one short line. */}
         {words.scale && <QuietHelp text={words.scale} testId="difficulty-scale-help" />}
       </Box>
-      <Typography variant="caption" color="text.secondary" sx={{ gridArea: "help", display: "block" }}>
+      <Typography variant="caption" color="text.secondary" sx={{ gridArea: "help", display: "block", width: 0, minWidth: "100%" }}>
         <span id={helpId}>{words.help}</span>
       </Typography>
     </Box>

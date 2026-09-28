@@ -27,9 +27,13 @@ const render = (catalogue: typeof ro) =>
   );
 
 describe("§NNN the difficulty row is centred", () => {
-  it("is one grid, every cell on the row's centre line, stacked below sm in the same order", () => {
+  it("is one grid, both outlines from the cells' top edge, stacked below sm in the same order", () => {
     expect(DIFFICULTY_ROW_SX.display).toBe("grid");
-    expect(DIFFICULTY_ROW_SX.alignItems).toBe("center");
+    // Top-aligned: the two 56-px outlines start at the cell's top, so their centres meet and the
+    // select's helper text after a refused save cannot move the toggle.
+    expect(DIFFICULTY_ROW_SX.alignItems).toBe("start");
+    // The step column is the toggle's own width; the band takes the rest.
+    expect(DIFFICULTY_ROW_SX.gridTemplateColumns.sm).toBe("minmax(0, 1fr) max-content");
     // From sm: the band beside the step, the help line in a row of its own under the step.
     expect(DIFFICULTY_ROW_SX.gridTemplateAreas.sm).toBe('"band step" ". help"');
     // Below sm: band, step, help — each full width.
@@ -37,8 +41,10 @@ describe("§NNN the difficulty row is centred", () => {
     expect(DIFFICULTY_ROW_SX.gridTemplateColumns.xs).toBe("minmax(0, 1fr)");
 
     const html = render(ro);
-    expect(html).toContain("align-items:center");
+    expect(html).toContain("align-items:start");
     expect(html).toContain("grid-template-areas");
+    // The help line wraps inside the toggle's width rather than widening the column.
+    expect(html).toMatch(/width:0;min-width:100%/);
   });
 
   it("puts the toggle and its «?» in the step cell and the help line in the help cell", () => {
