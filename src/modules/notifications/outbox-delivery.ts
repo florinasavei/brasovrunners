@@ -28,6 +28,18 @@ export type OutboxDelivery = {
   scheduledWait: { day: number; night: number };
   /** The pinger call at which the outbox job is next expected to run for real (an estimate). */
   nextTickAt: string;
+  /**
+   * When the outbox job last ran for real (§NNN), null when it never has: the queue panel says it
+   * beside the next tick, so "the scheduler has not come since 04:00" is read, not guessed.
+   */
+  lastRunAt: string | null;
+  /**
+   * What holds the scheduled round back now, in minutes (§NNN): the pinger's cadence at this hour,
+   * the Administrator's minimum interval (§334) and the budget governor's floor (§447) — the three
+   * `emailWaitMinutes` takes the longest of, each named on the queue panel so the club can see
+   * which one to change.
+   */
+  holds: { pingerMinutes: number; intervalMinutes: number; governorFloorMinutes: number };
 };
 
 /**
@@ -61,5 +73,7 @@ export async function readOutboxDelivery<T extends Record<string, unknown>>(
     waitMinutes: emailWaitMinutes({ timing, pingerMinutes, intervalMinutes: stated, governorFloorMinutes }),
     scheduledWait: { day: scheduledAt(day), night: scheduledAt(Math.max(PINGER_CADENCE_MINUTES.night, day)) },
     nextTickAt: nextOutboxTick({ now, pingerMinutes, intervalMinutes, lastRunAt: lastRun?.finishedAt ?? null }).toISOString(),
+    lastRunAt: lastRun?.finishedAt ? lastRun.finishedAt.toISOString() : null,
+    holds: { pingerMinutes, intervalMinutes: stated, governorFloorMinutes },
   };
 }

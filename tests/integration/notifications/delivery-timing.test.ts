@@ -13,6 +13,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-10-01T10:00:00.000Z");
 
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
+// Switched off, the queue leaves after the response (§NNN): the drain is counted, never run here.
+const drained = vi.hoisted(() => ({ calls: 0 }));
+vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => void drained.calls++ }));
 
 const { fakeNextCache } = await import("../../helpers/next-cache");
 const { readDeliveryTiming, updateDeliveryTiming, DELIVERY_TIMING_SETTING_KEY } = await import("@/modules/notifications/delivery-timing");
@@ -112,5 +115,17 @@ describe("BR-REQ-060-01 the delivery timing is a «Termene» setting, the Admini
     const again = await updateDeliveryTiming(db, admin, { timing: "immediate" }, later);
     expect(again.updatedAt).toEqual(NOW);
     expect(await db.select().from(auditLogs)).toHaveLength(1);
+  });
+
+  it("§NNN sends what the round was holding when switched off, and only then", async () => {
+    const admin = await staff("ADMIN");
+    drained.calls = 0;
+    await updateDeliveryTiming(db, admin, { timing: "scheduled" }, NOW);
+    expect(drained.calls).toBe(0);
+    await updateDeliveryTiming(db, admin, { timing: "immediate" }, new Date(NOW.getTime() + 60_000));
+    expect(drained.calls).toBe(1);
+    // A save that changes nothing drains nothing either.
+    await updateDeliveryTiming(db, admin, { timing: "immediate" }, new Date(NOW.getTime() + 120_000));
+    expect(drained.calls).toBe(1);
   });
 });

@@ -173,7 +173,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       What waits in the queue and when it next leaves (§NNN), for the forecast's first line: the
       pinger's cadence, the Administrator's interval and the governor's floor (§447) — the budget's
       reading is this instance's memo, the same one /admin/tasks reads. «Termene» says the same wait
-      beside its «Când pleacă emailurile» setting.
+      beside its «Când pleacă emailurile» setting, and the queue panel opens with it — the next and
+      the last real run, what holds the round back, each row's departure and the switch (§NNN).
     */
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
   ]);
@@ -296,6 +297,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
         {saved === "emailTransport" && <Alert severity="success">{t("emails.transport.saved")}</Alert>}
         {saved === "outboxSent" && <Alert severity="success">{t("outbox.sentNow", { count: sent ?? "0" })}</Alert>}
+        {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
@@ -328,7 +330,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           queue={queue}
           volume={volume}
           mayEdit={maySendNow}
-          openWhen={{ saved: saved === "outboxSent", refused: Boolean(error) }}
+          delivery={outboxDelivery}
+          now={now}
+          // «Trimitere programată» on/off (§NNN): the «Termene» setting, the Administrator's (§513).
+          mayEditTiming={mayEditEmail}
+          openWhen={{ saved: saved === "outboxSent" || saved === "deliveryTiming", refused: Boolean(error) }}
         />
       )}
 

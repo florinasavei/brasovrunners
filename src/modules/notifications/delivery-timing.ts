@@ -9,6 +9,7 @@ import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { type DeliveryTimingSetting, defaultDeliveryTiming, deliveryTimingSettingSchema } from "./domain/delivery-timing";
+import { drainOutboxAfterResponse } from "./drain";
 
 /**
  * Whether the outbox drains after the request that filled it, or only on the scheduler
@@ -93,5 +94,11 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
   // Rows the drain was leaving to the pinger, or the pinger to the drain: the outbox job looks
   // again at its next ping rather than at the end of the quiet it last promised (§334).
   wakeJobs("email-outbox");
+  /*
+    Switched off (§NNN): what the scheduled round was holding leaves now, after this response, the
+    way every email leaves from here on — not at the tick the queue panel had just named. One
+    batch, the drain's own (§68); anything past it or deferred is the outbox job's, woken above.
+  */
+  if (next.timing === "immediate") drainOutboxAfterResponse();
   return { ...next, updatedAt: now };
 }

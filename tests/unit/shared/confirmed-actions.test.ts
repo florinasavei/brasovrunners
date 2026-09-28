@@ -148,6 +148,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateAddressCapAction: [],
   // «Când pleacă emailurile» (§513): every message the platform sends from now on leaves by it.
   updateDeliveryTimingAction: [],
+  // The same setting as the queue panel's switch (§NNN): off, the queue leaves now.
+  updateDeliveryTimingFromEmailsAction: [],
   // A line of the club's checklist deleted (§438): gone for the whole team, with no undo.
   deleteClubTodoAction: [],
   // «Tradu din română»'s daily character budget (§464): what the club may spend from now on.

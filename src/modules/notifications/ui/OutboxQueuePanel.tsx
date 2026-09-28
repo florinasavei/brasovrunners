@@ -5,10 +5,16 @@ import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { getTranslations } from "next-intl/server";
-import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/settings/emails/actions";
+import { sendOutboxNowFromEmailsAction, updateDeliveryTimingFromEmailsAction } from "@/app/[locale]/admin/settings/emails/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
-import type { OutboxQueue } from "@/modules/notifications/queue";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
+import { isBulkMessage } from "@/modules/notifications/domain/bulk";
+import { outboxRowLeavesAt, outboxRowOverdue } from "@/modules/notifications/domain/email-wait";
+import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
+import type { OutboxDelivery } from "@/modules/notifications/outbox-delivery";
+import type { OutboxQueue, QueuedMessage } from "@/modules/notifications/queue";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -20,7 +26,20 @@ type Props = {
   volume: EmailVolumeToday;
   /** "Trimite acum" is the Administrator's (§80); the queue itself is read by whoever may read the registrations (§291). */
   mayEdit: boolean;
-  /** Why the fold opens by itself, as the page knows it: "send now" just answered (§336). */
+  /**
+   * When the queue leaves (§NNN, from `outbox-delivery.ts`): the timing, the next real run of the
+   * outbox job, the last one and what holds the scheduled round back — the same reading
+   * `/api/health` carries (§513).
+   */
+  delivery: OutboxDelivery;
+  /** The instant the page read the queue and the delivery at, so every row is estimated from one "now". */
+  now: Date;
+  /**
+   * Whether the reader may switch the scheduled round on and off (§NNN): the Administrator's club
+   * setting (`canManageClubSettings`, §513), asserted again by the action and the service.
+   */
+  mayEditTiming: boolean;
+  /** Why the fold opens by itself, as the page knows it: "send now" or the switch just answered (§336). */
   openWhen?: FoldOpenWhen;
 };
 
@@ -33,27 +52,128 @@ type Props = {
  * `/devs`. On race morning the useful question is "is Ana's confirmation stuck, and why", and
  * this is the screen that answers it.
  *
- * A Server Component with one form. Rows are stacked rather than tabulated: five facts about a
+ * **When it leaves (§NNN; the owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile
+ * și să pot face on/off la acea setare").** Under the scheduled default (§513) a queue waiting for
+ * the tick is normal, and on QA — pinged hourly, with a two-hour minimum interval — it waited up to
+ * three hours with nothing on this screen saying so: it read as "the emails no longer leave". So
+ * the panel opens with the timing, the outbox job's next expected run and its last one, and what
+ * holds the round back (the pinger, the interval, the budget governor — each with the number that
+ * applies now); every row says when *it* is expected to leave, and a row whose turn passed longer
+ * ago than `/api/health`'s `overdue` threshold says so in red. The switch beside it is the «Termene»
+ * setting itself, on the screen where its effect is visible.
+ *
+ * A Server Component with two forms. Rows are stacked rather than tabulated: five facts about a
  * message do not fit a table at 320 pixels, and a table that scrolls sideways is worse than a
  * paragraph (the same reasoning §196 applied to the one place a table is unavoidable).
  */
-export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, openWhen }: Props) {
+export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, delivery, now, mayEditTiming, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
   const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
 
+  const scheduled = delivery.timing === "scheduled";
+  const nextTickAt = new Date(delivery.nextTickAt);
+  const { pingerMinutes, intervalMinutes, governorFloorMinutes } = delivery.holds;
+  // The real runs after the next one are spaced by the longer of the two intervals (§334, §447).
+  const runInterval = Math.max(intervalMinutes, governorFloorMinutes);
+  const waitMinutes = delivery.waitMinutes ?? Math.max(pingerMinutes, runInterval);
+  // What holds the round back now, each with its number: the pinger always, the others when set.
+  const holds = [
+    t("emails.queue.when.holds.pinger", { wait: minutesPhrase(locale, pingerMinutes) }),
+    ...(intervalMinutes > 0 ? [t("emails.queue.when.holds.interval", { wait: minutesPhrase(locale, intervalMinutes) })] : []),
+    ...(governorFloorMinutes > 0 ? [t("emails.queue.when.holds.governor", { wait: minutesPhrase(locale, governorFloorMinutes) })] : []),
+  ];
+
+  /*
+    One row's departure, in words (§NNN). A row being sent is "now"; a row that spent its retries
+    goes nowhere on its own; a waiting row leaves at the outbox job's first real run at or after its
+    own turn — and when that turn is further back than health's `overdue` allows, it is late, said
+    in red: the estimate would otherwise read as a promise the scheduler is not keeping. A newsletter
+    held for the allowance's reserve (§445) is the reserve working, as health counts it, never late.
+  */
+  const leaves = (row: QueuedMessage): { text: string; late: boolean } => {
+    if (row.status === "PROCESSING") return { text: t("emails.queue.leaves.sending"), late: false };
+    if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
+    const dueAt = row.nextAttemptAt ?? row.createdAt;
+    const late =
+      !isBulkMessage(row.messageType) &&
+      outboxRowOverdue({ now, dueAt, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: runInterval });
+    const at = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
+    return { text: t(late ? "emails.queue.leaves.late" : "emails.queue.leaves.at", { at: when.format(at) }), late };
+  };
+
   return (
     <Panel glyph="outbox"
       title={t("emails.queue.title")}
       intro={t("emails.queue.intro")}
-      aside={t("outbox.waitingShort", { count: queue.total })}
+      aside={t("emails.queue.aside", {
+        waiting: t("outbox.waitingShort", { count: queue.total }),
+        state: scheduled ? t("emails.queue.when.onShort") : t("emails.queue.when.offShort"),
+      })}
       collapsible
-      // Open while something waits (§269), and after "send now" answered — sent or refused (§336).
+      // Open while something waits (§269), and after "send now" or the switch answered — sent or refused (§336).
       openWhen={{ ...openWhen, attention: queue.total > 0 }}
       id="outbox-queue"
       data-testid="outbox-queue"
     >
+      {/*
+        When the queue leaves (§NNN): the switch's state, the next and the last real run, and what
+        holds the round back. Said to every reader of the queue; the switch is the Administrator's.
+      */}
+      <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }} data-testid="outbox-when">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, mb: 0.5 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {t("emails.queue.when.title")}
+          </Typography>
+          <Chip
+            size="small"
+            color={scheduled ? "primary" : "default"}
+            label={scheduled ? t("emails.queue.when.on") : t("emails.queue.when.off")}
+            data-testid="outbox-when-state"
+            data-timing={delivery.timing}
+          />
+        </Stack>
+        <Typography variant="body2" data-testid="outbox-when-next">
+          {scheduled
+            ? t("emails.queue.when.scheduled", { at: when.format(nextTickAt), wait: minutesPhrase(locale, waitMinutes) })
+            : t("emails.queue.when.immediate", { at: when.format(nextTickAt) })}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-holds">
+          {t("emails.queue.when.holdsLead", { holds: holds.join(" · ") })}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-last">
+          {delivery.lastRunAt ? t("emails.queue.when.lastRun", { at: when.format(new Date(delivery.lastRunAt)) }) : t("emails.queue.when.neverRan")}
+        </Typography>
+        {mayEditTiming && (
+          /*
+            The switch (§NNN): the «Termene» setting (§513), one press to the other value, asking
+            first (§384) with what the press changes — switched off, the queue leaves now.
+          */
+          <ActionForm
+            action={updateDeliveryTimingFromEmailsAction}
+            confirm={{
+              title: scheduled ? t("emails.queue.when.offTitle") : t("emails.queue.when.onTitle"),
+              body: scheduled ? t("emails.queue.when.offBody") : t("emails.queue.when.onBody", { wait: minutesPhrase(locale, Math.max(pingerMinutes, runInterval)) }),
+              confirmLabel: scheduled ? t("emails.queue.when.turnOff") : t("emails.queue.when.turnOn"),
+              cancelLabel: words.cancel,
+            }}
+            scope="outbox-timing"
+            data-testid="outbox-timing-form"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="timing" value={scheduled ? "immediate" : "scheduled"} />
+            <Box sx={{ mt: 1 }}>
+              <GlyphSubmitButton
+                label={scheduled ? t("emails.queue.when.turnOff") : t("emails.queue.when.turnOn")}
+                pendingLabel={t("emails.deadlines.saving")}
+                icon={scheduled ? "turnOff" : "turnOn"}
+                variant="outlined"
+              />
+            </Box>
+          </ActionForm>
+        )}
+      </Box>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, mb: 1.5 }}>
         <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
@@ -88,38 +208,46 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
 
       {queue.rows.length > 0 && (
         <Stack component="ul" spacing={1} sx={{ listStyle: "none", p: 0, m: 0 }}>
-          {queue.rows.map((row) => (
-            <Box component="li" key={row.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", mb: 0.5 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {t(`emails.types.${row.messageType}`)}
+          {queue.rows.map((row) => {
+            const departure = leaves(row);
+            return (
+              <Box component="li" key={row.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", mb: 0.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {t(`emails.types.${row.messageType}`)}
+                  </Typography>
+                  {/* FAILED is the one that needs the eye: it has spent its retries and will not
+                      move again on its own. The other two are ordinary queue states. */}
+                  <Chip
+                    size="small"
+                    color={row.status === "FAILED" ? "error" : "default"}
+                    label={t(`emails.queue.status.${row.status}`)}
+                  />
+                  {row.isManualResend && <Chip size="small" variant="outlined" label={t("emails.queue.manual")} />}
+                </Stack>
+                <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+                  {row.recipientEmail}
                 </Typography>
-                {/* FAILED is the one that needs the eye: it has spent its retries and will not
-                    move again on its own. The other two are ordinary queue states. */}
-                <Chip
-                  size="small"
-                  color={row.status === "FAILED" ? "error" : "default"}
-                  label={t(`emails.queue.status.${row.status}`)}
-                />
-                {row.isManualResend && <Chip size="small" variant="outlined" label={t("emails.queue.manual")} />}
-              </Stack>
-              <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
-                {row.recipientEmail}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" component="p">
-                {t("emails.queue.facts", {
-                  queued: when.format(row.createdAt),
-                  attempts: row.attemptCount,
-                  next: row.nextAttemptAt ? when.format(row.nextAttemptAt) : t("emails.queue.nextAny"),
-                })}
-              </Typography>
-              {row.lastError && (
-                <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5, wordBreak: "break-word" }}>
-                  {t("emails.queue.lastError", { error: row.lastError })}
+                <Typography variant="caption" color="text.secondary" component="p">
+                  {t("emails.queue.facts", { queued: when.format(row.createdAt), attempts: row.attemptCount })}
                 </Typography>
-              )}
-            </Box>
-          ))}
+                <Typography
+                  variant="caption"
+                  component="p"
+                  color={departure.late ? "error" : "text.primary"}
+                  sx={{ fontWeight: 500 }}
+                  data-testid="outbox-row-leaves"
+                >
+                  {departure.text}
+                </Typography>
+                {row.lastError && (
+                  <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5, wordBreak: "break-word" }}>
+                    {t("emails.queue.lastError", { error: row.lastError })}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })}
         </Stack>
       )}
 
