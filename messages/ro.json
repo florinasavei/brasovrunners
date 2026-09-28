@@ -4051,7 +4051,7 @@
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
           "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablon spune acest număr.",
-          "familySittingMinutes": "Emailul pentru o familie pleacă o dată pentru toți: la „Gata”, sau singur după atâtea minute de la ultimul formular. 0 = fiecare email pleacă imediat."
+          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -5453,6 +5453,12 @@
       "heading": "Aproape gata!",
       "headingNamed": "Aproape gata, {name}!",
       "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
+      "leavesNow": "Emailul către {email} pleacă acum.",
+      "leavesToday": "Emailul către {email} pleacă la {at}.",
+      "leavesOn": "Emailul către {email} pleacă {at}.",
+      "leftAlready": "Emailul către {email} a plecat.",
+      "formIn": "Formularul pentru {name} a ajuns.",
+      "formInUnnamed": "Formularul a ajuns.",
       "nextTitle": "Ce urmează",
       "next": {
         "open": {
@@ -5731,6 +5737,10 @@
       "question": "Mai înscrii pe cineva cu aceeași adresă?",
       "add": "Da, încă o persoană",
       "addPending": "Se deschide formularul…",
+      "addHint": "Dacă apeși „Da” până la {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintOn": "Dacă apeși „Da” până {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintLeft": "Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.",
+      "addHintAtOnce": "Fiecare persoană primește emailul ei.",
       "done": "Nu, gata — trimite-mi emailul",
       "doneAtOnce": "Nu, am terminat",
       "donePending": "Se trimite…",

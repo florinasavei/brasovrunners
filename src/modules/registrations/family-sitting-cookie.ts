@@ -1,6 +1,15 @@
+import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { env } from "@/shared/config/env";
-import { sittingCookieMaxAgeSeconds, type FamilySittingCookie, type SittingPerson } from "./domain/family-sitting";
+import { isUuid } from "@/shared/ids";
+import {
+  openEmailLeavesAt,
+  sealEmailLeavesAt,
+  sittingCookieMaxAgeSeconds,
+  type FamilySittingCookie,
+  type SittingPerson,
+  type SittingSeed,
+} from "./domain/family-sitting";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
@@ -43,6 +52,29 @@ function sharedOf(json: string | undefined): Record<string, string> | undefined 
   }
 }
 
+/*
+  The first form's seed (§NNN), always one shape: a letter and two ids, random ids where there is
+  nothing to name. A first form that registered somebody, kept a form or only re-sent a message then
+  seals to a cookie of the same length, so its size tells whoever typed a stranger's address nothing
+  (§39). The letter: r/R a registration with/without its message, e/E a kept form, n nothing.
+*/
+const SEED_KINDS = { r: ["registration", true], R: ["registration", false], e: ["entry", true], E: ["entry", false] } as const;
+
+function sealSeed(seed: SittingSeed | null): string {
+  if (!seed) return `n${randomUUID()}${randomUUID()}`;
+  const letter = seed.kind === "registration" ? (seed.outboxId ? "r" : "R") : seed.outboxId ? "e" : "E";
+  return `${letter}${seed.id}${seed.outboxId ?? randomUUID()}`;
+}
+
+function seedOf(text: string | undefined): SittingSeed | null {
+  const kind = SEED_KINDS[(text?.[0] ?? "n") as keyof typeof SEED_KINDS];
+  if (!kind || !text) return null;
+  const id = text.slice(1, 37);
+  const outboxId = text.slice(37, 73);
+  if (!isUuid(id) || !isUuid(outboxId)) return null;
+  return { kind: kind[0], id, outboxId: kind[1] ? outboxId : null };
+}
+
 function windowMinutesOf(text: string | undefined): number | undefined {
   const minutes = text ? Number(text) : Number.NaN;
   return Number.isInteger(minutes) && minutes >= 0 ? minutes : undefined;
@@ -51,6 +83,9 @@ function windowMinutesOf(text: string | undefined): number | undefined {
 export function sealFamilySittingCookie(value: FamilySittingCookie, secret = purposeSecret(PURPOSE)): string | null {
   const base = {
     s: value.sittingId ?? "",
+    r: sealSeed(value.seed),
+    // «Da» was pressed on this browser (§NNN): the screens after it are the sitting's.
+    j: value.joined ? "1" : "",
     e: value.eventId,
     m: value.email,
     n: peopleLines(value.people),
@@ -60,6 +95,8 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     a: value.atOnce ? "1" : "",
     // The window the action read (§519): the screen names this one, not the public cache's.
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
+    // When the first form's email leaves (§NNN), computed once at submit; always 25 characters (§39).
+    l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt) : "",
   };
   /*
     The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
@@ -76,12 +113,15 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
   const [typed = "", kept = ""] = (opened.w ?? "").split("\t");
   return {
     sittingId: opened.s ? opened.s : null,
+    seed: seedOf(opened.r),
+    joined: opened.j === "1" ? true : undefined,
     eventId: opened.e,
     email: opened.m,
     people: peopleOf(opened.n),
     heldUntil,
     atOnce: opened.a === "1" ? true : undefined,
     windowMinutes: windowMinutesOf(opened.k),
+    emailLeavesAt: openEmailLeavesAt(opened.l),
     shared: sharedOf(opened.f),
     sameBirthDate: typed !== "" && kept !== "" ? { typed, kept } : null,
   };

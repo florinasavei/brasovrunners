@@ -97,7 +97,8 @@ export type DayOptions = {
   year?: boolean;
   /**
    * "long" writes the month in full ("5 noiembrie 1990") — only the typed birth date read back in
-   * words (§467); every other date keeps the abbreviated month.
+   * words (§467) and the sentence that says when a participant's email leaves («pleacă marți, 29
+   * septembrie, la 10:00», `emailLeavesWords`, §NNN); every other date keeps the abbreviated month.
    */
   month?: "short" | "long";
   /**
