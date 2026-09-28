@@ -135,7 +135,7 @@ describe("§505 the minimum age is saved for every type, through the editor's on
     const created = await createEvent(db, { actor: admin, fields: { ...GROUP_RUN, translations: translations("tura") }, now: NOW });
     await postSave(editorForm(await reload(created.id), "16"));
     expect((await reload(created.id)).minAge).toBe(16);
-    // A later save changes it; never under fourteen since §NNN, so to eighteen rather than 0.
+    // A later save changes it; never under fourteen since §515, so to eighteen rather than 0.
     await postSave(editorForm(await reload(created.id), "18"));
     expect((await reload(created.id)).minAge).toBe(18);
   });

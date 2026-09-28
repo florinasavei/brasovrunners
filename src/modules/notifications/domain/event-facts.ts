@@ -136,9 +136,11 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   // The night pill's sunset sentence rides on `tooltip` on the page and the card, where hovering
   // or focusing the chip opens it; an email has no chip to hover, so it goes in parentheses right
   // after the word instead — the same sentence, never a second one written here. The difficulty's
-  // step, which the page's gauge draws as dots, is in its words here (`plain`, §526).
+  // step, which the page's gauge draws as dots, is in its words here (`plain`, §526) — and `plain`
+  // is the whole of it: the difficulty's tooltip, the gauge's level of fifteen (§528), is the
+  // gauge's own explanation and stays on the page.
   const pills = orderRoutePills(routePillParts(details, t, format)).map((pill) => ({
-    text: pill.tooltip ? `${pill.plain ?? pill.label} (${pill.tooltip})` : (pill.plain ?? pill.label),
+    text: pill.plain ?? (pill.tooltip ? `${pill.label} (${pill.tooltip})` : pill.label),
   }));
   const routeLinks: Piece[] = [
     // With a route description the route link lives in the page's "Traseul" section (§387), which the Linkuri row points at.

@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
  * type, and the event's page says it for every type, inside «Condiții de participare» (§498) after
  * the rules, no longer as a «Vârstă» row of the facts (amending §329's "only where the club counts
  * it"). Where the club takes the registrations, the form's own sentence (§410); anywhere else the
- * minimum with the parent's consent below eighteen. Never under fourteen (§NNN): an event saved
+ * minimum with the parent's consent below eighteen. Never under fourteen (§515): an event saved
  * with 0 reads as fourteen (`effectiveMinimumAge`), so every event states a minimum.
  */
 vi.mock("next-intl/server", async () => {
@@ -47,7 +47,7 @@ describe("§505 the page says the minimum age for every type", () => {
     // The club's own door: the form's sentence, the parent's clause by the number (§329, §410).
     expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 14 })).toBe("minimumAndGuardian");
     expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 18 })).toBe("minimumOnly");
-    // An older event's 0 reads as fourteen (§NNN): the minimum and the parent, never «no minimum».
+    // An older event's 0 reads as fourteen (§515): the minimum and the parent, never «no minimum».
     expect(publicAgeRule({ type: "RACE", registrationMode: "INTERNAL", minAge: 0 })).toBe("minimumAndGuardian");
     // Every type, registered elsewhere or not at all: the minimum with the parent's consent under
     // eighteen, the minimum alone from eighteen; 0 reads as fourteen.
@@ -86,7 +86,7 @@ describe("§505 the page says the minimum age for every type", () => {
     );
   });
 
-  it("an older event's 0 says fourteen, never «no minimum» (§NNN)", async () => {
+  it("an older event's 0 says fourteen, never «no minimum» (§515)", async () => {
     expect(await ageOf({ type: "GROUP_RUN", registrationMode: "NONE", minAge: 0 })).toContain(
       "Vârsta minimă: 14 ani. Sub 18 ani, participarea se face cu acordul unui părinte.",
     );
@@ -140,7 +140,7 @@ describe("§505 the editor's one box, for every type", () => {
     }
   });
 
-  it("the box's help says the floor, 14, never «0 for no limit» (§NNN)", async () => {
+  it("the box's help says the floor, 14, never «0 for no limit» (§515)", async () => {
     const html = await rulesBox("GROUP_RUN");
     expect(html).toContain("Cel puțin 14 ani, împliniți în ziua evenimentului.");
     expect(html).not.toContain("fără limită");

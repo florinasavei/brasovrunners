@@ -14,6 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { alias } from "drizzle-orm/pg-core";
+import { offerAwaitingItsFirstEmail } from "./repository";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -1149,7 +1150,12 @@ export function termsLineKindFor(registration: {
   return registration.source === "STAFF" ? { kind: "onPaper" } : { kind: "notRecorded" };
 }
 
-export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
+/**
+ * The queue panel's rows (§92). `offerEmailQueued` is the allocator's own guard (§520,
+ * `repository.ts#offerAwaitingItsFirstEmail`): an offer whose email has not left yet still holds
+ * its place past its stored deadline, so the panel lists it as `countOccupied` counts it.
+ */
+export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date) {
   return db
     .select({
       id: registrations.id,
@@ -1159,6 +1165,7 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
       submittedAt: registrations.submittedAt,
       waitlistedAt: registrations.waitlistedAt,
       holdExpiresAt: registrations.holdExpiresAt,
+      offerEmailQueued: sql<boolean>`(${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)})`,
     })
     .from(registrations)
     .where(

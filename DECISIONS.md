@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.16-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.17-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.16-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.17-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20393,3 +20393,180 @@ The comparison is made as `::text`. A database migrated from further back applie
 Between `0104` running and the new build going live, the old build can still save an event, and that event keeps its old level. The reader already handles this: when the level and the band disagree, it takes the band. So the window needs no code, and the next save by the new build writes a matching level. An address bookmarked under §413's four-level keys still filters: `?difficulty=VERY_EASY` reads as EASY and `?difficulty=MODERATE` as MEDIUM, the same mapping the migration applied to the rows.
 
 Baseline `BR-V2.16-2026-09-27`.
+
+## 527. The backoffice events list: a search, a state and one order, in the address
+
+The events list at `/admin` had grown to a season of runs, races and series, and the only way to find one was scrolling. It now has one row above the list, never folded, with three controls. Each wears its glyph (the owner's rule, 2026-09-27). The row is a plain GET form with native selects. Its state lives in the address, so the list can be bookmarked, it survives a Server Action's redirect back, and it works with JavaScript off, like the public listing's filters (§413).
+
+- **Search (`q`)**: every word must appear in a title, a page address or a place name, in either language. Accents and case are ignored, using the pickers' own `foldForSearch` (§463), so «tampa» finds «Tâmpa».
+- **State (`state`)**, in the owner's words: «Viitoare» is a date still to come that is neither called off nor completed. «Încheiate» is a date whose start has passed, or that the club marked `COMPLETED`; a called-off date is never «Încheiate». «Ciorne», «În verificare», «Publicate» and «Arhivate» are the editorial states. «În verificare» is kept on purpose: the editor sets it, and without it a date in that state could only be found by scrolling. «Anulate» is the event's own state since §331. A hand-typed value such as `?state=Încheiate` falls back to the whole list and is never an error.
+- **Order (`sort`)**: one select, no direction parameter.
+  - «Data (cele mai apropiate)», the default: the dates still to come, soonest first, then the past, most recent first.
+  - «Data (cele mai vechi)»: the oldest first.
+  - «Nume A–Z» / «Nume Z–A»: in the reader's language, so `ș` sorts after `s`.
+  - «Stare»: Ciornă, În verificare, Publicat, Arhivat, then called off, then completed.
+
+Every order breaks a tie on the nearest date. The column headings do not sort, because two ways to say one order would disagree. The club's former order (featured first, then soonest) is no longer the default. A featured race is at most a few weeks away, so the nearest-date order puts it at or near the top anyway, and its star still marks it on its line.
+
+The filter narrows the *dates* before they are grouped into a series (§113). A series filtered to «Ciorne» is the line of its draft dates, so the tick selects exactly the dates the line shows. A series line sorts by its `next` date: the first still to come, else its last. The whole pipeline (narrow, group, pick `next`, order) is one pure function, `arrangeEventList` in `src/modules/content/events/list-query.ts`. The page and the integration test both call it.
+
+While a search or a state narrows the list, a line under the row says «N din M evenimente», where M is the number of lines with nothing narrowing them. «Șterge filtrele» shows whenever anything differs from the default. The list is now paged for real; before this change the page links showed every line.
+
+The list's address survives an action. Every form on the events list posts a hidden `back`: the list's own query string. The Server Action reads it through the same parser as the address (`eventListBack`). Only `q`, `state`, `sort`, `dir`, `page` and `perPage` survive, each validated; an outcome flag, an unknown key or another path never does. The action redirects to `/admin?<back>` with its outcome after it. An archive, publish, delete or duplicate made from «Ciorne», page 2, sorted A–Z, lands back on «Ciorne», page 2, sorted A–Z. The form's one button is «Aplică» / "Apply" with the filter glyph, because it applies the search, the state and the order together. The search box keeps its own placeholder «Caută un eveniment».
+
+Baseline `BR-V2.17-2026-09-27`.
+
+## 528. The difficulty pill names its level of fifteen — «Mediu 2 — nivelul 5 din 15» — and a «?» explains the scale
+
+**The ask.** Since §526 the gauge draws five bands of three steps («Mediu 2»), but nothing on the site gave the level as a number or said what a level means. The owner wanted the pill to say its place on the scale, for example «ușor 2», and wanted the backoffice to explain the scale where the difficulty is chosen.
+
+**The pill's tooltip.** The difficulty pill now carries a tooltip on every surface that draws it through `RoutePills` / `GlyphChip`: the event page, the listing card, the featured hero and the backoffice list. The tooltip reads «{band} {step} — nivelul {level} din 15: {example}», for example «Mediu 2 — nivelul 5 din 15: o alergare mai lungă» or «Easy 1 — level 1 of 15: short, flat, for anyone». The example is the owner's own, from §526. «Mediu» has one example per step (1 the run up Tâmpa, 2 a longer run, 3 long and technical); every other band has one for all three of its steps (`difficultyExampleKey`, `Event.difficultyExamples`).
+- **Keyboard and screen reader:** a plain chip cannot be focused, so the same sentence also goes in `srSuffix`, the night pill's way (§428). A keyboard or screen-reader user hears it without the hover, and `GlyphChip` leaves the tooltip's description off so it is not read twice.
+- **Touch:** a tap opens the tooltip — the chip's own click opens the controlled tooltip, which closes after the reading time (the fix round below). On a listing card the pill is marked `data-has-tooltip`, which lifts it above the whole-card link (§486), so the tap shows the sentence instead of opening the page.
+- **No level set:** when the club has not set a difficulty, there is no pill and no tooltip.
+
+**Emails keep the band and the step alone.** The facts block (§392) says «Mediu, treapta 2 din 3» (`plain`) with no level of fifteen: an email has no gauge to explain. The night pill, which has no `plain`, still carries its sunset in parentheses.
+
+**The filter.** Each band's checkbox in «Filtre» names the levels it ticks on hover, for example «Greuț: nivelurile 7–9 din 15». This is a native `title`, not MUI's `Tooltip`, so the panel stays a Server Component that works without a script (§413).
+
+**The backoffice «?».** In «Ce fel de eveniment», a discreet «?» (`QuietHelp`, §511) appears in two places: after the «Treapta» help line and beside the band select. It holds the club's whole scale, one line per band in the owner's words:
+- «ușor = scurt, plat, pentru oricine»
+- «mediu 1 = alergarea de pe Tâmpa»
+- «mediu 2 = alergare mai lungă»
+- «mediu 3 = lung și tehnic»
+- «greuț = de la semimaraton în sus»
+- «greu = maratoane»
+- «foarte greu = ultramaratoane și mai mult»
+
+An intro line comes before the list and «Nu știi treapta? 2.» after it. Each line is its own key under `Admin.editor.difficultyScale`, joined with newlines, so each stays within §511's 200 characters and the tooltip draws one line per entry (§257). The «?» sits outside the radio group's `aria-describedby`, which stays the one short line. The guide's scale task gains one step pointing to the «?» and to the pill's tap.
+
+The difficulty pill's tooltip names the level only, the band and step then the position: «Mediu 2 — nivelul 5 din 15» / «Medium 2 — level 5 of 15». It never gives an example, because an example would call every «Mediu 1» event the Tâmpa run. A screen reader hears the same thing once, as the chip's own name: «Dificultate: mediu 2 — nivelul 5 din 15». The owner's examples exist in one place only, `Admin.editor.difficultyScale`, in his exact words. The backoffice «?» beside «Dificultate» and «Treapta» reads them, and «Ghid» points to that «?» instead of repeating them.
+
+**A tap opens the pill's tooltip (the CI fix round, 2026-09-28).** The batch's end-to-end run showed that `enterTouchDelay={0}` was not enough: MUI opens a tooltip on touch only once `enterTouchDelay` has run out while the finger is still down, and its touchend clears that timer, so a quick tap opened nothing — the difficulty pill's «Mediu 1 — nivelul 4 din 15» and the night pill's sunset alike. `GlyphChip`'s tooltip is now controlled. MUI's hover, focus and long-press still open and close it (`onOpen` / `onClose`); the chip's own click, which a tap also fires, opens it, and it closes on its own after the reading time (`readingTimeMs`, as `InfoTip`). `clickable={false}` keeps the chip a plain `<div>` with no role, so the click opens a tooltip without making the chip a button. On the listing card the tap stays on the page, because the chip is lifted above the whole-card link (§486). The same run fixed three specs the chains had written without running them: the events list's glyph is asserted as the one start adornment (MUI's native-select arrow is also an svg), the outbox spec starts from the timing in force (`defaultDeliveryTiming(APP_ENV)`: immediate locally and under test, scheduled on QA and production — §513) and switches both ways, and the text-size sample line no longer names Tâmpa, so the example is said once per catalogue, by the scale's own key.
+
+Baseline `BR-V2.17-2026-09-27`.
+
+## 529. The outbox queue says when each email leaves, and switches «Când pleacă emailurile» where its effect shows
+
+**The owner, 2026-09-28:** "vreau să pot vedea exact când pleacă emailurile și să pot face on/off la acea setare — pare că mailurile nu mai pleacă de pe QA".
+
+**What was wrong.** Under the scheduled default (§513) a waiting queue is normal: an email leaves at the outbox job's next real run. QA is pinged hourly and has a two-hour minimum interval (§334, SETUP.md §40), so a QA email could wait about three hours. Nothing on «Setări» → «Emailuri» said so, and the wait looked like the email had stopped.
+
+**What the queue panel («Coada de trimitere») now says.**
+- **When the queue leaves.** It opens with a «Când pleacă emailurile» block:
+  - the timing, as «Emailurile pleacă: la trecerea programată / imediat după cerere»;
+  - the outbox job's next expected real run and its last one;
+  - what holds the scheduled round back, each with the number in force: the pinger's cadence at this hour, the Administrator's minimum interval (§334) and the budget governor's floor (§447).
+
+The closed fold's line names the timing beside the count.
+- **When each row leaves.**
+  - A row being sent says so.
+  - A row that spent its retries says it will not leave on its own.
+  - A family's held row (a turn in the future and no attempt yet, §519) says «Ținut până …: o familie încă semnează. Apoi pleacă la trecerea următoare: …».
+  - Every other waiting row gives its estimated departure: the outbox job's first real run at or after the row's own turn, stepping at the pinger's cadence or the interval (`outboxRowLeavesAt`, pure).
+- **Late, by the monitor's own rule.** A row is marked «Întârziat» in red when its turn passed longer ago than `/api/health` allows: ninety minutes plus `outboxOverdueCadenceMinutes`. That is the longest of the stated interval, the governor's floor and the interval the last real run planned under (`plannedCadenceMinutes`). One function serves both the health check and the panel, so the two never disagree about a stall. A newsletter held for the reserve (§445) is never late, as health counts it.
+- **«Trimite acum» says what it sends and what it leaves.** `readOutboxQueue` counts, with the claim's own rule, the due rows (PENDING with `next_attempt_at` empty or passed). It also counts the held rows by reason: a family still signing, a retry or deferral, the newsletter's reserve. The confirm's email line counts only the due rows, and the body names the held ones with their reasons and the first release time. The button is offered only while something is due; otherwise the panel says why nothing would leave.
+
+**The switch.** It is the same «Termene» setting (§513), shown on the screen where its effect is visible. It is phrased in «Termene»'s own words, «Trimite imediat după cerere» and «Trimite la trecerea programată», so the setting has one name wherever it appears.
+- It is the Administrator's (`canManageClubSettings`), asserted by the action and the service.
+- It asks first (§384) and is audited like the «Termene» form.
+- Switched to «imediat după cerere», it also drains the queue after the response, so what the round was holding leaves now rather than at the tick the panel had just named.
+- Everybody who reads the queue (§291) reads the timing; only the Administrator gets the switch.
+
+**Per environment.** Each database keeps its own setting, so switching QA changes nothing on production. The /admin/tasks monitors row now states this environment's day and night pinger cadence, read from `PINGER_CADENCE_MINUTES` and never a literal. SETUP.md §40 says why QA waits longer and how to shorten it while testing.
+
+The «Trimite acum» note says how many emails stay held as a plain count («Rămân ținute: {count}»), with no ICU plural. A late row tells only the Administrator, who is the one who can send, to press «Trimite acum»; every other role is told to tell the administrator. An email counts as a family's hold only when it carries the sittingHeld or familyHeld flag. A row that Gmail's pacing pushed back without that flag counts as a retry. The held row keeps «Ținut până {until}» with no «la», per §452.
+
+Baseline `BR-V2.17-2026-09-27`.
+
+## 530. «Mărimea textului» — the public pages' text size as a club setting
+
+**The owner, 2026-09-28, from his phone.** The public pages' text size is a club setting, beside the background tint of §488.
+
+**Decision.** «Setări» → «Aspect» gains a second card, «Mărimea textului»: the Administrator picks «Mic», «Normal», «Mare» or «Foarte mare» — 93.75 / 100 / 106.25 / 112.5 % of the root, body text 15–18 px — each option drawn with a line of text at its size, saved behind the confirmation (§384), audited as `site_font_size.changed` (entity …e012). The locale layout draws one server-side rule from the public cache (§333), `html:not(:has([data-backoffice])){font-size:<n>%}`: MUI's typography is rem, so every heading, paragraph, button and field scales together while spacing stays; a percentage keeps the reader's own browser size; both schemes; the backoffice stays at 16 px; the default draws nothing.
+
+**Measured** through the backoffice on `next dev`: root 15/16/17/18 px, h1 30–36 px, no sideways scroll at 320 px at any step, the backoffice root 16 px.
+
+No migration (a keyed setting), no new dependency.
+
+Baseline `BR-V2.17-2026-09-27`.
+
+## 531. The cleanup after the night: the queue panel holds an offer while its email waits, and the documents, guards and words catch up with V2.13–V2.16
+
+**Why.** `BR-V2.13` to `BR-V2.16` landed overnight (00:05–03:06 on 2026-09-28), and each landing left something behind. The work queue still showed them as planned. The CLAUDE.md map and its «Still owed» list did not name what they built or what the club now owes. The click lists in `SETUP.md` and `docs/RUNBOOKS.md` still sent the reader to addresses §516 moved. Code comments carried §531 markers that were never numbered. The registration queue panel also disagreed with the count it stands beside.
+
+**The queue panel reads the allocator's own guard (amends §92, following §520).** Since §520, `countOccupied` counts a waiting-list offer that is past its stored deadline while its first email is still queued: the send will move the deadline (§513). The panel's list dropped that offer, so the «Rezervate» figure and the lines under it disagreed, and the chip showed a deadline the send will move. `listQueueForEvent` now reads the same guard, `offerAwaitingItsFirstEmail`, and the panel lists such an offer as «ofertă; termenul curge de când pleacă emailul». An offer past its deadline whose email has left holds nothing, as before. Tested in `tests/integration/registrations/queue-panel-zone.test.ts`, in both languages, before and after the send (BR-REQ-034-01).
+
+**The documents.**
+- `docs/QUEUE.md` lists V2.13–V2.16 as released, each with its landing hour. It also carries the V2.17 plan (including the owner's ask to regenerate and delete the legal texts in one batch), the contract steps and the tests the night deferred (§515, §526, §493), and the owner's clicks as they stand.
+- `CLAUDE.md` «Still owed» gains three club items:
+  - approve the texts again from the new templates (the trail and road declarations of §515, the series group-run declarations of §523, the notice describing the members' zone of §524), with «Aprobă acum textele care lipsesc…» for the missing ones;
+  - re-grade every event's difficulty, since migration `0104` put each one in the middle step of its old band (§526);
+  - open the members' zone and the FAQ.
+- `CLAUDE.md` map lines added: the difficulty scale (§526), «Întrebări frecvente» (§525), the members' zone (§524, public and backoffice), «Setări» (§516, with «Anti-robot» named since §522 and «Configurație» as its only way in since §520), emails on the scheduler's tick (§513), and the family sitting (§519).
+- Every click list in `SETUP.md` and `docs/RUNBOOKS.md` that named `/admin/emails` or `/admin/tasks` → Costuri now names «Setări» → «Emailuri», «Contact» or «Costuri» (`/admin/settings/…`, with the card's `#`).
+- The guide's legal-texts task names six texts and the one-press approval (§515).
+
+**The guards.**
+- The glyph test (§521) recognises an order arrow written as a button's only words, so the FAQ arrows need no allowlist entries, and it holds their accessible names.
+- The glyph test no longer counts a fold's own arrow (ExpandMore…, ExpandLess…, Chevron…, ArrowDropDown/Up…, KeyboardArrow…) or an empty `ListItemIcon` as the fold's glyph. The arrow says the fold opens; only a subject glyph says what is inside. A glyph inside `ListItemIcon` still counts.
+- The plain-words test (§511, §522) covers the toasts (`Feedback.*`) in both languages: at most 200 characters, no reference, no parenthesis over six words, no «platforma» and no hedge. The laddering failure toast was rewritten to pass.
+- `GlyphButton` and `GlyphButtonLink` say what §521 changed. Every button wears a glyph, public pages included, through a directly imported icon file. The lookup-by-name registry stays off public pages, the one line of §318 that §521 keeps.
+- CI's docs-check and e2e jobs stop after 30 minutes. V2.13's hung Turnstile spec cost an hour per shard under GitHub's six-hour default.
+
+**The words.**
+- The editor's two notice counts use one wording for the Mailgun messages: «Mesaje, cu tot cu copiile pentru club: N (planul …)» / "Messages, the club's copies included: N (…)". Both numbers already included the club's copies.
+- The rich-text image panel's glyph-only close button has a tooltip.
+- The older-pictures card (§430) keeps two facts behind its «?»: a picture that fails stays counted and is retried at every press, and the old file stays until the picture is deleted.
+- Fifteen catalogue keys that nothing reads are removed from both catalogues.
+- The stale comments on the offer count (`capacity.ts`, `waitlist.ts`, `repository.ts`) now cite the §520 guard.
+- Four exports that nothing used were removed.
+- The §531 markers left by landed sections now carry their numbers (§511, §513, §515, §516, §519, §520, §522).
+
+No migration, no new dependency, no rule changed.
+
+The plain-words guard now reads the catalogues' arrays too. Every «Cum» step on a task row or on the desk (`how`, `howBroken`, `howCapped`, `howUnreachable`) is held to 200 characters and to the no-reference and forbidden-word rules, with quotes exempt and no parenthesis limit. Steps that ran longer are split into more numbered steps, the same count in both languages. The guide's numbered steps keep their length, because the detail lives there, but are still held to the references and the words.
+
+Baseline `BR-V2.17-2026-09-27`.
+
+## 532. Every legal text at once: regenerate from the templates, approve the drafts, delete the ticked versions
+
+The platform's legal templates moved several times in one week (§418, §515, §523). Each move meant six rounds of «Versiune nouă → pornește de la textul platformei → Salvează → Aprobă», plus one delete screen per leftover test version. `/admin/legal` now has a box, «Toate textele deodată», with three presses. Each one is the one-version verb applied to several versions, under the same guards. None of them is a new rule.
+
+**«Regenerează din șabloane».** It makes a new **draft** for each text whose platform template, with the club's facts written in, says something new. A text is skipped when either of these is true:
+
+- the text in force (or an approved version above it that has not been withdrawn) already has the template's words (`unchanged`);
+- a draft of that text is already waiting (`draftExists`). A draft is waiting when it is numbered above every approved version still offered, whatever its words.
+
+The second rule does not compare hashes. A regenerated draft whose `<PLACEHOLDER>` the Administrator then typed in, or a draft made the long way, no longer hashes like the template. Offering «Regenerează» again would make a newer placeholder draft that supersedes the club's filled-in one. A draft numbered below an offered approved version would never take effect, so it does not hold the template back.
+
+On an empty database the press makes all six texts; otherwise it makes only the drafts that are due. Every draft is made by `createDraftVersion`, the long way's own function, inside **one transaction**: a failure at the fourth text leaves no draft of the first three. Nothing is approved. A club fact the deployment does not know stays a `<PLACEHOLDER>` for the Administrator to type, as "start from the platform's text" leaves it (§95). Drafts are on no public page, so the press does not revalidate the public cache (§333).
+
+**«Aprobă ciornele».** It approves the drafts that are `ready` — the newest draft of its text, above every approved version still offered, with no `<PLACEHOLDER>` left in either language. Each is approved by `approveVersion`, in one transaction, all or none. Every other draft is listed under the button with its reason:
+
+- `superseded`: a newer draft of the same text exists;
+- `behind`: an approved version with a higher number is offered, so this one would never take effect;
+- `placeholders`: a club fact is still a `<PLACEHOLDER>`.
+
+If a named draft is no longer `ready` when the press lands, the whole press is refused, because the club approved the list it read. The effects are the single approval's and nothing more. The approval is recorded on the row (`approvedByStaffUserId`, `effectiveAt`) and **writes no audit row, exactly as approving one version does**; adding `legal_document.approved` rows would be a change to both verbs, not to this one.
+
+**«Șterge versiunile bifate».** Every deletable row has a tick. The ticks belong to a GET form through the `form=` attribute on the `<input>` (§114), and it opens `/admin/legal/delete`. That screen lists what goes and what stays with the list's own reasons (`deletionObstacle`), then deletes in one press:
+
+- drafts are deleted as one draft is (§53), behind the §384 confirm dialog, with no phrase;
+- approved versions are deleted as `deleteApprovedVersion` deletes one (§151, §316): one reason for all of them, the typed phrase `DELETE <n>` counting only the approved versions, an audit row per approved version written first, and every number retired. The destroy body is now shared with the single delete.
+
+The batch is checked before the transaction and again inside it. Inside, each text's lowest version is deleted first, so deleting a newer terms version never widens an older one's time in force over registrations that did not rely on it.
+
+**The delete is all or none, and the refusal names the version.** The phrase `DELETE <n>` and the one reason were given for exactly the approved versions the screen listed, and the audit rows repeat that reason. Deleting a different set under them would make both untrue. So a version that became undeletable between the screen and the press (it took effect, somebody relied on it, it changed) stops the whole press. The refusal names that version by its phrase — «Nu s-a șters nimic: între timp, GDPR 2 nu se mai poate șterge…» (`LegalBatchVersionRefused`, `LEGAL_BATCH_VERSION_BLOCKED`). Read again, the screen lists that version under what stays, with its reason, and the rest go on the next press.
+
+**«Aprobă textele platformei» stays beside the new box.** It appears only while a text has no version at all, which is production's first run (§132). It is the one press that creates **and** approves the missing texts, which the new box never does, because the box only drafts. Folding it into the box would either add an approve-on-create to «Regenerează», or cost a first-run club an extra press on the page it meets first.
+
+Each of the three presses belongs to the Administrator (§450). It is checked on the page, in the action (`canWriteLegalTexts`) and in the service (`assertMayEdit`). The guide's legal task is now this route in both languages. There is no migration and no new dependency.
+
+Signed group-run declarations are erased in batch as well as one at a time (the owner, 2026-09-28: «să pot face batch delete și la declarații, cu confirmarea numărului șters»). Each signature row on the run's panel carries a tick belonging to one batch form below the list by `form=` (each row already holds its own erase form, and forms cannot nest); one reason is typed, and «Șterge cele bifate» asks through the one ConfirmDialog (§384), whose body is counted from the ticks at the press and names the run: «Ștergi N declarații semnate pentru «…»? Nu se pot recupera.» (`ConfirmSpec.bodyCount`, the three count forms of `count-form.ts`; with nothing ticked nothing is asked and the server refuses). The ids the dialog counted are what is posted, and the service erases them only if they are still, all of them, signatures of this run: one erased meanwhile or one of another run refuses the whole press with a CONFLICT that says the ticked set changed, and nothing is erased, because the Administrator confirmed N, not what the rows became. One transaction, the rows locked; every signature goes through the same `eraseSignature` the single erase uses: its audit row first (who and why, never the signer, §67), its outbox rows, the row. Administrator-only, asserted in the service (BR-REQ-060-01). The toast and the page say how many went. Race declarations have no signature list of their own: a race declaration is erased with its registration, whose list already offers a bulk erase with the count typed.
+
+«Aprobă ciornele» checks twice, like the batch delete: before the transaction, so a refusal names the draft before anything opens, and again inside it with the same plan, so a draft that lost readiness between the plan and the press (a newer draft saved in another tab, a placeholder typed back) refuses the whole press with a CONFLICT.
+
+The guide's task over the batch presses is titled «Textele legale ale clubului» / "The club's legal texts": a count of texts in a title goes stale the day a text is added.
+
+Baseline `BR-V2.17-2026-09-27`.

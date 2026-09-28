@@ -81,8 +81,9 @@ test.describe("§331 the participants hear about a change when the organizer ask
     const count = page.getByTestId("notice-count");
     await expect(count).toContainText("Participanți care ar primi emailul „Detalii actualizate”: 1");
     // The messages and what is left of the plan's allowance, in §522's plain words:
-    // «Mesaje: 1 (planul Free: încă 89 azi)», or «(planul …, fără limită)» on a plan with none.
-    await expect(count).toContainText(/Mesaje: \d+ \(planul [^:(),]+(: încă \d+ (azi|luna aceasta)|, fără limită)\)/);
+    // «Mesaje, cu tot cu copiile pentru club: 1 (planul Free: încă 89 azi)», or «(planul …, fără
+    // limită)» on a plan with none — the same words as the cancellation's line below.
+    await expect(count).toContainText(/Mesaje, cu tot cu copiile pentru club: \d+ \(planul [^:(),]+(: încă \d+ (azi|luna aceasta)|, fără limită)\)/);
 
     // The box is unticked on every load, and the note appears only once it is ticked.
     const notify = page.getByRole("checkbox", { name: "Anunță participanții despre schimbare" });
@@ -153,6 +154,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(cancel).toBeVisible();
     await expect(cancel.getByRole("checkbox", { name: "Anunță participanții că evenimentul a fost anulat" })).toBeChecked();
     await expect(page.getByTestId("cancel-count")).toContainText("„Eveniment anulat”: 1");
+    await expect(page.getByTestId("cancel-count")).toContainText(/Mesaje, cu tot cu copiile pentru club: \d+ \(planul /);
     // The update box is gone while the status says "Anulat".
     await expect(page.getByTestId("notice-fields")).toHaveCount(0);
     // Why, in both languages: each registrant reads it in theirs (§354).

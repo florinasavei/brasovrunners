@@ -193,6 +193,20 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
     }
   });
 
+  /*
+    The legal texts' task walks the batch presses over every text of the catalogue. It was titled
+    «Cele cinci texte» when the catalogue had grown to six: a count in a title goes stale the day a
+    text is added, so the task is named without one, and no task title counts the texts.
+  */
+  it("names the legal texts' task without a count that goes stale", () => {
+    const titles = { ro: "Textele legale ale clubului", en: "The club's legal texts" } as const;
+    for (const [locale, catalogue] of Object.entries(locales)) {
+      const tasks = guideOf(catalogue).sections.flatMap((section) => section.tasks.map((task) => task.title));
+      expect(tasks, locale).toContain(titles[locale as keyof typeof titles]);
+      expect(tasks.filter((title) => /(cinci|șase|five|six) (texte|texts)/i.test(title)), locale).toEqual([]);
+    }
+  });
+
   it("keeps the family section the page appends its pending line to (§389)", () => {
     for (const catalogue of Object.values(locales)) {
       expect(guideOf(catalogue).sections.filter((section) => section.key === "family")).toHaveLength(1);

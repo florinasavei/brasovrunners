@@ -64,6 +64,8 @@ import { readContactRecipients } from "@/modules/contact/recipients";
 import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
+import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { PINGER_CADENCE_MINUTES } from "@/modules/jobs/quiet-hours";
 import { getPathname } from "@/i18n/navigation";
 import SubNav from "@/shared/ui/SubNav";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -361,6 +363,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     maintenanceUrl: `${env.APP_BASE_URL}/api/internal/jobs/registration-maintenance`,
     webhookUrl: `${env.APP_BASE_URL}/api/webhooks/mailgun`,
     baseUrl: env.APP_BASE_URL,
+    /*
+      The monitors row's cadence (§529): this environment's own pinger, by day and at night, from
+      `PINGER_CADENCE_MINUTES` — QA reads "o oră", production "15 minute" — never a literal, so the
+      row says why QA's emails wait longer than production's.
+    */
+    pingerDay: minutesPhrase(locale, env.PINGER_CADENCE_MINUTES),
+    pingerNight: minutesPhrase(locale, Math.max(PINGER_CADENCE_MINUTES.night, env.PINGER_CADENCE_MINUTES)),
     // The renewal row's sentence (§435): the expiry as a day a person reads, and the years paid.
     domainExpiresOn:
       domain.status === "unknown" ? "" : formatCalendarDay(domain.expiresOn, { locale, style: "long", position: "inline" }),

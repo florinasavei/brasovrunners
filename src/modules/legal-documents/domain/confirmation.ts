@@ -43,6 +43,30 @@ export function confirmationPhrase(key: LegalDocumentKey, version: number): stri
 }
 
 /**
+ * The phrase for deleting several approved versions at once (§532), e.g. `DELETE 3`.
+ *
+ * One phrase per version would be `GDPR 2, GDPR 3, TERMS 1, …` typed on a phone, and the owner's
+ * ask was one press for the club's testing leftovers. What the typed phrase must still do is make
+ * the wrong press impossible: the batch screen lists every version by its own phrase, and the
+ * count in this one is the number of approved versions on that list — a selection that grew or
+ * shrank between the screen and the press no longer matches it. The same word in both languages,
+ * for the reason `DOCUMENT_CODES` gives. Drafts are not counted: a draft is deleted without a
+ * typed phrase (§53), in a batch as alone.
+ */
+export function batchConfirmationPhrase(approvedCount: number): string {
+  return `DELETE ${approvedCount}`;
+}
+
+/** `matchesConfirmation`'s forgiveness — case and space — for the batch phrase. */
+export function matchesBatchConfirmation(typed: string, approvedCount: number): boolean {
+  return normalize(typed) === batchConfirmationPhrase(approvedCount).toUpperCase();
+}
+
+function normalize(typed: string): string {
+  return typed.trim().replace(/\s+/g, " ").toUpperCase();
+}
+
+/**
  * Case and surrounding space are forgiven; nothing else is.
  *
  * A case-insensitive compare would be wrong for a title somebody half-remembers — that is the
@@ -56,6 +80,5 @@ export function matchesConfirmation(
   key: LegalDocumentKey,
   version: number,
 ): boolean {
-  const normalized = typed.trim().replace(/\s+/g, " ").toUpperCase();
-  return normalized === confirmationPhrase(key, version).toUpperCase();
+  return normalize(typed) === confirmationPhrase(key, version).toUpperCase();
 }
