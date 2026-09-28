@@ -47,6 +47,7 @@ export default async function OlderPicturesPanel({ locale, left, lastFailed }: P
       id="older-pictures"
       title={t("tasks.olderPictures.title")}
       intro={t("tasks.olderPictures.intro", { perPress: OLDER_PICTURES_PER_PRESS })}
+      introMore={t("tasks.olderPictures.introMore")}
       data-testid="older-pictures"
     >
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="older-pictures-left">

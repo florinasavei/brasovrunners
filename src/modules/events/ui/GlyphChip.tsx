@@ -5,6 +5,8 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
+import { useState } from "react";
+import { readingTimeMs } from "@/shared/ui/tooltip-text";
 import { GLYPHS, type GlyphName } from "./glyphs";
 
 /**
@@ -93,6 +95,16 @@ export default function GlyphChip({
   closeMark?: boolean;
 }) {
   const Icon = GLYPHS[glyph];
+  /*
+    A tap opens the tooltip (§528; the owner asked for the difficulty's sentence on a phone). MUI
+    opens on a touch only once `enterTouchDelay` has run out while the thumb is still down, and its
+    touchend clears that timer — so a quick tap, shorter than the timer's turn of the event loop,
+    opened nothing. The tooltip is therefore controlled: MUI's own hover, focus and long-press still
+    open and close it (`onOpen` / `onClose`), and the chip's own click — a tap's, too — opens it,
+    closing on its own after the reading time (`leaveTouchDelay`, as `InfoTip`). `clickable={false}`
+    keeps the chip the roleless `<div>` it was: the click opens a tooltip, it is not a button.
+  */
+  const [open, setOpen] = useState(false);
   const content =
     srSuffix || srLabel || closeMark ? (
       <>
@@ -118,7 +130,16 @@ export default function GlyphChip({
   const chip = href ? (
     <Chip component="a" href={href} clickable size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} {...marked} />
   ) : (
-    <Chip size="small" color={color} variant={variant} icon={<Icon />} label={content} sx={sx} {...marked} />
+    <Chip
+      size="small"
+      color={color}
+      variant={variant}
+      icon={<Icon />}
+      label={content}
+      sx={sx}
+      {...marked}
+      {...(tooltip ? { clickable: false, onClick: () => setOpen(true) } : {})}
+    />
   );
   // `describeChild` sets `aria-describedby` on the chip while the tooltip is open, so a screen
   // reader that already read the sentence out of `srSuffix` — part of the chip's own accessible
@@ -132,10 +153,21 @@ export default function GlyphChip({
   // `titleIsString` guard), which is why the tooltip is wrapped in a fragment only on this path —
   // the string form stays on every other chip, whose native, pre-hydration `title` attribute
   // `describeChild={true}` sets depends on it.
-  const describeChild = srSuffix !== tooltip;
+  // A chip with its own `srLabel` (the difficulty's, §528) already says the tooltip's sentence in
+  // its accessible name, so it takes the same path.
+  const describeChild = srSuffix !== tooltip && !srLabel;
   const tooltipTitle = describeChild ? tooltip : tooltip != null ? <>{tooltip}</> : tooltip;
   return tooltip ? (
-    <Tooltip title={tooltipTitle} arrow describeChild={describeChild} enterTouchDelay={0}>
+    <Tooltip
+      title={tooltipTitle}
+      arrow
+      describeChild={describeChild}
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+      enterTouchDelay={0}
+      leaveTouchDelay={readingTimeMs(tooltip)}
+    >
       {chip}
     </Tooltip>
   ) : (

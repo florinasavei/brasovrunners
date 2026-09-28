@@ -12,6 +12,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import BorderAllIcon from "@mui/icons-material/BorderAll";
@@ -1537,9 +1538,12 @@ function RichTextEditorIsland({
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {labels.imagePanel}
               </Typography>
-              <Button size="small" color="inherit" onClick={closeImagePanel} aria-label={labels.imageClose} sx={{ minWidth: 44 }}>
-                <CloseIcon aria-hidden fontSize="small" />
-              </Button>
+              {/* A glyph-only button says its word on hover and focus, like the toolbar's (§361). */}
+              <Tooltip title={labels.imageClose}>
+                <Button size="small" color="inherit" onClick={closeImagePanel} aria-label={labels.imageClose} sx={{ minWidth: 44 }}>
+                  <CloseIcon aria-hidden fontSize="small" />
+                </Button>
+              </Tooltip>
             </Stack>
             {/* The picture's own size, whenever it is selected (§437): what was stored, not what the page draws. */}
             {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (

@@ -169,7 +169,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   `yarn docs:land --tree [--to BR-V2.NN]` needs no manifest: the next baseline, today in Brașov,
   and it writes the batch line and the Released row itself.
 - **Commit:** run `yarn docs:check`, then `git commit --no-verify` — not the hook's full
-  `yarn check`, which took about ten minutes of every release (§NNN). CI runs the full
+  `yarn check`, which took about ten minutes of every release (§504). CI runs the full
   `yarn check` on the batch PR minutes later, and every merged branch already passed the hook.
   The risk is a red batch PR instead of a red hook; a fix round fixes it. The hook still runs
   for every other commit — this is the one exception `AGENTS.md` §6.3 and `SETUP.md` § Contributing name.
@@ -185,7 +185,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   continues from step 3. It waits for the `qa` push's run by its status and opens the release
   PR only once that run is green, so the release PR's run finds the tree tested and skips; at
   the end, and at any stop, it prints each step's m:ss and appends one JSON line to
-  `SHIP_TIMES_FILE` (§NNN).
+  `SHIP_TIMES_FILE` (§504).
 
 ### Cloud loop
 

@@ -40,3 +40,14 @@ describe("GlyphChip drops the redundant description when srSuffix repeats the to
     expect(html).toContain('title="Plata la organizator"');
   });
 });
+
+describe("§528 a tap opens a chip's tooltip, and the chip stays a roleless pill", () => {
+  it("a chip with a tooltip is still a plain div — the click that opens the tooltip makes it no button", () => {
+    const html = render({ glyph: "night", label: "Noapte", tooltip: "Soarele apune la 16:42" });
+    expect(html).toMatch(/<div\b[^>]*class="MuiChip-root/);
+    expect(html).not.toContain('role="button"');
+    expect(html).not.toContain("tabindex");
+    expect(html).not.toContain("MuiChip-clickable");
+    expect(html).toContain('data-has-tooltip="true"');
+  });
+});

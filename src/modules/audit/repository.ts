@@ -197,6 +197,8 @@ export type AuditAction =
   | "shown_contact_address.changed"
   /** «Aspectul site-ului»: the public pages' light background tint, a preset or a typed colour (§488). */
   | "site_tint.changed"
+  /** «Mărimea textului»: the public pages' text size, one of four steps (§530). */
+  | "site_font_size.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
   | "bot_check.changed"
   /**

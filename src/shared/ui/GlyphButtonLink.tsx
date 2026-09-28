@@ -17,10 +17,12 @@ type Props = Omit<ButtonProps, "href" | "startIcon"> &
 /**
  * `ButtonLink` wearing a verb's glyph, for a backoffice Server Component to render (§318).
  *
- * **Backoffice only**, for the reason `GlyphSubmitButton` gives: the name is looked up in the
- * verbs' registry, which no bundler can shake, so `ButtonLink` itself — on the landing page's
- * featured event, every event page's registration button and the not-found page — takes no
- * glyph and imports no registry. `tests/unit/shared/action-icons.test.ts` holds the line.
+ * Since §521 a public page's link-button wears a glyph too, but never through this: the name is
+ * looked up in the verbs' registry, which no bundler can shake, and §521 keeps §318's line for
+ * the registry alone. So `ButtonLink` itself — on the landing page's featured event, every event
+ * page's registration button and the not-found page — imports no registry, and a public call
+ * site hands it one directly imported icon file as its child, beside the words (`WITH_GLYPH_SX`).
+ * `tests/unit/shared/action-icons.test.ts` holds the line.
  */
 export default function GlyphButtonLink({ href, icon, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];
