@@ -3,43 +3,27 @@ import type { SmtpAddress, SmtpMessage } from "@/infrastructure/email/smtp-adapt
 import type { ContactSignals, ContactSuspicion, SuspicionReason } from "./domain/suspicion";
 
 /**
- * The message the club receives when somebody writes through the form (`DECISIONS.md` §149).
- *
- * Romanian, whatever language the visitor wrote in: the reader is the club, and the club
- * reads Romanian. The visitor's own words are quoted as typed. From the club's own sending
- * address (Gmail refuses any other), to the mailboxes the club named, and `Reply-To` the
- * visitor — so "Reply" in Gmail answers them, which is the whole of the workflow. On QA the
- * subject carries the outbox's `[QA] ` mark (AGENTS.md §16.4): the club's real mailboxes are
- * on both projects, and a question typed on the public `qa.` host must not read as a real one.
- *
- * Not a template under `notifications/templates`: those render the club's card for a
- * participant, through the outbox; this is one plain message to the club, through SMTP.
+ * The message the club receives from the contact form (§149). Romanian whatever the visitor's
+ * language; from the club's sending address (Gmail refuses any other), `Reply-To` the visitor;
+ * `[QA] ` on QA (AGENTS.md §16.4). Plain SMTP, not an outbox template.
  */
 
 export type ContactMessageInput = {
   name: string;
   email: string;
   message: string;
-  /** Which language the form was on, so the club knows how to answer. */
   locale: "ro" | "en";
-  /** The page the form was posted from, absolute (§8): the club sees where the question came from. */
+  /** Absolute (§8). */
   pageUrl: string;
 };
 
 export type ContactMessageRoute = {
   from: SmtpAddress;
   to: readonly string[];
-  /**
-   * The club's copy list (`DECISIONS.md` §164): a real `Cc` header, not a second `To`, so a
-   * colleague sees she was copied and "Reply all" keeps the club together on the thread.
-   */
+  /** A real `Cc` header, so "Reply all" keeps the club on the thread (§164). */
   cc?: readonly string[];
-  /**
-   * The club's hidden copies (2026-09-22): envelope recipients that appear in no header, so
-   * neither the visitor's `Reply-To` thread nor the Cc'd colleagues learn of them.
-   */
+  /** Envelope-only recipients, named in no header. */
   bcc?: readonly string[];
-  /** Which deployment sends it, for the subject's mark. */
   appEnv: AppEnvironment;
 };
 
@@ -62,15 +46,9 @@ export function contactSubject(name: string): string {
   return `Mesaj de pe site: ${headerSafe(name)}`;
 }
 
-/**
- * The mark on a message the gates let through that still looks like a program's
- * (`domain/suspicion.ts`; the owner, 2026-09-23, of SEO spam through the form). Stable, because
- * the club filters on it — a Gmail filter on `subject:"[posibil spam]"` (`SETUP.md` §38) — so a
- * change to these characters is a change to every club mailbox's filter.
- */
+/** Keep stable: the club's Gmail filters on it (`SETUP.md` §38). */
 export const SUSPICIOUS_SUBJECT_PREFIX = "[posibil spam] ";
 
-/** One line per reason, in Romanian whatever the form's language: the club is the reader (this module's first note). */
 function reasonLine(reason: SuspicionReason): string {
   switch (reason.kind) {
     case "no-token":
@@ -109,11 +87,7 @@ const BOT_CHECK_TEXT: Record<ContactSignals["botCheck"], string> = {
   rejected: "verificarea anti-bot respinsă",
 };
 
-/**
- * The footer of a marked message: why, in one plain line a reason, and what else was measured,
- * so the person reading can overrule the mark — a real question from somebody whose browser
- * never ran the widget looks exactly like this, and "Reply" still answers them.
- */
+/** The reasons and everything measured, so the reader can overrule the mark. */
 function suspicionFooter(suspicion: ContactSuspicion): { heading: string; reasons: string[]; signals: string } {
   const { signals } = suspicion;
   return {
@@ -123,12 +97,7 @@ function suspicionFooter(suspicion: ContactSuspicion): { heading: string; reason
   };
 }
 
-/**
- * The message itself. `suspicion` is what the gates could not decide (`domain/suspicion.ts`):
- * a suspicious one gets the subject's prefix and a footer below everything else; any other —
- * no suspicion given, or one that found nothing — is byte-for-byte the message as it has always
- * been, which `tests/unit/contact/message.test.ts` pins.
- */
+/** A suspicious message gets the subject prefix and a footer; any other is byte-for-byte unchanged (tests pin it). */
 export function renderContactMessage(
   input: ContactMessageInput,
   route: ContactMessageRoute,
@@ -160,8 +129,7 @@ export function renderContactMessage(
   ].join("");
 
   const marked = suspicion?.suspicious ? suspicionFooter(suspicion) : null;
-  // Below the message and the signature, behind a rule, so the visitor's words read first and
-  // the platform's verdict is plainly not theirs.
+  // Behind a rule, below the visitor's words, so the verdict is plainly not theirs.
   const markedText = marked
     ? [text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n")
     : text;
@@ -178,17 +146,12 @@ export function renderContactMessage(
 
   return {
     from: route.from,
-    // Each address on one line, whatever a setting or a variable once held: a header may not
-    // fold (§164). Both lists, because `CONTACT_FORM_TO` is never validated at startup —
-    // the operator types it — while the setting's addresses met the canonicalizer.
+    // A header may not fold (§164); `CONTACT_FORM_TO` is never validated at startup.
     to: route.to.map(headerSafe),
     ...(route.cc && route.cc.length > 0 ? { cc: route.cc.map(headerSafe) } : {}),
     ...(route.bcc && route.bcc.length > 0 ? { bcc: route.bcc.map(headerSafe) } : {}),
-    // The sender's, marked or not: a real person whose browser never ran the widget is answered
-    // with "Reply" like anybody else.
     replyTo: { name, address: input.email },
-    // On QA the environment's mark comes first — "[QA] [posibil spam] …" — and a filter on the
-    // phrase matches either way.
+    // "[QA] [posibil spam] …" on QA; a filter on the phrase matches either way.
     subject: markSubjectForEnvironment(subject, route.appEnv),
     text: markedText,
     html: markedHtml,

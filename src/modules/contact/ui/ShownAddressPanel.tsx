@@ -18,26 +18,18 @@ import Panel from "@/shared/ui/Panel";
 type Props = {
   locale: Locale;
   state: ShownContactAddressState;
-  /** `EMAIL_REPLY_TO`, the mailbox on the Mailgun domain — the default choice's address. */
+  /** `EMAIL_REPLY_TO`. */
   mailbox: string | null;
-  /** `CONTACT_SMTP_USER` when it is an address: the Gmail the two other modes show, never typed. */
+  /** `CONTACT_SMTP_USER` when it is an address. */
   configuredGmail: string | null;
-  /** The addresses in force, in order (`resolveShownContactAddresses`). */
+  /** `resolveShownContactAddresses`. */
   resolved: readonly string[];
   /** Administrator only (§291); the service refuses anybody else. */
   mayEdit: boolean;
   openWhen?: FoldOpenWhen;
 };
 
-/**
- * «Adresa de contact afișată» (§442; the owner, 2026-09-26: "configure the default mail shown…
- * switch and show the club's Gmail, or show both").
- *
- * The contact recipients' shape (§164): a Server Component, one form, three radios and the Gmail
- * read-only from configuration (§442 as amended), Save behind the §384 confirmation. The choice is what the footer, the contact page,
- * the legal texts started from the platform's text and the bib print, and every email's Reply-To.
- * The sender does not change, and the panel says why.
- */
+/** «Adresa de contact afișată» (§442 as amended): three modes, the Gmail read-only from configuration. */
 export default async function ShownAddressPanel({ locale, state, mailbox, configuredGmail, resolved, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();

@@ -18,26 +18,15 @@ import {
   shownContactAddressSchema,
 } from "./domain/shown-address";
 
-/**
- * «Adresa de contact afișată» (§442): the contact-recipients setting's shape (§164) — one
- * `platform_settings` row, written by an Administrator on `/admin/emails`, audited, read by
- * everything that shows the club's address or sets an email's Reply-To.
- */
+/** «Adresa de contact afișată» (§442): one audited `platform_settings` row, like §164's. */
 
 export const SHOWN_CONTACT_ADDRESS_SETTING_KEY = "shownContactAddress";
-/** The audit row's fixed entity id for this key — one per key, never reused (`…e002` is the contact recipients'). */
+/** The audit row's fixed entity id for this key, never reused. */
 export const SHOWN_CONTACT_ADDRESS_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00a";
 
 export type ShownContactAddressState = ShownContactAddress & { updatedAt: Date | null };
 
-/**
- * The setting in force. With no row — the club has not chosen — it is the configured Gmail
- * (`CONTACT_SMTP_USER`), or the mailbox where there is none (§442 as amended, `defaultShownContactAddress`);
- * `updatedAt: null` says it is the default. `configuredGmail` is the environment's unless a test
- * passes its own. A saved `gmail` or `both` reads the configured Gmail, never a typed one: a row
- * saved while the Gmail was typed reads as the configured mode (§442 as amended), its typed
- * address kept only where no Gmail is configured.
- */
+/** The setting in force; `updatedAt: null` means the default (§442 as amended). */
 export async function readShownContactAddress<T extends Record<string, unknown>>(
   db: Database<T>,
   configuredGmail: string | null | undefined = env.CONTACT_SMTP_USER,
@@ -49,18 +38,13 @@ export async function readShownContactAddress<T extends Record<string, unknown>>
     .limit(1);
   const fallback = defaultShownContactAddress(configuredGmail);
   if (!row) return { ...fallback, updatedAt: null };
-  // A value this code can no longer read is the default.
   const parsed = shownContactAddressSchema.safeParse(row.value);
   if (!parsed.success) return { ...fallback, updatedAt: row.updatedAt };
   const gmail = parsed.data.mode === "mailbox" ? null : effectiveGmail(parsed.data.gmail, configuredGmail);
   return { mode: parsed.data.mode, gmail, updatedAt: row.updatedAt };
 }
 
-/**
- * The addresses in force, straight from the database, for a caller that already holds one — the
- * outbox's senders, the legal prefill. A database that cannot answer gives the default: the
- * configured Gmail, else the environment's mailbox (§442 as amended).
- */
+/** For a caller holding a database; one that cannot answer gives the default. */
 export async function shownContactAddresses<T extends Record<string, unknown>>(
   db: Database<T>,
   configuredGmail: string | null | undefined = env.CONTACT_SMTP_USER,
@@ -72,7 +56,6 @@ export async function shownContactAddresses<T extends Record<string, unknown>>(
   }
 }
 
-/** The same list as one Reply-To header value, or nothing. */
 export async function replyToInForce<T extends Record<string, unknown>>(db: Database<T>): Promise<string | undefined> {
   return replyToHeader(await shownContactAddresses(db));
 }

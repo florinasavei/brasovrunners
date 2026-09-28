@@ -2,27 +2,9 @@ import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
 
 /**
- * Who reads what the contact form sends (`DECISIONS.md` §164; the owner: "I wanna allow CC on
- * the contact form so that [the Administrator] can receive emails… I need these CC's to be configurable in
- * the app").
- *
- * Pure: no database, no environment. The club edits these on `/admin/emails`, they are stored
- * under `platform_settings.contactRecipients`, and they are shown back on the screen that sets
- * them — which is exactly why an address may live in that table and the Gmail app password may
- * not (`db/schema/platform-settings.ts`, AGENTS.md §14.5).
- *
- * The environment keeps `CONTACT_FORM_TO` as a fallback, so a deployment whose database has no
- * row yet still reaches somebody: the setting wins when it names at least one "to", the
- * environment answers when it does not, and with neither the form is off, as before. The Cc
- * list is app-only — there is no environment variable for it, and there will not be one: a
- * copy for a colleague is a club decision, not a deployment's.
- *
- * The Bcc list (2026-09-22) is the same kind of thing, one degree quieter: a hidden copy of
- * every message the form sends, to a mailbox neither the visitor nor the other recipients see.
- * §164 refused it once for the *Cc* — "a club is not a blind list" — and that reasoning still
- * holds for the people who should see one another; this list is for the mailbox that should not
- * be seen: an archive, a president who reads but does not answer. A row stored before the list
- * existed reads it as empty.
+ * Who receives the contact form's messages (§164). Stored in `platform_settings` and shown back,
+ * so it may hold addresses but never the Gmail password (AGENTS.md §14.5). `CONTACT_FORM_TO` is
+ * the fallback "to"; Cc and Bcc are app-only. Bcc is for an unseen archive mailbox.
  */
 
 /** One address, trimmed, validated by the same canonicalizer the whole platform uses (§10.4). */
@@ -37,14 +19,8 @@ const address = z
 export const CONTACT_RECIPIENTS_MAX = 10;
 
 /**
- * The same mailbox twice is one mailbox (§164).
- *
- * Nodemailer builds the envelope from `to` and `cc` together, so an address typed in both
- * boxes — the obvious thing to do with the club's own Gmail — becomes two `RCPT TO` commands
- * and a message that names the same person in both headers. Compared case-insensitively and
- * not through the canonicalizer: `a.b@gmail.com` and `ab@gmail.com` are two addresses by
- * §74, and a club that typed both meant both; only the *spelling* is deduplicated, and the
- * first spelling is the one kept, because that is the one the club typed first.
+ * The same mailbox twice is one mailbox (§164): otherwise Nodemailer sends it twice. Compared
+ * case-insensitively, not canonically — Gmail dots are two addresses (§74). First spelling kept.
  */
 function withoutRepeats(addresses: readonly string[], alreadySeen?: Set<string>): string[] {
   const seen = alreadySeen ?? new Set<string>();
@@ -62,13 +38,11 @@ export const contactRecipientsSchema = z
   .object({
     to: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
     cc: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
-    // Absent on a row saved before the list existed, and read as empty then — a stored setting
-    // never needs a migration to grow a list (`platform_settings` is one JSON row per key).
+    // Absent on rows saved before the list existed.
     bcc: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
   })
   .strict()
-  // Stored the way it will be sent, so the boxes show the club what it actually did. One `seen`
-  // set across the three lists: an address in "to" is not also copied, visibly or not.
+  // Stored as sent; one `seen` set across the lists, so an address in "to" is not also copied.
   .transform((value) => {
     const seen = new Set<string>();
     return {
@@ -83,14 +57,8 @@ export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
 export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [] };
 
 /**
- * A typed line — "club@…, secretar@…" — as a list. Commas and semicolons both, because both are
- * what people type, and the empty entries a trailing separator leaves are dropped rather than
- * rejected, as `env.ts`'s `allowlist` drops them.
- *
- * **Spaces and line breaks separate too (§457).** An address can never hold whitespace — the
- * canonicalizer refuses it (`FORBIDDEN` in `canonical-email.ts`) — so "a@x.ro b@y.ro" and one
- * address per line can only mean two addresses. Read as one entry, they were refused as "not a
- * valid email", and the owner's hidden copies would not save ("nu pot salva aparent").
+ * Commas, semicolons and whitespace all separate (an address never holds whitespace; §457);
+ * empty entries are dropped.
  */
 export function parseAddressList(value: string): string[] {
   return value
@@ -99,12 +67,7 @@ export function parseAddressList(value: string): string[] {
     .filter((entry) => entry !== "");
 }
 
-/**
- * The typed entries no address list will accept, each once, in the order typed (§457) — so a
- * refused save can say *which* entry, not only that "something is not valid". The same test the
- * lists' own schemas apply (the canonicalizer, and §164's 320-character ceiling), so the words
- * cannot name an entry the save would have kept, or miss one it refused.
- */
+/** Entries the list schemas refuse, each once, in typed order, so a refusal can name them; the same test as `address` (§457). */
 export function invalidAddresses(entries: readonly string[]): string[] {
   const invalid: string[] = [];
   for (const entry of entries) {
@@ -116,10 +79,8 @@ export function invalidAddresses(entries: readonly string[]): string[] {
 }
 
 /**
- * Why a list of address boxes was refused, in words the summary can print (§457): the entries
- * that are not addresses, or else the list that holds more than `max`. `null` when neither —
- * the refusal was something else, and the generic sentence stands. The codes are `Admin.errors`
- * keys; the values fill their `{addresses}` and `{max}` (`FormOutcome.errorValues`).
+ * Why address boxes were refused (§457), as `Admin.errors` keys and their values; `null` when the
+ * refusal was something else.
  */
 export function addressListRefusal(
   lists: readonly (readonly string[])[],
@@ -131,7 +92,6 @@ export function addressListRefusal(
   return null;
 }
 
-/** The list as the form shows it back, so a save round-trips to the same text. */
 export function formatAddressList(addresses: readonly string[]): string {
   return addresses.join(", ");
 }
@@ -148,14 +108,8 @@ export type ResolvedContactRecipients = {
 };
 
 /**
- * The reading order, so a deployment always works: the setting when it holds at least one
- * "to", otherwise `CONTACT_FORM_TO`, otherwise nobody and the form is off.
- *
- * The Cc and Bcc lists are the setting's whichever way the "to" list resolved — a copy to a
- * colleague must not depend on whether the club has got round to moving the main list into the
- * app. Both are resolved *against* the "to" list, and against the environment's too: a
- * colleague who is already a recipient is not copied as well, whichever half named her, and an
- * address in Cc is not also hidden-copied.
+ * "to" is the setting's when it has one, else `CONTACT_FORM_TO`, else none (the form is off). Cc
+ * and Bcc always come from the setting, deduplicated against the resolved "to" and each other.
  */
 export function resolveContactRecipients(
   setting: ContactRecipients | null,

@@ -14,19 +14,12 @@ import {
 } from "./domain/recipients";
 
 /**
- * Who receives the contact form's messages, as the club sets it (`DECISIONS.md` §164).
- *
- * The Mailgun plan's own shape (§100, `notifications/email-plan.ts`): one `platform_settings`
- * row, read by everything that needs it, written by an Administrator on `/admin/emails`, with
- * an audit row naming who changed it and from what. Addresses, never a password — the Gmail
- * account and its app password stay `CONTACT_SMTP_USER` / `CONTACT_SMTP_PASSWORD`.
+ * Who receives the contact form's messages (§164): one audited `platform_settings` row, the
+ * shape of the Mailgun plan's (§100). Addresses only; the Gmail password stays in the environment.
  */
 
 export const CONTACT_RECIPIENTS_SETTING_KEY = "contactRecipients";
-/**
- * `audit_logs.entity_id` is a UUID and a setting has a key, so the audit row names the setting
- * by a fixed id of its own — one per key, never reused (`…e001` is the email plan's).
- */
+/** `audit_logs.entity_id` is a UUID, so each setting key has a fixed id, never reused. */
 export const CONTACT_RECIPIENTS_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e002";
 
 export type ContactRecipientsState = ContactRecipients & { updatedAt: Date | null };
@@ -40,9 +33,7 @@ export async function readContactRecipients<T extends Record<string, unknown>>(
     .where(eq(platformSettings.key, CONTACT_RECIPIENTS_SETTING_KEY))
     .limit(1);
   if (!row) return { ...DEFAULT_CONTACT_RECIPIENTS, updatedAt: null };
-  // A stored value this code can no longer read falls back to "nobody", which sends the
-  // resolution on to `CONTACT_FORM_TO` rather than crashing every page that asks: the safe
-  // answer is the deployment's own list, the same reasoning as the plan's smallest ceiling.
+  // Unreadable reads as "nobody", which falls back to `CONTACT_FORM_TO` instead of crashing.
   const parsed = contactRecipientsSchema.safeParse(row.value);
   return parsed.success
     ? { ...parsed.data, updatedAt: row.updatedAt }
@@ -50,19 +41,9 @@ export async function readContactRecipients<T extends Record<string, unknown>>(
 }
 
 /**
- * The same read for a page that must render whatever the database is doing.
- *
- * `/contact` and the header are the two places that ask, and both of them are the *fallback*
- * — the page whose job is to say "write to us at …" when something is broken, and the menu
- * that is a site's only way out of a page. Neon's compute suspends once the club's free
- * 100 CU-hours are spent (`DECISIONS.md` §68), and a build renders the layout with no
- * database at all (`db/client.ts`), so a throw here would turn the remedy into a 500.
- *
- * `null` is the honest answer and also the safe one: `resolveContactRecipients` reads it as
- * "the club has named nobody" and hands the question to `CONTACT_FORM_TO`, which is exactly
- * how the deployment behaved before §164. The `try` covers `getDb()` as well as the await,
- * because `getDb()` throws synchronously, as an argument — `SiteHeader.tsx` documents the
- * same trap and the same shape.
+ * For `/contact` and the header, which must render with a suspended or absent database (§68, a
+ * build): `null` falls back to `CONTACT_FORM_TO`. The `try` also covers `getDb()`, which throws
+ * synchronously.
  */
 export async function readContactRecipientsOrNull(): Promise<ContactRecipientsState | null> {
   try {
@@ -112,8 +93,7 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
       now,
     });
   });
-  // The header's "Contact" entry and the contact page ask the public cache whether anybody is
-  // named (§333); this is the write that changes the answer.
+  // The header and contact page read this through the public cache (§333).
   revalidatePublicContent("settings");
   return { ...next, updatedAt: now };
 }

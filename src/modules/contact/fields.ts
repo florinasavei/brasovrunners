@@ -1,20 +1,10 @@
 import { z } from "zod";
 
-/**
- * The contact form's three boxes (`DECISIONS.md` §149), and the contract between the action
- * and the page for a rejection.
- *
- * Validated like the registration form's own fields: the address goes through `z.email()`
- * before the canonicalizer sees it, the name has no line breaks because it becomes a header
- * (the subject and `Reply-To`), and the message is capped where a mailbox stops reading.
- */
+/** The contact form's fields (§149) and the action–page contract for a rejection. */
 
 /**
- * Long enough for a paragraph and a question; a message past it is not one person's question.
- * And short enough that a rejection keeps it: the draft cookie holds about 3 800 bytes sealed
- * (`registrations/form-draft.ts`), and the page promises "your message is still written
- * below" on every rejection — `tests/unit/contact/fields.test.ts` proves the longest message,
- * with the longest name and address, fits.
+ * Short enough that a rejection keeps the draft in its ~3 800-byte sealed cookie
+ * (`registrations/form-draft.ts`); `tests/unit/contact/fields.test.ts` proves the worst case fits.
  */
 export const CONTACT_MESSAGE_MAX = 2_000;
 
@@ -24,9 +14,8 @@ export const contactFields = z.object({
     .trim()
     .min(1)
     .max(120)
-    // A newline in a name is a second header — a classic injection on a form that becomes mail.
+    // The name becomes a header: a newline would inject another.
     .refine((value) => !/[\r\n]/.test(value)),
-  // Trimmed first, like the canonicalizer: a trailing space on a phone keyboard is not a typo.
   email: z.string().trim().max(320).pipe(z.email()),
   message: z.string().trim().min(1).max(CONTACT_MESSAGE_MAX),
   locale: z.enum(["ro", "en"]),
@@ -36,11 +25,7 @@ export const contactFields = z.object({
 
 export type ContactInput = z.infer<typeof contactFields>;
 
-/**
- * The names a rejection may carry in `?fields=`, matched against this list rather than
- * trusted — the same reflected-content reasoning as `registrations/form-errors.ts`. `captcha`
- * is the widget, which has no input of its own.
- */
+/** Allowed `?fields=` names, never reflected unchecked (as `registrations/form-errors.ts`); `captcha` is the widget. */
 export const CONTACT_FORM_FIELDS = ["name", "email", "message", "captcha"] as const;
 
 export type ContactFormField = (typeof CONTACT_FORM_FIELDS)[number];
@@ -51,11 +36,7 @@ export function parseContactErrorFields(value: string | undefined): ContactFormF
   return CONTACT_FORM_FIELDS.filter((field) => named.has(field));
 }
 
-/**
- * What `?error=` may say, and nothing else. `VALIDATION_ERROR` comes with `fields`; the other
- * three are whole-form answers: too many messages this hour, the club's mailbox could not be
- * reached, or the form is not configured on this deployment at all.
- */
+/** What `?error=` may say. `VALIDATION_ERROR` comes with `fields`; the rest are whole-form answers. */
 export const CONTACT_ERRORS = ["VALIDATION_ERROR", "LIMITED", "DELIVERY", "UNAVAILABLE"] as const;
 
 export type ContactError = (typeof CONTACT_ERRORS)[number];

@@ -19,35 +19,21 @@ type Props = {
   locale: Locale;
   recipients: ContactRecipientsState;
   resolved: ResolvedContactRecipients;
-  /**
-   * Who may change the list (§291). Everybody who opens the page reads where messages go; only
-   * the Administrator writes it, and `updateContactRecipients` refuses anybody else — the owner:
-   * "organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
-   */
+  /** Administrator only (§291); the service refuses anybody else. */
   mayEdit: boolean;
-  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
+  /** Opens the fold after this panel's save (§336). */
   openWhen?: FoldOpenWhen;
 };
 
 /**
- * Who reads what "Scrie-ne" sends (`DECISIONS.md` §164; the owner: "I wanna allow CC on the
- * contact form so that [the Administrator] can receive emails… configurable in the app").
- *
- * The email plan's own shape (§100): a Server Component with one form, two ordinary text
- * boxes and a Save. No JavaScript decides anything; the service validates each address and
- * writes the audit row. The account the message *leaves* from is not here and never will be —
- * a Gmail app password belongs in the environment, not in a table the backoffice can read
- * (AGENTS.md §14.5) — so the panel names the two variables and shows neither's value.
+ * Who receives "Scrie-ne" messages (§164). The sending account stays in the environment, never
+ * in a table the backoffice reads (AGENTS.md §14.5).
  */
 export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
 
-  /*
-    Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
-    be closed by default"), with where the messages go right now in the summary — the one thing
-    anybody opens this panel to check. The copies are left to the body: the summary is one line.
-  */
+  // Closed by default (§336); the summary names only the "to" list.
   return (
     <Panel glyph="contacts"
       title={t("emails.contacts.title")}
@@ -59,13 +45,10 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       data-testid="contact-recipients"
     >
 
-      {/* Where the list in force comes from, so "I saved it and nothing changed" cannot happen. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
         {t(`emails.contacts.source.${resolved.source}`, {
           to: formatAddressList(resolved.to) || "—",
           cc: formatAddressList(resolved.cc) || "—",
-          // Named, not counted: this is the backoffice, and the Administrator who set the hidden
-          // copies is the one reading them back. Hidden from the message, never from the club.
           bcc: formatAddressList(resolved.bcc) || "—",
         })}
       </Typography>
@@ -87,7 +70,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       <ActionForm
         action={updateContactRecipientsAction}
         messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc") })}
-        // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        // Several forms share the page; `scope` prefixes each id.
         confirm={{ title: t("confirm.contactRecipientsTitle"), body: t("confirm.contactRecipientsBody"), confirmLabel: t("emails.contacts.save"), cancelLabel: words.cancel }}
         scope="contacts"
         data-testid="contact-recipients-form"

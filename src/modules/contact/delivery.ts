@@ -8,22 +8,16 @@ import { type ContactRecipients, resolveContactRecipients } from "./domain/recip
 import type { ContactDelivery } from "./service";
 
 /**
- * Where the contact form's configuration meets its transport (`DECISIONS.md` §149, §164) —
- * the `sender.ts` of this one message, and the only module here that reads `env`.
- *
- * `CONTACT_FORM_MODE` is derived in `env.ts` and answers one question only: has this
- * deployment a way of sending at all — `capture` on a laptop and in the tests (no socket,
- * ever), `smtp` with the Gmail account and its app password, `off` otherwise. *Who* receives
- * is the club's, set on `/admin/emails` and passed in here (§164), with `CONTACT_FORM_TO` as
- * the fallback for a deployment whose database has no row yet. Both must answer for the form
- * to exist: a transport with nobody to send to is `null`, exactly as no transport is.
+ * The contact form's transport and route (§149, §164); the only module here that reads `env`.
+ * `CONTACT_FORM_MODE` says whether a way to send exists; recipients come from the setting. No
+ * transport or nobody to send to both mean `null`: the form is off.
  */
 
-/** One capture for the process, so what a request captured is what `/devs` shows a minute later (§124). */
+/** One capture per process, so `/devs` shows what a request captured (§124). */
 const sharedCapture = createCaptureSmtpTransport();
 const CAPTURE_KEEP = 20;
 
-/** The most recent captured contact messages, newest first — for the local viewer and the tests. */
+/** Newest first. */
 export function capturedContactMessages(): readonly CapturedSmtpMessage[] {
   const all = sharedCapture.messages;
   return [...all.slice(Math.max(0, all.length - CAPTURE_KEEP))].reverse();
@@ -43,24 +37,21 @@ export type ContactConfig = Pick<
 
 type ContactRoute = Omit<ContactDelivery, "transport">;
 
-/** The addresses and the envelope, with no transport attached — what both callers below need. */
 function contactRoute(config: ContactConfig, recipients: ContactRecipients | null): ContactRoute | null {
   if (config.CONTACT_FORM_MODE === "off") return null;
 
   const resolved = resolveContactRecipients(recipients, config.CONTACT_FORM_TO);
-  // Nobody to send to is the same answer as no way to send: the page shows the club's address.
-  // On a laptop a placeholder stands in, so the form works with nothing configured at all.
+  // In capture mode a placeholder stands in, so the form works unconfigured.
   const to =
     resolved.to.length > 0 ? resolved.to : config.CONTACT_FORM_MODE === "capture" ? ["club@localhost"] : null;
   if (!to) return null;
 
-  // The display name is the club's, quoted by Nodemailer; the address is the Gmail account —
-  // Google rewrites any other sender to it anyway. Captured, a placeholder stands in.
+  // Gmail rewrites any other sender address to the account's own.
   const from = { name: config.EMAIL_FROM_NAME, address: config.CONTACT_SMTP_USER ?? "contact@localhost" };
   return { from, to, cc: resolved.cc, bcc: resolved.bcc, appEnv: config.APP_ENV };
 }
 
-/** Can a message posted on this deployment reach anybody? The page asks before it shows a form. */
+/** The page asks this before it shows a form. */
 export function contactFormReaches(config: ContactConfig, recipients: ContactRecipients | null): boolean {
   return contactRoute(config, recipients) !== null;
 }
@@ -85,7 +76,6 @@ export function contactDeliveryFor(
   };
 }
 
-/** This process's delivery, from its environment and the club's own recipient list. */
 export function contactDelivery(recipients: ContactRecipients | null): ContactDelivery | null {
   return contactDeliveryFor(env, recipients);
 }
