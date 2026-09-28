@@ -11,6 +11,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { isBulkMessage } from "@/modules/notifications/domain/bulk";
+import { leavesNow } from "@/modules/notifications/domain/send-at-once";
 import { emailLeavesWords, outboxRowLeavesAt, outboxRowOverdue } from "@/modules/notifications/domain/email-wait";
 import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 import type { OutboxDelivery } from "@/modules/notifications/outbox-delivery";
@@ -95,6 +96,9 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   const leaves = (row: QueuedMessage): { text: string; late: boolean } => {
     if (row.status === "PROCESSING") return { text: t("emails.queue.leaves.sending"), late: false };
     if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
+    // A press sent it now, past the scheduled pass (§NNN): it leaves after that press's response —
+    // `emailLeavesWords`' own `leavesNow`, the instant null — never at the round the rest waits for.
+    if (leavesNow(row)) return { text: t(`emails.queue.leaves.${emailLeavesWords(null, now, locale).key}`), late: false };
     const dueAt = row.nextAttemptAt ?? row.createdAt;
     // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
     // adds to its ninety minutes, the planned interval included — one judgement, two screens (§529).
@@ -169,6 +173,12 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
         <Typography variant="body2" color="text.secondary" data-testid="outbox-when-last">
           {delivery.lastRunAt ? t("emails.queue.when.lastRun", { at: when.format(new Date(delivery.lastRunAt)) }) : t("emails.queue.when.neverRan")}
         </Typography>
+        {/* The round is for everything automatic; a backoffice resend may leave at once (§NNN). */}
+        {scheduled && (
+          <Typography variant="body2" color="text.secondary" data-testid="outbox-when-bypass">
+            {t("emails.deliveryTiming.bypassHelp")}
+          </Typography>
+        )}
         {mayEditTiming && (
           /*
             The switch (§529): the «Termene» setting (§513), one press to the other value, asking

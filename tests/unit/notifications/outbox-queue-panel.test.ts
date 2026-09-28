@@ -60,6 +60,7 @@ const QUEUE: Props["queue"] = {
       createdAt: new Date("2026-10-01T07:02:00.000Z"),
       isManualResend: false,
       familyHeld: false,
+      sentNow: false,
     },
     {
       id: "b",
@@ -73,6 +74,7 @@ const QUEUE: Props["queue"] = {
       createdAt: new Date("2026-10-01T02:00:00.000Z"),
       isManualResend: false,
       familyHeld: false,
+      sentNow: false,
     },
     {
       id: "c",
@@ -85,6 +87,7 @@ const QUEUE: Props["queue"] = {
       createdAt: new Date("2026-09-30T07:00:00.000Z"),
       isManualResend: false,
       familyHeld: false,
+      sentNow: false,
     },
   ],
 };
@@ -227,6 +230,24 @@ describe("§529 the queue panel says when the emails leave", () => {
     const english = await OutboxQueuePanel({ locale: "en", queue, volume: VOLUME, mayEdit: true, delivery: DELIVERY, now: NOW, mayEditTiming: true });
     const englishConfirm = findByTestId(english, "send-now-form")?.props.confirm as { body: string };
     expect(englishConfirm.body).toMatch(/Still held: 3, the first until [^:]*11:30: a family still signing: 2 · a retry or a deferral: 1\.$/);
+  });
+
+  it("says «Pleacă acum» for a row a press sent past the round, and its retry's time once tried (§NNN)", async () => {
+    const now = { ...QUEUE.rows[0]!, id: "n", isManualResend: true, sentNow: true };
+    const html = await render("ro", { queue: { ...QUEUE, total: 1, rows: [now] } });
+    const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(leaves).toEqual([ro.Admin.emails.queue.leaves.leavesNow]);
+    expect(await render("en", { queue: { ...QUEUE, total: 1, rows: [now] } })).toContain("Leaves now, without waiting for the scheduled round.");
+    // Tried once and put back for a retry: the drain after the press is over, the row says its round.
+    const retried = { ...now, attemptCount: 1 };
+    const again = await render("ro", { queue: { ...QUEUE, total: 1, rows: [retried] } });
+    expect(again).not.toContain(ro.Admin.emails.queue.leaves.leavesNow);
+  });
+
+  it("says under the round that a backoffice resend may leave at once, only while the round holds mail (§NNN)", async () => {
+    expect(await render("ro")).toContain(ro.Admin.emails.deliveryTiming.bypassHelp);
+    const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
+    expect(off).not.toContain(ro.Admin.emails.deliveryTiming.bypassHelp);
   });
 
   it("offers no «Trimite acum» while nothing is due, and says why", async () => {

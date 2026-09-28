@@ -158,7 +158,8 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await says[from]();
     // Every row the queue holds says when it leaves, whatever this database has queued now.
     for (const row of await main.getByTestId("outbox-row-leaves").all()) {
-      await expect(row).toHaveText(/^(Pleacă:|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
+      // «Pleacă acum»: a resend a press sent past the round, waiting for its drain (§NNN).
+      await expect(row).toHaveText(/^(Pleacă:|Pleacă acum|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
     }
 
     await switchTo(from === "scheduled" ? "immediate" : "scheduled");

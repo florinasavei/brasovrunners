@@ -45,8 +45,14 @@ describe("§384 ActionForm asks first", () => {
   });
 
   it("draws the one ConfirmDialog only while a question is asked", () => {
-    expect(source).toMatch(/\{asking && <ConfirmDialog spec=\{asking\.spec\} open onCancel=\{\(\) => setAsking\(null\)\} onConfirm=\{answerYes\} \/>\}/);
+    expect(source).toMatch(/\{asking && \(\s*<ConfirmDialog\s+spec=\{asking\.spec\}\s+open\s+onCancel=\{\(\) => setAsking\(null\)\}\s+onConfirm=\{\(\) => answer\("confirm"\)\}/);
     expect(source).not.toContain("@mui/material/Dialog");
+  });
+
+  it("offers a two-way question's quiet answer beside the primary one, and sets the hidden field before sending (§NNN)", () => {
+    expect(source).toMatch(/alternative=\{asking\.spec\.choice \? \{ label: asking\.spec\.choice\.alternativeLabel, onClick: \(\) => answer\("alternative"\) \} : null\}/);
+    expect(source).toMatch(/const chosen = choiceAnswer\(pending\.spec, which\);/);
+    expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = chosen\.value;/);
   });
 
   it("hands a returned notice to the toast provider from an effect, and never a refusal", () => {

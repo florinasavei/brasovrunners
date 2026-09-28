@@ -9,6 +9,9 @@ import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent, scrubParticipantFromAudit, scrubRegistrationFromAudit } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
+import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domain/send-at-once";
+import { assertRoomToSendNow, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -77,6 +80,11 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   now: Date,
   /** `EVENT_REMINDER` asks for the reminder instead of the state's own message (§81). */
   wanted?: "EVENT_REMINDER",
+  /**
+   * «now» sends it after this response, past the scheduled pass (§NNN); «queue», the default, leaves
+   * it to «Când pleacă emailurile», as every resend did before.
+   */
+  delivery: DeliveryChoice = "queue",
 ): Promise<void> {
   assertAdministrator(actor);
 
@@ -154,20 +162,45 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
     .limit(1);
   if (!participant) throw new DomainError("NOT_FOUND", "no such participant");
 
-  await db.transaction((tx) =>
-    enqueueEmail(tx, {
+  /*
+    «Trimite acum, fără să aștepte trecerea programată» (§NNN): inside the day's allowance, asked
+    before anything is queued, so a refusal leaves nothing behind (§80: refused, never deferred in
+    silence). The club's copies ride on the club's own road and are not counted against it here.
+  */
+  if (delivery === "now") await assertRoomToSendNow(db, [messageType], now);
+
+  const idempotencyKey = `registration:${registration.id}:manual-resend:${now.toISOString()}`;
+  await db.transaction(async (tx) => {
+    const queued = await enqueueEmail(tx, {
       participantId: registration.participantId,
       registrationId: registration.id,
       messageType,
       locale: registration.locale,
       recipientEmail: participant.deliveryEmail,
-      payload: {},
-      idempotencyKey: `registration:${registration.id}:manual-resend:${now.toISOString()}`,
+      // Marked for the queue panel's «Pleacă acum» (§NNN); the club's copies carry the mark with it.
+      payload: markedForNow({}, delivery),
+      idempotencyKey,
       requestedByStaffUserId: actor.id,
       isManualResend: true,
       now,
-    }),
-  );
+      // Sent now by its own drain below, not by the timing's (§NNN); queued, the timing's as before.
+      drainAfter: delivery !== "now",
+    });
+    // The press, on the registration's trail (§NNN): who, which message, and that it passed the round.
+    if (delivery === "now" && queued) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: registration.participantId,
+        action: "registration.sent_now",
+        entityType: "registration",
+        entityId: registration.id,
+        metadata: { outboxId: queued.id, messageType, bypassedSchedule: true },
+        now,
+      });
+    }
+  });
+  // The message and its club copies, after this response, whatever «Când pleacă emailurile» says.
+  if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, idempotencyKey));
 }
 
 // --- The rest of the registration CRUD (BR-REQ-037-03, BR-REQ-037-05) -------------------------

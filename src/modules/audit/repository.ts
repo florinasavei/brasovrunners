@@ -35,6 +35,11 @@ export type AuditAction =
   | "registration.deleted_by_staff"
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
   | "registration.resend_rate_limited"
+  /**
+   * A resend sent at once, past the scheduled pass (§NNN): the staff member (the actor), the outbox
+   * row's id and its message type — never the address or a body.
+   */
+  | "registration.sent_now"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"
   // The desk's spare numbers reserved by a print (§444): the range, never a name.

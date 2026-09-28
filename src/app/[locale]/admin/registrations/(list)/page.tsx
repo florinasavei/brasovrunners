@@ -51,6 +51,8 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
+import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
+import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -281,6 +283,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
+  // A row's resend asks «Trimite acum» or «Pune la coadă» (§NNN): read once, for every row.
+  const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
   const printedOnPage = printedNumbersACancelWouldVoid(rows);
   /*
@@ -1163,10 +1167,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {mayManage && deriveAllowedResendMessageType(row.status) && (
               <ActionForm
                 action={resendRegistrationEmailAction}
-                confirm={{ title: t("confirm.resendTitle"), body: t("confirm.resendBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel }}
+                confirm={withSendNowChoice(
+                  { title: t("confirm.resendTitle"), body: t("confirm.resendBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("registrations.resendShort"), cancelLabel: words.cancel },
+                  sendNow,
+                )}
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                {/* «Trimite acum» or «Pune la coadă» (§NNN), under the scheduled timing only. */}
+                {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
                 {/*
                   The envelope going back out, as on the registration's own "Retrimite" (§318).
                   It was left off here once, for 24 pixels of a crowded column; every button

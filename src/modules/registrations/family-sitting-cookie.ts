@@ -4,6 +4,7 @@ import { env } from "@/shared/config/env";
 import { isUuid } from "@/shared/ids";
 import {
   openEmailLeavesAt,
+  openEmailSubmittedAt,
   sealEmailLeavesAt,
   sittingCookieMaxAgeSeconds,
   type FamilySittingCookie,
@@ -96,7 +97,7 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     // The window the action read (§519): the screen names this one, not the public cache's.
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
     // When the first form's email leaves (§NNN), computed once at submit; always 25 characters (§39).
-    l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt) : "",
+    l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt, value.emailSubmittedAt) : "",
   };
   /*
     The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
@@ -122,6 +123,7 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
     atOnce: opened.a === "1" ? true : undefined,
     windowMinutes: windowMinutesOf(opened.k),
     emailLeavesAt: openEmailLeavesAt(opened.l),
+    emailSubmittedAt: openEmailSubmittedAt(opened.l),
     shared: sharedOf(opened.f),
     sameBirthDate: typed !== "" && kept !== "" ? { typed, kept } : null,
   };

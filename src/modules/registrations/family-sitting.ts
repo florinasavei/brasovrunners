@@ -150,7 +150,9 @@ export async function settleSitting<T extends Record<string, unknown>>(
       messageType: "REGISTER_ANOTHER_PERSON",
       locale: sitting.locale,
       recipientEmail: params.recipientEmail,
-      payload: { familySittingId: sitting.id },
+      // `FAMILY_HELD` (§NNN): held until «Gata» or the window, the queue panel (§529) counts it as the
+      // family's hold, not as a retry. The renderer ignores the flag on this message.
+      payload: { familySittingId: sitting.id, [FAMILY_HELD]: true },
       idempotencyKey: key,
       now,
       notBefore: heldUntil,

@@ -608,7 +608,8 @@
           "resubmitted": "Registered again with the same address",
           "health_viewed": "Emergency details and health note opened",
           "consent_withdrawn": "Consent withdrawn",
-          "declaration_downloaded": "Signed declaration downloaded (PDF)"
+          "declaration_downloaded": "Signed declaration downloaded (PDF)",
+          "sent_now": "Sent now, past the scheduled round"
         }
       },
       "locale": {
@@ -756,7 +757,8 @@
       "filtersNone": "no filter · every registration",
       "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear.",
       "socialsOnList": "also on the public list, beside the name",
-      "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once"
+      "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once",
+      "resendSentNow": "The email is leaving now, without waiting for the scheduled round."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -996,7 +998,12 @@
       "deliveryTimingTitle": "Change when emails leave?",
       "deliveryTimingBody": "It applies from now on to every email the site sends, including those already in the queue. No message is lost.",
       "inviteMembersTitle": "Add the members?",
-      "inviteMembersBody": "Every address on the list gets the Member role and the sign-in invitation by email. Once they set a password, a member enters only the members' area on the site — never the backoffice."
+      "inviteMembersBody": "Every address on the list gets the Member role and the sign-in invitation by email. Once they set a password, a member enters only the members' area on the site — never the backoffice.",
+      "sendNowChoice": {
+        "now": "Send now, without waiting for the scheduled round",
+        "queue": "Queue it for the scheduled round",
+        "note": "Emails now leave on the scheduled round, within {wait}. Choose whether this one leaves now or waits for it."
+      }
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1037,7 +1044,8 @@
       "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
       "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
-      "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press."
+      "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press.",
+      "SEND_NOW_ALLOWANCE_SPENT": "Nothing was sent: the Mailgun plan's limit for today is reached. Choose «Queue it»; the email leaves after the reset."
     },
     "editor": {
       "startsAt": "Event start",
@@ -3810,7 +3818,8 @@
           "lateAskAdmin": "Late: it should have left already. Next scheduled round: {at}; or tell the administrator.",
           "sending": "Being sent now.",
           "never": "Will not leave on its own: every attempt is spent.",
-          "held": "Held until {until}: a family is still signing. Then leaves on the next round: {at} (estimated)."
+          "held": "Held until {until}: a family is still signing. Then leaves on the next round: {at} (estimated).",
+          "leavesNow": "Leaves now, without waiting for the scheduled round."
         },
         "lastError": "The provider's last answer: {error}",
         "manual": "Sent again by hand",
@@ -4171,7 +4180,8 @@
           "immediate": "Right after the request"
         },
         "save": "Save the sending",
-        "saved": "When emails leave was saved."
+        "saved": "When emails leave was saved.",
+        "bypassHelp": "This is for the automatic emails. A resend or a message from the backoffice may leave at once: at the press, choose «Send now»."
       },
       "familyConfirmed": {
         "name": "Registration confirmed — family (several people)",
@@ -6774,6 +6784,13 @@
         "one": "{count} version deleted.",
         "few": "{count} versions deleted.",
         "other": "{count} versions deleted."
+      },
+      "resentNow": "The email is leaving now, without waiting for the scheduled round.",
+      "reminderSentNow": "The reminder is leaving now, without waiting for the scheduled round.",
+      "participantMessageSentNow": {
+        "one": "The email is leaving now for {count} participant, without waiting for the scheduled round.",
+        "few": "The email is leaving now for {count} participants, without waiting for the scheduled round.",
+        "other": "The email is leaving now for {count} participants, without waiting for the scheduled round."
       }
     }
   },

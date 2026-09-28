@@ -275,6 +275,8 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
     realRecipients: number;
     requestedByStaffUserId?: string | null;
     now: Date;
+    /** As `EnqueueEmailParams.drainAfter`: `false` for a press that sends its own rows now (§NNN). */
+    drainAfter?: boolean;
   },
 ): Promise<number> {
   if (params.realRecipients <= 0) return 0;
@@ -307,7 +309,7 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
       .returning({ id: emailOutbox.id });
     if (row) queued += 1;
   }
-  if (queued > 0) drainOutboxAfterResponse();
+  if (queued > 0 && params.drainAfter !== false) drainOutboxAfterResponse();
   return queued;
 }
 
@@ -387,15 +389,23 @@ export async function claimOutboxBatch(
      * its claim here, and its own cap is the sender's to keep.
      */
     bulkLimit?: number | null;
+    /**
+     * Only these rows (§NNN): a backoffice press that sends its own message now, past the scheduled
+     * pass — never the rest of the queue. Still only a row the claim would take (PENDING and due, or a
+     * stale PROCESSING): a row already sent, bounced or failed is never sent again by this path (§39).
+     */
+    ids?: readonly string[];
   },
 ): Promise<OutboxRow[]> {
   const { now, batchSize, roads } = params;
+  if (params.ids && params.ids.length === 0) return [];
   const bulkLimit = params.bulkLimit ?? null;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
-  const due = or(
+  const claimable = or(
     and(eq(emailOutbox.status, "PENDING"), or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now))),
     and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
   );
+  const due = params.ids ? and(claimable, inArray(emailOutbox.id, [...params.ids])) : claimable;
   const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
 
   return db.transaction(async (tx) => {
@@ -520,9 +530,11 @@ export async function processOutboxBatch(
      * Absent — no Gmail account, or a test's own sender — one claim, oldest first, as before.
      */
     roads?: OutboxRoads;
+    /** Only these rows (§NNN, `claimOutboxBatch`): a backoffice press's own message, sent now. */
+    ids?: readonly string[];
   },
 ): Promise<OutboxBatchSummary> {
-  const { sender, render, now, batchSize = OUTBOX_BATCH_SIZE, route, roads } = params;
+  const { sender, render, now, batchSize = OUTBOX_BATCH_SIZE, route, roads, ids } = params;
 
   const jobRunId = await startJobRun(db, "email-outbox", now);
   // The batch's clock moved on by the real time elapsed: what the re-base checks an offer against
@@ -534,10 +546,11 @@ export async function processOutboxBatch(
   // Mailgun's road — Gmail's rows cost the allowance nothing.
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
   const bulkLimit = await readBulkLimit(db, now, mailgunRoad);
-  const claimed = await claimOutboxBatch(db, { now, batchSize, bulkLimit, ...(roads ? { roads } : {}) });
+  const claimed = await claimOutboxBatch(db, { now, batchSize, bulkLimit, ...(roads ? { roads } : {}), ...(ids ? { ids } : {}) });
   // The reserve is reached: whatever newsletter is still due on Mailgun's road waits for the reset, untouched.
   const mailgunBulk = claimed.filter((row) => isBulkMessage(row.messageType) && !(roads && onGmailRoad(row, roads)));
-  if (bulkLimit !== null && mailgunBulk.length >= bulkLimit) {
+  // A press's own rows (§NNN) say nothing about the rest of the queue: the reserve's hold is the job's.
+  if (!ids && bulkLimit !== null && mailgunBulk.length >= bulkLimit) {
     await holdBulkUntilReset(db, now, mailgunRoad);
   }
   const summary: OutboxBatchSummary = {

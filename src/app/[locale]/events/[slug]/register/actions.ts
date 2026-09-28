@@ -256,6 +256,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       atOnce,
       windowMinutes: minutes,
       emailLeavesAt,
+      // Sent by the request itself: when, so a reload later says it left (§NNN), never «pleacă acum» forever.
+      ...(emailLeavesAt === null ? { emailSubmittedAt: now } : {}),
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
     },
