@@ -11,20 +11,11 @@ import { type FaqPageFields, type FaqRow, faqFieldName, faqPageFieldsSchema } fr
 import { DEFAULT_FAQ_PAGE, FAQ_PAGE_SETTING_ENTITY_ID, FAQ_PAGE_SETTING_KEY, type FaqPageSettings, parseFaqPageSettings } from "./page-settings";
 
 /**
- * «Întrebări frecvente» — the page's one save (§525, §28): the introduction and every question
- * card, in the order of the cards, written together or not at all. «Echipa»'s thresholds (§459),
- * asserted here whatever the screen offered (BR-REQ-060-01):
- *
- * - writing the introduction, adding, writing, moving, and deleting a question that is not on the
- *   site — `canEditFaqPage`, the Redactor's and the Administrator's, because these are words;
- * - «Pe site» on a question, and deleting one that is on the site — `canShowFaqItem`, the
- *   Administrator's, the crossing into public view since §201. For anybody else the posted tick
- *   is not read: a question keeps the visibility it had, and a new one starts hidden.
- *
- * Guarded by the page's version (AGENTS.md §11.5): a colleague's save in between is a CONFLICT,
- * never an overwrite. One `audit_logs` row per save, naming the questions by id — added, deleted,
- * shown, taken off — and never the words (§12.12); the public cache's `pages` kind expires after
- * it (§333), under which the page, its menu and footer entries and its sitemap entry are read.
+ * «Întrebări frecvente»: the page's one save (§525, §28), introduction and cards together or not
+ * at all, against the page's version (AGENTS.md §11.5). Asserted here (BR-REQ-060-01): words are
+ * `canEditFaqPage`; «Pe site» and deleting a shown question are `canShowFaqItem` (§201) — for
+ * anybody else the tick is ignored and a new question starts hidden. One audit row per save names
+ * questions by id, never words (§12.12); expires the `pages` cache (§333).
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -37,14 +28,13 @@ function parseOrThrow(value: unknown): FaqPageFields {
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${faqFieldName(issue.path)}: ${issue.message}`).join("; "),
-      // The boxes' own names — `faq[2].questionEn` — so the summary lands on them.
       [...new Set(parsed.error.issues.map((issue) => faqFieldName(issue.path)))],
     );
   }
   return parsed.data;
 }
 
-/** The kept cards in their new order: the posted order, with the pressed arrow's swap applied. */
+/** The kept cards in the posted order, with the pressed arrow's swap applied. */
 function ordered(rows: readonly FaqRow[], move: { index: number; direction: "up" | "down" } | null): FaqRow[] {
   const kept = rows.filter((row) => !row.remove);
   if (!move) return kept;
@@ -55,14 +45,14 @@ function ordered(rows: readonly FaqRow[], move: { index: number; direction: "up"
   return kept;
 }
 
-/** Save the whole page — the introduction and the cards — against the version it was loaded with. */
+/** Save the introduction and the cards against the loaded version. */
 export async function saveFaqPage<T extends Record<string, unknown>>(
   db: Database<T>,
   input: {
     actor: Actor;
     expectedVersion: number;
     fields: unknown;
-    /** An arrow pressed on a card: the save moves it one place (`parseFaqMove`). */
+    /** An arrow pressed on a card (`parseFaqMove`). */
     move?: { index: number; direction: "up" | "down" } | null;
     now?: Date;
   },
@@ -109,7 +99,7 @@ export async function saveFaqPage<T extends Record<string, unknown>>(
 
     const kept = ordered(fields.rows, input.move ?? null) as Array<Extract<FaqRow, { remove: false }>>;
     const posted = new Set(fields.rows.flatMap((row) => (row.id ? [row.id] : [])));
-    // A question this form did not carry (a crafted post) keeps its words, after the posted ones.
+    // A question the form did not carry (a crafted post) keeps its words, after the posted ones.
     const untouched = existing.filter((row) => !posted.has(row.id));
 
     const created: string[] = [];

@@ -20,30 +20,8 @@ export type EditablePageTranslation = {
 };
 
 /**
- * The whole page editor's fields: the nav order, then one block per language.
- *
- * ## One tab per language, as everywhere else (§259)
- *
- * This form stacked the two languages and argued for it: a page carries four fields, and both
- * languages at once makes "the English one is empty" obvious before somebody presses publish.
- * The argument stopped being true when the body became a rich-text editor — two editors stacked
- * is two screens of scrolling to reach the English title — and the owner asked for the
- * consistency outright: "hai să fim consistenți". The incompleteness it was protecting is still
- * caught, by the publish rule itself (`AGENTS.md` §11.2) and by the tab's own "incomplet" mark.
- *
- * ## Why a textarea rather than a rich-text editor
- *
- * The same reason `DECISIONS.md` §46 gave for legal documents: the Tiptap body contract is M5,
- * and pulling it forward to write an About page would decide that schema for the wrong reason.
- * The format is the one the legal editor already uses and this converts with the same module —
- * a blank line between paragraphs, `## ` for a heading, and it round-trips, so nothing an
- * organizer typed is reshaped behind their back.
- *
- * ## After a refused submit
- *
- * Every box comes back as typed, the rich text included (§315): the fields are `RecallField`s
- * and the editor re-mounts from the posted document. Each box carries what `fields.ts`
- * requires of it, so the browser refuses a missing title or a malformed address first.
+ * The page editor's fields: the nav order, then one tab per language (§259). Every box comes back
+ * as typed after a refused submit, rich text included (§315).
  */
 export default async function PageFieldsForm({
   navOrder,
@@ -55,12 +33,11 @@ export default async function PageFieldsForm({
   translations: readonly EditablePageTranslation[];
   /** AGENTS.md §11.5: a published page's address is stable. */
   slugLocked: boolean;
-  /** The stored page (§485): «Din galerie» in its text opens on «Această pagină». None on create. */
+  /** «Din galerie» in the text opens on «Această pagină» (§485). None on create. */
   pageId?: string;
 }) {
   const t = await getTranslations("Admin.pages");
-  // The editor is a client island and cannot read the catalogue itself, so its control names are
-  // resolved here and passed down (AGENTS.md §9.3: no user-facing string in code).
+  // The client editor cannot read the catalogue, so its labels are resolved here (AGENTS.md §9.3).
   const rt = await getTranslations("Admin.richText");
   const box = (field: Parameters<typeof pageTranslationConstraints>[0]) => textFieldConstraints(pageTranslationConstraints(field));
 
@@ -75,17 +52,17 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482): every English box from its Romanian twin, in one press. */}
+      {/* §464, §482. */}
       <TranslateAllButton />
 
       <LocaleTabPanels
         idPrefix="locale"
-        // «Tradu cardul: RO → EN» in the tab row too (§514), where the person is looking.
+        // §514.
         translateCard
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;
-          // «Tradu din română» under each English box (§464); nothing on the Romanian tab.
+          // Under each English box only (§464).
           const translate = (field: string) => (locale === "en" ? <TranslateFieldButton en={name(field)} /> : null);
 
           return {

@@ -11,26 +11,14 @@ import { canShowFaqItem } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Întrebări frecvente» as a page (§525): whether it is on the site at all, the club's own
- * introduction, and the page's version — one `platform_settings` row, «Echipa»'s shape (§459).
- *
- * `status` is DRAFT until an Administrator publishes it, both languages at once (§28); each
- * question keeps its own «Pe site» switch as the second gate. The introduction is the club's text
- * in the rich-text editor, Romanian **and** English or neither (§352); with none, the page reads
- * the catalogue's sentence. `version` guards the page's one save (AGENTS.md §11.5): every save
- * of the introduction and the questions bumps it, and a save loaded at another version is a
- * CONFLICT, never an overwrite. Publishing leaves it as it is — it changes no words.
- *
- * A row this code cannot read is a DRAFT page with no introduction — nothing is shown that nobody
- * decided to show.
+ * «Întrebări frecvente» as a page (§525): one `platform_settings` row shaped like «Echipa» (§459)
+ * holding the DRAFT/PUBLISHED state (§28), the introduction (both languages or neither, §352) and
+ * the page's `version`. Every save bumps the version and a stale one is a CONFLICT (AGENTS.md
+ * §11.5); publishing does not bump it. An unreadable row reads as a DRAFT with no introduction.
  */
 
 export const FAQ_PAGE_SETTING_KEY = "faqPage";
-/**
- * `audit_logs.entity_id` for this setting, one fixed id per key, never reused (§164's rule). Taken
- * well away from the `…e00a`–`…e011` run the sibling settings count up through, so a sibling
- * branch's next setting cannot land on it.
- */
+/** `audit_logs.entity_id` for this setting, fixed and never reused (§164); far from the …e00a–…e011 run. */
 export const FAQ_PAGE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e0fa";
 
 export type FaqPageStatus = "DRAFT" | "PUBLISHED";
@@ -66,7 +54,7 @@ const storedSchema = z.object({
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
-/** The stored value as this code reads it: a row it cannot read is the default. */
+/** An unreadable row reads as the default. */
 export function parseFaqPageSettings(value: unknown): FaqPageSettings {
   const parsed = storedSchema.safeParse(value);
   return parsed.success ? parsed.data : DEFAULT_FAQ_PAGE;
@@ -82,10 +70,7 @@ export function faqIntroDocs(settings: FaqPageSettings): { ro: RichTextDoc | nul
   return { ro: storedTeamDoc(settings.introRoJson, settings.introRo), en: storedTeamDoc(settings.introEnJson, settings.introEn) };
 }
 
-/**
- * The introduction in this language — the document, and its words for the page's description —
- * or nulls unless both sides are written (§352, §354).
- */
+/** The introduction in this language, or nulls unless both sides are written (§352, §354). */
 export function faqIntroFor(locale: string, settings: FaqPageSettings): { doc: RichTextDoc | null; text: string | null } {
   const docs = faqIntroDocs(settings);
   if (!docs.ro || !docs.en) return { doc: null, text: null };
@@ -94,7 +79,7 @@ export function faqIntroFor(locale: string, settings: FaqPageSettings): { doc: R
   return { doc, text: text === "" ? null : text };
 }
 
-/** Put the page on the site in both languages, or take it off — the Administrator's (§201). */
+/** Publish or unpublish the page in both languages — the Administrator's (§201). */
 export async function setFaqPagePublished<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; published: boolean; now?: Date },
@@ -106,7 +91,7 @@ export async function setFaqPagePublished<T extends Record<string, unknown>>(
   const next = await db.transaction(async (tx) => {
     const [row] = await tx.select().from(platformSettings).where(eq(platformSettings.key, FAQ_PAGE_SETTING_KEY)).limit(1).for("update");
     const before = row ? parseFaqPageSettings(row.value) : DEFAULT_FAQ_PAGE;
-    // The words and the version as they are: publishing changes neither.
+    // Publishing changes neither the words nor the version.
     const value: FaqPageSettings = { ...before, status: input.published ? "PUBLISHED" : "DRAFT" };
     await tx
       .insert(platformSettings)
@@ -122,8 +107,7 @@ export async function setFaqPagePublished<T extends Record<string, unknown>>(
     });
     return value;
   });
-  // The page, the header's entry, the footer's link and the sitemap read the page's state from the
-  // public cache under `pages` (§333), as «Echipa»'s do.
+  // The page's state is read from the public cache under `pages` (§333).
   revalidatePublicContent("pages");
   return next;
 }

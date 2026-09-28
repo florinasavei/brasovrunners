@@ -3,12 +3,8 @@ import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { teamPhotoFrame } from "./team-photo-frame";
 
 /**
- * A card's photograph, drawn by `teamPhotoFrame` (§541): the crop the club drew in its own shape,
- * or — with none — the square the page always drew. No hook and no state, so the public page (a
- * Server Component), the backoffice list and the upload's preview (a client island) all render
- * this one component.
- *
- * `width` is the card's: `"100%"` on the page, a fixed number of pixels for a thumbnail.
+ * A card's photo, drawn by `teamPhotoFrame` (§541). No hook or state, so the public page, the
+ * backoffice list and the upload preview share it. `width`: `"100%"` on the page, pixels for a thumbnail.
  */
 export default function TeamPhotoImage({
   src,
@@ -30,7 +26,7 @@ export default function TeamPhotoImage({
   testId?: string;
 }) {
   const frame = teamPhotoFrame(photo);
-  // The name is beside or under it everywhere it is drawn; announcing it twice helps nobody.
+  // The name is beside it everywhere, so the image is decorative.
   const image = { src, srcSet, sizes, alt: "", width: photo.width, height: photo.height, loading, draggable: false };
   if (frame.kind === "cover") {
     return (
