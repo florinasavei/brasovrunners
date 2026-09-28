@@ -6,6 +6,7 @@ import { fillIn } from "@/shared/forms/fill-in";
 import { hasOneLanguageCoHostDescription, hasOneLanguageCoHostLabel, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/links";
 import { placeInBox } from "@/modules/events/domain/place";
+import { blankStartParts } from "@/modules/events/domain/provisional-start";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
@@ -255,10 +256,13 @@ type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStart
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
   const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
+  // A part left blank (§NNN, amending §533) is not said at all: no invented date, and the day alone
+  // when only the hour was left blank — never the provisional value the platform stored in its place.
+  const blank = blankStartParts(event.startsAt, event.timezone);
   return join(words, [
     // Said first while the date is held back (§533): the provisional date after it is staff's alone.
     event.dateToBeAnnounced ? words.when.tba : event.timeToBeAnnounced ? words.when.timeTba : null,
-    summaryDateTime(event.startsAt, event.timezone, locale),
+    blank.date ? null : blank.time ? summaryDate(event.startsAt, event.timezone, locale) : summaryDateTime(event.startsAt, event.timezone, locale),
     event.type === "RACE" && event.raceStartsAt
       ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })
       : null,

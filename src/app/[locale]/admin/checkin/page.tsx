@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
@@ -142,7 +143,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.title ?? event.id} ·{" "}
-                    {formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })}
+                    {typedStartOrNull(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")}
                   </option>
                 ))}
               </TextField>

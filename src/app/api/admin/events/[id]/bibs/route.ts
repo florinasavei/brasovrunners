@@ -1,12 +1,11 @@
 import { hasLocale } from "next-intl";
-import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
-import { findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
+import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { bibPictureUrl } from "@/modules/registrations/bib-design";
@@ -120,7 +119,8 @@ export async function GET(
   const pdf = await renderBibSheet({
     rows,
     eventTitle: event.title,
-    eventDate: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" }),
+    // Empty while the date is to be announced later (§NNN): never the provisional day on paper.
+    eventDate: bibEventDate(event, locale),
     // The band in the event's own colour, and the facts the foot is composed from — the
     // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
     bandColour: event.bibColour,

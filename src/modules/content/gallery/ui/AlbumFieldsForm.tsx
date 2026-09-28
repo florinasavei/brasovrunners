@@ -1,6 +1,7 @@
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { textFieldConstraints } from "@/shared/forms/constraints";
@@ -41,7 +42,8 @@ export default async function AlbumFieldsForm({
   translations: readonly EditableAlbumTranslation[];
   slugLocked: boolean;
 }) {
-  const t = await getTranslations("Admin.gallery");
+  // One word for the namespace (the catalogue check reads it, `docs/VIBECODING.md`): the album's words are `gallery.*`.
+  const t = await getTranslations("Admin");
   const uiLocale = await getLocale();
   const box = (field: Parameters<typeof albumTranslationConstraints>[0]) => textFieldConstraints(albumTranslationConstraints(field));
 
@@ -50,8 +52,8 @@ export default async function AlbumFieldsForm({
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <DateField
           name="takenOn"
-          label={t("fields.takenOn")}
-          helperText={t("takenOnHelp")}
+          label={t("gallery.fields.takenOn")}
+          helperText={t("gallery.takenOnHelp")}
           defaultValue={takenOn}
           required={albumInputConstraints("takenOn").required}
           sx={{ maxWidth: 240 }}
@@ -59,15 +61,16 @@ export default async function AlbumFieldsForm({
         <RecallField
           select
           name="eventId"
-          label={t("fields.event")}
-          helperText={t("eventHelp")}
+          label={t("gallery.fields.event")}
+          helperText={t("gallery.eventHelp")}
           defaultValue={eventId ?? ""}
           sx={{ flex: 1, minWidth: 240 }}
         >
-          <MenuItem value="">{t("noEvent")}</MenuItem>
+          <MenuItem value="">{t("gallery.noEvent")}</MenuItem>
           {events.map((event) => (
             <MenuItem key={event.id} value={event.id}>
-              {formatDay(event.startsAt, { locale: uiLocale, timeZone: event.timezone, style: "short" })} · {event.title}
+              {/* A date left blank (§NNN) is said, never printed as the provisional day stored for it. */}
+              {typedStartOrNull(event) ? formatDay(event.startsAt, { locale: uiLocale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")} · {event.title}
             </MenuItem>
           ))}
         </RecallField>
@@ -84,32 +87,32 @@ export default async function AlbumFieldsForm({
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;
-          const translate = (field: string) => (locale === "en" ? <TranslateFieldButton en={name(field)} /> : null);
+          const fromRomanian = (field: string) => (locale === "en" ? <TranslateFieldButton en={name(field)} /> : null);
           return {
             locale,
-            label: t(`language.${locale}`),
+            label: t(`gallery.language.${locale}`),
             content: (
               <Stack spacing={2} sx={{ pt: 2 }}>
-              <RecallField name={name("title")} label={t("fields.title")} defaultValue={translation?.title ?? ""} {...box("title")} />
-              {translate("title")}
+              <RecallField name={name("title")} label={t("gallery.fields.title")} defaultValue={translation?.title ?? ""} {...box("title")} />
+              {fromRomanian("title")}
               <RecallField
                 name={name("slug")}
-                label={t("fields.slug")}
-                helperText={slugLocked ? t("slugLocked") : t("slugHelp")}
+                label={t("gallery.fields.slug")}
+                helperText={slugLocked ? t("gallery.slugLocked") : t("gallery.slugHelp")}
                 defaultValue={translation?.slug ?? ""}
                 {...box("slug")}
                 slotProps={{ input: { readOnly: slugLocked }, htmlInput: albumTranslationConstraints("slug") }}
               />
               <RecallField
                 name={name("description")}
-                label={t("fields.description")}
-                helperText={t("descriptionHelp")}
+                label={t("gallery.fields.description")}
+                helperText={t("gallery.descriptionHelp")}
                 defaultValue={translation?.description ?? ""}
                 multiline
                 minRows={2}
                 {...box("description")}
               />
-              {translate("description")}
+              {fromRomanian("description")}
               </Stack>
             ),
           };

@@ -12,11 +12,10 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { formatDay } from "@/i18n/dates";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readEmergencySheet } from "@/modules/registrations/admin-service";
-import { findEventForBibs } from "@/modules/registrations/bibs";
+import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -66,9 +65,8 @@ export default async function EmergencySheetPage({ params }: Props) {
   }
   const event = await findEventForBibs(db, id, locale);
   const t = await getTranslations("Admin");
-  const when = event
-    ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" })
-    : "";
+  // The day in words, or «Data se anunță mai târziu» while it is left blank (§NNN).
+  const when = event ? bibEventDate(event, locale) || t("editor.dateToBeAnnounced") : "";
 
   return (
     <Stack spacing={2}>
