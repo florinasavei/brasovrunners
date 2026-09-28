@@ -44,6 +44,31 @@ async function expectGauge(pill: Locator, band: number, step?: number) {
   await expect(gauge.locator('[data-testid="difficulty-step-off"]')).toHaveCount(3 - step);
 }
 
+test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a tap (§NNN)", () => {
+  test.use({ hasTouch: true, viewport: { width: 320, height: 720 } });
+  const SENTENCE = "Mediu 1 — nivelul 4 din 15: alergarea de pe Tâmpa";
+
+  test("on the event page, a tap on «Mediu 1» opens the tooltip", async ({ page }) => {
+    await page.goto("/ro/evenimente/tura-pe-tampa");
+    await hydrated(page);
+    const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "Mediu 1" });
+    await pill.tap();
+    await expect(page.getByRole("tooltip")).toHaveText(SENTENCE);
+  });
+
+  test("on the listing card, a tap opens the tooltip and does not follow the whole-card link (§486)", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    await hydrated(page);
+    const card = (await cardOnListing(page, "Tură pe Tâmpa")).first();
+    const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu 1" });
+    await expect(pill).toHaveAttribute("data-has-tooltip", "true");
+    const before = page.url();
+    await pill.tap();
+    await expect(page.getByRole("tooltip")).toHaveText(SENTENCE);
+    expect(page.url()).toBe(before);
+  });
+});
+
 test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
   test("the event page's route row shows «Mediu 1» beside the gauge and is heard as «Dificultate: mediu, treapta 1 din 3»", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
@@ -146,6 +171,12 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
     await expect(page.getByText("1 = cel mai ușor din categorie, 3 = cel mai greu")).toBeVisible();
+    // The whole scale behind a «?» after the help line and beside the band (§NNN), one line per band.
+    for (const testId of ["difficulty-scale-help", "difficulty-band-help"]) {
+      const help = page.getByTestId(testId);
+      await expect(help).toBeVisible();
+      await expect(help).toHaveAttribute("aria-label", /– mediu 1 = alergarea de pe Tâmpa/);
+    }
     // Side by side with the band from `sm`: the two controls' tops on one row.
     const select = await page.getByRole("combobox", { name: "Dificultate" }).boundingBox();
     const group = await steps.boundingBox();

@@ -6,13 +6,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
  * `DECISIONS.md` §NNN — the difficulty gauge says its level of fifteen, and the backoffice explains
  * the scale behind a «?».
  *
- * - The event's pill (`route-pills.ts`): the tooltip «Nivelul 5 din 15: o alergare mai lungă», the
- *   owner's own example for the level (§526), and the same sentence in the chip's accessible name
+ * - The event's pill (`route-pills.ts`): the tooltip «Mediu 2 — nivelul 5 din 15: o alergare mai
+ *   lungă» — the band and step, the level of fifteen, the owner's own example for it (§526) — and the same sentence in the chip's accessible name
  *   (`srSuffix`), so a screen reader hears it without the hover.
  * - An email has no gauge: its facts keep `plain` alone, «Mediu, treapta 2 din 3».
  * - A band's filter box names its levels on hover: «Greuț: nivelurile 7–9 din 15».
- * - The editor's «Treapta» carries a «?» with the whole scale, outside the radio group's own
- *   one-line description.
+ * - The editor's «Treapta» and the band select beside it carry a «?» with the whole scale, one
+ *   line per band in the owner's words, outside the radio group's own one-line description.
  */
 let currentLocale: "ro" | "en" = "ro";
 
@@ -113,17 +113,19 @@ describe("§NNN the scale's arithmetic", () => {
 
 describe("§NNN the pill's tooltip names the level of fifteen", () => {
   it.each([
-    ["ro", 1, "Nivelul 1 din 15: scurt și pe plat, pentru oricine"],
-    ["ro", 4, "Nivelul 4 din 15: cam cât alergarea pe Tâmpa"],
-    ["ro", 5, "Nivelul 5 din 15: o alergare mai lungă"],
-    ["ro", 6, "Nivelul 6 din 15: o alergare lungă și tehnică"],
-    ["ro", 8, "Nivelul 8 din 15: de la semimaraton în sus"],
-    ["ro", 11, "Nivelul 11 din 15: un maraton"],
-    ["ro", 15, "Nivelul 15 din 15: un ultramaraton sau mai mult"],
-    ["en", 2, "Level 2 of 15: short and flat, for anyone"],
-    ["en", 5, "Level 5 of 15: a longer run"],
-    ["en", 12, "Level 12 of 15: a marathon"],
-    ["en", 13, "Level 13 of 15: an ultramarathon or more"],
+    ["ro", 1, "Ușor 1 — nivelul 1 din 15: scurt, plat, pentru oricine"],
+    ["ro", 2, "Ușor 2 — nivelul 2 din 15: scurt, plat, pentru oricine"],
+    ["ro", 4, "Mediu 1 — nivelul 4 din 15: alergarea de pe Tâmpa"],
+    ["ro", 5, "Mediu 2 — nivelul 5 din 15: o alergare mai lungă"],
+    ["ro", 6, "Mediu 3 — nivelul 6 din 15: o alergare lungă și tehnică"],
+    ["ro", 8, "Greuț 2 — nivelul 8 din 15: de la semimaraton în sus"],
+    ["ro", 11, "Greu 2 — nivelul 11 din 15: un maraton"],
+    ["ro", 15, "Foarte greu 3 — nivelul 15 din 15: un ultramaraton sau mai mult"],
+    ["en", 1, "Easy 1 — level 1 of 15: short, flat, for anyone"],
+    ["en", 2, "Easy 2 — level 2 of 15: short, flat, for anyone"],
+    ["en", 5, "Medium 2 — level 5 of 15: a longer run"],
+    ["en", 12, "Hard 3 — level 12 of 15: a marathon"],
+    ["en", 15, "Very hard 3 — level 15 of 15: an ultramarathon or more"],
   ] as const)("in %s, level %i reads «%s»", async (locale, level, sentence) => {
     currentLocale = locale;
     const pill = await difficultyPill(level);
@@ -149,7 +151,7 @@ describe("§NNN the pill's tooltip names the level of fifteen", () => {
     expect(html).toContain('data-has-tooltip="true"');
     expect(html).toContain(`<span aria-hidden="true">Mediu 2</span>`);
     expect(html).toContain("Dificultate: mediu, treapta 2 din 3");
-    expect(html).toContain(" — Nivelul 5 din 15: o alergare mai lungă");
+    expect(html).toContain(" — Mediu 2 — nivelul 5 din 15: o alergare mai lungă");
     expect(html).not.toMatch(/aria-label=/);
   });
 });
@@ -158,7 +160,7 @@ describe("§NNN the editor's «?» explains the whole scale", () => {
   const words = {
     label: ro.Admin.editor.fields.difficultyStep,
     help: ro.Admin.editor.difficultyStepHelp,
-    scale: ro.Admin.editor.difficultyStepHelpMore,
+    scale: Object.values(ro.Admin.editor.difficultyScale).join("\n"),
     choices: ro.Admin.editor.difficultySteps,
   };
 
@@ -173,11 +175,18 @@ describe("§NNN the editor's «?» explains the whole scale", () => {
     expect(html).toContain(`<span id="${describedBy}">${words.help}</span>`);
   });
 
-  it("says the fifteen levels and the club's examples, in both languages", () => {
-    for (const text of [ro.Admin.editor.difficultyStepHelpMore, en.Admin.editor.difficultyStepHelpMore]) {
-      expect(text).toContain("15");
-      expect(text).toContain("Tâmpa");
+  it("says the fifteen levels as one line per band, in the owner's own words, in both languages", () => {
+    for (const scale of [ro.Admin.editor.difficultyScale, en.Admin.editor.difficultyScale]) {
+      expect(scale.intro).toContain("15");
+      const lines = Object.values(scale);
+      // The intro, one line per band («mediu» one per step: 1 + 3 + 3), the fallback.
+      expect(lines.filter((line) => line.startsWith("– "))).toHaveLength(7);
+      for (const line of lines) expect(line.length, line).toBeLessThanOrEqual(200);
     }
+    // The owner's words (§526), word for word.
+    expect(ro.Admin.editor.difficultyScale.EASY).toBe("– ușor = scurt, plat, pentru oricine");
+    expect(ro.Admin.editor.difficultyScale.MEDIUM1).toBe("– mediu 1 = alergarea de pe Tâmpa");
+    expect(en.Admin.editor.difficultyScale.MEDIUM1).toBe("– medium 1 = the run up Tâmpa");
   });
 
   it("draws no «?» when no scale is handed to it", () => {

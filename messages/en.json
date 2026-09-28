@@ -185,7 +185,7 @@
     "difficultyLevelShort": "{band} {step}",
     "difficultyLevelSr": "Difficulty: {band}, step {step} of {steps}",
     "difficultyWithStep": "{band}, step {step} of {steps}",
-    "difficultyLevelTooltip": "Level {level} of {levels}: {example}",
+    "difficultyLevelTooltip": "{band} {step} — level {level} of {levels}: {example}",
     "difficultyBandTitle": "{band}: levels {from}–{to} of {levels}",
     "cost": "Cost",
     "registration": "Registration",
@@ -314,8 +314,8 @@
       "VERY_HARD": "Very hard"
     },
     "difficultyExamples": {
-      "EASY": "short and flat, for anyone",
-      "MEDIUM1": "about the run up Tâmpa",
+      "EASY": "short, flat, for anyone",
+      "MEDIUM1": "the run up Tâmpa",
       "MEDIUM2": "a longer run",
       "MEDIUM3": "a long and technical run",
       "FAIRLY_HARD": "from a half marathon up",
@@ -1179,7 +1179,17 @@
       },
       "difficultySummary": "{band} {step}",
       "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
-      "difficultyStepHelpMore": "15 levels: 5 bands × 3 steps. Easy: short, flat. Medium: 1 Tâmpa, 2 longer, 3 long and technical. Fairly hard: from a half marathon. Hard: marathon. Very hard: ultra. Unsure of the step? 2.",
+      "difficultyScale": {
+        "intro": "The club's scale: 15 levels, 5 bands × 3 steps; step 1 is the easiest in the band, 3 the hardest.",
+        "EASY": "– easy = short, flat, for anyone",
+        "MEDIUM1": "– medium 1 = the run up Tâmpa",
+        "MEDIUM2": "– medium 2 = a longer run",
+        "MEDIUM3": "– medium 3 = long and technical",
+        "FAIRLY_HARD": "– fairly hard = from a half marathon up",
+        "HARD": "– hard = marathons",
+        "VERY_HARD": "– very hard = ultramarathons and beyond",
+        "unsure": "Not sure of the step? 2."
+      },
       "costValues": {
         "FREE": "Free",
         "PAID": "Paid",
@@ -4330,7 +4340,7 @@
                 "«Very hard»: ultramarathons and beyond.",
                 "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
                 "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
-                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Level 5 of 15\"."
+                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
               ]
             },
             {
@@ -4404,7 +4414,7 @@
                 "«Very hard»: ultramarathons and beyond.",
                 "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
                 "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
-                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Level 5 of 15\"."
+                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
               ]
             },
             {

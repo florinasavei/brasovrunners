@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -5,6 +6,7 @@ import { DEFAULT_DIFFICULTY_STEP, DIFFICULTY_BANDS, difficultyBandOf, difficulty
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { EVENT_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import { eventInputConstraints } from "../../constraints";
 import DifficultyStepField from "../DifficultyStepField";
 import GlyphSelect from "../GlyphSelect";
@@ -71,6 +73,9 @@ export default async function KindBox({
   // The level on the club's scale of fifteen (§526), as the two controls show it: its band and its step.
   const level = event ? difficultyLevelOf(event) : null;
   const band = level === null ? null : difficultyBandOf(level);
+  // The club's whole scale, one line per band in the owner's words (§526, §NNN), behind a «?» beside
+  // the band and after «Treapta»'s help: a newline is a line in the tooltip (§257).
+  const difficultyScale = DIFFICULTY_SCALE_LINES.map((line) => t(`editor.difficultyScale.${line}`)).join("\n");
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const difficultyLine = band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null;
   // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
@@ -124,23 +129,27 @@ export default async function KindBox({
           {/* How hard (§526): the band and its step, side by side from `sm` — the level on the
               club's scale of fifteen, which «Ghid» explains. */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-            <GlyphSelect
-              name="event.difficulty"
-              label={t("editor.fields.difficulty")}
-              defaultValue={band ?? ""}
-              options={[
-                { value: "", label: t("editor.notStated") },
-                ...DIFFICULTY_BANDS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
-              ]}
-              sx={{ flex: 1 }}
-            />
+            {/* The whole scale behind a «?» beside the band too (§NNN): the band is the first choice. */}
+            <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <GlyphSelect
+                name="event.difficulty"
+                label={t("editor.fields.difficulty")}
+                defaultValue={band ?? ""}
+                options={[
+                  { value: "", label: t("editor.notStated") },
+                  ...DIFFICULTY_BANDS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
+                ]}
+                sx={{ flex: 1 }}
+              />
+              <QuietHelp text={difficultyScale} testId="difficulty-band-help" />
+            </Box>
             <DifficultyStepField
               name="event.difficultyStep"
               defaultStep={step}
               words={{
                 label: t("editor.fields.difficultyStep"),
                 help: t("editor.difficultyStepHelp"),
-                scale: t("editor.difficultyStepHelpMore"),
+                scale: difficultyScale,
                 choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
               }}
             />
@@ -166,3 +175,6 @@ export default async function KindBox({
     </Panel>
   );
 }
+
+/** The «?»'s lines, in order: the scale, «Ușor», «Mediu» per step, the other bands, the fallback. */
+const DIFFICULTY_SCALE_LINES = ["intro", "EASY", "MEDIUM1", "MEDIUM2", "MEDIUM3", "FAIRLY_HARD", "HARD", "VERY_HARD", "unsure"] as const;

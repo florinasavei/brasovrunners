@@ -267,12 +267,12 @@ const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
 function pillLabels(fragment: string): string[] {
   return [...withoutStyles(fragment).matchAll(/class="MuiChip-label[^"]*"[^>]*>(?:<span aria-hidden="true">)?([^<]*)</g)].map((match) => match[1]);
 }
-/** Every tooltip's words, in order. */
 /** The sun's tooltips: every chip's but the difficulty's, which names its level of fifteen since §NNN. */
 function tooltips(fragment: string): string[] {
-  return allTooltips(fragment).filter((title) => !/^(?:Nivelul|Level) \d+ /.test(title));
+  return allTooltips(fragment).filter((title) => !/ — (?:nivelul \d+ din|level \d+ of) \d+/.test(title));
 }
 
+/** Every tooltip's words, in order. */
 function allTooltips(fragment: string): string[] {
   return [...withoutStyles(fragment).matchAll(/data-tooltip-title="">([^<]*)</g)].map((match) => match[1]);
 }
@@ -315,7 +315,7 @@ describe("§394 the event page's facts", () => {
     expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu 2", "8 km", "250 m D+", "Noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
     // The difficulty's own tooltip, before it in the row (§NNN).
-    expect(allTooltips(route!.dd)).toEqual(["Nivelul 5 din 15: o alergare mai lungă", "Soarele apune la 16:44"]);
+    expect(allTooltips(route!.dd)).toEqual(["Mediu 2 — nivelul 5 din 15: o alergare mai lungă", "Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");
     // The tooltip only opens on hover or focus, and the chip is not focusable, so the sunset

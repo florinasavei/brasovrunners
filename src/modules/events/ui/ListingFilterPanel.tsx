@@ -236,4 +236,4 @@ function isDifficultyBand(value: string): value is DifficultyBand {
   return (DIFFICULTY_BANDS as readonly string[]).includes(value);
 }
 
-const FIELDSET_SX ={ border: 0, p: 0, m: 0, minWidth: 0 } as const;
+const FIELDSET_SX = { border: 0, p: 0, m: 0, minWidth: 0 } as const;
