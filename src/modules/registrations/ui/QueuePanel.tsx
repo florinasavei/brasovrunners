@@ -1,3 +1,4 @@
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -5,12 +6,15 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
+import { countForm } from "@/i18n/count-form";
 import type { Database } from "@/db/types";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { computeOccupied } from "../domain/capacity";
 import { countOccupied } from "../repository";
-import { listQueueForEvent } from "../admin-repository";
+import { listFamilyReservationsForEvent, listQueueForEvent } from "../admin-repository";
+import { familyOf } from "../family-marker";
+import FamilyChip from "./FamilyChip";
 import QuietHelp from "@/shared/ui/QuietHelp";
 
 /**
@@ -51,7 +55,10 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const occupied = computeOccupied(counts);
   const rows = await listQueueForEvent(db, event.id, now);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
-  const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds;
+  // A family's reserved places count as held (§NNN): the same count the public page and the allocator read.
+  const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + counts.familyReservations + counts.familyPlaceHolds;
+  const reserved = await listFamilyReservationsForEvent(db, event.id, now);
+  const family = await familyOf(db, reserved);
   /*
     The line as the allocator counts it (§348, `domain/waitlist.ts#waitlistLength`): everybody
     waiting, and the offers still open — an offer before its deadline, or one whose email is still
@@ -97,6 +104,52 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {t("queue.holdsHelp", { hold: words.hold, offer: words.offer })}
         <QuietHelp text={t("queue.holdsHelpMore")} />
       </Typography>
+
+      {/*
+        The places families reserved at their forms (§NNN; the owner, 2026-09-28: «să rezerv 3 locuri și
+        așa să se calculeze pe site»): each person, the family marker, and until when the place is held —
+        and whether the family's one email is still queued, which moves nothing: the deadline is the
+        sitting's, fixed by its first form.
+      */}
+      {reserved.length > 0 && (
+        <Box sx={{ mb: 2 }} data-testid="queue-family-reservations">
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
+            <FamilyRestroomIcon fontSize="small" aria-hidden="true" />
+            {t(`queue.familyTitle.${countForm(reserved.length, locale)}`, { count: reserved.length })}
+          </Typography>
+          <Box component="ol" sx={{ m: 0, pl: 0, listStyle: "none" }}>
+            {reserved.map((row) => (
+              <Box
+                component="li"
+                key={row.id}
+                data-testid="queue-family-reservation"
+                sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.75, borderBottom: 1, borderColor: "divider", flexWrap: "wrap" }}
+              >
+                <Box component="span" sx={{ flex: 1, minWidth: 160 }}>
+                  {row.registeredName}
+                  {row.kind === "TEST" && <Chip size="small" label={t("queue.test")} sx={{ ml: 1 }} />}
+                </Box>
+                <FamilyChip label={t("registrations.familyChip")} members={(family.get(row.id) ?? []).map((member) => ({ name: member.name }))} />
+                <Chip
+                  size="small"
+                  color="warning"
+                  label={row.holdExpiresAt === null ? t("queue.familyQueuedNoDeadline") : t(row.emailQueued ? "queue.familyQueued" : "queue.familyUntil", { until: when(row.holdExpiresAt) })}
+                />
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
+      {/*
+        The places family sittings hold for forms that wrote no registration (§NNN; §39): counted like a
+        reservation, naming nobody, until the sitting's deadline or its email's confirmation.
+      */}
+      {counts.familyPlaceHolds > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 0.75 }} data-testid="queue-family-place-holds">
+          <FamilyRestroomIcon fontSize="small" aria-hidden="true" />
+          {t(`queue.familyHeld.${countForm(counts.familyPlaceHolds, locale)}`, { count: counts.familyPlaceHolds })}
+        </Typography>
+      )}
 
       <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
         <HourglassTopIcon fontSize="small" aria-hidden="true" />

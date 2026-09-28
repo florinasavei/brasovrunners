@@ -758,6 +758,7 @@
       "listOptInStates": "Pe listă apare și stadiul înscrierii: „{pending}”, „{waitlisted}” sau „{confirmed}”; o înscriere anulată nu apare.",
       "socialsOnList": "și pe lista publică, lângă nume",
       "resubmittedHeld": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — „{message}” așteaptă deja să plece și pleacă o singură dată",
+      "familyChip": "Familie",
       "resendSentNow": "Emailul pleacă acum, fără să aștepte trecerea programată."
     },
     "events": {
@@ -1959,7 +1960,20 @@
       "interestNotFound": "Adresa nu era pe lista acestui eveniment. Verifică dacă a scris de pe altă adresă.",
       "simulate": "Ca să încerci lista de așteptare (nu în producție): pune puține locuri, adaugă mai multe înscrieri de test, apoi anulează una confirmată.",
       "simulateMore": "Primele înscrieri iau locurile, rezervate câte {hold}; restul intră pe listă, în ordine. O rezervare expirată sau mai multe locuri dau și ele oferta primului din listă; emailul apare în Outbox.",
-      "holdsHelpMore": "O rezervare expirată rămâne a persoanei și se eliberează doar când așteaptă cineva un loc sau când începe evenimentul."
+      "holdsHelpMore": "O rezervare expirată rămâne a persoanei și se eliberează doar când așteaptă cineva un loc sau când începe evenimentul.",
+      "familyTitle": {
+        "one": "{count} loc rezervat de o familie",
+        "few": "{count} locuri rezervate de familii",
+        "other": "{count} de locuri rezervate de familii"
+      },
+      "familyQueued": "rezervat până {until}, termen fixat de primul formular al familiei; emailul familiei n-a plecat încă și nu mută termenul",
+      "familyQueuedNoDeadline": "rezervat; emailul familiei n-a plecat încă",
+      "familyUntil": "rezervat până {until}",
+      "familyHeld": {
+        "one": "{count} loc ținut de o familie pentru un formular fără înscriere, până la termenul familiei",
+        "few": "{count} locuri ținute de familii pentru formulare fără înscriere, până la termenele lor",
+        "other": "{count} de locuri ținute de familii pentru formulare fără înscriere, până la termenele lor"
+      }
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -5018,6 +5032,7 @@
               "steps": [
                 "Prima persoană se înscrie cu formularul, ca oricine.",
                 "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise. Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
+                "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton.",
                 "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
                 "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
                 "Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
@@ -5036,6 +5051,7 @@
               "title": "Ce vezi în backoffice",
               "steps": [
                 "În «Înscrieri», la masă și în export, fiecare persoană e un rând separat, cu aceeași adresă.",
+                "Rândurile aceleiași adrese la un eveniment poartă eticheta «Familie», cu numele celorlalți: în «Înscrieri», în coada de înscrieri, la masă și în ultima coloană a exportului, family.",
                 "«Înscrierile mele» arată toate înscrierile adresei, fiecare cu numele ei. Anularea sau ștergerea uneia nu le atinge pe celelalte.",
                 "Mementourile și mulțumirile vin câte unul pentru fiecare persoană."
               ]
@@ -5569,7 +5585,8 @@
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
       "tooFastResend": "Trimite din nou înscrierea",
-      "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular."
+      "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular.",
+      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului pentru un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
     },
     "sections": {
       "about": "Despre tine",
@@ -5819,7 +5836,25 @@
       "formLeft": "Emailul pentru cei de mai sus pleacă singur peste {minutes}, dacă nu trimiți acest formular până atunci.",
       "formAtOnce": "Emailul pentru această persoană pleacă imediat ce trimiți formularul.",
       "formBack": "Nu mai înscriu pe nimeni — înapoi la „Gata”",
-      "sameBirthDate": "Formularul pentru {name} nu a fost păstrat: are aceeași dată de naștere ca {kept}, trimis(ă) deja. Lista de mai jos este cea din email. Ai vrut să corectezi numele? Răspunde la email și îl corectăm noi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email sau scrie-ne și facem noi înscrierea."
+      "sameBirthDate": "Formularul pentru {name} nu a fost păstrat: are aceeași dată de naștere ca {kept}, trimis(ă) deja. Lista de mai jos este cea din email. Ai vrut să corectezi numele? Răspunde la email și îl corectăm noi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email sau scrie-ne și facem noi înscrierea.",
+      "marker": "Înscriere de familie: {names}.",
+      "markerPlaces": "Înscriere de familie: {names} — {places}.",
+      "reserved": {
+        "one": "un loc rezervat",
+        "few": "{count} locuri rezervate",
+        "other": "{count} de locuri rezervate"
+      },
+      "waiting": {
+        "one": "o persoană pe lista de așteptare",
+        "few": "{count} persoane pe lista de așteptare",
+        "other": "{count} de persoane pe lista de așteptare"
+      },
+      "untilToday": "până la {at}",
+      "untilOn": "până {at}",
+      "placeReserved": "loc rezervat",
+      "placeWaitlist": "pe lista de așteptare, după confirmare",
+      "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
+      "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci."
     }
   },
   "Registrations": {
@@ -6010,7 +6045,9 @@
         "title": "Așteaptă confirmarea din email",
         "person": "{name} — {event}",
         "how": "Nu sunt încă înscriși: apasă butonul din emailul primit pentru ei. Până atunci nu li se ține niciun loc."
-      }
+      },
+      "family": "Familie",
+      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi."
     },
     "manage": {
       "title": "Gestionează înscrierea",
@@ -6099,11 +6136,13 @@
     "familySitting": {
       "title": "Înscriere de familie la {event}",
       "titlePlain": "Înscriere de familie",
-      "intro": "De pe adresa {email} s-a trimis formularul pentru {people}. Nu am înscris încă pe nimeni: verifică lista și apasă butonul o singură dată.",
+      "intro": "De pe adresa {email} s-a trimis formularul pentru {people}. Locurile sunt rezervate, dar nimeni nu e confirmat încă: verifică lista și apasă butonul o singură dată.",
+      "introLapsed": "De pe adresa {email} s-a trimis formularul pentru {people}. Locurile nu mai sunt rezervate: confirmă oricum și fiecare primește un loc dacă mai e liber, altfel unul pe lista de așteptare.",
       "joining": "Se înscriu acum",
       "personLabel": "{n}. {name}",
       "born": "Data nașterii: {date}",
       "untick": "Cineva nu trebuie înscris? Debifează-l: datele lui se șterg la apăsare și nu se înscrie. Date greșite? Debifează persoana și trimite din nou formularul pentru ea.",
+      "withdrawLater": "Cineva nu trebuie înscris? După confirmare, îl retragi din „Toate înscrierile mele” și locul lui se eliberează.",
       "next": "După apăsare, adresa {email} e confirmată, fiecare persoană are propriul loc (sau un loc pe lista de așteptare), iar declarațiile le semnezi imediat, una după alta. Fiecare primește apoi propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
       "fitnessAcknowledged": "Știu că adulții pe care îi înscriu declară ei înșiși, când își semnează declarația, că starea de sănătate le permite efortul.",
       "action": "Confirm și semnez declarațiile ({count})",

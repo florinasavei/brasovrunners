@@ -112,12 +112,24 @@ type FamilyFactsInput = {
   /** The club's limit of registrations per address, from «Termene»; absent, no line. */
   cap?: number;
 };
+/**
+ * One person a family sitting's message names (§519): the name, the birth date ("YYYY-MM-DD"), and
+ * since §NNN their place — `reserved` (the form reserved it; the button confirms it) or `waitlist`
+ * (no place was free: the button puts them on the waiting list). Absent reads as neither.
+ */
+export type FamilySittingPerson = { name: string; birthDate: string; place?: "reserved" | "waitlist" };
+/** A registration the address held before the sitting (§NNN), by the state the message names. */
+export type FamilyEarlierState = "confirmed" | "declaration" | "waitlist" | "email";
 /** A family sitting's facts (§519): the event, everybody joining now, who the address held before, the link's life, the limit. */
 type FamilySittingFactsInput = {
   event?: string;
   when?: string;
-  people: ReadonlyArray<{ name: string; birthDate: string }>;
+  people: ReadonlyArray<FamilySittingPerson>;
   registered: readonly string[];
+  /** Who the address held before, with their state (§NNN); preferred over `registered` when set. */
+  registeredStates?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
+  /** Until when the reserved places are held, in this half's language (§NNN). */
+  reservedUntil?: string;
   hours: string;
   cap?: number;
 };
@@ -157,6 +169,17 @@ export function joinNames(locale: EmailLocale, names: readonly string[]): string
   if (names.length <= 1) return names[0] ?? "";
   return `${names.slice(0, -1).join(", ")} ${locale === "ro" ? "și" : "and"} ${names.at(-1)}`;
 }
+
+/** A name's first word, for the family marker's list (§NNN): «Ana, Mihai și Ioana». */
+function firstNameOf(name: string): string {
+  return name.trim().split(/\s+/)[0] || name;
+}
+
+/** Who the address held before a sitting, by state (§NNN): the words the family's message says beside each name. */
+const EARLIER_STATE_WORDS: Record<EmailLocale, Record<FamilyEarlierState, string>> = {
+  ro: { confirmed: "confirmat", declaration: "semnează declarația", waitlist: "pe lista de așteptare", email: "așteaptă confirmarea adresei" },
+  en: { confirmed: "confirmed", declaration: "signing the declaration", waitlist: "on the waiting list", email: "waiting for the address to be confirmed" },
+};
 
 /** The family's greeting (§519): every confirmed person's first name, in the order the forms were sent. */
 function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>): string[] {
@@ -407,6 +430,8 @@ export function renderBilingual(
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
     // Every date of the second half in its own language (§349), not only the event's.
     ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
+    // A family's reservations, in the second half's own words (§NNN).
+    ...(data.familyReservedUntilFormattedOther ? { familyReservedUntilFormatted: data.familyReservedUntilFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     // A group run series' rhythm in the second half's language (§523).
     ...(data.seriesRhythmOther ? { seriesRhythm: data.seriesRhythmOther } : {}),
@@ -738,7 +763,20 @@ export type TemplateData = {
    * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
    * Set, the message is the family's: its subject, its facts box, its button and its words.
    */
-  familySittingPeople?: ReadonlyArray<{ name: string; birthDate: string }>;
+  familySittingPeople?: ReadonlyArray<FamilySittingPerson>;
+  /**
+   * Until when the family's places are reserved (§NNN), in the reader's language and the other's —
+   * the sitting's fixed deadline, as the reservations of the people listed carry it; this send moves
+   * nothing. Absent when nobody holds one.
+   */
+  familyReservedUntilFormatted?: string;
+  familyReservedUntilFormattedOther?: string;
+  /**
+   * Who the address held before the sitting (§NNN, amending §446's list of names): each by first name
+   * and initial with their state — confirmed, signing, on the waiting list, waiting for the address —
+   * and asked nothing again. Set on a family sitting's message; `familyRegistered` stays the plain names.
+   */
+  familyRegisteredStates?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
    * Somebody the family message names already got an email of their own, which left before «Da» took
    * them in (§536, `sittingEarlierEmailSent`): one line says this message's button covers them too.
@@ -1407,6 +1445,21 @@ const T = {
         everybody, that registration included.
       */
       earlier: "Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.",
+      /*
+        The family marker at the head of the message (§NNN; the owner, 2026-09-28: «trebuie un marker
+        pentru familie»): everybody by first name, then how many places are reserved and until when,
+        and who waits for a place. The same line the screen after the form shows.
+      */
+      heading: (people: ReadonlyArray<FamilySittingPerson>, reservedUntil: string | undefined): string => {
+        const names = joinNames("ro", people.map((person) => firstNameOf(person.name)));
+        const reserved = people.filter((person) => person.place === "reserved").length;
+        const waiting = people.filter((person) => person.place === "waitlist").length;
+        const parts = [
+          ...(reserved > 0 ? [`${reserved === 1 ? "un loc rezervat" : `${reserved}${countForm(reserved, "ro") === "other" ? " de" : ""} locuri rezervate`}${reservedUntil ? ` ${reservedUntil}` : ""}`] : []),
+          ...(waiting > 0 ? [`${waiting === 1 ? "o persoană" : `${waiting}${countForm(waiting, "ro") === "other" ? " de" : ""} persoane`} pe lista de așteptare`] : []),
+        ];
+        return `Înscriere de familie: ${names}${parts.length > 0 ? ` — ${parts.join(", ")}` : ""}.`;
+      },
       facts: (f: FamilySittingFactsInput): FamilyFact[] => [
         ...(f.event ? [{ label: "Evenimentul", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
         ...f.people.map((person, index) => ({
@@ -1414,9 +1467,29 @@ const T = {
           value: [
             { text: person.name, bold: true },
             ...(formatBirthDate(person.birthDate, "ro") ? [{ text: ", data nașterii " }, { text: formatBirthDate(person.birthDate, "ro"), bold: true }] : []),
+            // Their place (§NNN): reserved by the form, or the waiting list once the address is confirmed.
+            ...(person.place === "reserved"
+              ? [{ text: " — " }, { text: `loc rezervat${f.reservedUntil ? ` ${f.reservedUntil}` : ""}`, bold: true }]
+              : person.place === "waitlist"
+                ? [{ text: " — " }, { text: "pe lista de așteptare", bold: true }, { text: ", după confirmare" }]
+                : []),
           ],
         })),
-        ...(f.registered.length > 0 ? [{ label: "Înscriși deja cu această adresă", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
+        // Who the address held before, with their state (§NNN): confirmed already, and asked nothing again.
+        ...(f.registeredStates && f.registeredStates.length > 0
+          ? [
+              {
+                label: "Înscriși deja cu această adresă",
+                value: f.registeredStates.flatMap((person, index) => [
+                  ...(index > 0 ? [{ text: "; " }] : []),
+                  { text: person.name, bold: true },
+                  { text: ` — ${EARLIER_STATE_WORDS.ro[person.state]}` },
+                ]),
+              },
+            ]
+          : f.registered.length > 0
+            ? [{ label: "Înscriși deja cu această adresă", value: [{ text: f.registered.join(", "), bold: true }] }]
+            : []),
         // What the press does is the message's first line now (§536), so the box keeps only facts.
         { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
         ...(f.cap !== undefined
@@ -1424,7 +1497,9 @@ const T = {
           : []),
       ],
       body: (): string[] => [
-        "Cineva din listă nu trebuie înscris? Îl debifezi pe pagina care se deschide. Dacă nu tu ai trimis formularul, ignoră mesajul: nu se înscrie nimeni, iar datele se șterg singure când linkul expiră.",
+        // The sitting's people are registrations now (§NNN): withdrawn from «Toate înscrierile mele», their place freed.
+        "Cineva din listă nu trebuie înscris? După confirmare, îl retragi din „Toate înscrierile mele” și locul lui se eliberează.",
+        "Dacă nu tu ai trimis formularul, ignoră mesajul: nu se confirmă nimeni, locurile rezervate se eliberează singure, iar datele se șterg.",
         "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
       ],
       action: (count: number) => `Confirm și semnez declarațiile (${count})`,
@@ -1883,6 +1958,16 @@ const T = {
           ? "One button: you confirm the address and the registration, then, if there is still a place, sign the declaration."
           : `One button: you confirm the address and the ${count} registrations, then sign, one by one, the declarations of those who still have a place.`,
       earlier: "This email covers everybody: the button below also confirms the registration from the earlier email.",
+      heading: (people: ReadonlyArray<FamilySittingPerson>, reservedUntil: string | undefined): string => {
+        const names = joinNames("en", people.map((person) => firstNameOf(person.name)));
+        const reserved = people.filter((person) => person.place === "reserved").length;
+        const waiting = people.filter((person) => person.place === "waitlist").length;
+        const parts = [
+          ...(reserved > 0 ? [`${reserved === 1 ? "one place reserved" : `${reserved} places reserved`}${reservedUntil ? ` ${reservedUntil}` : ""}`] : []),
+          ...(waiting > 0 ? [`${waiting === 1 ? "one person" : `${waiting} people`} on the waiting list`] : []),
+        ];
+        return `Family registration: ${names}${parts.length > 0 ? ` — ${parts.join(", ")}` : ""}.`;
+      },
       facts: (f: FamilySittingFactsInput): FamilyFact[] => [
         ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),
         ...f.people.map((person, index) => ({
@@ -1890,16 +1975,35 @@ const T = {
           value: [
             { text: person.name, bold: true },
             ...(formatBirthDate(person.birthDate, "en") ? [{ text: ", date of birth " }, { text: formatBirthDate(person.birthDate, "en"), bold: true }] : []),
+            ...(person.place === "reserved"
+              ? [{ text: " — " }, { text: `place reserved${f.reservedUntil ? ` ${f.reservedUntil}` : ""}`, bold: true }]
+              : person.place === "waitlist"
+                ? [{ text: " — " }, { text: "on the waiting list", bold: true }, { text: ", once confirmed" }]
+                : []),
           ],
         })),
-        ...(f.registered.length > 0 ? [{ label: "Already registered with this address", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
+        ...(f.registeredStates && f.registeredStates.length > 0
+          ? [
+              {
+                label: "Already registered with this address",
+                value: f.registeredStates.flatMap((person, index) => [
+                  ...(index > 0 ? [{ text: "; " }] : []),
+                  { text: person.name, bold: true },
+                  { text: ` — ${EARLIER_STATE_WORDS.en[person.state]}` },
+                ]),
+              },
+            ]
+          : f.registered.length > 0
+            ? [{ label: "Already registered with this address", value: [{ text: f.registered.join(", "), bold: true }] }]
+            : []),
         { label: "Deadline", value: [{ text: "the link is valid for " }, { text: f.hours, bold: true }, { text: " and can be used once" }] },
         ...(f.cap !== undefined
           ? [{ label: "The limit", value: [{ text: "at most " }, { text: peoplePhrase("en", f.cap), bold: true }, { text: " per address, for an event" }] }]
           : []),
       ],
       body: (): string[] => [
-        "Someone on the list should not be registered? Untick them on the page that opens. If you did not send the form, ignore this message: nobody is registered, and the details are deleted by themselves when the link expires.",
+        "Someone on the list should not be registered? Once confirmed, withdraw them from “All my registrations” and their place is freed.",
+        "If you did not send the form, ignore this message: nobody is confirmed, the reserved places are freed by themselves, and the details are deleted.",
         "Only register someone with their consent, and tell them how we use their data: the privacy notice is at the link at the end of this message.",
       ],
       action: (count: number) => `Confirm and sign the declarations (${count})`,
@@ -2331,7 +2435,12 @@ export function buildTemplateContent(
         (§519): everybody joining now, each on a line of the one outlined box.
       */
       ...(familySittingShape
-        ? [copy.familySitting.lead(familySittingPeople.length), ...(data.familyEarlierSent ? [copy.familySitting.earlier] : [])]
+        ? [
+            // The family marker first (§NNN): who, how many places are reserved and until when.
+            copy.familySitting.heading(familySittingPeople, data.familyReservedUntilFormatted),
+            copy.familySitting.lead(familySittingPeople.length),
+            ...(data.familyEarlierSent ? [copy.familySitting.earlier] : []),
+          ]
         : []),
       ...(familySittingShape
         ? [
@@ -2341,6 +2450,8 @@ export function buildTemplateContent(
                 when: data.eventStartsAtFormatted,
                 people: familySittingPeople,
                 registered: data.familyRegistered ?? [],
+                registeredStates: data.familyRegisteredStates,
+                reservedUntil: data.familyReservedUntilFormatted,
                 hours: data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours),
                 cap: data.addressCap,
               }),

@@ -70,7 +70,7 @@ import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistrationAction } from "./actions";
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
-import { afterFormScreen, FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
+import { afterFormScreen, FAMILY_SITTING_FIELD, SITTING_AT_CAP, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -267,6 +267,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     form stays, so a slot that opens a minute later is still one press away, and so a refusal can
     keep what was typed. The cached read the event page makes; optional, so a failure says nothing.
   */
+  /*
+    A family sitting's next form, refused at the club's limit per address (§NNN): the people this
+    browser already sent fill it. A marker, like the two above; every person it counts was typed here (§39).
+  */
+  const sittingAtCap = refusedMarkers.includes(SITTING_AT_CAP);
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null = null;
   if (!submitted && !error && !resting) {
     try {
@@ -534,6 +539,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         <FamilySittingNext
           email={sitting.email}
           names={sittingNames(sitting.people)}
+          // Each person's place and until when (§NNN), from the browser's half.
+          reservation={{ people: sitting.people, until: sitting.reservedUntil ?? null }}
           sameBirthDate={sitting.sameBirthDate ?? null}
           releaseInMs={sitting.heldUntil.getTime() - now.getTime()}
           firstName={submittedFacts?.firstName ?? null}
@@ -656,6 +663,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   {waitlistRefusal === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
                   <Box sx={{ mt: 0.5 }}>{t("errors.waitlistFullNothingSent")}</Box>
                 </>
+              ) : sittingAtCap ? (
+                <Box component="span" data-testid="registration-sitting-at-cap">
+                  {t("errors.sittingAtCap")}
+                </Box>
               ) : captchaFailed ? (
                 t("errors.captcha")
               ) : throttled ? (

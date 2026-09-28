@@ -146,3 +146,24 @@ export function computeWaitlistOfferExpiry(params: {
     eventStartsAt: params.eventStartsAt,
   });
 }
+
+/**
+ * Until when a family's places are reserved (§NNN): the club's declaration hold («Termene»,
+ * `holdMinutes`) counted from `from` — the end of the first form's window, when the sitting opens
+ * (or a form's own window, when it opens a new sitting after the last one's deadline) — capped by the
+ * close and the start like every hold. Worked out once per sitting and stored on it
+ * (`family_sittings.reserved_until`); no form, press or send moves it afterwards (the review of
+ * 2026-09-28, round three).
+ */
+export function computeFamilyReservationExpiry(params: {
+  from: Date;
+  registrationClosesAt: Date | null;
+  eventStartsAt: Date;
+  deadlines: Pick<Deadlines, "holdMinutes">;
+}): Date {
+  return capHoldExpiry({
+    naiveExpiresAt: declarationHoldEndsAt(params.from, params.deadlines),
+    registrationClosesAt: params.registrationClosesAt,
+    eventStartsAt: params.eventStartsAt,
+  });
+}

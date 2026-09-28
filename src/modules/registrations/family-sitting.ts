@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, like, lt, lte, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { type FamilySitting, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
+import { type FamilySitting, familyPlaceHolds, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -32,7 +32,11 @@ import { liveSittingEntries } from "./family-entries";
  * when it will (`drain.ts`), so the window is kept even when nobody presses «Gata».
  */
 
-/** The sitting a form names, locked, when it still takes forms: this event and address, not sent, not confirmed. */
+/**
+ * The sitting a form names, locked, when it still takes forms: this event and address, not sent, not
+ * confirmed, within its window — and before its fixed reservation deadline (§NNN, the review of
+ * 2026-09-28, round three): a form after it opens a new sitting, with a deadline of its own.
+ */
 export async function lockLiveSitting<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   sittingId: string,
@@ -44,17 +48,30 @@ export async function lockLiveSitting<T extends Record<string, unknown>>(
   if (!row) return null;
   if (row.eventId !== scope.eventId || row.participantId !== scope.participantId) return null;
   if (row.releasedAt !== null || row.confirmedAt !== null || row.heldUntil.getTime() <= now.getTime()) return null;
+  if (!reservationStillAhead(row, now)) return null;
   return row;
 }
 
-/** A new sitting, scoped to the address's registration its one link will name. */
+/** Whether a sitting's fixed reservation deadline (§NNN) is still ahead; a sitting written before the column has none yet. */
+function reservationStillAhead(row: Pick<FamilySitting, "reservedUntil">, now: Date): boolean {
+  return row.reservedUntil === null || row.reservedUntil.getTime() > now.getTime();
+}
+
+/**
+ * A new sitting, scoped to the address's registration its one link will name, with its reservation
+ * deadline written once (§NNN): `reservedUntil`, which nothing moves afterwards. `id`, when given, is
+ * the random id the browser's half already carries (a first form that wrote nothing, whose «Da» took a
+ * hold under it, `family_place_holds`): the sitting then adopts that hold by its key.
+ */
 export async function openSitting<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  values: { eventId: string; participantId: string; registrationId: string; locale: Locale; heldUntil: Date; now: Date },
+  values: { id?: string; eventId: string; participantId: string; registrationId: string; locale: Locale; heldUntil: Date; reservedUntil: Date; now: Date },
 ): Promise<FamilySitting> {
   const [row] = await tx
     .insert(familySittings)
     .values({
+      ...(values.id ? { id: values.id } : {}),
+      reservedUntil: values.reservedUntil,
       eventId: values.eventId,
       participantId: values.participantId,
       registrationId: values.registrationId,
@@ -93,6 +110,10 @@ export async function sittingPendingRegistrations<T extends Record<string, unkno
       birthDate: registrations.birthDate,
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       createdAt: registrations.createdAt,
+      // Another adult's row keeps no fitness statement of theirs (§421, §NNN): the press asks the holder's tick.
+      fitnessDeclaredAt: registrations.fitnessDeclaredAt,
+      // The family's reservation (§NNN): the email and its page say each person's place.
+      holdExpiresAt: registrations.holdExpiresAt,
     })
     .from(registrations)
     .where(and(inArray(registrations.id, [...sitting.registrationIds]), eq(registrations.status, "PENDING_EMAIL_CONFIRMATION")))
@@ -222,19 +243,30 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
  *
  * A sitting already sent, confirmed or past its window, and a seed that no longer names a waiting
  * registration or a live kept form of this event, are left as they are: the next form is the
- * ordinary one, and opens a sitting of its own. Returns the sitting that takes the next form, or
- * null. The ids come from the browser's sealed half; nothing is said back (§39).
+ * ordinary one, and opens a sitting of its own. Returns the sitting that takes the next form, and
+ * whether this press opened it (§NNN: only the opening press reserves a place), or null. The ids come
+ * from the browser's sealed half; nothing is said back (§39).
  */
 export async function continueFamilySitting<T extends Record<string, unknown>>(
   db: Database<T>,
   press: { sittingId: string | null; seed: SittingSeed | null; eventId: string; locale: Locale },
   heldUntil: Date,
   now: Date,
-): Promise<string | null> {
+  /** The deadline a sitting this press opens is given (§NNN): the first form's window and the club's hold. Written once. */
+  reservedUntil: Date,
+): Promise<{ sittingId: string; opened: boolean } | null> {
   return db.transaction(async (tx) => {
     if (press.sittingId && isUuid(press.sittingId)) {
       const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, press.sittingId)).limit(1).for("update");
-      if (row && row.eventId === press.eventId && row.releasedAt === null && row.confirmedAt === null && row.heldUntil.getTime() > now.getTime()) {
+      if (
+        row &&
+        row.eventId === press.eventId &&
+        row.releasedAt === null &&
+        row.confirmedAt === null &&
+        row.heldUntil.getTime() > now.getTime() &&
+        // Past its fixed deadline a sitting takes no more forms (§NNN): the press does not hold its email back either.
+        reservationStillAhead(row, now)
+      ) {
         if (row.heldOutboxIds.length > 0) {
           await tx
             .update(emailOutbox)
@@ -245,16 +277,22 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
           .update(familySittings)
           .set({ heldUntil, expiresAt: row.expiresAt.getTime() < heldUntil.getTime() ? heldUntil : row.expiresAt })
           .where(eq(familySittings.id, row.id));
-        return row.id;
+        return { sittingId: row.id, opened: false };
       }
     }
-    return press.seed ? openSittingFromSeed(tx, press.seed, { eventId: press.eventId, locale: press.locale, heldUntil, now }) : null;
+    return press.seed ? openSittingFromSeed(tx, press.seed, { eventId: press.eventId, locale: press.locale, heldUntil, reservedUntil, now }) : null;
   });
 }
 
-/** A live sitting of this event, not sent and not confirmed, still taking forms. */
+/** A live sitting of this event, not sent and not confirmed, still taking forms — before its fixed deadline (§NNN). */
 function liveSittingWhere(eventId: string, now: Date) {
-  return and(eq(familySittings.eventId, eventId), isNull(familySittings.releasedAt), isNull(familySittings.confirmedAt), gt(familySittings.heldUntil, now));
+  return and(
+    eq(familySittings.eventId, eventId),
+    isNull(familySittings.releasedAt),
+    isNull(familySittings.confirmedAt),
+    gt(familySittings.heldUntil, now),
+    or(isNull(familySittings.reservedUntil), gt(familySittings.reservedUntil, now)),
+  );
 }
 
 /**
@@ -296,9 +334,9 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
 async function openSittingFromSeed<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   seed: SittingSeed,
-  at: { eventId: string; locale: Locale; heldUntil: Date; now: Date },
-): Promise<string | null> {
-  const { eventId, locale, heldUntil, now } = at;
+  at: { eventId: string; locale: Locale; heldUntil: Date; reservedUntil: Date; now: Date },
+): Promise<{ sittingId: string; opened: boolean } | null> {
+  const { eventId, locale, heldUntil, reservedUntil, now } = at;
   if (!isUuid(seed.id)) return null;
   if (seed.kind === "registration") {
     const [registration] = await tx
@@ -314,28 +352,28 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
       .from(familySittings)
       .where(and(liveSittingWhere(eventId, now), sql`${familySittings.registrationIds} @> ${JSON.stringify([registration.id])}::jsonb`))
       .limit(1);
-    if (already) return already.id;
-    const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, now });
+    if (already) return { sittingId: already.id, opened: false };
+    const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, reservedUntil, now });
     const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil, SITTING_HELD);
     await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId });
     const expiresAt = sittingLinkExpiresAt([registration.emailLinkExpiresAt, heldUntil], now) ?? heldUntil;
     await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
-    return sitting.id;
+    return { sittingId: sitting.id, opened: true };
   }
   const [entry] = await tx.select().from(pendingFamilyEntries).where(eq(pendingFamilyEntries.id, seed.id)).limit(1).for("update");
   if (!entry || entry.eventId !== eventId || entry.expiresAt.getTime() <= now.getTime()) return null;
   if (entry.sittingId !== null) {
     const [already] = await tx.select({ id: familySittings.id }).from(familySittings).where(and(eq(familySittings.id, entry.sittingId), liveSittingWhere(eventId, now))).limit(1);
-    return already?.id ?? null;
+    return already ? { sittingId: already.id, opened: false } : null;
   }
   // Scoped, as a kept form's own sitting always was, to the registration the address already holds here.
-  const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, now });
+  const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, reservedUntil, now });
   await tx.update(pendingFamilyEntries).set({ sittingId: sitting.id }).where(eq(pendingFamilyEntries.id, entry.id));
   const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil, FAMILY_HELD);
   await holdInSitting(tx, sitting, { outboxId });
   const expiresAt = sittingLinkExpiresAt([entry.expiresAt, heldUntil], now) ?? heldUntil;
   await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
-  return sitting.id;
+  return { sittingId: sitting.id, opened: true };
 }
 
 /**
@@ -462,6 +500,9 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
  * valabil 48 de ore»), not from the form that was sent a window and a pinger's wait earlier. Only
  * what is still live is lengthened, and never shortened: a registration whose link already lapsed and
  * a kept form past its time stay lapsed. Returns the sitting with its new lapse, for the token.
+ *
+ * The links only (§NNN, the review of 2026-09-28, round three): the family's reserved places keep the
+ * sitting's fixed deadline, which this send does not move, late or on time.
  */
 export async function extendSittingLinks<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -567,5 +608,11 @@ export async function sittingEarlierEmailSent<T extends Record<string, unknown>>
  */
 export async function purgeLapsedFamilySittings<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   const gone = await db.delete(familySittings).where(lte(familySittings.expiresAt, now)).returning({ id: familySittings.id });
+  /*
+    …and the sittings' place holds (§NNN) a day past their deadline: counted by nobody since it, and
+    left that long so the per-event sweep (`expireStaleHolds`) still finds a fresh lapse and offers the
+    place to whoever waits, as it does for a lapsed reservation.
+  */
+  await db.delete(familyPlaceHolds).where(lte(familyPlaceHolds.expiresAt, new Date(now.getTime() - 24 * 60 * 60_000)));
   return gone.length;
 }

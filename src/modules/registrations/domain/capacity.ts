@@ -18,11 +18,26 @@ export type OccupiedCounts = {
    * its place whatever the stored deadline says.
    */
   unexpiredWaitlistOfferedHolds: number;
+  /**
+   * A family's reserved places (§NNN, amending §446 and §519): `PENDING_EMAIL_CONFIRMATION` rows a
+   * family sitting reserved when their form was sent, while the reservation's deadline is ahead or
+   * the sitting's one email is still queued. A single registration never reserves: it takes its
+   * place when the address is confirmed, as before. Optional, so a caller that counts no family
+   * reservation (a hand-built count in a test) reads as none.
+   */
+  familyReservations?: number;
+  /**
+   * A family sitting's holds for forms that wrote no registration (§NNN; §39, AGENTS.md §19.4): a
+   * kept form, a person the address already holds, an address at the club's limit — each counted as
+   * one reserved place until the sitting's deadline, so the public count drops by one for such a form
+   * as it does for a fresh address. Optional, like `familyReservations`.
+   */
+  familyPlaceHolds?: number;
 };
 
 export function computeOccupied(counts: OccupiedCounts): number {
   return (
-    counts.confirmed + counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds
+    counts.confirmed + counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0)
   );
 }
 

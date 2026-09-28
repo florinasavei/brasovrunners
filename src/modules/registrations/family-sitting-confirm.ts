@@ -21,6 +21,7 @@ import { familyRegistrationOpen } from "./family-gate";
 import { findSittingByToken, sittingPeople, sittingStillOpen } from "./family-sitting";
 import { publicFormEvent } from "./public-form-event";
 import { confirmEmail, submitRegistration } from "./service";
+import { releaseFamilyPlaceHolds } from "./repository";
 
 /**
  * A family's one button (§519): the page the family message opens, and its press.
@@ -66,6 +67,12 @@ export type FamilySittingLink =
       /** Who the address held at the event before the sitting, as "Ana P." (`registeredOnAddress`). */
       registered: string[];
       registrationsPerAddress: number;
+      /**
+       * Whether the sitting's places are still reserved now (§NNN; the review of 2026-09-28, round four):
+       * its fixed deadline is ahead. The link lives longer than the places, so past it the page says they
+       * lapsed and that the press still allocates what is free.
+       */
+      reserved: boolean;
     }
   | { ok: false };
 
@@ -95,6 +102,7 @@ export async function readFamilySittingLink<T extends Record<string, unknown>>(
       people: listed,
       registered: await registeredOnAddress(tx, sitting.eventId, sitting.participantId, sitting.registrationIds),
       registrationsPerAddress: (await readAddressCap(tx)).cap.registrationsPerAddress,
+      reserved: sitting.reservedUntil !== null && sitting.reservedUntil.getTime() > now.getTime(),
     };
   });
 }
@@ -105,7 +113,8 @@ function listPeople(people: Awaited<ReturnType<typeof sittingPeople>>, now: Date
       key: `r:${row.id}`,
       name: row.registeredName,
       birthDate: row.birthDate ?? "",
-      adultEntry: false,
+      // Another adult's registration from a sitting's form (§NNN) kept none of their own consents (§421).
+      adultEntry: anotherAdultRow(row, now),
       optional: false,
     })),
     ...people.entries.map((entry) => {
@@ -119,6 +128,15 @@ function listPeople(people: Awaited<ReturnType<typeof sittingPeople>>, now: Date
       };
     }),
   ];
+}
+
+/**
+ * A registration a sitting's form wrote for another adult (§NNN): an adult with no fitness statement
+ * of their own on the row — the form's first person made theirs; a third party cannot make it for an
+ * adult (§421). The press asks the address holder's acknowledgement for them, as for a kept form.
+ */
+function anotherAdultRow(row: { birthDate: string | null; fitnessDeclaredAt: Date | null }, now: Date): boolean {
+  return row.fitnessDeclaredAt === null && adultOnTheFamilyForm(row.birthDate, now);
 }
 
 /** Why one person of the family did not join at the press — a marker the page turns into a sentence, never a value. */
@@ -158,7 +176,10 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
     const included = people.entries.filter((entry) => input.includedKeys.includes(`e:${entry.id}`));
     const left = people.entries.filter((entry) => !input.includedKeys.includes(`e:${entry.id}`));
     // The adults' own consents were never kept (§421): the holder acknowledges they give them at signing.
-    if (!input.fitnessAcknowledged && included.some((entry) => adultOnTheFamilyForm(personOfEntry(entry).birthDate, now))) {
+    if (
+      !input.fitnessAcknowledged &&
+      (included.some((entry) => adultOnTheFamilyForm(personOfEntry(entry).birthDate, now)) || people.registrations.some((row) => anotherAdultRow(row, now)))
+    ) {
       throw new DomainError("VALIDATION_ERROR", "the address holder's acknowledgement for another adult is missing", ["fitnessAcknowledged"]);
     }
 
@@ -173,6 +194,12 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
       (`familyHeldDeclaration`, in `confirmEmail`): a request never arrives after its own hold.
     */
     const declarationNotBefore = new Date(now.getTime() + FAMILY_PASS_MINUTES * 60_000);
+    /*
+      The sitting's holds for forms that wrote no registration (§NNN) go first: every person the press
+      registers is allocated below like any other, and must not find their own held place counted
+      against them.
+    */
+    await releaseFamilyPlaceHolds(tx, sitting.id);
 
     const registrations: Registration[] = [];
     const refused: FamilySittingRefusal[] = [];

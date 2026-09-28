@@ -217,6 +217,43 @@ export async function registeredOnAddress<T extends Record<string, unknown>>(
 }
 
 /**
+ * Who the address held at the event before a family sitting (§NNN): `registeredOnAddress`'s rows,
+ * each with the state the family's message names beside it — confirmed, signing, on the waiting
+ * list, or waiting for the address — so a person already confirmed is listed as such and asked
+ * nothing again.
+ */
+export async function registeredOnAddressWithStates<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  participantId: string,
+  exceptIds: readonly string[] = [],
+): Promise<{ name: string; state: "confirmed" | "declaration" | "waitlist" | "email" }[]> {
+  const rows = await db
+    .select({ firstName: registrations.firstName, lastName: registrations.lastName, displayName: registrations.displayName, status: registrations.status })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.participantId, participantId),
+        inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+        ...(exceptIds.length > 0 ? [notInArray(registrations.id, [...exceptIds])] : []),
+      ),
+    )
+    .orderBy(asc(registrations.createdAt));
+  return rows.map((row) => ({
+    name: shortRunnerName(row),
+    state:
+      row.status === "CONFIRMED"
+        ? "confirmed"
+        : row.status === "WAITLISTED"
+          ? "waitlist"
+          : row.status === "PENDING_EMAIL_CONFIRMATION"
+            ? "email"
+            : "declaration",
+  }));
+}
+
+/**
  * The address's other declarations still to sign at the event (§471): the registrations of this
  * participant there, other than `exceptId`, in a state a declaration is signed from — named as
  * `registeredOnAddress` names them, first name and initial. The declaration request says them, so
