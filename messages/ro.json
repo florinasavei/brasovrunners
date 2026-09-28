@@ -2258,7 +2258,8 @@
           "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea.",
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
-            "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă. Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
+            "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
+            "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
             "Dacă vrei să citești mai întâi: sub casetă, „Pornește de la șablon” → deschide fiecare, citește, apoi apasă butonul din casetă.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
@@ -2270,10 +2271,20 @@
           "done": "Emailurile ajung la participanți.",
           "how": [
             "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
-            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking). Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat). Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată. Apoi „Verify” în Mailgun — poate dura până la o oră.",
-            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY). Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints” — cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
-            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=o adresă pe care clubul o citește (dacă nu există încă, nu seta variabila deloc — goală, pornirea o refuză). Expeditorul e „{senderName}” <noreply@{mailDomain}> fără altă setare — numele din EMAIL_FROM_NAME, implicit numele clubului.",
-            "Probă pe QA, nu pe producție (producția refuză înscrierile până sunt aprobate textele legale): pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA — emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
+            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking).",
+            "Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat).",
+            "Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată.",
+            "Apoi „Verify” în Mailgun — poate dura până la o oră.",
+            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY).",
+            "Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints”.",
+            "Cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
+            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY.",
+            "Tot acolo: MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3 și EMAIL_REPLY_TO=o adresă pe care clubul o citește.",
+            "Dacă adresa nu există încă, nu seta EMAIL_REPLY_TO deloc: goală, pornirea o refuză.",
+            "Expeditorul e „{senderName}” <noreply@{mailDomain}> fără altă setare — numele din EMAIL_FROM_NAME, implicit numele clubului.",
+            "Probă pe QA, nu pe producție: producția refuză înscrierile până sunt aprobate textele legale.",
+            "Pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA.",
+            "Emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
           ]
         },
         "scheduler": {
@@ -2282,11 +2293,15 @@
           "done": "Ambele sarcini rulează la timp.",
           "how": [
             "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
-            "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
-            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *). Noapte: Custom → toate zilele, orele 23 și 0–6, minutul 0 (0 0-6,23 * * *); monitorul de noapte pentru mentenanță poate sări peste 02:00 și 03:00 (0 0-1,4-6,23 * * *).",
-            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
+            "Adresele: {outboxUrl} și {maintenanceUrl}.",
+            "La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
+            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *).",
+            "Noapte: Custom → toate zilele, orele 23 și 0–6, minutul 0 (0 0-6,23 * * *); monitorul de noapte pentru mentenanță poate sări peste 02:00 și 03:00 (0 0-1,4-6,23 * * *).",
+            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date.",
+            "Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
             "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe Setări → Costuri „Cât de des verifică site-ul” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
-            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header — pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
+            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
+            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
           ]
         },
         "retentionSweep": {
@@ -2294,7 +2309,8 @@
           "todo": "Pasul care șterge datele ajunse la termen a eșuat de două ori la rând, deci termenele nu se mai respectă singure. Monitoarele sunt în regulă",
           "done": "Ștergerea automată a datelor rulează fără erori.",
           "how": [
-            "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu retention:registrations-after-event). Numele pașilor sunt în src/modules/jobs/retention.ts.",
+            "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu „retention:registrations-after-event”).",
+            "Numele pașilor sunt în codul sarcinilor de retenție.",
             "În jurnalele funcției din Vercel caută „[retention] sweep step failed”: lângă numele pasului apare codul erorii bazei de date (de exemplu 57014, timp depășit), niciodată valorile.",
             "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health răspunde din nou ok."
           ]
@@ -2304,7 +2320,8 @@
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
           "done": "Echipa are conturi.",
           "how": [
-            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele), Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină) sau Superadministrator (și setările tehnice; rolul îl dă doar alt Superadministrator).",
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele) sau Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină).",
+            "Superadministrator înseamnă și setările tehnice; rolul îl dă doar alt Superadministrator.",
             "„Adaugă” îi trimite pe email invitația clubului. Cu cheia de invitații pusă (ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel, cu link pentru parolă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
@@ -2318,16 +2335,21 @@
           "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
           "how": [
             "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „{club} — invitații”, access token type Bearer. Create.",
-            "Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „brasovrunners-invites”. Nu „Role Assignments”.",
-            "Pe service account → Personal Access Tokens → New. Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit. Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
+            "Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „brasovrunners-invites”.",
+            "Nu „Role Assignments”.",
+            "Pe service account → Personal Access Tokens → New.",
+            "Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit.",
+            "Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
             "Vercel → proiectul de producție → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = tokenul (Production). La fel pe proiectul QA. Redeploy pe ambele.",
-            "Verificare: reîncarcă această pagină după redeploy — rândul se face verde când cheia găsește contul tău, fără să inviți pe nimeni. Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
+            "Verificare: reîncarcă această pagină după redeploy — rândul se face verde când cheia găsește contul tău, fără să inviți pe nimeni.",
+            "Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
           ],
           "howBroken": [
             "Consola Zitadel → Organization → Managers → + New: service account-ul cheii („brasovrunners-invites”), rolul Org User Manager. Dialogul se numește „Add an Administrator”.",
             "Nu „Role Assignments”: acea pagină dă roluri într-un proiect și nu ajută la crearea utilizatorilor.",
             "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy.",
-            "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău. Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
+            "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău.",
+            "Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
           ],
           "howUnreachable": [
             "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
@@ -2335,7 +2357,8 @@
           ],
           "capped": "Organizația are mai multe conturi decât citește verificarea: cel mult 2000, câte 200 pe pagină. Cheia poate funcționa, dar Echipa nu mai poate spune ce rând nu are cont de autentificare.",
           "howCapped": [
-            "Nu e nimic de reparat la cheie. Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din src/modules/staff-identity/zitadel-users.ts, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
+            "Nu e nimic de reparat la cheie.",
+            "Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din codul conturilor Zitadel, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
           ]
         },
         "mediaStorage": {
@@ -2345,9 +2368,12 @@
           "how": [
             "Cont Cloudflare (gratuit) pe adresa clubului. Nu trebuie mutat domeniul acolo.",
             "În meniul din stânga → R2 Object Storage → activează R2 (aici cere cardul; nu se plătește nimic sub 10 GB).",
-            "Create bucket → numele „brasovrunners-media”, locația „European Union”. Apoi, în setările bucket-ului, activează „Public access” prin subdomeniul r2.dev (sau un domeniu propriu) și copiază adresa publică — este R2_PUBLIC_BASE_URL.",
-            "R2 → „Manage R2 API Tokens” → Create API token → nume „brasovrunners-site”, permisiune „Object Read & Write”, doar pe acest bucket. Copiază Access Key ID, Secret Access Key și endpoint-ul S3 (apar o singură dată).",
-            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy. Rândul acesta devine verde și pagina albumului primește butonul de încărcare."
+            "Create bucket → numele „brasovrunners-media”, locația „European Union”.",
+            "Apoi, în setările bucket-ului, activează „Public access” prin subdomeniul r2.dev (sau un domeniu propriu) și copiază adresa publică — este R2_PUBLIC_BASE_URL.",
+            "R2 → „Manage R2 API Tokens” → Create API token → nume „brasovrunners-site”, permisiune „Object Read & Write”, doar pe acest bucket.",
+            "Copiază Access Key ID, Secret Access Key și endpoint-ul S3 (apar o singură dată).",
+            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy.",
+            "Rândul acesta devine verde și pagina albumului primește butonul de încărcare."
           ]
         },
         "publishEvents": {
@@ -2365,11 +2391,15 @@
           "todo": "Au trecut șapte zile de la eveniment: distrugeți listele descărcate și foile tipărite, cel târziu la 30 de zile. Rândul dispare singur.",
           "done": "Nicio listă sau foaie de distrus acum.",
           "how": [
-            "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis. Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
+            "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis.",
+            "Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
             "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
             "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
-            "În Gmail-ul clubului: copiile declarațiilor mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
-            "Tot acolo, confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
+            "În Gmail-ul clubului, declarațiile mai vechi de trei ani: subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y.",
+            "Mesajele de pe formularul de contact mai vechi de 12 luni: subject:\"Mesaj de pe site\" older_than:1y.",
+            "Selectează-le pe toate și șterge-le.",
+            "Tot acolo, confirmările și copiile pentru club mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y.",
+            "Selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
           ]
         },
         "botCheck": {
@@ -2406,7 +2436,8 @@
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
-            "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
+            "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy.",
+            "Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
           ]
         },
         "domainRenewal": {
@@ -2417,7 +2448,8 @@
           "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire.",
           "how": [
             "Reînnoiește pe mai mulți ani la registrar; apoi actualizează DOMAIN_RENEWAL_YEARS.",
-            "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4. În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
+            "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4.",
+            "În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
             "Verifică: rândul acesta arată noua dată de expirare și devine verde când mai sunt peste 90 de zile."
           ]
         },
@@ -2428,9 +2460,12 @@
           "how": [
             "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
             "Tot în Security → App passwords → creează una cu numele „{club} site” → copiază cele 16 caractere (se arată o singură dată).",
-            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
+            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
+            "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
+            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
+            "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
+            "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         },
@@ -2441,7 +2476,8 @@
           "done": "Pe acest mediu e setată o limită lunară, iar perioada curentă e confortabil sub ea.",
           "how": [
             "În fila Costuri, deschide „Limitele bazei de date”, alege „Cu limită” și scrie numărul recomandat acolo.",
-            "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele. Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
+            "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele.",
+            "Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
             "Verifică: după salvare, cifrele de deasupra formularului sunt ce ține Neon acum, niciodată ce a fost trimis. Rândul devine verde sub 80% din limită, și roșu la sau peste ea."
           ]
         },
@@ -2461,7 +2497,8 @@
           "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
           "how": [
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”.",
+            "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },
@@ -2491,10 +2528,13 @@
           "todo": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” pornesc când pui cheia DeepL pe server; până atunci, engleza se scrie de mână.",
           "done": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare.",
           "how": [
-            "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar. DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
+            "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar.",
+            "DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
-            "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
-            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Setări → Costuri."
+            "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl.",
+            "Redeploy.",
+            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde.",
+            "Bugetul pe zi se alege la Setări → Costuri."
           ],
           "credit": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare. Creditul DeepL: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining} — se dă o singură dată.",
           "creditUnread": "Traducerea automată e pornită. Creditul DeepL: — {creditReason}",
@@ -2515,7 +2555,8 @@
           "how": [
             "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere — cursă trail” → „Pornește de la șablon”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
             "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
-            "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci — cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului; alege-o pe cea de șosea sau parc și salvează."
+            "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
+            "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
           ]
         },
         "groupRunSeriesTexts": {
@@ -3392,15 +3433,23 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc, iar un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
-        "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
-        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
+        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
+        "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
+        "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
+        "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
+        "Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
+        "Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
-        "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
-        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
+        "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
+        "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
+        "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
+        "Bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul.",
+        "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
-        "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
+        "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
+        "Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
       ],
       "noEvents": "Niciun eveniment cu înscriere locală în perioada asta.",
       "event": "Eveniment",

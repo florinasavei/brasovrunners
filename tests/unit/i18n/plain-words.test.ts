@@ -101,8 +101,11 @@ const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs", "Budget", "Feedb
  */
 const STAFF_ERROR_KEYS = ["staffTitle", "staffBody", "staffSettings"] as const;
 
+/** A task row's or the desk's «Cum» step: an array element, held to the length and the references, its parentheses free. */
+const ARRAY_STEP = /\.how(Broken|Capped|Unreachable)?\.\d+$/;
+
 /** The numbered steps, where the detail is meant to live: the guide's and a task row's «Cum». */
-const STEP_KEYS: readonly RegExp[] = [/^Admin\.guide\.sections\.\d+\.tasks\.\d+\.steps\.\d+$/, /\.how(Broken)?\.\d+$/];
+const STEP_KEYS: readonly RegExp[] = [/^Admin\.guide\.sections\.\d+\.tasks\.\d+\.steps\.\d+$/, ARRAY_STEP];
 
 function isStep(key: string): boolean {
   return STEP_KEYS.some((pattern) => pattern.test(key));
@@ -147,7 +150,8 @@ function leaves(catalogue: Catalogue, scope: string): Array<[string, string]> {
   const out: Array<[string, string]> = [];
   const walk = (node: unknown, key: string) => {
     if (typeof node === "string") out.push([key, node]);
-    else if (node && typeof node === "object" && !Array.isArray(node)) for (const [k, v] of Object.entries(node)) walk(v, `${key}.${k}`);
+    else if (Array.isArray(node)) node.forEach((v, i) => walk(v, `${key}.${i}`));
+    else if (node && typeof node === "object") for (const [k, v] of Object.entries(node)) walk(v, `${key}.${k}`);
   };
   walk(catalogue[scope], scope);
   return out;
@@ -174,6 +178,13 @@ function breaches(text: string, parenLimit: number = MAX_PAREN_WORDS): string[] 
   for (const [name, pattern] of FORBIDDEN) if (pattern.test(text)) why.push(name);
   for (const group of longParentheses(text, parenLimit)) why.push(`a parenthesis of more than ${parenLimit} words: ${group}`);
   return why;
+}
+
+
+/** A guide step keeps its length (the detail lives there); a «Cum» step is held to 200 characters. */
+function stepBreaches(key: string, text: string): string[] {
+  const why = breaches(text, Number.POSITIVE_INFINITY);
+  return ARRAY_STEP.test(key) ? why : why.filter((reason) => !reason.endsWith(" characters"));
 }
 
 describe("§511 the backoffice says one plain sentence per field, the rest behind «?»", () => {
@@ -206,8 +217,8 @@ describe("§511 the backoffice says one plain sentence per field, the rest behin
 
     it(`keeps every string the backoffice shows to ${MAX_HELP} characters and no parenthesis over ${MAX_SCREEN_PAREN_WORDS} words, steps apart (${locale})`, () => {
       const offenders = screenLeaves(catalogue)
-        .filter(([key]) => !isStep(key) && !(key in ALLOWED_LONG))
-        .map(([key, text]) => [key, breaches(text, MAX_SCREEN_PAREN_WORDS)] as const)
+        .filter(([key]) => !(key in ALLOWED_LONG))
+        .map(([key, text]) => [key, isStep(key) ? stepBreaches(key, text) : breaches(text, MAX_SCREEN_PAREN_WORDS)] as const)
         .filter(([, why]) => why.length > 0)
         .map(([key, why]) => `${key}: ${why.join("; ")}`);
       expect(offenders).toEqual([]);
@@ -225,6 +236,8 @@ describe("§511 the backoffice says one plain sentence per field, the rest behin
       const keys = screenLeaves(catalogue).map(([key]) => key);
       expect(keys.filter((key) => key.startsWith("Feedback.")).length).toBeGreaterThan(100);
       for (const key of STAFF_ERROR_KEYS) expect(keys).toContain(`Error.${key}`);
+      // The «Cum» steps are arrays, and the walk reads them.
+      expect(keys.filter((key) => ARRAY_STEP.test(key)).length).toBeGreaterThan(50);
       // The public error page's words are not the backoffice's.
       expect(keys).not.toContain("Error.body");
       expect(screenLeaves(catalogue).every(([, text]) => typeof text === "string" && text.length > 0)).toBe(true);

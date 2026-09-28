@@ -235,7 +235,7 @@ sections and in `CHANGELOG.md`.
   interval between real runs on «Setări» → «Costuri» (§334, §516); the "Limitele bazei de date" card
   reads and sets Neon's size ceiling and monthly quota, and `/api/health` warns at 80% of it (§335).
 - Backoffice folds start closed and open themselves only for a refusal, a save, a warning or the
-  address's `#` (§336); `/admin/emails` is one card of cards. The telephone is one box with a flag
+  address's `#` (§336); «Setări» → «Emailuri» is one card of cards (§516). The telephone is one box with a flag
   and a mask (§337); a bib is a true A5 sheet, two to an A4 page (§338).
 - **Batch 3 (2026-09-24):** tooltips that explain, with a series naming the dates it left as drafts and a switch
   to publish new ones automatically (§341); a canonical and `hreflang` on every public page, the sitemap to match (§342);
@@ -346,7 +346,7 @@ sections and in `CHANGELOG.md`.
 - **Batch 39 (2026-09-27, `BR-V2.16`):** «Întrebări frecvente» — a platform page the club fills with questions and rich-text answers in both languages, native folds with deep links, `FAQPage` structured data; Pagini in «standard» and «personalizate» groups; migration `0103` (§525) · the difficulty as five bands × three steps — ușor, mediu, greuț, greu, foarte greu, each 1·2·3 — one level column backfilled from the old five values, the gauge with step dots, the club's scale in the guide; migration `0104` (§526).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
-  form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
+  form — with the steps under each row; the cost table with the Mailgun plan's price under «Setări» → «Costuri» (§516, §41,
   §97–§101, §149). `/devs`: the
   configuration, Neon's month, Vercel's deployments and build minutes, the outbox, the
   repository's documents at `/devs/docs/<name>` (§88, §101).
