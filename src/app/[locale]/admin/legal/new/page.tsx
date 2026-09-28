@@ -22,8 +22,16 @@ import LegalDocumentForm, {
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { isUuid } from "@/shared/ids";
-import { createLegalVersionAction } from "../actions";
+import { createLegalVersionAction, regenerateLegalTemplatesAction } from "../actions";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
+import { LEGAL_KIND_GROUPS } from "@/modules/legal-documents/domain/overview";
+import { readLegalOverview } from "@/modules/legal-documents/service";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -90,6 +98,10 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
       : undefined;
   // What is still a blank, named, so the Administrator types two things and not a search.
   const blanks = values && fromTemplate ? remainingPlaceholders(values.ro.body) : [];
+  // Each text's state under its template's button, read only while the choice is shown (§NNN).
+  const overview = values ? null : await readLegalOverview(getDb(), facts, new Date());
+  const toRegenerate = overview ? LEGAL_DOCUMENT_KEYS.filter((key) => overview[key].regeneration === "create") : [];
+  const words = await confirmWords();
 
   return (
     <Stack spacing={3}>
@@ -128,26 +140,96 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         Only while nothing has been chosen: once `?template=` or `?from=` has filled the form,
         the panel would be offering to discard what the reader is looking at.
       */}
-      {!values && (
-        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+      {/*
+        The owner, 2026-09-28, on this card: «de aici aș vrea să pot regenera documentele» (§NNN).
+        So it is where the regenerating is: the six templates in three labelled rows, each button
+        with its text's state under it — in force, a draft waiting, none — and «Șablon nou» when
+        the template changed after the text in force was made from it. A press keeps its meaning,
+        the form below prefilled with that template (regenerating one text); «Regenerează toate»
+        makes a draft of every text whose template is due, through §532's own press.
+      */}
+      {!values && overview && (
+        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }} data-testid="legal-start-from">
           <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
             {t("legal.startFrom.title")}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t("legal.startFrom.intro")}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }} data-testid="legal-start-from-help">
+            {t("legal.startFrom.help")}
           </Typography>
-          <Stack direction={{ xs: "column", sm: "row" }} sx={{ flexWrap: "wrap", gap: 1 }}>
-            {LEGAL_DOCUMENT_KEYS.map((documentKey) => (
-              <GlyphButton
-                key={documentKey}
-                icon="template"
-                href={`${getPathname({ locale, href: "/admin/legal/new" })}?template=${documentKey}`}
-                variant="outlined"
-                sx={{ minHeight: 44 }}
-              >
-                {t(`legal.keys.${documentKey}`)}
-              </GlyphButton>
+          <Stack spacing={2}>
+            {LEGAL_KIND_GROUPS.map((group) => (
+              <Box key={group.id} component="section" aria-labelledby={`legal-group-${group.id}`} data-testid={`legal-group-${group.id}`}>
+                <Typography id={`legal-group-${group.id}`} component="h3" variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
+                  {t(`legal.groups.${group.id}`)}
+                </Typography>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+                  {group.keys.map((documentKey) => {
+                    const kind = overview[documentKey];
+                    const state = [
+                      kind.summary.inForce
+                        ? t("legal.kinds.inForce", {
+                            version: kind.summary.inForce.version,
+                            date: formatDay(kind.summary.inForce.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
+                          })
+                        : t("legal.kinds.noneInForce"),
+                      kind.summary.waitingDraft ? t("legal.kinds.draftPending", { version: kind.summary.waitingDraft.version }) : null,
+                    ]
+                      .filter((line) => line !== null)
+                      .join(" · ");
+                    return (
+                      <Stack key={documentKey} spacing={0.5} sx={{ alignItems: "flex-start" }} data-testid={`legal-template-${documentKey}`}>
+                        <GlyphButton
+                          icon="template"
+                          href={`${getPathname({ locale, href: "/admin/legal/new" })}?template=${documentKey}`}
+                          variant="outlined"
+                          sx={{ minHeight: 44, textAlign: "left", justifyContent: "flex-start" }}
+                        >
+                          {t(`legal.keys.${documentKey}`)}
+                        </GlyphButton>
+                        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+                          <Typography variant="body2" color="text.secondary" data-testid="legal-template-state">
+                            {state}
+                          </Typography>
+                          {kind.templateNewer && (
+                            <Chip size="small" color="warning" variant="outlined" label={t("legal.kinds.templateNew")} title={t("legal.kinds.templateNewHint")} />
+                          )}
+                        </Stack>
+                      </Stack>
+                    );
+                  })}
+                </Box>
+              </Box>
             ))}
+
+            {toRegenerate.length > 0 ? (
+              <ActionForm
+                action={regenerateLegalTemplatesAction}
+                confirm={{
+                  title: t("legal.batch.regenerateTitle", { count: toRegenerate.length }),
+                  body: t("legal.batch.regenerateBody", { texts: toRegenerate.map((key) => t(`legal.keys.${key}`)).join(", ") }),
+                  confirmLabel: t("legal.startFrom.regenerateAll", { count: toRegenerate.length }),
+                  cancelLabel: words.cancel,
+                }}
+                data-testid="legal-regenerate-all"
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="returnTo" value="new" />
+                {toRegenerate.map((key) => (
+                  <input key={key} type="hidden" name="key" value={key} />
+                ))}
+                <GlyphSubmitButton
+                  label={t("legal.startFrom.regenerateAll", { count: toRegenerate.length })}
+                  pendingLabel={t("legal.batch.regeneratePending")}
+                  icon="template"
+                  variant="contained"
+                  size="medium"
+                />
+              </ActionForm>
+            ) : (
+              <Typography variant="body2" color="text.secondary" data-testid="legal-regenerate-all-none">
+                {t("legal.batch.upToDate")}
+              </Typography>
+            )}
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             {t("legal.startFrom.orBlank")}
@@ -159,6 +241,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         action={createLegalVersionAction}
         locale={locale}
         values={values}
+        startedFrom={fromTemplate && template ? { template } : source ? { versionId: source.id } : undefined}
         keyLocked={Boolean(source || fromTemplate)}
         submitLabel={t("legal.saveDraft")}
         pendingLabel={t("editor.saving")}

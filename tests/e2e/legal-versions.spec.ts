@@ -90,7 +90,9 @@ test.describe("legal documents: a Superadministrator can create the first versio
 test.describe("legal documents: the next version starts from the current one", () => {
   test("an approved version offers the next version, prefilled from its text", async ({ page }) => {
     await signIn(page, "Dev Superadministrator");
-    await page.goto("/ro/admin/legal");
+    // The texts in force, through the address (§NNN): each text's versions fold under its card and
+    // a fold opens only for a reason — a filter that keeps rows in it is one.
+    await page.goto("/ro/admin/legal?state=inForce");
 
     // The first version in the list. `/admin/legal/new` and the back link do not match the
     // trailing slash plus an id, so only version rows do — and only the visible copy: below
@@ -120,7 +122,7 @@ test.describe("legal documents: the next version starts from the current one", (
    */
   test("the Romanian text takes the room it needs before the editor mounts, so the English half does not move", async ({ page }) => {
     await signIn(page, "Dev Superadministrator");
-    await page.goto("/ro/admin/legal");
+    await page.goto("/ro/admin/legal?state=inForce");
     await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
     await page.getByRole("link", { name: "Pornește versiunea următoare din aceasta" }).click();
     await expect(page).toHaveURL(/\/admin\/legal\/new\?from=[0-9a-f-]{36}$/);
@@ -161,7 +163,7 @@ test.describe("legal documents: the next version starts from the current one", (
 test.describe("legal documents: a version downloads as a PDF", () => {
   test("offers one download per language on the version page, and the file is a PDF", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/legal");
+    await page.goto("/ro/admin/legal?state=inForce");
     await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
     await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}$/);
 
@@ -209,27 +211,56 @@ test.describe("legal documents: a version downloads as a PDF", () => {
  * this spec made are the ones it deletes — found as the ticks that were not there before the press —
  * so the list is left as it was. Desktop only: one database, and the phone renders the same rows as
  * labelled blocks.
+ *
+ * §NNN — the list is one card per text now, each text's versions folded under it, and one text is
+ * regenerated from its own card first: «Regenerează din șablon», a dialog naming the text and the
+ * version it makes, a toast, and the list landing on «Ciorne», where every draft's fold is open.
+ * The ticks are read on that filter, before and after, so a fold's state never changes the count.
  */
 test.describe("legal documents: every text at once", () => {
   test("regenerates drafts from the templates, names them for approval, and deletes the ticked ones", async ({ page }) => {
     test.skip(test.info().project.name !== "desktop", "one database: the drafts are made and deleted once");
     test.setTimeout(120_000);
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/legal");
-    await hydrated(page);
 
     const tools = page.getByTestId("legal-batch-tools");
     const ticks = page.locator('[data-testid="legal-batch-tick"]:visible input[type="checkbox"]');
     const labelsOf = async () => Promise.all((await ticks.all()).map(async (tick) => (await tick.getAttribute("aria-label")) ?? ""));
-    // The list streams in behind «Se încarcă…»: read the ticks once the tools are on the page.
+    // The drafts already there, on «Ciorne»: the list streams in behind «Se încarcă…», so the
+    // ticks are read once the tools are on the page.
+    await page.goto("/ro/admin/legal?state=drafts");
+    await hydrated(page);
     await expect(tools).toBeVisible();
     const before = new Set(await labelsOf());
 
-    // Regenerate: the dialog names the texts, nothing is in force, the toast counts the drafts.
-    await tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+\)$/ }).click();
-    await confirmDialog(page, /^Faci ciorne noi din șabloane \(\d+\)\?$/);
-    await expect(page.getByTestId("toast")).toContainText(/ciorn(ă nouă din șablon|e noi din șabloane)/, { timeout: 30_000 });
+    // One text from its card: the terms, whose sample in force is not the template's words.
+    await page.goto("/ro/admin/legal");
     await hydrated(page);
+    const terms = page.getByTestId("legal-kind-TERMS");
+    await expect(terms.getByTestId("legal-kind-state").first()).toHaveText(/^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/);
+    const regenerateOne = terms.getByRole("button", { name: "Regenerează din șablon" });
+    if ((await regenerateOne.count()) > 0) {
+      await regenerateOne.click();
+      const dialog = page.getByRole("dialog", { name: "Faci o ciornă nouă pentru Termeni de concurs?" });
+      await expect(dialog).toContainText(/O ciornă nouă pentru Termeni de concurs, din șablon, versiunea \d+/);
+      await confirmDialog(page, "Faci o ciornă nouă pentru Termeni de concurs?");
+      await expect(page.getByTestId("toast")).toContainText("1 ciornă creată din șablon.", { timeout: 30_000 });
+      // Landed on «Ciorne», the new draft's text named as waiting, its versions open.
+      await expect(page).toHaveURL(/\/admin\/legal\?state=drafts/);
+      await hydrated(page);
+      await expect(page.getByTestId("legal-kind-TERMS")).toContainText(/O ciornă așteaptă aprobarea: versiunea \d+/);
+      await expect(page.getByTestId("legal-versions-TERMS")).toHaveAttribute("open", "");
+    }
+
+    // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
+    const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+\)$/ });
+    if ((await regenerateRest.count()) > 0) {
+      await regenerateRest.click();
+      await confirmDialog(page, /^Faci ciorne noi din șabloane \(\d+\)\?$/);
+      await expect(page.getByTestId("toast")).toContainText(/ciorn(ă creată din șablon|e create din șabloane)/, { timeout: 30_000 });
+      await expect(page).toHaveURL(/\/admin\/legal\?state=drafts/);
+      await hydrated(page);
+    }
     await expect(tools.getByTestId("legal-regenerate-uptodate")).toBeVisible();
 
     // Approve: every new draft is either offered (named in the dialog) or held with its reason.
@@ -259,9 +290,71 @@ test.describe("legal documents: every text at once", () => {
     await expect(page.getByTestId("toast")).toContainText(`${made.length} ${made.length === 1 ? "versiune ștearsă" : made.length < 20 ? "versiuni șterse" : "de versiuni șterse"}.`, {
       timeout: 30_000,
     });
+    // Back on «Ciorne»: the drafts that were there before, and no other. Polled, not read once
+    // while the list still streams in.
+    await page.goto("/ro/admin/legal?state=drafts");
     await hydrated(page);
-    // After the redirect the list streams in again: polled, not read once while it still loads.
     await expect(tools).toBeVisible();
     await expect.poll(async () => new Set(await labelsOf())).toEqual(before);
+  });
+});
+
+/**
+ * §NNN — the list grouped and filtered, and «Versiune nouă» as the place to regenerate: read only,
+ * both projects. Every text has its card with its state in words; the chips filter through the
+ * address, without a script; «Versiune nouă» shows the templates in three labelled rows, each with
+ * its text's state under it, and «Regenerează toate» (or the sentence saying nothing is due).
+ */
+test.describe("legal documents: one card per text, filtered, and the templates' page", () => {
+  test("says each text's state, filters by state and text, and groups the templates", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/legal");
+    // Scoped to the page's own content: on a phone the shell may hold a second copy while it streams.
+    const main = page.locator("#main");
+
+    // The page's three steps, and one card per text in the catalogue's order.
+    await expect(main.getByTestId("legal-steps")).toContainText("1. Regenerează (ciornă din șablon)");
+    const keys = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"];
+    for (const key of keys) {
+      await expect(main.getByTestId(`legal-kind-${key}`).getByTestId("legal-kind-state").first()).toHaveText(
+        /^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/,
+      );
+    }
+    await expect(main.getByTestId("legal-filter-count")).toHaveText(/^\d+ (de )?versiun(e|i) din \d+$/);
+
+    // A chip is a link: «În vigoare» narrows the address and opens the folds it keeps rows in.
+    await main.getByTestId("legal-filter").getByRole("link", { name: "În vigoare", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/legal\?state=inForce$/);
+    await expect(main.getByTestId("legal-filter").getByRole("link", { name: "În vigoare", exact: true })).toHaveAttribute("aria-current", "page");
+    // And one text alone: only its card stays.
+    await main.getByTestId("legal-filter").getByRole("link", { name: "Termeni", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/legal\?state=inForce&kind=TERMS$/);
+    await expect(main.getByTestId("legal-kind-TERMS")).toBeVisible();
+    await expect(main.getByTestId("legal-kind-PRIVACY_NOTICE")).toHaveCount(0);
+
+    // «Versiune nouă»: three labelled rows, a state line under every template's button.
+    await page.goto("/ro/admin/legal/new");
+    await expect(main.getByTestId("legal-start-from-help")).toHaveText(
+      "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
+    );
+    for (const [group, label] of [
+      ["general", "Documente generale"],
+      ["race", "Declarații de cursă"],
+      ["groupRun", "Declarații pentru alergările de grup"],
+    ] as const) {
+      await expect(main.getByTestId(`legal-group-${group}`).getByRole("heading", { name: label })).toBeVisible();
+    }
+    for (const key of keys) {
+      await expect(main.getByTestId(`legal-template-${key}`).getByTestId("legal-template-state")).toHaveText(
+        /^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)( · Ciornă în așteptare: versiunea \d+)?$/,
+      );
+    }
+    await expect(
+      main.getByRole("button", { name: /^Regenerează toate \(\d+\)$/ }).or(main.getByTestId("legal-regenerate-all-none")),
+    ).toBeVisible();
+    // A template's button keeps its meaning: the form below, prefilled with that template.
+    await main.getByTestId("legal-template-TERMS").getByRole("link", { name: "Termeni de concurs" }).click();
+    await expect(page).toHaveURL(/\/admin\/legal\/new\?template=TERMS$/);
+    await expect(page.locator('input[name="fromTemplate"]')).toHaveValue("TERMS");
   });
 });

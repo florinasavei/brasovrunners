@@ -2009,7 +2009,6 @@
       "noTranslations": "This version has no text yet.",
       "newTitle": "New version",
       "newFromTemplateIntro": "Prefilled with the template's text. Left to fill, in both languages, in angle brackets: {blanks}. Save the draft, then approve it from its page.",
-      "templatesIntro": "Or start from the template:",
       "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{minimumAge}}' (the event's minimum age, with its unit), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
       "newVersion": "New version",
@@ -2029,7 +2028,6 @@
       "referencedFull": "{signatures} signatures · {events} events · {acknowledgements} registrations",
       "termsRegistrations": "Registrations while it was in force: {count}",
       "termsRegistrationsSoFar": "Registrations since it took effect: {count}",
-      "tableCaption": "Legal document versions, with their state and what depends on each",
       "delete": "Delete the draft",
       "deletePending": "Deleting…",
       "deleteTitle": "Delete the draft?",
@@ -2064,13 +2062,13 @@
       "withdrawn": "Withdrawn",
       "withdrawnOn": "Withdrawn on {date}",
       "withdrawnNotice": "This version was withdrawn on {date}. Its text stays here, on the record, with its number, but it no longer appears publicly and can no longer be chosen on an event.",
-      "showWithdrawn": "Show withdrawn versions too ({count})",
-      "hideWithdrawn": "Hide withdrawn versions",
       "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere.",
       "startFrom": {
         "title": "Start from the template",
         "intro": "Pick the document and you get the complete text, with the club's facts already written in. Read it, change what you like, then approve it.",
-        "orBlank": "Or write from nothing, in the form below."
+        "orBlank": "Or write from nothing, in the form below.",
+        "help": "1. Pick the template (or Regenerate all) · 2. Read and fill in · 3. Approve — only then is it in force.",
+        "regenerateAll": "Regenerate all ({count})"
       },
       "tokens": {
         "title": "The fields that fill themselves in",
@@ -2190,7 +2188,71 @@
         "draftsApproved": "Done: drafts approved ({count}), in force from now.",
         "deleted": "Done: versions deleted ({count}).",
         "deleteDrafts": "Delete the drafts ({count})"
-      }
+      },
+      "kinds": {
+        "inForce": "In force: version {version} of {date}",
+        "noneInForce": "No version in force",
+        "draftWaiting": "A draft waits for approval: version {version}",
+        "draftPending": "Draft waiting: version {version}",
+        "templateNew": "New template",
+        "templateNewHint": "The template changed after the text in force was made. Regenerate, read and approve.",
+        "versions": "Versions",
+        "versionsCount": {
+          "one": "{count} version",
+          "few": "{count} versions",
+          "other": "{count} versions"
+        },
+        "regenerate": "Regenerate from the template",
+        "regeneratePending": "Making the draft…",
+        "regenerateTitle": "Make a new draft of {kind}?",
+        "regenerateBody": "A new draft of {kind}, from the template, version {version}; the text in force does not change until you approve it.",
+        "unchanged": "The text in force already has the template's words.",
+        "draftExists": "A draft is already waiting: approve it or delete it, then you can regenerate.",
+        "blanks": "The draft will still have fields to fill in, written '<'…>.",
+        "empty": "No version for this filter."
+      },
+      "stateLabel": {
+        "inForce": "In force",
+        "superseded": "Replaced"
+      },
+      "groups": {
+        "general": "General documents",
+        "race": "Race declarations",
+        "groupRun": "Group run declarations"
+      },
+      "shortKeys": {
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Terms",
+        "EVENT_DECLARATION": "Trail race",
+        "EVENT_DECLARATION_ROAD": "Road / park race",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Group asphalt",
+        "GROUP_RUN_DECLARATION_TRAIL": "Group trail"
+      },
+      "filter": {
+        "label": "Filter the versions",
+        "statesLabel": "State:",
+        "kindsLabel": "Text:",
+        "states": {
+          "all": "All",
+          "inForce": "In force",
+          "drafts": "Drafts",
+          "superseded": "Replaced",
+          "withdrawn": "Withdrawn"
+        },
+        "allKinds": "All texts",
+        "count": {
+          "one": "{count} version of {total}",
+          "few": "{count} versions of {total}",
+          "other": "{count} versions of {total}"
+        },
+        "none": "No version matches the filter.",
+        "clear": "Show every version"
+      },
+      "steps": {
+        "title": "1. Regenerate (a draft from the template) · 2. Read it and fill in the four facts · 3. Approve — only then is it in force",
+        "body": "The text in force stays on the site until you approve the draft. The four facts are the club's legal name, CIF, seat and contact address."
+      },
+      "tableCaptionOf": "The versions of {kind}, with their state and what depends on each"
     },
     "tasks": {
       "title": "What is still to do",
@@ -2355,8 +2417,8 @@
           "how": [
             "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
             "The notice, the terms and both race declarations, trail and road or park, come into force with the club's facts in them.",
-            "To read first: under the box, “Start from the template” → open each, read, then press the button in the box.",
-            "The long way, for a change: “New version” → text → save the draft → PDF → “Approve”. An approved text never changes; a correction is the next version.",
+            "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
+            "The long way, for a change: “New version” → pick the template → “Save draft” → PDF → “Approve and publish”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
           ]
         },
@@ -2581,7 +2643,7 @@
           "todo": "The notice in force does not describe the stages of the public participant list yet, so the list shows only confirmed participants, until the club approves a notice that does.",
           "done": "The notice in force describes the stages: the public list shows beside each name whether the person is confirmed, registered awaiting confirmation, or on the waiting list.",
           "how": [
-            "/admin/legal → “New version” → Privacy notice → “Start from the template”. The section on the public list describes the stages.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the stages.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
             "Approve the terms and the declaration from their templates as well, if not already, so they all say the same."
           ]
@@ -2591,7 +2653,7 @@
           "todo": "The notice in force does not yet describe Strava and Instagram on the public list, so they show for nobody until the club approves a new notice.",
           "done": "The notice in force describes Strava and Instagram on the public list: the form offers the tick, and the list shows them beside the names of those who ticked it.",
           "how": [
-            "/admin/legal → “New version” → Privacy notice → “Start from the template”. The section on the public list describes Strava and Instagram beside a name.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes Strava and Instagram beside a name.",
             "Read the text, save the draft, then “Approve”.",
             "From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
@@ -2602,7 +2664,7 @@
           "todo": "The notice in force does not describe the newsletter yet, so the contact page offers no news subscription and we keep no address for it, until the club approves a notice that describes it.",
           "done": "The notice in force describes the newsletter: the contact page offers the subscription, with the topics chosen and a confirmation by email.",
           "how": [
-            "/admin/legal → “New version” → Privacy notice → “Start from the template”. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
             "Read the text, save the draft, then “Approve”. From the moment it takes effect, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
             "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
           ]
@@ -2612,7 +2674,7 @@
           "todo": "The notice in force does not yet describe the team page, which shows the names and photographs of the club's team and volunteers. Approve a new notice before publishing the page.",
           "done": "The notice in force describes the team page: what it shows, on what basis, and how a card is taken down.",
           "how": [
-            "/admin/legal → “New version” → Privacy notice → “Start from the template”. Section 4 describes the team page.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 4 describes the team page.",
             "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
             "Only then publish the page, from /admin/pages/team → “Publish the page”.",
             "The same new notice also describes, in section 12, the club members' accounts (the members' area): approve it before inviting the first members from Team → “Add several members”."
@@ -2648,7 +2710,7 @@
           "todo": "At least one race declaration (trail, road or park) has no version from the template yet. Until the road one is approved, asphalt races sign trail.",
           "done": "Both race declarations, trail and road or park, are in force from the template: every race signs the declaration that fits its course.",
           "how": [
-            "/admin/legal → “New version” → “Self-declaration — trail race” → “Start from the template”. Read the text, fill in the club's name, save the draft, then “Approve”.",
+            "/admin/legal → the “Self-declaration — trail race” card → “Regenerate from the template”. Then the draft: read, fill in, “Approve and publish”.",
             "The same for “Self-declaration — road / park race”.",
             "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then.",
             "The trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
@@ -2659,7 +2721,7 @@
           "todo": "The group-run declarations in force cover one date, so a runner signs again on each date. The new template covers the whole series (or the one-day run); approve it.",
           "done": "The group-run declarations in force say what they cover: a runner signs once for the whole series.",
           "how": [
-            "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “Start from the template”. Read the text, fill in the club's details, save the draft, then “Approve”.",
+            "/admin/legal → the “Self-declaration (group run, asphalt)” card → “Regenerate from the template”. Then the draft: read, fill in, “Approve and publish”.",
             "The same for “Self-declaration (group run, trail)”.",
             "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while the runner keeps coming to the runs.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
@@ -4825,7 +4887,7 @@
               "title": "Approve a new version of a legal text",
               "steps": [
                 "«Legal documents» → «New version».",
-                "Under «Start from the template» pick the document: «Racing TOS», «GDPR», «Self-declaration — trail race», «Self-declaration — road / park race», «Self-declaration (group run, asphalt)» or «Self-declaration (group run, trail)».",
+                "Under «Start from the template» pick the document, from «General documents», «Race declarations» or «Group run declarations». Under each button is what is in force; «New template» shows that the template changed since.",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
                 "Read all of it and press «Save draft».",
                 "On the draft's page: «Download PDF» to read it on paper or give it to a lawyer.",
@@ -4837,10 +4899,10 @@
               "title": "The club's legal texts",
               "steps": [
                 "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
-                "The texts whose template changed, all at once: under «Every text at once» press «Regenerate from the templates» and confirm. One draft is made for each; nothing takes effect yet.",
-                "Open each draft from the table, read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
+                "One text: on its card in «Legal documents» press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
+                "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
-                "A single text to redo: «Legal documents» → «New version» → under «Start from the template» pick it, then the steps of “Approve a new version of a legal text”.",
+                "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",
                 "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
                 "Until you approve the new notice, the public participant list shows the confirmed only.",
                 "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
@@ -6751,9 +6813,9 @@
         "other": "{count} signed declarations were erased."
       },
       "legalTemplatesRegenerated": {
-        "one": "{count} new draft from the template.",
-        "few": "{count} new drafts from the templates.",
-        "other": "{count} new drafts from the templates."
+        "one": "{count} draft created from its template.",
+        "few": "{count} drafts created from the templates.",
+        "other": "{count} drafts created from the templates."
       },
       "legalDraftsApproved": {
         "one": "{count} draft approved and in effect.",

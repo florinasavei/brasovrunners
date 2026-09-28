@@ -8,8 +8,10 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
+import { countForm } from "@/i18n/count-form";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import {
   findCurrentApprovedDocument,
   noticeDescribesListSocials,
@@ -19,6 +21,8 @@ import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import type { PanelGlyphName } from "@/shared/ui/panel-glyphs";
+import ChipLink from "@/shared/ui/ChipLink";
 import { env } from "@/shared/config/env";
 import { approvePlatformTemplatesAction } from "../actions";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -33,8 +37,21 @@ import {
   type InForceWindow,
   isReliedOn,
 } from "@/modules/legal-documents/domain/deletability";
-import { planDraftApproval, planTemplateRegeneration, readDeletionFacts } from "@/modules/legal-documents/service";
+import { planDraftApproval, readDeletionFacts, readLegalOverview } from "@/modules/legal-documents/service";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
+import {
+  filterLegalVersions,
+  isNarrowing,
+  kindFoldOpens,
+  kindHeadline,
+  LEGAL_STATE_FILTERS,
+  type LegalListFilter,
+  legalListQuery,
+  type LegalVersionState,
+  parseLegalListFilter,
+  versionState,
+  versionsOfKind,
+} from "@/modules/legal-documents/domain/overview";
 import Checkbox from "@mui/material/Checkbox";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
@@ -57,6 +74,16 @@ import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-doc
 /** The form the rows' ticks belong to (`form=`), a GET to `/admin/legal/delete` (§532). */
 const BATCH_DELETE_FORM = "legal-batch-delete";
 
+/** Each text's card wears its subject's picture (§521): the notice and the terms their own, the declarations the pen. */
+const KIND_GLYPH: Record<LegalDocumentKey, PanelGlyphName> = {
+  PRIVACY_NOTICE: "legal",
+  TERMS: "rules",
+  EVENT_DECLARATION: "declaration",
+  EVENT_DECLARATION_ROAD: "declaration",
+  GROUP_RUN_DECLARATION_ASPHALT: "declaration",
+  GROUP_RUN_DECLARATION_TRAIL: "declaration",
+};
+
 type Props = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | undefined>>;
@@ -76,6 +103,20 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  *
  * So the counts on each row are not decoration. They are the answer to "may this be changed",
  * stated on the page rather than in a document somebody has to remember.
+ *
+ * ## One card per text (§NNN, amending §532)
+ *
+ * The list was one long table of every version of every text, and the owner could not see at a
+ * glance which text is in force, which draft waits, or where «regenerate» lives. So the page is
+ * one card per text, in `LEGAL_DOCUMENT_KEYS`' fixed order: the card's header says the state in
+ * words (`kindHeadline`), carries «Regenerează din șablon» for that text alone — the same
+ * `regenerateFromTemplates` §532's press calls, with one key — and folds the text's versions,
+ * newest first, beneath it. A fold opens on arrival only when a draft waits or nothing is in force
+ * (§336 `attention`), or when a filter keeps rows in it (`inUse`).
+ *
+ * The chips above the cards filter by state and by text through the address (§413's shape): plain
+ * links, so it works without JavaScript, and the address says what the page shows. The old
+ * withdrawn fold's `?withdrawn=1` still means «Retrase».
  *
  * ## The third count
  *
@@ -106,10 +147,6 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * explains nothing; a count is a reason an organizer accepts. The server refuses regardless
  * (BR-REQ-060-01) — this only changes what the screen is able to explain before anything is
  * pressed.
- *
- * Withdrawn rows are folded away by default and revealed with `?withdrawn=1`, because the
- * point of withdrawing is to get them out of the way, and the point of not deleting them is
- * that the club can still find them.
  *
  * Administrator only, asserted here on the server — the same rule the staff screen carries,
  * because a legal document is exactly the kind of thing that must not be editable by whoever
@@ -147,6 +184,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
   const current = await searchParams;
   const { saved, error } = current;
+  const filter = parseLegalListFilter(current);
 
   const t = await getTranslations("Admin");
   const words = await confirmWords();
@@ -217,13 +255,23 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     .map(([name]) => name);
 
   /*
+    Each text as its card says it (§NNN): what is in force, which draft waits, what «Regenerează
+    din șablon» would do with it and the number its draft would get — one read for the cards and
+    for §532's box beside them, so the box, the cards and their confirm dialogs name the same
+    texts. The in-force ids come with it, for the rows' states and the filter.
+  */
+  const overview = await readLegalOverview(getDb(), facts, now, versions);
+  const inForceIds = Object.fromEntries(LEGAL_DOCUMENT_KEYS.map((key) => [key, overview[key].inForceId]));
+  const stateOf = (version: LegalDocumentVersionRow): LegalVersionState => versionState(version, inForceIds[version.key]);
+  /*
     The presses over every text at once (§532), asked of the service's own plans so the box, its
     confirm dialog and the press name the same versions: which templates now say something no
     version in force or waiting says, and which drafts one press may approve. Read only for the
     role that may press them.
   */
-  const regeneration = mayCreate ? await planTemplateRegeneration(getDb(), facts, now) : [];
-  const toRegenerate = regeneration.filter((item) => item.outcome === "create");
+  const toRegenerate = mayCreate
+    ? LEGAL_DOCUMENT_KEYS.filter((key) => overview[key].regeneration === "create").map((key) => ({ key, hasPlaceholders: overview[key].hasPlaceholders }))
+    : [];
   const regeneratedWithBlanks = toRegenerate.filter((item) => item.hasPlaceholders);
   const draftPlan = mayCreate ? await planDraftApproval(getDb()) : [];
   const readyDrafts = draftPlan.filter((item) => item.outcome === "ready").map((item) => item.row);
@@ -245,14 +293,21 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     acknowledgements: version.privacyAcknowledgementCount,
   });
 
-  // The fold. `listVersionsForBackoffice` is the one reader that still returns withdrawn rows,
-  // so the hiding happens here rather than in SQL — the count below has to be honest about
-  // rows the club cannot currently see.
-  const showWithdrawn = current.withdrawn === "1";
-  const withdrawnCount = versions.filter((version) => version.withdrawnAt !== null).length;
-  const visible = showWithdrawn
-    ? versions
-    : versions.filter((version) => version.withdrawnAt === null);
+  // What the filter keeps, and how many of how many: «4 versiuni din 11».
+  const shown = filterLegalVersions(versions, inForceIds, filter);
+  const listHref = (next: LegalListFilter) => getPathname({ locale, href: { pathname: "/admin/legal", query: legalListQuery(next) } });
+  const kindsShown = LEGAL_DOCUMENT_KEYS.filter(
+    (key) => (filter.kind === null || filter.kind === key) && (!isNarrowing(filter) || shown.some((row) => row.key === key)),
+  );
+
+  const stateChip = (state: LegalVersionState) => {
+    // Outlined rather than filled for the two that are no longer the club's word, so «Retrasă»
+    // and «Înlocuită» cannot be mistaken for «Ciornă» at a glance.
+    if (state === "inForce") return <Chip size="small" color="success" label={t("legal.stateLabel.inForce")} />;
+    if (state === "draft") return <Chip size="small" label={t("legal.draft")} />;
+    if (state === "superseded") return <Chip size="small" variant="outlined" label={t("legal.stateLabel.superseded")} />;
+    return <Chip size="small" variant="outlined" label={t("legal.withdrawn")} />;
+  };
 
   const columns: readonly AdminColumn<LegalDocumentVersionRow>[] = [
     {
@@ -272,18 +327,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     {
       key: "state",
       label: t("legal.state"),
-      render: (version) =>
-        version.withdrawnAt ? (
-          // Outlined rather than filled, so "retrasă" cannot be mistaken for "ciornă" at a
-          // glance: both are grey, and only one of them was ever the club's word.
-          <Chip size="small" variant="outlined" label={t("legal.withdrawn")} />
-        ) : (
-          <Chip
-            size="small"
-            color={version.isApproved ? "success" : "default"}
-            label={version.isApproved ? t("legal.approved") : t("legal.draft")}
-          />
-        ),
+      render: (version) => stateChip(stateOf(version)),
     },
     {
       key: "languages",
@@ -486,6 +530,126 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     );
   };
 
+  const tableLabels = (count: number) => ({
+    results: t("list.results", { count }),
+    page: t("list.page", { page: query.page, pages: pageCount(count, query.perPage) }),
+    previous: t("list.previous"),
+    next: t("list.next"),
+    perPage: t("list.perPage"),
+    actions: t("list.actions"),
+    sortBy: (column: string) => t("list.sortBy", { column }),
+  });
+
+  /*
+    One text's card (§NNN): its name and what it is, the state in words, «Regenerează din șablon»
+    for this text alone, and its versions folded under it, newest first.
+  */
+  const kindCard = (key: LegalDocumentKey) => {
+    const kind = overview[key];
+    const rows = versionsOfKind(shown, key);
+    const kindName = t(`legal.keys.${key}`);
+    const headline = kindHeadline(kind.summary)
+      .map((line) =>
+        line.key === "inForce"
+          ? t("legal.kinds.inForce", {
+              version: line.version,
+              date: formatDay(line.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
+            })
+          : line.key === "draftWaiting"
+            ? t("legal.kinds.draftWaiting", { version: line.version })
+            : t("legal.kinds.noneInForce"),
+      );
+    return (
+      <Panel
+        key={key}
+        glyph={KIND_GLYPH[key]}
+        level={3}
+        id={`legal-kind-${key}`}
+        data-testid={`legal-kind-${key}`}
+        title={kindName}
+        intro={t(`legal.whatIs.${key}`)}
+        tone={kind.summary.waitingDraft || !kind.summary.inForce ? "risk" : "default"}
+      >
+        <Stack spacing={1.5}>
+          <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 1, rowGap: 0.5 }}>
+            {headline.map((sentence, index) => (
+              <Typography key={sentence} variant="body2" sx={{ fontWeight: index === 0 ? 600 : 400 }} data-testid="legal-kind-state">
+                {sentence}
+              </Typography>
+            ))}
+            {kind.templateNewer && <Chip size="small" color="warning" variant="outlined" label={t("legal.kinds.templateNew")} title={t("legal.kinds.templateNewHint")} />}
+          </Stack>
+
+          {mayCreate &&
+            (kind.regeneration === "create" ? (
+              <ActionForm
+                action={regenerateLegalTemplatesAction}
+                confirm={{
+                  title: t("legal.kinds.regenerateTitle", { kind: kindName }),
+                  body: t("legal.kinds.regenerateBody", { kind: kindName, version: kind.nextVersion }),
+                  confirmLabel: t("legal.kinds.regenerate"),
+                  cancelLabel: words.cancel,
+                }}
+                data-testid="legal-kind-regenerate"
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="key" value={key} />
+                <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+                  <GlyphSubmitButton
+                    label={t("legal.kinds.regenerate")}
+                    pendingLabel={t("legal.kinds.regeneratePending")}
+                    icon="template"
+                    variant="outlined"
+                    size="medium"
+                  />
+                  {kind.hasPlaceholders && (
+                    <Typography variant="body2" color="warning.main">
+                      {t("legal.kinds.blanks")}
+                    </Typography>
+                  )}
+                </Stack>
+              </ActionForm>
+            ) : (
+              <Typography variant="body2" color="text.secondary" data-testid="legal-kind-regenerate-none">
+                {t(`legal.kinds.${kind.regeneration}`)}
+              </Typography>
+            ))}
+
+          <Panel
+            glyph="history"
+            level={4}
+            collapsible
+            id={`legal-versions-${key}`}
+            data-testid={`legal-versions-${key}`}
+            title={t("legal.kinds.versions")}
+            aside={t(`legal.kinds.versionsCount.${countForm(rows.length, locale)}`, { count: rows.length })}
+            openWhen={kindFoldOpens(kind.summary, filter, rows.length)}
+          >
+            <AdminTable
+              caption={t("legal.tableCaptionOf", { kind: kindName })}
+              columns={columns}
+              rows={rows}
+              rowKey={(version) => version.id}
+              basePath={getPathname({ locale, href: "/admin/legal" })}
+              // So paging and the page-size control keep the filter.
+              currentParams={legalListQuery(filter)}
+              query={query}
+              total={rows.length}
+              labels={tableLabels(rows.length)}
+              empty={<Typography variant="body2" color="text.secondary">{t("legal.kinds.empty")}</Typography>}
+              rowActions={(version) => (
+                <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", alignItems: "center" }}>
+                  {verbsOf(version)}
+                  {tickOf(version)}
+                </Stack>
+              )}
+            />
+          </Panel>
+        </Stack>
+      </Panel>
+    );
+  };
+
   return (
     <Stack spacing={3}>
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
@@ -586,20 +750,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         <Typography variant="body2" color="text.secondary">
           {t("legal.intro", { count: PLATFORM_APPROVAL_KEYS.length })}
         </Typography>
-        {/* What each text is, in one line (the owner, 2026-09-19: "it is not clear what
-            these documents are — is the privacy notice GDPR? and what is the other one?"). */}
-        <Box component="dl" sx={{ m: 0, mt: 1, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" }, columnGap: 2, rowGap: 0.5 }}>
-          {LEGAL_DOCUMENT_KEYS.map((key) => (
-            <Fragment key={key}>
-              <Typography component="dt" variant="body2" sx={{ fontWeight: 600 }}>
-                {t(`legal.keys.${key}`)}
-              </Typography>
-              <Typography component="dd" variant="body2" color="text.secondary" sx={{ m: 0 }}>
-                {t(`legal.whatIs.${key}`)}
-              </Typography>
-            </Fragment>
-          ))}
-        </Box>
+        {/* The three steps, in the owner's words, as the page's one help line (§398's help variant, §NNN). */}
+        <Panel variant="help" legendIcon="info" title={t("legal.steps.title")} intro={t("legal.steps.body")} data-testid="legal-steps" />
       </Stack>
 
       {listStatesMissing && (
@@ -628,19 +780,10 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
       {mayCreate && (
         <Box>
+          {/* «Versiune nouă» opens the templates, grouped, each with its state (§NNN). */}
           <GlyphButtonLink href="/admin/legal/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
             {t("legal.newTitle")}
           </GlyphButtonLink>
-          {/* The platform's own texts, complete but for the club's four facts (§95). */}
-          <Typography variant="body2" sx={{ mt: 1.5 }}>
-            {t("legal.templatesIntro")}{" "}
-            {LEGAL_DOCUMENT_KEYS.map((key, index) => (
-              <span key={key}>
-                {index > 0 ? " · " : ""}
-                <Link href={{ pathname: "/admin/legal/new", query: { template: key } }}>{t(`legal.keys.${key}`)}</Link>
-              </span>
-            ))}
-          </Typography>
         </Box>
       )}
 
@@ -649,6 +792,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         approved in one press. Two presses on purpose — nothing reaches the site from a template
         without the club reading the draft first (§46) — each behind the §384 confirm dialog that
         names the texts. What cannot be approved together is said with its reason, never hidden.
+        One text alone is its card's own «Regenerează din șablon» below (§NNN).
       */}
       {mayCreate && (
         <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="legal-batch-tools">
@@ -773,54 +917,68 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         </Box>
       )}
 
-      {versions.length === 0 ? (
+      {versions.length === 0 && (
         <Alert severity="warning">{mayCreate ? t("legal.emptyCanCreate") : t("legal.empty")}</Alert>
-      ) : (
-        <AdminTable
-          caption={t("legal.tableCaption")}
-          columns={columns}
-          rows={visible}
-          rowKey={(version) => version.id}
-          basePath={getPathname({ locale, href: "/admin/legal" })}
-          // So paging and the page-size control keep the fold open once it is.
-          currentParams={{ withdrawn: current.withdrawn }}
-          query={query}
-          total={visible.length}
-          labels={{
-            results: t("list.results", { count: visible.length }),
-            page: t("list.page", {
-              page: query.page,
-              pages: pageCount(visible.length, query.perPage),
-            }),
-            previous: t("list.previous"),
-            next: t("list.next"),
-            perPage: t("list.perPage"),
-            actions: t("list.actions"),
-            sortBy: (column) => t("list.sortBy", { column }),
-          }}
-          empty={<Alert severity="warning">{t("legal.empty")}</Alert>}
-          rowActions={(version) => (
-            <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", alignItems: "center" }}>
-              {verbsOf(version)}
-              {tickOf(version)}
-            </Stack>
-          )}
-        />
       )}
 
       {/*
-        The fold, and an ordinary link rather than a disclosure widget: the state belongs in the
-        URL like every other list filter here, so it survives a Server Action's redirect and can
-        be sent to somebody. Offered only when there is something behind it.
+        The filter (§NNN, §413's shape): by state and by text, as plain links, so it works with
+        JavaScript off and the address says what the page shows — a filtered page can be sent to
+        somebody. The count line says how much of the whole it keeps.
       */}
-      {withdrawnCount > 0 && (
-        <Box>
-          <Link href={{ pathname: "/admin/legal", query: showWithdrawn ? {} : { withdrawn: "1" } }}>
-            {showWithdrawn
-              ? t("legal.hideWithdrawn")
-              : t("legal.showWithdrawn", { count: withdrawnCount })}
-          </Link>
+      {versions.length > 0 && (
+        <Box component="nav" aria-label={t("legal.filter.label")} data-testid="legal-filter">
+          <Stack spacing={0.5}>
+            <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+                {t("legal.filter.statesLabel")}
+              </Typography>
+              {LEGAL_STATE_FILTERS.map((state) => (
+                <ChipLink
+                  key={state}
+                  href={listHref({ ...filter, state })}
+                  label={t(`legal.filter.states.${state}`)}
+                  active={filter.state === state}
+                  current={filter.state === state ? "page" : undefined}
+                  keepScroll
+                />
+              ))}
+            </Stack>
+            <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+                {t("legal.filter.kindsLabel")}
+              </Typography>
+              <ChipLink
+                href={listHref({ ...filter, kind: null })}
+                label={t("legal.filter.allKinds")}
+                active={filter.kind === null}
+                current={filter.kind === null ? "page" : undefined}
+                keepScroll
+              />
+              {LEGAL_DOCUMENT_KEYS.map((key) => (
+                <ChipLink
+                  key={key}
+                  href={listHref({ ...filter, kind: key })}
+                  label={t(`legal.shortKeys.${key}`)}
+                  active={filter.kind === key}
+                  current={filter.kind === key ? "page" : undefined}
+                  keepScroll
+                />
+              ))}
+            </Stack>
+            <Typography variant="body2" color="text.secondary" data-testid="legal-filter-count">
+              {t(`legal.filter.count.${countForm(shown.length, locale)}`, { count: shown.length, total: versions.length })}
+            </Typography>
+          </Stack>
         </Box>
+      )}
+
+      {versions.length > 0 && kindsShown.length === 0 ? (
+        <Alert severity="info" data-testid="legal-filter-none">
+          {t("legal.filter.none")} <Link href={{ pathname: "/admin/legal" }}>{t("legal.filter.clear")}</Link>
+        </Alert>
+      ) : (
+        <Stack spacing={2}>{kindsShown.map(kindCard)}</Stack>
       )}
     </Stack>
   );

@@ -12,6 +12,7 @@ import type { Locale } from "@/i18n/routing";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
 import { LegalBatchVersionRefused } from "@/modules/legal-documents/domain/batch";
+import { legalListQuery } from "@/modules/legal-documents/domain/overview";
 import {
   approveDrafts,
   approvePlatformTemplates,
@@ -21,6 +22,7 @@ import {
   deleteDraftVersion,
   deleteVersionsInBatch,
   regenerateFromTemplates,
+  templateSourceOf,
   updateDraftVersion,
   withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
@@ -59,11 +61,14 @@ function translationsFrom(form: FormData) {
 async function backTo(
   path: string,
   outcome: { error?: string; saved?: string; phrase?: string; approved?: string; created?: string; deleted?: string },
+  /** The page's own filter to land on (§NNN: a regenerate lands on «Ciorne»), before the outcome. */
+  landOn: Record<string, string> = {},
 ): Promise<never> {
   await flashOutcome(outcome);
-  const query = new URLSearchParams(
-    Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
-  ).toString();
+  const query = new URLSearchParams([
+    ...Object.entries(landOn),
+    ...(Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][]),
+  ]).toString();
   redirect(query ? `${path}?${query}#admin-alert` : path);
 }
 
@@ -84,7 +89,14 @@ export async function createLegalVersionAction(_previous: FormOutcome | null, fo
   let created: string;
   try {
     const actor = await requireStaffCapability(canWriteLegalTexts);
-    created = await createDraftVersion(getDb(), actor, { key, translations: translationsFrom(form) }, new Date());
+    const db = getDb();
+    // Which template the draft started from, asked of the server's own catalogue and rows (§NNN):
+    // the form names the template or the version it was prefilled from, never a fingerprint.
+    const templateSha256 = await templateSourceOf(db, key, {
+      fromTemplate: text(form, "fromTemplate"),
+      fromVersionId: text(form, "fromVersionId"),
+    });
+    created = await createDraftVersion(db, actor, { key, translations: translationsFrom(form), templateSha256 }, new Date());
   } catch (error) {
     return refused(error, form);
   }
@@ -149,9 +161,14 @@ export async function regenerateLegalTemplatesAction(_previous: FormOutcome | nu
     outcome = { saved: "legalTemplatesRegenerated", created: String(result.created.length) };
   } catch (error) {
     outcome = outcomeOf(error);
+    // A refusal goes back to the page that was pressed — the list or «Versiune nouă» (§NNN).
+    const from = text(form, "returnTo") === "new" ? "/admin/legal/new" : "/admin/legal";
+    return backTo(getPathname({ locale, href: from }), outcome);
   }
 
-  return backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
+  // What was made is what to read next: the list, filtered to «Ciorne» (§NNN), from either page —
+  // one text's press on its card, «Regenerează toate» on the list or on «Versiune nouă».
+  return backTo(getPathname({ locale, href: "/admin/legal" }), outcome, legalListQuery({ state: "drafts", kind: null }));
 }
 
 /**

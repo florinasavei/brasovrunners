@@ -2009,7 +2009,6 @@
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
       "newFromTemplateIntro": "Precompletat cu textul din șablon. Mai rămân de completat, în ambele limbi, între paranteze unghiulare: {blanks}. Salvează ciorna, apoi aprob-o din pagina ei.",
-      "templatesIntro": "Sau pornește de la șablon:",
       "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{participantIdDocument}}' (actul lui de identitate, tastat la semnare), '{{guardian}}' și '{{guardianIdDocument}}' (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), '{{idDocument}}' (actul celui care declară — al părintelui, pentru un minor), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{minimumAge}}' (vârsta minimă a evenimentului, cu unitatea), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
       "newVersion": "Versiune nouă",
@@ -2029,7 +2028,6 @@
       "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
       "termsRegistrations": "Înscrieri cât a fost în vigoare: {count}",
       "termsRegistrationsSoFar": "Înscrieri de când e în vigoare: {count}",
-      "tableCaption": "Versiunile documentelor legale, cu starea și ce depinde de fiecare",
       "delete": "Șterge ciorna",
       "deletePending": "Se șterge…",
       "deleteTitle": "Ștergi ciorna?",
@@ -2064,13 +2062,13 @@
       "withdrawn": "Retrasă",
       "withdrawnOn": "Retrasă {date}",
       "withdrawnNotice": "Versiunea a fost retrasă {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
-      "showWithdrawn": "Arată și versiunile retrase ({count})",
-      "hideWithdrawn": "Ascunde versiunile retrase",
       "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
       "startFrom": {
         "title": "Pornește de la șablon",
         "intro": "Alege documentul și primești textul complet, cu datele clubului deja scrise. Îl citești, îl schimbi cât vrei, apoi îl aprobi.",
-        "orBlank": "Sau scrie de la zero în formularul de mai jos."
+        "orBlank": "Sau scrie de la zero în formularul de mai jos.",
+        "help": "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
+        "regenerateAll": "Regenerează toate ({count})"
       },
       "tokens": {
         "title": "Câmpurile care se completează singure",
@@ -2190,7 +2188,71 @@
         "draftsApproved": "Gata: ciorne aprobate ({count}), în vigoare de acum.",
         "deleted": "Gata: versiuni șterse ({count}).",
         "deleteDrafts": "Șterge ciornele ({count})"
-      }
+      },
+      "kinds": {
+        "inForce": "În vigoare: versiunea {version} din {date}",
+        "noneInForce": "Nicio versiune în vigoare",
+        "draftWaiting": "O ciornă așteaptă aprobarea: versiunea {version}",
+        "draftPending": "Ciornă în așteptare: versiunea {version}",
+        "templateNew": "Șablon nou",
+        "templateNewHint": "Șablonul s-a schimbat după ce a fost făcut textul în vigoare. Regenerează, citește și aprobă.",
+        "versions": "Versiunile",
+        "versionsCount": {
+          "one": "{count} versiune",
+          "few": "{count} versiuni",
+          "other": "{count} de versiuni"
+        },
+        "regenerate": "Regenerează din șablon",
+        "regeneratePending": "Se face ciorna…",
+        "regenerateTitle": "Faci o ciornă nouă pentru {kind}?",
+        "regenerateBody": "O ciornă nouă pentru {kind}, din șablon, versiunea {version}; textul în vigoare nu se schimbă până nu o aprobi.",
+        "unchanged": "Textul în vigoare are deja cuvintele șablonului.",
+        "draftExists": "O ciornă așteaptă deja: aprob-o sau șterge-o, apoi poți regenera.",
+        "blanks": "În ciornă vor rămâne câmpuri de completat, de forma '<'…>.",
+        "empty": "Nicio versiune pentru acest filtru."
+      },
+      "stateLabel": {
+        "inForce": "În vigoare",
+        "superseded": "Înlocuită"
+      },
+      "groups": {
+        "general": "Documente generale",
+        "race": "Declarații de cursă",
+        "groupRun": "Declarații pentru alergările de grup"
+      },
+      "shortKeys": {
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Termeni",
+        "EVENT_DECLARATION": "Cursă trail",
+        "EVENT_DECLARATION_ROAD": "Cursă asfalt / parc",
+        "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
+        "GROUP_RUN_DECLARATION_TRAIL": "Grup trail"
+      },
+      "filter": {
+        "label": "Filtrează versiunile",
+        "statesLabel": "Starea:",
+        "kindsLabel": "Textul:",
+        "states": {
+          "all": "Toate",
+          "inForce": "În vigoare",
+          "drafts": "Ciorne",
+          "superseded": "Înlocuite",
+          "withdrawn": "Retrase"
+        },
+        "allKinds": "Toate textele",
+        "count": {
+          "one": "{count} versiune din {total}",
+          "few": "{count} versiuni din {total}",
+          "other": "{count} de versiuni din {total}"
+        },
+        "none": "Nicio versiune nu se potrivește filtrului.",
+        "clear": "Arată toate versiunile"
+      },
+      "steps": {
+        "title": "1. Regenerează (ciornă din șablon) · 2. Citește și completează cele patru fapte · 3. Aprobă — abia atunci intră în vigoare",
+        "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
+      },
+      "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare"
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -2355,8 +2417,8 @@
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
             "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
-            "Dacă vrei să citești mai întâi: sub casetă, „Pornește de la șablon” → deschide fiecare, citește, apoi apasă butonul din casetă.",
-            "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
+            "Dacă vrei să citești mai întâi: pe cardul fiecărui text, „Regenerează din șablon” → deschide ciorna, citește, completează → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
+            "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
         },
@@ -2581,7 +2643,7 @@
           "todo": "Nota în vigoare nu descrie stadiile listei publice de participanți, așa că lista arată doar participanții confirmați, până când clubul aprobă o notă care le descrie.",
           "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea despre lista publică descrie stadiile.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie stadiile.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din șabloanele lor, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
@@ -2591,7 +2653,7 @@
           "todo": "Nota în vigoare nu descrie încă Strava și Instagram pe lista publică, deci nu apar nimănui până clubul aprobă o notă nouă.",
           "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
             "Citește textul, salvează ciorna, apoi „Aprobă”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
@@ -2602,7 +2664,7 @@
           "todo": "Nota în vigoare nu descrie încă newsletterul, așa că pagina de contact nu arată abonarea la noutăți și nu păstrăm nicio adresă pentru el, până când clubul aprobă o notă care îl descrie.",
           "done": "Nota în vigoare descrie newsletterul: pagina de contact arată abonarea, cu temele alese și confirmarea pe email.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
             "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
@@ -2612,7 +2674,7 @@
           "todo": "Nota în vigoare nu descrie încă pagina Echipa, care arată numele și fotografiile oamenilor din echipă și ale voluntarilor. Aprobă o notă nouă înainte să publici pagina.",
           "done": "Nota în vigoare descrie pagina Echipa: ce arată, pe ce temei și cum se scoate un card.",
           "how": [
-            "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea 4 descrie pagina Echipa.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 4 descrie pagina Echipa.",
             "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
             "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”.",
             "Aceeași notă nouă descrie, în secțiunea 12, și conturile membrilor clubului (zona membrilor): aprob-o înainte să inviți primii membri din Echipa → „Adaugă mai mulți membri”."
@@ -2648,7 +2710,7 @@
           "todo": "Cel puțin o declarație de concurs (trail, șosea sau parc) nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează trail.",
           "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
           "how": [
-            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere — cursă trail” → „Pornește de la șablon”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere — cursă trail” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
             "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
             "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
@@ -2659,7 +2721,7 @@
           "todo": "Declarațiile alergărilor de grup în vigoare acoperă o singură dată, deci alergătorul semnează la fiecare dată. Șablonul nou acoperă toată seria (sau alergarea de o zi); aprobă-l.",
           "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
           "how": [
-            "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Pornește de la șablon”. Citește textul, completează datele clubului, salvează ciorna, apoi „Aprobă”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
             "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp alergătorul vine la alergări.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
@@ -4825,7 +4887,7 @@
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
                 "«Documente legale» → «Versiune nouă».",
-                "Sub «Pornește de la șablon» alege documentul: «Termeni de concurs», «GDPR», «Declarație pe propria răspundere — cursă trail», «Declarație pe propria răspundere — cursă pe asfalt / în parc», «Declarație pe propria răspundere (alergare de grup, asfalt)» sau «Declarație pe propria răspundere (alergare de grup, trail)».",
+                "Sub «Pornește de la șablon» alege documentul, din «Documente generale», «Declarații de cursă» sau «Declarații pentru alergările de grup». Sub fiecare buton scrie ce e în vigoare; «Șablon nou» arată că șablonul s-a schimbat de atunci.",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
                 "Citește tot și apasă «Salvează ciorna».",
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",
@@ -4837,10 +4899,10 @@
               "title": "Textele legale ale clubului",
               "steps": [
                 "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
-                "Textele al căror șablon s-a schimbat, toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane» și confirmă. Se face câte o ciornă pentru fiecare; nimic nu intră încă în vigoare.",
-                "Deschide fiecare ciornă din tabel, citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
+                "Un singur text: pe cardul lui din «Documente legale» apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
+                "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
-                "Un singur text de refăcut: «Documente legale» → «Versiune nouă» → sub «Pornește de la șablon» alege-l, apoi pașii de la „Aprobă o versiune nouă a unui text legal”.",
+                "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau trail) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
@@ -6751,9 +6813,9 @@
         "other": "{count} de declarații semnate au fost șterse."
       },
       "legalTemplatesRegenerated": {
-        "one": "{count} ciornă nouă din șablon.",
-        "few": "{count} ciorne noi din șabloane.",
-        "other": "{count} de ciorne noi din șabloane."
+        "one": "{count} ciornă creată din șablon.",
+        "few": "{count} ciorne create din șabloane.",
+        "other": "{count} de ciorne create din șabloane."
       },
       "legalDraftsApproved": {
         "one": "{count} ciornă aprobată și în vigoare.",

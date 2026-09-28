@@ -242,6 +242,13 @@ export type AuditAction =
    */
   | "legal_document.deleted"
   /**
+   * A draft made from the platform's template by «Regenerează din șablon» — one text's press on
+   * its card, or «Regenerează toate» (§532, §NNN). One row per draft: the key, the version it was
+   * given and the template's fingerprint, so "who regenerated the privacy notice, and from which
+   * template" has an answer. Nothing is in force by it; approving stays its own press.
+   */
+  | "legal_document.regenerated"
+  /**
    * «Echipa» (§459): a card added, written, shown or taken off, moved, or deleted, and the page
    * published, taken off or its introduction saved. The card's id, never its words or the
    * person's name (§12.12): the row says who put a person's photograph on the site, and when.

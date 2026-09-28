@@ -722,6 +722,13 @@
       "when": 1790578270127,
       "tag": "0105_start_to_be_announced",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1790585465770,
+      "tag": "0106_legal_template_hash",
+      "breakpoints": true
     }
   ]
 }

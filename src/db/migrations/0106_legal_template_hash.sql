@@ -1,0 +1,2 @@
+-- expand: the fingerprint of the platform's template a legal version started from (§NNN), so /admin/legal can say «Șablon nou» when the template changed after the text in force was made from it. Nullable, no backfill: a version made before this column, or written from nothing, has none, and the page falls back to comparing the text itself.
+ALTER TABLE "legal_documents" ADD COLUMN "template_sha256" text;

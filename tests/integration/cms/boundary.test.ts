@@ -386,6 +386,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       questions (`deletionObstacle`, `isReliedOn`) and destroys it through the body
       `deleteApprovedVersion` uses — audit row, retired number. The three `plan…`/`template…`
       names read.
+
+      §NNN adds two readers and no writer: `readLegalOverview` reads each text's state for the
+      cards and «Versiune nouă», and `templateSourceOf` answers which template fingerprint a
+      draft made the long way inherits — the value `createDraftVersion` then stores beside the
+      words it writes, never a change to words already written.
     */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
@@ -399,7 +404,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "planDraftApproval",
       "planTemplateRegeneration",
       "readDeletionFacts",
+      "readLegalOverview",
       "regenerateFromTemplates",
+      "templateSourceOf",
       "templateTranslations",
       "updateDraftVersion",
       "withdrawApprovedVersion",
