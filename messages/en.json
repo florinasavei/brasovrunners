@@ -4823,12 +4823,17 @@
               ]
             },
             {
-              "title": "The legal texts, before the race is published",
+              "title": "The club's legal texts",
               "steps": [
-                "«Legal documents» → «One step: approve the templates with the club's facts» → «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
-                "A text already approved whose template has changed (the terms, the GDPR notice, the declarations): «New version» → «Start from the template», one at a time.",
-                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. The group runs' declarations appear only on the runs that tick them.",
-                "Until you approve the new notice, the public participant list shows the confirmed only."
+                "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
+                "The texts whose template changed, all at once: under «Every text at once» press «Regenerate from the templates» and confirm. One draft is made for each; nothing takes effect yet.",
+                "Open each draft from the table, read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
+                "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
+                "A single text to redo: «Legal documents» → «New version» → under «Start from the template» pick it, then the steps of “Approve a new version of a legal text”.",
+                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
+                "Until you approve the new notice, the public participant list shows the confirmed only.",
+                "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
+                "The signed declarations of a group run, when the signer asks for them to be erased: «Events» → «Edit» on the run → «Signed declarations (group run)» → «Erase several at once»: tick them, fill in «Why it is erased» once, press «Erase the ticked ones» and confirm. The log keeps your name and the reason, not the signer's."
               ]
             },
             {

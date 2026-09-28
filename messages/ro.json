@@ -4823,12 +4823,17 @@
               ]
             },
             {
-              "title": "Textele legale, înainte de publicarea cursei",
+              "title": "Textele legale ale clubului",
               "steps": [
-                "«Documente legale» → «Într-un pas: aprobă șabloanele cu datele clubului» → «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
-                "Un text deja aprobat al cărui șablon s-a schimbat (termenii, nota GDPR, declarațiile): «Versiune nouă» → «Pornește de la șablon», pe rând.",
-                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. Declarațiile alergărilor de grup apar doar la alergările care le bifează.",
-                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
+                "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
+                "Textele al căror șablon s-a schimbat, toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane» și confirmă. Se face câte o ciornă pentru fiecare; nimic nu intră încă în vigoare.",
+                "Deschide fiecare ciornă din tabel, citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
+                "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
+                "Un singur text de refăcut: «Documente legale» → «Versiune nouă» → sub «Pornește de la șablon» alege-l, apoi pașii de la „Aprobă o versiune nouă a unui text legal”.",
+                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau trail) e aprobat.",
+                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
+                "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
+                "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
               ]
             },
             {
