@@ -9,7 +9,7 @@ import { emailWaitMinutes } from "./domain/email-wait";
 import { DELIVERY_CHOICE_FIELD, type SendNowWords } from "./domain/send-at-once";
 
 /**
- * A resend's two answers (§NNN), worded on the server for the press's `ConfirmDialog`: «Trimite acum,
+ * A resend's two answers (§540), worded on the server for the press's `ConfirmDialog`: «Trimite acum,
  * fără să aștepte trecerea programată», the primary one, and «Pune la coadă pentru trecerea
  * programată», the quiet one — with one sentence for the body naming the scheduled pass's wait now.
  *

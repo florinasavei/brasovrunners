@@ -11,12 +11,12 @@ import { createOutboxRenderer } from "./render";
  * organizer's message to a long list marks and hands over only its first forty
  * (`sendNowSplit`), and the rest wait for the outbox job's next pass. The bound keeps the `after()`
  * short: a function stopped mid-batch leaves its rows PROCESSING until the lock times out and the
- * job sends them again, and the fewer rows one call holds, the fewer a stop can send twice (§NNN review).
+ * job sends them again, and the fewer rows one call holds, the fewer a stop can send twice (§540 review).
  */
 const MAX_BATCHES = Math.ceil(SEND_NOW_ROW_LIMIT / OUTBOX_BATCH_SIZE);
 
 /**
- * Sends exactly these rows now (§NNN, `send-at-once.ts`), in the order they were queued, up to
+ * Sends exactly these rows now (§540, `send-at-once.ts`), in the order they were queued, up to
  * `MAX_BATCHES` batches — the worker every other sender runs (§16.2), limited to the ids. Not a run
  * of the outbox job: no `job_runs` row is written (`recordRun: false`), so «Ultima trecere
  * programată», the next round, the health check and the jobs' overview still say the scheduler's

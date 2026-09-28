@@ -145,7 +145,7 @@ export default async function TeamPage({ params }: Props) {
             <Card key={member.id} component="li" variant="outlined" sx={riseIn(index)}>
               {member.photo && (
                 // Our own WebP ladder, sized on upload (§414), in the crop the club drew — or, with
-                // none, the square it always was (§NNN). The name is right under it: `alt` is empty.
+                // none, the square it always was (§541). The name is right under it: `alt` is empty.
                 <TeamPhotoImage
                   src={member.photo.thumbUrl}
                   {...photoWidths(member.photo)}
@@ -220,7 +220,7 @@ function MemberLinks({ links, label, kindWords: words }: { links: readonly Publi
  * The photo's `srcset` and `sizes` (§414), or neither: a card is a column of the grid — the album
  * grid's `tile` widths, two, three and four to a row — and the photograph is drawn wider than its
  * card by what the frame magnifies: the crop's `1 / w`, or a square's cover (`teamPhotoFrame`,
- * §NNN). A picture from before the ladder keeps its thumbnail.
+ * §541). A picture from before the ladder keeps its thumbnail.
  */
 function photoWidths(photo: NonNullable<PublicTeamMember["photo"]>): { srcSet?: string; sizes?: string } {
   const srcSet = pictureSrcSet(photo.webUrl, photo.width);

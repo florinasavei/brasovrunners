@@ -104,7 +104,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * So the counts on each row are not decoration. They are the answer to "may this be changed",
  * stated on the page rather than in a document somebody has to remember.
  *
- * ## One card per text (§NNN, amending §532)
+ * ## One card per text (§539, amending §532)
  *
  * The list was one long table of every version of every text, and the owner could not see at a
  * glance which text is in force, which draft waits, or where «regenerate» lives. So the page is
@@ -255,7 +255,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     .map(([name]) => name);
 
   /*
-    Each text as its card says it (§NNN): what is in force, which draft waits, what «Regenerează
+    Each text as its card says it (§539): what is in force, which draft waits, what «Regenerează
     din șablon» would do with it and the number its draft would get — one read for the cards and
     for §532's box beside them, so the box, the cards and their confirm dialogs name the same
     texts. The in-force ids come with it, for the rows' states and the filter.
@@ -542,7 +542,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   });
 
   /*
-    One text's card (§NNN): its name and what it is, the state in words, «Regenerează din șablon»
+    One text's card (§539): its name and what it is, the state in words, «Regenerează din șablon»
     for this text alone, and its versions folded under it, newest first.
   */
   const kindCard = (key: LegalDocumentKey) => {
@@ -751,7 +751,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         <Typography variant="body2" color="text.secondary">
           {t("legal.intro", { count: PLATFORM_APPROVAL_KEYS.length })}
         </Typography>
-        {/* The three steps, in the owner's words, as the page's one help line (§398's help variant, §NNN). */}
+        {/* The three steps, in the owner's words, as the page's one help line (§398's help variant, §539). */}
         <Panel variant="help" legendIcon="info" title={t("legal.steps.title")} intro={t("legal.steps.body")} data-testid="legal-steps" />
       </Stack>
 
@@ -781,7 +781,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
       {mayCreate && (
         <Box>
-          {/* «Versiune nouă» opens the templates, grouped, each with its state (§NNN). */}
+          {/* «Versiune nouă» opens the templates, grouped, each with its state (§539). */}
           <GlyphButtonLink href="/admin/legal/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
             {t("legal.newTitle")}
           </GlyphButtonLink>
@@ -793,7 +793,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         approved in one press. Two presses on purpose — nothing reaches the site from a template
         without the club reading the draft first (§46) — each behind the §384 confirm dialog that
         names the texts. What cannot be approved together is said with its reason, never hidden.
-        One text alone is its card's own «Regenerează din șablon» below (§NNN).
+        One text alone is its card's own «Regenerează din șablon» below (§539).
       */}
       {mayCreate && (
         <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="legal-batch-tools">
@@ -923,7 +923,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       )}
 
       {/*
-        The filter (§NNN, §413's shape): by state and by text, as plain links, so it works with
+        The filter (§539, §413's shape): by state and by text, as plain links, so it works with
         JavaScript off and the address says what the page shows — a filtered page can be sent to
         somebody. The count line says how much of the whole it keeps.
       */}

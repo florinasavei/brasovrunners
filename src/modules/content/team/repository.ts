@@ -30,7 +30,7 @@ export type TeamPhoto = {
   width: number;
   height: number;
   /**
-   * The part the card shows (§NNN), four fractions of the stored picture; null for the whole
+   * The part the card shows (§541), four fractions of the stored picture; null for the whole
    * photograph, drawn as before — a square with the face near the top.
    */
   crop: ImageCrop | null;

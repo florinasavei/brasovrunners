@@ -39,7 +39,7 @@ import { type ConfirmSpec, confirmOnKey } from "./notice";
  * **A second answer**, rarely (`alternative`): a question with two ways forward and a way back —
  * «Copiază și tradu tot» asks whether to replace the English already written or fill only the
  * empty boxes (§482). It sits between cancel and confirm, outlined, and Enter never picks it.
- * A resend's two answers (§NNN, `spec.choice`): «Trimite acum…» is the confirm button with the send
+ * A resend's two answers (§540, `spec.choice`): «Trimite acum…» is the confirm button with the send
  * glyph, «Pune la coadă…» the outlined one with the scheduled-send glyph.
  */
 export default function ConfirmDialog({
@@ -99,7 +99,7 @@ export default function ConfirmDialog({
         {alternative && (
           <Button
             variant="outlined"
-            // «Pune la coadă pentru trecerea programată» (§NNN) wears the scheduled-send glyph.
+            // «Pune la coadă pentru trecerea programată» (§540) wears the scheduled-send glyph.
             startIcon={spec.choice ? <ScheduleSendIcon fontSize="small" /> : <AltRouteIcon fontSize="small" />}
             onClick={alternative.onClick}
             sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
@@ -111,7 +111,7 @@ export default function ConfirmDialog({
         <Button
           variant="contained"
           color={spec.destructive ? "error" : "primary"}
-          // «Trimite acum, fără să aștepte trecerea programată» (§NNN) wears the send glyph.
+          // «Trimite acum, fără să aștepte trecerea programată» (§540) wears the send glyph.
           startIcon={spec.choice ? <SendIcon fontSize="small" /> : <CheckIcon fontSize="small" />}
           onClick={onConfirm}
           sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}

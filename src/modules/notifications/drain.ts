@@ -88,7 +88,7 @@ export function drainOutboxAfterResponse(): void {
 }
 
 /**
- * «Trimite acum, fără să aștepte trecerea programată» (§NNN, amending §513 and §68): the rows one
+ * «Trimite acum, fără să aștepte trecerea programată» (§540, amending §513 and §68): the rows one
  * backoffice press queued — its message and the club's copies of it — sent after the press's
  * response, **whatever «Când pleacă emailurile» says**, and nothing else of the queue. The same
  * one-shot `after()` as above, limited to the ids; the allowance was asked before the press queued

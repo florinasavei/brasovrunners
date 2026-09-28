@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — «Dificultate» and «Treapta» on one centred axis (the owner, 2026-09-28:
+ * `DECISIONS.md` §537 — «Dificultate» and «Treapta» on one centred axis (the owner, 2026-09-28:
  * «partea asta nu e centrată!»). `KindBox` renders the row on the create page and in the editor
  * alike (§406), so the row itself is what is pinned here.
  */
@@ -26,7 +26,7 @@ const render = (catalogue: typeof ro) =>
     }),
   );
 
-describe("§NNN the difficulty row is centred", () => {
+describe("§537 the difficulty row is centred", () => {
   it("is one grid, both outlines from the cells' top edge, stacked below sm in the same order", () => {
     expect(DIFFICULTY_ROW_SX.display).toBe("grid");
     // Top-aligned: the two 56-px outlines start at the cell's top, so their centres meet and the

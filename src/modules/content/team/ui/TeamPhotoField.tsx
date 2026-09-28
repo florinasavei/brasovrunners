@@ -40,7 +40,7 @@ export type TeamPhotoLabels = {
   /** «Din galerie» and its picker's words (§485). */
   fromGallery: string;
   gallery: GalleryPickerLabels;
-  /** The crop box's words (§454), the text editor's own, with the card's title and help (§NNN). */
+  /** The crop box's words (§454), the text editor's own, with the card's title and help (§541). */
   crop: ImageCropLabels;
   /** What is going up and what it became (§437, §414), the text editor's own sentences. */
   chosen: ChosenFactsLabels;
@@ -62,7 +62,7 @@ type Props = {
 };
 
 /**
- * The shape a person's photograph starts in (§NNN): a square portrait — what the card always
+ * The shape a person's photograph starts in (§541): a square portrait — what the card always
  * drew. The crop box offers every other shape of §454, and the club may pick one.
  */
 export const TEAM_PHOTO_SHAPE = "1:1" as const;
@@ -73,7 +73,7 @@ export function initialTeamCrop(intrinsic: { width: number; height: number }): I
 }
 
 /**
- * A card's photograph (§459), with the upload every other picture has (§NNN, amending §474): the
+ * A card's photograph (§459), with the upload every other picture has (§541, amending §474): the
  * quality beside it (§414, §437), the chosen file's pixels and weight and what it became once
  * stored, «Din galerie» beside it (§485) — and after the choice the crop box with §454's shapes,
  * 1∶1 pressed first, a portrait. Uploaded through `uploadPicture`, the one upload a picture in the
@@ -128,7 +128,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
   const sized = photo.id !== "" && photo.width > 0 && photo.height > 0;
 
-  /** A new photograph: its largest square first (§NNN), the crop box's shapes for the rest. */
+  /** A new photograph: its largest square first (§541), the crop box's shapes for the rest. */
   const take = (next: TeamPhotoValue) => {
     setPhoto(next);
     setCrop(next.width > 0 && next.height > 0 ? initialTeamCrop(next) : null);

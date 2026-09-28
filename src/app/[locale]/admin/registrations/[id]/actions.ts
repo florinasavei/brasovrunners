@@ -26,7 +26,7 @@ export async function resendRegistrationEmailAction(_previous: FormOutcome | nul
     href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } },
   });
 
-  // The dialog's answer (§NNN): «now» past the scheduled pass, anything else the queue, as before.
+  // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
   const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
 
   let outcome: "sent" | { error: string };
@@ -36,7 +36,7 @@ export async function resendRegistrationEmailAction(_previous: FormOutcome | nul
     outcome = "sent";
   } catch (error) {
     if (isDomainError(error)) {
-      // The allowance's own sentence for a «now» it cannot hold (§80, §NNN), never a generic one.
+      // The allowance's own sentence for a «now» it cannot hold (§80, §540), never a generic one.
       outcome = { error: sendNowRefusalCode(error) };
     } else {
       throw error;
@@ -44,7 +44,7 @@ export async function resendRegistrationEmailAction(_previous: FormOutcome | nul
   }
 
   // `#admin-alert`, like every other backoffice redirect: land on the outcome — and the toast
-  // (§384) says which message went, from the same flag, and whether it left now (§NNN).
+  // (§384) says which message went, from the same flag, and whether it left now (§540).
   if (outcome === "sent" && delivery === "now") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSentNow" : "resentNow" });
   else if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
   redirect(

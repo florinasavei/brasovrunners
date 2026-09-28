@@ -81,7 +81,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   /** `EVENT_REMINDER` asks for the reminder instead of the state's own message (§81). */
   wanted?: "EVENT_REMINDER",
   /**
-   * «now» sends it after this response, past the scheduled pass (§NNN); «queue», the default, leaves
+   * «now» sends it after this response, past the scheduled pass (§540); «queue», the default, leaves
    * it to «Când pleacă emailurile», as every resend did before.
    */
   delivery: DeliveryChoice = "queue",
@@ -132,7 +132,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   if (!participant) throw new DomainError("NOT_FOUND", "no such participant");
 
   /*
-    «Trimite acum, fără să aștepte trecerea programată» (§NNN): inside the day's allowance, asked
+    «Trimite acum, fără să aștepte trecerea programată» (§540): inside the day's allowance, asked
     before anything is queued, so a refusal leaves nothing behind (§80: refused, never deferred in
     silence). The club's copies ride with it, each on the club group's road, and count too.
   */
@@ -150,7 +150,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
    * and it is invisible if each of them has their own allowance.
    *
    * Checked after everything that only reads — the message type, the event, the day's allowance
-   * for a «now» (§NNN) — so a press refused for any of those spends none of the hour's resends and
+   * for a «now» (§540) — so a press refused for any of those spends none of the hour's resends and
    * the «Pune la coadă» the allowance's refusal suggests is still allowed; a throttled resend
    * queues nothing at all. Refused with a real error rather than a generic success: this caller
    * is an authenticated Administrator looking at the screen, so there is nothing to leak and
@@ -182,16 +182,16 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
       messageType,
       locale: registration.locale,
       recipientEmail: participant.deliveryEmail,
-      // Marked for the queue panel's «Pleacă acum» (§NNN); the club's copies carry the mark with it.
+      // Marked for the queue panel's «Pleacă acum» (§540); the club's copies carry the mark with it.
       payload: markedForNow({}, delivery),
       idempotencyKey,
       requestedByStaffUserId: actor.id,
       isManualResend: true,
       now,
-      // Sent now by its own drain below, not by the timing's (§NNN); queued, the timing's as before.
+      // Sent now by its own drain below, not by the timing's (§540); queued, the timing's as before.
       drainAfter: delivery !== "now",
     });
-    // The press, on the registration's trail (§NNN): who, which message, and that it passed the round.
+    // The press, on the registration's trail (§540): who, which message, and that it passed the round.
     if (delivery === "now" && queued) {
       await recordAuditEvent(tx, {
         actorStaffUserId: actor.id,

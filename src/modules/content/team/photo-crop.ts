@@ -1,7 +1,7 @@
 import { type ImageCrop, imageCropSchema, meaningfulCrop } from "@/modules/content/rich-text/domain/schema";
 
 /**
- * A card photograph's crop as posted or stored (§NNN): the four fractions inside the picture that
+ * A card photograph's crop as posted or stored (§541): the four fractions inside the picture that
  * `ImageCropBox` draws — the JSON a picture in a text keeps as its `crop` (§241) — or `null` for
  * none: absent, empty, or the whole photograph, which is not a crop (`meaningfulCrop`).
  * `"invalid"` for anything else, which the save refuses. Its own file, because the upload's

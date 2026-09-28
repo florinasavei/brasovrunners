@@ -354,7 +354,7 @@ const imageCrop = z
 
 export type ImageCrop = z.infer<typeof imageCrop>;
 
-/** The same rule for a crop kept outside a document — a card of «Echipa»'s photograph (§NNN). */
+/** The same rule for a crop kept outside a document — a card of «Echipa»'s photograph (§541). */
 export const imageCropSchema = imageCrop;
 
 /** The whole picture, as the crop box shows it before anybody has dragged one. */

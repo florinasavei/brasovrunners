@@ -114,7 +114,7 @@ export function readClubTodoValue(value: unknown): ClubTodoItem[] {
 }
 
 /**
- * The row's `seenDefaults` (§NNN): the ids of the starting lines this list has already been given,
+ * The row's `seenDefaults` (§538): the ids of the starting lines this list has already been given,
  * so one the club deleted is never given again. Null for a row written before the field existed —
  * `mergeClubTodoDefaults` reads that as §438's first nineteen.
  */

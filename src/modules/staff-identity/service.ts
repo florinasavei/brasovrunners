@@ -199,7 +199,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
   email: string,
   now = new Date(),
   /**
-   * «now» sends it after this response, past the scheduled pass (§NNN), as a registration's resend
+   * «now» sends it after this response, past the scheduled pass (§540), as a registration's resend
    * does; «queue», the default, leaves it to «Când pleacă emailurile».
    */
   delivery: DeliveryChoice = "queue",
@@ -209,11 +209,11 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
   if (!member) throw new DomainError("NOT_FOUND", "no such staff user");
   assertMayManage(actor, member);
   if (member.firstSignedInAt) throw new DomainError("CONFLICT", "this person has signed in already; there is nothing to invite them to");
-  // Inside the day's allowance, asked before anything is queued (§80, §NNN): a refusal leaves nothing.
+  // Inside the day's allowance, asked before anything is queued (§80, §540): a refusal leaves nothing.
   if (delivery === "now") await assertRoomToSendNow(db, [invitationMessageType(member)], now);
   const key = await db.transaction(async (tx) => {
     const queued = await enqueueStaffInvitation(tx, actor, member, now, true, delivery);
-    // The press on the audit trail (§NNN): who, which message, and that it passed the round.
+    // The press on the audit trail (§540): who, which message, and that it passed the round.
     if (delivery === "now" && queued.id) {
       await recordAuditEvent(tx, {
         actorStaffUserId: actor.id,
@@ -226,7 +226,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
     }
     return queued.key;
   });
-  // The invitation, after this response, whatever «Când pleacă emailurile» says (§NNN).
+  // The invitation, after this response, whatever «Când pleacă emailurile» says (§540).
   if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, key));
   return member;
 }
@@ -252,13 +252,13 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
     messageType: invitationMessageType(member),
     locale: member.preferredLocale,
     recipientEmail: member.email,
-    // Marked for the queue panel's «Pleacă acum» on a press that sends now (§NNN).
+    // Marked for the queue panel's «Pleacă acum» on a press that sends now (§540).
     payload: markedForNow({ displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName }, delivery),
     idempotencyKey: key,
     requestedByStaffUserId: actor.id,
     isManualResend,
     now,
-    // Sent now by the press's own drain after the transaction (§NNN), not by the timing's.
+    // Sent now by the press's own drain after the transaction (§540), not by the timing's.
     drainAfter: delivery !== "now",
   });
   return { id: queued?.id ?? null, key };

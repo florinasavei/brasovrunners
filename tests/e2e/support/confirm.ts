@@ -16,7 +16,7 @@ export async function confirmDialog(page: Page, name?: string | RegExp): Promise
 }
 
 /**
- * The same dialog's quiet second answer (§482, §NNN): «Pune la coadă pentru trecerea programată» on
+ * The same dialog's quiet second answer (§482, §540): «Pune la coadă pentru trecerea programată» on
  * a resend, the outlined button between cancel and confirm.
  */
 export async function chooseAlternative(page: Page, name?: string | RegExp): Promise<void> {

@@ -150,7 +150,7 @@ describe("§529 the queue panel says when the emails leave", () => {
     const on = await render("ro");
     expect(on).toMatch(/data-testid="outbox-timing-form"/);
     expect(on).toMatch(/<input type="hidden" name="timing" value="immediate"\/>/);
-    // Without JavaScript the button beside the switch posts the same form (§NNN).
+    // Without JavaScript the button beside the switch posts the same form (§540).
     expect(on).toContain(ro.Admin.emails.queue.when.turnOff);
 
     const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
@@ -162,7 +162,7 @@ describe("§529 the queue panel says when the emails leave", () => {
   /** The switch's own input: MUI draws it as a checkbox with the `switch` role. */
   const switchInput = (html: string) => html.match(/<input[^>]*role="switch"[^>]*>/)?.[0] ?? "";
 
-  it("is a switch labelled «Trimite la trecerea programată», checked under the scheduled setting, with one sentence of the mode (§NNN)", async () => {
+  it("is a switch labelled «Trimite la trecerea programată», checked under the scheduled setting, with one sentence of the mode (§540)", async () => {
     const on = await render("ro");
     expect(on).toContain(ro.Admin.emails.queue.when.turnOn);
     expect(switchInput(on)).toMatch(/checked=""/);
@@ -262,7 +262,7 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(englishConfirm.body).toMatch(/Still held: 3, the first until [^:]*11:30: a family still signing: 2 · a retry or a deferral: 1\.$/);
   });
 
-  it("says «Pleacă acum» for a row a press sent past the round, and its retry's time once tried (§NNN)", async () => {
+  it("says «Pleacă acum» for a row a press sent past the round, and its retry's time once tried (§540)", async () => {
     const now = { ...QUEUE.rows[0]!, id: "n", isManualResend: true, sentNow: true };
     const html = await render("ro", { queue: { ...QUEUE, total: 1, rows: [now] } });
     const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
@@ -274,7 +274,7 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(again).not.toContain(ro.Admin.emails.queue.leaves.leavesNow);
   });
 
-  it("says under the round that a backoffice resend may leave at once, only while the round holds mail (§NNN)", async () => {
+  it("says under the round that a backoffice resend may leave at once, only while the round holds mail (§540)", async () => {
     expect(await render("ro")).toContain(ro.Admin.emails.deliveryTiming.bypassHelp);
     const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
     expect(off).not.toContain(ro.Admin.emails.deliveryTiming.bypassHelp);

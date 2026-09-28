@@ -10,7 +10,7 @@ import { gmailIsConfigured, readEmailTransport } from "./email-transport";
 import { readEmailVolumeToday } from "./volume";
 
 /**
- * The server half of «Trimite acum, fără să aștepte trecerea programată» (§NNN, amending §513, §80
+ * The server half of «Trimite acum, fără să aștepte trecerea programată» (§540, amending §513, §80
  * and §68): the press's own rows, and only those, sent right after its response, inside the day's
  * allowance and through the road the message's group is set to (§443). What a press sends:
  *
@@ -25,10 +25,10 @@ import { readEmailVolumeToday } from "./volume";
  *   not claimed (§39: a resend is a new row, and the same message is never sent twice).
  */
 
-/** The refusal's code, a sentence in `Admin.errors` (§NNN). */
+/** The refusal's code, a sentence in `Admin.errors` (§540). */
 export const SEND_NOW_ALLOWANCE_SPENT = "SEND_NOW_ALLOWANCE_SPENT";
 
-/** A press that asked to send now past what the day's Mailgun allowance still holds (§80, §NNN). */
+/** A press that asked to send now past what the day's Mailgun allowance still holds (§80, §540). */
 export class SendNowRefused extends DomainError {
   readonly reason = SEND_NOW_ALLOWANCE_SPENT;
   constructor(message: string) {
@@ -86,7 +86,7 @@ export async function clubCopyTypesFor<T extends Record<string, unknown>>(
  * Only waiting rows (`PENDING`): the press has just queued them and nothing else may send them but
  * this drain or the outbox job — and only a waiting row can be claimed anyway. The status is the
  * claim index's first column (`email_outbox_status_next_attempt_created_idx`), so the prefix is
- * compared over the queue, never over every message the club ever sent (§NNN review).
+ * compared over the queue, never over every message the club ever sent (§540 review).
  */
 export async function outboxIdsForKey<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -101,7 +101,7 @@ export async function outboxIdsForKey<T extends Record<string, unknown>>(
       and(
         eq(emailOutbox.status, "PENDING"),
         or(eq(emailOutbox.idempotencyKey, key), sql`left(${emailOutbox.idempotencyKey}, ${under.length}) = ${under}`),
-        // A send to many past `SEND_NOW_ROW_LIMIT` (§NNN): only the rows the press marked leave now.
+        // A send to many past `SEND_NOW_ROW_LIMIT` (§540): only the rows the press marked leave now.
         options.markedOnly ? sql`(${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true'` : undefined,
       ),
     )

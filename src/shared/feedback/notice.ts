@@ -305,7 +305,7 @@ export type ConfirmSpec = {
    */
   bodyCount?: BodyCount;
   /**
-   * Two ways forward (§NNN): a resend in the backoffice leaves now, or waits for the scheduled pass.
+   * Two ways forward (§540): a resend in the backoffice leaves now, or waits for the scheduled pass.
    * `field` is a hidden input of the form; the confirm button posts it as `confirmValue` (the primary,
    * with the send glyph) and the quiet button beside it as `alternativeValue`. Without JavaScript
    * the hidden input posts what the page wrote in it — the primary's value.
@@ -322,7 +322,7 @@ export type ConfirmChoice = {
 };
 
 /**
- * What an answer to a two-way question posts (§NNN): the confirm button its `confirmValue`, the quiet
+ * What an answer to a two-way question posts (§540): the confirm button its `confirmValue`, the quiet
  * one its `alternativeValue`; `null` for a dialog with no choice, which posts the form as it stands.
  * Pure, so both answers are tested in Node.
  */

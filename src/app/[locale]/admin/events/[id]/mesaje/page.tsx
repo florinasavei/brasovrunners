@@ -137,7 +137,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     number — `countParticipantMessageAudiences`, the count the send itself queues from. One spec
     per radio choice, picked by the `audience` the form posts, so the dialog is the group's own.
   */
-  // «Trimite acum» or «Pune la coadă» (§NNN): under the scheduled timing, the send asks which.
+  // «Trimite acum» or «Pune la coadă» (§540): under the scheduled timing, the send asks which.
   const sendNow = await sendNowChoiceFor(db, locale);
   const sendConfirm = audiences.map((choice) =>
     withSendNowChoice(

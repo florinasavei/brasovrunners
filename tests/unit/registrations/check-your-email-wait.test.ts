@@ -150,7 +150,7 @@ describe("§536 the short screen after the first form", () => {
     expect(html).not.toContain("unul singur pentru toți");
   });
 
-  it("under «imediat» says «pleacă acum» on the redirect and «a plecat» on a reload an hour later (§NNN)", async () => {
+  it("under «imediat» says «pleacă acum» on the redirect and «a plecat» on a reload an hour later (§540)", async () => {
     wait.minutes = null;
     wait.leavesAt = null;
     const submittedAt = new Date("2026-09-28T10:00:00.000Z");

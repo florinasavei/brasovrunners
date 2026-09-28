@@ -15,7 +15,7 @@ import {
 import { choiceAnswer, type ConfirmSpec } from "@/shared/feedback/notice";
 
 /**
- * §NNN (the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea de bypass la cron ca sa
+ * §540 (the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea de bypass la cron ca sa
  * pot retrimite instant!») — a resend's dialog has two answers: «Trimite acum, fără să aștepte trecerea
  * programată», the primary one, and «Pune la coadă pentru trecerea programată», the quiet one. Each
  * posts its own value in the form's hidden field; the server reads only «now» as now.
@@ -28,7 +28,7 @@ const WORDS = {
 
 const RESEND: ConfirmSpec = { title: "Retrimiți emailul?", body: "Emailul pleacă din nou către Ana.", confirmLabel: "Retrimite", cancelLabel: "Renunță" };
 
-describe("§NNN a resend's two answers", () => {
+describe("§540 a resend's two answers", () => {
   it("the primary answer posts «now», the quiet one «queue», in the hidden field", () => {
     const spec = withSendNowChoice(RESEND, WORDS);
     expect(choiceAnswer(spec, "confirm")).toEqual({ field: "delivery", value: "now" });
@@ -103,7 +103,7 @@ describe("§NNN a resend's two answers", () => {
   });
 });
 
-describe("§NNN a send to many past what one press sends (review)", () => {
+describe("§540 a send to many past what one press sends (review)", () => {
   it("sends the first forty now, the rest at the scheduled pass, and the club's copy only when the whole send fits", () => {
     expect(SEND_NOW_ROW_LIMIT).toBe(40);
     expect(sendNowSplit({ recipients: 12, copies: 1 })).toEqual({ now: 12, later: 0, copiesNow: true });

@@ -9,7 +9,7 @@ export type UploadedPicture = { assetId: string; src: string; width: number; hei
 /**
  * One picture up to `/api/admin/media` at the chosen quality (§414): shrunk in the browser only
  * as far as that choice keeps, then the server's answer. The one upload of the backoffice — a
- * picture in the text, a film's poster and a card of «Echipa» (§NNN) all call it, so the three
+ * picture in the text, a film's poster and a card of «Echipa» (§541) all call it, so the three
  * cannot drift apart again.
  *
  * The choice is read from the store unless the caller hands it over: a paste or a drop in the

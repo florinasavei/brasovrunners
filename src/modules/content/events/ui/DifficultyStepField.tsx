@@ -23,7 +23,7 @@ function StepDotsIcon({ step }: { step: DifficultyStep }) {
 }
 
 /**
- * The outline's geometry (§NNN), matched to the band select beside it — an outlined MUI select,
+ * The outline's geometry (§537), matched to the band select beside it — an outlined MUI select,
  * 56 px tall, its shrunk label (0.75rem) in the top edge. Here the label is a `legend`, which
  * draws the same notch natively; the fieldset is 6 px taller than the select (half the legend's
  * line above the edge) and a −6 px top margin takes that back, so in `DifficultyRow`'s centred row
@@ -43,7 +43,7 @@ export const STEP_FRAME = { height: 62, legendLine: 12, marginTop: -6, segmentHe
  * only for the recall after a refused save (§315): the choice that was posted comes back. Words
  * only, as strings — no element crosses from the Server Component that renders it (§370).
  *
- * Laid out by `DifficultyRow` (§NNN): the root is `display: contents`, the outline with its «?» is
+ * Laid out by `DifficultyRow` (§537): the root is `display: contents`, the outline with its «?» is
  * the grid's `step` cell — on the band select's axis — and the help line is the `help` cell under
  * it, so the line never lifts the toggle. Below `sm` the outline takes the full width.
  */
@@ -140,7 +140,7 @@ export default function DifficultyStepField({
           </Box>
         </Box>
         {/* The whole scale behind a «?» (§528, the §511 way), beside the toggle as the band's is
-            beside its select (§NNN) — outside the radio group's description, the one short line. */}
+            beside its select (§537) — outside the radio group's description, the one short line. */}
         {words.scale && <QuietHelp text={words.scale} testId="difficulty-scale-help" />}
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ gridArea: "help", display: "block", width: 0, minWidth: "100%" }}>

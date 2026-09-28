@@ -1577,7 +1577,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // the decision must agree, and the confirmation asks the limit again under the lock anyway.
         // The entry by its id alone — never a name or a date in the outbox (§12.12).
         // The entry's link starts with this message (§513): each submission is a new entry and its own first send.
-        // Held in a live sitting, it says so (`FAMILY_HELD`, §NNN): the queue panel (§529) counts it as
+        // Held in a live sitting, it says so (`FAMILY_HELD`, §540): the queue panel (§529) counts it as
         // the family's hold, not as a retry. The renderer ignores the flag on this message.
         payload: entry
           ? startingDeadline({

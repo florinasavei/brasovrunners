@@ -13,7 +13,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §513, §80, §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea
+ * §540 (amending §513, §80, §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea
  * de bypass la cron ca sa pot retrimite instant!») — under the scheduled timing a backoffice resend
  * with «Trimite acum» leaves within its request: the drain after the response sends that row and its
  * club copy, and nothing else of the queue; with «Pune la coadă» it waits for the scheduled pass as
@@ -166,7 +166,7 @@ async function runAfters() {
 
 const resends = () => db.select().from(emailOutbox).where(eq(emailOutbox.isManualResend, true));
 
-describe("§NNN a resend with «Trimite acum» leaves within its request", () => {
+describe("§540 a resend with «Trimite acum» leaves within its request", () => {
   it("sends that row once after the response, marks it SENT and names the press on the trail", async () => {
     const { registration } = await confirmedRunner();
     const later = new Date(NOW.getTime() + 60_000);
@@ -336,7 +336,7 @@ describe("§NNN a resend with «Trimite acum» leaves within its request", () =>
   });
 });
 
-describe("§NNN the organizer's message with «Trimite acum»", () => {
+describe("§540 the organizer's message with «Trimite acum»", () => {
   it("sends every row of the send after the response, and the trail says it passed the round", async () => {
     const { event } = await confirmedRunner();
     const result = await sendParticipantMessage(
@@ -396,7 +396,7 @@ describe("§NNN the organizer's message with «Trimite acum»", () => {
   });
 });
 
-describe("§NNN «Retrimite invitația» on Echipa with «Trimite acum»", () => {
+describe("§540 «Retrimite invitația» on Echipa with «Trimite acum»", () => {
   /** A colleague on the list who has not signed in yet. */
   async function invited() {
     const [row] = await db.insert(staffUsers).values({ email: "voluntar@club.test", displayName: "Voluntar", role: "CONTRIBUTOR" }).returning();

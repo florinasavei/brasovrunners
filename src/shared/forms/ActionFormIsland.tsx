@@ -222,7 +222,7 @@ export default function ActionFormIsland({
     setAsking(null);
     const element = form.current;
     if (!pending || !element) return;
-    // A two-way question (§NNN): the answer is the hidden field's value, set before the form is sent.
+    // A two-way question (§540): the answer is the hidden field's value, set before the form is sent.
     const chosen = choiceAnswer(pending.spec, which);
     if (chosen) {
       const input = element.elements.namedItem(chosen.field);
@@ -355,7 +355,7 @@ export default function ActionFormIsland({
           open
           onCancel={() => setAsking(null)}
           onConfirm={() => answer("confirm")}
-          // A two-way question (§NNN): the quiet answer beside the primary one, never on Enter.
+          // A two-way question (§540): the quiet answer beside the primary one, never on Enter.
           alternative={asking.spec.choice ? { label: asking.spec.choice.alternativeLabel, onClick: () => answer("alternative") } : null}
         />
       )}

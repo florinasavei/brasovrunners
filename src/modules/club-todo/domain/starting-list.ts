@@ -90,7 +90,7 @@ const ORGANIZER: ReadonlyArray<readonly [text: string, due?: string]> = [
 ];
 
 /**
- * The lines added to the starting list after it was first written (§NNN, amending §438) — the
+ * The lines added to the starting list after it was first written (§538, amending §438) — the
  * owner, 2026-09-28: «actualizează lista de TODOs pentru Administrator să facă pagina de Echipa și
  * Întrebări frecvente». Unlike the nineteen above, each one reaches a club whose list is already
  * stored: `mergeClubTodoDefaults` adds it once, by its id, and the row remembers that it did
@@ -171,7 +171,7 @@ function addedLine(entry: AddedDefault, order: number): ClubTodoItem {
 }
 
 /**
- * §438's pre-fill as it was first written: the nineteen lines a list stored before §NNN started
+ * §438's pre-fill as it was first written: the nineteen lines a list stored before §538 started
  * from, line 11 included — what the merge and its tests read a stored row against.
  */
 export function firstClubTodo(): ClubTodoItem[] {
@@ -183,7 +183,7 @@ const REPLACED_IDS: ReadonlySet<string> = new Set(ADDED_DEFAULTS.flatMap((entry)
 
 /**
  * The twenty starting lines: the Administrator's eleven (§438's twelve without line 11, which the
- * team-page line replaces) and the two pages (§NNN), then the Organizer's seven — every id and
+ * team-page line replaces) and the two pages (§538), then the Organizer's seven — every id and
  * every word of the lines kept unchanged.
  */
 export function startingClubTodo(): ClubTodoItem[] {
@@ -195,7 +195,7 @@ export function startingClubTodo(): ClubTodoItem[] {
 
 /**
  * What §438's pre-fill gave a stored list: the nineteen ids. One of them missing from a row written
- * before §NNN was deleted by the club, and stays deleted; only the lines added since are new to it.
+ * before §538 was deleted by the club, and stays deleted; only the lines added since are new to it.
  */
 const FIRST_DEFAULT_IDS: readonly string[] = firstClubTodo().map((item) => item.id);
 
@@ -223,7 +223,7 @@ export type ClubTodoMerge = {
 };
 
 /**
- * A stored list with the defaults it has never seen added at its end, once each (§NNN). `seen` is
+ * A stored list with the defaults it has never seen added at its end, once each (§538). `seen` is
  * the row's `seenDefaults`, or null for a row written before it existed (read as §438's nineteen).
  * Idempotent: a line already on the list, or seen and since deleted, is never added again.
  * A list at `CLUB_TODO_MAX_ITEMS` gets nothing more (the cap the add operation holds), and a

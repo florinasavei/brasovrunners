@@ -103,7 +103,7 @@ export function emailHasLeft(leavesAt: Date | null, now: Date): boolean {
 /**
  * The first form's leaving instant as the browser's half keeps it (§536): one letter and an ISO
  * instant, always 25 characters — `s` and the scheduled pass, or `i` and the submit instant when the
- * request itself sent it (`immediate`; §NNN, the family re-review of 2026-09-28: the epoch it sealed
+ * request itself sent it (`immediate`; §540, the family re-review of 2026-09-28: the epoch it sealed
  * before let a reload an hour later still say «pleacă acum»). A club setting, never the address's:
  * the sealed length says nothing about what the address holds (§39).
  */
@@ -138,7 +138,7 @@ export function openEmailSubmittedAt(text: string | undefined): Date | undefined
 export const IMMEDIATE_EMAIL_LEFT_AFTER_MS = 60_000;
 
 /**
- * Whether the first form's email has left by now, on the short screen (§NNN): a scheduled pass once it
+ * Whether the first form's email has left by now, on the short screen (§540): a scheduled pass once it
  * has come (`emailHasLeft`); under `immediate`, a minute after the submit — never on the redirect from
  * it, and always on a reload an hour later. Without the submit instant (an older half), not yet.
  */
@@ -309,7 +309,7 @@ export type FamilySittingCookie = {
    */
   emailLeavesAt?: Date | null;
   /**
-   * Under `immediate` (`emailLeavesAt` null), when the form was sent (§NNN): the short screen then says
+   * Under `immediate` (`emailLeavesAt` null), when the form was sent (§540): the short screen then says
    * the email left on a reload, not «pleacă acum» forever. Sealed in the same 25 characters.
    */
   emailSubmittedAt?: Date;

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 
 /**
- * The difficulty row of «Ce fel de eveniment» (§526, centred §NNN): the band select with its «?»
+ * The difficulty row of «Ce fel de eveniment» (§526, centred §537): the band select with its «?»
  * and «Treapta» with its «?», on one axis — the owner, 2026-09-28: «partea asta nu e centrată!».
  *
  * One grid: from `sm` the band and the step share the first row and the step's help line has a row

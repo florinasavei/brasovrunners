@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.19-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20761,3 +20761,127 @@ A first «Da» can find nothing left to open from its seed: the first person may
 When «Da» takes in a kept form's REGISTER_ANOTHER_PERSON, it marks the message `familyHeld`, never `sittingHeld`, which changes a verification link's life. The /admin/emails queue then counts it as the family's hold, with its «Ținut până …» line. The queue's family test is one bracketed, never-null condition. Unbracketed, it had counted a flagged row as a retry too, and left an unflagged retry uncounted.
 
 Baseline `BR-V2.19-2026-09-27`.
+
+## 537. «Dificultate» and «Treapta» on one axis
+
+**The owner, 2026-09-28**, on a screenshot of «Ce fel de eveniment»: «partea asta nu e centrată!». The step toggle «Treapta» (§526) sat higher than the band select beside it. Three things caused it: a plain caption stood above the buttons, the row was top-aligned on the caption rather than on the outlines, and the help line «1 = cel mai ușor din categorie, 3 = cel mai greu» and its «?» made the step's column longer.
+
+**Decided.** The row is one grid, `DifficultyRow`, which `KindBox` renders for the create page and the editor alike (§406, one layout).
+
+- From `sm`, the band and the step share the first row. The step's help line has a grid row of its own under the toggle, so it never lifts it.
+- The toggle's label is a `legend` in the outline's edge, drawn like the outlined select's shrunk label. The fieldset is 6 px taller than the select (half the legend's line above the edge), and a −6 px top margin takes that back (`STEP_FRAME`). The two visible outlines are therefore the same 56 px.
+- The cells align to the row's top. Both outlines start at the cell's top edge, so their centres meet. When a refused save puts helper text under the select, the band cell grows downwards and the toggle stays on the select's axis.
+- The step column is the toggle's own width (`max-content`). The help line wraps inside that width (`width: 0; min-width: 100%`), and the band select takes the rest of the row.
+- Each «?» sits beside its own control: the band's beside the select, the whole scale (§528) beside the toggle.
+- Below `sm`, the band, the toggle and the help line stack at full width, in that order.
+
+**What did not change.** The fieldset is the radio group itself. It is named by its legend and described by the help line, and the three native radios post `event.difficultyStep` with or without a script (§315 recall kept). Each segment is still at least 44 × 56 px (BR-REQ-041-01 criterion 6). No element crosses from the Server Component (§370).
+
+**Tests.** `tests/unit/events/difficulty-row.test.ts` pins the grid and its areas, the top alignment, the column widths, the legend and the 56-px arithmetic, and the group's name and description in both languages. `tests/e2e/difficulty-gauge.spec.ts` measures it on both projects. From 600 px, the select's centre and the segments' centre are within 6 px. Below that, the toggle sits under the select at the row's full width, and the help line is always under the segments. The segments' text is read from the segments, since the group's text now carries its legend.
+
+«Contact» is a standard page of «Pagini», not a tab of «Setări» (the owner, 2026-09-28: «când dau click pe pagina de contact mă duce automat la Setări... ar trebui să rămân în același loc»). The «Pagini» row's «Contact» entry opened /admin/settings/contact (§516), so the main bar switched to «Setări» and the row the reader had pressed it from was gone. The two cards — who reads «Scrie-ne» (§164) and the address the site shows (§442) — and their two actions moved unchanged to /admin/pages/contact: the page's gate is still canReadContent, each action and service still asks canManageClubSettings (§450), and both saves land back there. /admin/settings/contact answers a 308 to it through `src/i18n/moved-paths.ts`, query and fragment kept, and the email page's old fragments hop there. «Setări» loses the tab — one page, one way in, as «Configurație» in §520 — so its row is «Emailuri», «Termene», «Aspect», «Costuri», «Anti-robot», «Configurație».
+
+A section's parts live under its href. Every entry of «Pagini»'s row is an address under /admin/pages (`PAGES_ROW_ROUTE`), so the main bar's longest-href rule (`activeAdminTabHref`) keeps «Pagini» lit on each, and the row marks the entry the address names (`pagesRowEntryOf`). A unit test holds each page's `active` to its address. «Sarcini» → «Club»'s contact-form row links to «Pagini → Contact».
+
+**The review's round.** The club's own pages' editors (`/admin/pages/new`, `/admin/pages/<id>`) now draw «Pagini»'s row too, with «Paginile clubului» marked — `pagesRowEntryOf` already mapped them to it — so the reader stays in the section on every address under it. The `/admin/pages` list's layout gate was `isEditorial` (Organizer and up) while the «Pagini» tab and the list page ask `canReadContent` (Redactor and up), so a Redactor pressed the tab into a 404; the layout asks `canReadContent` now, still on the server and still above the `loading.tsx` boundary so the refusal stays a real 404. The writes keep their own gates: reordering and deleting assert `canEditEventFields`, which a Redactor lacks, and the list draws the move arrows only for a role the move accepts, rather than offering a Redactor an arrow the server refuses.
+
+**The public menu's order.** One list decides it — `SECTIONS` in `SiteNav`, which the header's row and its ☰ menu both draw; the footer's fold carries its own links, not this list. It reads «Evenimente · Calendar · Contact · Echipa · Întrebări frecvente», then the rule and the club's own pages in their own order (§251 had Contact last of the platform's sections). The two conditional sections keep their relative slots: «Galerie» (while an album is published, §66) just before «Echipa», «Membri» (§524) right after «Întrebări frecvente». Contact moving to third also serves §262, which wanted it on a phone's row beside the first two. A unit test pins the rendered order; the header spec asserts the first three.
+
+**Each row's ⋮ offers only what its service accepts.** The second review found the menu still gated on `canEditTexts` alone, so a Redactor was shown «Șterge», which `deletePage` refuses (`canEditEventFields`), and «Publică» / «Retrage», which `transitionPage` refuses under the Administrator (`TRANSITIONS`). One pure function, `pageListVerbs` (`modules/content/pages/page-list-verbs.ts`), answers per role and status: «Editează» for `canEditTexts`, «Publică» / «Retrage» only where `canTransition` allows that move from the row's status, «Șterge» only for `canEditEventFields`; the list draws each item and its hidden form only when the verb is offered, and the server still asserts every press. A side effect worth naming: `TRANSITIONS` has no DRAFT → PUBLISHED row, so a draft's row no longer offers «Publică» to anyone — the server refused that press for every role already; a draft is published from its own editor (§423).
+
+Baseline `BR-V2.20-2026-09-27`.
+
+## 538. «De făcut» tells the Administrator to write the Team and FAQ pages, and a stored list gains new starting lines once
+
+**The owner, 2026-09-28:** "de asemenea, actualizeaza lista de TODOs pt Amalia (Administrator) sa faca pagina de Echipa si Intrebari frecvente" — update the checklist so the Administrator writes the «Echipa» page and the «Întrebări frecvente» page.
+
+**The problem.** §438's starting list was read only while no `clubTodo` row existed. Production has stored its list since the first press, so a line added to the starting list would never reach it.
+
+**Decision.** Two starting lines for the Administrator, undated, with fixed ids (`start-admin-team-page`, `start-admin-faq-page`). Their words are in both catalogues (`Admin.clubTodo.defaults`) and use the screens' own button words:
+
+- the team page: «Salvează» for the introduction, then for each person «Adaugă o persoană» → «Adaugă cardul» → «Pune pe site», then «Publică pagina»;
+- the FAQ page: «Pe site» ticked on each question, then «Salvează pagina», then «Publică pagina».
+
+Each line is under 200 characters, with one action per arrow. The Romanian is the line's stored text. While the club has not edited it, the reader sees it in their own language, with a link and a glyph to `/admin/pages/team` or `/admin/pages/faq`. Once the club edits it, it is the club's words, shown as typed, with no link.
+
+A stored list gains every starting line it has never seen, once, at its end. The row keeps a `seenDefaults` marker inside its existing JSON value (no migration), written by the next change under the row's lock. A read adds the same lines without storing anything. A ticked line stays ticked, and a line the club deleted after seeing it never comes back. A row with no marker counts as having seen §438's nineteen, so a §438 line deleted before the marker existed is not revived. Adding the lines is not audited, because the trail records what a person did. The merge respects the 300-line cap the add operation enforces: a list at the cap gets nothing, and a line it could not take stays unseen, so it arrives once the club makes room. The Organizer's lines are unchanged.
+
+**Refused.**
+
+- A migration to rewrite production's stored list: it would overwrite the club's ticks and edits.
+- Re-adding the whole starting list on every read: a deleted line would come back.
+- Naming a colleague in the lines: the repository is public (§483), and the owner is the Administrator role.
+
+**The team-page line replaces §438's line 11.** §438's Administrator line 11 («Pagina «Echipa»: backoffice → Pagini → Echipa → … → «Publică»») says what the new team-page line says, with older button words; a club would otherwise see both. A fresh list therefore starts without it: twenty lines, the Administrator's thirteen (§438's twelve without line 11, then the two pages) and the Organizer's seven. Line 11 keeps its place in the source and its id among the ids a row has seen, so the lines after it keep their numbers (`start-admin-12` is still the dated «După 10 octombrie» line) and it is never given to a list again. On a stored list, the merge that adds the team-page line takes line 11 off in the same step — only while it is unticked and still says §438's words; an edited or ticked copy is the club's and stays beside the new line. Taking it off frees its place, so a list at the cap still gains the team-page line in its stead. Like the addition, the removal is not audited. Renumbering the §438 ids after line 11 was refused: a tick pressed on a page drawn before the release would land on another line.
+
+Baseline `BR-V2.20-2026-09-27`.
+
+## 539. `/admin/legal` as one card per text, filtered through the address, and «Regenerează din șablon» per text (amending §532)
+
+**The owner, 2026-09-28:** on `/admin/legal` he could not see which text is in force, which draft waits, or where «regenerate from the template» lives («nu e prea clar»), and asked to regenerate from «Versiune nouă» → «Pornește de la șablon» as well.
+
+**Decision.**
+
+- **One card per legal text**, in the catalogue's fixed order. Its header says the state in words: «În vigoare: versiunea N din <data>» (the whole date in words, as §534 decided for every legal version line) or «Nicio versiune în vigoare», and «O ciornă așteaptă aprobarea: versiunea N» while one waits. A draft waits when it is the newest draft numbered above every approved version still offered, which is §532's `draftExists` rule, so the card and the press agree.
+- **«Regenerează din șablon» on each card**, for that text alone. It is §532's `regenerateFromTemplates` asked with one key, behind a `ConfirmDialog` that names the text and the version it makes. Where there is nothing to make, the card says why instead (the text in force already has the template's words, or a draft already waits). Each draft it makes writes a `legal_document.regenerated` audit row naming the key and the version, in the same transaction.
+- **The versions fold under the card**, closed, and open themselves only for a waiting draft, for nothing in force, or for a filter that keeps rows in them (§336).
+- **A chip row filters by state** (Toate, În vigoare, Ciorne, Înlocuite, Retrase) **and by text**, through the address and without JavaScript (§413's shape), with a «N versiuni din M» line. «Toate» never shows a withdrawn version: the point of withdrawing is to get it out of the way, so «Retrase» is the one place withdrawn versions show, as the old withdrawn fold did. The old `?withdrawn=1` still opens «Retrase».
+- **«Versiune nouă»** groups the six templates in three labelled rows (the club's texts, the race declarations, the group-run declarations). Under each button is the text's state line, and a «Șablon nou» chip appears when the text in force no longer has the template's words, the club's facts written in. That is the same comparison §532's `regenerationOutcome` calls `unchanged`. «Regenerează toate (N)» sits beside them. Every regenerate, from a card, the list's tools or «Versiune nouă», lands on the list filtered to «Ciorne», with a toast saying how many drafts were made. A refusal returns to the page that was pressed.
+- **The page's three steps as a help line**: regenerate, read the draft and fill in whatever is still written `<…>`, approve (only then is it in force). The four facts are written in from the deployment already, so the line does not ask for them again. The body still names them. The backoffice guide's legal section and `/admin/tasks`' legal rows name the new buttons.
+
+**Refused: a stored fingerprint of the template.** Recording the template's hash on each version (a `legal_documents.template_sha256` column) would let «Șablon nou» tell a template change apart from the club's own edits. But it needs a migration, and the release would have to wait for the gated production migration run, for a chip the content comparison already answers. A text the club edited after starting from a template reads as «Șablon nou» until a draft from the template is approved. That is acceptable, because the draft is one press away and nothing is in force by it.
+
+**«Salvează ciorna» before «Aprobă și publică», in every step that names both.** On a draft's page, editing and approving are two separate forms. Approving puts the *stored* row in force and does not check for a remaining `<…>`. A step that said «completează, apoi „Aprobă și publică”» would lead an Administrator to fill in a placeholder on screen and then approve the text that was never saved, with the placeholder still in it for the public to read. So every `/admin/tasks` legal row now says «citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”», as the guide's regenerate step already did, in both languages. Each step still fits within the 200 characters allowed for a «Cum» step.
+
+The same holds for the two help lines on the page. `/admin/legal`'s three steps read «1. Regenerează … · 2. Citește ciorna și completează ce a rămas de forma <…>, apoi «Salvează ciorna» · 3. Aprobă». «Versiune nouă»'s second step reads «2. Citește, completează și «Salvează ciorna»». Both languages say it, and each line stays within 200 characters.
+
+Baseline `BR-V2.20-2026-09-27`.
+
+## 540. A backoffice resend may leave now, past the scheduled pass
+
+**The owner, 2026-09-28 11:35:** «pt 2.20, cand retrimit un mail trebuie sa am optiunee de bypass la cron ca sa pot retrimite instant!»
+
+**Decision.** While «Când pleacă emailurile» is «La trecerea programată» (§513), every backoffice press that sends one person's email by hand asks which: «Trimite acum, fără să aștepte trecerea programată» (the primary answer) or «Pune la coadă pentru trecerea programată». The presses: «Retrimite emailul» and «Trimite reminderul» on a registration, the resend on a registrations-list row, «Trimite un mesaj participanților», and «Retrimite invitația» on «Echipa». «Acum» sends only that press's own rows — the message and the club's copies that ride on it, found by the idempotency key the press wrote — right after the response, through the same worker and each group's road (§443). Under «imediat» there is nothing to choose and the dialog is the one it always was.
+
+**Why «acum» is the default.** A resend is asked for by someone looking at the screen, for someone waiting at the inbox. It is also the answer a press without JavaScript posts.
+
+**What stays scheduled.** Everything automatic; the event editor's update notice and cancellation, which are queued inside the series save (a follow-up in `docs/QUEUE.md`); the queue-wide «Trimite acum» (§80), which already skips the pass.
+
+**Guards.** The day's Mailgun allowance is asked before anything is queued, counting the club's copies on the club group's road too, and a «now» it cannot hold is refused with its own sentence and queues nothing, never deferred in silence (§80). The hour's resend limit is spent only after that check, so the «Pune la coadă» the refusal suggests is still allowed. Only the press's own ids are sent, and the claim takes only waiting rows, so a message that left is never sent twice (§39). Each press leaves an audit row naming the staff member, the outbox row and the message type: `registration.sent_now` on the registration's trail, `staff.invitation_sent_now` for an invitation, `delivery: "now"` on the organizer's message. The queue panel says «Pleacă acum» for such a row only while it waits untried, with no turn of its own, a few minutes after the press; a row Gmail's pace handed back, or one a failed drain left, says its time like any other. «Termene» names the bypass only while the timing is scheduled.
+
+**Also on this branch.** The family sitting's held `REGISTER_ANOTHER_PERSON` rows count as the family's hold on the queue (§536), and under «imediat» a reload of the short screen a minute after the submit says the email left rather than «pleacă acum» forever.
+
+Amends §513, §80 and §68.
+
+**A press is not a pass of the scheduler.** The rows a press sends go through the outbox worker without writing a `job_runs` row. «Ultima trecere programată», the next round counted from it, `/api/health`'s stall check and the jobs' overview all read that table. A press recorded there would move every one of them without the pinger having run. The panel would name the press as the last scheduled round, and a stalled pinger would look alive for the threshold window. One press sends at most two batches (forty rows) in its `after()`, and stops at the first batch that is not full. The ordinary drain after a response sends one batch. An organizer's message to a longer list sends its first forty now and the rest at the next pass, which the drain wakes. The bound keeps a function stopped mid-batch from leaving many rows PROCESSING until the lock times out and the job sends them again. The press's rows are looked up among the waiting ones only, so the lookup reads the queue through the claim's index. «Retrimite invitația» with «Trimite acum» says so in its toast («Invitația pleacă acum, fără să aștepte trecerea programată.»), as the registration's resend does. «Trimite mulțumirea», the newsletter composer and the race-day desk verbs' emails are offered no choice and still wait for the pass (a `docs/QUEUE.md` follow-up).
+
+**The timing control is a switch.** The owner, on the queue panel's button: «nu e clar cum funcționează acest toggle». The panel's «Când pleacă emailurile» is now a Material switch labelled «Trimite la trecerea programată», with the scheduled-send glyph. It is checked while the §513 setting is «La trecerea programată». Under it, one sentence states the mode in force: «Emailurile pleacă la trecerea programată; următoarea: <zi, oră>.» or «Emailurile pleacă imediat după cererea care le-a pus în coadă.». The chip that said the same beside the title is gone, and the lines below are shorter. A change posts the other value through the same action. It asks first (§384) and flashes the toast after. Until the page runs JavaScript, the switch is disabled and the old button beside it posts the same form.
+
+**A list longer than one press.** An organizer's message to more than forty recipients marks and sends only its first forty now; the other rows are queued unmarked and leave at the next scheduled pass, and the club's copy waits with them unless the whole send fits in the forty. Only what leaves now is asked of the day's allowance. The queue panel says «Pleacă acum» only for a marked row, so it never says «acum» for a row the press's drain will not claim. The toast says both halves: «Emailul pleacă acum către primii 40 de participanți; ceilalți N pleacă la trecerea programată.» «Retrimite invitația» with «Trimite acum» keeps Zitadel's answer in its toast, so a failed or unconfigured password link holds back the green toast beside the page's red banner (§171, §288).
+
+The queue panel's heading shows only how many emails wait; the mode in force is said once, under the switch.
+
+Baseline `BR-V2.20-2026-09-27`.
+
+## 541. A photo on «Echipa» gets the same upload as every other picture, with the crop box
+
+**The owner, 2026-09-28 12:45:** «când încarc fotografia membrilor pe site, trebuie să pot face crop».
+
+**Before.** A card of «Echipa» (§459, §474) took its photograph through its own upload: the quality choice (§414, §437) and «Din galerie» (§485) were there, but it had no crop box and did not show the chosen file's size or what it was stored as. The page always drew the photo as a square, covered, with the face near the top (`50% 25%`), so the club could not choose which part of the photo the card showed.
+
+**Decision (amending §474 and §454).**
+
+- **One upload.** `uploadPicture` moves out of the text editor to `src/modules/media/ui/upload-picture.ts`. A picture in a text, a film's poster and a card of «Echipa» now all call it, so they cannot drift apart again. The card's field shows the same sentences as the editor: the chosen file's pixels and weight (§437), what it was stored as (§414), and for a gallery pick the name and size (§485).
+- **The crop box after the choice**, as §485 does for a poster: it is `ImageCropBox`, the text editor's own, with the five shapes of §454 (Liber, 16:9, 4:3, 1:1, 4:5). A new photo, uploaded or taken from the gallery, starts with its largest centred square: **1:1, a portrait**. The club may pick another shape or draw a rectangle. The stored file is never touched. The crop is §241's four fractions `{ x, y, w, h }`, the same JSON a picture in a text keeps.
+- **Saved with the person.** It goes in a new nullable column, `team_members.photo_crop jsonb` (migration `0106`, expand only). The save reads it with the rich text's own crop rule (`imageCropSchema`) and keeps it only with a photo. A crop the box could not have drawn is refused on the photo box. Removing the photo, or pressing «Fără decupaj», clears it.
+- **Drawn by one rule everywhere.** `teamPhotoFrame` and `TeamPhotoImage` draw the photo on the public page, on the backoffice list and in the preview beside the upload. With a crop, the photo is drawn through §241's window in the crop's own shape, and `sizes` reads the window's magnification (`1 / w`) so the ladder and `srcset` pick the right file (§414). **Without a crop**, which covers every card saved before this, the card draws exactly what it drew before: the covered square, face near the top. No card changes until the club crops it.
+
+**Refused.**
+
+- *A card-wide fixed frame with a focal point, like the listing's 16:9 (§454).* The owner asked to crop, and the brief lets the club pick another shape. A fixed square would throw away a 4:5 portrait the club had just chosen. So the card follows the crop, and a portrait card is taller because the club chose it.
+- *A second upload component for people.* That is the drift this closes.
+- *Changing old cards to a crop in a migration.* A card with no crop keeps its square.
+
+Roles are unchanged: writing a card stays with the Redactor and the Administrator, checked on the server (BR-REQ-060-01).
+
+Baseline `BR-V2.20-2026-09-27`.

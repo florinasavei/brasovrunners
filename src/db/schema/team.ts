@@ -64,7 +64,7 @@ export const teamMembers = pgTable(
      */
     photoMediaAssetId: uuid("photo_media_asset_id").references(() => mediaAssets.id, { onDelete: "set null" }),
     /**
-     * The part of the photograph the card shows (§NNN, amending §474 and §454): the crop box's own
+     * The part of the photograph the card shows (§541, amending §474 and §454): the crop box's own
      * four fractions `{ x, y, w, h }` of the stored picture — the JSON a picture in a text keeps
      * as its `crop` (§241) — drawn by the page through the ladder and `srcset`. Null is no crop:
      * the card draws the whole photograph as it did before, a square with the face near the top.

@@ -94,7 +94,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
-  // «Retrimite invitația» asks «Trimite acum» or «Pune la coadă» (§NNN), under the scheduled timing only.
+  // «Retrimite invitația» asks «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only.
   const sendNow = await sendNowChoiceFor(getDb(), locale);
   /**
    * Which of these rows has no sign-in account (§288). For two days every "Add" wrote the row

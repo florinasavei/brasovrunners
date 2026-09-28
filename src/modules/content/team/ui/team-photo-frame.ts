@@ -3,7 +3,7 @@ import { cropGeometry, cropImageSx } from "@/modules/content/rich-text/ui/image-
 import { coverMagnification } from "@/modules/media/ladder";
 
 /**
- * How a card of «Echipa» draws its photograph (§NNN, amending §474): one rule for the public
+ * How a card of «Echipa» draws its photograph (§541, amending §474): one rule for the public
  * page, the card on the backoffice list and the preview beside the upload, so the three cannot
  * disagree about what a person looks like.
  *

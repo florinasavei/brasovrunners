@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN (after §251) — the public menu's order is the owner's: «Evenimente · Calendar · Contact
+ * `DECISIONS.md` §537 (after §251) — the public menu's order is the owner's: «Evenimente · Calendar · Contact
  * · Echipa · Întrebări frecvente», then the club's own pages in their own order. «Galerie» keeps
  * its slot just before «Echipa» and «Membri» its slot right after «Întrebări frecvente». One list
  * (`SECTIONS` in `SiteNav`) decides the row and the ☰ menu alike, so the rendered anchors' order is
@@ -45,7 +45,7 @@ function hrefs(markup: string): string[] {
   return [...markup.matchAll(/<a[^>]*href="([^"]+)"/g)].map((match) => match[1]);
 }
 
-describe("§NNN the public menu's order", () => {
+describe("§537 the public menu's order", () => {
   it("is Evenimente, Calendar, Contact, Echipa, Întrebări frecvente, then the club's pages", async () => {
     const markup = await html(
       createElement(SiteNav, {

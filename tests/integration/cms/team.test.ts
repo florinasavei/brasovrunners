@@ -189,7 +189,7 @@ describe("§459 the team page's cards", () => {
     expect(await sweepOrphanAssets(db, daysLater(ORPHAN_ASSET_DAYS * 5))).toBe(1);
     expect(await db.select().from(mediaAssets).where(eq(mediaAssets.id, uploaded.assetId))).toEqual([]);
   });
-  it("§NNN saves the part of the photograph the card shows, reads it back on both screens, and a card without one reads none", async () => {
+  it("§541 saves the part of the photograph the card shows, reads it back on both screens, and a card without one reads none", async () => {
     const picture = await sharp({ create: { width: 1200, height: 800, channels: 3, background: "#3355ff" } }).jpeg().toBuffer();
     const uploaded = await uploadBodyImage(db, { actorId: actor("ADMIN").id, file: picture, originalFilename: "ana.jpg", now: T0 });
     const square = { x: 0.1667, y: 0, w: 0.6667, h: 1 };

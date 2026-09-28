@@ -50,7 +50,7 @@ export async function readClubTodo<T extends Record<string, unknown>>(db: Databa
     .where(eq(platformSettings.key, CLUB_TODO_SETTING_KEY))
     .limit(1);
   if (!row) return { items: startingClubTodo(), stored: false, updatedAt: null };
-  // The starting lines written since the row was stored (§NNN), added once each. A read stores
+  // The starting lines written since the row was stored (§538), added once each. A read stores
   // nothing — the next write stores them with `seenDefaults`, under the row's lock, the same way
   // the first write stores the starting list; until then every read adds the same lines.
   const { items } = mergeClubTodoDefaults(readClubTodoValue(row.value), readClubTodoSeenDefaults(row.value));
@@ -160,7 +160,7 @@ export async function changeClubTodo<T extends Record<string, unknown>>(
     const storedSeen = readClubTodoSeenDefaults(row?.value);
     const merge = mergeClubTodoDefaults(readClubTodoValue(row?.value), storedSeen);
     const current = merge.items;
-    // Whether the row lacks a starting line or the marker of having been given it (§NNN): then the
+    // Whether the row lacks a starting line or the marker of having been given it (§538): then the
     // list is written even when the press itself changed nothing, so the next read finds it stored.
     const mergeChanged =
       merge.added.length > 0 || storedSeen === null || merge.seenDefaults.length !== new Set(storedSeen).size;

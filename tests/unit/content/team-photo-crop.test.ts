@@ -12,7 +12,7 @@ import TeamPhotoImage from "@/modules/content/team/ui/TeamPhotoImage";
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * §NNN (amending §474 and §454) — a card of «Echipa» takes its photograph through the upload every
+ * §541 (amending §474 and §454) — a card of «Echipa» takes its photograph through the upload every
  * other picture has, with the crop box: 1∶1 first, any of the five shapes after, the crop saved with
  * the person as §241's four fractions and drawn by one rule on the page, the list and the preview.
  * A card saved before this has no crop and draws exactly the square it always drew.
@@ -27,7 +27,7 @@ const issuesOf = (input: Record<string, unknown>) => {
   return result.success ? [] : result.error.issues.map((issue) => issue.path.join("."));
 };
 
-describe("§NNN the saved crop's shape", () => {
+describe("§541 the saved crop's shape", () => {
   it("reads the crop box's JSON, an object, or nothing — and the whole photograph is no crop", () => {
     expect(readTeamPhotoCrop(JSON.stringify(PORTRAIT_CROP))).toEqual(PORTRAIT_CROP);
     expect(readTeamPhotoCrop(PORTRAIT_CROP)).toEqual(PORTRAIT_CROP);
@@ -55,7 +55,7 @@ describe("§NNN the saved crop's shape", () => {
   });
 });
 
-describe("§NNN the card draws the crop, or the square it always drew", () => {
+describe("§541 the card draws the crop, or the square it always drew", () => {
   const LANDSCAPE = { width: 4000, height: 3000 };
 
   it("without a crop: the old square, covered, the face near the top", () => {
@@ -94,7 +94,7 @@ describe("§NNN the card draws the crop, or the square it always drew", () => {
   });
 });
 
-describe("§NNN the photo field's wiring", () => {
+describe("§541 the photo field's wiring", () => {
   const labels: TeamPhotoLabels = {
     legend: "Fotografia",
     choose: "Alege o fotografie",

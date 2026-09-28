@@ -49,7 +49,7 @@ describe("§384 ActionForm asks first", () => {
     expect(source).not.toContain("@mui/material/Dialog");
   });
 
-  it("offers a two-way question's quiet answer beside the primary one, and sets the hidden field before sending (§NNN)", () => {
+  it("offers a two-way question's quiet answer beside the primary one, and sets the hidden field before sending (§540)", () => {
     expect(source).toMatch(/alternative=\{asking\.spec\.choice \? \{ label: asking\.spec\.choice\.alternativeLabel, onClick: \(\) => answer\("alternative"\) \} : null\}/);
     expect(source).toMatch(/const chosen = choiceAnswer\(pending\.spec, which\);/);
     expect(source).toMatch(/if \(input instanceof HTMLInputElement\) input\.value = chosen\.value;/);

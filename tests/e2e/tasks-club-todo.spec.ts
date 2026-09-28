@@ -105,7 +105,7 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     expect(overflow).toBe(false);
   });
 
-  test("§NNN gives the Administrator the «Echipa» and «Întrebări frecvente» pages, each with a link to its editor, in the reader's language", async ({ page }) => {
+  test("§538 gives the Administrator the «Echipa» and «Întrebări frecvente» pages, each with a link to its editor, in the reader's language", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/tasks?panel=todo&for=Administrator");
     const main = page.locator("#main");

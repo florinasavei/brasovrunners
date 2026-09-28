@@ -280,7 +280,7 @@ describe("§519 one person in a sitting", () => {
   });
 });
 
-describe("§NNN a kept form held inside a live sitting says it is the family's hold", () => {
+describe("§540 a kept form held inside a live sitting says it is the family's hold", () => {
   it("the REGISTER_ANOTHER_PERSON queued in the sitting carries `familyHeld`, and the queue counts it as the family's", async () => {
     const event = await createEvent();
     // Ana registered before, outside any sitting; Ion's form is sent after «Da» (joined), the seed spent:
@@ -310,7 +310,7 @@ describe("§519 a family in one sitting", () => {
     const rows = await outbox();
     expect(rows).toHaveLength(1);
     expect(rows[0].messageType).toBe("REGISTER_ANOTHER_PERSON");
-    // Flagged as the family's hold (§NNN): the queue panel (§529) counts it there, never as a retry.
+    // Flagged as the family's hold (§540): the queue panel (§529) counts it there, never as a retry.
     expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
     expect(rows[0].nextAttemptAt?.toISOString()).toBe(new Date(at(6).getTime() + WINDOW_MS).toISOString());
     expect((await readOutboxQueue(db, 50, at(7))).held).toMatchObject({ total: 1, family: 1, retry: 0, reserve: 0 });

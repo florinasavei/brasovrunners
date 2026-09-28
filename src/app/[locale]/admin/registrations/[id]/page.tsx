@@ -105,7 +105,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
-  // «Trimite acum» or «Pune la coadă» on a resend (§NNN): offered only under the scheduled timing.
+  // «Trimite acum» or «Pune la coadă» on a resend (§540): offered only under the scheduled timing.
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // Every verb here asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
@@ -213,7 +213,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Typography>
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {/* Sent now, past the scheduled pass (§NNN), or queued for it, as before. */}
+        {/* Sent now, past the scheduled pass (§540), or queued for it, as before. */}
         {resent && <Alert severity="success">{resent === "now" ? tr("registrations.resendSentNow") : tr("registrations.resendSent")}</Alert>}
         {saved && <Alert severity="success">{tr("saved")}</Alert>}
       {/* The action redirects with a language-neutral code (AGENTS.md 14.3); this is where it

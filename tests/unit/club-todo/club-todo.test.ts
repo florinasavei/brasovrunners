@@ -61,7 +61,7 @@ const input = (text: string, owner = "", due = "") => clubTodoInputSchema.parse(
 describe("§438 the starting list — the owner's two messages of 2026-09-26", () => {
   const items = startingClubTodo();
 
-  it("is twenty lines: the Administrator's eleven and the two pages (§NNN), then the Organizer's seven, in their order", () => {
+  it("is twenty lines: the Administrator's eleven and the two pages (§538), then the Organizer's seven, in their order", () => {
     expect(items).toHaveLength(20);
     expect(items.slice(0, 13).every((item) => item.owner === "Administrator")).toBe(true);
     expect(items.slice(13).every((item) => item.owner === "Organizator")).toBe(true);
@@ -121,7 +121,7 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
   });
 });
 
-describe("§NNN the Administrator's two pages — «Echipa» and «Întrebări frecvente»", () => {
+describe("§538 the Administrator's two pages — «Echipa» and «Întrebări frecvente»", () => {
   const items = startingClubTodo();
   const words = { ro: ro.Admin.clubTodo.defaults, en: en.Admin.clubTodo.defaults };
 

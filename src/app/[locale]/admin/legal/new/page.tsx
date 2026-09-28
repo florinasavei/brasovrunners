@@ -98,7 +98,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
       : undefined;
   // What is still a blank, named, so the Administrator types two things and not a search.
   const blanks = values && fromTemplate ? remainingPlaceholders(values.ro.body) : [];
-  // Each text's state under its template's button, read only while the choice is shown (§NNN).
+  // Each text's state under its template's button, read only while the choice is shown (§539).
   const overview = values ? null : await readLegalOverview(getDb(), facts, new Date());
   const toRegenerate = overview ? LEGAL_DOCUMENT_KEYS.filter((key) => overview[key].regeneration === "create") : [];
   const words = await confirmWords();
@@ -141,7 +141,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         the panel would be offering to discard what the reader is looking at.
       */}
       {/*
-        The owner, 2026-09-28, on this card: «de aici aș vrea să pot regenera documentele» (§NNN).
+        The owner, 2026-09-28, on this card: «de aici aș vrea să pot regenera documentele» (§539).
         So it is where the regenerating is: the six templates in three labelled rows, each button
         with its text's state under it — in force, a draft waiting, none — and «Șablon nou» when
         the text in force differs by its words from the filled template (§532's `unchanged`

@@ -22,7 +22,7 @@ import {
 } from "@/modules/legal-documents/domain/overview";
 
 /**
- * BR-REQ-053-02 (§NNN, amending §532) — `/admin/legal` grouped by text, filtered through the
+ * BR-REQ-053-02 (§539, amending §532) — `/admin/legal` grouped by text, filtered through the
  * address, each card saying its state in words, and «Versiune nouă» showing each template's
  * state under its button. The pure half: the grouping, the filter, the header's sentences, the
  * folds' opening and «Șablon nou».

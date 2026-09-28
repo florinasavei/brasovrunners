@@ -30,7 +30,7 @@ test.describe("§262 the sections on a phone's header row", () => {
     }
   });
 
-  test("orders the sections Evenimente, Calendar, Contact, then the rest (§NNN)", async ({ page }) => {
+  test("orders the sections Evenimente, Calendar, Contact, then the rest (§537)", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/ro/evenimente");
 

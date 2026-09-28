@@ -1,5 +1,5 @@
 /**
- * A backoffice press that sends its own email now, past the scheduled pass (§NNN, amending §513, §80
+ * A backoffice press that sends its own email now, past the scheduled pass (§540, amending §513, §80
  * and §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea de bypass la cron ca
  * sa pot retrimite instant!»).
  *
@@ -31,14 +31,14 @@ export function deliveryChoiceOf(value: unknown): DeliveryChoice {
 }
 
 /**
- * The payload's mark on a row a press sends now (§NNN), and on its club copies, which carry the
+ * The payload's mark on a row a press sends now (§540), and on its club copies, which carry the
  * payload (`clubCopyPayload`): the queue panel says «Pleacă acum» for it while it waits for the
  * drain after the response. The renderer ignores it.
  */
 export const SENT_NOW_FLAG = "sentNow";
 
 /**
- * The most rows one press sends in its `after()` (§NNN review): two batches of the worker's twenty
+ * The most rows one press sends in its `after()` (§540 review): two batches of the worker's twenty
  * (`send-rows-now.ts`). A press that queues more — an organizer's message to a long list — marks
  * and sends only its first rows now; the rest wait for the scheduled pass like any other row, and
  * neither the queue panel nor the toast says «acum» for them.
@@ -46,7 +46,7 @@ export const SENT_NOW_FLAG = "sentNow";
 export const SEND_NOW_ROW_LIMIT = 40;
 
 /**
- * Which of a send-to-many's rows leave now (§NNN): the first `limit` recipients, and the club's
+ * Which of a send-to-many's rows leave now (§540): the first `limit` recipients, and the club's
  * copies only when the whole send fits — a copy of a message most of the list has not yet had
  * waits with the rest. `later` is how many recipients wait for the scheduled pass.
  */
@@ -69,7 +69,7 @@ export function markedForNow(payload: Record<string, unknown>, choice: DeliveryC
 export const LEAVES_NOW_WITHIN_MS = 5 * 60_000;
 
 /**
- * Whether the queue panel says «Pleacă acum» for a row (§NNN): marked by a press, still waiting,
+ * Whether the queue panel says «Pleacă acum» for a row (§540): marked by a press, still waiting,
  * never tried, with no turn of its own, and pressed a moment ago. Once tried — a transient failure
  * put it back with a retry — or handed back by Gmail's pace with a turn later on (the attempt given
  * back, §443), or left behind by a drain that never ran, it says its time like any other row: the
@@ -92,7 +92,7 @@ export function leavesNow(
 export type SendNowWords = { choice: ConfirmChoice; note: string; confirmLabel: string };
 
 /**
- * A press's dialog with the choice folded in (§NNN): the body with the wait's sentence after it, the
+ * A press's dialog with the choice folded in (§540): the body with the wait's sentence after it, the
  * primary button «Trimite acum, fără să aștepte trecerea programată», the quiet one «Pune la coadă
  * pentru trecerea programată». Without a choice (the «imediat» timing), the spec as it was.
  */

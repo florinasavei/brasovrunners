@@ -3,7 +3,7 @@ import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { teamPhotoFrame } from "./team-photo-frame";
 
 /**
- * A card's photograph, drawn by `teamPhotoFrame` (§NNN): the crop the club drew in its own shape,
+ * A card's photograph, drawn by `teamPhotoFrame` (§541): the crop the club drew in its own shape,
  * or — with none — the square the page always drew. No hook and no state, so the public page (a
  * Server Component), the backoffice list and the upload's preview (a client island) all render
  * this one component.

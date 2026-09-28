@@ -60,7 +60,7 @@ function translationsFrom(form: FormData) {
 async function backTo(
   path: string,
   outcome: { error?: string; saved?: string; phrase?: string; approved?: string; created?: string; deleted?: string },
-  /** The page's own filter to land on (§NNN: a regenerate lands on «Ciorne»), before the outcome. */
+  /** The page's own filter to land on (§539: a regenerate lands on «Ciorne»), before the outcome. */
   landOn: Record<string, string> = {},
 ): Promise<never> {
   await flashOutcome(outcome);
@@ -153,12 +153,12 @@ export async function regenerateLegalTemplatesAction(_previous: FormOutcome | nu
     outcome = { saved: "legalTemplatesRegenerated", created: String(result.created.length) };
   } catch (error) {
     outcome = outcomeOf(error);
-    // A refusal goes back to the page that was pressed — the list or «Versiune nouă» (§NNN).
+    // A refusal goes back to the page that was pressed — the list or «Versiune nouă» (§539).
     const from = text(form, "returnTo") === "new" ? "/admin/legal/new" : "/admin/legal";
     return backTo(getPathname({ locale, href: from }), outcome);
   }
 
-  // What was made is what to read next: the list, filtered to «Ciorne» (§NNN), from either page —
+  // What was made is what to read next: the list, filtered to «Ciorne» (§539), from either page —
   // one text's press on its card, «Regenerează toate» on the list or on «Versiune nouă».
   return backTo(getPathname({ locale, href: "/admin/legal" }), outcome, legalListQuery({ state: "drafts", kind: null }));
 }

@@ -63,7 +63,7 @@ describe("§438 the club's checklist, stored", () => {
     const state = await readClubTodo(db);
     expect(state.stored).toBe(false);
     expect(state.items).toHaveLength(20);
-    // §NNN: a fresh club gets the two pages in the pre-fill, and not §438's line 11 they replace.
+    // §538: a fresh club gets the two pages in the pre-fill, and not §438's line 11 they replace.
     expect(state.items.map((item) => item.id)).toEqual(expect.arrayContaining(["start-admin-team-page", "start-admin-faq-page"]));
     expect(state.items.map((item) => item.id)).not.toContain("start-admin-11");
     expect(await storedRow()).toBeUndefined();
@@ -136,7 +136,7 @@ describe("§438 the club's checklist, stored", () => {
     expect(items).toHaveLength(19);
   });
 
-  describe("§NNN a list stored before the two pages were written", () => {
+  describe("§538 a list stored before the two pages were written", () => {
     const PAGES = ["start-admin-team-page", "start-admin-faq-page"];
 
     /**

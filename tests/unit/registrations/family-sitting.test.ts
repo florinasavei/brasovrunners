@@ -416,7 +416,7 @@ describe("§536 no sitting without a press", () => {
     expect(openEmailLeavesAt("")).toBeUndefined();
   });
 
-  it("under «imediat» seals the submit instant in the same 25 characters, so a reload can say the email left (§NNN)", () => {
+  it("under «imediat» seals the submit instant in the same 25 characters, so a reload can say the email left (§540)", () => {
     const immediate = { ...cookie, seed: registrationSeed, emailLeavesAt: null, emailSubmittedAt: NOW };
     const opened = openFamilySittingCookie(sealFamilySittingCookie(immediate)!);
     expect(opened?.emailLeavesAt).toBeNull();

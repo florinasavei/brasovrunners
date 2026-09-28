@@ -114,7 +114,7 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
   });
 });
 
-describe("«Pagini»'s row on the club's own pages' editors, and the list's gate (§NNN)", () => {
+describe("«Pagini»'s row on the club's own pages' editors, and the list's gate (§537)", () => {
   it("renders the row with «Paginile clubului» marked on /admin/pages/new and /admin/pages/<id>", () => {
     for (const file of ["src/app/[locale]/admin/pages/new/page.tsx", "src/app/[locale]/admin/pages/[id]/page.tsx"]) {
       expect(read(file), file).toContain('<PagesSubNav locale={locale} active="pages" />');

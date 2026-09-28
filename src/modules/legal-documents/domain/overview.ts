@@ -3,7 +3,7 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { LEGAL_DOCUMENT_KEYS } from "./keys";
 
 /**
- * `/admin/legal` and «Versiune nouă» as the owner reads them (§NNN, amending §532, §393, §95;
+ * `/admin/legal` and «Versiune nouă» as the owner reads them (§539, amending §532, §393, §95;
  * the owner, 2026-09-28: which text is in force, which draft waits, and where «regenerate» is).
  *
  * Pure — the rows in, the answer out — so the grouping, the filter, the card's sentence and the
@@ -192,7 +192,7 @@ export function kindFoldOpens(summary: LegalKindSummary, filter: LegalListFilter
 
 /**
  * Whether the text in force differs by its words from the filled template (§532's `unchanged`
- * test) — the «Șablon nou» chip on «Versiune nouă» (§NNN, the owner, 2026-09-28).
+ * test) — the «Șablon nou» chip on «Versiune nouă» (§539, the owner, 2026-09-28).
  *
  * - With nothing in force, no: the state line already says «Nicio versiune în vigoare».
  * - Otherwise the text in force is compared by its words with the template's, the club's facts

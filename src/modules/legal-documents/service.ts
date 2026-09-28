@@ -915,7 +915,7 @@ export async function planTemplateRegeneration<T extends Record<string, unknown>
 }
 
 /**
- * One text as `/admin/legal`'s card and «Versiune nouă»'s button read it (§NNN): its summary
+ * One text as `/admin/legal`'s card and «Versiune nouă»'s button read it (§539): its summary
  * (what is in force, which draft waits), what «Regenerează din șablon» would do with it — the same
  * `regenerationOutcome` §532's press asks — whether its template is newer than the text in force,
  * and the number its next draft would get (for the confirm dialog's «versiunea N»).
@@ -1010,7 +1010,7 @@ export async function regenerateFromTemplates<T extends Record<string, unknown>>
         { key: item.key, translations: templateTranslations(item.key, facts) },
         now,
       );
-      // Who made which draft (§NNN): one row per draft, in the same transaction, so a press that
+      // Who made which draft (§539): one row per draft, in the same transaction, so a press that
       // fails leaves neither a draft nor a row about one. Only the number is read back.
       const [draft] = await tx
         .select({ version: legalDocuments.version })

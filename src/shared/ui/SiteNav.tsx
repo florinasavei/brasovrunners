@@ -13,7 +13,7 @@ import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 /**
  * The platform's own sections — the one list that orders the public menu, the row and the ☰ menu
- * alike (the footer's fold carries links, not this list). The owner's order (§NNN, after §251):
+ * alike (the footer's fold carries links, not this list). The owner's order (§537, after §251):
  * «Evenimente · Calendar · Contact · Echipa · Întrebări frecvente», then the rule and
  * the club's own pages in their own order.
  *

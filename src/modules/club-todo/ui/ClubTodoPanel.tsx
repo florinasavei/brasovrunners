@@ -128,7 +128,7 @@ export default async function ClubTodoPanel({ locale, items, mayEdit, owner, tod
 
   const row = (item: ClubTodoItem, index: number, siblings: readonly ClubTodoItem[]) => {
     const overdue = isClubTodoOverdue(item, today);
-    // A starting line the club has not edited (§NNN): its words in the reader's language, and the editor it names.
+    // A starting line the club has not edited (§538): its words in the reader's language, and the editor it names.
     const view = clubTodoDefaultView(item, locale);
     const text = view?.text ?? item.text;
     const label = shortText(text);

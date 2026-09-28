@@ -91,14 +91,14 @@ export type SendParticipantMessageInput = {
   sendId: string;
   /**
    * «now» sends every row of this press after the response, past the scheduled pass and inside the
-   * day's allowance (§NNN); «queue», the default, leaves it to «Când pleacă emailurile».
+   * day's allowance (§540); «queue», the default, leaves it to «Când pleacă emailurile».
    */
   delivery?: DeliveryChoice;
 };
 
 export type SendParticipantMessageResult =
   /**
-   * `sentNow` / `later` (§NNN): under «Trimite acum», how many recipients' rows this press sends
+   * `sentNow` / `later` (§540): under «Trimite acum», how many recipients' rows this press sends
    * after the response (at most `SEND_NOW_ROW_LIMIT`) and how many wait for the scheduled pass;
    * absent for «Pune la coadă».
    */
@@ -191,12 +191,12 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       .where(and(eq(registrations.eventId, input.eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[audience]])));
     if (rows.length === 0) return { kind: "nobody" } as const;
     /*
-      «Trimite acum» (§NNN): every message of this send inside the day's allowance, asked before any
+      «Trimite acum» (§540): every message of this send inside the day's allowance, asked before any
       row is written — refused with the allowance's sentence and nothing queued, never a silent
       defer (§80). Test rows are sent too, so they are counted here too.
     */
     /*
-      A long list (§NNN review): only the first `SEND_NOW_ROW_LIMIT` recipients leave now, and the
+      A long list (§540 review): only the first `SEND_NOW_ROW_LIMIT` recipients leave now, and the
       club's copy only when the whole send fits; the rest wait for the scheduled pass, unmarked, so
       neither the queue panel nor the toast says «acum» for them. Only what leaves now is asked of
       the allowance.
@@ -209,7 +209,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       await assertRoomToSendNow(tx, rows.slice(0, split.now).map(() => "ORGANIZER_MESSAGE" as const), now, split.copiesNow ? copies : []);
     }
     const words = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
-    // Marked for the queue panel's «Pleacă acum» (§NNN) — only a row this press sends now.
+    // Marked for the queue panel's «Pleacă acum» (§540) — only a row this press sends now.
     const nowPayload = markedForNow(words, delivery);
 
     let real = 0;
@@ -230,7 +230,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         idempotencyKey: `organizer-message:${input.sendId}:registration:${row.registrationId}`,
         requestedByStaffUserId: actor.id,
         now,
-        // Sent now by the press's own drain after the transaction (§NNN), not one per row.
+        // Sent now by the press's own drain after the transaction (§540), not one per row.
         drainAfter: delivery !== "now",
       });
       if (!inserted) continue;
@@ -258,7 +258,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       entityId: input.eventId,
       // Who (the actor), the group, the counts and the subject — never who received it, and never
       // the body (§12.12). The send's id is what makes a second press find this row.
-      // `delivery: "now"` — sent at once, past the scheduled pass (§NNN): the trail says which press it was.
+      // `delivery: "now"` — sent at once, past the scheduled pass (§540): the trail says which press it was.
       metadata: {
         sendId: input.sendId,
         audience,

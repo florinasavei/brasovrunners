@@ -36,7 +36,7 @@ export type AuditAction =
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
   | "registration.resend_rate_limited"
   /**
-   * A resend sent at once, past the scheduled pass (§NNN): the staff member (the actor), the outbox
+   * A resend sent at once, past the scheduled pass (§540): the staff member (the actor), the outbox
    * row's id and its message type — never the address or a body.
    */
   | "registration.sent_now"
@@ -248,7 +248,7 @@ export type AuditAction =
   | "legal_document.deleted"
   /**
    * A draft made from the platform's template by «Regenerează din șablon» — one text's press on
-   * its card, or «Regenerează toate» (§532, §NNN). One row per draft: the key and the version it
+   * its card, or «Regenerează toate» (§532, §539). One row per draft: the key and the version it
    * was given, so "who regenerated the privacy notice, and when" has an answer. Nothing is in
    * force by it; approving stays its own press.
    */
@@ -290,7 +290,7 @@ export type AuditAction =
    */
   | "staff.members_invited"
   /**
-   * «Retrimite invitația» sent at once, past the scheduled pass (§NNN): the staff member who pressed
+   * «Retrimite invitația» sent at once, past the scheduled pass (§540): the staff member who pressed
    * (the actor), the invited row (the entity), the outbox row's id and its message type — never the
    * address.
    */

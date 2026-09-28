@@ -283,7 +283,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
-  // A row's resend asks «Trimite acum» or «Pune la coadă» (§NNN): read once, for every row.
+  // A row's resend asks «Trimite acum» or «Pune la coadă» (§540): read once, for every row.
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
   const printedOnPage = printedNumbersACancelWouldVoid(rows);
@@ -1174,7 +1174,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
-                {/* «Trimite acum» or «Pune la coadă» (§NNN), under the scheduled timing only. */}
+                {/* «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only. */}
                 {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
                 {/*
                   The envelope going back out, as on the registration's own "Retrimite" (§318).

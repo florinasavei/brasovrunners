@@ -88,7 +88,7 @@ describe("§384 the notice a redirect's outcome becomes", () => {
     expect(noticeOf({ saved: "invited", invite: "exists" })?.kind).toBe("success");
   });
 
-  it("§NNN «Retrimite invitația» with «Trimite acum»: a failed or unconfigured Zitadel invite is no green toast", () => {
+  it("§540 «Retrimite invitația» with «Trimite acum»: a failed or unconfigured Zitadel invite is no green toast", () => {
     // The action keeps the provider's answer in the toast (`{ ...outcome, saved: "reinvitedNow" }`).
     for (const invite of ["failed", "unconfigured"]) {
       expect(noticeOf({ saved: "reinvitedNow", invite, reason: "Errors.Internal" }), invite).toBeNull();

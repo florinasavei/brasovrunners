@@ -49,7 +49,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
     body: { ro: posted(form, "bodyRo"), en: posted(form, "bodyEn") },
   };
 
-  // The dialog's answer (§NNN): «now» past the scheduled pass, anything else the queue, as before.
+  // The dialog's answer (§540): «now» past the scheduled pass, anything else the queue, as before.
   const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
 
   let result;
@@ -62,7 +62,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
       new Date(),
     );
   } catch (error) {
-    // A «now» the day's allowance cannot hold (§80, §NNN): its own sentence, the boxes as typed.
+    // A «now» the day's allowance cannot hold (§80, §540): its own sentence, the boxes as typed.
     if (error instanceof SendNowRefused) {
       return { error: sendNowRefusalCode(error), fields: [], values: keptValuesOf(form) };
     }
@@ -96,7 +96,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
   await flash(
     result.kind === "duplicate"
       ? { kind: "info", key: "participantMessageDuplicate" }
-      : // Sent now, past the scheduled pass (§NNN), says so; a list longer than one press sends
+      : // Sent now, past the scheduled pass (§540), says so; a list longer than one press sends
         // (`SEND_NOW_ROW_LIMIT`) says how many leave now and how many at the scheduled pass; queued, as before.
         delivery === "now" && (result.later ?? 0) > 0
         ? { kind: "success", key: "participantMessageSentNowPart", values: { count: String(result.sentNow ?? 0), later: String(result.later ?? 0) } }

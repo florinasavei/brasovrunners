@@ -172,13 +172,13 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
     await expect(page.getByText("1 = cel mai ușor din categorie, 3 = cel mai greu")).toBeVisible();
-    // The whole scale behind a «?» beside the toggle and beside the band (§528, §NNN), one line per band.
+    // The whole scale behind a «?» beside the toggle and beside the band (§528, §537), one line per band.
     for (const testId of ["difficulty-scale-help", "difficulty-band-help"]) {
       const help = page.getByTestId(testId);
       await expect(help).toBeVisible();
       await expect(help).toHaveAttribute("aria-label", /mediu 1: alergarea de pe Tâmpa/);
     }
-    // Side by side with the band from `sm`, on one centred axis (§NNN): the select's centre and the
+    // Side by side with the band from `sm`, on one centred axis (§537): the select's centre and the
     // toggle's segments' centre within a few pixels; the help line under the toggle, never beside it.
     // Below `sm` the two stack, the toggle under the select and as wide as the row.
     const select = await page.getByRole("combobox", { name: "Dificultate" }).boundingBox();

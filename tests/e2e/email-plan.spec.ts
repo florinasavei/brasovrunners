@@ -112,7 +112,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
       la acea setare". The queue panel opens with the timing, the next round and what holds it back;
       every row says its departure; the switch is «Termene»'s «Când pleacă emailurile», both values,
       asking first — a Material switch labelled «Trimite la trecerea programată», checked while the
-      round holds the mail, with one sentence under it saying the mode in force (§NNN).
+      round holds the mail, with one sentence under it saying the mode in force (§540).
 
       `data-timing` is the setting in force: the stored choice, else the environment's default —
       scheduled on QA and production, immediate on a laptop and on this suite's server, where no
@@ -160,7 +160,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await says[from]();
     // Every row the queue holds says when it leaves, whatever this database has queued now.
     for (const row of await main.getByTestId("outbox-row-leaves").all()) {
-      // «Pleacă acum»: a resend a press sent past the round, waiting for its drain (§NNN).
+      // «Pleacă acum»: a resend a press sent past the round, waiting for its drain (§540).
       await expect(row).toHaveText(/^(Pleacă:|Pleacă acum|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
     }
 

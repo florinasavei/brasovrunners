@@ -49,7 +49,7 @@ function fieldsOf(form: FormData) {
     bioEnBody: body(form, "bioEnBody"),
     links: teamLinkRowsOf(form),
     photoAssetId: text(form, "photoAssetId"),
-    // The part of the photograph the card shows, as the crop box drew it (§NNN).
+    // The part of the photograph the card shows, as the crop box drew it (§541).
     photoCrop: text(form, "photoCrop"),
   };
 }

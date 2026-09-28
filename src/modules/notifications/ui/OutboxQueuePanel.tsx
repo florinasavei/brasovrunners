@@ -97,7 +97,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   const leaves = (row: QueuedMessage): { text: string; late: boolean } => {
     if (row.status === "PROCESSING") return { text: t("emails.queue.leaves.sending"), late: false };
     if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
-    // A press sent it now, past the scheduled pass (§NNN): it leaves after that press's response —
+    // A press sent it now, past the scheduled pass (§540): it leaves after that press's response —
     // `emailLeavesWords`' own `leavesNow`, the instant null — never at the round the rest waits for.
     if (leavesNow(row, now)) return { text: t(`emails.queue.leaves.${emailLeavesWords(null, now, locale).key}`), late: false };
     const dueAt = row.nextAttemptAt ?? row.createdAt;
@@ -136,7 +136,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     <Panel glyph="outbox"
       title={t("emails.queue.title")}
       intro={t("emails.queue.intro")}
-      // The waiting count alone: the mode in force is said once, under the switch (§NNN review).
+      // The waiting count alone: the mode in force is said once, under the switch (§540 review).
       aside={t("outbox.waitingShort", { count: queue.total })}
       collapsible
       // Open while something waits (§269), and after "send now" or the switch answered — sent or refused (§336).
@@ -148,7 +148,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
         When the queue leaves (§529): the switch, the mode in force in one sentence, the next and the
         last real run, and what holds the round back. Said to every reader of the queue; the switch
         is the Administrator's. The switch replaced a button that named the other value (the owner:
-        «nu e clar cum funcționează acest toggle», §NNN): on is «La trecerea programată».
+        «nu e clar cum funcționează acest toggle», §540): on is «La trecerea programată».
       */}
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }} data-testid="outbox-when">
         <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -196,7 +196,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
         <Typography variant="body2" color="text.secondary" data-testid="outbox-when-last">
           {delivery.lastRunAt ? t("emails.queue.when.lastRun", { at: when.format(new Date(delivery.lastRunAt)) }) : t("emails.queue.when.neverRan")}
         </Typography>
-        {/* The round is for everything automatic; a backoffice resend may leave at once (§NNN). */}
+        {/* The round is for everything automatic; a backoffice resend may leave at once (§540). */}
         {scheduled && (
           <Typography variant="body2" color="text.secondary" data-testid="outbox-when-bypass">
             {t("emails.deliveryTiming.bypassHelp")}

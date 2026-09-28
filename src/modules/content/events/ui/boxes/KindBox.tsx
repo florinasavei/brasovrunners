@@ -127,7 +127,7 @@ export default async function KindBox({
             />
           )}
           {/* How hard (§526): the band and its step, the level on the club's scale of fifteen, which
-              «Ghid» explains — on one centred axis since §NNN (`DifficultyRow`), stacked below `sm`. */}
+              «Ghid» explains — on one centred axis since §537 (`DifficultyRow`), stacked below `sm`. */}
           <DifficultyRow
             band={
               // The whole scale behind a «?» beside the band too (§528): the band is the first choice.

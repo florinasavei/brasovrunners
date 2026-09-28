@@ -16,7 +16,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-053-02 (§NNN, amending §532) — «Regenerează din șablon» on one text's card: §532's own
+ * BR-REQ-053-02 (§539, amending §532) — «Regenerează din șablon» on one text's card: §532's own
  * press asked for one key. It makes one draft of that text and of no other, numbered next, with
  * an audit row saying who made it; and the
  * cards and «Versiune nouă» read each text's state, and «Șablon nou», from the same overview.
@@ -45,7 +45,7 @@ async function codeOf(operation: Promise<unknown>): Promise<string> {
   }
 }
 
-describe("one text regenerated from its template (§NNN)", () => {
+describe("one text regenerated from its template (§539)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

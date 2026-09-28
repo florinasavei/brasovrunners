@@ -360,7 +360,7 @@ test.describe.serial("§485 pictures from the gallery", () => {
     // The card keeps the stored picture's own id — linked, never copied — and shows its small file.
     await expect(form.locator('[name="photoAssetId"]')).toHaveValue(picture.id);
     await expect(photo.getByTestId("team-photo-new-preview").locator("img")).toHaveAttribute("src", picture.thumb);
-    // §NNN — the crop box after the choice, the text editor's own: five shapes, 1∶1 first (a
+    // §541 — the crop box after the choice, the text editor's own: five shapes, 1∶1 first (a
     // portrait), and the crop the save posts. The 640 × 400 map's largest square is 62.5 % wide.
     const cropBox = photo.getByTestId("team-photo-new-crop");
     await expectShapes(cropBox, "1:1");

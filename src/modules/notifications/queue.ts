@@ -42,7 +42,7 @@ export type QueuedMessage = {
   isManualResend: boolean;
   /** A family sitting's hold, read from the payload's own flag (`sittingHeld` / `familyHeld`), never from timing. */
   familyHeld: boolean;
-  /** A press asked for it now, past the scheduled pass (§NNN): the payload's `sentNow` flag. */
+  /** A press asked for it now, past the scheduled pass (§540): the payload's `sentNow` flag. */
   sentNow: boolean;
 };
 

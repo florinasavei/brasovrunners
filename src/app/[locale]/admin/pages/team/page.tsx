@@ -173,7 +173,7 @@ export default async function AdminTeamPage({ params, searchParams }: Props) {
         originalMax: String(ORIGINAL_WEB_MAX),
       }),
     },
-    // The upload every other picture has (§NNN): the crop box, the chosen file and what it became —
+    // The upload every other picture has (§541): the crop box, the chosen file and what it became —
     // the text editor's own words, the card's title and help beside them.
     crop: {
       title: t("team.photoCrop"),
@@ -431,7 +431,7 @@ function MemberCard({
     <Paper component="li" variant="outlined" id={`team-${member.id}`} sx={{ p: { xs: 1.5, sm: 2 }, scrollMarginTop: 16 }}>
       <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
         {member.photo ? (
-          // The card's own drawing (§NNN): the crop the club drew, or the square it always was.
+          // The card's own drawing (§541): the crop the club drew, or the square it always was.
           <TeamPhotoImage src={member.photo.thumbUrl} photo={member.photo} width={64} radius={8} />
         ) : (
           <Box aria-hidden sx={{ width: 64, height: 64, borderRadius: 2, bgcolor: "action.hover", flexShrink: 0 }} />

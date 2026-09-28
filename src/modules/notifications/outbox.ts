@@ -275,7 +275,7 @@ export async function enqueueBulkClubCopies<T extends Record<string, unknown>>(
     realRecipients: number;
     requestedByStaffUserId?: string | null;
     now: Date;
-    /** As `EnqueueEmailParams.drainAfter`: `false` for a press that sends its own rows now (§NNN). */
+    /** As `EnqueueEmailParams.drainAfter`: `false` for a press that sends its own rows now (§540). */
     drainAfter?: boolean;
   },
 ): Promise<number> {
@@ -390,7 +390,7 @@ export async function claimOutboxBatch(
      */
     bulkLimit?: number | null;
     /**
-     * Only these rows (§NNN): a backoffice press that sends its own message now, past the scheduled
+     * Only these rows (§540): a backoffice press that sends its own message now, past the scheduled
      * pass — never the rest of the queue. Still only a row the claim would take (PENDING and due, or a
      * stale PROCESSING): a row already sent, bounced or failed is never sent again by this path (§39).
      */
@@ -530,10 +530,10 @@ export async function processOutboxBatch(
      * Absent — no Gmail account, or a test's own sender — one claim, oldest first, as before.
      */
     roads?: OutboxRoads;
-    /** Only these rows (§NNN, `claimOutboxBatch`): a backoffice press's own message, sent now. */
+    /** Only these rows (§540, `claimOutboxBatch`): a backoffice press's own message, sent now. */
     ids?: readonly string[];
     /**
-     * Whether this batch is a run of the outbox job (the default). A press's own send (§NNN,
+     * Whether this batch is a run of the outbox job (the default). A press's own send (§540,
      * `send-rows-now.ts`) passes `false`: it is not a pass of the scheduler, so it writes no
      * `job_runs` row — the queue panel's «Ultima trecere programată», the next round counted from
      * it (`nextOutboxTick`), `/api/health`'s stall check and the jobs' overview all read that table,
@@ -557,7 +557,7 @@ export async function processOutboxBatch(
   const claimed = await claimOutboxBatch(db, { now, batchSize, bulkLimit, ...(roads ? { roads } : {}), ...(ids ? { ids } : {}) });
   // The reserve is reached: whatever newsletter is still due on Mailgun's road waits for the reset, untouched.
   const mailgunBulk = claimed.filter((row) => isBulkMessage(row.messageType) && !(roads && onGmailRoad(row, roads)));
-  // A press's own rows (§NNN) say nothing about the rest of the queue: the reserve's hold is the job's.
+  // A press's own rows (§540) say nothing about the rest of the queue: the reserve's hold is the job's.
   if (!ids && bulkLimit !== null && mailgunBulk.length >= bulkLimit) {
     await holdBulkUntilReset(db, now, mailgunRoad);
   }

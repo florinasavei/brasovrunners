@@ -92,7 +92,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
 test.describe("legal documents: the next version starts from the current one", () => {
   test("an approved version offers the next version, prefilled from its text", async ({ page }) => {
     await signIn(page, "Dev Superadministrator");
-    // The texts in force, through the address (§NNN): each text's versions fold under its card and
+    // The texts in force, through the address (§539): each text's versions fold under its card and
     // a fold opens only for a reason — a filter that keeps rows in it is one.
     await page.goto("/ro/admin/legal?state=inForce");
 
@@ -214,7 +214,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
  * so the list is left as it was. Desktop only: one database, and the phone renders the same rows as
  * labelled blocks.
  *
- * §NNN — the list is one card per text now, each text's versions folded under it, and one text is
+ * §539 — the list is one card per text now, each text's versions folded under it, and one text is
  * regenerated from its own card first: «Regenerează din șablon», a dialog naming the text and the
  * version it makes, a toast, and the list landing on «Ciorne», where every draft's fold is open.
  * The ticks are read on that filter, before and after, so a fold's state never changes the count.
@@ -329,7 +329,7 @@ test.describe("legal documents: every text at once", () => {
 });
 
 /**
- * §NNN — the list grouped and filtered, and «Versiune nouă» as the place to regenerate: read only,
+ * §539 — the list grouped and filtered, and «Versiune nouă» as the place to regenerate: read only,
  * both projects. Every text has its card with its state in words; the chips filter through the
  * address, without a script; «Versiune nouă» shows the templates in three labelled rows, each with
  * its text's state under it, and «Regenerează toate» (or the sentence saying nothing is due).

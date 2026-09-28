@@ -5,7 +5,7 @@ import { chooseAlternative } from "./support/confirm";
 import { FEATURED, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §513, §80, §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea
+ * §540 (amending §513, §80, §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea
  * de bypass la cron ca sa pot retrimite instant!») — under the scheduled timing a resend asks which:
  * «Trimite acum, fără să aștepte trecerea programată», the primary answer, or «Pune la coadă pentru
  * trecerea programată». The first leaves after the press's response and names the press on the
@@ -54,7 +54,7 @@ async function seedRunner(tag: string): Promise<string> {
   });
 }
 
-test.describe("§NNN a resend may leave now, past the scheduled pass", () => {
+test.describe("§540 a resend may leave now, past the scheduled pass", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });
