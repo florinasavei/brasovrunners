@@ -72,7 +72,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const event = await findEventForBibs(db, id, locale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   // The bib's own line, in the language it is drawn for and the event's zone (§349, §317); empty
-  // while the date is to be announced later (§NNN).
+  // while the date is to be announced later (§545).
   const eventDate = bibEventDate(event, locale);
   // The first address the club shows (§442): one line of small print has room for one.
   const replyTo = (await shownContactAddresses(db))[0] ?? null;

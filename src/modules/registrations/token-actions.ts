@@ -553,7 +553,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
     /** The zone that instant is read in on the page — the event's own. */
     eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
     /**
-     * The family marker (§NNN): the other people on this address at the event, names only — behind the
+     * The family marker (§543): the other people on this address at the event, names only — behind the
      * address's own link, the one place the names on it may be read (§389).
      */
     family: ((await familyOf(db, [registration])).get(registration.id) ?? []).map((member) => member.name),

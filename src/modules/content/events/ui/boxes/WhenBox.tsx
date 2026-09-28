@@ -98,7 +98,7 @@ export default async function WhenBox({
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
     >
-      {/* Never the provisional start of a date left blank (§NNN) — though nobody can be registered then (§533). */}
+      {/* Never the provisional start of a date left blank (§545) — though nobody can be registered then (§533). */}
       {risk && event && typedStartOrNull(event) && (
         <RiskLine>{t("editor.risk.when", { date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
       )}
@@ -124,7 +124,7 @@ export default async function WhenBox({
           ) : (
             /* The same two boxes, then «Data se anunță mai târziu» and «Ora se anunță mai târziu»
                (§533), the place's switch for the start (§328). While a switch is on, the box it
-               excuses is not required and may stay empty (§NNN): the boxes show "" for a part left
+               excuses is not required and may stay empty (§545): the boxes show "" for a part left
                blank (`startBoxValues`), never the provisional value the platform stored for it. */
             <StartToBeAnnounced
               labels={{

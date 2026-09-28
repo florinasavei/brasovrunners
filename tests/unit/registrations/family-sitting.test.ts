@@ -80,7 +80,7 @@ describe("§519 the browser's half of a sitting", () => {
     expect(opened?.shared).toBeUndefined();
   });
 
-  it("carries each person's place — reserved or the waiting list, never «none» (§NNN, the review of 2026-09-28, round three)", async () => {
+  it("carries each person's place — reserved or the waiting list, never «none» (§543, the review of 2026-09-28, round three)", async () => {
     const { isNewSittingPerson, sittingReservationFacts, withLatestPlace, withPlace, withSittingPerson } = await import("@/modules/registrations/domain/family-sitting");
     const people = [
       { name: "Ana Pop", birthDate: "1985-03-02" },
@@ -102,7 +102,7 @@ describe("§519 the browser's half of a sitting", () => {
     expect(isNewSittingPerson(people, withSittingPerson(people, { name: "Ioana Pop", birthDate: "2011-05-20" }))).toBe(false);
   });
 
-  it("a stored reservation holds only while its fixed deadline is ahead, whatever the email is doing (§NNN)", async () => {
+  it("a stored reservation holds only while its fixed deadline is ahead, whatever the email is doing (§543)", async () => {
     const { familyReservationHoldsAt } = await import("@/modules/registrations/domain/family-reservation");
     const deadline = new Date(NOW.getTime() + 40 * 60_000);
     expect(familyReservationHoldsAt(null, NOW)).toBe(false);

@@ -221,7 +221,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const basePath = getPathname({ locale, href: "/admin" });
 
   // A table cell: the short form, with its weekday (§349) — or «Data se anunță mai târziu» for a date
-  // left blank (§NNN), never the provisional day the platform stored in its place.
+  // left blank (§545), never the provisional day the platform stored in its place.
   const shortDate = (event: EditableEvent) =>
     typedStartOrNull(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced");
 
@@ -309,7 +309,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 `buildRoutePills` and `RoutePills` (§388), so neither surface can read the route
                 in a different order or a different set from the other. A series shares one
                 route, so this reads the next occurrence's row once for the whole line. A date or
-                an hour left blank (§NNN) gives the night pill no start, so no sunset of the
+                an hour left blank (§545) gives the night pill no start, so no sunset of the
                 provisional day is invented. */}
             <RoutePills pills={buildRoutePills({ ...event, startsAt: typedStartShape(event)?.hour ? event.startsAt : null }, tEvent, format)} />
             {sentence && (

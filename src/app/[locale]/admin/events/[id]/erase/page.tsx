@@ -74,7 +74,7 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
     plan.titles.find((entry) => entry.locale === locale)?.title ?? plan.titles[0]?.title ?? plan.eventId;
 
   // The day and hour typed, the day alone for an hour left blank, no date at all for a date left
-  // blank (§NNN) — never the provisional start stored in place of either.
+  // blank (§545) — never the provisional start stored in place of either.
   const start = typedStartShape({ startsAt: plan.startsAt, timezone: plan.timezone });
 
   return (

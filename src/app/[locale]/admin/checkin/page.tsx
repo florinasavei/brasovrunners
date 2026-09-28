@@ -86,7 +86,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
   // The next free desk spare of each event on the page (§444) — one, or two when a code found a
   // runner of another event — read once for every row.
   const spares = rows.length > 0 ? await spareStates(db, rows.map((row) => row.eventId)) : {};
-  // Who came with whom (§NNN): the other people on each row's address, names only, one query.
+  // Who came with whom (§543): the other people on each row's address, names only, one query.
   const family = await familyOf(db, rows);
 
   const codeHrefTemplate = getPathname({

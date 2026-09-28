@@ -151,7 +151,7 @@ export default async function RegistrationBox({
   */
   const hold = minutesPhrase(locale, clubDeadlines.holdMinutes);
   const confirmationDates = (() => {
-    // No dates to count back from while the date is left blank (§NNN): never the provisional day's.
+    // No dates to count back from while the date is left blank (§545): never the provisional day's.
     if (!event || !typedStartOrNull(event)) return null;
     if (!confirmationWindow(event)) return t("editor.boxes.confirmation.datesOff", { hold });
     const values = {

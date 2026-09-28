@@ -207,7 +207,7 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    // §425's two, now followed by the declaration's two (§499) and the family column (§NNN).
+    // §425's two, now followed by the declaration's two (§499) and the family column (§543).
     expect(columns.slice(-5, -3)).toEqual(["Terms version", "Terms accepted"]);
     expect(accepted.split(",").slice(-5, -3)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
     expect(staff.split(",").slice(-5, -3)).toEqual(["", ""]);
@@ -245,7 +245,7 @@ describe("CSV formula neutralization", () => {
       base,
     ]);
     const [header, signed, unsigned, older] = csv.split("\r\n");
-    // Before the family column (§NNN), which is last.
+    // Before the family column (§543), which is last.
     expect(header.split(",").slice(-3, -1)).toEqual(["Declaration version", "Declaration signed"]);
     expect(signed.split(",").slice(-5, -1)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
     expect(unsigned.split(",").slice(-3, -1)).toEqual(["", ""]);
@@ -279,11 +279,11 @@ describe("CSV formula neutralization", () => {
     expect(shown.split(",").slice(at - 1, at + 1)).toEqual(["ana.pop", "Yes"]);
     expect(kept.split(",")[at]).toBe("");
     expect(older.split(",")[at]).toBe("");
-    // The declaration's pair stays after the terms (§499), the family column last (§NNN).
+    // The declaration's pair stays after the terms (§499), the family column last (§543).
     expect(header.split(",").slice(-3)).toEqual(["Declaration version", "Declaration signed", "family"]);
   });
 
-  // §NNN — the family marker in the export: the other people on the same address at the event, last, «; »-joined.
+  // §543 — the family marker in the export: the other people on the same address at the event, last, «; »-joined.
   it("ends with the family column: the other people on the address, or an empty cell", () => {
     const base = {
       eventTitle: "Test",

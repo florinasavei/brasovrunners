@@ -68,7 +68,7 @@ export type FamilySittingLink =
       registered: string[];
       registrationsPerAddress: number;
       /**
-       * Whether the sitting's places are still reserved now (§NNN; the review of 2026-09-28, round four):
+       * Whether the sitting's places are still reserved now (§543; the review of 2026-09-28, round four):
        * its fixed deadline is ahead. The link lives longer than the places, so past it the page says they
        * lapsed and that the press still allocates what is free.
        */
@@ -113,7 +113,7 @@ function listPeople(people: Awaited<ReturnType<typeof sittingPeople>>, now: Date
       key: `r:${row.id}`,
       name: row.registeredName,
       birthDate: row.birthDate ?? "",
-      // Another adult's registration from a sitting's form (§NNN) kept none of their own consents (§421).
+      // Another adult's registration from a sitting's form (§543) kept none of their own consents (§421).
       adultEntry: anotherAdultRow(row, now),
       optional: false,
     })),
@@ -131,7 +131,7 @@ function listPeople(people: Awaited<ReturnType<typeof sittingPeople>>, now: Date
 }
 
 /**
- * A registration a sitting's form wrote for another adult (§NNN): an adult with no fitness statement
+ * A registration a sitting's form wrote for another adult (§543): an adult with no fitness statement
  * of their own on the row — the form's first person made theirs; a third party cannot make it for an
  * adult (§421). The press asks the address holder's acknowledgement for them, as for a kept form.
  */
@@ -195,7 +195,7 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
     */
     const declarationNotBefore = new Date(now.getTime() + FAMILY_PASS_MINUTES * 60_000);
     /*
-      The sitting's holds for forms that wrote no registration (§NNN) go first: every person the press
+      The sitting's holds for forms that wrote no registration (§543) go first: every person the press
       registers is allocated below like any other, and must not find their own held place counted
       against them.
     */

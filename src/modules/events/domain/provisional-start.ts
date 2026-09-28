@@ -1,7 +1,7 @@
 import { fromWallTimeInput, toWallTimeInput } from "./zoned-time";
 
 /**
- * A start the organizer left blank while it is to be announced (`DECISIONS.md` §NNN, amending §533).
+ * A start the organizer left blank while it is to be announced (`DECISIONS.md` §545, amending §533).
  *
  * The owner, 2026-09-28: «în V2.23 trebuie să pot să nu pun data și ora evenimentului!». With
  * «Data se anunță mai târziu» ticked the date and the hour may both stay empty; with «Ora se anunță
@@ -43,7 +43,7 @@ export function blankStartParts(startsAt: Date, timeZone: string): { date: boole
   };
 }
 
-/** What the start's boxes show for a stored start: "" for a part left blank (§NNN), never the provisional value. */
+/** What the start's boxes show for a stored start: "" for a part left blank (§545), never the provisional value. */
 export function startBoxValues(startsAt: Date | null, timeZone: string): StartBoxes {
   if (!startsAt) return { date: "", time: "" };
   const wall = toWallTimeInput(startsAt, timeZone);
@@ -60,7 +60,7 @@ export function typedStartOrNull(event: { startsAt: Date; timezone: string }): D
 }
 
 /**
- * How a staff surface that prints the start in words may print it (§NNN): null while no date was
+ * How a staff surface that prints the start in words may print it (§545): null while no date was
  * typed — the surface says «Data se anunță mai târziu» or leaves the date out — and `hour: false`
  * while the hour was left blank, so the day is printed alone, never at the provisional noon.
  */

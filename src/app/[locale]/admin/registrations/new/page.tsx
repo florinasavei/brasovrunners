@@ -171,7 +171,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               defaultValue={selectedEventId}
               events={events.map((event) => ({
                 id: event.id,
-                // A date left blank (§NNN) is said, never printed as the provisional day stored for it.
+                // A date left blank (§545) is said, never printed as the provisional day stored for it.
                 label: `${event.title ?? event.id} · ${typedStartOrNull(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")} · ${effectiveMinimumAge(event.minAge)}+`,
               }))}
             />

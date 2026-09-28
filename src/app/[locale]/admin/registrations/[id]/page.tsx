@@ -103,7 +103,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
     */
     registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date(), registration.eventId) : false,
-    // The family marker (§NNN): the other people on this address at the event, each a link to their page.
+    // The family marker (§543): the other people on this address at the event, each a link to their page.
     familyOf(db, [registration]).then((members) => members.get(registration.id) ?? []),
   ]);
 

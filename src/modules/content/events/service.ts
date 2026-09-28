@@ -234,7 +234,7 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
     return parsed;
   };
 
-  // The start's date and hour may be left empty while they are to be announced (§NNN, amending
+  // The start's date and hour may be left empty while they are to be announced (§545, amending
   // §533): `resolveStart` stores the provisional parts in their place, and refuses an empty box the
   // switches do not excuse, naming it (§47).
   const { startsAt, blank } = resolveStart(fields.startsAtWallTime, switches, zone);
@@ -249,7 +249,7 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
   // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
   const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
   // «Startul cursei» is checked against the event's start, so it waits for the start's own date and
-  // hour (§NNN): typed beside a blank one, it is refused naming its box rather than compared with the
+  // hour (§545): typed beside a blank one, it is refused naming its box rather than compared with the
   // provisional value.
   if ((blank.date || blank.time) && raceStartsAt) {
     throw new DomainError(

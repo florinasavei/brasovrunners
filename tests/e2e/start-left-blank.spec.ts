@@ -4,7 +4,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * `DECISIONS.md` §NNN (amending §533) — the start's boxes left empty while it is to be announced,
+ * `DECISIONS.md` §545 (amending §533) — the start's boxes left empty while it is to be announced,
  * in a browser. The owner, 2026-09-28, of «4 · Când și unde» with both switches ticked and «Ora *»
  * still red: «în V2.23 trebuie să pot să nu pun data și ora evenimentului! momentan am validare pe
  * asta».
@@ -17,7 +17,7 @@ import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "
  *
  * Each project makes its own event (the suffix), and the spec takes it off the site at the end.
  */
-test.describe("§NNN the start left blank while it is to be announced", () => {
+test.describe("§545 the start left blank while it is to be announced", () => {
   test("publishes with no date and no hour, says so everywhere, and asks for both again once unticked", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `data-neanuntata-${suffix}`;

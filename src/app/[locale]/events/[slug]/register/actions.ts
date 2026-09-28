@@ -137,12 +137,12 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   let sittingPlace: FamilyPlace | null = null;
   let reservedUntil: Date | null = null;
   /*
-    Whether this form names a new person of the sitting (§NNN), by this browser's own list: only such a
+    Whether this form names a new person of the sitting (§543), by this browser's own list: only such a
     form takes a place — its registration's, or a held one where it wrote none — and a correction of a
     name typed before keeps the place it had (`withSittingPerson`).
   */
   /*
-    Past the sitting's deadline (§NNN; the review of 2026-09-28, round four) its places have lapsed, and
+    Past the sitting's deadline (§543; the review of 2026-09-28, round four) its places have lapsed, and
     this form opens a new sitting with its own: the people sent before it are not this sitting's, so
     they are neither listed nor marked reserved on its screen — its email covers them no more than the
     count does. Read from this browser's half and the clock alone, the same for every address (§39).
@@ -251,7 +251,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     server moved to the same instant. Everything from this browser's own forms (§39).
   */
   const prior = continuing && liveSitting ? liveSitting : null;
-  // The place a new person's form got (§NNN): reserved, or the waiting list once the address is confirmed — the same whatever the address holds (§39).
+  // The place a new person's form got (§543): reserved, or the waiting list once the address is confirmed — the same whatever the address holds (§39).
   if (newPerson) typedPerson.people = withLatestPlace(typedPerson.people, sittingPlace ?? undefined);
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
@@ -290,7 +290,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
       /*
-        Until when the sitting's places are reserved (§NNN): the sitting's fixed deadline, as the server
+        Until when the sitting's places are reserved (§543): the sitting's fixed deadline, as the server
         wrote it at the opening «Da» or at the form that opened a new sitting after it — the first form's
         instant, the club's window and hold, the event's close and start: the same for every address (§39).
       */
@@ -357,7 +357,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     const deadlines = await currentDeadlines(db);
     const holding = !sitting.atOnce && deadlines.familySittingMinutes > 0;
     /*
-      The press that opens the sitting — the first on this browser — fixes the sitting's deadline (§NNN):
+      The press that opens the sitting — the first on this browser — fixes the sitting's deadline (§543):
       the end of the first form's window, which this half carries (`heldUntil`, written by that form),
       plus the club's hold; and gives the first form its place. A later press reserves and lengthens
       nothing (`continueFamilySittingAndReserve`).
@@ -369,7 +369,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
             { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
             familySittingHeldUntil(now, deadlines),
             now,
-            // The first form's person and address, as this half typed them: only pick the slot of their held place (§NNN).
+            // The first form's person and address, as this half typed them: only pick the slot of their held place (§543).
             opening ? { firstWindowEnd: sitting.heldUntil, firstName: sitting.people[0]?.name ?? null, email: sitting.email } : null,
           )
         : null;
@@ -377,7 +377,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     // The names this browser lists name only the people the sitting's email covers (`peopleAfterYes`).
     const { people: listed, seedSpent } = peopleAfterYes({ holding, seed: sitting.seed, opened, people: sitting.people });
     /*
-      Each person's place as this press leaves it (§NNN). Only the press that opens the sitting changes
+      Each person's place as this press leaves it (§543). Only the press that opens the sitting changes
       one: the first form's, reserved — its registration's, or a held place where it wrote none (a kept
       form, §446; a person the address already holds) — or the waiting list when none was free: the same
       words for every address (§39). A later press changes no place and no deadline.
@@ -398,7 +398,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
         atOnce: deadlines.familySittingMinutes <= 0,
         windowMinutes: deadlines.familySittingMinutes,
         sameBirthDate: null,
-        // The sitting's fixed deadline (§NNN): written by the opening press; a later press keeps it as it is.
+        // The sitting's fixed deadline (§543): written by the opening press; a later press keeps it as it is.
         reservedUntil: !holding ? null : opening ? (continued?.reservedUntil ?? null) : (sitting.reservedUntil ?? null),
       },
       path,

@@ -86,7 +86,7 @@ export type RegistrationCsvRow = {
    */
   listSocials?: boolean;
   /**
-   * The family marker (§NNN): the other people registered on the same address at the event,
+   * The family marker (§543): the other people registered on the same address at the event,
    * «; »-joined, or empty — so a spreadsheet shows who came together.
    */
   family?: string;
@@ -125,7 +125,7 @@ const HEADER = [
   // After the terms (§499), last for the same reason.
   "Declaration version",
   "Declaration signed",
-  // Last (§NNN), for the same reason: the other people on the same address.
+  // Last (§543), for the same reason: the other people on the same address.
   "family",
 ];
 

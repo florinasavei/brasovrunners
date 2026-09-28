@@ -34,7 +34,7 @@ import { liveSittingEntries } from "./family-entries";
 
 /**
  * The sitting a form names, locked, when it still takes forms: this event and address, not sent, not
- * confirmed, within its window — and before its fixed reservation deadline (§NNN, the review of
+ * confirmed, within its window — and before its fixed reservation deadline (§543, the review of
  * 2026-09-28, round three): a form after it opens a new sitting, with a deadline of its own.
  */
 export async function lockLiveSitting<T extends Record<string, unknown>>(
@@ -52,14 +52,14 @@ export async function lockLiveSitting<T extends Record<string, unknown>>(
   return row;
 }
 
-/** Whether a sitting's fixed reservation deadline (§NNN) is still ahead; a sitting written before the column has none yet. */
+/** Whether a sitting's fixed reservation deadline (§543) is still ahead; a sitting written before the column has none yet. */
 function reservationStillAhead(row: Pick<FamilySitting, "reservedUntil">, now: Date): boolean {
   return row.reservedUntil === null || row.reservedUntil.getTime() > now.getTime();
 }
 
 /**
  * A new sitting, scoped to the address's registration its one link will name, with its reservation
- * deadline written once (§NNN): `reservedUntil`, which nothing moves afterwards. `id`, when given, is
+ * deadline written once (§543): `reservedUntil`, which nothing moves afterwards. `id`, when given, is
  * the random id the browser's half already carries (a first form that wrote nothing, whose «Da» took a
  * hold under it, `family_place_holds`): the sitting then adopts that hold by its key.
  */
@@ -110,9 +110,9 @@ export async function sittingPendingRegistrations<T extends Record<string, unkno
       birthDate: registrations.birthDate,
       emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       createdAt: registrations.createdAt,
-      // Another adult's row keeps no fitness statement of theirs (§421, §NNN): the press asks the holder's tick.
+      // Another adult's row keeps no fitness statement of theirs (§421, §543): the press asks the holder's tick.
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
-      // The family's reservation (§NNN): the email and its page say each person's place.
+      // The family's reservation (§543): the email and its page say each person's place.
       holdExpiresAt: registrations.holdExpiresAt,
     })
     .from(registrations)
@@ -244,7 +244,7 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
  * A sitting already sent, confirmed or past its window, and a seed that no longer names a waiting
  * registration or a live kept form of this event, are left as they are: the next form is the
  * ordinary one, and opens a sitting of its own. Returns the sitting that takes the next form, and
- * whether this press opened it (§NNN: only the opening press reserves a place), or null. The ids come
+ * whether this press opened it (§543: only the opening press reserves a place), or null. The ids come
  * from the browser's sealed half; nothing is said back (§39).
  */
 export async function continueFamilySitting<T extends Record<string, unknown>>(
@@ -252,7 +252,7 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
   press: { sittingId: string | null; seed: SittingSeed | null; eventId: string; locale: Locale },
   heldUntil: Date,
   now: Date,
-  /** The deadline a sitting this press opens is given (§NNN): the first form's window and the club's hold. Written once. */
+  /** The deadline a sitting this press opens is given (§543): the first form's window and the club's hold. Written once. */
   reservedUntil: Date,
 ): Promise<{ sittingId: string; opened: boolean } | null> {
   return db.transaction(async (tx) => {
@@ -264,7 +264,7 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
         row.releasedAt === null &&
         row.confirmedAt === null &&
         row.heldUntil.getTime() > now.getTime() &&
-        // Past its fixed deadline a sitting takes no more forms (§NNN): the press does not hold its email back either.
+        // Past its fixed deadline a sitting takes no more forms (§543): the press does not hold its email back either.
         reservationStillAhead(row, now)
       ) {
         if (row.heldOutboxIds.length > 0) {
@@ -284,7 +284,7 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
   });
 }
 
-/** A live sitting of this event, not sent and not confirmed, still taking forms — before its fixed deadline (§NNN). */
+/** A live sitting of this event, not sent and not confirmed, still taking forms — before its fixed deadline (§543). */
 function liveSittingWhere(eventId: string, now: Date) {
   return and(
     eq(familySittings.eventId, eventId),
@@ -501,7 +501,7 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
  * what is still live is lengthened, and never shortened: a registration whose link already lapsed and
  * a kept form past its time stay lapsed. Returns the sitting with its new lapse, for the token.
  *
- * The links only (§NNN, the review of 2026-09-28, round three): the family's reserved places keep the
+ * The links only (§543, the review of 2026-09-28, round three): the family's reserved places keep the
  * sitting's fixed deadline, which this send does not move, late or on time.
  */
 export async function extendSittingLinks<T extends Record<string, unknown>>(
@@ -609,7 +609,7 @@ export async function sittingEarlierEmailSent<T extends Record<string, unknown>>
 export async function purgeLapsedFamilySittings<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   const gone = await db.delete(familySittings).where(lte(familySittings.expiresAt, now)).returning({ id: familySittings.id });
   /*
-    …and the sittings' place holds (§NNN) a day past their deadline: counted by nobody since it, and
+    …and the sittings' place holds (§543) a day past their deadline: counted by nobody since it, and
     left that long so the per-event sweep (`expireStaleHolds`) still finds a fresh lapse and offers the
     place to whoever waits, as it does for a lapsed reservation.
   */

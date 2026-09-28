@@ -26,7 +26,7 @@ import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail }
 
 export type RegistrationListRow = {
   id: string;
-  /** The address (§389): the family marker names the other rows of it at the event (§NNN). */
+  /** The address (§389): the family marker names the other rows of it at the event (§543). */
   participantId: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
@@ -522,7 +522,7 @@ export type RegistrationDetail = {
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
-  /** The address (§389): the family marker names the other rows of it at the event (§NNN). */
+  /** The address (§389): the family marker names the other rows of it at the event (§543). */
   participantId: string;
   eventId: string;
   eventTitle: string | null;
@@ -816,7 +816,7 @@ export async function listLatestDeclarationAcceptances<T extends Record<string, 
  */
 export type DeskRegistration = {
   id: string;
-  /** The address's row id — never the address itself (§15.11): the family marker groups by it (§NNN). */
+  /** The address's row id — never the address itself (§15.11): the family marker groups by it (§543). */
   participantId: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
@@ -1165,7 +1165,7 @@ export function termsLineKindFor(registration: {
  * its place past its stored deadline, so the panel lists it as `countOccupied` counts it.
  */
 /**
- * The places families reserved at their forms (§NNN), for the queue panel: each registration still
+ * The places families reserved at their forms (§543), for the queue panel: each registration still
  * waiting for its address whose reservation holds (`familyReservationHolds`), its deadline — the
  * sitting's, fixed by its first form — and whether the family's one email is still queued, which moves
  * nothing.

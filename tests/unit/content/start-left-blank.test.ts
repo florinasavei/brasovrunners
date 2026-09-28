@@ -20,7 +20,7 @@ import { eventFormFieldName } from "@/modules/content/events/form-names";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * `DECISIONS.md` §NNN (amending §533) — which of the start's boxes may be left empty, per switch
+ * `DECISIONS.md` §545 (amending §533) — which of the start's boxes may be left empty, per switch
  * state, and the provisional start the platform stores in place of an empty part: read back as an
  * empty box, never as a date or an hour somebody typed.
  */
@@ -30,7 +30,7 @@ const dateLater = { dateToBeAnnounced: true, timeToBeAnnounced: false };
 const timeLater = { dateToBeAnnounced: false, timeToBeAnnounced: true };
 const both = { dateToBeAnnounced: true, timeToBeAnnounced: true };
 
-describe("§NNN the start's boxes, per switch state", () => {
+describe("§545 the start's boxes, per switch state", () => {
   it("requires both with neither switch, nothing with the date's, the date alone with the time's", () => {
     expect(startBoxesRequired(off)).toEqual({ date: true, time: true });
     expect(startBoxesRequired(dateLater)).toEqual({ date: false, time: false });
@@ -69,7 +69,7 @@ describe("§NNN the start's boxes, per switch state", () => {
   });
 });
 
-describe("§NNN the provisional start", () => {
+describe("§545 the provisional start", () => {
   it("reads back as empty boxes, and a typed start never does", () => {
     for (const boxes of [
       { date: "", time: "" },
@@ -116,7 +116,7 @@ describe("§NNN the provisional start", () => {
   });
 });
 
-describe("§NNN the staff surfaces that print the start in words", () => {
+describe("§545 the staff surfaces that print the start in words", () => {
   const blankDate = { startsAt: resolveStart("T19:00", dateLater, ZONE).startsAt, timezone: ZONE };
   const blankHour = { startsAt: resolveStart("2027-03-14", timeLater, ZONE).startsAt, timezone: ZONE };
   const typed = { startsAt: resolveStart("2027-03-14T19:00", off, ZONE).startsAt, timezone: ZONE };
@@ -139,7 +139,7 @@ describe("§NNN the staff surfaces that print the start in words", () => {
   });
 });
 
-describe("§NNN the start's boxes without JavaScript", () => {
+describe("§545 the start's boxes without JavaScript", () => {
   const ROOT = path.resolve(__dirname, "../../..");
   const messages = JSON.parse(readFileSync(path.join(ROOT, "messages/ro.json"), "utf8")) as { Admin: { pickers: Record<string, string> } };
   const render = (defaults: typeof off) =>

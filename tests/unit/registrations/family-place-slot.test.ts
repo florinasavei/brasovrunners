@@ -3,14 +3,14 @@ import { deploymentSecretIssue } from "@/shared/config/deployment-secret";
 import { familyPlaceSlot, familySlotSecret, LOCAL_FAMILY_SLOT_SECRET } from "@/modules/registrations/family-place-slot";
 
 /**
- * BR-REQ-034-02 — the slot of a family sitting's held place (§NNN, the review of 2026-09-28, round five):
+ * BR-REQ-034-02 — the slot of a family sitting's held place (§543, the review of 2026-09-28, round five):
  * keyed under a secret that survives a restart, one per person the address sends at the event, and
  * naming nobody.
  */
 const EVENT = "11111111-1111-4111-8111-111111111111";
 const PARTICIPANT = "22222222-2222-4222-8222-222222222222";
 
-describe("BR-REQ-034-02 the family place slot's secret is stable across a restart (§NNN, round five)", () => {
+describe("BR-REQ-034-02 the family place slot's secret is stable across a restart (§543, round five)", () => {
   it("a module loaded again — a development server restarted mid-sitting — keys the same slot", async () => {
     const before = familyPlaceSlot(EVENT, PARTICIPANT, "Ana Pop");
     vi.resetModules();
@@ -37,7 +37,7 @@ describe("BR-REQ-034-02 the family place slot's secret is stable across a restar
   });
 });
 
-describe("BR-REQ-034-02 one slot per person the address sends at the event, whatever sitting (§NNN, round five; §39)", () => {
+describe("BR-REQ-034-02 one slot per person the address sends at the event, whatever sitting (§543, round five; §39)", () => {
   it("the same runner by the name key, another runner, address or event another slot", () => {
     const ana = familyPlaceSlot(EVENT, PARTICIPANT, "Ana Pop");
     expect(familyPlaceSlot(EVENT, PARTICIPANT, "  ana   POP ")).toBe(ana);

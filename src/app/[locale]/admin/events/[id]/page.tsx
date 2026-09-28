@@ -741,7 +741,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <input type="hidden" name="eventId" value={event.id} />
                         <RepeatToggle name="repeatOn" label={t("editor.repeatOn")}>
                           <RepeatFields
-                            // Neither the provisional day's weekday nor its hour for a part left blank (§NNN).
+                            // Neither the provisional day's weekday nor its hour for a part left blank (§545).
                             ownWeekday={typedStartOrNull(event) ? wallClockWeekday(event.startsAt, event.timezone) : undefined}
                             startTime={startBoxValues(event.startsAt, event.timezone).time}
                             draftSource={!live}

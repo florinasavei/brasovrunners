@@ -114,11 +114,11 @@ type FamilyFactsInput = {
 };
 /**
  * One person a family sitting's message names (§519): the name, the birth date ("YYYY-MM-DD"), and
- * since §NNN their place — `reserved` (the form reserved it; the button confirms it) or `waitlist`
+ * since §543 their place — `reserved` (the form reserved it; the button confirms it) or `waitlist`
  * (no place was free: the button puts them on the waiting list). Absent reads as neither.
  */
 export type FamilySittingPerson = { name: string; birthDate: string; place?: "reserved" | "waitlist" };
-/** A registration the address held before the sitting (§NNN), by the state the message names. */
+/** A registration the address held before the sitting (§543), by the state the message names. */
 export type FamilyEarlierState = "confirmed" | "declaration" | "waitlist" | "email";
 /** A family sitting's facts (§519): the event, everybody joining now, who the address held before, the link's life, the limit. */
 type FamilySittingFactsInput = {
@@ -126,9 +126,9 @@ type FamilySittingFactsInput = {
   when?: string;
   people: ReadonlyArray<FamilySittingPerson>;
   registered: readonly string[];
-  /** Who the address held before, with their state (§NNN); preferred over `registered` when set. */
+  /** Who the address held before, with their state (§543); preferred over `registered` when set. */
   registeredStates?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
-  /** Until when the reserved places are held, in this half's language (§NNN). */
+  /** Until when the reserved places are held, in this half's language (§543). */
   reservedUntil?: string;
   hours: string;
   cap?: number;
@@ -170,12 +170,12 @@ export function joinNames(locale: EmailLocale, names: readonly string[]): string
   return `${names.slice(0, -1).join(", ")} ${locale === "ro" ? "și" : "and"} ${names.at(-1)}`;
 }
 
-/** A name's first word, for the family marker's list (§NNN): «Ana, Mihai și Ioana». */
+/** A name's first word, for the family marker's list (§543): «Ana, Mihai și Ioana». */
 function firstNameOf(name: string): string {
   return name.trim().split(/\s+/)[0] || name;
 }
 
-/** Who the address held before a sitting, by state (§NNN): the words the family's message says beside each name. */
+/** Who the address held before a sitting, by state (§543): the words the family's message says beside each name. */
 const EARLIER_STATE_WORDS: Record<EmailLocale, Record<FamilyEarlierState, string>> = {
   ro: { confirmed: "confirmat", declaration: "semnează declarația", waitlist: "pe lista de așteptare", email: "așteaptă confirmarea adresei" },
   en: { confirmed: "confirmed", declaration: "signing the declaration", waitlist: "on the waiting list", email: "waiting for the address to be confirmed" },
@@ -430,7 +430,7 @@ export function renderBilingual(
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
     // Every date of the second half in its own language (§349), not only the event's.
     ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
-    // A family's reservations, in the second half's own words (§NNN).
+    // A family's reservations, in the second half's own words (§543).
     ...(data.familyReservedUntilFormattedOther ? { familyReservedUntilFormatted: data.familyReservedUntilFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     // A group run series' rhythm in the second half's language (§523).
@@ -765,14 +765,14 @@ export type TemplateData = {
    */
   familySittingPeople?: ReadonlyArray<FamilySittingPerson>;
   /**
-   * Until when the family's places are reserved (§NNN), in the reader's language and the other's —
+   * Until when the family's places are reserved (§543), in the reader's language and the other's —
    * the sitting's fixed deadline, as the reservations of the people listed carry it; this send moves
    * nothing. Absent when nobody holds one.
    */
   familyReservedUntilFormatted?: string;
   familyReservedUntilFormattedOther?: string;
   /**
-   * Who the address held before the sitting (§NNN, amending §446's list of names): each by first name
+   * Who the address held before the sitting (§543, amending §446's list of names): each by first name
    * and initial with their state — confirmed, signing, on the waiting list, waiting for the address —
    * and asked nothing again. Set on a family sitting's message; `familyRegistered` stays the plain names.
    */
@@ -1446,7 +1446,7 @@ const T = {
       */
       earlier: "Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.",
       /*
-        The family marker at the head of the message (§NNN; the owner, 2026-09-28: «trebuie un marker
+        The family marker at the head of the message (§543; the owner, 2026-09-28: «trebuie un marker
         pentru familie»): everybody by first name, then how many places are reserved and until when,
         and who waits for a place. The same line the screen after the form shows.
       */
@@ -1467,7 +1467,7 @@ const T = {
           value: [
             { text: person.name, bold: true },
             ...(formatBirthDate(person.birthDate, "ro") ? [{ text: ", data nașterii " }, { text: formatBirthDate(person.birthDate, "ro"), bold: true }] : []),
-            // Their place (§NNN): reserved by the form, or the waiting list once the address is confirmed.
+            // Their place (§543): reserved by the form, or the waiting list once the address is confirmed.
             ...(person.place === "reserved"
               ? [{ text: " — " }, { text: `loc rezervat${f.reservedUntil ? ` ${f.reservedUntil}` : ""}`, bold: true }]
               : person.place === "waitlist"
@@ -1475,7 +1475,7 @@ const T = {
                 : []),
           ],
         })),
-        // Who the address held before, with their state (§NNN): confirmed already, and asked nothing again.
+        // Who the address held before, with their state (§543): confirmed already, and asked nothing again.
         ...(f.registeredStates && f.registeredStates.length > 0
           ? [
               {
@@ -1497,7 +1497,7 @@ const T = {
           : []),
       ],
       body: (): string[] => [
-        // The sitting's people are registrations now (§NNN): withdrawn from «Toate înscrierile mele», their place freed.
+        // The sitting's people are registrations now (§543): withdrawn from «Toate înscrierile mele», their place freed.
         "Cineva din listă nu trebuie înscris? După confirmare, îl retragi din „Toate înscrierile mele” și locul lui se eliberează.",
         "Dacă nu tu ai trimis formularul, ignoră mesajul: nu se confirmă nimeni, locurile rezervate se eliberează singure, iar datele se șterg.",
         "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
@@ -2436,7 +2436,7 @@ export function buildTemplateContent(
       */
       ...(familySittingShape
         ? [
-            // The family marker first (§NNN): who, how many places are reserved and until when.
+            // The family marker first (§543): who, how many places are reserved and until when.
             copy.familySitting.heading(familySittingPeople, data.familyReservedUntilFormatted),
             copy.familySitting.lead(familySittingPeople.length),
             ...(data.familyEarlierSent ? [copy.familySitting.earlier] : []),

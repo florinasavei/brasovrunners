@@ -40,7 +40,7 @@ export default async function FamilySittingConfirm({ locale, token, link, refuse
 
   return (
     <Stack spacing={2} data-testid="family-sitting-confirm">
-      {/* The places hold until the sitting's deadline, the link for longer (§NNN): past it, said so. */}
+      {/* The places hold until the sitting's deadline, the link for longer (§543): past it, said so. */}
       <Typography data-testid="family-sitting-intro">
         {t(link.reserved ? "familySitting.intro" : "familySitting.introLapsed", { email: link.email, people: people(count) })}
       </Typography>
@@ -92,7 +92,7 @@ export default async function FamilySittingConfirm({ locale, token, link, refuse
               })}
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {/* Only a kept form can be unticked (§446); a registration a sitting's form wrote is withdrawn afterwards (§NNN). */}
+              {/* Only a kept form can be unticked (§446); a registration a sitting's form wrote is withdrawn afterwards (§543). */}
               {link.people.some((person) => person.optional) ? t("familySitting.untick") : t("familySitting.withdrawLater")}
             </Typography>
           </Box>

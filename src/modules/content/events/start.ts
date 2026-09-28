@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 export type StartSwitches = { dateToBeAnnounced: boolean; timeToBeAnnounced: boolean };
 
 /**
- * Which parts of the start may be left empty (`DECISIONS.md` §NNN, amending §533) — the one rule the
+ * Which parts of the start may be left empty (`DECISIONS.md` §545, amending §533) — the one rule the
  * service applies and the editor's boxes follow (`StartToBeAnnounced`):
  *
  * - «Data se anunță mai târziu» ticked: the date and the hour are both optional;
@@ -21,7 +21,7 @@ export function startBoxesRequired(switches: StartSwitches): { date: boolean; ti
 }
 
 /**
- * The start to store, from its posted value and the switches (§NNN): the typed instant, or the
+ * The start to store, from its posted value and the switches (§545): the typed instant, or the
  * provisional one (`provisional-start.ts`) in place of a part the switch lets the organizer leave
  * empty. Every refusal names its box (§47): an empty date is `startsAt` (the date box, «Începutul
  * evenimentului»), an empty hour beside a typed date is `startsAtTime`.

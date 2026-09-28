@@ -53,7 +53,7 @@ export const familySittings = pgTable(
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     /*
-      Until when the sitting's places are reserved (§NNN, the review of 2026-09-28, round three): the
+      Until when the sitting's places are reserved (§543, the review of 2026-09-28, round three): the
       first form's instant, the club's window and the club's declaration hold, capped by the close and
       the start — written once, when the sitting opens, and never moved by a form, a press or a send.
       Past it the sitting takes no more forms: the next one opens a new sitting. Null on a sitting
@@ -73,7 +73,7 @@ export const familySittings = pgTable(
 export type FamilySitting = typeof familySittings.$inferSelect;
 
 /**
- * A place a family sitting holds for a form that wrote no registration (§NNN, the review of
+ * A place a family sitting holds for a form that wrote no registration (§543, the review of
  * 2026-09-28, round three; §39, AGENTS.md §19.4): a kept form, a person the address already holds, an
  * address at the club's limit with registrations made elsewhere — and the opening «Da» of a sitting
  * whose first form wrote none. Counted by `countOccupied` exactly as a reserved registration is, so

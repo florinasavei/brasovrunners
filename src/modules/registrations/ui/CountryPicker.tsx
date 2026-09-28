@@ -94,7 +94,7 @@ function withEnglishNames(countries: readonly SearchableCountry[], mode: Country
  * Only `className` and the children travel; the popper's own positioning props (`anchorEl`,
  * `open`, `disablePortal`, a measured `style.width`) mean nothing to a div in the flow.
  *
- * `position: static` is the fix of §NNN. MUI styles its popper slot — ours included, since the
+ * `position: static` is the fix of §544. MUI styles its popper slot — ours included, since the
  * slot is rendered `as` this div inside MUI's own styled popper — with `position: absolute` when
  * `disablePortal` is set. Out of the flow, the list gave the popover's paper no height: the
  * paper (MUI's `overflow: auto`) was as tall as the search box alone and clipped the list under
@@ -121,7 +121,7 @@ export const INLINE_LIST_STYLE = {
 /** 44 pixels a row: a thumb picks a country out of a list of them (BR-REQ-041-01 criterion 6). */
 export const PICKER_ROW_PX = 44;
 
-/** Never fewer rows than this in view on a desktop (§NNN). */
+/** Never fewer rows than this in view on a desktop (§544). */
 export const PICKER_MIN_ROWS = 8;
 
 /** The listbox's own padding, top plus bottom (MUI's `8px 0`). */
@@ -205,7 +205,7 @@ export const PICKER_BUTTON_SX = {
 } as const;
 
 /**
- * A popover under the field — on a phone a sheet at the bottom of the screen (§NNN) — the search
+ * A popover under the field — on a phone a sheet at the bottom of the screen (§544) — the search
  * box focused, the list under it filtering as letters (or, for a telephone, digits) are typed,
  * the chosen country in view. Choosing a country hands its code back; Escape or a tap outside
  * leaves the country as it was.

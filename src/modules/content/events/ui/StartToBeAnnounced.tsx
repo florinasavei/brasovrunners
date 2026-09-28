@@ -38,7 +38,7 @@ type Props = {
 };
 
 /**
- * The start of «Când și unde» and its two switches (`DECISIONS.md` §NNN, amending §533; the owner,
+ * The start of «Când și unde» and its two switches (`DECISIONS.md` §545, amending §533; the owner,
  * 2026-09-28: «în V2.23 trebuie să pot să nu pun data și ora evenimentului! momentan am validare pe
  * asta»): the date and hour boxes, then «Data se anunță mai târziu» and «Ora se anunță mai târziu».
  *

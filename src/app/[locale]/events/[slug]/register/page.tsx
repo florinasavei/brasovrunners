@@ -268,7 +268,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     keep what was typed. The cached read the event page makes; optional, so a failure says nothing.
   */
   /*
-    A family sitting's next form, refused at the club's limit per address (§NNN): the people this
+    A family sitting's next form, refused at the club's limit per address (§543): the people this
     browser already sent fill it. A marker, like the two above; every person it counts was typed here (§39).
   */
   const sittingAtCap = refusedMarkers.includes(SITTING_AT_CAP);
@@ -539,7 +539,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         <FamilySittingNext
           email={sitting.email}
           names={sittingNames(sitting.people)}
-          // Each person's place and until when (§NNN), from the browser's half.
+          // Each person's place and until when (§543), from the browser's half.
           reservation={{ people: sitting.people, until: sitting.reservedUntil ?? null }}
           sameBirthDate={sitting.sameBirthDate ?? null}
           releaseInMs={sitting.heldUntil.getTime() - now.getTime()}

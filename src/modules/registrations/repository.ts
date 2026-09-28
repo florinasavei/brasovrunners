@@ -614,14 +614,14 @@ export type OccupiedCountsRow = {
    * take is given (§348, `domain/waitlist.ts#occupiedForNewcomer`).
    */
   lapsedDeclarationHolds: number;
-  /** A family's reserved places (§NNN): `domain/capacity.ts#OccupiedCounts.familyReservations`. */
+  /** A family's reserved places (§543): `domain/capacity.ts#OccupiedCounts.familyReservations`. */
   familyReservations: number;
-  /** A family sitting's holds for forms that wrote no registration (§NNN): `domain/capacity.ts#OccupiedCounts.familyPlaceHolds`. */
+  /** A family sitting's holds for forms that wrote no registration (§543): `domain/capacity.ts#OccupiedCounts.familyPlaceHolds`. */
   familyPlaceHolds: number;
 };
 
 /**
- * The family sitting that holds this registration still has its one email queued (§NNN): held for
+ * The family sitting that holds this registration still has its one email queued (§543): held for
  * «Gata» or the club's window, or waiting for the outbox job's pass. Only a fact for the queue panel
  * («emailul familiei nu a plecat încă»): it keeps no place past the deadline (the review of
  * 2026-09-28, round three: the deadline is the sitting's, fixed by its first form, and nothing moves
@@ -632,7 +632,7 @@ export function familyEmailQueued(): SQL {
 }
 
 /**
- * A family's reservation that still holds its place (§NNN): a registration waiting for its address
+ * A family's reservation that still holds its place (§543): a registration waiting for its address
  * whose deadline — the sitting's `reserved_until`, written on the row by its form — is ahead. A hard
  * ceiling: past it the place is free, whatever the family's email is doing.
  */
@@ -641,7 +641,7 @@ export function familyReservationHolds(now: Date): SQL {
 }
 
 /**
- * Whether this registration holds a family's reservation right now (§NNN): its own place, counted in
+ * Whether this registration holds a family's reservation right now (§543): its own place, counted in
  * `countOccupied`, which the allocator gives it when the address is confirmed rather than counting it
  * against itself. Read under the caller's event lock.
  */
@@ -655,7 +655,7 @@ export async function holdsFamilyReservation<T extends Record<string, unknown>>(
 }
 
 /**
- * A family's reservation written (§NNN): only on a registration still waiting for its address, under
+ * A family's reservation written (§543): only on a registration still waiting for its address, under
  * the caller's event lock, after the allocator's own count said a place is free, until the sitting's
  * fixed deadline. Tells the public cache: one place fewer from now on (§333).
  */
@@ -671,7 +671,7 @@ export async function writeFamilyReservation<T extends Record<string, unknown>>(
 }
 
 /**
- * A family sitting's hold for a form that wrote no registration (§NNN; §39, AGENTS.md §19.4): one row
+ * A family sitting's hold for a form that wrote no registration (§543; §39, AGENTS.md §19.4): one row
  * of `family_place_holds`, under the caller's event lock, after the allocator's own count said a place
  * is free, until the sitting's fixed deadline. One per `slot`: a replayed press adds nothing. The
  * sitting's record of a person sent while no place was free (`writeFamilyPlaceMarker`) becomes the
@@ -708,7 +708,7 @@ export async function writeFamilyPlaceHold<T extends Record<string, unknown>>(
 }
 
 /**
- * A person a family sitting sent while no place was free (§NNN, the review of 2026-09-28, round six;
+ * A person a family sitting sent while no place was free (§543, the review of 2026-09-28, round six;
  * §39, AGENTS.md §19.4): a row of `family_place_holds` that holds no place (`holds_place` false) and
  * counts in no capacity, until the sitting's fixed deadline. It is what a fresh address's waiting
  * registration is for the club's limit: the server's own record that this browser sent the person in
@@ -729,7 +729,7 @@ export async function writeFamilyPlaceMarker<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the event has any row of `family_place_holds`, live or lapsed, held or only sent (§NNN, round
+ * Whether the event has any row of `family_place_holds`, live or lapsed, held or only sent (§543, round
  * six): an event without one — every single registration's — never keys the slot secret on allocation.
  */
 export async function eventHasFamilyPlaceHolds<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
@@ -738,7 +738,7 @@ export async function eventHasFamilyPlaceHolds<T extends Record<string, unknown>
 }
 
 /**
- * A sitting key's people still recorded (§NNN): how many, and until when (they share the sitting's
+ * A sitting key's people still recorded (§543): how many, and until when (they share the sitting's
  * deadline) — its counted holds and, since round six, the people it sent while no place was free
  * (`writeFamilyPlaceMarker`), as a fresh address's waiting registrations count for the club's limit.
  */
@@ -755,7 +755,7 @@ export async function liveFamilyPlaceHolds<T extends Record<string, unknown>>(
 }
 
 /**
- * A sitting's holds released (§NNN): the family's email was confirmed, and every person it names now
+ * A sitting's holds released (§543): the family's email was confirmed, and every person it names now
  * has a registration of their own, allocated like any other. Tells the public cache.
  */
 export async function releaseFamilyPlaceHolds<T extends Record<string, unknown>>(db: Database<T>, sittingKey: string): Promise<number> {
@@ -765,7 +765,7 @@ export async function releaseFamilyPlaceHolds<T extends Record<string, unknown>>
 }
 
 /**
- * One person's held places released (§NNN): a kept form confirmed on its own, whose person now has a
+ * One person's held places released (§543): a kept form confirmed on its own, whose person now has a
  * registration allocated like any other. By the person's slot at the event (`familyPlaceSlot`), in
  * whichever sitting it was taken (the review of 2026-09-28, round five).
  */
@@ -778,7 +778,7 @@ export async function releaseFamilyPlaceHold<T extends Record<string, unknown>>(
   return gone.length > 0;
 }
 
-/** The count of an event's sitting holds still counted (§NNN), as a scalar subquery for `countOccupied`. */
+/** The count of an event's sitting holds still counted (§543), as a scalar subquery for `countOccupied`. */
 function familyPlaceHoldsCount(eventId: string, now: Date): SQL<number> {
   return sql<number>`(select count(*)::int from ${familyPlaceHolds} where ${familyPlaceHolds.eventId} = ${eventId} and ${familyPlaceHolds.holdsPlace} and ${familyPlaceHolds.expiresAt} > ${now})`;
 }
@@ -851,9 +851,9 @@ export async function countOccupied<T extends Record<string, unknown>>(
       unexpiredWaitlistOfferedHolds: sql<number>`count(*) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
       // Not a hold whose first email is still queued (§513): its clock has not started.
       lapsedDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
-      // A family's reserved places (§NNN): the sitting's forms, before the address is confirmed.
+      // A family's reserved places (§543): the sitting's forms, before the address is confirmed.
       familyReservations: sql<number>`count(*) filter (where ${familyReservationHolds(now)})::int`,
-      // …and the sitting's holds for forms that wrote no registration (§NNN), counted the same.
+      // …and the sitting's holds for forms that wrote no registration (§543), counted the same.
       familyPlaceHolds: familyPlaceHoldsCount(eventId, now),
     })
     .from(registrations)
@@ -891,12 +891,12 @@ export async function listPlaceCountInstants<T extends Record<string, unknown>>(
         or(
           eq(registrations.status, "WAITLIST_OFFERED"),
           and(eq(registrations.status, "PENDING_DECLARATION"), isNotNull(events.waitlistCapacity)),
-          // A family's reservation frees its place at its deadline (§NNN).
+          // A family's reservation frees its place at its deadline (§543).
           and(eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"), isNotNull(registrations.holdExpiresAt)),
         ),
       ),
     )
-    // …and a family sitting's hold for a form that wrote no registration, at the same deadline (§NNN): one statement still (§489).
+    // …and a family sitting's hold for a form that wrote no registration, at the same deadline (§543): one statement still (§489).
     // A person sent while no place was free holds none, so frees none (round six).
     .unionAll(
       db
@@ -946,7 +946,7 @@ export async function expireStalePendingEmailConfirmations<T extends Record<stri
     // The provisional number goes with the place (§214, §220). These bulk sweeps do not go
     // through `transitionRegistration`, which is where the release lives, so each one has to
     // say it — a number held by an expired row is a number nobody can ever be given.
-    // A family's reservation goes with it (§NNN): an expired registration is counted nowhere.
+    // A family's reservation goes with it (§543): an expired registration is counted nowhere.
     .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EMAIL_CONFIRMATION_LAPSED", provisionalBibNumber: null, updatedAt: now })
     .where(
       and(
@@ -955,7 +955,7 @@ export async function expireStalePendingEmailConfirmations<T extends Record<stri
       ),
     )
     .returning({ id: registrations.id, reserved: sql<boolean>`${registrations.holdExpiresAt} is not null` });
-  // The list and the count read reservations (§NNN): tell the cache when one went with its row.
+  // The list and the count read reservations (§543): tell the cache when one went with its row.
   if (rows.some((row) => row.reserved)) revalidatePublicContent("places");
   return rows.length;
 }
@@ -1076,7 +1076,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     .returning({ id: registrations.id });
 
   /*
-    A family's reservation past its deadline (§NNN), whatever its email is doing: the place goes back to the count
+    A family's reservation past its deadline (§543), whatever its email is doing: the place goes back to the count
     — the registration itself stays, waiting for its address, and is allocated like any other when the
     address is confirmed. Cleared rather than left to lapse in the count alone, so the job does not
     find it again on every run (`findEventsNeedingMaintenance`).
@@ -1092,7 +1092,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
       ),
     )
     .returning({ id: registrations.id });
-  // …and a family sitting's holds past the same deadline (§NNN): nobody's, so simply gone — a person sent while none was free too (round six).
+  // …and a family sitting's holds past the same deadline (§543): nobody's, so simply gone — a person sent while none was free too (round six).
   const lapsedPlaceHolds = await db
     .delete(familyPlaceHolds)
     .where(and(eq(familyPlaceHolds.eventId, event.id), lte(familyPlaceHolds.expiresAt, now)))
@@ -1186,9 +1186,9 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
             not(offerAwaitingItsFirstEmail(now)),
           ),
           and(eq(registrations.status, "PENDING_DECLARATION"), lte(registrations.holdExpiresAt, now), somebodyWaits, not(awaitingItsFirstEmail())),
-          // A family's reservation past its deadline, while somebody waits (§NNN): a hard ceiling.
+          // A family's reservation past its deadline, while somebody waits (§543): a hard ceiling.
           and(eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"), lte(registrations.holdExpiresAt, now), somebodyWaits),
-          // …and a family sitting's hold past it, on an event somebody waits for (§NNN).
+          // …and a family sitting's hold past it, on an event somebody waits for (§543).
           and(
             eq(registrations.status, "WAITLISTED"),
             sql`exists (select 1 from ${familyPlaceHolds} where ${familyPlaceHolds.eventId} = ${registrations.eventId} and ${familyPlaceHolds.holdsPlace} and ${familyPlaceHolds.expiresAt} <= ${now})`,

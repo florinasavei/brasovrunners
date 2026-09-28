@@ -55,7 +55,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const occupied = computeOccupied(counts);
   const rows = await listQueueForEvent(db, event.id, now);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
-  // A family's reserved places count as held (§NNN): the same count the public page and the allocator read.
+  // A family's reserved places count as held (§543): the same count the public page and the allocator read.
   const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + counts.familyReservations + counts.familyPlaceHolds;
   const reserved = await listFamilyReservationsForEvent(db, event.id, now);
   const family = await familyOf(db, reserved);
@@ -106,7 +106,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
       </Typography>
 
       {/*
-        The places families reserved at their forms (§NNN; the owner, 2026-09-28: «să rezerv 3 locuri și
+        The places families reserved at their forms (§543; the owner, 2026-09-28: «să rezerv 3 locuri și
         așa să se calculeze pe site»): each person, the family marker, and until when the place is held —
         and whether the family's one email is still queued, which moves nothing: the deadline is the
         sitting's, fixed by its first form.
@@ -141,7 +141,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         </Box>
       )}
       {/*
-        The places family sittings hold for forms that wrote no registration (§NNN; §39): counted like a
+        The places family sittings hold for forms that wrote no registration (§543; §39): counted like a
         reservation, naming nobody, until the sitting's deadline or its email's confirmation.
       */}
       {counts.familyPlaceHolds > 0 && (

@@ -148,7 +148,7 @@ export function computeWaitlistOfferExpiry(params: {
 }
 
 /**
- * Until when a family's places are reserved (§NNN): the club's declaration hold («Termene»,
+ * Until when a family's places are reserved (§543): the club's declaration hold («Termene»,
  * `holdMinutes`) counted from `from` — the end of the first form's window, when the sitting opens
  * (or a form's own window, when it opens a new sitting after the last one's deadline) — capped by the
  * close and the start like every hold. Worked out once per sitting and stored on it

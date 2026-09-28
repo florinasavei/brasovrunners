@@ -54,7 +54,7 @@ export default async function CourseBox({
   const { words } = await summaryWords();
   // The event's own start on its own clock, for the night line's first paint (§394).
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
-  // The boxes as «Când și unde» shows them: "" for a part left blank (§NNN), never the provisional start.
+  // The boxes as «Când și unde» shows them: "" for a part left blank (§545), never the provisional start.
   const start = startBoxValues(event?.startsAt ?? null, zone);
   // The span's end for the first paint, by the server's rule (§394): «Durata» (the saved end), else
   // the programme's rows on the event's clock — the island reads both from the form after.
@@ -73,7 +73,7 @@ export default async function CourseBox({
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
-        // Nothing for a date or an hour left blank (§NNN): there is no sunset to compare them with.
+        // Nothing for a date or an hour left blank (§545): there is no sunset to compare them with.
         night: event && start.date && start.time ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
       languages.map((entry) => entry.translation),

@@ -167,7 +167,7 @@ function eventFieldsFrom(form: FormData) {
     return `${date}T${value(`${field}Time`) || "00:00"}`;
   };
   /*
-    The event's own start, whose halves may each be left empty while it is to be announced (§NNN,
+    The event's own start, whose halves may each be left empty while it is to be announced (§545,
     amending §533): posted as they are — the whole value, the date alone, `THH:mm` for an hour alone,
     or "" — never with midnight for an empty hour, which would store a time nobody typed. The service
     decides what the switches excuse (`start.ts#resolveStart`).

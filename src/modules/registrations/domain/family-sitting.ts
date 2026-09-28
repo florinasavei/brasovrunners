@@ -38,7 +38,7 @@ export const SITTING_SENT_PARAM = "sent";
 
 /**
  * The refusal a sitting's next form meets when this browser's own people already fill the club's
- * limit per address (§NNN, amending §519): said at the form, because every person it counts was
+ * limit per address (§543, amending §519): said at the form, because every person it counts was
  * typed on this browser (§39). A marker, never a value (§14.5).
  */
 export const SITTING_AT_CAP = "sittingAtCap";
@@ -329,7 +329,7 @@ export type FamilySittingCookie = {
   /** The last form named another person on the birth date of one typed before it (`withSittingPerson`). */
   sameBirthDate?: { typed: string; kept: string } | null;
   /**
-   * Until when the sitting's places are reserved (§NNN): the sitting's fixed deadline — the first
+   * Until when the sitting's places are reserved (§543): the sitting's fixed deadline — the first
    * form's instant, the club's window and hold, capped by the event — as the server wrote it at the
    * opening «Da», or at the form that opened a new sitting after it. Facts about this browser's forms,
    * the club's settings and the event, never the address's (§39). Absent before «Da» and on a half
@@ -339,7 +339,7 @@ export type FamilySittingCookie = {
 };
 
 /**
- * The family marker's facts on the screen after a sitting's form (§NNN; the owner, 2026-09-28:
+ * The family marker's facts on the screen after a sitting's form (§543; the owner, 2026-09-28:
  * «trebuie un marker pentru familie... nu e clar cum rezervăm»): the first names this browser typed,
  * how many have a reserved place and how many will wait for one — all from the browser's own half.
  */
@@ -352,7 +352,7 @@ export function sittingReservationFacts(people: readonly SittingPerson[]): { fir
 }
 
 /**
- * The person with the place their form got (§NNN): `reserved` or `waitlist`. Every form of a sitting
+ * The person with the place their form got (§543): `reserved` or `waitlist`. Every form of a sitting
  * for a new person gets one of the two, whatever the address holds (the review of 2026-09-28, round
  * three; §39): a form that wrote no registration takes a counted hold (`family_place_holds`) as a
  * fresh address's form takes a reserved registration, and reads the same.
@@ -362,14 +362,14 @@ export function withPlace(person: SittingPerson, place: "reserved" | "waitlist")
   return place === "waitlist" ? { ...rest, waitlist: true } : rest;
 }
 
-/** The last person of the list with the place their form got (§NNN), the others as they were; `undefined` changes nobody. */
+/** The last person of the list with the place their form got (§543), the others as they were; `undefined` changes nobody. */
 export function withLatestPlace(people: readonly SittingPerson[], place: "reserved" | "waitlist" | undefined): SittingPerson[] {
   if (place === undefined || people.length === 0) return [...people];
   return [...people.slice(0, -1), withPlace(people.at(-1)!, place)];
 }
 
 /**
- * Whether the form just typed is a new person of the sitting (§NNN): its name joins the list, rather
+ * Whether the form just typed is a new person of the sitting (§543): its name joins the list, rather
  * than correcting a name typed before or being set aside as another name on a typed birth date
  * (`withSittingPerson`). Only a new person takes a place; a correction keeps the one it had.
  */
@@ -381,7 +381,7 @@ export function isNewSittingPerson(before: readonly SittingPerson[], after: { pe
 
 /**
  * One person of the sitting, as this browser typed them: the name, and the birth date ("YYYY-MM-DD",
- * or ""). `waitlist` (§NNN): no place was free when their form was sent, so they join the waiting
+ * or ""). `waitlist` (§543): no place was free when their form was sent, so they join the waiting
  * list when the address is confirmed — a fact about the event, never about the address (§39).
  */
 export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean };
@@ -459,7 +459,7 @@ export function withSittingPerson(
   if (name === "") return { people: [...people], sameBirthDate: null };
   const sameName = people.find((person) => sameRunner(person.name, name));
   if (sameName) {
-    // A correction keeps the place the person had (§NNN): only a new person takes one.
+    // A correction keeps the place the person had (§543): only a new person takes one.
     const place = sameName.waitlist ? { waitlist: true } : {};
     return { people: [...people.filter((person) => person !== sameName), { name, birthDate, ...place }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
   }

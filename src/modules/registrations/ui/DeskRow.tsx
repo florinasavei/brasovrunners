@@ -72,7 +72,7 @@ export default async function DeskRow({
   family = [],
 }: {
   row: DeskRegistration;
-  /** The other people on this row's address at the event (§NNN, `familyOf`): names only, never an address. */
+  /** The other people on this row's address at the event (§543, `familyOf`): names only, never an address. */
   family?: readonly string[];
   locale: Locale;
   back: "desk" | "code";
@@ -200,7 +200,7 @@ export default async function DeskRow({
             {row.guardianName && (
               <Chip size="small" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
             )}
-            {/* A family on one address (§NNN), beside the parent's line: who came with this person — names only (§15.11). */}
+            {/* A family on one address (§543), beside the parent's line: who came with this person — names only (§15.11). */}
             <FamilyChip label={t("registrations.familyChip")} members={family.map((name) => ({ name }))} testId="desk-family" />
             <Chip
               size="small"

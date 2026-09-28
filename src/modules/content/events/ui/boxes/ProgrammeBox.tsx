@@ -41,7 +41,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
   });
   // The day a new row opens on (§405): the event's own start date, as its start box shows it —
   // "" on the create page, where the rows take it once it is typed — and "" for a date left blank
-  // (§NNN), so no new row opens on the provisional day the platform stored in its place.
+  // (§545), so no new row opens on the provisional day the platform stored in its place.
   const startDate = startBoxValues(event?.startsAt ?? null, zone).date;
   const programmeTypes = EVENT_TYPES.filter(hasProgramme);
   const turnUpTypes = EVENT_TYPES.filter((type) => !hasProgramme(type));

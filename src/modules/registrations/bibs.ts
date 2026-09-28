@@ -1035,7 +1035,7 @@ export async function setBibPrinted<T extends Record<string, unknown>>(
  */
 /**
  * The date line a bib prints (§349, §317), in the language it is drawn for and the event's zone — or
- * nothing while the date is left blank to be announced later (§NNN): the sample in the editor's
+ * nothing while the date is left blank to be announced later (§545): the sample in the editor's
  * «Înscriere» card, the sheet and the desk's picture never print the provisional day stored for it.
  */
 export function bibEventDate(event: { startsAt: Date; timezone: string }, locale: string): string {

@@ -218,7 +218,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
   });
 
-  test("§519 one sitting: the first email leaves at once, «Da» opens the sitting with the address kept, every form reserves its place (§NNN), «Gata» sends one family message naming three, one press confirms everybody and opens the wizard", async ({ page }) => {
+  test("§519 one sitting: the first email leaves at once, «Da» opens the sitting with the address kept, every form reserves its place (§543), «Gata» sends one family message naming three, one press confirms everybody and opens the wizard", async ({ page }) => {
     test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -272,7 +272,7 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page.getByTestId("family-sitting-when")).toContainText("Emailul pleacă când apeși „Gata” sau singur după");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-    // A third person (§NNN; the owner: «să rezerv 3 locuri și așa să se calculeze pe site»): «Da» again, then the form.
+    // A third person (§543; the owner: «să rezerv 3 locuri și așa să se calculeze pe site»): «Da» again, then the form.
     await page.getByTestId("family-sitting-add").getByRole("button", { name: "Da, încă o persoană" }).click();
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);

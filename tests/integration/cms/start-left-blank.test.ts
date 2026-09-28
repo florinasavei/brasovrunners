@@ -29,7 +29,7 @@ import { runRegistrationMaintenance } from "@/modules/registrations/maintenance"
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN (amending §533) — the start's boxes left empty while it is to be announced.
+ * `DECISIONS.md` §545 (amending §533) — the start's boxes left empty while it is to be announced.
  * The owner, 2026-09-28: «în V2.23 trebuie să pot să nu pun data și ora evenimentului! momentan am
  * validare pe asta».
  *
@@ -74,7 +74,7 @@ const TRANSLATIONS = {
   en: { slug: "half-marathon", title: "Half marathon", excerpt: "21 kilometres." },
 };
 
-describe("§NNN the start's boxes left empty while it is to be announced", () => {
+describe("§545 the start's boxes left empty while it is to be announced", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

@@ -174,7 +174,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const sendId = randomUUID();
   // Inside the history line's sentence, so in the language's own case (§349).
   // The heading's date: the day and hour typed, the day alone for an hour left blank, or «Data se
-  // anunță mai târziu» for a date left blank (§NNN) — never the provisional start stored for either.
+  // anunță mai târziu» for a date left blank (§545) — never the provisional start stored for either.
   const start = typedStartShape(event);
   const eventDate = start
     ? formatDay(start.at, { locale, timeZone: event.timezone, style: "long", withTime: start.hour })

@@ -11,11 +11,11 @@ import {
 
 /**
  * BR-REQ-031-04, BR-REQ-041-01 criterion 6 — the one country picker both fields open (§463)
- * opens tall enough to read (§NNN): the owner's «pop-up-ul cu cetățenia e minuscul!» showed a
+ * opens tall enough to read (§544): the owner's «pop-up-ul cu cetățenia e minuscul!» showed a
  * row and a half. The cause was MUI's `position: absolute` on the popper slot under
  * `disablePortal`, which took the list out of the popover's flow; these pin the fix and the sizes.
  */
-describe("the country picker's list height (§NNN)", () => {
+describe("the country picker's list height (§544)", () => {
   it("keeps the list in the popover's flow, so the paper is as tall as the list", () => {
     expect(INLINE_LIST_STYLE.position).toBe("static");
     expect(INLINE_LIST_STYLE.minHeight).toBe(0);

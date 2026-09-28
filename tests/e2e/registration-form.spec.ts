@@ -532,7 +532,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
     await page.getByRole("button", { name: /^Cetățenie/ }).click();
     const search = page.getByPlaceholder(/Caută țara/);
     await expect(search).toBeFocused();
-    // Tall enough to read (§NNN, the owner's «pop-up-ul cu cetățenia e minuscul!»): at least eight
+    // Tall enough to read (§544, the owner's «pop-up-ul cu cetățenia e minuscul!»): at least eight
     // whole rows in view, each 44 pixels, the chosen «România» among them; on a phone a sheet at
     // the screen's bottom with the search box above the list.
     const listbox = page.getByRole("listbox");

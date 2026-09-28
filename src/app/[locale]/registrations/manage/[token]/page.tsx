@@ -112,7 +112,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         <Stack spacing={3}>
           {/* The race will not run (§331): said first, and no race-day block under it. */}
           {live?.eventCancelled && <Alert severity="info">{t("mine.eventCancelled")}</Alert>}
-          {/* Who came with this person (§NNN): the other people on the address, as «Înscrierile mele» names them. */}
+          {/* Who came with this person (§543): the other people on the address, as «Înscrierile mele» names them. */}
           {live && live.family.length > 0 && (
             <Box>
               <FamilyChip label={t("mine.family")} members={live.family.map((name) => ({ name }))} testId="manage-family" />

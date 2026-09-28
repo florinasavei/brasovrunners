@@ -256,7 +256,7 @@ type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStart
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
   const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
-  // A part left blank (§NNN, amending §533) is not said at all: no invented date, and the day alone
+  // A part left blank (§545, amending §533) is not said at all: no invented date, and the day alone
   // when only the hour was left blank — never the provisional value the platform stored in its place.
   const blank = blankStartParts(event.startsAt, event.timezone);
   return join(words, [

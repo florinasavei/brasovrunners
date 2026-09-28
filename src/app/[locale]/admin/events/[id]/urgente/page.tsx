@@ -65,7 +65,7 @@ export default async function EmergencySheetPage({ params }: Props) {
   }
   const event = await findEventForBibs(db, id, locale);
   const t = await getTranslations("Admin");
-  // The day in words, or «Data se anunță mai târziu» while it is left blank (§NNN).
+  // The day in words, or «Data se anunță mai târziu» while it is left blank (§545).
   const when = event ? bibEventDate(event, locale) || t("editor.dateToBeAnnounced") : "";
 
   return (

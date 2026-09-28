@@ -135,7 +135,7 @@ const COLUMNS: Array<{
   // The declaration signed, the same two columns as the CSV (§499): the version as a number, the moment on the club's clock.
   { header: "Declaration version", width: 10, cell: (row) => ({ value: row.declarationVersion ?? null, type: Number }) },
   { header: "Declaration signed", width: 18, cell: (row) => ({ value: onClubClock(row.declarationSignedAt ?? null), type: Date, format: STAMP_FORMAT }) },
-  // The family marker (§NNN): the other people on the same address at the event, last like the CSV's.
+  // The family marker (§543): the other people on the same address at the event, last like the CSV's.
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
 ];
 

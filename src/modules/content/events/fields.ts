@@ -554,7 +554,7 @@ export const eventFieldsSchema = z
     /**
      * The start, as `YYYY-MM-DDTHH:mm` — or, from the editor, the date alone, `THH:mm` for an hour
      * alone, or "" (`admin/actions.ts`). Required, and the box says so (the `html` metadata, as the
-     * meeting point's does), unless it is to be announced (§NNN, amending §533): with «Data se anunță
+     * meeting point's does), unless it is to be announced (§545, amending §533): with «Data se anunță
      * mai târziu» both halves may be empty, with «Ora se anunță mai târziu» the hour. The refusal is
      * the service's (`start.ts#resolveStart`), the one place the switches are known after the save —
      * a caller that does not post a switch keeps the row's — and the editor drops the `required` while

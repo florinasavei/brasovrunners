@@ -69,7 +69,7 @@ export default async function AlbumFieldsForm({
           <MenuItem value="">{t("gallery.noEvent")}</MenuItem>
           {events.map((event) => (
             <MenuItem key={event.id} value={event.id}>
-              {/* A date left blank (§NNN) is said, never printed as the provisional day stored for it. */}
+              {/* A date left blank (§545) is said, never printed as the provisional day stored for it. */}
               {typedStartOrNull(event) ? formatDay(event.startsAt, { locale: uiLocale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")} · {event.title}
             </MenuItem>
           ))}

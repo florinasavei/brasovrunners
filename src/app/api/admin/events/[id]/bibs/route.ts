@@ -119,7 +119,7 @@ export async function GET(
   const pdf = await renderBibSheet({
     rows,
     eventTitle: event.title,
-    // Empty while the date is to be announced later (§NNN): never the provisional day on paper.
+    // Empty while the date is to be announced later (§545): never the provisional day on paper.
     eventDate: bibEventDate(event, locale),
     // The band in the event's own colour, and the facts the foot is composed from — the
     // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
