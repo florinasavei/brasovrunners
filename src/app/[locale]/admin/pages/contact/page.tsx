@@ -12,10 +12,9 @@ import { readContactRecipients } from "@/modules/contact/recipients";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
-import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
-import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
+import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
+import { canManageClubSettings, canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import { env } from "@/shared/config/env";
 
 type Props = {
@@ -31,10 +30,14 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Setări» → «Contact» (§516; both cards were folds on `/admin/emails`): where the club is written
- * to — who reads what «Scrie-ne» sends (§164) and the address the site shows and every email
- * answers to (§442). Read by whoever reads the club's content; changed by the Administrator
- * (`canManageClubSettings`, §450), which the actions and the services assert again.
+ * «Pagini» → «Contact»: where the club is written to — who reads what «Scrie-ne» sends (§164) and
+ * the address the site shows and every email answers to (§442). Both cards were folds on
+ * `/admin/emails`, then «Setări» → «Contact» (§516); they live here, a standard page of «Pagini»
+ * (§525), because the row's «Contact» entry switched the main bar to «Setări» and the reader lost the
+ * row (the owner, 2026-09-28: «ar trebui să rămân în același loc»). `/admin/settings/contact`
+ * answers 308 here. Read by whoever reads the club's content — the gate the tab had, and every
+ * «Pagini» entry's; changed by the Administrator (`canManageClubSettings`, §450), which the actions
+ * and the services assert again.
  */
 export default async function AdminContactSettingsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -42,7 +45,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canOpenSettingsTab(actor.role, "contact")) notFound();
+  if (!canReadContent(actor.role)) notFound();
 
   const { saved } = await searchParams;
   const t = await getTranslations("Admin");
@@ -52,14 +55,14 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
 
   return (
     <Stack spacing={3}>
-      <SettingsSubNav locale={locale} role={actor.role} active="contact" />
+      <PagesSubNav locale={locale} active="contact" />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
         {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
       </Box>
 
-      {/* The tab is these two cards alone, so they open on arrival (§336's `primary`, §516). */}
+      {/* The page is these two cards alone, so they open on arrival (§336's `primary`, §516). */}
       <ContactRecipientsPanel
         locale={locale}
         recipients={recipients}

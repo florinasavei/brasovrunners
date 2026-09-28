@@ -21,8 +21,8 @@ import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/rep
 import { readTeamPageSettings } from "@/modules/content/team/page-settings";
 import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
+import { PAGES_ROW_ROUTE } from "@/modules/content/pages/pages-row";
 import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules/public-cache/reads";
-import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { countMembers } from "@/modules/staff-identity/repository";
@@ -93,7 +93,8 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     (§459), «Întrebări frecvente» and «Membri» (§524). Each wears its glyph and says whether it is on the site and
     what of it is, so the list answers "what is live" for every page the club has, standard and
     custom alike. «Contact» is always on the site; its row says what the page offers, and opens
-    the settings behind it for a role that may read them.
+    its own page, `/admin/pages/contact`, like the others — never a «Setări» tab, which switched the
+    main bar away from «Pagini» (the owner, 2026-09-28).
   */
   const contactLine = [
     contactFormReaches ? t("pages.contactForm") : t("pages.contactNoForm"),
@@ -105,7 +106,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "contact",
       icon: <MailOutlineIcon aria-hidden fontSize="small" color="action" />,
-      href: canOpenSettingsTab(actor.role, "contact") ? ("/admin/settings/contact" as const) : null,
+      href: PAGES_ROW_ROUTE.contact,
       title: t("pages.tabContact"),
       published: true,
       line: contactLine,
@@ -113,7 +114,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "team",
       icon: <GroupsIcon aria-hidden fontSize="small" color="action" />,
-      href: "/admin/pages/team" as const,
+      href: PAGES_ROW_ROUTE.team,
       title: t("pages.tabTeam"),
       published: teamSettings.status === "PUBLISHED",
       line: t("pages.standardShown", {
@@ -124,7 +125,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "faq",
       icon: <HelpOutlineIcon aria-hidden fontSize="small" color="action" />,
-      href: "/admin/pages/faq" as const,
+      href: PAGES_ROW_ROUTE.faq,
       title: t("pages.tabFaq"),
       published: faqSettings.status === "PUBLISHED",
       line: t("pages.standardShown", {
@@ -135,7 +136,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     {
       key: "members",
       icon: <CardMembershipIcon aria-hidden fontSize="small" color="action" />,
-      href: "/admin/pages/members" as const,
+      href: PAGES_ROW_ROUTE.members,
       title: t("pages.tabMembers"),
       published: membersSettings.status === "PUBLISHED",
       line: t("members.count", { count: members }),

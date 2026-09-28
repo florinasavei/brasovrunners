@@ -216,7 +216,7 @@ sections and in `CHANGELOG.md`.
   tests, `disabled` answers 404 to every staff route (`AGENTS.md` §13.1). `/admin/guide` opens the reader's
   own sections first (§103).
 - **Members** (§524): a seventh role, `MEMBER` (rank 0, below the volunteer), is a `staff_users` row added on «Echipa» — one by one or «Adaugă mai mulți membri» for a list — invited by Zitadel with the same key; `requireStaff` answers null for it, so every backoffice page, action and route refuses a member as it refuses a stranger. Its texts are «Pagini» → «Pagini standard» → «Membri», published by an Administrator.
-- **«Setări»** (§516): one main-bar entry with tabs at `/admin/settings/<tab>` — «Emailuri», «Termene», «Contact», «Aspect», «Costuri», «Anti-robot» (named «Platformă» until §522), then «Configurație» (`/devs`) as the last tab and its only way in (§520); every club setting lives there (the Mailgun plan, the deadlines, who reads the contact form and the shown address, the site's tint, the money and Neon's limits, the anti-robot switch); «Sarcini» keeps «Club», «De făcut» and «Aplicația», each row linking to the tab and card where it is done; every old address (`/admin/emails`, `/admin/tasks?panel=costs` …) answers a 308.
+- **«Setări»** (§516): one main-bar entry with tabs at `/admin/settings/<tab>` — «Emailuri», «Termene», «Aspect», «Costuri», «Anti-robot» (named «Platformă» until §522; «Contact» moved to «Pagini» → «Contact», `/admin/pages/contact`, on 2026-09-28), then «Configurație» (`/devs`) as the last tab and its only way in (§520); every club setting lives there (the Mailgun plan, the deadlines, the site's tint, the money and Neon's limits, the anti-robot switch); «Sarcini» keeps «Club», «De făcut» and «Aplicația», each row linking to the tab and card where it is done; every old address (`/admin/emails`, `/admin/tasks?panel=costs` …) answers a 308.
 - The whole of an event in one form and one save, both languages together, versions on the
   row and the translations (§28, §36, §64, §70, §71); recurring events published as a series;
   the ⋮ menu; the queue panel with the waiting list in order (§92); the participation window's
@@ -426,7 +426,7 @@ it is the authority, this is the summary):
 11. ~~The contact form's Gmail~~ — done 2026-09-20: `CONTACT_SMTP_USER`,
     `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
     the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who
-    receives a message is «Setări» → «Contact» → "Cine primește mesajele de contact" (§516).
+    receives a message is «Pagini» → «Contact» → "Cine primește mesajele de contact".
 12. **The race itself, and this is the launch item.** Production publishes the weekly group run
     and nothing else: the 21 November race has no event there, so nobody can register for it.
     It is one save in `/admin/events` — the event, its capacity, its participation window, its

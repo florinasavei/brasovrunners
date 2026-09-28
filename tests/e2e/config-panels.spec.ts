@@ -32,8 +32,9 @@ test.describe("§265 the configuration panels", () => {
     await page.goto("/ro/admin/settings");
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/emails$/);
     const settingsNav = main.getByRole("navigation", { name: "Setări" });
-    // Seven for an Administrator: the six tabs of /admin/settings and «Configurație» (/devs) last.
-    await expect(settingsNav.getByRole("link")).toHaveText(["Emailuri", "Termene", "Contact", "Aspect", "Costuri", "Anti-robot", "Configurație"]);
+    // Six for an Administrator: the five tabs of /admin/settings and «Configurație» (/devs) last.
+    // «Contact» is «Pagini»'s since 2026-09-28 (the test below).
+    await expect(settingsNav.getByRole("link")).toHaveText(["Emailuri", "Termene", "Aspect", "Costuri", "Anti-robot", "Configurație"]);
     await expect(settingsNav.getByRole("link", { name: "Emailuri" })).toHaveAttribute("aria-current", "page");
 
     // The switch, one press away.
@@ -76,6 +77,43 @@ test.describe("§265 the configuration panels", () => {
     await link.click();
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/platform#bot-check$/);
     await expect(main.getByTestId("bot-check")).toBeVisible();
+  });
+
+  /*
+    The owner, 2026-09-28: «când dau click pe pagina de contact mă duce automat la Setări... ar
+    trebui să rămân în același loc». Every entry of «Pagini»'s row is an address under
+    `/admin/pages`, so pressing any of them keeps «Pagini» lit in the main bar and the row under it,
+    with the pressed entry marked; the old «Setări» → «Contact» address answers with the new one.
+  */
+  test("«Pagini»'s row keeps the reader in «Pagini», «Contact» included", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    const main = page.locator("#main");
+    await page.goto("/ro/admin/pages");
+
+    for (const entry of [
+      { name: "Contact", url: /\/ro\/admin\/pages\/contact$/ },
+      { name: "Echipa", url: /\/ro\/admin\/pages\/team$/ },
+      { name: "Întrebări frecvente", url: /\/ro\/admin\/pages\/faq$/ },
+      { name: "Membri", url: /\/ro\/admin\/pages\/members$/ },
+      { name: "Paginile clubului", url: /\/ro\/admin\/pages$/ },
+    ]) {
+      await main.getByRole("navigation", { name: "Pagini" }).getByRole("link", { name: entry.name, exact: true }).click();
+      await expect(page, entry.name).toHaveURL(entry.url);
+      await expect(page.getByRole("tab", { name: "Pagini" }), entry.name).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByRole("tab", { name: "Setări" }), entry.name).toHaveAttribute("aria-selected", "false");
+      const row = main.getByRole("navigation", { name: "Pagini" });
+      await expect(row.getByRole("link", { name: entry.name, exact: true }), entry.name).toHaveAttribute("aria-current", "page");
+    }
+
+    // The contact page is the same two cards it was on «Setări».
+    await page.goto("/ro/admin/pages/contact");
+    await expect(main.locator("#contact-recipients")).toBeVisible();
+    await expect(main.locator("#shown-contact-address")).toBeVisible();
+    await expect(main.getByRole("navigation", { name: "Setări" })).toHaveCount(0);
+
+    // The old address, a fragment and a query with it, lands on the new one (a 308 from the proxy).
+    await page.goto("/ro/admin/settings/contact?saved=contactRecipients#contact-recipients");
+    await expect(page).toHaveURL(/\/ro\/admin\/pages\/contact\?saved=contactRecipients#contact-recipients$/);
   });
 
   test("the anti-bot switch is the Superadministrator's to press (§450)", async ({ page }) => {
@@ -145,7 +183,7 @@ test.describe("§360 the sub-tabs on a phone", () => {
       { url: "/ro/admin/tasks", nav: "Ce mai este de făcut", current: "Club" },
       { url: "/ro/devs?panel=general", nav: "Setări", current: "Configurație · General" },
       { url: "/ro/admin/gallery/pictures", nav: "Galerie foto", current: "Imagini" },
-      // «Setări»'s six tabs (§516): the row that must scroll on a phone rather than wrap.
+      // «Setări»'s tabs (§516): the row that must scroll on a phone rather than wrap.
       { url: "/ro/admin/settings/costs", nav: "Setări", current: "Costuri" },
     ];
     for (const row of rows) {

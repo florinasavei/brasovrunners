@@ -85,8 +85,9 @@ export const dynamic = "force-dynamic";
  * "I must be able to see the email templates that get sent to them").
  *
  * «Setări» → «Emailuri» since §516 (it was `/admin/emails`, which answers 308 here): the plan, the
- * roads, the queue, the club's copies, the forecast and the messages. «Termene» and «Contact» are
- * their own tabs beside it — the numbers the when-lines below state, and where the club is written to.
+ * roads, the queue, the club's copies, the forecast and the messages. «Termene» is its own tab
+ * beside it — the numbers the when-lines below state — and where the club is written to is «Pagini» →
+ * «Contact» (`/admin/pages/contact`, since the owner's «ar trebui să rămân în același loc», 2026-09-28).
  *
  * The same `buildTemplateContent` and `renderContent` the outbox worker uses, so what is on
  * this page is what a participant gets, subject and all — there is no second copy of the
@@ -339,7 +340,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         />
       )}
 
-      {/* The club's own copies (§244, §245); the contact recipients they mirror are on «Contact» (§516). */}
+      {/* The club's own copies (§244, §245); the contact recipients they mirror are on «Pagini» → «Contact». */}
       {notices && (
         <ClubNoticesPanel
           locale={locale}

@@ -1,3 +1,4 @@
+import { PAGES_ROW_ROUTE } from "@/modules/content/pages/pages-row";
 import { SETTINGS_TAB_ROUTE, type SettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import type { TaskId } from "../owner-tasks";
 
@@ -8,7 +9,7 @@ import type { TaskId } from "../owner-tasks";
  * A row used to say where to go only inside its folded steps, as a path to read — «/admin/emails →
  * „Cine primește mesajele de contact”» — and the reader then found the section, the panel and the
  * card by hand. Each row whose work is a screen of this backoffice now carries one link to it, named
- * by the navigation's own words («Setări → Contact»), and the `#` opens the card on arrival
+ * by the navigation's own words («Setări → Costuri», «Pagini → Contact»), and the `#` opens the card on arrival
  * (`OpenFoldFromHash`, §336). A row whose work is outside the backoffice — a hosting variable, a
  * DNS record, a monitor — has no target and keeps its steps alone.
  *
@@ -17,6 +18,8 @@ import type { TaskId } from "../owner-tasks";
  */
 export type TaskTarget =
   | { kind: "settings"; tab: SettingsTab; hash: string }
+  /** A standard page of «Pagini» (§525): «Contact» left «Setări» for it on 2026-09-28. */
+  | { kind: "pages"; entry: "contact"; hash: string }
   | { kind: "section"; section: "legal" | "staff" | "events" };
 
 export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
@@ -40,7 +43,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   // The daily allowance and the credit (§464, §497).
   translation: { kind: "settings", tab: "costs", hash: "translation-budget" },
   // Who reads «Scrie-ne» (§164).
-  contactForm: { kind: "settings", tab: "contact", hash: "contact-recipients" },
+  contactForm: { kind: "pages", entry: "contact", hash: "contact-recipients" },
   // The domain's line on «Luna aceasta» (§435, §479).
   domainRenewal: { kind: "settings", tab: "costs", hash: "month-costs" },
   // The database's brakes (§335).
@@ -54,11 +57,19 @@ export const SECTION_TARGET_ROUTE = {
   events: "/admin",
 } as const;
 
-type TargetPathname = (typeof SETTINGS_TAB_ROUTE)[SettingsTab] | (typeof SECTION_TARGET_ROUTE)[keyof typeof SECTION_TARGET_ROUTE];
+type TargetPathname =
+  | (typeof SETTINGS_TAB_ROUTE)[SettingsTab]
+  | (typeof PAGES_ROW_ROUTE)["contact"]
+  | (typeof SECTION_TARGET_ROUTE)[keyof typeof SECTION_TARGET_ROUTE];
 
 /** The internal route and the fragment of a target, for `getPathname`. */
 export function targetRoute(target: TaskTarget): { pathname: TargetPathname; hash?: string } {
-  return target.kind === "settings"
-    ? { pathname: SETTINGS_TAB_ROUTE[target.tab], hash: target.hash }
-    : { pathname: SECTION_TARGET_ROUTE[target.section] };
+  switch (target.kind) {
+    case "settings":
+      return { pathname: SETTINGS_TAB_ROUTE[target.tab], hash: target.hash };
+    case "pages":
+      return { pathname: PAGES_ROW_ROUTE[target.entry], hash: target.hash };
+    default:
+      return { pathname: SECTION_TARGET_ROUTE[target.section] };
+  }
 }

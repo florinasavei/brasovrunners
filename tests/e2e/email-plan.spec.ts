@@ -94,9 +94,9 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // The sentence in force depends on the shared row and on `CONTACT_FORM_TO`: with an address
     // in either it names the Bcc ("Copie ascunsă: …"); with neither — CI sets no variable, and the
     // Administrator's test below clears the row — it says nobody receives them, and names no copy.
-    // Whichever state this database is in, the Organizer is shown the sentence. On «Setări» →
-    // «Contact» since §516, where the card arrives open.
-    await page.goto("/ro/admin/settings/contact");
+    // Whichever state this database is in, the Organizer is shown the sentence. On «Pagini» →
+    // «Contact» since 2026-09-28 (it was «Setări» → «Contact», §516), where the card arrives open.
+    await page.goto("/ro/admin/pages/contact");
     await openFold(main.getByTestId("contact-recipients"));
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
     await expect(main.getByText("Cine primește mesajele de contact stabilește Administratorul", { exact: false })).toBeVisible();
@@ -202,12 +202,12 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   // Set and cleared again, so the next test on this database starts from the environment's list.
   test("an Administrator sets who receives the contact messages, with a Cc and a Bcc", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/settings/contact");
+    await page.goto("/ro/admin/pages/contact");
     const main = page.locator("#main");
 
     const contacts = main.getByTestId("contact-recipients");
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
-    // «Setări» → «Contact» is this card and the shown address alone, so it arrives open (§516),
+    // «Pagini» → «Contact» is this card and the shown address alone, so it arrives open (§516),
     // its summary still saying where the messages go right now.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: ");
@@ -265,7 +265,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   */
   test("a refused list stays in view, with JavaScript on and with it off", async ({ page, browser }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/settings/contact");
+    await page.goto("/ro/admin/pages/contact");
     await hydrated(page);
     const contacts = page.locator("#main").getByTestId("contact-recipients");
     const to = "Către (adrese despărțite prin virgulă)";
@@ -289,7 +289,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
       storageState: await page.context().storageState(),
     });
     const bare = await scriptless.newPage();
-    await bare.goto("/ro/admin/settings/contact");
+    await bare.goto("/ro/admin/pages/contact");
     const fold = bare.locator("#main").getByTestId("contact-recipients");
     await openFold(fold);
     await fold.getByLabel(to).fill("nope");
