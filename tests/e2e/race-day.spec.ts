@@ -188,6 +188,14 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.locator('[name="lastName"]').fill(suffix);
     await page.locator('[name="email"]').fill(`void-${suffix}@test.invalid`);
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
+    /*
+      The handed-bib box (§444) suggests the next desk spare only where somebody printed spares for
+      this event. A spare is on paper already, so the page would say «E tipărit» and the list would
+      offer no «Marchează BID-ul ca printat». Emptied, the confirmation draws the next number in
+      order (§NNN) — the path this story is about, whatever a shared database holds.
+    */
+    const handedBib = page.locator('input[name="bibNumber"]');
+    if ((await handedBib.count()) > 0 && (await handedBib.first().isVisible())) await handedBib.first().fill("");
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
     await confirmDialog(page);
     await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });

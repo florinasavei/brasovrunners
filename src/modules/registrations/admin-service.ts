@@ -629,6 +629,22 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         second meets the check below rather than the unique index.
       */
       await tx.select({ id: events.id }).from(events).where(eq(events.id, current.eventId)).for("update");
+      /*
+        The number this change replaces, read again under that lock: `current` was read before it,
+        so two volunteers replacing 5 with 9 and 5 with 12 at once would otherwise both record
+        `from: 5`, and 9 — already emailed — would be retired by nobody. The second meets a changed
+        number here and is told to look again.
+      */
+      const [locked] = await tx
+        .select({ bibNumber: registrations.bibNumber })
+        .from(registrations)
+        .where(eq(registrations.id, registrationId))
+        .limit(1);
+      if (!locked) throw new DomainError("NOT_FOUND", "no such registration");
+      if (locked.bibNumber !== current.bibNumber) {
+        throw new DomainError("CONFLICT", "this race number was changed by somebody else a moment ago; look at it again", ["bibNumber"]);
+      }
+      const replaced = locked.bibNumber;
       if (await bibNumberInUse(tx, { eventId: current.eventId, number: bibNumber, exceptRegistrationId: registrationId })) {
         throw new DomainError("CONFLICT", `number ${bibNumber} is already somebody's at this event`, ["bibNumber"]);
       }
@@ -651,6 +667,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
             eq(registrations.id, registrationId),
             eq(registrations.status, "CONFIRMED"),
             or(isNull(registrations.bibPrintedAt), isNull(registrations.bibNumber)),
+            replaced === null ? isNull(registrations.bibNumber) : eq(registrations.bibNumber, replaced),
           ),
         )
         .returning();
@@ -676,7 +693,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         action: "registration.bib_set",
         entityType: "registration",
         entityId: registrationId,
-        metadata: { eventId: current.eventId, from: current.bibNumber, to: bibNumber },
+        metadata: { eventId: current.eventId, from: replaced, to: bibNumber },
         now,
       });
       return row;

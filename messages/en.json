@@ -3792,7 +3792,7 @@
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
         "DECLARATION_ARCHIVE": "With the signed declaration, to the club's declarations mailbox, for real registrations only. The identity document is masked.",
-        "BIB_ASSIGNED": "Once, when registration closes and the numbers become final, and when someone sets a confirmed registration's number by hand. With the QR code.",
+        "BIB_ASSIGNED": "When someone sets a confirmed registration's number by hand. Once after this release, also to the confirmed who keep their earlier number. With the QR code.",
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
         "REGISTRATION_OPENED": "When registration opens, once, to every address left at “Tell me” on the event's page.",
         "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",
@@ -3822,7 +3822,7 @@
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
         "DECLARATION_ARCHIVE": "with each signed declaration, to the archive",
-        "BIB_ASSIGNED": "when registration closes, or a number is set by hand",
+        "BIB_ASSIGNED": "when a number is set by hand",
         "STAFF_INVITATION": "when a colleague is added",
         "REGISTRATION_OPENED": "when registration opens",
         "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
@@ -4273,7 +4273,7 @@
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
-        "BIB_ASSIGNED": "Automatically at the close, or when an organizer types the number on the registration's page or at the desk. With the manage link. Never for a cancelled event.",
+        "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link."
       }
     },

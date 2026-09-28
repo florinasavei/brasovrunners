@@ -3792,7 +3792,7 @@
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța clubului pentru declarații, doar pentru înscrieri reale. Actul de identitate apare mascat.",
-        "BIB_ASSIGNED": "O dată, când se închid înscrierile și numerele devin definitive, și când cineva dă de mână numărul unei înscrieri confirmate. Cu codul QR.",
+        "BIB_ASSIGNED": "Când cineva dă de mână numărul unei înscrieri confirmate. O dată, după această versiune, și celor confirmați care își păstrează numărul de dinainte. Cu codul QR.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
         "REGISTRATION_OPENED": "Când se deschid înscrierile, o dată, către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului.",
         "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token.",
@@ -3822,7 +3822,7 @@
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
         "DECLARATION_ARCHIVE": "odată cu declarația semnată, către arhivă",
-        "BIB_ASSIGNED": "la închiderea înscrierilor, sau când numărul e dat de mână",
+        "BIB_ASSIGNED": "când numărul e dat de mână",
         "STAFF_INVITATION": "când e adăugat un coleg",
         "REGISTRATION_OPENED": "când se deschid înscrierile",
         "CLUB_CONFIRMATION_NOTICE": "la fiecare confirmare, către club",
@@ -4273,7 +4273,7 @@
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
-        "BIB_ASSIGNED": "Automat la închidere, sau când un organizator scrie numărul din pagina înscrierii ori de la masă. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
+        "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link."
       }
     },
