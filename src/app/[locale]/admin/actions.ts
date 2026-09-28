@@ -1183,7 +1183,8 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
     const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
     const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
-    if (delivery === "now") toast = { saved: "reinvitedNow" };
+    // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288).
+    if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
   } catch (error) {
     // A «now» the day's allowance cannot hold says so in its own sentence (§80, §NNN).
     outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
