@@ -2066,7 +2066,7 @@
       "startFrom": {
         "title": "Pornește de la șablon",
         "orBlank": "Sau scrie de la zero în formularul de mai jos.",
-        "help": "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
+        "help": "1. Alege șablonul (sau Regenerează toate) · 2. Citește, completează și «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare.",
         "regenerateAll": "Regenerează toate ({count})"
       },
       "tokens": {
@@ -2248,7 +2248,7 @@
         "clear": "Arată toate versiunile"
       },
       "steps": {
-        "title": "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…> · 3. Aprobă — abia atunci intră în vigoare",
+        "title": "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…>, apoi «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare",
         "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
       },
       "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare"

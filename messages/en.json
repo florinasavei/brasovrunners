@@ -2066,7 +2066,7 @@
       "startFrom": {
         "title": "Start from the template",
         "orBlank": "Or write from nothing, in the form below.",
-        "help": "1. Pick the template (or Regenerate all) · 2. Read and fill in · 3. Approve — only then is it in force.",
+        "help": "1. Pick the template (or Regenerate all) · 2. Read, fill in and “Save draft” · 3. Approve — only then is it in force.",
         "regenerateAll": "Regenerate all ({count})"
       },
       "tokens": {
@@ -2248,7 +2248,7 @@
         "clear": "Show every version"
       },
       "steps": {
-        "title": "1. Regenerate (a draft from the template) · 2. Read the draft and fill in whatever is left written '<'…> · 3. Approve — only then is it in force",
+        "title": "1. Regenerate (a draft from the template) · 2. Read the draft and fill in whatever is left written '<'…>, then “Save draft” · 3. Approve — only then is it in force",
         "body": "The text in force stays on the site until you approve the draft. The four facts are the club's legal name, CIF, seat and contact address."
       },
       "tableCaptionOf": "The versions of {kind}, with their state and what depends on each"

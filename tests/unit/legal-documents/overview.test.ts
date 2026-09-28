@@ -200,10 +200,10 @@ describe("a text's card", () => {
 
   it("gives the page's three steps and «Versiune nouă»'s in both languages", () => {
     expect(ro.Admin.legal.steps.title).toBe(
-      "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…> · 3. Aprobă — abia atunci intră în vigoare",
+      "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…>, apoi «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare",
     );
     expect(ro.Admin.legal.startFrom.help).toBe(
-      "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
+      "1. Alege șablonul (sau Regenerează toate) · 2. Citește, completează și «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare.",
     );
     expect(en.Admin.legal.steps.title.startsWith("1. Regenerate")).toBe(true);
     expect(en.Admin.legal.startFrom.help.startsWith("1. Pick the template")).toBe(true);

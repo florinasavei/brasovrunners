@@ -364,7 +364,7 @@ test.describe("legal documents: one card per text, filtered, and the templates' 
     // «Versiune nouă»: three labelled rows, a state line under every template's button.
     await page.goto("/ro/admin/legal/new");
     await expect(main.getByTestId("legal-start-from-help")).toHaveText(
-      "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
+      "1. Alege șablonul (sau Regenerează toate) · 2. Citește, completează și «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare.",
     );
     for (const [group, label] of [
       ["general", "Documente generale"],
