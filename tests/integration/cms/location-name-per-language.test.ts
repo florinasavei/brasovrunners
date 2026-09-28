@@ -93,7 +93,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
   beforeEach(async () => {
     await resetTables(db);
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
-    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" }).returning();
+    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "ADMIN" }).returning();
     [copywriter] = await db.insert(staffUsers).values({ email: "copy@dev.test", displayName: "Ioana", role: "COPYWRITER" }).returning();
   });
 
@@ -117,7 +117,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
     const reviewed = await transitionEvent(db, { actor: admin, eventId: id, expectedVersion: (await rowOf(id)).version, to: "IN_REVIEW", now: NOW });
     return transitionEvent(db, { actor: admin, eventId: id, expectedVersion: reviewed.version, to: "PUBLISHED", now: NOW });
   };
-  /** The Organizer's save of the event's fields: no words, as the editor posts it for that role. */
+  /** The settings-only save of the event's fields (the Administrator's since §NNN): no words. */
   const saveAsOrganizer = async (id: string, fields: Record<string, unknown>, scope?: "all") =>
     saveEventAndTranslations(db, {
       actor: organizer,
@@ -141,7 +141,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       expect(await namesOf(created.id)).toEqual({ ro: RO_PLACE, en: RO_PLACE });
     });
 
-    it("is the Organizer's: written with the event's fields under the event's version, leaving the words' versions alone", async () => {
+    it("is the settings' save: written with the event's fields under the event's version, leaving the words' versions alone", async () => {
       const created = await create();
       const before = await listTranslationsForEvent(db, created.id);
       await saveAsOrganizer(created.id, { locationName: "Stadionul Tineretului", locationNameEn: "Youth Stadium" });

@@ -18,7 +18,7 @@ import {
 } from "@/modules/media/references";
 import { isLadderKeyPrefix, topRungWidth } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
-import { canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
+import { isEditorial } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
@@ -63,7 +63,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
   const rows = isStorageConfigured() ? await listMediaAssetsForAdmin(getDb(), locale) : [];
   const query = parseListQuery(current, { sortable: [], defaultSort: "createdAt", defaultPerPage: 50 });
   const page = rows.slice((query.page - 1) * query.perPage, query.page * query.perPage);
-  const mayDelete = canEditEventFields(actor.role);
+  const mayDelete = isEditorial(actor.role);
 
   const referenceLink = (reference: MediaReference) => {
     const title = reference.title ?? t("pictures.untitled");

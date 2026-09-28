@@ -107,7 +107,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
   beforeEach(async () => {
     await resetTables(db);
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
-    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" }).returning();
+    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "ADMIN" }).returning();
   });
 
   const rowOf = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
