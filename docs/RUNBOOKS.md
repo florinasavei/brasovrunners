@@ -612,6 +612,11 @@ The run's **Summary** says where, in words:
   pull request has a merge conflict with `qa` («This branch has conflicts»). Run **release** by
   hand with its number; the merge step resolves the journal, the catalogues and the tests by rule
   and names anything else.
+- **A batch's `yarn batch:merge` stopped on README.md, SETUP.md or CLAUDE.md**: two branches
+  wrote the same lines of documentation — each branch writes its own index row, section or command
+  line, and no rule merges prose, so the stop is by design (`docs/DISPATCHER.md` § Cloud loop).
+  A Claude Code on the web session: "resolve the conflict in <file>, keep both sides' lines,
+  commit, and run yarn batch:merge again"; then push and tick **ship**.
 - **"qa has no scripts/merge-branches.mjs yet"**: the release tooling is not in `qa` yet — this
   one release goes from the PC (`docs/DISPATCHER.md` § Ship).
 - **"Set once in … Secrets and variables"** or **"GitHub refused to say what … may do"**: the

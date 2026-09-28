@@ -201,6 +201,12 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - **Several changes in one release:** a session cuts `batch/<date>-<letter>` from `origin/qa`,
   runs `yarn batch:merge` with the branches, pushes, and opens one pull request carrying every
   entry; one label lands them all, numbered in the order the entries were added.
+- **What a branch writes, and what that costs:** a branch writes its own README index row, its
+  SETUP or `docs/*.md` section and its CLAUDE.md command line; the landing alone writes
+  `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md`, the baseline and CLAUDE.md's batch line (§ Rules the
+  dispatcher keeps). The cost: two siblings that touch the same README, SETUP or CLAUDE.md lines
+  conflict, and `yarn batch:merge` stops on that file by design — no rule resolves prose — so a
+  person or a merge agent resolves it, commits, and runs the same command again.
 - **When the PC is back:** nothing to reconcile — every landed text is in the repository;
   `docs/QUEUE.md`'s Released rows were written by the landings.
 
