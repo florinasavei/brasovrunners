@@ -100,13 +100,15 @@ describe("§NNN «Înscriu încă o persoană cu această adresă» is one quiet
 });
 
 describe("§NNN the name and the race number beside every QR", () => {
-  it("reads the name and the number the row holds, «—» before one is given, provisional said", () => {
-    expect(qrIdentity({ registeredName: " Ana Pop ", bibNumber: 12, provisionalBibNumber: null })).toEqual({ name: "Ana Pop", number: "12", provisional: false });
-    expect(qrIdentity({ registeredName: "Mihai Pop", bibNumber: null, provisionalBibNumber: 13 })).toEqual({ name: "Mihai Pop", number: "13", provisional: true });
-    expect(qrIdentity({ registeredName: "Ioana Pop", bibNumber: null, provisionalBibNumber: null })).toEqual({ name: "Ioana Pop", number: NO_RACE_NUMBER, provisional: false });
+  it("reads the name and the registration's own race number, «—» before one is given, never «provisional»", () => {
+    expect(qrIdentity({ registeredName: " Ana Pop ", bibNumber: 12 })).toEqual({ name: "Ana Pop", number: "12" });
+    expect(qrIdentity({ registeredName: "Ioana Pop", bibNumber: null })).toEqual({ name: "Ioana Pop", number: NO_RACE_NUMBER });
     expect(NO_RACE_NUMBER).toBe("—");
     expect(words("ro")("qr.number", { number: "12" })).toBe("Număr de concurs: 12");
     expect(words("en")("qr.number", { number: NO_RACE_NUMBER })).toBe("Race number: —");
+    // The race number exists once the registration is confirmed (the sibling change): nothing beside the QR qualifies it.
+    expect(JSON.stringify(ro.Registrations.qr)).not.toMatch(/provizoriu/i);
+    expect(JSON.stringify(en.Registrations.qr)).not.toMatch(/provisional/i);
   });
 
   const confirmed: TemplateData = {

@@ -4978,7 +4978,7 @@
                 "Completează formularul. La o cursă: «Citește condițiile concursului», derulează până la capăt, apoi «Am citit și sunt de acord». Bifează și termenii.",
                 "Apasă «Trimite înscrierea». Dacă lipsește ceva, deasupra butonului apare «Mai lipsesc:» cu fiecare lucru — atinge-l și te duce la el.",
                 "În email apasă «Confirmă adresa de email». Linkul e valabil {confirmation}.",
-                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează și confirmă».",
+                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează».",
                 "Primește confirmarea cu codul QR și numărul de concurs, plus declarația semnată ca PDF.",
                 "Verifică în backoffice: «Înscrieri» → caută numele → starea «Confirmată»."
               ]
@@ -6018,7 +6018,6 @@
       "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "listTitle": "Înscrierile tale",
       "empty": "Nu ai nicio înscriere activă în acest moment.",
-      "bibProvisional": "Număr provizoriu. Se stabilește definitiv la închiderea înscrierilor și îl primești atunci pe email.",
       "cancel": "Renunț la această înscriere",
       "cancelledTitle": "Înscrierea a fost anulată",
       "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
@@ -6181,7 +6180,6 @@
     },
     "qr": {
       "number": "Număr de concurs: {number}",
-      "provisional": "provizoriu",
       "code": "Cod de acces: {code}"
     }
   },

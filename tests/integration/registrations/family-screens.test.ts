@@ -348,12 +348,13 @@ describe("§NNN «Gestionează înscrierea» per person, and safe", () => {
       const fresh = (await db.select().from(registrations).where(eq(registrations.id, row.id)))[0];
       expect(html).toContain(`/api/registrations/qr/${fresh.checkinCode}.png`);
       expect(html).toContain(`Anulează înscrierea pentru ${row.registeredName}`);
-      const number = fresh.bibNumber ?? fresh.provisionalBibNumber;
-      expect(html).toContain(`Număr de concurs: ${number ?? "—"}`);
+      // The registration's own race number beside its QR, «—» before one — never «provizoriu».
+      expect(html).toContain(`Număr de concurs: ${fresh.bibNumber ?? "—"}`);
     }
     expect(html).toContain("Înscrierile de pe această adresă");
     // The signed declaration only in the email that delivered it: no link to the PDF on this page.
     expect(html).not.toContain("/api/registrations/declaration/");
+    expect(html).not.toContain("provizoriu");
     expect(html).toContain("Declarația semnată ți-a fost trimisă pe email.");
     // Nothing about another address (§39).
     expect(html).not.toContain("Vecina");

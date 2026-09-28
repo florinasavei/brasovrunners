@@ -4978,7 +4978,7 @@
                 "Fill in the form. For a race: «Read the race conditions», scroll to the end, then «I have read them and I agree». Tick the terms too.",
                 "Press «Submit registration». If something is missing, «Still missing:» appears above the button with each item — tap one and it takes you there.",
                 "In the email press «Confirm your email». The link is valid for {confirmation}.",
-                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign and confirm».",
+                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign».",
                 "They get the confirmation with the QR code and the race number, plus the signed declaration as a PDF.",
                 "Check in the backoffice: «Registrations» → search the name → the status «Confirmată» (confirmed)."
               ]
@@ -6018,7 +6018,6 @@
       "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
       "listTitle": "Your registrations",
       "empty": "You have no active registration at the moment.",
-      "bibProvisional": "Provisional number. It is settled when registration closes, and you get it by email then.",
       "cancel": "Withdraw from this registration",
       "cancelledTitle": "Registration cancelled",
       "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",
@@ -6181,7 +6180,6 @@
     },
     "qr": {
       "number": "Race number: {number}",
-      "provisional": "provisional",
       "code": "Access code: {code}"
     }
   },

@@ -10,8 +10,6 @@ export type QrWords = {
   alt: (name: string) => string;
   /** «Număr de concurs: {number}». */
   number: (number: string) => string;
-  /** «provizoriu». */
-  provisional: string;
   /** «Cod de acces: {code}». */
   code: (code: string) => string;
 };
@@ -20,7 +18,6 @@ type Props = {
   checkinCode: string;
   registeredName: string;
   bibNumber: number | null;
-  provisionalBibNumber: number | null;
   /** The picture's side in pixels: 200 on «Gestionează înscrierea», 160 on «Înscrierile mele». */
   size: number;
   words: QrWords;
@@ -29,15 +26,15 @@ type Props = {
 /**
  * One person's QR code with their name and race number beside it (§NNN; the owner, 2026-09-28: a
  * family's three codes looked the same). The name in bold, then «Număr de concurs: 12» — «—» while
- * none is given, «provizoriu» while it can still move (§214) — then the access code the desk types
- * when the camera fails. The number is whatever the row holds (`qrIdentity`), so a numbering that
- * gives numbers only at the confirmation needs nothing here.
+ * none is given — then the access code the desk types when the camera fails. The number is the
+ * registration's own (`qrIdentity`): it exists once the registration is confirmed, so nothing here
+ * says «provisional».
  *
  * A Server Component, synchronous: the page hands it its words, so the page renders as one tree.
  * Strings in, the picture a hosted PNG from `APP_BASE_URL` (AGENTS.md §8).
  */
-export default function QrWithName({ checkinCode, registeredName, bibNumber, provisionalBibNumber, size, words }: Props) {
-  const who = qrIdentity({ registeredName, bibNumber, provisionalBibNumber });
+export default function QrWithName({ checkinCode, registeredName, bibNumber, size, words }: Props) {
+  const who = qrIdentity({ registeredName, bibNumber });
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" } }} data-testid="qr-with-name">
       <Box
@@ -54,11 +51,6 @@ export default function QrWithName({ checkinCode, registeredName, bibNumber, pro
         </Typography>
         <Typography sx={{ fontWeight: 700, fontSize: "1.375rem", color: "primary.main" }} data-testid="qr-number">
           {words.number(who.number)}
-          {who.provisional && (
-            <Box component="span" sx={{ fontSize: "0.875rem", fontWeight: 400, color: "text.secondary" }}>
-              {` (${words.provisional})`}
-            </Box>
-          )}
         </Typography>
         <Typography sx={{ fontFamily: "monospace", fontWeight: 700, letterSpacing: 2 }} data-testid="qr-code">
           {words.code(checkinCode)}

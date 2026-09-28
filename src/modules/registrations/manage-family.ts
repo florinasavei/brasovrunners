@@ -38,7 +38,6 @@ export type ManagedPerson = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   bibNumber: number | null;
-  provisionalBibNumber: number | null;
   /** Off the public list (§143): the participant's own answer, per person. */
   listOptOut: boolean;
   /** The registration the link itself names. */
@@ -60,7 +59,6 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       listOptOut: registrations.listOptOut,
     })
     .from(registrations)
@@ -79,7 +77,6 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     checkinCode: row.checkinCode,
     checkedInAt: row.checkedInAt,
     bibNumber: row.bibNumber,
-    provisionalBibNumber: row.provisionalBibNumber,
     listOptOut: row.listOptOut,
     own: row.id === own.id,
   }));

@@ -21,7 +21,6 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import ContactLink from "@/shared/ui/ContactLink";
@@ -75,7 +74,6 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   const qrWords: QrWords = {
     alt: (name) => t("manage.qrTitle", { name }),
     number: (number) => t("qr.number", { number }),
-    provisional: t("qr.provisional"),
     code: (code) => t("qr.code", { code }),
   };
   /*
@@ -301,25 +299,12 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               {/* No desk code or QR for a race that will not run: the desk is closed (§331). */}
               {/*
                 The QR with the person's name and race number beside it (§NNN): a family's codes
-                told apart at a glance. The number is the one the runner has (§214), «—» while none
-                is given; a provisional one is said so in a sentence beneath rather than left to look
-                final — it is the number they will quote to a volunteer.
+                told apart at a glance. The number is the registration's own, «—» while none is
+                given; it exists once the registration is confirmed, so nothing says «provisional».
               */}
               {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (
                 <Box sx={{ mb: 1.5 }}>
-                  <QrWithName
-                    checkinCode={item.checkinCode}
-                    registeredName={item.registeredName}
-                    bibNumber={item.bibNumber}
-                    provisionalBibNumber={item.provisionalBibNumber}
-                    size={160}
-                    words={qrWords}
-                  />
-                  {raceNumberOf(item) && !raceNumberOf(item)?.settled && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                      {t("mine.bibProvisional")}
-                    </Typography>
-                  )}
+                  <QrWithName checkinCode={item.checkinCode} registeredName={item.registeredName} bibNumber={item.bibNumber} size={160} words={qrWords} />
                 </Box>
               )}
 

@@ -85,7 +85,6 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const qrWords: QrWords = {
     alt: (name) => t("manage.qrTitle", { name }),
     number: (number) => t("qr.number", { number }),
-    provisional: t("qr.provisional"),
     code: (code) => t("qr.code", { code }),
   };
 
@@ -213,7 +212,6 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       checkinCode={confirmed}
                       registeredName={one.registeredName}
                       bibNumber={one.bibNumber}
-                      provisionalBibNumber={one.provisionalBibNumber}
                       size={200}
                       words={qrWords}
                     />
