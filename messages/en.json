@@ -43,7 +43,6 @@
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
-    "pastNotice": "This event has already taken place.",
     "featured": "Featured event",
     "pastCount": "{count, plural, one {# past event} other {# past events}}",
     "pastCountFiltered": "Past, filtered ({count})",
@@ -112,14 +111,12 @@
     "photosNotice": "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or <contact>write to us</contact> and we take the photo down, no reason needed. Details in the <privacy>privacy notice</privacy>.",
     "date": "Date",
     "startTime": "Start time",
-    "gatheringTime": "Gathering time",
     "gatheringAt": "gather at {time}",
     "raceStartAt": "start at {time}",
     "gatheringAtBold": "gather at <strong>{time}</strong>",
     "raceStartAtBold": "start at <strong>{time}</strong>",
     "when": "When",
     "where": "Where",
-    "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
     "share": {
       "title": "Share:",
@@ -183,8 +180,10 @@
       "ics": "{label}: {times} — bring a headlamp"
     },
     "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Difficulty: {band}, step {step} of {steps}",
+    "difficultyLevelSr": "Difficulty: {band} {step} — level {level} of {levels}",
     "difficultyWithStep": "{band}, step {step} of {steps}",
+    "difficultyLevelTooltip": "{band} {step} — level {level} of {levels}",
+    "difficultyBandTitle": "{band}: levels {from}–{to} of {levels}",
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
@@ -533,7 +532,6 @@
       "backToList": "Back to registrations",
       "resend": "Resend email",
       "resendSent": "The email has been queued again.",
-      "resendNothingToSend": "There is nothing to resend for this status.",
       "timeline": "Timeline",
       "submitted": "Submitted",
       "emailConfirmed": "Email confirmed",
@@ -783,9 +781,7 @@
       "tableCaption": "The club's events, with their status, date and number of registrations",
       "selectEvent": "Select \"{title}\"",
       "bulkArchiveTitle": "Archive the ticked events",
-      "bulkArchiveHelp": "Archiving takes an event off the site without deleting anything. An event somebody else has edited in the meantime is not archived, so their change is not lost.",
       "bulkArchiveAction": "Archive the ticked ones",
-      "bulkArchivePending": "Archiving…",
       "eventsArchivedDone": {
         "one": "{count} event archived.",
         "few": "{count} events archived.",
@@ -797,7 +793,6 @@
         "other": "{count} could not be archived."
       },
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
-      "deleteBlockedShort": "{count} registrations",
       "eventsRepeatedOne": "The series is running: {dates} created now, up to {until} — the next {horizon}. The site creates the rest by itself, always {horizon} ahead, until the chosen date or for ever.",
       "eventsRepeatedMany": "The series is running: {dates} created now, up to {until} — the next {horizon}. The site creates the rest by itself, always {horizon} ahead, until the chosen date or for ever.",
       "seriesDraftsOne": "{dates} in draft, not on the site:",
@@ -849,7 +844,32 @@
         "other": "{count} could not be published: a language is incomplete, or they changed meanwhile."
       },
       "hardDelete": "Permanent deletion…",
-      "eventErased": "Event permanently deleted, together with {erased} registrations."
+      "eventErased": "Event permanently deleted, together with {erased} registrations.",
+      "listFormLabel": "Search and filter the events",
+      "listSearch": "Search for an event",
+      "listSearchHelp": "The title, the page address or the place",
+      "listState": "State",
+      "listStateAll": "All",
+      "listStates": {
+        "UPCOMING": "Upcoming",
+        "PAST": "Ended",
+        "DRAFT": "Drafts",
+        "IN_REVIEW": "In review",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived",
+        "CANCELLED": "Cancelled"
+      },
+      "listSort": "Order",
+      "listSorts": {
+        "date-near": "Date (nearest first)",
+        "date-old": "Date (oldest first)",
+        "title-asc": "Name A–Z",
+        "title-desc": "Name Z–A",
+        "state": "State"
+      },
+      "listApply": "Apply",
+      "listCount": "{shown} of {total} events",
+      "listEmpty": "No event matches. Change the search or the state, or clear the filters."
     },
     "confirm": {
       "cancel": "Never mind",
@@ -964,6 +984,8 @@
       "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
+      "siteFontSizeTitle": "Change the text size?",
+      "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in both themes. The backoffice stays as it is. You can go back to «Normal» at any time.",
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
       "deliveryTimingTitle": "Change when emails leave?",
@@ -1008,10 +1030,11 @@
       "WALK_IN_BIB_TAKEN": "The person is entered, but somebody just gave that number away, so they are unconfirmed. Find them in the list and press “Confirm here” with another number.",
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
       "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
-      "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added."
+      "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
+      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
+      "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press."
     },
     "editor": {
-      "eventSection": "Event details",
       "startsAt": "Event start",
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
@@ -1042,7 +1065,6 @@
       "acknowledgeLive": "I understand that I am editing published content.",
       "acknowledgeLiveHint": "Tick that you understand you are changing published content to be able to save.",
       "saving": "Saving…",
-      "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
       "costHelp": "What a participant pays; the site collects no money. If the place is given only once paid, choose “Paid” and add the payment link.",
@@ -1075,9 +1097,7 @@
         "scheduleNotes": "Notes under the programme",
         "routeDescription": "Route / training description"
       },
-      "sharedFieldHelp": "The same in both languages. Filled in once.",
       "tabIncomplete": "incomplete",
-      "settingsSection": "Settings",
       "save": "Save",
       "publicationSection": "Publication",
       "newTitle": "New event",
@@ -1109,7 +1129,6 @@
       "eventStatus": "Event status",
       "timezone": "Time zone",
       "endsAt": "Event end",
-      "endsAtHelp": "Optional. Leave empty when the club has stated only a start.",
       "distanceMeters": "Distance",
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
@@ -1129,7 +1148,6 @@
         "series": "In a series, each date follows its own day's sunset: the winter dates are night events, the summer ones are not.",
         "help": "Automatic: a night event when any part of it falls after dusk or before dawn. Shown on the card, the page, the calendar and the reminder email."
       },
-      "registrationSection": "Registration",
       "registrationMode": "Registration mode",
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
       "capacity": "Capacity",
@@ -1168,6 +1186,16 @@
       },
       "difficultySummary": "{band} {step}",
       "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
+      "difficultyScale": {
+        "EASY": "easy: short, flat, for anyone",
+        "MEDIUM1": "medium 1: the run up Tâmpa",
+        "MEDIUM2": "medium 2: the longer runs",
+        "MEDIUM3": "medium 3: long and technical",
+        "FAIRLY_HARD": "fairly hard: from a half marathon up",
+        "HARD": "hard: marathons",
+        "VERY_HARD": "very hard: ultramarathons and beyond",
+        "steps": "in every band 1 = the easiest, 3 = the hardest"
+      },
       "costValues": {
         "FREE": "Free",
         "PAID": "Paid",
@@ -1229,10 +1257,8 @@
         "FORTNIGHTLY": "Every two weeks",
         "MONTHLY": "Monthly"
       },
-      "repeatCount": "How many editions",
       "repeat": "Create the dates",
       "timeOfDay": "Time",
-      "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
       "repeatWeekdaysHelp": "This event's day is always in the series; tick other days too, say Wednesday for a Sunday run.",
       "weekdays": {
@@ -1391,7 +1417,7 @@
       "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}",
       "notice": {
         "notify": "Tell participants about the change",
-        "count": "Participants who would get the “Updated details” email: {count}, only if the place, date, time or programme changed, or you write a note. Messages: {messages} ({allowance}).",
+        "count": "Participants who would get the “Updated details” email: {count}, only if the place, date, time or programme changed, or you write a note. Messages, the club's copies included: {messages} ({allowance}).",
         "countNone": "Nobody is registered for this date right now, so the box sends no email.",
         "countSeries": "If the change also reaches other dates of the series, their participants are told too, once each, about their own date.",
         "note": "What changed (optional)",
@@ -1404,7 +1430,7 @@
         "cancelReason": "Why the event is cancelled",
         "cancelReasonHelp": "Required, in both languages · plain text, at most {max} characters each. Each participant gets it in the language they registered in; it also appears in the audit log, with your name.",
         "cancelNotify": "Tell the participants that the event is cancelled",
-        "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
+        "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages, the club's copies included: {messages} ({allowance}).",
         "cancelCountNone": "Nobody is registered right now, so no email goes out.",
         "allowanceDay": "the {plan} plan: {remaining} left today",
         "allowanceMonth": "the {plan} plan: {remaining} left this month",
@@ -1901,6 +1927,7 @@
       "lineNone": "This event has no waiting list: once the places are gone, registration stops.",
       "test": "test",
       "offered": "offer until {until}",
+      "offeredQueued": "offer; its deadline runs from when the email leaves",
       "since": "since {when}",
       "interestTitle": "Addresses waiting for the opening notice: {count}",
       "interestHelp": "The addresses left at “Tell me”: each gets one email when registration opens. Type here the address of someone who no longer wants the message.",
@@ -2109,7 +2136,50 @@
         "redo": "Redo"
       },
       "listSocialsMissing": "The notice in force does not yet describe Strava and Instagram on the public list, so they do not show. Approve a new notice from the template.",
-      "listStatesMissing": "The notice in force does not yet describe the stages on the public list, so it shows only the confirmed. Approve a new notice from the template."
+      "listStatesMissing": "The notice in force does not yet describe the stages on the public list, so it shows only the confirmed. Approve a new notice from the template.",
+      "batch": {
+        "toolsTitle": "Every text at once",
+        "regenerateIntro": "The template changed for: {texts}. The button makes a new draft of each, with the club's facts; nothing takes effect until you approve it.",
+        "regenerateBlanks": "In {texts} some fields are left to fill in, written '<'…>: type them into the draft before approving.",
+        "regenerate": "Regenerate from the templates ({count})",
+        "regeneratePending": "Making the drafts…",
+        "regenerateTitle": "Make new drafts from the templates ({count})?",
+        "regenerateBody": "A new draft is made for: {texts}. The texts in force stay as they are until you approve the drafts.",
+        "upToDate": "Every text already has its template's words in force, or a draft waiting to be read and approved; a new draft from the template is made once you approve or delete that one.",
+        "approveIntro": "Drafts ready to approve: {versions}.",
+        "approve": "Approve the drafts ({count})",
+        "approvePending": "Approving…",
+        "approveTitle": "Approve the drafts ({count})?",
+        "approveBody": "Approving: {versions}. From now on they are in force on the site as the club's texts; a correction is a new version.",
+        "heldIntro": "Not approved together:",
+        "held": {
+          "superseded": "a newer draft of the same text exists; delete this one or approve it from its own page.",
+          "behind": "an approved version with a higher number is already offered, so this one would never take effect.",
+          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them."
+        },
+        "deleteIntro": "Tick the versions to delete in the table, then press the button: you see the list before anything is deleted.",
+        "deleteTicked": "Delete the ticked versions",
+        "tick": "Tick {version} for deletion",
+        "backToList": "Back to the legal documents",
+        "title": "Deleting the ticked versions",
+        "nothingSelected": "No version is ticked. Go back to the list and tick the versions to delete.",
+        "goes": "Deleted ({count}):",
+        "stays": "Kept, they cannot be deleted ({count}):",
+        "draftGoes": "a draft; nobody has seen it.",
+        "approvedGoes": "approved; gone for good, its number stays retired.",
+        "approvedConsequence": "The approved versions listed ({count}) are gone for good: the text in both languages, the titles and the record. Their numbers stay retired. They cannot be recovered.",
+        "phraseHelp": "Type exactly \"{phrase}\" (the number of approved versions listed) to confirm. Anything else stops the deletion.",
+        "reasonHelp": "It stays in the log, on every approved version deleted. It is the only thing that survives the deletion.",
+        "action": "Delete the versions ({count})",
+        "pending": "Deleting…",
+        "draftsOnly": "Drafts only: nobody has seen them and their numbers were given to nobody, so no typed confirmation is asked.",
+        "draftsConfirmTitle": "Delete the drafts ({count})?",
+        "draftsConfirmBody": "Deleting: {versions}. They cannot be recovered.",
+        "regenerated": "Done: new drafts from the templates ({count}). Read them, then approve them.",
+        "draftsApproved": "Done: drafts approved ({count}), in force from now.",
+        "deleted": "Done: versions deleted ({count}).",
+        "deleteDrafts": "Delete the drafts ({count})"
+      }
     },
     "tasks": {
       "title": "What is still to do",
@@ -2272,7 +2342,8 @@
           "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone.",
           "done": "The club’s approved wording is published.",
           "how": [
-            "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box. The notice, the terms and both race declarations, trail and road or park, come into force with the club's facts in them.",
+            "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
+            "The notice, the terms and both race declarations, trail and road or park, come into force with the club's facts in them.",
             "To read first: under the box, “Start from the template” → open each, read, then press the button in the box.",
             "The long way, for a change: “New version” → text → save the draft → PDF → “Approve”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
@@ -2284,23 +2355,37 @@
           "done": "Email reaches participants.",
           "how": [
             "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
-            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated. Then “Verify” in Mailgun — up to an hour.",
-            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “Permanent Failure” and “Spam Complaints” — the two the application acts on (a rejected address shows at the desk and on the registration). “Delivered” is optional.",
-            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=a mailbox the club reads (if none exists yet, leave the variable unset — an empty one is refused at startup). The sender is “{senderName}” <noreply@{mailDomain}> with no further setting — the name in EMAIL_FROM_NAME, the club’s own name by default.",
-            "Rehearse on QA, not on production (production refuses registrations until the legal texts are approved): on the QA Vercel project set the same MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (the mode stays allowlist, EMAIL_ALLOWLIST=your address), redeploy, register on QA — the email comes from noreply@{mailDomain}. When it does: on production EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
+            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking).",
+            "Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain).",
+            "Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated.",
+            "Then “Verify” in Mailgun — up to an hour.",
+            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY).",
+            "Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “Permanent Failure” and “Spam Complaints”.",
+            "The two the application acts on (a rejected address shows at the desk and on the registration). “Delivered” is optional.",
+            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY.",
+            "In the same place: MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3 and EMAIL_REPLY_TO=a mailbox the club reads.",
+            "If no such mailbox exists yet, leave EMAIL_REPLY_TO unset: an empty one is refused at startup.",
+            "The sender is “{senderName}” <noreply@{mailDomain}> with no further setting — the name in EMAIL_FROM_NAME, the club’s own name by default.",
+            "Rehearse on QA, not on production: production refuses registrations until the legal texts are approved.",
+            "On the QA Vercel project set the same MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (the mode stays allowlist, EMAIL_ALLOWLIST=your address), redeploy, register on QA.",
+            "The email comes from noreply@{mailDomain}. When it does: on production EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
           ]
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
-          "todo": "Monitors for the two scheduled jobs, with this environment's JOB_SECRET: every 15 minutes by day and hourly at night. Missing or late",
-          "done": "Both jobs are running on time.",
+          "todo": "Monitors for the two scheduled jobs, with this environment's JOB_SECRET. This environment is called every {pingerDay} by day and every {pingerNight} at night. Missing or late",
+          "done": "Both jobs are running on time. This environment is called every {pingerDay} by day and every {pingerNight} at night.",
           "how": [
             "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
-            "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
-            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *). Night: Custom → every day, hours 23 and 0–6, minute 0 (0 0-6,23 * * *); the maintenance night job may skip 02:00 and 03:00 (0 0-1,4-6,23 * * *).",
-            "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
+            "The addresses: {outboxUrl} and {maintenanceUrl}.",
+            "On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
+            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *).",
+            "Night: Custom → every day, hours 23 and 0–6, minute 0 (0 0-6,23 * * *); the maintenance night job may skip 02:00 and 03:00 (0 0-1,4-6,23 * * *).",
+            "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption.",
+            "At night the site answers its first request more slowly — that is intended.",
             "On QA: the outbox every hour (0 * * * *) and maintenance every 2 hours (0 */2 * * *), and on Settings → Costs “How often the site checks” = 2 hours: QA pays for its own database's awake hours too.",
-            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header — production once an hour at minute 2 (2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Under Notifications tick “on failure” and “when the job gets disabled”."
+            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header.",
+            "Production once an hour at minute 2 (2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Under Notifications tick “on failure” and “when the job gets disabled”."
           ]
         },
         "retentionSweep": {
@@ -2308,7 +2393,8 @@
           "todo": "The step that deletes data past its window failed twice in a row, so the windows no longer keep themselves. The monitors are fine",
           "done": "The automatic deletion of expired data runs without errors.",
           "how": [
-            "Open /devs: the registration-maintenance row says “failing” and its last error names the steps that failed (for example retention:registrations-after-event). The step names are in src/modules/jobs/retention.ts.",
+            "Open /devs: the registration-maintenance row says “failing” and its last error names the steps that failed (for example “retention:registrations-after-event”).",
+            "The step names live in the retention jobs code.",
             "In the function logs on Vercel, look for “[retention] sweep step failed”: next to the step's name is the database's error code (for example 57014, a timeout), never the values.",
             "Fix the cause, then wait for the next run (at most 15 minutes by day, an hour at night). The row goes by itself after the first run without errors, and /api/health answers ok again."
           ]
@@ -2318,7 +2404,8 @@
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
           "done": "The team has accounts.",
           "how": [
-            "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events), Administrator (runs the club: registrations, legal texts, the team, this page) or Superadministrator (the technical settings too; only another Superadministrator can give this role).",
+            "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events) or Administrator (runs the club: registrations, legal texts, the team, this page).",
+            "Superadministrator adds the technical settings; only another Superadministrator can give this role.",
             "“Add” emails them the club's invitation. With the invitation key set (ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account, with a password link.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
@@ -2332,16 +2419,21 @@
           "done": "The key works: checked just now with a real search, it found your account. “Add” on Echipa creates the sign-in account and Zitadel sends the password link.",
           "how": [
             "Zitadel console → Users → Service Accounts → New: user name “brasovrunners-invites”, name “{club} — invitații”, access token type Bearer. Create.",
-            "Organization → Managers → + New: the service account, role Org User Manager. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is “brasovrunners-invites”. Not “Role Assignments”.",
-            "On the service account → Personal Access Tokens → New. The console offers no expiry here and the token does not expire — it is a secret that has to be revoked by hand, on the same screen, when it is no longer wanted. Copy it (shown once) into the password manager and note there that it has no end date.",
+            "Organization → Managers → + New: the service account, role Org User Manager. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is “brasovrunners-invites”.",
+            "Not “Role Assignments”.",
+            "On the service account → Personal Access Tokens → New.",
+            "The console offers no expiry here and the token does not expire — it is a secret that has to be revoked by hand, on the same screen, when it is no longer wanted.",
+            "Copy it (shown once) into the password manager and note there that it has no end date.",
             "Vercel → the production project → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = the token (Production). The same on the QA project. Redeploy both.",
-            "Check: reload this page after the redeploy — the row turns green when the key finds your account, without inviting anybody. Then, on Echipa, “Add” creates the account and Zitadel sends the password link; whoever has not signed in yet has “Resend the invitation” on their row."
+            "Check: reload this page after the redeploy — the row turns green when the key finds your account, without inviting anybody.",
+            "Then, on Echipa, “Add” creates the account and Zitadel sends the password link; whoever has not signed in yet has “Resend the invitation” on their row."
           ],
           "howBroken": [
             "Zitadel console → Organization → Managers → + New: the key's service account (“brasovrunners-invites”), role Org User Manager. The dialog is called “Add an Administrator”.",
             "Not “Role Assignments”: that page grants roles inside a project and does not help create users.",
             "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy.",
-            "Check: reload this page; the row turns green when the key finds your account. Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
+            "Check: reload this page; the row turns green when the key finds your account.",
+            "Then, on Echipa, for every colleague marked “No sign-in account”: ⋮ → “Revoke access”, then “Add” again with the same address."
           ],
           "howUnreachable": [
             "Reload the page in a few minutes: the check runs on every open, with one search in Zitadel.",
@@ -2349,7 +2441,8 @@
           ],
           "capped": "The organization has more accounts than the check reads: at most 2000, 200 to a page. The key may well work, but Echipa can no longer say which row has no sign-in account.",
           "howCapped": [
-            "Nothing to fix on the key. A developer raises the ACCOUNTS_LISTING_MAX ceiling in src/modules/staff-identity/zitadel-users.ts, or deletes the accounts no longer used in the Zitadel console."
+            "Nothing to fix on the key.",
+            "A developer raises the ACCOUNTS_LISTING_MAX ceiling in the Zitadel accounts code, or deletes the accounts no longer used in the Zitadel console."
           ]
         },
         "mediaStorage": {
@@ -2359,9 +2452,12 @@
           "how": [
             "A Cloudflare account (free) on the club's address. The domain does not move there.",
             "Left menu → R2 Object Storage → enable R2 (this is where the card is asked for; nothing is charged under 10 GB).",
-            "Create bucket → name “brasovrunners-media”, location “European Union”. Then, in the bucket's settings, enable “Public access” through the r2.dev subdomain (or a custom domain) and copy the public address — that is R2_PUBLIC_BASE_URL.",
-            "R2 → “Manage R2 API Tokens” → Create API token → name “brasovrunners-site”, permission “Object Read & Write”, this bucket only. Copy the Access Key ID, the Secret Access Key and the S3 endpoint (shown once).",
-            "In Vercel → the production project (and QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy. This row turns green and the album page gets its upload button."
+            "Create bucket → name “brasovrunners-media”, location “European Union”.",
+            "Then, in the bucket's settings, enable “Public access” through the r2.dev subdomain (or a custom domain) and copy the public address — that is R2_PUBLIC_BASE_URL.",
+            "R2 → “Manage R2 API Tokens” → Create API token → name “brasovrunners-site”, permission “Object Read & Write”, this bucket only.",
+            "Copy the Access Key ID, the Secret Access Key and the S3 endpoint (shown once).",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy.",
+            "This row turns green and the album page gets its upload button."
           ]
         },
         "publishEvents": {
@@ -2379,11 +2475,15 @@
           "todo": "Seven days have passed since the event: destroy the downloaded lists and printed sheets, within 30 days at the latest. The row goes by itself.",
           "done": "No list or sheet to destroy right now.",
           "how": [
-            "Delete the CSV and xlsx files downloaded for the event and the all-declarations PDF — from Downloads, from the bin, and from any email or chat you sent them through. If a list must be kept, cut the identity document column first.",
+            "Delete the CSV and xlsx files downloaded for the event and the all-declarations PDF — from Downloads, from the bin, and from any email or chat you sent them through.",
+            "If a list must be kept, cut the identity document column first.",
             "On declarations signed on paper, cross out or cover the identity document's series and number. The paper stays three years, then it is destroyed too.",
             "Destroy the emergency sheet and any other list printed for race day (shredder, or torn small).",
-            "In the club's Gmail: declaration copies older than three years are found with subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, and contact-form messages older than 12 months with subject:\"Mesaj de pe site\" older_than:1y — select them all and delete them.",
-            "In the same place, the confirmation notices sent to the club and the club copies of participants' emails, older than three years: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — select them all and delete them. The search carries both languages, so it finds the subject in either."
+            "In the club's Gmail, declaration copies older than three years: subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y.",
+            "Contact-form messages older than 12 months: subject:\"Mesaj de pe site\" older_than:1y.",
+            "Select them all and delete them.",
+            "In the same place, confirmations and club copies older than three years: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y.",
+            "Select them all and delete them. The search carries both languages, so it finds the subject in either."
           ]
         },
         "botCheck": {
@@ -2420,7 +2520,8 @@
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
             "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
-            "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy. The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
+            "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy.",
+            "The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
           ]
         },
         "domainRenewal": {
@@ -2431,7 +2532,8 @@
           "unknown": "The expiry date is not known: DOMAIN_REGISTERED_ON is not set on this environment, so nothing reminds anyone to renew.",
           "how": [
             "Renew for several years at the registrar; then update DOMAIN_RENEWAL_YEARS.",
-            "DOMAIN_RENEWAL_YEARS is the total number of years paid since registration: the first year plus a 3-year renewal is 4. In Vercel → the production project (and QA) → Settings → Environment Variables; beside it DOMAIN_REGISTERED_ON = the day {apex} was registered, YYYY-MM-DD. Redeploy.",
+            "DOMAIN_RENEWAL_YEARS is the total number of years paid since registration: the first year plus a 3-year renewal is 4.",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables; beside it DOMAIN_REGISTERED_ON = the day {apex} was registered, YYYY-MM-DD. Redeploy.",
             "Check: this row shows the new expiry date and turns green when more than 90 days are left."
           ]
         },
@@ -2442,9 +2544,12 @@
           "how": [
             "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
             "Still under Security → App passwords → create one named “{club} site” → copy the 16 characters (shown once).",
-            "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
+            "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters.",
+            "(CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: Settings → Contact → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
+            "In the app: Settings → Contact → “Who receives the contact messages” → write the addresses under “To” and, if you like, a copy under “Copy (Cc)”.",
+            "A copy nobody on the message sees goes under “Hidden copy (Bcc)” → Save.",
+            "Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         },
@@ -2455,7 +2560,8 @@
           "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
           "how": [
             "On the Costs tab, open “The database's limits”, choose “With a limit” and type the number recommended there.",
-            "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits. If Neon refuses the write, the card says so and names the key that would do.",
+            "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits.",
+            "If Neon refuses the write, the card says so and names the key that would do.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
           ]
         },
@@ -2475,7 +2581,8 @@
           "done": "The notice in force describes Strava and Instagram on the public list: the form offers the tick, and the list shows them beside the names of those who ticked it.",
           "how": [
             "/admin/legal → “New version” → Privacy notice → “Start from the template”. The section on the public list describes Strava and Instagram beside a name.",
-            "Read the text, save the draft, then “Approve”. From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
+            "Read the text, save the draft, then “Approve”.",
+            "From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
         },
@@ -2505,10 +2612,13 @@
           "todo": "The “Copy and translate everything: RO → EN” and “Translate from Romanian” buttons start once the DeepL key is on the server; until then, the English is written by hand.",
           "done": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press.",
           "how": [
-            "Create a DeepL API account (the \"DeepL API\" page on DeepL's site): one key, with a one-time credit of 1,000,000 characters that does not renew monthly. DeepL may ask for a card for verification only; the credit is not charged, and a paid plan is chosen only with the club's explicit yes.",
+            "Create a DeepL API account (the \"DeepL API\" page on DeepL's site): one key, with a one-time credit of 1,000,000 characters that does not renew monthly.",
+            "DeepL may ask for a card for verification only; the credit is not charged, and a paid plan is chosen only with the club's explicit yes.",
             "In the DeepL account → API Keys: copy the key (a free one ends in \":fx\").",
-            "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl. Redeploy.",
-            "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green. The daily budget is chosen under Settings → Costs."
+            "In Vercel → the production project (and QA, with the same key or its own) → Settings → Environment Variables: DEEPL_API_KEY = the key. TRANSLATE_PROVIDER need not be set: it defaults to deepl.",
+            "Redeploy.",
+            "Open an event: at the top, \"Copy and translate everything: RO → EN\" is no longer grey, and \"Translate from Romanian\" shows under the English boxes. This row turns green.",
+            "The daily budget is chosen under Settings → Costs."
           ],
           "credit": "Automatic translation is on: at the top of every editor, \"Copy and translate everything: RO → EN\" translates it all in one press. The DeepL credit: {creditUsed} of {creditLimit} characters used ({creditPercent}), {creditRemaining} left — given once.",
           "creditUnread": "Automatic translation is on. The DeepL credit: — {creditReason}",
@@ -2529,7 +2639,8 @@
           "how": [
             "/admin/legal → “New version” → “Self-declaration — trail race” → “Start from the template”. Read the text, fill in the club's name, save the draft, then “Approve”.",
             "The same for “Self-declaration — road / park race”.",
-            "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then — the trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course; choose the road or park one and save."
+            "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then.",
+            "The trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
           ]
         },
         "groupRunSeriesTexts": {
@@ -2699,6 +2810,7 @@
       "olderPictures": {
         "title": "Older pictures, without phone sizes",
         "intro": "Old pictures have one large file, which a phone downloads whole. The button makes their small sizes, at most {perPress} per press.",
+        "introMore": "A picture that fails stays counted and is tried again at every press. The old file stays until you delete the picture; then it goes too.",
         "left": {
           "one": "{count} picture left without sizes.",
           "few": "{count} pictures left without sizes.",
@@ -3160,6 +3272,39 @@
       "groupCustom": "Custom pages",
       "tabMembers": "Members"
     },
+    "fontSize": {
+      "title": "Text size",
+      "intro": "How large the text is on the public pages: headings, paragraphs and buttons grow or shrink together.",
+      "introMore": "The page's spacing and widths stay the same. The size multiplies the visitor's own browser size: a reader who enlarged their text still reads it larger.",
+      "current": "Now: {size}",
+      "updatedAt": "Set {when}.",
+      "legend": "Text size on the public pages",
+      "default": "default",
+      "save": "Save the size",
+      "saving": "Saving…",
+      "saved": "The site's text size was saved.",
+      "readOnly": "The Administrator chooses the size; this is the choice in force.",
+      "scope": "Applies in both themes. The backoffice always stays at its own size.",
+      "sample": "Group run in Noua forest, Saturday at 9:00",
+      "sizes": {
+        "small": {
+          "name": "Small",
+          "help": "Paragraph text at {px} px."
+        },
+        "normal": {
+          "name": "Normal",
+          "help": "The size so far: {px} px."
+        },
+        "large": {
+          "name": "Large",
+          "help": "Paragraph text at {px} px."
+        },
+        "xlarge": {
+          "name": "Extra large",
+          "help": "Paragraph text at {px} px; on a phone, some lines may wrap."
+        }
+      }
+    },
     "appearance": {
       "title": "Site appearance",
       "intro": "The light colour the public pages sit on. Choose a tint from the club's colours or type one.",
@@ -3405,15 +3550,23 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet. Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot, and an administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
-        "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
-        "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens. Or search by name or by race number.",
+        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
+        "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
+        "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
+        "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number.",
+        "No email addresses, and nobody can be cancelled from here.",
+        "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens.",
+        "Or search by name or by race number.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
-        "No email arrived, or they cannot find the QR: search by name. If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
-        "Never registered at all: “Add somebody” — name and email; the “This person is at the desk” tick is already set, and “Number given now” suggests the next spare number: hand them that bib and write their name on it in marker. They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
+        "No email arrived, or they cannot find the QR: search by name.",
+        "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
+        "Never registered at all: “Add somebody”. Name and email.",
+        "The “This person is at the desk” tick is already set, and “Number given now” suggests the next spare number: hand them that bib and write their name on it in marker.",
+        "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
-        "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in. If it says the number was printed, pull that bib out of the pile — numbers are never reused."
+        "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in.",
+        "If it says the number was printed, pull that bib out of the pile — numbers are never reused."
       ],
       "noEvents": "No event with local registration in this period.",
       "event": "Event",
@@ -3615,8 +3768,39 @@
         "title": "The sending queue",
         "intro": "What has not left yet: the type, the recipient, when it was queued, how many attempts and the provider's last answer. The message is composed only at sending.",
         "count": "In the queue: {count} messages.",
-        "facts": "Queued since {queued} · attempts: {attempts} · next attempt: {next}",
-        "nextAny": "at the next send",
+        "aside": "{waiting} · {state}",
+        "when": {
+          "title": "When emails leave",
+          "on": "Emails leave: on the scheduled round",
+          "off": "Emails leave: right after the request",
+          "onShort": "on the scheduled round",
+          "offShort": "right after the request",
+          "scheduled": "Emails leave on the site's scheduled round. Next round: {at}. An email queued now waits at most {wait}.",
+          "immediate": "Each email leaves right after the request that queued it. What is left (a retry, a deferral) leaves on the scheduled round; the next: {at}.",
+          "holdsLead": "What holds the scheduled round now: {holds}.",
+          "holds": {
+            "pinger": "the monitor that calls the site, every {wait}",
+            "interval": "«How often the site checks» in Settings → Costs, at most every {wait}",
+            "governor": "the database's budget brake, at most every {wait}"
+          },
+          "lastRun": "Last scheduled round: {at}.",
+          "neverRan": "No scheduled round recorded yet.",
+          "turnOff": "Send right after the request",
+          "turnOn": "Send on the scheduled round",
+          "offTitle": "Should emails leave right after the request?",
+          "offBody": "The queued emails leave now, and from now on each email leaves right after the request that queued it. The same setting as in «Deadlines». No message is lost.",
+          "onTitle": "Should emails leave on the scheduled round?",
+          "onBody": "From now on emails leave on the scheduled round, within {wait}. The same setting as in «Deadlines». No message is lost."
+        },
+        "facts": "Queued since {queued} · attempts: {attempts}",
+        "leaves": {
+          "at": "Leaves: {at} (estimated).",
+          "late": "Late: it should have left already. Next scheduled round: {at}; or press «Send now».",
+          "lateAskAdmin": "Late: it should have left already. Next scheduled round: {at}; or tell the administrator.",
+          "sending": "Being sent now.",
+          "never": "Will not leave on its own: every attempt is spent.",
+          "held": "Held until {until}: a family is still signing. Then leaves on the next round: {at} (estimated)."
+        },
         "lastError": "The provider's last answer: {error}",
         "manual": "Sent again by hand",
         "more": "And {count} more in the queue, not shown here.",
@@ -3624,6 +3808,15 @@
           "PENDING": "Waiting",
           "PROCESSING": "Sending now",
           "FAILED": "Stopped after every attempt"
+        },
+        "sendNow": {
+          "held": "Still held: {count}, the first until {until}: {reasons}.",
+          "reasons": {
+            "family": "a family still signing: {count}",
+            "retry": "a retry or a deferral: {count}",
+            "reserve": "the newsletter's reserve: {count}"
+          },
+          "nothingDue": "No email is due now: the queued ones are held until their time, being sent right now, or out of attempts."
         }
       },
       "copy": {
@@ -4311,13 +4504,10 @@
               "steps": [
                 "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
                 "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "«Easy»: short and flat — for anyone.",
-                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
-                "«Fairly hard»: from a half marathon up.",
-                "«Hard»: marathons.",
-                "«Very hard»: ultramarathons and beyond.",
+                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
                 "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
+                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
               ]
             },
             {
@@ -4384,13 +4574,10 @@
               "steps": [
                 "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
                 "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "«Easy»: short and flat — for anyone.",
-                "«Medium»: 1 is the run up Tâmpa, 2 a longer run, 3 a long and technical one.",
-                "«Fairly hard»: from a half marathon up.",
-                "«Hard»: marathons.",
-                "«Very hard»: ultramarathons and beyond.",
+                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
                 "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps."
+                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
+                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
               ]
             },
             {
@@ -4636,11 +4823,17 @@
               ]
             },
             {
-              "title": "The five texts, before the race is published",
+              "title": "The club's legal texts",
               "steps": [
-                "In one sitting, each from «Start from the template»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
-                "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
-                "Until you approve the new notice, the public participant list shows the confirmed only."
+                "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
+                "The texts whose template changed, all at once: under «Every text at once» press «Regenerate from the templates» and confirm. One draft is made for each; nothing takes effect yet.",
+                "Open each draft from the table, read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
+                "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
+                "A single text to redo: «Legal documents» → «New version» → under «Start from the template» pick it, then the steps of “Approve a new version of a legal text”.",
+                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
+                "Until you approve the new notice, the public participant list shows the confirmed only.",
+                "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
+                "The signed declarations of a group run, when the signer asks for them to be erased: «Events» → «Edit» on the run → «Signed declarations (group run)» → «Erase several at once»: tick them, fill in «Why it is erased» once, press «Erase the ticked ones» and confirm. The log keeps your name and the reason, not the signer's."
               ]
             },
             {
@@ -4939,7 +5132,24 @@
       "erase": "Erase the declaration",
       "eraseTitle": "Erase the declaration?",
       "eraseBody": "The declaration and the messages about it are deleted for good. The log keeps your name and the reason, never the signer's.",
-      "erased": "The declaration was erased. The log keeps your name and the reason."
+      "erased": "The declaration was erased. The log keeps your name and the reason.",
+      "tick": "Tick the declaration signed by {name}",
+      "ticked": "The ticked declarations",
+      "batchTitle": "Erase several at once",
+      "batchHelp": "Tick the declarations to erase, write the reason once and press «Erase the ticked ones». Each stays in the log with your name and the reason, never the signer's.",
+      "batchErase": "Erase the ticked ones",
+      "batchEraseTitle": "Erase the ticked declarations?",
+      "batchEraseBody": {
+        "one": "Erase {count} signed declaration for “{run}”? It cannot be recovered.",
+        "few": "Erase {count} signed declarations for “{run}”? They cannot be recovered.",
+        "other": "Erase {count} signed declarations for “{run}”? They cannot be recovered."
+      },
+      "batchChanged": "The ticked declarations changed meanwhile — at least one was already erased. Nothing was erased: reload the page and tick again.",
+      "batchErased": {
+        "one": "{count} signed declaration was erased. The log keeps your name and the reason.",
+        "few": "{count} signed declarations were erased. The log keeps your name and the reason.",
+        "other": "{count} signed declarations were erased. The log keeps your name and the reason."
+      }
     },
     "newsletter": {
       "title": "Subscribers",
@@ -6458,13 +6668,14 @@
         "other": "{count} pictures got their phone sizes; left: {left}."
       },
       "picturesLadderedFailed": {
-        "one": "{count} picture got its phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
-        "few": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}.",
-        "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
+        "one": "{count} picture got its phone sizes; failed: {failed} — a missing file or not a picture, see “Pictures”; left: {left}.",
+        "few": "{count} pictures got their phone sizes; failed: {failed} — a missing file or not a picture, see “Pictures”; left: {left}.",
+        "other": "{count} pictures got their phone sizes; failed: {failed} — a missing file or not a picture, see “Pictures”; left: {left}."
       },
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",
       "siteTint": "The site's background was saved.",
+      "siteFontSize": "The site's text size was saved.",
       "clubTodoAdded": "Added to the list.",
       "clubTodoSaved": "Line saved.",
       "clubTodoUnchanged": "The line already said this; nothing changed.",
@@ -6522,6 +6733,26 @@
         "one": "Added: {count} member.",
         "few": "Added: {count} members.",
         "other": "Added: {count} members."
+      },
+      "groupRunDeclarationsErased": {
+        "one": "{count} signed declaration was erased.",
+        "few": "{count} signed declarations were erased.",
+        "other": "{count} signed declarations were erased."
+      },
+      "legalTemplatesRegenerated": {
+        "one": "{count} new draft from the template.",
+        "few": "{count} new drafts from the templates.",
+        "other": "{count} new drafts from the templates."
+      },
+      "legalDraftsApproved": {
+        "one": "{count} draft approved and in effect.",
+        "few": "{count} drafts approved and in effect.",
+        "other": "{count} drafts approved and in effect."
+      },
+      "legalVersionsDeleted": {
+        "one": "{count} version deleted.",
+        "few": "{count} versions deleted.",
+        "other": "{count} versions deleted."
       }
     }
   },

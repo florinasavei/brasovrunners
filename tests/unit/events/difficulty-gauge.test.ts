@@ -143,7 +143,7 @@ describe("§412/§526 one glyph, drawn in the chip's ink", () => {
   });
 
   it("a pill with no srSuffix keeps its word as its accessible name (§318)", () => {
-    const html = renderToStaticMarkup(GlyphChip({ glyph: "type:RACE", label: "Cursă" }));
+    const html = renderToStaticMarkup(createElement(GlyphChip, { glyph: "type:RACE", label: "Cursă" }));
     expect(html).not.toMatch(/aria-label="[^"]*Cursă/);
     expect(html).toContain(">Cursă<");
     for (const [tag] of html.matchAll(/<svg\b[^>]*>/g)) expect(tag).toContain('aria-hidden="true"');
@@ -151,7 +151,7 @@ describe("§412/§526 one glyph, drawn in the chip's ink", () => {
 
   it("draws the level's gauge inside a difficulty pill, beside the words, and gives a screen reader its own words (§526)", () => {
     const html = renderToStaticMarkup(
-      GlyphChip({ glyph: "difficulty:VERY_HARD-3", label: "Foarte greu 3", srLabel: "Dificultate: foarte greu, treapta 3 din 3" }),
+      createElement(GlyphChip, { glyph: "difficulty:VERY_HARD-3", label: "Foarte greu 3", srLabel: "Dificultate: foarte greu, treapta 3 din 3" }),
     );
     expect(html).toContain('data-testid="difficulty-gauge"');
     expect(html).toContain('data-level="15"');

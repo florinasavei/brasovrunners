@@ -42,7 +42,6 @@ export const NEON_MIN_CU = 0.25;
  */
 export const NEON_SUSPEND_MODES = ["auto", "never"] as const;
 export type NeonSuspendMode = (typeof NEON_SUSPEND_MODES)[number];
-export const NEON_SUSPEND_AUTO_SECONDS = 300;
 /** Neon's value for "never suspend". */
 export const NEON_SUSPEND_NEVER_SECONDS = -1;
 

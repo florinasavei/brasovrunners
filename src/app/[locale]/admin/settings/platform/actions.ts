@@ -13,7 +13,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import type { FormOutcome } from "@/shared/forms/outcome";
 
 /*
-  «Setări» → «Anti-robot» (§516; the tab was «Platformă» until §NNN): the anti-robot check (§254, §282), the Superadministrator's switch
+  «Setări» → «Anti-robot» (§516; the tab was «Platformă» until §522): the anti-robot check (§254, §282), the Superadministrator's switch
   since §450. Moved here, unchanged, from `/admin/tasks` → «Anti-robot»; it lands back on this tab.
 */
 
@@ -24,7 +24,7 @@ function localeOf(form: FormData): Locale {
 }
 
 /**
- * The anti-bot challenge (`DECISIONS.md` §254), switched on «Setări» → «Anti-robot» (§516, named so since §NNN).
+ * The anti-bot challenge (`DECISIONS.md` §254), switched on «Setări» → «Anti-robot» (§516, named so since §522).
  *
  * Administrator only — the same gate as every other setting that changes what a participant
  * meets (§100, §164, §244) — and the service asserts the role again and writes the audit row.

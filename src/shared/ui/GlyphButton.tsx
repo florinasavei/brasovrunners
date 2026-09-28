@@ -26,9 +26,11 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  * It replaced `SubmitIconButton`, which was this for submits only: the backoffice's download
  * links needed the same thing, and two components for one idea is one too many.
  *
- * **Backoffice only**, as `action-icons.ts` explains: the lookup by name ships the whole table
- * to whatever renders this. A public page's button that wants the runner is `SubmitButton`
- * with `runner`, never this.
+ * Since §521 every button wears a glyph, public pages included — but not through this. The
+ * lookup by name ships the whole table to whatever renders it, so the table stays off public
+ * pages (§318's restriction, which §521 keeps for the table alone; `action-icons.test.ts` walks
+ * the imports). A public page's button imports its one icon file and hands it to MUI's
+ * `startIcon`, or is `SubmitButton` with `runner` or `glyph`; never this.
  */
 export default function GlyphButton({ icon, href, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];

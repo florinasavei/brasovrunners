@@ -15,7 +15,8 @@ import { DomainError } from "@/shared/errors/domain-error";
  * waiting list is carrying and the club still owes an answer, and the queue panel lists them in
  * the line with their deadline (§92). So an offer does not open a slot when it is made; it opens
  * one when it is accepted, declined or lapses — at most a day later. An offer past its deadline
- * is not counted, the same way `countOccupied` stops counting its place, so no decision here
+ * is not counted (unless its email is still queued, §520), the same way `countOccupied` stops
+ * counting its place, so no decision here
  * waits for the maintenance job either (§10.6). `kind` appears nowhere: a `TEST` row stands in
  * the line exactly as a real one does (`AGENTS.md` §12.6).
  */
@@ -25,7 +26,7 @@ export type WaitlistInput = {
   waitlistCapacity: number | null;
   /** `WAITLISTED` rows — `countEligibleWaitlisted`. */
   waitlisted: number;
-  /** `WAITLIST_OFFERED` rows whose deadline is ahead — `OccupiedCounts.unexpiredWaitlistOfferedHolds`. */
+  /** `WAITLIST_OFFERED` rows whose deadline is ahead or whose email is still queued (§520) — `OccupiedCounts.unexpiredWaitlistOfferedHolds`. */
   openOffers: number;
 };
 
