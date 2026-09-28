@@ -188,6 +188,14 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.locator('[name="lastName"]').fill(suffix);
     await page.locator('[name="email"]').fill(`void-${suffix}@test.invalid`);
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
+    /*
+      The handed-bib box (§444) suggests the next desk spare only where somebody printed spares for
+      this event. A spare is on paper already, so the page would say «E tipărit» and the list would
+      offer no «Marchează BID-ul ca printat». Emptied, the confirmation draws the next number in
+      order (§548) — the path this story is about, whatever a shared database holds.
+    */
+    const handedBib = page.locator('input[name="bibNumber"]');
+    if ((await handedBib.count()) > 0 && (await handedBib.first().isVisible())) await handedBib.first().fill("");
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
     await confirmDialog(page);
     await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
@@ -199,19 +207,15 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await expect(deskRow).toHaveCount(1);
     const code = (await deskRow.locator("span, p").filter({ hasText: /^[A-HJ-NP-Z2-9]{10}$/ }).first().textContent()) as string;
 
-    // The registration's own page. The window is open, so the number is provisional (§214);
-    // saving it by hand settles it (§230) — which is what makes it printable.
+    // The registration's own page. Confirmed at the desk, so the number came with that
+    // confirmation (§548) — nothing to save by hand before it can be printed.
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
     await hydrated(page);
     await page.getByRole("link", { name: `Deschide înscrierea lui ${name}` }).click();
     await expect(page).toHaveURL(/\/admin\/registrations\/[0-9a-f-]{36}/);
     const detailUrl = page.url();
-    await page.locator("summary", { hasText: "Schimbă numărul" }).click();
-    await page.getByRole("button", { name: "Salvează nr." }).click();
-    await confirmDialog(page, "Salvezi numărul?");
-    await page.waitForURL(/saved=bibSet/);
-    const settled = (await page.getByText(/Numărul de concurs este \d+/).textContent()) as string;
-    const bib = (settled.match(/Numărul de concurs este (\d+)/) as RegExpMatchArray)[1];
+    const settled = (await page.getByText(/Numărul de concurs: \d+, dat la confirmare/).textContent()) as string;
+    const bib = (settled.match(/Numărul de concurs: (\d+)/) as RegExpMatchArray)[1];
 
     // "This bib is on paper" from the list's ⋮ menu (§264).
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);

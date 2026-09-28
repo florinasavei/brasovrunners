@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.23-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.22-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.23-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.

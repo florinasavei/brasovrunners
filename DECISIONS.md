@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.23-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.22-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.23-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -19506,146 +19506,21 @@ The column's default of 14 (§329) now reaches every type's page, so every exist
 
 Baseline `BR-V2.12-2026-09-27`.
 
-## 506. A held send button is sent the moment Turnstile answers, every time
+## 506. Withdrawn — a duplicate of §502
 
-**2026-09-27. Amends §285 and §304; follows §185, §205 and §216.** The owner, on QA and production (`BR-V2.10`), with the registration form showing «Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde» under a widget that already said «Success!»: «Am rămas în acest state! ce se întâmplă???» The press had been held for Cloudflare's token (§285). The token arrived, and nothing sent the form.
+The `BR-V2.12` landing wrote §502 a second time under this number. §502 is the decision; the code cites it.
 
-**Where it came from.** Two releases, not the latest:
-- **`BR-V1.45-2026-09-22` (§285).** It added `tokenMissing`, a state fed by a MutationObserver and a listener on the form's `input`, and an eight-second valve counted from when the button was drawn. The valve disconnected the observer for good, but the `input` listener kept measuring. Anybody who typed after the page's eighth second while the widget had no token set `tokenMissing` back to true, and nothing was left to set it false. That covers a widget still thinking, a challenge to tick, a reset after a refusal (§185) and a token being refreshed. The next press was held, the widget said «Success!», and the valve had already been spent.
-- **`BR-V1.55-2026-09-23` (§304).** Its replay of a held press was latched once per mount. The button survives the redirect that shows a refusal, so a second held press after a refused attempt was never replayed.
-- **§489 (`BR-V2.09`) was ruled out.** It moved the widget's two constants into `domain/turnstile-widget.ts` and changed no held-press logic. §491 and §493 did not touch it either.
+## 507. Withdrawn — a duplicate of §503
 
-**Decision.**
-- **The press asks the form, at the moment of the press,** whether Cloudflare's field holds a token (`botCheckUnanswered`). No state is kept that could go stale. A widget never drawn at all (a blocked script) is waited for only in the page's first eight seconds, as §285 had it. After that a press goes straight through, and the server takes a missing token for the check not running (§216).
-- **A held press waits for the token, or for eight seconds counted from that press,** whichever comes first. Then it calls `requestSubmit(button)`, exactly as if the finger had landed now, and never while a request is already in flight. Every held press gets its own valve and its own replay: nothing is used up by the first one.
-- **Two signals say the token is there, and each is enough on its own:**
-  - Cloudflare's success callback. `TurnstileWidget` passes a `callback` to `render` that dispatches a bubbling `TURNSTILE_TOKEN_EVENT` from its own element. The button reads the field on the **next task** after that event, not inside Cloudflare's callback, so a script that calls back before it writes the field is not left to the valve.
-  - A MutationObserver on the `value` attribute. Cloudflare's field is `<input type="hidden">`, whose value mode in the HTML standard is "default": its `.value =` write *is* an attribute change, which the observer sees. On a text box it would not be, and there the callback alone carries the token.
+The `BR-V2.12` landing wrote §503 a second time under this number. §503 is the decision; the code cites it.
 
-The form's own `input` is watched as well, for somebody typing while held. Only the success callback is handed to Cloudflare: an `error-callback` would change how its widget retries, and a held press has its own valve.
-- **Nothing changes for somebody whose check answered before the press:** the press goes straight through, once, with no held sentence.
+## 508. Withdrawn — a duplicate of §504
 
-**Proof.** The suite gains a second server over the same build, with the anti-bot check on and Cloudflare's published test keys (a site key that always passes, and the secret that accepts only its dummy token; never the club's keys). Only `tests/e2e/registration-turnstile.spec.ts` uses it. A stand-in for `api.js` lets the spec decide when the check answers and in what order.
+The `BR-V2.12` landing wrote §504 a second time under this number. §504 is the decision; the code cites it.
 
-A held press is also sent by its valve, with the token by then. So every "sent when it answers" case times the request: within three seconds of the answer, and before the valve could have fired. The cases:
-- the owner's case, a press after the page's eighth second;
-- a check answered before the press: never held, exactly one request;
-- the observer alone: a hidden field written with no callback;
-- the callback alone: a field the observer cannot see, called back before it is written. With the old synchronous read this case fails at 4.5 s, for the valve;
-- that field's control: written with no callback, so only the valve sends it, at 7.5 s or later;
-- a refused attempt, then a second held press;
-- a check that never answers: sent by the valve and accepted (§205);
-- with `E2E_REAL_TURNSTILE=1`, Cloudflare's real test widget arriving four seconds after the press, timed against the press. It is never run in CI, since it depends on a third party.
+## 509. Withdrawn — a duplicate of §505
 
-`held-press-is-sent.test.ts` holds the source-level lines: the read at the press, the per-press valve with no once-per-mount latch, the three watchers, and the next-task read after the callback.
-
-One held press per form. The registration form carries two send buttons that wait for Cloudflare's token: the main one and, after a too-fast refusal, «Retrimite» (§324). Each held its own press, and each replayed it when the token landed. That meant two `requestSubmit` calls on one form and two POSTs of one registration: the person saw a success and then the second request's refusal. The hold now belongs to the form (`src/shared/ui/held-press.ts`, a WeakMap keyed by the form that names the pressed button). The first press claims it. Any other press on that form while it is held is swallowed and shows the same sentence under its own button. The release (the token, the valve, or the pressed button unmounting) submits at most once, and only from the button that owns the hold.
-
-A widget that is drawn but has no token, such as an interactive challenge nobody has ticked, now holds every press for the full eight seconds however old the page is. Before, a press after the page's eighth second went straight through without a token. That is why the waiting sentence now asks the person to tick the box when one appears.
-
-Baseline `BR-V2.12-2026-09-27`.
-
-## 507. A group run's self-declaration is kept while the signer comes to the runs, and deleted when they ask
-
-**Decided 2026-09-27, the owner's words:** «clubul o păstrează cât timp vii la alergări și o șterge când îi ceri». This amends §393's seven days and §418's retention paragraph.
-
-**Why.** The optional group-run self-declaration is the club's evidence that a runner was told the run's risks and took them on. Deleting it seven days after the run threw that evidence away while the runner was still coming to the runs. The retention is bound to a purpose, not a number of days: the declaration is kept while the signer takes part in the club's runs (art. 5(1)(e) GDPR storage limitation). It is deleted at the signer's request, sent to the club's contact address. The legal basis is still legitimate interest (art. 6(1)(f)), and art. 9(2)(f) for the health statement. The signer may object at any time (notice section 8).
-
-**What the code does.**
-- `jobs/retention.ts` no longer deletes `group_run_declarations` rows or their outbox messages. `GROUP_RUN_DECLARATION_RETENTION_DAYS` and the step "group-run-declarations" are gone.
-- A declaration leaves by the Administrator's erase, on the signer's request. The erase is deliberate, per row, and audited: the audit row names who and why, never who was erased (BR-REQ-037-06's rule). A declaration also leaves with its event.
-- A new step, "group-run-identity-documents", clears only an identity document typed under a text approved before §418 took `{{idDocument}}` off. It runs seven days after the run, as the race's does. The number lives in `group-run-declarations/domain.ts` (`GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS`), and the signing page's help reads it from there.
-- The outbox rows follow the ordinary 90-day windows, because they carry no registration.
-- A signed legal version stays undeletable while its signature is kept, and becomes deletable after the erase. This closes §393's "Open".
-
-**What unchanged.** The club's archive-mailbox copy is still kept three years from the run (art. 2517 Codul civil), and sooner on an objection. The race's seven-day identity document, health note and emergency contact are untouched.
-
-**Every sentence follows, in both languages, in one voice («clubul … când îi ceri»):**
-- the run page's offer line
-- the backoffice fold's help
-- the signer's email and the club's archive email
-- both group-run declaration templates: «Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului»
-- the privacy notice's sections 3 and 7: «cât timp participi la alergările clubului, sau până ne ceri s-o ștergem»
-
-No text states a number of days for the platform copy.
-
-**For the club.** The texts in force on production say seven days until the club approves new versions of the two group-run declarations and the privacy notice from the platform's templates.
-
-Baseline `BR-V2.12-2026-09-27`.
-
-## 508. A release tests one tree once, and ship times itself
-
-**Context.** The owner measured a release at 50–60 minutes. Most of it was the same files tested again and again. The landing commit's pre-commit hook ran `yarn check` for about ten minutes. Then CI tested the tree four times: on the batch pull request's merge ref, on the push to `qa` from merging it, on the `qa → main` release pull request, and on the push to `main`. Each run took about twelve minutes, and `yarn ship` waited on three of them in a row.
-
-**Decision.**
-
-- **One tree, tested once.** `docs-check.yml` gets a first job, `tested-tree`. It computes `HEAD^{tree}` and asks whether a run of this workflow, on a branch of this repository, already uploaded an unexpired artifact named `tested-tree-<tree>`. A run uploads that artifact only when `docs-check` and every e2e shard passed.
-  - If the tree has a record, `docs-check` and `e2e-shard` are skipped by their own `if:`. A job skipped by a condition reports Success to a required check, while a skipped workflow would stay Pending ([GitHub: handling skipped but required checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks)). So the workflow has no path or branch filter, and only its jobs skip.
-  - Any different tree finds no record and runs everything: `qa` moved, a conflict was resolved, one byte changed anywhere, including this workflow file.
-  - Any failure of the lookup counts as "not tested". The job carries `continue-on-error`, so a lookup that fails for checkout or runner reasons cannot turn a green run red and stop a ship.
-  - `workflow_dispatch` with `full` (true by default) tests a tree again.
-  - This covers the qa push, the release pull request and the main push in one mechanism, rather than a condition written only for `qa → main`.
-- **Who the record trusts.** A fork's record is refused, because a fork runs its own copy of the file and could upload any name. A branch of this repository also runs its own copy and could record a tree it never tested. That is trusted, because pushing a branch here needs write access, which could change the workflow on `qa` anyway. The check keeps strangers out; it does not police collaborators.
-- **Pull requests** run eight shards of both projects, with `fail-fast: false` kept. The `docs-check` job's build stays, because "Verify the app serves on PORT" (BR-REQ-101-01) serves it. The two required check names, `docs-check` and `e2e`, are unchanged, and a test holds that neither job has a `name:` override.
-- **`yarn ship`:**
-  - It finds the `qa` push's run with `gh run list --commit <sha> --event push` and polls its status until the run completes. An empty conclusion counts as not green.
-  - It opens the release pull request only after that run is green, so the release PR's own run finds the tree tested and skips. `judgeChecks` already treats SKIPPED and NEUTRAL as green.
-  - It skips the migration step only when `git diff origin/main origin/qa -- src/db/migrations` is empty, which is the same test as `migrate.yml`'s `paths` filter. It still approves a waiting migration run and still refuses a failed one.
-  - It prints each step's m:ss and a total, at the end and at any stop, and appends one JSON line to `SHIP_TIMES_FILE` (default in the temp directory), so the next measurement is a file rather than a stopwatch.
-  - The one Google-Fonts rerun is gone. Since §460 the fonts are the repository's own files through `next/font/local`, so the build no longer fetches from Google and that flake cannot happen.
-- **Landing a batch** (`docs/DISPATCHER.md`): after `yarn docs:land --apply` and the hand edits, the landing commit is `yarn docs:check` followed by `git commit --no-verify`. CI runs the full `yarn check` on the batch pull request minutes later, and every merged branch already passed the hook. The risk is a red batch PR instead of a red hook, fixed by a fix round. The hook still runs for every other commit.
-
-**Consequences.**
-
-- The first release after this lands gains nothing from the skip, because its batch PR ran the old workflow and recorded no tree. From the next one, a release whose `qa` did not move between the batch merge and the release tests its tree once.
-- The skip itself is proven only on GitHub. The unit tests hold the workflow's shape and ship's judgement.
-
-A tested-tree record is trusted for twenty-four hours at most. `tested-tree` accepts an artifact only if its `created_at` is within the last 86 400 seconds, and the record uploads with `retention-days: 1`, the shortest GitHub keeps one. The end-to-end seed builds its events relative to today, so a tree tested days ago has not been tested against today's dates. A release ships a tree tested the same day; an older tree is tested again in full. Why the workflow always runs and only its jobs skip is GitHub's own documented behaviour: a job skipped by its `if:` reports success to a required check, while a workflow skipped by a path or branch filter leaves the check pending (https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/troubleshooting-required-status-checks#handling-skipped-but-required-checks).
-
-The landing commit's `--no-verify` is written into the rules and not left as a dispatcher habit. AGENTS.md §6.3 and SETUP.md § Contributing name it as the one documented exception: every branch in the batch already passed the hook, `yarn docs:check` runs first, and CI runs the full `yarn check` on the batch pull request minutes later. Every other commit keeps the hook.
-
-`yarn ship` prints each step's duration the moment it ends and the total at the end or at a stop, so a release in progress shows where its time goes.
-
-Baseline `BR-V2.12-2026-09-27`.
-
-## 509. The minimum age is one box in «Regulamentul» for every type, and the page says it in «Condiții de participare»
-
-The owner, 2026-09-27 19:30: «tot în 2.12 trebuie să pot seta vârsta minimă de participare la regulament pentru orice tip de eveniment».
-
-**What it was.** The minimum age was two boxes, and the save picked one by the type:
-
-- the race's, under «Participare și înscrieri» › «Condiții de participare» (§329);
-- a group run's own `event.groupRunMinAge`, in «Traseul» (§440, §495).
-
-A type that registers elsewhere or not at all had no box on screen. The event page said the age only where the club takes the registrations, as a «Vârstă» row of the facts (§410).
-
-**The editor.** There is now one `event.minAge`, labelled «Vârsta minimă de participare» / «Minimum age to take part». It sits after the rules' language tabs, in «Program, regulament și declarație» › «Regulamentul» (§448, §481), for every type.
-
-- Its help is the owner's sentence: «0 = fără limită. Sub 18 ani, înscrierea se face de un părinte.»
-- A group run keeps §440's note under it: its self-declaration is for adults.
-- A role without settings rights reads the number instead of the box. The server refuses its change regardless (BR-REQ-060-01).
-- The rules card's closed line says «vârsta minimă 14 ani» / «fără vârstă minimă».
-- The registration card keeps one line saying where the age and the declaration went.
-- The reader (`eventFieldsFrom`) reads `minAge` for every type. The group-run special case and its refusal name are gone.
-- No migration: the service already stored `min_age` for every type, and a series carries it by scope as before.
-
-**The page.** The age is no longer a row of the facts. It is said inside «Condiții de participare» (§498), under an `h3` «Vârstă», after the rules and before the photographs notice. The age is a condition of taking part, so it is read with the rules, where the editor now asks for it. The sentence is `publicAgeRule`'s:
-
-- where the club takes the registrations, the registration form's own sentence (§410), so the page and the form cannot disagree;
-- anywhere else — a group run, an event registered at another organizer's or taking none — «Vârsta minimă: N ani. Sub 18 ani, participarea se face cu acordul unui părinte.», with the minimum alone from eighteen. There is no registration there for a parent to make, so the sentence names the parent's consent, not a door that does not exist;
-- for 0 where nobody registers here, nothing.
-
-The structured data states `typicalAgeRange` wherever minAge > 0.
-
-**Visible on shipping.** Every existing event carries the column default of 14. Production's weekly group run, which never set an age, will therefore say «Vârsta minimă: 14 ani. Sub 18 ani, participarea se face cu acordul unui părinte.» in its «Condiții de participare», and its JSON-LD will say `typicalAgeRange` "14-", unless the club sets 0. The doors are unchanged: the form, the desk, a staff entry and the group-run declaration still count the same number (`effectiveMinimumAge`).
-
-Amends §329, §410, §440, §448, §481, §498.
-
-The staff preview (`/preview/events/[id]`) says the minimum age as the public page does: `EventAgeRule`, after the rules, the same `publicAgeRule`, since the facts no longer carry a «Vârstă» row.
-
-The column's default of 14 (§329) now reaches every type's page, so every existing group run and external event says «Vârsta minimă: 14 ani» until the club changes it. This is deliberate: the owner asked for the age on every type. The editor's help under the box says so: «Implicit 14; pune 0 pentru fără limită.», with the number read from `MIN_PARTICIPANT_AGE`.
-
-Baseline `BR-V2.12-2026-09-27`.
+The `BR-V2.12` landing wrote §505 a second time under this number. §505 is the decision; the code cites it.
 
 ## 510. The country of residence before the city; «Sex» asks for an answer
 
@@ -21020,3 +20895,175 @@ The editor's boxes read the provisional parts back as empty (`startBoxValues`), 
 The unit test also checks that a bib's date for a race without one is empty and never `9999`, that a blank hour prints the day alone, and that the server-rendered boxes carry no `required` whatever the saved switches. The browser walk is `tests/e2e/start-left-blank.spec.ts`.
 
 Baseline `BR-V2.22-2026-09-27`.
+
+## 546. Fewer words on the registration form and the public pages: one helper at most per field, only where the label is not enough
+
+**The owner, 2026-09-28 11:25 and 17:42:** «AI slop cleanup, spre exemplu pe partea de contact sunt multe texte» and, of the registration form, «sunt prea multe descrieri la fiecare label!». This carries §511/§522's rule (one plain sentence per field, the rest behind a «?») from the backoffice to the public pages. It amends §171 (the two «Confidențial» section markers), §322 (a purpose helper under the city), §59 (the optional groups' «Opțional» helper) and §323 (the banner's description of the identity document's mask — the first two and last two characters left — and its «Participant (nume ascuns)» sentence, both moved to the notice and the declaration page).
+
+**The rule, on the public form.** A helper under a field stays only when it says what the label cannot: a format the runner would get wrong, a legal reason, a consequence. It goes when it repeats the label, repeats another sentence on the same screen, explains an obvious control, or hedges («de obicei», «vă rugăm», «pur și simplu», «platforma»). At most one helper per field.
+
+**What went, on the registration form.**
+- The two section markers «Confidențial. Nu se publică.» and «Confidențial. Folosit doar ca să te anunțăm…» (§171). The banner above the first field says where every answer goes, once.
+- The birth date's help (the minimum age and the categories). The minimum age is the line above the form (§321, §329), and the words under the box (§467) say the age on race day. A refusal for age still says the rule.
+- The city's purpose helper (§322).
+- The email's «Aici îți trimitem linkul de confirmare»: the address is typed twice, and the journey line says the email comes to confirm it.
+- The club's «Opțional»: the fold's summary says «— opțional».
+- Instagram's «Cu sau fără @»: the placeholder shows it.
+- The health note's second helper: the fold's own sentence says it.
+- The guardian's block sentence and the name's helper were two helpers on one box. They are one now, under the name: «Obligatoriu sub 18 ani. Tu, părintele sau tutorele, semnezi declarația și dai acordurile de mai jos pentru copil; emailul și telefonul pot fi ale tale.» The box carries no asterisk (the birth date shows it), so «Obligatoriu sub 18 ani» is the one fact the label cannot say. The staff entry keeps `guardianNameHelp`.
+- The asterisk legend's second sentence («Restul sunt opționale — lasă-le goale…»).
+
+**What stayed, shorter.**
+- The privacy banner keeps every GDPR art. 13 fact §323 put there: never on the site (the list's one exception, by the tick); used only to run the race; who sees it (the organizers, and the providers that host the site and send the emails); the declaration emailed, with an archive copy with the identity document masked; kept three years. It says it in 51 words instead of 64 (75 instead of 118 with a list). The mask's exact shape (the first two and last two characters, §323) and the «Participant (nume ascuns)» sentence are for the notice and the declaration page to say; the banner says that the archive copy is masked, not how.
+- The emergency contact's help now tells the truth since §421: the name and number are deleted seven days after the event. It said «as long as the registration».
+- The socials keep their purpose, that a tag is public, and how to withdraw (§323, GDPR art. 7(3)).
+- The sex keeps its purpose, «Pentru clasamentele pe categorii.». «„Prefer să nu spun” e și el unul» is already the «Mai lipsesc:» entry's own words (§510).
+
+**Counted.** The form is rendered on the server as a visitor meets it, every fold in the markup. **19 help texts before, 10 after. 12 helpers under a box at rest before, 6 after**: the emergency contact's name, the guardian's name, the phone, the emails' language, the sex and the Strava link. The consents, the race's rules box (§422), the birth date read back in words (§467) and the «Mai lipsesc:» list are not helpers and are unchanged.
+
+**The contact page.**
+- The intro is two short sentences, 13 words (RO) / 14 (EN) in all — a question and the answer's channel: «O întrebare despre o alergare, o înscriere sau club? Îți răspundem pe e-mail.»
+- The asterisk legend is gone: all three boxes are required, and the line under the button says what is missing. So is the email's «Îți răspundem pe această adresă»: the intro says it.
+- The privacy sentence, Cloudflare's line (§323) and the newsletter's consent are unchanged.
+- The newsletter box at rest says «Alege temele care te interesează și îți scriem doar despre ele.». Its dialog lost the email's helper (the dialog's intro says the link comes there) and the topics' second sentence.
+- Measured on the rendered page, with the anti-bot check on and the FAQ on the site: **above the form, 35 → 21 words (RO) and 44 → 26 (EN); down to the send button, 109 → 90 (RO) and 120 → 97 (EN).**
+
+**Lighter elsewhere.**
+- «Cum funcționează înscrierea» (the fold on the form and on the event page): the declaration step in one or two sentences instead of three or four, every deadline placeholder kept.
+- The event page's «Nu mai sunt locuri» line under the waiting-list button.
+- The screen after the form (§224). «De obicei ajunge într-un minut, cel târziu în cinci.» is «Ajunge în cel mult cinci minute.». «Emailurile pleacă la trecerea programată a platformei, așa că…» is «Ajunge în cel mult {wait}.». The link's life is said once, in the first step, and not again under «Nu a venit?». Only sentences changed there, never the structure: two family branches own that screen.
+- «Înscrierile mele»: the request page's intro in 15 words and no helper under its one box; «platforma» gone from its sent line; a cancelled event's line no longer repeats its chip («Eveniment anulat») and says only that there is nothing to do.
+- The manage page («Gestionează înscrierea») has no such chip, so it no longer borrows that line: its own `Registrations.manage.eventCancelled` says «Evenimentul a fost anulat; nu trebuie să faci nimic.» — the cancellation still said first (§331).
+- After the form, on a free race further away than its window, the request is said as a request, not a deadline: «Îți cerem declarația cu {opens} înainte de start … poți semna și mai devreme.» The deadline is {due}, in the steps fold.
+- The FAQ's lead lost «Apasă pe o întrebare ca să vezi răspunsul.».
+
+**Measured and left.** The event page's «Condiții de participare» holds the club's own rules, the one-sentence age line and the photographs notice (a privacy notice's item, word for word). The footer's «Despre club» fold holds links only, no sentence. «Echipa»'s lead is one sentence. None of them had anything to cut.
+
+**Never touched.** The legal texts, every email, the consents' words, the rules box, and the declaration and signing pages, all reviewed by counsel (§418–§421).
+
+**The words, before → after** (visible words, RO / EN):
+
+| Screen | Text | RO | EN |
+| --- | --- | --- | --- |
+| Form | `Registration.requiredLegend` | 15 → 4 | 17 → 4 |
+| Form | `Registration.privacyBanner` | 64 → 51 | 76 → 62 |
+| Form | `Registration.privacyBannerWithList` | 118 → 75 | 135 → 90 |
+| Form | `Registration.confidentialNote` | 4 → gone | 3 → gone |
+| Form | `Registration.contactNote` | 20 → gone | 18 → gone |
+| Form | `Registration.journey.now.details` | 12 → 10 | 13 → 9 |
+| Form | `Registration.birthDateHelp` | 17 → gone | 20 → gone |
+| Form | `Registration.originHelp` | 8 → gone | 9 → gone |
+| Form | `Registration.sexHelp` | 15 → 4 | 14 → 4 |
+| Form | `Registration.emailHelp` | 9 → gone | 10 → gone |
+| Form | `Registration.phoneHelp` | 9 → 8 | 11 → 9 |
+| Form | `Registration.emergencyContactHelp` | 23 → 22 | 29 → 27 |
+| Form | `Registration.optional` | 1 → gone | 1 → gone |
+| Form | `Registration.clubNameFromMembership` | 15 → 11 | 17 → 12 |
+| Form | `Registration.guardianHelp` + `guardianNameHelp` | 26 + 11 → 25 | 29 + 12 → 26 |
+| Form | `Registration.socialsHelp` | 33 → 30 | 35 → 30 |
+| Form | `Registration.socialsHelpList` | 35 → 34 | 37 → 35 |
+| Form | `Registration.instagramHandleHelp` | 3 → gone | 4 → gone |
+| Form | `Registration.healthIntro` | 25 → 24 | 24 → 23 |
+| Form | `Registration.healthNotesHelp` | 18 → gone | 20 → gone |
+| Form | `Registration.listSocialsHelp` | 28 → 12 | 34 → 13 |
+| Form | `Registration.preferredLocaleHelp` | 14 → 7 | 17 → 8 |
+| Form and event page | `Registration.steps.declaration.body` | 43 → 29 | 51 → 37 |
+| Form and event page | `Registration.steps.declaration.bodyLater` | 64 → 43 | 71 → 47 |
+| Form and event page | `Registration.steps.declaration.bodyLaterAtStart` | 56 → 38 | 63 → 43 |
+| Event page | `Event.cta.full` | 22 → 14 | 21 → 16 |
+| After the form | `Registration.done.next.open.body` | 5 → 4 | 9 → 6 |
+| After the form | `Registration.done.next.declare.bodyLater` | 34 → 25 | 35 → 26 |
+| After the form | `Registration.done.delay` | 9 → 6 | 10 → 5 |
+| After the form | `Registration.done.delayScheduled` | 14 → 5 | 15 → 4 |
+| After the form | `Registration.done.notArrived` | 15 → 7 | 16 → 6 |
+| After the form | `Registration.submittedAlready` | 19 → 14 | 19 → 16 |
+| Contact | `Contact.intro` | 22 → 13 | 27 → 14 |
+| Contact | `Contact.requiredLegend` | 5 → gone | 5 → gone |
+| Contact | `Contact.emailHelp` | 5 → gone | 5 → gone |
+| Contact | `Newsletter.intro` | 22 → 11 | 25 → 14 |
+| Contact | `Newsletter.emailHelp` | 10 → gone | 11 → gone |
+| Contact | `Newsletter.topicsHelp` | 14 → 4 | 18 → 4 |
+| Contact | `Newsletter.sent.bodyScheduled` | 36 → 29 | 42 → 35 |
+| «Înscrierile mele» | `Registrations.mine.intro` | 30 → 15 | 31 → 16 |
+| «Înscrierile mele» | `Registrations.mine.emailHelp` | 4 → gone | 5 → gone |
+| «Înscrierile mele» | `Registrations.mine.sentScheduled` | 24 → 18 | 26 → 20 |
+| «Înscrierile mele» | `Registrations.mine.eventCancelled` | 22 → 16 | 25 → 19 |
+| Manage page | `Registrations.manage.eventCancelled` (was `mine.eventCancelled`) | 22 → 8 | 25 → 11 |
+| FAQ | `Faq.lead` | 26 → 18 | 28 → 21 |
+
+Totals of these texts: the form 530 → 335 (RO) and 594 → 373 (EN); the steps and the full line 185 → 124 and 206 → 143; after the form 96 → 61 and 104 → 63; the contact page 187 → 130 and 205 → 139; «Înscrierile mele» 102 → 71 and 106 → 74.
+
+**Refused.**
+- Cutting the privacy banner to one sentence and a link. GDPR art. 13 wants the purpose, the recipients and the retention where the data is given (§323), and the banner is where the form says them.
+- Dropping either the «12 înscriși din 50 de locuri» line or the free places under the button, as one fact said twice. BR-REQ-034-01 criteria 8 and 10 ask for both.
+- Shortening the contact page's privacy sentence, Cloudflare's line or any consent. The brief keeps them as reviewed.
+
+**Tests.**
+- Unit `registrations/form-helpers.test.ts` renders the form in both languages. It holds the ten help texts by name, the six helpers under a box, one at most per box, the eight removed keys out of both catalogues, and no hedge in what stays.
+- Unit `contact/contact-page-words.test.ts` renders the contact page in both languages. It holds the intro to at most two short sentences, 15 words in all; at most 120 words above the form and down to the send button; the privacy sentence and Cloudflare's line present; the newsletter box at rest at most 25 words; the three removed keys gone.
+- Unit `registrations/manage-cancelled-line.test.ts`: the manage page draws `manage.eventCancelled`, never «Înscrierile mele»'s line, and it says «anulat» / «cancelled».
+- The form's criterion is filed under BR-REQ-041-01 rather than BR-REQ-031-01: 041-01 already holds the form's structure (criterion 9, the required half first and the folds), while 031-01 is about registering without an account.
+- Updated: `check-your-email-wait.test.ts`, `minimum-age.test.ts`, `theme/density.test.ts` (the legend's margin went with the legend).
+- E2e `registration-form.spec.ts` (the age said once) and `public-density-360.spec.ts` (the first box under the intro): edited, not run.
+
+Baseline `BR-V2.23-2026-09-27`.
+
+## 547. The family's screens after the owner's walk: a quiet «Înscriu încă o persoană», the wizard's button by position and «Renunț la înscrierea pentru …», the name and number beside every QR, a per-person manage page without the PDF, and one cancellation email per person (amending §543, §471, §536 and §77)
+
+**The owner, 2026-09-28, 17:45–18:00**, walking the family flow on QA after BR-V2.22's family sitting (§543, «A family sitting reserves every place as its forms are sent…»): the question «Mai înscrii pe cineva cu aceeași adresă?» in bold with a full-width «DA, ÎNCĂ O PERSOANĂ» under it — «pare că încurajăm asta… când e doar o excepție»; the wizard's button said «… și treci la următoarea» on the last person too — «altfel nu scrie»; a person registered by mistake had no way out of the wizard; three identical QR codes with nothing beside them to tell them apart; the manage page linked the signed declaration's PDF and showed one person; and «vreau mail de confirmare că participarea a fost anulată pentru persoana X».
+
+**1. «Înscriu încă o persoană cu această adresă» is one quiet line (amending §536).** On the short screen after the first form the bold question and the primary button are gone. The screen's point is the email's line («Emailul către … pleacă acum»); after it comes one text-styled press with the person-add glyph and its one sentence under it, still a 44-pixel target. The sentences no longer answer a «Da» the screen does not show: «Dacă înscrii încă o persoană până la 13:15, emailul îi așteaptă formularul, cel mult 10 minute, și primiți unul singur pentru toți.» The sitting's own screen after the second form (`FamilySittingNext`) keeps its question and its two answers, because there the family is already under way and «Gata» is the primary press.
+
+**2. The wizard's button says what it does by position (amending §471).** «Semnează și treci la următoarea persoană» (EN “Sign and go to the next person”) only while another person's declaration follows in this sitting; on the last one, and on a single declaration, just «Semnează» (“Sign”). One pure function decides (`signActionKey`); a person put off with «Semnez mai târziu» is not a person who follows.
+
+**3. «Renunț la înscrierea pentru <nume>» on every step of the wizard.** A quiet red text link with the person-remove glyph, never the primary button, that asks first (§384) naming the person and the event. The press cancels that registration exactly as a cancellation does: through `unregister`, under the event's lock, the place released and the waiting list served; the club copy of the email as §320 says; and now an audit row (below). The wizard then moves on: the person is put off in the pass like «Semnez mai târziu», shown as «înscriere anulată», and the next person's step follows, or the family's last screen. A toast says «Gata: înscrierea e anulată, iar adresa primește un email de confirmare.» Only the step the page is on can be withdrawn, and only through what could sign it: the pass beside the link it is bound to (the person must be its current step), or, with no pass yet, the live declaration or offer link of that very person on a family's page — the two roads «Semnez mai târziu» already takes. The declaration link is not spent: it signs nobody any more, and the pass keeps walking beside it.
+
+**4. The name and the race number beside every QR.** In the confirmed email (and the reminder and the number's own message) the caption reads «Mihai Pop · Număr de concurs: 12 · Codul tău: ABC123»; «Gestionează înscrierea» and «Înscrierile mele» draw the QR with the name in bold, «Număr de concurs: 12» and the access code beside it; the club's copy, which carries no QR (§320), says «Mihai Pop · Număr de concurs: 12» in its place. The number is the registration's own race number (`qrIdentity`, `bibNumber ?? «—»`): «—» while there is none.
+
+*Coordinated with the race numbers of the same release.* A sibling change gives a race number only once a registration is confirmed, so nothing beside a QR says «provizoriu»: the pages print the registration's number or «—», never the number held before the close, and «Înscrierile mele» drops its provisional-number sentence under the QR (the key `mine.bibProvisional` goes with it). The email's caption reads the number the message carries, which the sibling change decides.
+
+**5. «Gestionează înscrierea» is per person, and safe (amending §77).** The page no longer shows or links the signed declaration's PDF: the PDF, with the identity document in it, travels only in the email that delivered it (§85–§87); the page says «Declarația semnată ți-a fost trimisă pe email.». It lists the registration the link names and every other active registration of the same address at the same event, in the family's order — each with their own QR, name and number, their state, their own public-list choice (§143), their own «Am ajuns» when it opens, and their own «Anulează înscrierea pentru <nume>», which asks first. A single registration keeps its one-person page. The health-note and socials withdrawal stays the link's own person's: another adult's consents are theirs (§421).
+
+*Why the per-registration link and not a redirect to «Înscrierile mele».* The participant is the canonical address (§389): the people of one participant at one event are exactly the registrations that inbox made, which the «Familie» marker already names on the same page and which «Înscrierile mele» (§77) lists to the same inbox on one request. The page reads nothing about another address and nothing about the address's other events, so it reveals no registration its reader did not make (§39, AGENTS.md §19.4). A redirect would need a `MANAGE_PROFILE` token minted into an address bar the email never put there, and would lose the page's scope — this race. Every per-person press names a registration id, and the server accepts it only when it is the link's own or another registration of the same participant at the same event (`managedRegistration`); anything else is NOT_FOUND inside the transaction, so nothing is spent. A cancellation from the page spends the link (§12.8), whichever person it cancels, as «Înscrierile mele» spends its own; the outcome page says that the other people are reached through a fresh «Înscrierile mele» link.
+
+**6. One cancellation email per person.** `REGISTRATION_CANCELLED` already left for every cancellation; it now reads «Înscrierea pentru Mihai Pop la Crosul Tâmpei a fost anulată» (EN alike), with the event's date in the body, «Locul a fost eliberat.» — or «Mihai Pop nu mai este pe lista de așteptare.» for a person who waited, from the state the row left, now in its payload — and «Pe această adresă rămân înscriși: Ana P. (confirmat), Ioana P. (semnează declarația).» read at send time from the address's own rows. The last two are the platform's lines after the body, facts of the send, so a club that rewrote the words still says them; the club's editable text starts from `{participantName}`, `{eventTitle}` and `{eventStartsAtFormatted}`. No new message type and no migration.
+
+**An audit row for a participant's own cancellation.** `registration.cancelled_by_participant`, written by `unregister` in the cancellation's transaction when a participant's door is named: `{ from: <state>, via: MANAGE_LINK | MY_REGISTRATIONS | FAMILY_WIZARD }`, no staff actor, never a name (AGENTS.md §12.12). The backoffice timeline reads «Anulată de participant, din linkul propriu».
+
+**The wizard's pass, one cookie per language (a defect of §471 found on the way).** Walking the family on a production build, the wizard's second press arrived without its pass and the page said the link was no longer valid. The pass was written twice under one name, on the Romanian and the English page's path, and a response keeps one cookie per name — so only the English one reached the browser; the page right after the press still read it, from the same response, and every press after that did not. It is now one cookie per language (`br_family_sign_ro`, `br_family_sign_en`), each on its own page's path, the same sealed value, read from whichever the request carries. No migration; a pass in flight at the release is lost once, and its person signs from their own emailed link.
+
+**Refused.** A withdrawal on a single declaration's page: one person's link already has «Nu mai pot veni» in every email. Leaving the manage link live after a sibling's cancellation: an action link is used once (§12.8). A new message type for a family's cancellation: the existing one, per person, says it. The PDF behind the manage page for the family's other people: it is the one file that carries an identity document, and it already went to the inbox.
+
+**After the second review.** The manage page's sentence «Declarația semnată ți-a fost trimisă pe email.» is printed only for a person whose latest declaration was accepted online; one confirmed on paper at the desk (§67) reads «Declarația a fost semnată pe hârtie.», and a person with no acceptance reads neither. A per-person cancel naming another person of the family who is no longer active is refused inside the transaction, so a stale page spends no link and flashes no false «Gata». The wizard's «Renunț» dialog names the event only in the page's own language (§28). The orphaned `Registrations.manage.action` key is gone.
+
+Baseline `BR-V2.23-2026-09-27`.
+
+## 548. A race number only once a registration is confirmed; nothing is «provizoriu»
+
+**The owner, 2026-09-28 17:56:** «faza cu numerele de concurs provizorii e ciudată». The dispatcher proposed that a number appears only when the registration is confirmed; the owner answered «da» at 18:10.
+
+**Decision (amending §173, §214, §420, §105, §444, §237, §313, §220, §230).** A race number exists only once a registration is confirmed: the address proved **and** the declaration signed, online or on paper at the desk. It is drawn at that moment and at no other — inside the confirmation's own transaction, under the event row's lock the confirmation already holds (§10.6) — as the lowest free number from the event's own first number (§173), never a spare of the desk's reservation (§444). Since no number is ever released, the numbers follow the order of confirmation and are never reused: a cancelled confirmed registration keeps its number, retired (§311), and a restarted one gets that same number back at its new confirmation. A test registration never gets one (§30).
+
+**Nothing before the confirmation.** No number is drawn at the form, with the address's confirmation, with a declaration hold or with a waiting-list offer, and none is shown: not on the screen after the form, not in the verification, declaration or offer emails (the confirmed email carries it), not on «Înscrierile mele» or beside a QR, not in the backoffice list and page («—»), not at the desk, not in the CSV or the Excel export (an empty cell). One pure rule decides what every surface shows (`raceNumberOf`): the number of a confirmed registration, the retired number of a cancelled or expired one, and nothing for any other state, whatever the row holds. The bib sheet lists confirmed registrations only, as before. The public participant list never showed numbers and still does not.
+
+**§214's provisional number and its settle at the close are gone.** No «provizoriu» / «provisional» is left for numbers in either catalogue; the close no longer renumbers anybody or sends «here is your race number», so the «Următoarele emailuri automate» panel no longer lists it. `registrations.provisional_bib_number` and `events.bibs_settled_at` stay in the schema, written by nothing and read only by the one data step below — no migration in this change; a later contract release drops them.
+
+**The desk and the hand-typed number.** A paper confirmation at the desk (§67) and a walk-in confirmed on the spot get their number at that press, in the same order; the volunteer may hand a pre-printed spare instead (§444), checked again under the lock. §105's preferential number is typed on a **confirmed** registration only; the number it replaces was already emailed with the confirmation, so it is retired through the change's audit row (`registration.bib_set`, now naming the event), never given to anybody else, and the new one is emailed.
+
+**A family (§543).** Every person of a family sitting gets their own number at their own confirmation — the person who signs first gets the lower number — shown beside their own QR and desk code; a person still at the declaration shows none. The family-screens change's slot beside the QR reads the same `raceNumberOf`, «—» before a number exists.
+
+**The data already on production — one data step in the maintenance job, not a migration.** The first maintenance run after the deploy (`bibs.ts#releaseLegacyHeldNumbers`, one transaction) turns what the old column holds into either a race number or nothing: a **confirmed** real registration with only an old held number keeps it as its race number, because its confirmation already showed it, and is emailed `BIB_ASSIGNED` once if its race is still ahead; **every other** held number — an address not confirmed, a declaration not signed, an offer, the waiting list, a cancelled or expired row — is cleared, so that registration gets its number at its confirmation. A kept number another row already wears is not kept (the row is left for «Alocă numerele»). Until the step has run, every draw still treats the old column's numbers as taken, so nobody is drawn a number somebody was shown. Idempotent: a second run finds nothing and sends nothing; proven in PGlite.
+
+**Refused.** A migration to clear the numbers: the rows must be read against their state and a runner told, which a SQL step cannot do, and a data step in the job is retryable. Dropping the old columns now: a contract release after this one does it (AGENTS.md §7.6). Renumbering the confirmed at the close: a number once emailed never moves (§173).
+
+**What it supersedes in `SPECS.md`.** Supersedes BR-REQ-038-01 criteria 11, 18, 22–24, 26–27 and criterion 7's clause that any staff role may type a confirmed registration's number or clear it, and that clearing one sends nothing; BR-REQ-037-07 12–13; BR-REQ-037-08 4, 12–15; BR-REQ-032-03 21; BR-REQ-035-05 5; BR-REQ-020-01 15; BR-REQ-034-03 4 — each of them describes §214's provisional number, its settle or its recompaction at the close, a number held before the confirmation, or §173's lock on a confirmed number, or let any staff role clear a confirmed number. Each of those requirements carries a closing criterion saying so. `BUSINESS.md` BR-BUS-037 says the same in the club's words: a number at the confirmation, in its order, never given twice; replaced by hand while it is not printed, the old one retired; never cleared.
+
+**Two staff replacing one number at once.** The number a hand-typed change replaces is read again under the event row's lock, and the write itself requires the row to still wear it: two volunteers replacing 5 with 9 and 5 with 12 at the same moment would otherwise both record `from: 5`, and 9 — already emailed — would be retired by nobody and drawn again. The second is told the number changed a moment ago (CONFLICT on `bibNumber`) and nothing is written.
+
+**Who replaces a number, and who fills a gap.** Replacing a confirmed runner's number retires the one they were emailed for good, so it is a change to a registration, the Administrator's (`canManageRegistrations`, §289), not a desk verb: `setBibNumberByStaff` answers FORBIDDEN to any other role when the row already wears a number, and nothing is written. Every desk role still gives a number to a confirmed registration that has none (the gap a row confirmed before §87 leaves). The registration's page offers the replace fold only to a role that may; the desk row never offered it.
+
+**One bib picture, the sheet's rule.** The single-bib preview draws a bib only for a confirmed real registration, as the sheet does (`bibScopeWhere`): a restarted registration still wearing its retired number draws none by a direct address, as it shows «—» everywhere else.
+
+**The CSV loses a column.** «Number settled» is gone, so every column after «Race number (BIB)» moves one place left. Kept empty for a release, it would have been a column that says nothing, so the shift is accepted and named in the changelog.
+
+Baseline `BR-V2.23-2026-09-27`.

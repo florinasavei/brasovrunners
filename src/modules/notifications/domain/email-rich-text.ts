@@ -209,8 +209,7 @@ function blockText(block: EmailBodyBlock, data: Facts): string[] {
  * One block of the club's body, in both halves at once: the inline-styled HTML a mail client
  * draws and the lines the plain-text part carries. They travel together because a message's
  * paragraphs are assembled with the platform's own sentences in among them — the "you are
- * already registered" line in front, the "this number is provisional" line after — and those
- * are plain strings. `renderContent` walks one list and asks each item which it is.
+ * already registered" line in front, the night-event line after — and those are plain strings. `renderContent` walks one list and asks each item which it is.
  */
 export type EmailBodyPart = { html: string; text: string[] };
 
