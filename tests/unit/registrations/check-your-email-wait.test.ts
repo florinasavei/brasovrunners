@@ -101,7 +101,7 @@ describe("§536 the short screen after the first form", () => {
     expect(html).toContain("Formularul pentru Ana a ajuns.");
     expect(html).toContain("Emailul către familia.pop@example.ro pleacă la 13:15.");
     expect(html.indexOf("Emailul către familia.pop@example.ro pleacă la 13:15.")).toBeLessThan(html.indexOf('data-testid="family-sitting-offer"'));
-    // §NNN: no bold question and no primary button any more — one quiet line after the main content.
+    // §547: no bold question and no primary button any more — one quiet line after the main content.
     expect(html).not.toContain("Mai înscrii pe cineva cu aceeași adresă?");
     expect(html).toContain("Înscriu încă o persoană cu această adresă");
     expect(html).not.toContain("Da, încă o persoană");

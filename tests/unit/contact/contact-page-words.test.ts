@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the contact page says less. The owner, 2026-09-28: «AI slop cleanup, spre exemplu pe
+ * §546 — the contact page says less. The owner, 2026-09-28: «AI slop cleanup, spre exemplu pe
  * partea de contact sunt multe texte».
  *
  * The page is rendered on the server with the real catalogues, the form working, the anti-bot check
@@ -101,7 +101,7 @@ function words(html: string): string[] {
     .filter((word) => /[\p{L}\p{N}]/u.test(word));
 }
 
-describe("§NNN the contact page says what it must and little else", () => {
+describe("§546 the contact page says what it must and little else", () => {
   for (const lang of ["ro", "en"] as const) {
     it(`keeps the intro to at most two short sentences, 15 words in all (${lang})`, () => {
       const intro = catalogues[lang].Contact.intro;

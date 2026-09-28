@@ -36,7 +36,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * The first block is the print: what it reserves, and that it never lands on a number somebody
  * has. The second carries the weight: every automatic draw — a confirmation (the only moment a
- * number is drawn, §NNN), the batch, the suggestions — steps over the reservation. The third is the
+ * number is drawn, §548), the batch, the suggestions — steps over the reservation. The third is the
  * desk: a spare handed with the paper is the number the confirmation gives, marked printed, and
  * refused when somebody else has it. They replace the three
  * Playwright cases the brief named (the owner cut the browser runs on 2026-09-26).
@@ -234,7 +234,7 @@ describe("§444 BR-REQ-038-01 the allocator never draws a desk spare", () => {
     const a = await enter(event, "a@example.org", { fastTrack: true });
     await reserveSpareBibs(db, { actor: admin, eventId: event.id, count: 3, now: later(1) });
     const b = await enter(event, "b@example.org", { at: later(2) });
-    // Sent, not confirmed: no number yet (§NNN).
+    // Sent, not confirmed: no number yet (§548).
     expect(b.bibNumber).toBeNull();
     const confirmed = await confirmRegistrationByStaff(db, volunteer, b.id, later(3));
     expect([a.bibNumber, confirmed.bibNumber]).toEqual([1, 5]);
@@ -426,7 +426,7 @@ describe("§444 BR-REQ-037-07 the desk hands a spare", () => {
 
   it("hands a spare to an online runner confirmed at the desk too, and refuses one for a row that wears a number or a printed bib", async () => {
     const event = await createRace({ spare: [900, 902] });
-    // An online registration: nobody has a number before the confirmation (§NNN), so the spare in
+    // An online registration: nobody has a number before the confirmation (§548), so the spare in
     // the volunteer's hand is the one it gets.
     const online = await enter(event, "online@example.org");
     await db.update(registrations).set({ source: "PUBLIC", createdByStaffUserId: null }).where(eq(registrations.id, online.id));

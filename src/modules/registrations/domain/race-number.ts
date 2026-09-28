@@ -2,7 +2,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { canTransition, isTerminalStatus } from "./state-machine";
 
 /**
- * The race number a screen, an email or an export shows for a registration (`DECISIONS.md` §NNN,
+ * The race number a screen, an email or an export shows for a registration (`DECISIONS.md` §548,
  * amending §214): the number it wears once it is **confirmed**, and nothing before.
  *
  * A number is drawn at the moment of confirmation and never moves (§173), so there is one column
@@ -11,7 +11,7 @@ import { canTransition, isTerminalStatus } from "./state-machine";
  * backoffice. A registration that is over keeps its number retired (a cancelled confirmed runner's
  * 27 is never given again), and the backoffice and the desk still show it, struck through, so a
  * printed bib can be pulled (§311). A row not confirmed yet that wears a number anyway — a
- * cancelled confirmed registration that restarted, or a number settled before §NNN — shows none
+ * cancelled confirmed registration that restarted, or a number settled before §548 — shows none
  * until it is confirmed again, and keeps that same number then.
  *
  * Pure, and over the row alone, so a list row, a desk row, a detail page and an export all ask it

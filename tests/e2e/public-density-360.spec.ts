@@ -172,7 +172,7 @@ test.describe("§480 the public pages at 360 px", () => {
       await expectInlineTarget(page, direct, direct.locator("a[href^='mailto:']").first(), "the club's address");
     }
 
-    // The asterisk legend is gone (§NNN): the first box sits under the intro, by the intro's margin alone.
+    // The asterisk legend is gone (§546): the first box sits under the intro, by the intro's margin alone.
     const gap = await page.evaluate(() => {
       const intro = [...document.querySelectorAll("#main p")].find((p) => p.textContent?.startsWith("O întrebare"));
       const field = document.getElementById("c-name")?.closest(".MuiFormControl-root");

@@ -37,7 +37,7 @@ export type RowVerb =
    * "This bib is on paper" — or is not, for a reprint (§264).
    *
    * Offered only where there is something to print: a confirmed, real registration with a
-   * number (§NNN: a number exists only from the confirmation).
+   * number (§548: a number exists only from the confirmation).
    */
   | "markBibPrinted"
   | "unmarkBibPrinted"

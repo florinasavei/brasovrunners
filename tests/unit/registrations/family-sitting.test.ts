@@ -319,7 +319,7 @@ describe("§519 the family's one confirmation", () => {
     for (const words of ["Număr de concurs: 12", "Număr de concurs: 13", "Număr de concurs: încă fără număr", "Codul pentru masă: BBB222", "Race number: 12", "Toate înscrierile mele"]) {
       expect(email.text).toContain(words);
     }
-    // Each person's own confirmation's number, plainly (§NNN).
+    // Each person's own confirmation's number, plainly (§548).
     expect(email.text).not.toContain("provizoriu");
     // The pictures once, in the first half: the second repeats the words.
     expect(email.html.split('<img src="https://example.test/api/registrations/qr/')).toHaveLength(4);

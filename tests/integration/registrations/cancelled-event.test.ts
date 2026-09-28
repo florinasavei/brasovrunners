@@ -173,7 +173,7 @@ describe("§331 a cancelled event allocates nothing and mails nothing on its own
     expect(confirmed.status).toBe("PENDING_EMAIL_CONFIRMATION");
     const row = await statusOf(pending.id);
     expect(row.status).toBe("PENDING_EMAIL_CONFIRMATION");
-    // The address was not marked verified, and no number was drawn (§NNN).
+    // The address was not marked verified, and no number was drawn (§548).
     expect(row.emailConfirmedAt).toBeNull();
     expect(row.bibNumber).toBeNull();
     expect(await allQueued()).toBe(before);

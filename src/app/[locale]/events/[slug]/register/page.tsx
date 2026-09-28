@@ -758,7 +758,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             owes the person reading it one sentence about where any of that goes — and the
             answer here is unusually good, so it is worth saying: nothing is published unless
             the event has a start list *and* the box below is ticked, and then only the name.
-            Said once (§NNN): the two section markers that repeated it are gone.
+            Said once (§546): the two section markers that repeated it are gone.
           */}
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
@@ -868,7 +868,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 }}
               >
               <Stack spacing={2} sx={{ minWidth: 0 }}>
-              {/* No «Confidențial» marker under the heading any more (§NNN): the banner above the
+              {/* No «Confidențial» marker under the heading any more (§546): the banner above the
                   form says where every answer goes, once. */}
               <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
                 {t("sections.about")}
@@ -899,7 +899,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate")}
-                /* No help at rest (§NNN): the minimum age is the line above the form, and the
+                /* No help at rest (§546): the minimum age is the line above the form, and the
                    words under the box (§467) say the age on race day. A refusal for age says the
                    rule (§321, §329) rather than "complete this field correctly". Left native, not
                    the backoffice's MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a
@@ -1028,7 +1028,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 invalidLabel={t("emailInvalid")}
                 suggestionLabel={t.raw("emailSuggestion") as string}
                 useSuggestionLabel={t("emailUseSuggestion")}
-                // No help at rest (§NNN): the address is typed twice, and the line above the form
+                // No help at rest (§546): the address is typed twice, and the line above the form
                 // already says the email comes to confirm it.
                 defaultValue={prefill("email")}
                 defaultConfirmValue={prefill("emailConfirm")}
@@ -1212,7 +1212,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("guardianName")}>
                 <Stack spacing={2}>
-                  {/* One helper, under the name (§NNN): required under eighteen — the box carries no
+                  {/* One helper, under the name (§546): required under eighteen — the box carries no
                       asterisk, because it is shown by the birth date — who signs, and whose email. */}
                   <TextField
                     {...field("guardianName", t("guardianHelp"))}

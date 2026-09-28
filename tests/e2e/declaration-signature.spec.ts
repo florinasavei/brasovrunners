@@ -136,7 +136,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
     await hydrated(page);
-    // «Anulează înscrierea pentru <nume>», asking first (§NNN, over §384).
+    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384).
     await page.getByRole("button", { name: /^Anulează înscrierea pentru / }).click();
     await confirmDialog(page, /^Anulezi înscrierea pentru /);
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });

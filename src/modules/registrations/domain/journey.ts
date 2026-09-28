@@ -128,7 +128,7 @@ function emailDate(input: JourneyInput): Date | null {
 }
 
 function bibDetail(input: JourneyInput): JourneyStepDetail | undefined {
-  // The chip says "nr. 42" on the confirmed step: the number comes with the confirmation (§NNN).
+  // The chip says "nr. 42" on the confirmed step: the number comes with the confirmation (§548).
   return input.bibNumber !== null ? "bib" : undefined;
 }
 

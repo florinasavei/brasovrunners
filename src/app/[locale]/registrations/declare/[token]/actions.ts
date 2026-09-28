@@ -232,7 +232,7 @@ export async function skipFamilyDeclarationAction(form: FormData): Promise<void>
 }
 
 /**
- * «Renunț la înscrierea pentru <nume>» on a family's step (§NNN, amending §471): the step's person is
+ * «Renunț la înscrierea pentru <nume>» on a family's step (§547, amending §471): the step's person is
  * cancelled — through the allocator, with the audit row and the cancellation email to the address —
  * and the page moves on to the next person, or to the end. Only the step the pass (or the person's
  * own live link) may sign; anything else is the link's generic refusal. After the event's start the

@@ -411,7 +411,7 @@ async function renderRow(
     if (others.length > 0) data.familyToSign = others;
   }
   /*
-    One cancellation email per person (§NNN): whether the person held a place or waited in line —
+    One cancellation email per person (§547): whether the person held a place or waited in line —
     the state the registration left, written in the row's payload by `unregister` — and who the
     address still holds at the event, with their states, read at send time. Only this address's own
     rows (the participant is the address, §389), so nothing about another inbox is said (§39).
@@ -523,7 +523,7 @@ async function renderRow(
       data.organizerBody = words.body[locale];
       data.organizerBodyOther = words.body[other];
     }
-    // A confirmed registration's number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`, §NNN).
+    // A confirmed registration's number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`, §548).
     if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
   }
   /*
@@ -679,7 +679,7 @@ async function renderRow(
       data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
     }
     /*
-      The number the confirmation gave (§NNN; the owner: "peste tot trebuie să apară BID-ul!!"):
+      The number the confirmation gave (§548; the owner: "peste tot trebuie să apară BID-ul!!"):
       drawn in the same transaction that confirmed the registration, so the confirmation carries
       it, and it never moves afterwards. Only these messages of a confirmed registration carry a
       number; the verification link and the declaration request say nothing about one.
@@ -690,7 +690,7 @@ async function renderRow(
   /*
     A family's one confirmation (§519): one block per person, headed by the name — the QR code and the
     desk code the desk hands the number against, and the race number from the one helper the page and
-    the export read (`raceNumberOf`: the number each person's own confirmation gave, §NNN), or «încă fără număr».
+    the export read (`raceNumberOf`: the number each person's own confirmation gave, §548), or «încă fără număr».
     A code is given here to a person confirmed before codes existed, as above. The club's copy names
     the people and their numbers, never a code or a QR (§320).
   */

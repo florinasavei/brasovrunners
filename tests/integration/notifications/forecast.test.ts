@@ -217,7 +217,7 @@ describe("§383 the forecast of automatic emails", () => {
     expect(row.recipients).toBe(1);
     expect(row.testRecipients).toBe(1);
     expect(row.registrationIds).toHaveLength(2);
-    // No race number is sent on its own since §NNN: it rides on the confirmation.
+    // No race number is sent on its own since §548: it rides on the confirmation.
     expect((await forecast()).some((candidate) => candidate.type === "BIB_ASSIGNED")).toBe(false);
   });
 

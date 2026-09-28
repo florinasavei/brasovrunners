@@ -114,7 +114,7 @@ describe("§444 the print's banner", () => {
   });
 });
 
-describe("§444 §NNN «Confirmă aici» hands a spare to a row that wears no number yet", () => {
+describe("§444 §548 «Confirmă aici» hands a spare to a row that wears no number yet", () => {
   const unnumbered = { kind: "REAL", bibNumber: null, bibPrintedAt: null };
 
   it("offers the spare to any real registration not numbered yet — nobody is numbered before the confirmation", () => {

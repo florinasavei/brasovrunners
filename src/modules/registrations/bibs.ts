@@ -47,9 +47,9 @@ async function bandOf<T extends Record<string, unknown>>(
 }
 
 /**
- * The numbers the rows of this event wear (§173, §NNN): every `bib_number`, whatever the row's
+ * The numbers the rows of this event wear (§173, §548): every `bib_number`, whatever the row's
  * status — a cancelled runner keeps theirs, retired — and any number still left in the old
- * `provisional_bib_number` column. Nothing writes that column since §NNN: a number exists only
+ * `provisional_bib_number` column. Nothing writes that column since §548: a number exists only
  * once a registration is confirmed. It is read here only until `releaseLegacyHeldNumbers` has run
  * once on this database (the maintenance job), so a number shown before this release is never
  * drawn for somebody else in the minutes between the deploy and that run.
@@ -74,7 +74,7 @@ async function wornNumbers<T extends Record<string, unknown>>(
 
 /**
  * Every number this event has on somebody — worn, and retired (erased or replaced by hand, §311,
- * §NNN) — and every number a print stepped over (§444, `skippedSpareNumbers`), as one set, for the
+ * §548) — and every number a print stepped over (§444, `skippedSpareNumbers`), as one set, for the
  * checks that ask "is this one free" rather than "which is the next". The rows first, then the
  * audit rows (`erasedBibNumbers` says why).
  */
@@ -89,7 +89,7 @@ async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, 
  * The numbers inside the desk's reservation that were never printed blank (§444): an extension
  * reached past them while a runner held them, so the print stepped over them and wrote them in its
  * audit row (`planSpareReservation`, `skipped`). Such a number stays its runner's, and one that was
- * cleared since (a number held before §NNN, `releaseLegacyHeldNumbers`) is nobody's: inside the
+ * cleared since (a number held before §548, `releaseLegacyHeldNumbers`) is nobody's: inside the
  * band, so no draw gives it, and never a spare, because no blank bib carries it. Read from the audit rows, as the
  * erased numbers are (§311): a fact about a past print, not a column on the event.
  */
@@ -115,7 +115,7 @@ async function skippedSpareNumbers<T extends Record<string, unknown>>(db: Databa
  * registration of one event that has no number yet the next free number counting up from the
  * event's own `bib_start_number`, in order of confirmation, and touches nothing else: a number
  * once given is never renumbered, so a bib printed on Friday is still right on Sunday. A
- * registration draws its number the moment it is confirmed and at no other (§87, §NNN), so the
+ * registration draws its number the moment it is confirmed and at no other (§87, §548), so the
  * batch is for a confirmed row that somehow has none. **Listing** is what the printed sheet
  * and the start line read.
  *
@@ -180,12 +180,12 @@ export async function erasedBibNumbers<T extends Record<string, unknown>>(
 
 /**
  * The numbers a staff member **replaced** by hand on a confirmed registration at this event
- * (§105, §NNN). Since §NNN every confirmation draws its number at once and the confirmation email
+ * (§105, §548). Since §548 every confirmation draws its number at once and the confirmation email
  * carries it, so the preferential number typed afterwards replaces a number the runner was already
  * told. That old number is retired like a cancelled one — handing it to the next confirmation
  * would make two people who each believe they are 27. It lives in the change's own audit row
- * (`registration.bib_set`, `from`, with the event since §NNN), read back as the erased ones are.
- * A replacement written before §NNN named no event and replaced only a number nobody had been
+ * (`registration.bib_set`, `from`, with the event since §548), read back as the erased ones are.
+ * A replacement written before §548 named no event and replaced only a number nobody had been
  * sent as final, so it retires nothing.
  */
 async function replacedBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
@@ -202,14 +202,14 @@ async function replacedBibNumbers<T extends Record<string, unknown>>(db: Databas
   return rows.map((row) => row.number);
 }
 
-/** Every number retired at this event without a row wearing it: erased (§311) or replaced by hand (§NNN). */
+/** Every number retired at this event without a row wearing it: erased (§311) or replaced by hand (§548). */
 export async function retiredBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
   return [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId))];
 }
 
 /**
  * The next free number at this event, counting up from the event's own start (§173, reversing
- * §94) — drawn at the moment a registration is confirmed, and at no other (§NNN).
+ * §94) — drawn at the moment a registration is confirmed, and at no other (§548).
  *
  * **In order of confirmation, from the race's own first number.** §94 drew at random, on the
  * owner's instruction at the time ("the bibs must be generated randomly"); he reversed it
@@ -223,7 +223,7 @@ export async function retiredBibNumbers<T extends Record<string, unknown>>(db: D
  * What does **not** change: a number once given is never taken back or reissued, so a bib
  * printed on Friday is still right on Sunday; a cancelled registration keeps its number, which
  * is how two people avoid both wearing 17; an erased or replaced one stays taken through its
- * audit row (`retiredBibNumbers`, §311, §NNN), because "lowest free" would otherwise go straight
+ * audit row (`retiredBibNumbers`, §311, §548), because "lowest free" would otherwise go straight
  * back to it; and the whole draw happens under the event row's lock, the same serialization
  * point capacity uses (§10.6), so two confirmations cannot reach the same free number.
  *
@@ -239,7 +239,7 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   startNumber?: number,
 ): Promise<number> {
   for (const number of await wornNumbers(tx, eventId)) taken.add(number);
-  // And the retired numbers (§311, §NNN), after the rows — `erasedBibNumbers` says why.
+  // And the retired numbers (§311, §548), after the rows — `erasedBibNumbers` says why.
   for (const number of await retiredBibNumbers(tx, eventId)) taken.add(number);
 
   // The caller inside a transaction that already holds the event row usually passes the start;
@@ -256,7 +256,7 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   throw new DomainError("VALIDATION_ERROR", `every race number from ${start} to ${ceiling} is taken at this event`);
 }
 
-/** One confirmed runner whose number shown before §NNN is kept as their race number, and what the message to them needs. */
+/** One confirmed runner whose number shown before §548 is kept as their race number, and what the message to them needs. */
 export type KeptLegacyNumber = {
   registrationId: string;
   participantId: string;
@@ -269,10 +269,10 @@ export type KeptLegacyNumber = {
 };
 
 /**
- * The one data step of §NNN: what the old `provisional_bib_number` column still holds becomes
+ * The one data step of §548: what the old `provisional_bib_number` column still holds becomes
  * either a race number or nothing, once.
  *
- * Before §NNN a number was drawn at submission and shown as «provizoriu» until the close, when the
+ * Before §548 a number was drawn at submission and shown as «provizoriu» until the close, when the
  * settle renumbered everybody. Now a number exists only once a registration is confirmed. So, on
  * a database that ran the old code:
  *
@@ -373,7 +373,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
           eq(registrations.status, "CONFIRMED"),
           eq(registrations.kind, "REAL"),
           isNull(registrations.bibNumber),
-          // Not a row whose number shown before §NNN the data step is about to keep (§286: the
+          // Not a row whose number shown before §548 the data step is about to keep (§286: the
           // number they were told is the number they keep) — never a second number for one runner.
           isNull(registrations.provisionalBibNumber),
         ),
@@ -382,7 +382,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
       .orderBy(asc(registrations.confirmedAt), asc(registrations.id));
 
     /*
-      Since §NNN a confirmation draws its own number, so this finds only a registration confirmed
+      Since §548 a confirmation draws its own number, so this finds only a registration confirmed
       before §87 or one whose old held number could not be kept (`releaseLegacyHeldNumbers`) — a
       gap to fill, in confirmation order, never anybody moved.
     */
@@ -452,7 +452,7 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
   count = 8,
 ): Promise<number[]> {
   // Cancelled numbers stay taken, as in the batch (§79), and so do erased and replaced ones
-  // (§311, §NNN): offering one would be offering a refusal.
+  // (§311, §548): offering one would be offering a refusal.
   const taken = await wornNumbers(db, eventId);
   for (const number of await retiredBibNumbers(db, eventId)) taken.add(number);
   // From the event's own band unless the caller asked from somewhere (§173): suggesting 1, 2, 3
@@ -587,7 +587,7 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
 /**
  * Whether a number typed at the desk is somebody's already (§444): worn by another registration of
  * this event — a cancelled one's included, retired — or retired by an erasure or a replacement by
- * hand (§311, §NNN). The unique index catches a worn one only.
+ * hand (§311, §548). The unique index catches a worn one only.
  */
 export async function bibNumberInUse<T extends Record<string, unknown>>(
   db: Database<T>,

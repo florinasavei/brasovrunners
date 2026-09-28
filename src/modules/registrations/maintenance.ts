@@ -48,7 +48,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   /** "Registration is open" messages queued this run to the addresses left ahead of the window (§146). */
   interestsNotified: number;
   /**
-   * Race numbers shown before §NNN that a confirmed registration keeps, told to the runner this run
+   * Race numbers shown before §548 that a confirmed registration keeps, told to the runner this run
    * (`releaseLegacyHeldNumbers`) — once per database, zero on every run after the first.
    */
   legacyNumbersKept: number;
@@ -74,7 +74,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   const settings = await readDeadlinesForRun(db);
 
   /*
-    The one data step of §NNN, first: a number exists only once a registration is confirmed, so
+    The one data step of §548, first: a number exists only once a registration is confirmed, so
     what the old held-number column still holds is kept by a confirmed registration and cleared
     from every other one. Idempotent and cheap — the partial index holds exactly the rows it
     touches, none after the first run — so it runs every time rather than being remembered. A
@@ -159,7 +159,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 
   /**
    * "Here is your race number" (§105's `BIB_ASSIGNED`), once, to a confirmed runner whose number
-   * shown before §NNN is now theirs for good — their confirmation said it was «provizoriu» and
+   * shown before §548 is now theirs for good — their confirmation said it was «provizoriu» and
    * promised the final one. Only for a race still ahead: a past or cancelled one needs no bib.
    * Queued after the data step's own transaction, and one per registration ever, by its own key,
    * so a retried run sends nothing twice.

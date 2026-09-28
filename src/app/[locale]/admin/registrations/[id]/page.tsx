@@ -463,7 +463,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {registration.status === "CONFIRMED" && (
             <>
               {/*
-                The number, drawn at the confirmation (§NNN), and the way to change it folded
+                The number, drawn at the confirmation (§548), and the way to change it folded
                 underneath (§232; the owner: "I wanna simplify that part with the BID changing").
                 The answer is one line; the change is a `<details>` that opens on the rare occasion
                 somebody wants §105's preferential number — the same idiom the list uses for its
@@ -479,7 +479,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
                       : tr("registrations.bibSettled", { number: registration.bibNumber })}
                 </Typography>
-                {/* Replacing a number already emailed is the Administrator's (§NNN); filling a gap is any desk role's. */}
+                {/* Replacing a number already emailed is the Administrator's (§548); filling a gap is any desk role's. */}
                 {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
                   /* The box spans the section. A refused number comes back in its box with the fold open (§315). */
                   <Box sx={{ alignSelf: "stretch" }}>

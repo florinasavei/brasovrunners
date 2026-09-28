@@ -516,7 +516,7 @@ export const events = pgTable(
 
     /**
      * When this event's race numbers were settled at the close (`DECISIONS.md` §214). **Retired
-     * since §NNN; nothing reads or writes it**: a number is drawn by each confirmation, so there is
+     * since §548; nothing reads or writes it**: a number is drawn by each confirmation, so there is
      * no settle. It stays, expand-only, until a contract release drops it.
      */
     bibsSettledAt: timestamp("bibs_settled_at", { withTimezone: true }),

@@ -48,7 +48,7 @@ type Props = {
   /**
    * After the first form of a would-be family (§536): the screen is then the short one — «Formularul
    * pentru Ana a ajuns.», «Emailul către ana@… pleacă la 10:15.» and, quiet after them, «Înscriu încă o
-   * persoană cu această adresă» (`FamilySittingOffer`, §NNN) — and nothing else. `atOnce`: the club's window is 0 (§519).
+   * persoană cu această adresă» (`FamilySittingOffer`, §547) — and nothing else. `atOnce`: the club's window is 0 (§519).
    * `continueAction` is that press, a server action, never a component. `email` is the
    * address the form went to and `windowMinutes` the club's window as the action read it, both from the
    * browser's half (absent on an older half: the club's current window). `leavesAt` is when the first
@@ -89,7 +89,7 @@ type Props = {
  *
  * **After the first form of a would-be family it is the short screen** (§536; the owner, 2026-09-28:
  * the screen must be clearer; the review's nits F0 and F2): the heading, then two lines — whose form
- * is in, and when its email leaves, the screen's point — and after them, since §NNN one quiet text
+ * is in, and when its email leaves, the screen's point — and after them, since §547 one quiet text
  * press, «Înscriu încă o persoană cu această adresă», with at most one sentence under it (the owner,
  * 2026-09-28: «pare că încurajăm asta… când e doar o excepție»). No steps and no wait box: the
  * leaving time is said once, in one shape, and nothing contradicts it.
@@ -163,7 +163,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             {leavesLine}
           </Typography>
         </Box>
-        {/* After the main content, quiet (§NNN): another person on the address is the exception. */}
+        {/* After the main content, quiet (§547): another person on the address is the exception. */}
         <FamilySittingOffer
           words={{
             add: t("sitting.addLink"),

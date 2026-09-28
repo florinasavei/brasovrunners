@@ -8,7 +8,7 @@ import { sittingOrderFor } from "./family-sitting";
 import { findRegistrationById } from "./repository";
 
 /**
- * «Gestionează înscrierea» per person (§NNN, amending §77 and §471; the owner, 2026-09-28, walking a
+ * «Gestionează înscrierea» per person (§547, amending §77 and §471; the owner, 2026-09-28, walking a
  * family of three on QA: one page, one QR, and no way to tell which of the three it was, nor to
  * cancel only one of them).
  *
@@ -97,7 +97,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
 }
 
 /**
- * The registration a per-person press may act on (§NNN): the link's own, or another registration of
+ * The registration a per-person press may act on (§547): the link's own, or another registration of
  * the same participant at the same event. Null for anything else — a malformed id, a stranger's, the
  * address's registration at another event — which the caller answers as a refused link.
  */

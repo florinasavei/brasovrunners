@@ -70,7 +70,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
   const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
   const t = await getTranslations("Registrations");
-  // The words beside every QR (§NNN): whose it is, their number, the code.
+  // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
     alt: (name) => t("manage.qrTitle", { name }),
     number: (number) => t("qr.number", { number }),
@@ -298,7 +298,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
               {/* No desk code or QR for a race that will not run: the desk is closed (§331). */}
               {/*
-                The QR with the person's name and race number beside it (§NNN): a family's codes
+                The QR with the person's name and race number beside it (§547): a family's codes
                 told apart at a glance. The number is the one rule's (`raceNumberOf`), «—» while none
                 is given; it exists once the registration is confirmed, and nothing qualifies it.
               */}

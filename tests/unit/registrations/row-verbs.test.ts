@@ -238,7 +238,7 @@ describe("§264 the bib's printing mark", () => {
     expect(
       rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } }),
     ).not.toContain("markBibPrinted");
-    // A registration not confirmed yet has no number at all (§NNN): nobody prints it.
+    // A registration not confirmed yet has no number at all (§548): nobody prints it.
     expect(
       rowVerbsFor("PENDING_EMAIL_CONFIRMATION", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } }),
     ).not.toContain("markBibPrinted");

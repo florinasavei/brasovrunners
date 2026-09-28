@@ -169,7 +169,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const legalCopy = await getTranslations("Legal");
   /*
     The page's one toast slot (§427): on the outcome page, the signature's own — the one that matches
-    this outcome, never the other — and on a family's step, «Renunț la înscrierea pentru …» (§NNN).
+    this outcome, never the other — and on a family's step, «Renunț la înscrierea pentru …» (§547).
   */
   const flashSlot = <PublicFlash accept={[done === "waitlisted" ? "declarationWaitlisted" : done ? "declarationConfirmed" : "familyWithdrawn"]} />;
 
@@ -502,7 +502,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       {/* Where the registration actually is when the link is spent; the declaration step
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep && <RegistrationJourney current={journeyStep} />}
-      {/* A person just withdrawn from the family's wizard (§NNN): said on the step it lands on. */}
+      {/* A person just withdrawn from the family's wizard (§547): said on the step it lands on. */}
       {familyMode && flashSlot}
 
       {familyMode && !familyCurrent && passSteps && walking ? (
@@ -827,7 +827,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {/*
                 «Semnează și treci la următoarea persoană» only while another person's declaration
                 follows in this sitting (§471); on the last one, and on a single declaration, just
-                «Semnează» (§NNN; the owner: «altfel nu scrie»).
+                «Semnează» (§547; the owner: «altfel nu scrie»).
               */}
               <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="declaration-sign">
                 <DrawIcon aria-hidden="true" sx={glyphSx("medium")} />
@@ -865,7 +865,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Box>
           )}
           {/*
-            «Renunț la înscrierea pentru <nume>» (§NNN, amending §471): a person registered by mistake
+            «Renunț la înscrierea pentru <nume>» (§547, amending §471): a person registered by mistake
             leaves the family here, on their own step — a quiet link, never the primary button, that
             asks first naming the person (§384). The server cancels only the step's person, through the
             allocator, and the page moves on to the next person or to the end.

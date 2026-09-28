@@ -387,7 +387,7 @@ export const registrations = pgTable(
     bibNumber: integer("bib_number"),
 
     /**
-     * **Retired since `DECISIONS.md` §NNN; nothing writes it.** From §214 to §NNN a number was held
+     * **Retired since `DECISIONS.md` §548; nothing writes it.** From §214 to §548 a number was held
      * here from the form until the close, and shown as «provizoriu». Now a number exists only once a
      * registration is confirmed, in `bib_number`. The column stays, expand-only, until a contract
      * release drops it: the maintenance job empties it once (`bibs.ts#releaseLegacyHeldNumbers` —
@@ -502,7 +502,7 @@ export const registrations = pgTable(
       "registrations_provisional_bib_number_positive",
       sql`${t.provisionalBibNumber} IS NULL OR ${t.provisionalBibNumber} > 0`,
     ),
-    // The retired column's index (§214, §NNN): it holds exactly the rows the one data step empties.
+    // The retired column's index (§214, §548): it holds exactly the rows the one data step empties.
     uniqueIndex("registrations_event_provisional_bib_unique")
       .on(t.eventId, t.provisionalBibNumber)
       .where(sql`${t.provisionalBibNumber} IS NOT NULL`),

@@ -3,10 +3,10 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
 
 /**
- * BR-REQ-038-01, `DECISIONS.md` §NNN (amending §173, §420) — the number every surface shows: a
+ * BR-REQ-038-01, `DECISIONS.md` §548 (amending §173, §420) — the number every surface shows: a
  * confirmed registration's, a finished one's kept retired, and nothing before the confirmation.
  */
-describe("§NNN the race number a surface shows", () => {
+describe("§548 the race number a surface shows", () => {
   it("shows a confirmed registration's number, and none while it has none", () => {
     expect(raceNumberOf({ status: "CONFIRMED", bibNumber: 12 })).toBe(12);
     expect(raceNumberOf({ status: "CONFIRMED", bibNumber: null })).toBeNull();

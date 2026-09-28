@@ -87,7 +87,7 @@ const COLUMNS: Array<{
   { header: "ID", width: 38, cell: (row) => ({ value: row.id, type: String }) },
   // Named as the backoffice names it (§180), and wide enough for the heading rather than the
   // number: a column headed by a truncated word is what makes somebody widen it by hand.
-  // Empty until the registration is confirmed (§NNN), as on every screen.
+  // Empty until the registration is confirmed (§548), as on every screen.
   { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: raceNumberOf({ status: row.status as RegistrationStatus, bibNumber: row.bibNumber ?? null }), type: Number }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
   { header: "First name", width: 18, cell: (row) => ({ value: row.firstName, type: String }) },

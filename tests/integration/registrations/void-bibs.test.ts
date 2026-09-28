@@ -162,7 +162,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
   });
 
   /**
-   * What "the number was later changed by hand" means here (§105, §NNN): a preferential number
+   * What "the number was later changed by hand" means here (§105, §548): a preferential number
    * replaces the one a confirmation gave, before anything is printed; once printed it stays.
    */
   it("a number typed by hand replaces the confirmation's, and once printed and cancelled it is void under that number", async () => {
@@ -229,7 +229,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
     const restarted = await register("Revenită", { status: "PENDING_DECLARATION", bib: 12, printedAt: NOW });
     await expect(setBibNumberByStaff(db, admin, restarted.id, 13, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     await expect(setBibNumberByStaff(db, admin, restarted.id, null, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
-    // Not confirmed, so no number to change (§NNN); confirmed and not printed, the preferential
+    // Not confirmed, so no number to change (§548); confirmed and not printed, the preferential
     // number is still the organizer's to give (§105).
     const pending = await register("În așteptare", { status: "PENDING_DECLARATION" });
     await expect(setBibNumberByStaff(db, admin, pending.id, 16, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
@@ -346,7 +346,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
   });
 
   /**
-   * Every confirmation draws from the band's start (§173, §NNN), so it is certain to reach an
+   * Every confirmation draws from the band's start (§173, §548), so it is certain to reach an
    * erased number — and an unprinted one is retired as firmly as a printed one: the runner was
    * emailed it either way.
    */

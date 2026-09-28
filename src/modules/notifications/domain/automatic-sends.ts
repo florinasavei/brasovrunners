@@ -29,7 +29,7 @@ export const AUTOMATIC_SEND_KEYS = {
   reminder: (registrationId: string) => `registration:${registrationId}:reminder`,
   lastCall: (registrationId: string) => `registration:${registrationId}:sign-reminder`,
   participation: (registrationId: string) => `registration:${registrationId}:confirm-participation`,
-  // The number a confirmation before §NNN was shown as «provizoriu», told once when it was kept (`bibs.ts#releaseLegacyHeldNumbers`).
+  // The number a confirmation before §548 was shown as «provizoriu», told once when it was kept (`bibs.ts#releaseLegacyHeldNumbers`).
   bibs: (registrationId: string) => `registration:${registrationId}:bib-settled`,
 } as const;
 

@@ -35,7 +35,7 @@ export type FamilySigningRow = {
   checkinCode?: string | null;
   /** Whether a declaration acceptance exists for the registration — signed on a link or on paper (§67). */
   declared?: boolean;
-  /** The race number (§NNN), for the number beside the desk code (`raceNumberOf`). */
+  /** The race number (§548), for the number beside the desk code (`raceNumberOf`). */
   bibNumber?: number | null;
   /** The place in the family's order (§519, `compareFamilyOrder`), when the family's one button confirmed it. */
   familyRank?: number | null;
@@ -68,7 +68,7 @@ export type FamilyStep = {
   holdExpiresAt: Date | null;
   checkinCode: string | null;
   /**
-   * The number the person's own confirmation gave (`raceNumberOf`, §NNN), or null before it: each
+   * The number the person's own confirmation gave (`raceNumberOf`, §548), or null before it: each
    * person of a family gets theirs at their own confirmation. The slot beside the QR a later change
    * fills with the name and the number on every QR.
    */
@@ -145,7 +145,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
 export type FamilyStepWordsKey = FamilyStepState | "waitlisted" | "cancelled";
 
 /**
- * A person withdrawn from the wizard with «Renunț la înscrierea pentru …» (§NNN) is a closed step
+ * A person withdrawn from the wizard with «Renunț la înscrierea pentru …» (§547) is a closed step
  * whose registration is cancelled: the line says «înscriere anulată», never the vaguer «nu mai
  * așteaptă semnătura» a lapsed hold gets.
  */
@@ -155,7 +155,7 @@ export function familyStepWordsKey(step: Pick<FamilyStep, "state" | "status">): 
 }
 
 /**
- * The signing button's words (§NNN, amending §471; the owner, 2026-09-28: «altfel nu scrie»):
+ * The signing button's words (§547, amending §471; the owner, 2026-09-28: «altfel nu scrie»):
  * «Semnează și treci la următoarea persoană» only while another person's declaration follows in
  * this sitting; on the last one, and on a single declaration, just «Semnează». A key under
  * `Registrations`, so both languages are tested together.

@@ -107,14 +107,14 @@ describe("BR-REQ-038-01 race numbers", () => {
   });
 
   /**
-   * `DECISIONS.md` §286, §NNN — the number somebody was told is the number they keep.
+   * `DECISIONS.md` §286, §548 — the number somebody was told is the number they keep.
    *
-   * Before §NNN a confirmed runner could hold a number in the old `provisional_bib_number` column
+   * Before §548 a confirmed runner could hold a number in the old `provisional_bib_number` column
    * (shown as «provizoriu»). The one data step keeps it as their race number
    * (`releaseLegacyHeldNumbers`); until it has run, the batch leaves that row alone rather than
    * give it a second number, and never draws the held number for somebody else.
    */
-  it("keeps the number a confirmed runner was told before §NNN, instead of handing out a second one (§286)", async () => {
+  it("keeps the number a confirmed runner was told before §548, instead of handing out a second one (§286)", async () => {
     await register("La ghișeu", { provisional: 5, confirmedAt: new Date("2026-09-01T10:00:00Z") });
     await register("Pe net", { confirmedAt: new Date("2026-09-02T10:00:00Z") });
 

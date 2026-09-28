@@ -68,8 +68,8 @@ export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<numb
 export type SpareState = { kind: "none" } | { kind: "free"; next: number } | { kind: "out" };
 
 /**
- * Whether the desk's «Confirmă aici» carries a spare for this row (§444, §NNN): a real registration
- * that wears no number yet and has no printed bib. Since §NNN nobody has a number before the
+ * Whether the desk's «Confirmă aici» carries a spare for this row (§444, §548): a real registration
+ * that wears no number yet and has no printed bib. Since §548 nobody has a number before the
  * confirmation — an online runner included — so the spare in the volunteer's hand is the number the
  * confirmation gives, whoever typed the registration in. A row that already wears one (a cancelled
  * confirmed registration that restarted keeps its retired number, §173) keeps it, and a printed bib

@@ -46,7 +46,7 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
  */
 
 /**
- * One cookie per language, each on its own page's path (§NNN, found walking the family on a
+ * One cookie per language, each on its own page's path (§547, found walking the family on a
  * production build): a response keeps one cookie per name, so two writes of one name on two paths
  * left only the last — the English page's — and the Romanian wizard's second press arrived with no
  * pass. The same sealed value under a name per locale; a request only ever carries its own page's.

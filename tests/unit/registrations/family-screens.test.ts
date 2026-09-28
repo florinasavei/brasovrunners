@@ -10,7 +10,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the family's screens after the owner's walk on QA (2026-09-28, 17:45–18:00), amending the
+ * §547 — the family's screens after the owner's walk on QA (2026-09-28, 17:45–18:00), amending the
  * family branch (a family sitting reserves every place), §471 and §77: the discreet «Înscriu încă o persoană», the wizard's button by
  * position, the name and number beside every QR, and one cancellation email per person
  * (BR-REQ-031-01, BR-REQ-033-02, BR-REQ-036-01, BR-REQ-036-04).
@@ -28,7 +28,7 @@ const step = (id: string, state: FamilyStep["state"], status: FamilyStep["status
   raceNumber: null,
 });
 
-describe("§NNN the wizard's button says «… și treci la următoarea persoană» only while another person follows", () => {
+describe("§547 the wizard's button says «… și treci la următoarea persoană» only while another person follows", () => {
   it("picks the words by position: first and middle go on, the last and a single declaration just sign", () => {
     const first = [step("a", "current"), step("b", "next"), step("c", "next")];
     const middle = [step("a", "signed", "CONFIRMED"), step("b", "current"), step("c", "next")];
@@ -66,7 +66,7 @@ describe("§NNN the wizard's button says «… și treci la următoarea persoan�
   });
 });
 
-describe("§NNN «Înscriu încă o persoană cu această adresă» is one quiet line, never the primary button", () => {
+describe("§547 «Înscriu încă o persoană cu această adresă» is one quiet line, never the primary button", () => {
   const html = renderToStaticMarkup(
     createElement(FamilySittingOffer, {
       words: { add: ro.Registration.sitting.addLink, addPending: ro.Registration.sitting.addPending, hint: "Fiecare persoană primește emailul ei." },
@@ -99,7 +99,7 @@ describe("§NNN «Înscriu încă o persoană cu această adresă» is one quiet
   });
 });
 
-describe("§NNN the name and the race number beside every QR", () => {
+describe("§547 the name and the race number beside every QR", () => {
   it("reads the name and the race number through raceNumberOf, «—» before one is given, never «provisional»", () => {
     expect(qrIdentity({ registeredName: " Ana Pop ", status: "CONFIRMED", bibNumber: 12 })).toEqual({ name: "Ana Pop", number: "12" });
     expect(qrIdentity({ registeredName: "Ioana Pop", status: "CONFIRMED", bibNumber: null })).toEqual({ name: "Ioana Pop", number: NO_RACE_NUMBER });
@@ -143,7 +143,7 @@ describe("§NNN the name and the race number beside every QR", () => {
   });
 });
 
-describe("§NNN one cancellation email per person", () => {
+describe("§547 one cancellation email per person", () => {
   const cancelled: TemplateData = {
     participantName: "Mihai Pop",
     eventTitle: "Crosul Tâmpei",

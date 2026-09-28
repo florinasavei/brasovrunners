@@ -27,7 +27,7 @@ type Props = {
 };
 
 /**
- * One person's QR code with their name and race number beside it (§NNN; the owner, 2026-09-28: a
+ * One person's QR code with their name and race number beside it (§547; the owner, 2026-09-28: a
  * family's three codes looked the same). The name in bold, then «Număr de concurs: 12» — «—» while
  * none is given — then the access code the desk types when the camera fails. The number is the
  * one rule's (`qrIdentity` through `raceNumberOf`): it exists once the registration is confirmed, and

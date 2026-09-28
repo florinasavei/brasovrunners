@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — fewer words on the registration form. The owner, 2026-09-28: «sunt prea multe descrieri
+ * §546 — fewer words on the registration form. The owner, 2026-09-28: «sunt prea multe descrieri
  * la fiecare label!». A helper under a field stays only where it says what the label cannot: a
  * format the runner would get wrong, a legal reason, a consequence. The consents, the race's rules
  * box (§422), the birth date read back in words (§467) and the «Mai lipsesc:» list are not helpers
@@ -164,7 +164,7 @@ const PLAIN_FORM_HELP = [
 ];
 
 /**
- * The field helpers under a box at rest. Gone (§NNN): the birth date's, the city's, the email's, the
+ * The field helpers under a box at rest. Gone (§546): the birth date's, the city's, the email's, the
  * club's «Opțional», the Instagram's and the health note's; the guardian's block sentence is its box's
  * one helper now.
  */
@@ -176,7 +176,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the registration form says only what a label cannot", () => {
+describe("§546 the registration form says only what a label cannot", () => {
   for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
     it(`draws ${PLAIN_FORM_HELP.length} help texts on a plain event, and one helper at most under a box (${locale})`, async () => {
       state.locale = locale;

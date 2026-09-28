@@ -49,7 +49,7 @@ type Props = {
     here?: string;
     list?: string;
     withdrawn?: string;
-    /** Which person a check-in or a list answer was about (§NNN): an id the page already lists, never a name. */
+    /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
   }>;
 };
@@ -62,7 +62,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * Manage/cancel a registration (BR-REQ-036-01). The GET shows the current state and asks for
  * explicit confirmation; nothing changes until the POST.
  *
- * **Per person since §NNN** (amending §77 and the family branch's QR page; the owner, 2026-09-28,
+ * **Per person since §547** (amending §77 and the family branch's QR page; the owner, 2026-09-28,
  * walking a family of three on QA): the page lists the registration the link names and every other
  * active registration of the same address at the same event (`listManagedPeople`) — each with their
  * own QR, name and race number, their state, their own public-list choice (§143) and their own
@@ -70,7 +70,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * one-person page. The page reveals nothing about any other address, nor about the address's other
  * events (§39): the inbox that holds this link holds the same list on «Înscrierile mele» (§77).
  *
- * **No signed declaration here any more** (§NNN): the PDF, with the identity document in it, travels
+ * **No signed declaration here any more** (§547): the PDF, with the identity document in it, travels
  * only in the email that delivered it (§85–§87); a link that anybody holding the manage email can
  * forward is not where it belongs. The page says it was sent.
  */
@@ -81,7 +81,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
   const { done, invalid, started, here, list, withdrawn, person } = await searchParams;
   const t = await getTranslations("Registrations");
-  // The words beside every QR (§NNN): whose it is, their number, the code.
+  // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
     alt: (name) => t("manage.qrTitle", { name }),
     number: (number) => t("qr.number", { number }),
@@ -98,7 +98,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         </Typography>
         <Alert severity="success">{t("manage.done")}</Alert>
         {/*
-          A family's page (§NNN): the cancel spent the link, as every cancellation does (§12.8), so
+          A family's page (§547): the cancel spent the link, as every cancellation does (§12.8), so
           the other people on the address are reached through a fresh «Înscrierile mele» link.
         */}
         {done === "family" && (
@@ -158,7 +158,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
               «Eveniment anulat» chip, so its own line names the cancellation (§NNN). */}
           {live.eventCancelled && <Alert severity="info">{t("manage.eventCancelled")}</Alert>}
           {/*
-            A family on the address (§NNN): one heading with the family glyph, the marker naming the
+            A family on the address (§547): one heading with the family glyph, the marker naming the
             others (the family branch's «Familie»), and a card per person below.
           */}
           {family && (
@@ -208,7 +208,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       </Typography>
                     )}
                     <Typography sx={{ mb: 2 }}>{t("manage.codeIntro")}</Typography>
-                    {/* The QR with the name and the race number beside it (§NNN): a family's codes told apart. */}
+                    {/* The QR with the name and the race number beside it (§547): a family's codes told apart. */}
                     <QrWithName
                       checkinCode={confirmed}
                       registeredName={one.registeredName}
@@ -308,7 +308,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  «Anulează înscrierea pentru <nume>» (§NNN): each person's own, asking first (§384) and
+                  «Anulează înscrierea pentru <nume>» (§547): each person's own, asking first (§384) and
                   naming the person. `#cancel` is the link's own person's — where "I can't make it any
                   more" in the email lands (§96). The server accepts only a registration of this address
                   at this event.

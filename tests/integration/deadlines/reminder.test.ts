@@ -158,7 +158,7 @@ describe("§377 the reminder lead, the event's or the club's", () => {
     participantId = again.id;
     const none = await seedEvent(new Date(NOW.getTime() + 10 * DAY), 0);
     await seedRegistration(none.id, "CONFIRMED");
-    // No reminder, and nothing is numbered at the close (§NNN): nothing is ahead.
+    // No reminder, and nothing is numbered at the close (§548): nothing is ahead.
     expect(await nextMaintenanceWork(db, NOW)).toBeNull();
   });
 

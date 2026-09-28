@@ -86,7 +86,7 @@ export async function setRegistrationStatus(id: string, status: string): Promise
  * the spec writes them with — so a spec that registers on the sample race does not fill it for the
  * specs after it (the e2e memory: two local runs fill the race). Cleanup, not a subject: the rows
  * are marked cancelled by an Administrator, a confirmed one keeping its number retired, as the
- * allocator's own cancel would leave them (§NNN); nobody on a waiting list is offered anything,
+ * allocator's own cancel would leave them (§548); nobody on a waiting list is offered anything,
  * which a run's leftovers never deserved.
  */
 export async function cancelRegistrationsByEmailPrefix(prefix: string): Promise<void> {

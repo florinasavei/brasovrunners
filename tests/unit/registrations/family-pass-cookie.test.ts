@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 /**
  * The jar as Next keeps it: one cookie per name in a response — a second `set` of the same name
- * replaces the first, whatever its path. That is what hid the defect (§NNN): the pass written under
+ * replaces the first, whatever its path. That is what hid the defect (§547): the pass written under
  * one name on the Romanian and the English path kept only the English one, and the Romanian
  * wizard's next press arrived without it.
  */
@@ -30,7 +30,7 @@ const PASS = {
   expiresAt: new Date(NOW.getTime() + 30 * 60_000),
 };
 
-describe("§NNN the family's pass reaches the wizard's next press in every language (§471)", () => {
+describe("§547 the family's pass reaches the wizard's next press in every language (§471)", () => {
   it("writes one cookie per language, each on its own page's path, so none replaces the other", async () => {
     jar.clear();
     await writeFamilySigningPass(PASS, "tok_en", NOW);

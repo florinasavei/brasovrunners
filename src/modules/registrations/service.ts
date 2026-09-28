@@ -224,7 +224,7 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
 }
 
 /**
- * The race number a registration gets at the moment it is confirmed (§NNN, amending §173, §214,
+ * The race number a registration gets at the moment it is confirmed (§548, amending §173, §214,
  * §420; the owner, 2026-09-28: «faza cu numerele de concurs provizorii e ciudată»).
  *
  * A number exists only once a registration is confirmed — the address proved and the declaration
@@ -267,7 +267,7 @@ async function handedBibAtConfirmation<T extends Record<string, unknown>>(
   if (current.kind !== "REAL") {
     throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number", ["bibNumber"]);
   }
-  // Nobody has a number before the confirmation (§NNN), so any real registration confirmed at the
+  // Nobody has a number before the confirmation (§548), so any real registration confirmed at the
   // desk may take the one in the volunteer's hand — unless it already wears one (the same rule the
   // desk's box is drawn by, `handsSpareAtConfirm`, here under the lock).
   if (!handsSpareAtConfirm(current)) {
@@ -739,7 +739,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     return (await repo.findRegistrationById(db, registrationId)) ?? updated;
   }
 
-  // A held place carries no race number: the number comes with the confirmation (§NNN).
+  // A held place carries no race number: the number comes with the confirmation (§548).
   return updated;
 }
 
@@ -877,7 +877,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       now,
     });
     if (!offered) continue;
-    // An offer carries no race number; accepting it is a confirmation, which draws one (§NNN).
+    // An offer carries no race number; accepting it is a confirmation, which draws one (§548).
 
     await enqueueEmail(db, {
       participantId: offered.participantId,
@@ -2338,7 +2338,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       createdByStaffUserId: origin.createdByStaffUserId ?? null,
       now,
     });
-    // No race number at the form: it is drawn when the registration is confirmed (§NNN).
+    // No race number at the form: it is drawn when the registration is confirmed (§548).
 
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
@@ -2654,7 +2654,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
         confirmedAt: now,
         holdExpiresAt: null,
         checkinCode: current.checkinCode ?? newCheckinCode(),
-        // The race number, drawn now and at no other moment (§NNN): the next one in confirmation order.
+        // The race number, drawn now and at no other moment (§548): the next one in confirmation order.
         ...(await bibAtConfirmation(tx, current)),
       },
       now,
@@ -2802,7 +2802,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       confirmedAt: now,
       holdExpiresAt: null,
       checkinCode: current.checkinCode ?? newCheckinCode(),
-      // As in `signDeclaration` (§NNN): the next number in confirmation order — unless the desk
+      // As in `signDeclaration` (§548): the next number in confirmation order — unless the desk
       // handed one with the paper, a spare above all (§444).
       ...(handedBib !== undefined ? await handedBibAtConfirmation(tx, current, handedBib, now) : await bibAtConfirmation(tx, current)),
     },
@@ -2926,7 +2926,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
       now,
     });
     if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
-    // The confirmation below draws the number, under this lock (§NNN).
+    // The confirmation below draws the number, under this lock (§548).
     const confirmed = await acceptDeclarationOnPaper(tx, locked, offered, actor, now);
     // As in `signDeclaration`: the expiry above may have released another person's lapsed
     // hold to the queue, and this transaction is the one holding the lock that can offer it.
@@ -2990,7 +2990,7 @@ export async function undoCheckIn<T extends Record<string, unknown>>(
   return updated;
 }
 
-/** Where a participant cancelled their own registration from (§NNN): audit metadata, never a name. */
+/** Where a participant cancelled their own registration from (§547): audit metadata, never a name. */
 export type ParticipantCancelDoor = "MANAGE_LINK" | "MY_REGISTRATIONS" | "FAMILY_WIZARD";
 
 export async function unregister<T extends Record<string, unknown>>(
@@ -3008,7 +3008,7 @@ export async function unregister<T extends Record<string, unknown>>(
   options: {
     notify?: boolean;
     /**
-     * The door a participant cancelled through (§NNN): their own manage link, «Înscrierile mele», or
+     * The door a participant cancelled through (§547): their own manage link, «Înscrierile mele», or
      * «Renunț la înscrierea pentru …» in the family's wizard. Given, the cancellation writes one audit
      * row with no staff actor — the state it left and the door, never a name (AGENTS.md §12.12) — so
      * the club's timeline says the person withdrew themselves, as it says a staff cancellation.
@@ -3063,7 +3063,7 @@ export async function unregister<T extends Record<string, unknown>>(
         locale: cancelled.locale,
         recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
         /*
-          The state the registration left (§NNN): the message says a held place was released, or that
+          The state the registration left (§547): the message says a held place was released, or that
           the person left the waiting list — «Înscrierea pentru <nume> … a fost anulată», one per
           person, whoever pressed it.
         */

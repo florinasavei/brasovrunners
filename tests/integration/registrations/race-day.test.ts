@@ -260,7 +260,7 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
     expect(acceptance.method).toBe("PAPER");
   });
 
-  it("retires the number a preferential one replaced, and never offers either again (§NNN)", async () => {
+  it("retires the number a preferential one replaced, and never offers either again (§548)", async () => {
     const event = await createInternalEvent(10);
     const { registration } = await enter(event, "numbered@example.org", { fastTrack: true });
     expect(registration.bibNumber).toBe(1);
@@ -347,7 +347,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "ana@example.org", { fastTrack: true });
     await enter(event, "pending@example.org", { at: new Date(NOW.getTime() + 60_000) });
-    // Numbered by the confirmation the fast track made (§NNN) — the event's first number (§173).
+    // Numbered by the confirmation the fast track made (§548) — the event's first number (§173).
     expect(a.registration.bibNumber).toBe(1);
     await checkInByStaff(db, volunteer, a.registration.id, "in", NOW);
 
@@ -379,7 +379,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   it("finds a cancelled runner by their settled number, so the desk can say why nothing is handed out", async () => {
     const event = await createInternalEvent(10);
     const ana = await enter(event, "ana@example.org", { fastTrack: true });
-    // Confirmed on the spot with 1; a preferential 27 replaces it (§105, §NNN).
+    // Confirmed on the spot with 1; a preferential 27 replaces it (§105, §548).
     await setBibNumberByStaff(db, admin, ana.registration.id, 27, NOW);
     await cancelRegistrationByStaff(db, admin, ana.registration.id, "accidentare", new Date(NOW.getTime() + 60_000));
 
@@ -396,10 +396,10 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §NNN — a number exists only once a registration is confirmed, so the desk finds nobody by a
+   * §548 — a number exists only once a registration is confirmed, so the desk finds nobody by a
    * number before then: a pending row shows «—» and answers to no digits.
    */
-  it("does not find an unconfirmed row by a number, and finds it by its own once the desk confirms it (§NNN)", async () => {
+  it("does not find an unconfirmed row by a number, and finds it by its own once the desk confirms it (§548)", async () => {
     const event = await createInternalEvent(10);
     const bob = await enter(event, "bob@example.org");
     expect(bob.registration.bibNumber).toBeNull();
@@ -411,10 +411,10 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §173, §NNN — numbers run in order from the event's own start, in the order registrations are
+   * §173, §548 — numbers run in order from the event's own start, in the order registrations are
    * **confirmed**, not the order they were sent: nothing is drawn before the confirmation.
    */
-  it("numbers in order of confirmation, from the event's own first number (§NNN)", async () => {
+  it("numbers in order of confirmation, from the event's own first number (§548)", async () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "a@example.org");
     const b = await enter(event, "b@example.org", { at: new Date(NOW.getTime() + 60_000) });
@@ -450,7 +450,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     expect(unchanged?.bibNumber).toBe(1);
   });
 
-  it("gives a preferential number on a confirmed registration only, retires the one it replaced, refuses a duplicate and a nonsense value (§105, §NNN)", async () => {
+  it("gives a preferential number on a confirmed registration only, retires the one it replaced, refuses a duplicate and a nonsense value (§105, §548)", async () => {
     const event = await createInternalEvent(10);
     const confirmed = await enter(event, "a@example.org", { fastTrack: true });
     const waiting = await enter(event, "b@example.org", { at: new Date(NOW.getTime() + 60_000) });

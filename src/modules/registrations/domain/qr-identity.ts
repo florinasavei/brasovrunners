@@ -2,7 +2,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { raceNumberOf } from "./race-number";
 
 /**
- * Whose QR code this is (§NNN; the owner, 2026-09-28, walking a family of three on QA: three
+ * Whose QR code this is (§547; the owner, 2026-09-28, walking a family of three on QA: three
  * identical squares, and nothing beside them to tell them apart). Beside every QR — the confirmed
  * email, «Gestionează înscrierea», «Înscrierile mele» — and on the club copy, which carries no QR
  * (§320), the person's name and their race number: the number once one is given, «—» before.

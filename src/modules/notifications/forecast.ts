@@ -42,7 +42,7 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
  * closes (§160, AGENTS.md §10.5, §420), and "registration is open" to the addresses left on the
- * event's page (§146). No race number is sent on its own since §NNN: it rides on the confirmation.
+ * event's page (§146). No race number is sent on its own since §548: it rides on the confirmation.
  *
  * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
  * is queued and not yet sent — the reserve (`domain/bulk.ts`) may hold it until the allowance

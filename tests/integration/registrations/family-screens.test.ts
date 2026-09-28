@@ -17,7 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the family's screens after the owner's walk on QA (2026-09-28, 17:45–18:00), amending §471
+ * §547 — the family's screens after the owner's walk on QA (2026-09-28, 17:45–18:00), amending §471
  * and §77 (BR-REQ-036-01, BR-REQ-036-04, BR-REQ-033-02, BR-REQ-034-01):
  *
  * - «Renunț la înscrierea pentru <nume>» in the declarations wizard cancels that person through the
@@ -220,7 +220,7 @@ async function thrown(promise: Promise<unknown>) {
   return "no error";
 }
 
-describe("§NNN «Renunț la înscrierea pentru <nume>» in the declarations wizard", () => {
+describe("§547 «Renunț la înscrierea pentru <nume>» in the declarations wizard", () => {
   it("cancels the step's person through the allocator — place released, audit row, one email — and goes on to the next", async () => {
     const { event, ana, maria, ion } = await family();
     vi.setSystemTime(at(20));
@@ -306,7 +306,7 @@ describe("§NNN «Renunț la înscrierea pentru <nume>» in the declarations wiz
   });
 });
 
-describe("§NNN «Gestionează înscrierea» per person, and safe", () => {
+describe("§547 «Gestionează înscrierea» per person, and safe", () => {
   /** The family of three, every declaration signed through the wizard: three confirmed, three QR codes. */
   async function confirmedFamily() {
     const people = await family();

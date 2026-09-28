@@ -18,7 +18,7 @@ import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
  *
  * A confirmed person's race number beside the desk code, on every line and on the last screen (§519;
  * the owner, of this list: «aici vreau să văd și BIB-urile»): the one helper the family's confirmation
- * email and the export read (`raceNumberOf`, §173, §NNN) — the number each person's own confirmation
+ * email and the export read (`raceNumberOf`, §173, §548) — the number each person's own confirmation
  * gave — or «încă fără număr» while none is given.
  */
 export default async function FamilySigningSteps({ steps, detailed = false }: { steps: readonly FamilyStep[]; detailed?: boolean }) {
@@ -31,7 +31,7 @@ export default async function FamilySigningSteps({ steps, detailed = false }: { 
   const whatNext = (step: FamilyStep) => {
     if (step.status === "CONFIRMED" && step.checkinCode) return t("declare.family.what.confirmed", { code: step.checkinCode });
     if (step.status === "WAITLISTED") return t("declare.family.what.waitlisted");
-    // Withdrawn from the wizard (§NNN): the registration is cancelled and the place free again.
+    // Withdrawn from the wizard (§547): the registration is cancelled and the place free again.
     if (step.status === "CANCELLED") return t("declare.family.what.cancelled");
     if (step.state === "later") return t("declare.family.what.later");
     if (step.state === "closed") return t("declare.family.what.closed");

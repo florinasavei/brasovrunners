@@ -10,7 +10,7 @@ import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * The public site's two glyphs for a press that asks first (§NNN) — by name, because a Server
+ * The public site's two glyphs for a press that asks first (§547) — by name, because a Server
  * Component cannot hand an element across the boundary (§370), and a public page never imports the
  * backoffice's registry (`action-icons.ts`, §318): this island imports exactly the two it draws.
  */
@@ -28,7 +28,7 @@ type Props = {
 };
 
 /**
- * A quiet, irreversible press on a participant's own page that asks first (§NNN, over §384): «Renunț
+ * A quiet, irreversible press on a participant's own page that asks first (§547, over §384): «Renunț
  * la înscrierea pentru Mihai» in the declarations wizard, «Anulează înscrierea pentru Mihai» on the
  * manage page. A text-styled button in the error colour, never the page's primary one, with its glyph
  * and its 44-pixel height (BR-REQ-041-01 criterion 6); the press opens the one `ConfirmDialog`, which

@@ -799,7 +799,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     const positions = inOrder.map((row) => message.text.indexOf(row.registeredName, blocks));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
-    // Each person's number is their own confirmation's (§NNN): they signed in this order, one by one.
+    // Each person's number is their own confirmation's (§548): they signed in this order, one by one.
     expect(inOrder.map((row) => row.bibNumber)).toEqual([1, 2, 3]);
     for (const row of inOrder) {
       expect(message.text).toContain(`Număr de concurs: ${row.bibNumber}`);

@@ -194,7 +194,7 @@ export async function consumeAndSetListConsent<T extends Record<string, unknown>
  * read, never spent — the page must still be able to cancel — and it is the token that says
  * which registration this is; nothing is trusted from the form.
  *
- * Per person since §NNN: `registrationId` names another person the page lists — a registration of
+ * Per person since §547: `registrationId` names another person the page lists — a registration of
  * the same address at the same event, checked here (`managedRegistration`); a stranger's id, or one
  * at another event, gets NOT_FOUND. Absent, the link's own.
  */

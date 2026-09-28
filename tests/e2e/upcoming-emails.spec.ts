@@ -94,7 +94,7 @@ test.describe("§383 the upcoming automatic emails on /admin/emails", () => {
 
     await openFold(panel);
     const rows = panel.getByTestId("upcoming-email").filter({ hasText: title });
-    // The reminder a day from now, and nothing at the close: the number came with the confirmation (§NNN).
+    // The reminder a day from now, and nothing at the close: the number came with the confirmation (§548).
     await expect(rows).toHaveCount(1);
     const row = rows.first();
     await expect(row).toHaveAttribute("data-type", "EVENT_REMINDER");

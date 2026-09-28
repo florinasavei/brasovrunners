@@ -19,7 +19,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-038-01, `DECISIONS.md` §NNN (amending §173, §214, §420, §105) — a race number exists only
+ * BR-REQ-038-01, `DECISIONS.md` §548 (amending §173, §214, §420, §105) — a race number exists only
  * once a registration is confirmed: the address proved and the declaration signed.
  *
  * The owner, 2026-09-28: «faza cu numerele de concurs provizorii e ciudată». So nothing is drawn at
@@ -77,7 +77,7 @@ function submissionInput(firstName: string, email: string, at: Date) {
   };
 }
 
-describe("BR-REQ-038-01 §NNN a race number only once a registration is confirmed", () => {
+describe("BR-REQ-038-01 §548 a race number only once a registration is confirmed", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let volunteer: StaffUser;
@@ -289,7 +289,7 @@ describe("BR-REQ-038-01 §NNN a race number only once a registration is confirme
   /**
    * Every message a registration can be sent, rendered for a registration that is not confirmed
    * but wears a number anyway — a cancelled confirmed runner who restarted, or a number settled
-   * before §NNN: none of them prints it. The number is a fact of a confirmed registration only.
+   * before §548: none of them prints it. The number is a fact of a confirmed registration only.
    */
   it("prints no number in any message of a registration not confirmed, whatever the row holds", async () => {
     const event = await createEvent();

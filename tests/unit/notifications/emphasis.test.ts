@@ -44,10 +44,10 @@ describe("§189 the race number is bold, and only this codebase can ask for bold
 });
 
 /**
- * §237, §NNN — the race number is in the confirmation: it is drawn at the confirmation, so the
+ * §237, §548 — the race number is in the confirmation: it is drawn at the confirmation, so the
  * message that says «confirmat» is the one that carries it, plainly, and nothing qualifies it.
  */
-describe("§237 §NNN the number in the message", () => {
+describe("§237 §548 the number in the message", () => {
   it("prints the number, and never «provizoriu»", () => {
     const content = buildTemplateContent(
       "REGISTRATION_CONFIRMED",

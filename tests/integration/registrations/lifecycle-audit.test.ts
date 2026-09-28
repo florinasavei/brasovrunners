@@ -23,9 +23,9 @@ import { sendHoldEmails } from "../../helpers/outbox";
  *   other runner on the paper (BR-REQ-037-05, BR-REQ-037-07);
  * - no waiting-list offer is made once registration has closed (BR-REQ-035-02 criterion 3);
  * - a lapsed declaration hold held no number, so the desk re-allocates it later with a free one
- *   (§160, §NNN);
- * - nothing is numbered at the close: a number comes with each confirmation (§NNN);
- * - an offer carries no number until it is confirmed, from the queue and from the desk (§NNN);
+ *   (§160, §548);
+ * - nothing is numbered at the close: a number comes with each confirmation (§548);
+ * - an offer carries no number until it is confirmed, from the queue and from the desk (§548);
  * - the verification link dies with the registration's own link (BR-REQ-031-03 criterion 2, §377);
  * - the desk's counters leave test registrations out (§30, AGENTS.md §12.6);
  * - "Înscrierile mele" names the runner of a closed registration too (§389).
@@ -380,13 +380,13 @@ describe("§420 BR-REQ-035-02 criterion 3 no waiting-list offer once registratio
   });
 });
 
-describe("§420 §160 §NNN a lapsed declaration hold held no number, so the desk re-allocates it later with a free one", () => {
+describe("§420 §160 §548 a lapsed declaration hold held no number, so the desk re-allocates it later with a free one", () => {
   it("so the desk can confirm it on race morning, with the next number, instead of a duplicate-key error", async () => {
     const staff = await admin();
     const event = await createEvent({ capacity: 2 });
     const ana = await allocated(event, "Ana");
     const bogdan = await allocated(event, "Bogdan", at(2));
-    // A held place carries no number: it comes with the confirmation (§NNN).
+    // A held place carries no number: it comes with the confirmation (§548).
     expect([ana.bibNumber, bogdan.bibNumber]).toEqual([null, null]);
     expect((await allocated(event, "Cristi", at(4))).status).toBe("WAITLISTED");
     await sendHoldEmails(db, at(4));
@@ -443,7 +443,7 @@ describe("§420 §160 once registration has closed, a lapsed declaration hold st
   });
 });
 
-describe("§420 §NNN AGENTS.md §10.5 invariant 3 nothing is numbered at the close", () => {
+describe("§420 §548 AGENTS.md §10.5 invariant 3 nothing is numbered at the close", () => {
   it("an unconfirmed address gets no number and no BIB_ASSIGNED, and joins the waiting list without one", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await confirmed(event, "Ana");
@@ -465,7 +465,7 @@ describe("§420 §NNN AGENTS.md §10.5 invariant 3 nothing is numbered at the cl
   });
 });
 
-describe("§420 §NNN an offered place carries no number until it is confirmed", () => {
+describe("§420 §548 an offered place carries no number until it is confirmed", () => {
   it("from the waiting list: offered with no number, and numbered when signed", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await allocated(event, "Ana");

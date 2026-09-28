@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.23-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.22-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.23-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1873,8 +1873,8 @@ registrations
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
-- bib_number integer null              -- BR-REQ-038-01; the race number: drawn when the registration is confirmed, in confirmation order from the event's first number (§NNN), unique per event (partial index), never reissued; kept, retired, by a cancelled row; per race across distances is M2
-- provisional_bib_number integer null  -- retired by §NNN (was §214's held number); nothing writes it, the maintenance job empties it once, a contract release drops it
+- bib_number integer null              -- BR-REQ-038-01; the race number: drawn when the registration is confirmed, in confirmation order from the event's first number (§548), unique per event (partial index), never reissued; kept, retired, by a cancelled row; per race across distances is M2
+- provisional_bib_number integer null  -- retired by §548 (was §214's held number); nothing writes it, the maintenance job empties it once, a contract release drops it
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null

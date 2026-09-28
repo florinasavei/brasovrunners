@@ -150,7 +150,7 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
     expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 20 * HOUR));
   });
 
-  it("is not the registration close: nothing is numbered then, each confirmation draws its own (§NNN)", async () => {
+  it("is not the registration close: nothing is numbered then, each confirmation draws its own (§548)", async () => {
     const event = await createEvent({ registrationClosesAt: new Date(NOW.getTime() + 2 * HOUR) });
     await register(event, { status: "CONFIRMED", confirmedAt: new Date(NOW.getTime() - 3 * DAY) });
     // The reminder before the start is the next work, well after the close.

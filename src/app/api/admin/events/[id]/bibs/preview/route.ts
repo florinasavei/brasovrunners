@@ -113,7 +113,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     .where(and(eq(registrations.id, registrationId), eq(registrations.eventId, id)))
     .limit(1);
   // The sheet's own rule (`bibs.ts#bibScopeWhere`): a bib is drawn for a confirmed real
-  // registration only, so a restarted row still wearing its retired number draws none (§NNN).
+  // registration only, so a restarted row still wearing its retired number draws none (§548).
   if (!row || row.kind !== "REAL" || row.status !== "CONFIRMED" || raceNumberOf(row) === null || row.bibNumber === null) {
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }

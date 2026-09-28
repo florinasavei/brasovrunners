@@ -106,7 +106,7 @@ export default async function DeskRow({
     row.status === "PENDING_DECLARATION" ||
     row.status === "WAITLIST_OFFERED";
 
-  // The number once the registration is confirmed (§NNN), a dash before; a row that is over keeps its own, retired.
+  // The number once the registration is confirmed (§548), a dash before; a row that is over keeps its own, retired.
   const number = raceNumberOf(row);
 
   /*
@@ -168,7 +168,7 @@ export default async function DeskRow({
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
             {/*
               The number first and large: it is what the volunteer reaches for on the table.
-              Digits alone, and «—» until the registration is confirmed (§NNN): the confirmation
+              Digits alone, and «—» until the registration is confirmed (§548): the confirmation
               — online, or here on paper — is what gives it one.
 
               Struck through and dimmed on a row that is over (§311): the number is still this
@@ -312,7 +312,7 @@ export default async function DeskRow({
               {hidden}
               <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                 {/*
-                  The bib handed with the paper (§444, §NNN): the next desk spare, suggested, for a
+                  The bib handed with the paper (§444, §548): the next desk spare, suggested, for a
                   row that wears no number yet (`handsSpareAtConfirm`) — which is everybody not
                   confirmed, since a number comes only with the confirmation — so the runner gets a
                   pre-printed spare, never a number nobody printed. Emptied, the confirmation draws
@@ -382,7 +382,7 @@ export default async function DeskRow({
             <>
               {/*
                 The field only where there is a number to give (§173): a confirmed runner got their
-                number with the confirmation (§NNN) and has it in their inbox, so the desk offers no
+                number with the confirmation (§548) and has it in their inbox, so the desk offers no
                 change — a preferential number is the registration page's, away from a queue. What
                 stays is filling a gap: a row confirmed before a number was drawn automatically.
               */}

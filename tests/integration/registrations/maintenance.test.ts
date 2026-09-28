@@ -172,7 +172,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     const raceMorning = new Date(desk.startsAt.getTime() - 60 * 60_000);
     const onPaper = await confirmByStaff(db, desk, lateAtDesk.id, { id: volunteer.id }, raceMorning);
     expect(onPaper.status).toBe("CONFIRMED");
-    // A number, drawn by this confirmation (§NNN).
+    // A number, drawn by this confirmation (§548).
     expect(onPaper.bibNumber).not.toBeNull();
   });
 

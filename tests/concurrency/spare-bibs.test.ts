@@ -194,7 +194,7 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
           locale: "ro",
           listOptOut: false,
           relayedByParticipantRequest: true,
-          // Confirmed at once: a number is drawn only at a confirmation since §NNN.
+          // Confirmed at once: a number is drawn only at a confirmation since §548.
           fastTrack: true,
         },
         NOW,

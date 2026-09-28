@@ -28,7 +28,7 @@ export type AuditAction =
   | "registration.name_corrected"
   | "registration.cancelled_by_staff"
   /**
-   * A participant cancelled their own registration (§NNN): from their manage link, «Înscrierile
+   * A participant cancelled their own registration (§547): from their manage link, «Înscrierile
    * mele» or the family's declarations wizard. No staff actor; the metadata is the state it left and
    * the door (`{ from, via }`), never the name.
    */

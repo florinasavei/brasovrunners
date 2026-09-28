@@ -61,7 +61,7 @@ export type RegistrationCsvRow = {
   guardianIdDocument: string;
   submittedAt: string;
   confirmedAt: string;
-  /** The race number, drawn at the confirmation (BR-REQ-038-01, §NNN); empty before it, never 0. */
+  /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); empty before it, never 0. */
   bibNumber?: number | null;
   /** Race day and the provider's verdict, the two columns an organizer sorts by afterwards (§83). */
   checkedInAt: string;
@@ -148,7 +148,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.guardianIdDocument,
         row.submittedAt,
         row.confirmedAt,
-        // Empty until the registration is confirmed (§NNN): the one helper every screen reads.
+        // Empty until the registration is confirmed (§548): the one helper every screen reads.
         String(raceNumberOf({ status: row.status as RegistrationStatus, bibNumber: row.bibNumber ?? null }) ?? ""),
         row.checkedInAt,
         row.emailBounced ? "Yes" : "",

@@ -52,7 +52,7 @@ export function isParticipantMessageAudience(value: unknown): value is Participa
  * which a message written for everybody at once has no business spelling out.
  *
  * `{bibNumber}` is the race number of a confirmed registration, empty for whoever is not
- * confirmed yet: a number exists only from the confirmation (§NNN).
+ * confirmed yet: a number exists only from the confirmation (§548).
  */
 export const ORGANIZER_MESSAGE_PLACEHOLDERS = [
   "participantName",

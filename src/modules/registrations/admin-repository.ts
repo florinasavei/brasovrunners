@@ -70,7 +70,7 @@ export type RegistrationListRow = {
   listSocials: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
-  /** The race number, drawn at the confirmation (BR-REQ-038-01, §NNN); shown through `raceNumberOf`. */
+  /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
@@ -910,7 +910,7 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
       is never reused (§173), so "who is 27" has exactly one answer at this event even after 27
       cancelled — and a volunteer holding the bib that somebody just handed over, typing its number
       and being told "nobody matches", is the surprise this exists to prevent. The row they get
-      says, in red, why nothing is to be handed out. A row not confirmed shows no number (§NNN,
+      says, in red, why nothing is to be handed out. A row not confirmed shows no number (§548,
       `raceNumberOf`), so it never answers to one either.
     */
     const number = Number(q);
@@ -941,7 +941,7 @@ export async function countDesk<T extends Record<string, unknown>>(
     .select({
       confirmed: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED')`.mapWith(Number),
       checkedIn: sql<number>`count(*) FILTER (WHERE ${registrations.checkedInAt} IS NOT NULL)`.mapWith(Number),
-      // Confirmed and wearing no number: a gap «Alocă numerele» fills (§NNN).
+      // Confirmed and wearing no number: a gap «Alocă numerele» fills (§548).
       withoutBib: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED' AND ${registrations.bibNumber} IS NULL)`.mapWith(Number),
       pending: sql<number>`count(*) FILTER (WHERE ${registrations.status} NOT IN ('CONFIRMED', 'CANCELLED', 'EXPIRED'))`.mapWith(Number),
     })

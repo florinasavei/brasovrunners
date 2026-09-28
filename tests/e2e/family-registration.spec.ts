@@ -239,7 +239,7 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${email} pleacă acum.`);
-    // §NNN: no bold question and no primary button — one quiet line after the email's, «Înscriu încă o persoană cu această adresă».
+    // §547: no bold question and no primary button — one quiet line after the email's, «Înscriu încă o persoană cu această adresă».
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Da, încă o persoană" })).toHaveCount(0);
     await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă înscrii încă o persoană, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
@@ -253,7 +253,7 @@ test.describe("§389 §446 a family on one address", () => {
     const add = page.getByTestId("family-sitting-add");
     expect((await add.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    // «Înscriu încă o persoană cu această adresă» (§NNN): the press that opens the sitting, then the same form, the address said back and not asked.
+    // «Înscriu încă o persoană cu această adresă» (§547): the press that opens the sitting, then the same form, the address said back and not asked.
     await add.getByRole("button", { name: "Înscriu încă o persoană cu această adresă" }).click();
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);
@@ -323,7 +323,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect((await registrationsByEmail(email)).map((row) => row.status).sort()).toEqual(["PENDING_DECLARATION", "PENDING_DECLARATION", "PENDING_DECLARATION"]);
 
     /*
-      §NNN: the button says «… și treci la următoarea persoană» while another person follows, and
+      §547: the button says «… și treci la următoarea persoană» while another person follows, and
       «Renunț la înscrierea pentru <nume>» withdraws one person, asking first; the last one just signs.
     */
     await hydrated(page);

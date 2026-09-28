@@ -17,7 +17,7 @@ type Props = {
 
 /**
  * «Înscriu încă o persoană cu această adresă» — one quiet line after the short screen's main content
- * (§NNN, amending §536; the owner, 2026-09-28, of the bold question and the full-width primary
+ * (§547, amending §536; the owner, 2026-09-28, of the bold question and the full-width primary
  * button that stood here: «pare că încurajăm asta… când e doar o excepție»). The screen's point is
  * the email's line above; registering somebody else on the same address is the exception, so it is
  * a text-styled press with its glyph and its one sentence under it, never a question in bold and

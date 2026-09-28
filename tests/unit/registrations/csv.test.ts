@@ -140,7 +140,7 @@ describe("CSV formula neutralization", () => {
     );
     expect(other).not.toContain("No");
 
-    // Not confirmed yet: an empty cell, whatever the row holds (§NNN) — the number comes with the confirmation.
+    // Not confirmed yet: an empty cell, whatever the row holds (§548) — the number comes with the confirmation.
     const pending = buildRegistrationsCsv([{ ...row, status: "PENDING_DECLARATION", bibNumber: 17 }]);
     expect(pending.split("\r\n")[1]).toBe(
       "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,PENDING_DECLARATION,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,",

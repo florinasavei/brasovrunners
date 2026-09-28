@@ -393,7 +393,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       label: t("registrations.columnJourney"),
       // "3/6" cannot say what the six are (§200).
       hint: t("registrations.journey.legend"),
-      // The number once the registration is confirmed (§NNN): the chip says "nr. 42".
+      // The number once the registration is confirmed (§548): the chip says "nr. 42".
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)} variant="compact" />,
     },
     {
@@ -404,12 +404,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */
       key: "bib",
       label: t("registrations.columnBib"),
-      // What «—», a bold number and the tick mean (§313, §NNN) — a tap-friendly hint, because the
+      // What «—», a bold number and the tick mean (§313, §548) — a tap-friendly hint, because the
       // cell's own `title` never shows on a phone.
       hint: t("registrations.bibColumnHint"),
       sortable: true,
       /*
-        The number once the registration is confirmed (§NNN, `raceNumberOf`), and «—» before: a
+        The number once the registration is confirmed (§548, `raceNumberOf`), and «—» before: a
         number exists only from the confirmation, in confirmation order. A registration that is over
         keeps its number, retired, so a printed bib can be found and pulled (§311).
       */
@@ -1192,7 +1192,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {(() => {
               const verbs = rowVerbsFor(row.status, actor.role, {
                 checkedIn: row.checkedInAt !== null,
-                // A number is printable once the registration is confirmed (§264, §NNN).
+                // A number is printable once the registration is confirmed (§264, §548).
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
               });
               const hidden = (

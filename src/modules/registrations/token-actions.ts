@@ -530,7 +530,7 @@ export async function consumeAndDeclineFamilyEntry(secret: string, now: Date): P
  * whether the self check-in window is open. The manage token is read, never spent — the same
  * link still has to cancel — and this reads nothing else.
  *
- * Per person since §NNN: `people` is the link's registration and the address's other active ones
+ * Per person since §547: `people` is the link's registration and the address's other active ones
  * at the event (`listManagedPeople`), each with whether "I am here" is open for them — the page
  * draws one card each, the QR with the name and the number beside it.
  */
@@ -566,7 +566,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
      * address's own link, the one place the names on it may be read (§389).
      */
     family: ((await familyOf(db, [registration])).get(registration.id) ?? []).map((member) => member.name),
-    /** Everybody the page manages, the link's own first in the family's order (§NNN). */
+    /** Everybody the page manages, the link's own first in the family's order (§547). */
     people,
   };
 }
@@ -577,7 +577,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
  * would cost them the ability to cancel. Only from the club's hours before the start (a day
  * unless changed, §377) — an "I am here" a week early is not information.
  *
- * `registrationId` (§NNN): another person of the page — the same address at the same event,
+ * `registrationId` (§547): another person of the page — the same address at the same event,
  * checked on the server (`managedRegistration`); absent, the link's own.
  */
 export async function checkInSelf(secret: string, now: Date, registrationId?: string) {
@@ -596,7 +596,7 @@ export async function checkInSelf(secret: string, now: Date, registrationId?: st
  * «Anulează înscrierea» from the manage link (BR-REQ-036-01). Spends the link (§12.8: an action
  * link is used once), as «Înscrierile mele» spends its own (§77) — whichever person it cancels.
  *
- * `registrationId` (§NNN): the person the press names, the link's own or another registration of
+ * `registrationId` (§547): the person the press names, the link's own or another registration of
  * the same address at the same event (`managedRegistration`). Anything else throws NOT_FOUND inside
  * the transaction, so the link is not spent and nobody is cancelled. `family` says whether the page
  * listed more than one person, for the outcome page's one extra sentence — never who.
@@ -625,7 +625,7 @@ export async function consumeAndCancel(secret: string, now: Date, registrationId
 }
 
 /**
- * «Renunț la înscrierea pentru <nume>» on a family's step of the declarations wizard (§NNN, amending
+ * «Renunț la înscrierea pentru <nume>» on a family's step of the declarations wizard (§547, amending
  * §471; the owner, 2026-09-28: a person registered by mistake had no way out from the wizard). The
  * step's person is cancelled — the place released through the allocator (`unregister`, under the
  * event's lock, the waiting list served), the audit row with no staff actor, and the cancellation

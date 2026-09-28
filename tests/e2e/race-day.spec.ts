@@ -192,7 +192,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
       The handed-bib box (§444) suggests the next desk spare only where somebody printed spares for
       this event. A spare is on paper already, so the page would say «E tipărit» and the list would
       offer no «Marchează BID-ul ca printat». Emptied, the confirmation draws the next number in
-      order (§NNN) — the path this story is about, whatever a shared database holds.
+      order (§548) — the path this story is about, whatever a shared database holds.
     */
     const handedBib = page.locator('input[name="bibNumber"]');
     if ((await handedBib.count()) > 0 && (await handedBib.first().isVisible())) await handedBib.first().fill("");
@@ -208,7 +208,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const code = (await deskRow.locator("span, p").filter({ hasText: /^[A-HJ-NP-Z2-9]{10}$/ }).first().textContent()) as string;
 
     // The registration's own page. Confirmed at the desk, so the number came with that
-    // confirmation (§NNN) — nothing to save by hand before it can be printed.
+    // confirmation (§548) — nothing to save by hand before it can be printed.
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
     await hydrated(page);
     await page.getByRole("link", { name: `Deschide înscrierea lui ${name}` }).click();

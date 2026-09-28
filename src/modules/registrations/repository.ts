@@ -1165,7 +1165,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
             sql`exists (select 1 from ${familyPlaceHolds} where ${familyPlaceHolds.eventId} = ${registrations.eventId} and ${familyPlaceHolds.holdsPlace} and ${familyPlaceHolds.expiresAt} <= ${now})`,
           ),
           and(inArray(registrations.status, ["PENDING_DECLARATION", "WAITLISTED"]), lte(events.startsAt, now)),
-          // No clause for the registration close since §NNN: nothing is numbered then — a number
+          // No clause for the registration close since §548: nothing is numbered then — a number
           // is drawn by each confirmation, under its own lock.
         ),
       ),

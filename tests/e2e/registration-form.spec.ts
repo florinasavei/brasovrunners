@@ -780,7 +780,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await page.goto(registerPath);
     await hydrated(page);
 
-    // Said once, before the first field (§NNN): the birth date's own help that repeated it is gone.
+    // Said once, before the first field (§546): the birth date's own help that repeated it is gone.
     await expect(page.locator("#main")).toContainText("Vârsta minimă: 14 ani");
     await expect(page.locator("#main")).not.toContainText("împliniți în ziua cursei");
 
@@ -944,7 +944,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     const editorUrl = page.url().split("?")[0];
 
     try {
-      // The form: the line before the first field — said once (§NNN) — and the picker's bound,
+      // The form: the line before the first field — said once (§546) — and the picker's bound,
       // the last birth date that is sixteen on 3 May 2027.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(

@@ -499,7 +499,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   /*
-    A handed number only for a row that wears none yet (§444, §NNN), the rule the desk's box is
+    A handed number only for a row that wears none yet (§444, §548), the rule the desk's box is
     drawn by: nobody has a number before the confirmation, so it is the number this confirmation
     gives; a row that already wears one keeps it, and a printed bib is never swapped. Refused naming
     the box, before anything is written; checked again under the lock.
@@ -568,7 +568,7 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
  * (§444). The partial unique index is what refuses two runners with one number; here that
  * surfaces as a sentence.
  *
- * **On a confirmed registration only** (§NNN, amending §105 and §173). A number exists only once a
+ * **On a confirmed registration only** (§548, amending §105 and §173). A number exists only once a
  * registration is confirmed, and the confirmation draws one at once and emails it — so there is
  * nothing to type a number into before then, and the preferential number is a change of the one
  * the confirmation gave. §173's lock ("nu ar trebui să mai pot schimba numărul de concurs odată
@@ -604,7 +604,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
       `this registration is ${current.status.toLowerCase()}; its race number is retired and cannot be changed`,
     );
   }
-  // Not confirmed yet: the number comes with the confirmation, in its order (§NNN).
+  // Not confirmed yet: the number comes with the confirmation, in its order (§548).
   if (current.status !== "CONFIRMED") {
     throw new DomainError("VALIDATION_ERROR", "a race number is given when the registration is confirmed, not before");
   }
@@ -615,7 +615,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "a confirmed registration keeps its race number; type another one to change it");
   }
   /*
-    Replacing a number the runner was already emailed retires it for good (§NNN), so it is a change
+    Replacing a number the runner was already emailed retires it for good (§548), so it is a change
     to a registration, the Administrator's (`canManageRegistrations`, §289) — not a desk verb. The
     desk keeps filling the gap: a confirmed row with no number yet takes one from any desk role.
   */
@@ -686,7 +686,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         throw new DomainError("VALIDATION_ERROR", "this registration is over or its race number is printed; the number cannot be changed");
       }
       /*
-        Nor a number retired here (§311, §NNN) — erased with its row or replaced by hand. The unique
+        Nor a number retired here (§311, §548) — erased with its row or replaced by hand. The unique
         index cannot say it, the row that wore 27 being gone or wearing another, so the audit rows
         do, read **after** the write, inside it: an erasure commits its audit row before its row goes.
       */

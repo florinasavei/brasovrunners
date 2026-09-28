@@ -172,7 +172,7 @@ export function joinNames(locale: EmailLocale, names: readonly string[]): string
 }
 
 /**
- * Whose QR this is (§NNN; the owner, 2026-09-28: a family's codes looked the same): the person's name
+ * Whose QR this is (§547; the owner, 2026-09-28: a family's codes looked the same): the person's name
  * and their race number, «—» while none is given — the number this message carries, which the
  * renderer decided through `raceNumberOf` (§173, §NNN). Beside the QR in the confirmation, the
  * reminder and the number's own message; alone, in the QR's place, on the club's copy, which carries
@@ -185,7 +185,7 @@ export function qrIdentityLine(locale: EmailLocale, d: Pick<TemplateData, "parti
   return name ? `${name} · ${words}` : words;
 }
 
-/** The QR picture with its name, number and code (§NNN), or nothing when the message carries no code. */
+/** The QR picture with its name, number and code (§547), or nothing when the message carries no code. */
 function qrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"] {
   if (!d.checkinQrUrl) return undefined;
   const code = d.checkinCode ?? "";
@@ -195,7 +195,7 @@ function qrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"]
     : { url: d.checkinQrUrl, alt: `QR code ${code}${name ? ` — ${name}` : ""}`, caption: `${qrIdentityLine("en", d)} · Your code: ${code}` };
 }
 
-/** The messages that draw the QR (§NNN): the club's copy of these says whose it was, without it (§320). */
+/** The messages that draw the QR (§547): the club's copy of these says whose it was, without it (§320). */
 const QR_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"]);
 
 /** A name's first word, for the family marker's list (§543): «Ana, Mihai și Ioana». */
@@ -554,7 +554,7 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
-  /** The race number, given at the confirmation (§87, §NNN) — on the confirmation and the reminder, never before. */
+  /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before. */
   bibNumber?: number;
   /** The event's map link and Strava event link, when set (§81). */
   eventMapUrl?: string;
@@ -806,7 +806,7 @@ export type TemplateData = {
    * A family's one confirmation (§519; the owner: «în mail trebuie să vină toate QR-urile pentru toată
    * familia»): everybody confirmed by the family's one button, in the order the forms were sent — the
    * name, the desk code and its QR (never on a club copy, §320), and the race number each person's
-   * own confirmation gave (`raceNumberOf`, §NNN), or null while there is none. Set, the confirmation is the family's, and it
+   * own confirmation gave (`raceNumberOf`, §548), or null while there is none. Set, the confirmation is the family's, and it
    * greets everybody by `firstName` (the name's first word when absent), in that order (§519).
    */
   familyConfirmed?: ReadonlyArray<{
@@ -839,7 +839,7 @@ export type TemplateData = {
    */
   familyToSign?: string[];
   /**
-   * A cancellation (§NNN): whether the person was on the waiting list rather than holding a place,
+   * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
    * from the state the registration left (the row's payload), and who else the address still holds
    * at the event, each with their state — read at send time, the address's own rows only (§39).
    */
@@ -1238,7 +1238,7 @@ const T = {
       ],
     },
     /*
-      One message per cancelled person (§NNN; the owner, 2026-09-28: «vreau mail de confirmare că
+      One message per cancelled person (§547; the owner, 2026-09-28: «vreau mail de confirmare că
       participarea a fost anulată pentru persoana X»): the person, the event and its date. What the
       person held and who else the address still holds are the platform's lines after the body
       (`cancelledReleased`, `cancelledOthers`), facts of this send whoever wrote the words.
@@ -1565,7 +1565,7 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
-    // A cancellation (§NNN): what the cancelled person held, and who else the address still holds.
+    // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -2450,7 +2450,7 @@ export function buildTemplateContent(
         : []),
       // Whose registration this is, under the parent's greeting (§419).
       ...(guardianName ? [copy.guardianIntro(data.participantName)] : []),
-      // The number when the message carries one: a confirmed registration's (§286, §NNN).
+      // The number when the message carries one: a confirmed registration's (§286, §548).
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
@@ -2539,7 +2539,7 @@ export function buildTemplateContent(
         ? [copy.familyToSign(data.familyToSign)]
         : []),
       /*
-        A cancellation's facts (§NNN), after the body whoever wrote it: the place released — or the
+        A cancellation's facts (§547), after the body whoever wrote it: the place released — or the
         waiting list left — and who the address still holds at the event, with their states.
       */
       ...(messageType === "REGISTRATION_CANCELLED" ? [copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)] : []),
@@ -2580,7 +2580,7 @@ export function buildTemplateContent(
       ...newsletterParts(messageType, data),
       ...newsletterLines(messageType, locale, data),
       /*
-        The club's copy carries no QR (§320), so it says whose the QR was, in its place (§NNN): the
+        The club's copy carries no QR (§320), so it says whose the QR was, in its place (§547): the
         person's name and race number, «—» before one is given — the line the runner's copy draws
         beside the code. Not a family's one confirmation, whose blocks already name everybody.
       */
