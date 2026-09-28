@@ -132,7 +132,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // The same capture notice here, where somebody would otherwise stand with an inbox open.
     await expect(page.getByText(captureNotice)).toBeVisible();
     /*
-      After the first form, the short screen (§NNN, amending §519; the owner, 2026-09-28): the heading,
+      After the first form, the short screen (§536, amending §519; the owner, 2026-09-28): the heading,
       then exactly three lines and one button — whose form is in, when its email leaves (the e2e server
       sends on the request, so «acum»), and one question with one answer — and one true sentence under
       it. No «Gata», no steps, no wait box.

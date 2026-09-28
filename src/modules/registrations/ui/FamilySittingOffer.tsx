@@ -17,7 +17,7 @@ type Props = {
 
 /**
  * «Mai înscrii pe cineva cu aceeași adresă?» — the third line of the short screen after the first
- * form (§NNN, amending §519; the owner, 2026-09-28: «partea asta e cam ciudata, adica sa inteleg ca
+ * form (§536, amending §519; the owner, 2026-09-28: «partea asta e cam ciudata, adica sa inteleg ca
  * nu primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?», and later: the screen must be
  * clearer), with its one button and one sentence under it — a true one, chosen by what the line
  * above says about the email (`offerHint`; the review's nit F0): while it waits for the scheduled

@@ -233,7 +233,7 @@ describe("§393 signing a group run's self-declaration", () => {
 
     const runs = await drawnRuns(() => renderGroupRunDeclarationPdf(db, signed, "participant", NOW));
     // Approved from 2026-01-01T00:00Z: 02:00 on Thursday 1 January on the club's clock.
-    const version = "Versiunea 1, în vigoare din joi, 1 ian. 2026";
+    const version = "Versiunea 1, în vigoare din 1 ianuarie 2026";
     expect(runs.filter((run) => run.text.startsWith(`${version} · sha256 ${signed.contentSha256.slice(0, 16)}`))).toHaveLength(1);
     const pages = new Set(runs.map((run) => run.page));
     const footers = runs.filter((run) => run.y === DECLARATION_FOOTER_Y && run.text.startsWith(CLUB_NAME));
@@ -808,7 +808,7 @@ describe("§523 what the text in force decides", () => {
     const first = await trailRun({ startsAt: OCT(7), locationName: null });
     await trailRun({ startsAt: OCT(14), locationName: null });
     const { text } = await rendered(first.id);
-    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura pe munte — în fiecare miercuri, la 19:00 — la care particip");
+    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura pe munte — în fiecare miercuri, la 19:00 — și nu trebuie semnată din nou");
     expect(text).not.toContain("cu plecare de obicei din");
     expect(text).not.toContain("Declarația este pentru alergarea de grup");
   });

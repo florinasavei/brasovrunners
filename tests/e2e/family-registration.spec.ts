@@ -38,7 +38,7 @@ test.describe("§389 §446 a family on one address", () => {
 
   /**
    * One form, sent. `email` null is a family sitting's next form (§519): the address is fixed and not
-   * asked. Nothing is pressed after it: a first form's email is never held (§NNN), it leaves at once;
+   * asked. Nothing is pressed after it: a first form's email is never held (§536), it leaves at once;
    * the sitting's case below presses «Gata» itself.
    */
   async function fillPerson(page: Page, person: Person, email: string | null) {
@@ -210,7 +210,7 @@ test.describe("§389 §446 a family on one address", () => {
     const rows = await registrationsByEmail(email);
     expect(rows).toHaveLength(1);
     expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([]);
-    // The first form's email starts the link and is never marked held — no «Da» took it in (§NNN, the review's nit F1); the re-send for the slip does neither.
+    // The first form's email starts the link and is never marked held — no «Da» took it in (§536, the review's nit F1); the re-send for the slip does neither.
     expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ startsDeadline: true }, { anotherPersonHint: true }]);
 
     // The re-sent email, as captured: the sentence, in both halves.
@@ -227,7 +227,7 @@ test.describe("§389 §446 a family on one address", () => {
     const lastName = `Pop ${suffix}`;
 
     /*
-      The first form (§NNN): the short screen — whose form is in, when its email leaves (the e2e server
+      The first form (§536): the short screen — whose form is in, when its email leaves (the e2e server
       sends on the request, so «acum»), one question with one answer, and the one sentence that is true
       of an email already gone. No «Gata»: nothing waits for a press.
     */
@@ -283,7 +283,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect(family.text).toContain(`Persoana 1 din 2: Ana ${lastName}`);
     expect(family.text).toContain(`Persoana 2 din 2: Maria ${lastName}, data nașterii 11 iulie 1990`);
     expect(family.text).toContain("Confirm și semnez declarațiile (2)");
-    // The first line says the one button does everything (§NNN); Ana's own email left before «Da», so one line says this one covers her too.
+    // The first line says the one button does everything (§536); Ana's own email left before «Da», so one line says this one covers her too.
     expect(family.text).toContain("Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.");
     expect(family.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
     expect(family.links.some((href) => href.includes("/inscrieri/ale-mele/"))).toBe(true);

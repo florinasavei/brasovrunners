@@ -172,7 +172,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(line).toContainText("S-a înscris din nou cu aceeași adresă");
     await expect(line).toContainText("(Așteaptă confirmarea emailului)");
     /*
-      The same browser, the plain form twice and no «Da, încă o persoană» in between (§NNN: no sitting
+      The same browser, the plain form twice and no «Da, încă o persoană» in between (§536: no sitting
       without a press): the second is the ordinary re-send, whether or not the first email had left,
       and the line says what was re-sent — never «already waiting to leave», which only a sitting says.
     */

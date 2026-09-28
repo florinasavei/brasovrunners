@@ -603,7 +603,7 @@ export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> 
 }
 
 /**
- * When a message queued now leaves (§NNN): null when the request sends it (`immediate`), else the
+ * When a message queued now leaves (§536): null when the request sends it (`immediate`), else the
  * next scheduled pass — the instant the screen after the registration form names above its question
  * («Emailul pleacă la 10:15»), from the same two settings as `cachedEmailWaitMinutes`.
  */

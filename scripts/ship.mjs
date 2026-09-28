@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.18-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.19-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
  *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
@@ -39,7 +39,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { createClock, formatDuration, judgeChecks, mergePullRequest, waitForRun, waitForSettledChecks } from "./ship-checks.mjs";
+import { createClock, formatDuration, judgeChecks, mergePullRequest, waitForRun, waitForSettledChecks, withoutWorkflow } from "./ship-checks.mjs";
 
 // Each step's time as it ends (m:ss), and the whole at the end or at a stop (§504).
 const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
@@ -141,7 +141,11 @@ async function until(test, every, times) {
  * and only then judges them (§426, `ship-checks.mjs`). Stops on a red that `tolerate` does not name.
  */
 async function settledChecks(pr, { tolerate } = {}) {
-  const read = () => JSON.parse(ghMayFail("pr", "checks", pr, "--json", "name,state,bucket") || "[]");
+  // Run from `.github/workflows/release.yml`, the release's own job is a check on the pull request
+  // it ships — still running while ship waits — so it is left out by its workflow's name (§535).
+  const skip = process.env.SHIP_SKIP_WORKFLOW || "";
+  const fields = skip ? "name,state,bucket,workflow" : "name,state,bucket";
+  const read = () => withoutWorkflow(JSON.parse(ghMayFail("pr", "checks", pr, "--json", fields) || "[]"), skip);
   const waited = await waitForSettledChecks(read, {
     sleep,
     every: 30,

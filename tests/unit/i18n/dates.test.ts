@@ -8,7 +8,9 @@ import {
   CLUB_TIME_ZONE,
   composeCalendarDay,
   DATE_FORMATS,
+  formatBirthDate,
   formatCalendarDay,
+  formatDateInWords,
   formatDay,
   formatDayRange,
   formatTime,
@@ -121,6 +123,32 @@ describe("BR-REQ-040-03 criterion 6 the zone the caller names, never the server'
     expect(formatCalendarDay("2027-01-16", { locale: "en", style: "short", position: "inline" })).toBe("Sat, 16 Jan 2027");
     // A `date` column read back as midnight UTC is still that day, not the evening before.
     expect(formatCalendarDay(new Date("2027-01-16T00:00:00Z"), { locale: "ro", position: "inline" })).toBe("sâmbătă, 16 ian. 2027");
+  });
+});
+
+/*
+  §534 — a legal text's version line, the counsel's review of 2026-09-28: «Versiunea 6, în vigoare din
+  28 septembrie 2026», the whole date with the month in words and no weekday («luni, 28 sept. 2026» was
+  the abbreviation it asked to drop) — on the club's clock, like every platform timestamp.
+*/
+describe("§534 the whole date in words, for a version line", () => {
+  it("writes the day, the month in full and the year, with no weekday, in both languages", () => {
+    const monday = new Date("2026-09-28T09:00:00Z");
+    expect(formatDateInWords(monday, { locale: "ro", timeZone: BUCHAREST })).toBe("28 septembrie 2026");
+    expect(formatDateInWords(monday, { locale: "en", timeZone: BUCHAREST })).toBe("28 September 2026");
+    expect(formatDateInWords(new Date("2027-01-16T07:30:00Z"), { locale: "ro", timeZone: BUCHAREST })).toBe("16 ianuarie 2027");
+  });
+
+  it("reads the day on the clock it is given: after midnight in Brașov is already the next day", () => {
+    const late = new Date("2026-09-27T22:30:00Z");
+    expect(formatDateInWords(late, { locale: "ro", timeZone: BUCHAREST })).toBe("28 septembrie 2026");
+    expect(formatDateInWords(late, { locale: "ro", timeZone: "UTC" })).toBe("27 septembrie 2026");
+  });
+
+  it("is the birth date's shape too, the one helper for both", () => {
+    expect(formatBirthDate("1974-06-03", "ro")).toBe("3 iunie 1974");
+    expect(formatBirthDate("1974-06-03", "en")).toBe("3 June 1974");
+    expect(formatBirthDate("03.06.1974", "ro")).toBe("");
   });
 });
 

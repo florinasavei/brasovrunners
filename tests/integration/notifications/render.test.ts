@@ -536,7 +536,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const message = await renderOutboxMessage(rowOf("VERIFY_REGISTRATION_EMAIL", "verify"), db, NOW);
     const hours = { ro: hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours), en: hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours) };
-    // §NNN (the owner, 2026-09-28): the event in the subject, and what to press and what follows first.
+    // §536 (the owner, 2026-09-28): the event in the subject, and what to press and what follows first.
     expect(message.subject).toContain("Confirmă adresa — Crosul");
     expect(message.text.indexOf("Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.")).toBeGreaterThan(-1);
     expect(message.text.indexOf("Apasă butonul ca să confirmi adresa.")).toBeLessThan(message.text.indexOf("Am primit o înscriere la Crosul"));

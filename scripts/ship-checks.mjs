@@ -59,6 +59,19 @@ export function judgeChecks(checks, { tolerate } = {}) {
   return verdict(red.length > 0 ? "red" : "green", { red, tolerated });
 }
 
+/**
+ * The checks without those of the workflow named `workflow` (§535): a release run by
+ * `.github/workflows/release.yml` is itself a check on the pull requests it ships, pending for as
+ * long as it waits — judging it would wait for ever. Nothing is left out when `workflow` is empty.
+ *
+ * @param {Array<{ name: string, workflow?: string }>} checks
+ * @param {string} workflow
+ */
+export function withoutWorkflow(checks, workflow) {
+  if (!workflow) return checks;
+  return checks.filter((c) => c.workflow !== workflow);
+}
+
 /** One reading as a comparable string: which checks exist and where each one stands. */
 function fingerprint(checks) {
   return checks
@@ -194,6 +207,29 @@ export async function mergePullRequest(merge, state, { sleep, every = 5, capSeco
 export function formatDuration(ms) {
   const seconds = Math.max(0, Math.round(ms / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+/**
+ * The last release in a `SHIP_TIMES_FILE` as a Markdown table (§535) — what the release workflow
+ * writes to its run's summary page, so the owner reads ship's steps on a phone. Empty for no line.
+ *
+ * @param {string} jsonl  the times file's text: one JSON record per line, the newest last
+ */
+export function timesTable(jsonl) {
+  const line = String(jsonl ?? "").trim().split("\n").filter(Boolean).at(-1);
+  if (!line) return "";
+  const record = JSON.parse(line);
+  const cell = (text) => String(text).replace(/\|/g, "/").replace(/\r?\n/g, " ");
+  return [
+    "",
+    `### Ship's steps, ${cell(record.release)} (m:ss)`,
+    "",
+    "| Step | m:ss |",
+    "| --- | --- |",
+    ...(record.steps ?? []).map((s) => `| ${cell(s.name)} | ${formatDuration(s.seconds * 1000)} |`),
+    `| **Total** — ${cell(record.outcome)} | ${formatDuration(record.totalSeconds * 1000)} |`,
+    "",
+  ].join("\n");
 }
 
 /**

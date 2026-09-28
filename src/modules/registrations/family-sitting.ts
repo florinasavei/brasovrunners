@@ -17,7 +17,7 @@ import { liveSittingEntries } from "./family-entries";
  * «Gata». What a sitting is, and why, is `domain/family-sitting.ts`; the table is
  * `db/schema/family-entries.ts`.
  *
- * **No sitting without a press** (§NNN, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
+ * **No sitting without a press** (§536, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
  * primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?»). The first form is an ordinary form:
  * its email is due at once, on the club's ordinary timing, and no row is written. «Da, încă o
  * persoană» opens the sitting (`continueFamilySitting`): it takes in the first form's registration or
@@ -109,7 +109,7 @@ export function familySittingMessageKey(sittingId: string): string {
 }
 
 /**
- * Whether a message of the sitting is still to leave or leaving (§519, §NNN): the same person sent
+ * Whether a message of the sitting is still to leave or leaving (§519, §536): the same person sent
  * again in the sitting is then told by it, and nothing more is queued. When nothing of the sitting is
  * waiting — «Da» came after the first form's email had left — the form is an ordinary re-send.
  */
@@ -209,7 +209,7 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
 }
 
 /**
- * «Da, încă o persoană» (§519; §NNN: the press that opens the sitting). A press, never a link.
+ * «Da, încă o persoană» (§519; §536: the press that opens the sitting). A press, never a link.
  *
  * - The browser's half names a sitting still taking forms (a «Da» after the second form, or pressed
  *   twice): its window starts again from this press, as it does from every form sent — the row's
@@ -258,7 +258,7 @@ function liveSittingWhere(eventId: string, now: Date) {
 }
 
 /**
- * The first form's message, held until the window's end (§NNN) — only while it is still waiting and
+ * The first form's message, held until the window's end (§536) — only while it is still waiting and
  * never tried, and only the one the seed named for this registration. Null when it has left.
  *
  * The message taken in is marked held here, and only here — the first form queued it unmarked, so a
@@ -292,7 +292,7 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
   return row?.id ?? null;
 }
 
-/** The sitting «Da» opens from the first form (§NNN): its registration or kept form, and its message while still waiting. */
+/** The sitting «Da» opens from the first form (§536): its registration or kept form, and its message while still waiting. */
 async function openSittingFromSeed<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   seed: SittingSeed,
@@ -532,7 +532,7 @@ export async function sittingPeople<T extends Record<string, unknown>>(
 
 /**
  * Whether somebody the family message names already got an email of their own that left before
- * «Da» took them in (§NNN): «Da» came after the first form's email had gone — its verification
+ * «Da» took them in (§536): «Da» came after the first form's email had gone — its verification
  * email, or the kept form's link of §446. That email's button still works for that one person; the
  * family message then says in one line that its own button covers them too, so the parent does not
  * wonder which to press. Only people the family message still names (`sittingPeople`), and only an

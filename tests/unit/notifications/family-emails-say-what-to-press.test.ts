@@ -3,13 +3,13 @@ import { emailCopyPrefill, emailSampleFamilyConfirmed, emailSampleFor } from "@/
 import { renderBilingual } from "@/modules/notifications/templates";
 
 /**
- * §NNN (the owner, 2026-09-28) — the three emails of a registration say in one line what to press and
+ * §536 (the owner, 2026-09-28) — the three emails of a registration say in one line what to press and
  * what follows: the verification email, a family's one message, and a family's one confirmation. Each
  * is rendered here as `/admin/emails` previews it, from the page's own sample (`emailSampleFor`).
  */
 const ACTION = "https://example.invalid/action";
 
-describe("§NNN the verification email says what to press first", () => {
+describe("§536 the verification email says what to press first", () => {
   it("names the event in the subject, then one line of what to press and what follows, the facts block, and the link's life in one line", () => {
     const data = emailSampleFor("VERIFY_REGISTRATION_EMAIL", "ro");
     const message = renderBilingual("VERIFY_REGISTRATION_EMAIL", "ro", data, ACTION, null);
@@ -41,7 +41,7 @@ describe("§NNN the verification email says what to press first", () => {
   });
 });
 
-describe("§NNN a family's one message says the one button does everything", () => {
+describe("§536 a family's one message says the one button does everything", () => {
   const people = [
     { name: "Ana Pop", birthDate: "1985-03-02" },
     { name: "Maria Pop", birthDate: "2010-07-11" },
@@ -80,7 +80,7 @@ describe("§NNN a family's one message says the one button does everything", () 
   });
 });
 
-describe("§NNN a family's one confirmation: one line, then one block per person", () => {
+describe("§536 a family's one confirmation: one line, then one block per person", () => {
   function confirmed(clubCopy: boolean) {
     const data = { ...emailSampleFor("REGISTRATION_CONFIRMED", "ro"), familyConfirmed: emailSampleFamilyConfirmed(), ...(clubCopy ? { clubCopy: true } : {}) };
     return renderBilingual("REGISTRATION_CONFIRMED", "ro", data, ACTION, null);

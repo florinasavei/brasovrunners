@@ -42,7 +42,7 @@ type Props = {
 
 /**
  * «Mai înscrii pe cineva cu aceeași adresă?» — the sitting's screen, after «Da, încă o persoană» (§519;
- * the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»). Since §NNN it
+ * the owner, 2026-09-27: «asta cu wizzardul de confirmare si claritate e top prio!»). Since §536 it
  * follows every form sent after «Da», and «Da» pressed and come back; the first form's screen is the
  * inbox's own, with the one question (`FamilySittingOffer`), because nothing waits before «Da».
  *

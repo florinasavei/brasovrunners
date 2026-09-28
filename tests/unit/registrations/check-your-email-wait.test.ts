@@ -75,12 +75,12 @@ describe("§513 the screen after the form says the scheduled round's wait", () =
 });
 
 /**
- * §NNN (the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite
+ * §536 (the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite
  * mailul”?», then: the screen must be clearer; the review's nits F0 and F2) — after the first form the
  * screen is the short one: the heading, whose form is in, when its email leaves, the one question with
  * its button, and one true sentence under it. No steps, no wait box: the time is said once.
  */
-describe("§NNN the short screen after the first form", () => {
+describe("§536 the short screen after the first form", () => {
   const offer: Offer = { atOnce: false, email: "familia.pop@example.ro", windowMinutes: 15, continueAction: async () => {} };
 
   beforeEach(() => {

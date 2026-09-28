@@ -41,7 +41,7 @@ export const termsRo: LegalDocumentBody = {
         "Confirmi adresa de e-mail din legătura primită, în {{confirmationHours}}, altfel înscrierea expiră. Dacă există un loc liber, este ținut {{holdMinutes}}, cât citești și semnezi declarația — iar la un eveniment care cere confirmarea participării cu câteva zile înainte de start, până la termenul de confirmare arătat pe pagina lui; doar semnătura confirmă înscrierea.",
         "Fără locuri, intri pe lista de așteptare, în ordinea confirmării; când se eliberează un loc, primul de pe listă are {{offerHours}} să semneze, apoi oferta trece la următorul.",
         "Semnezi scriindu-ți numele complet și bifând că accepți; platforma reține numele, seria și numărul actului de identitate, momentul și o amprentă a textului exact. Declarația semnată îți vine pe e-mail, ca PDF.",
-        "Este o semnătură electronică simplă în sensul Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea și al Regulamentului (UE) nr. 910/2014 (eIDAS); nu i se pot refuza efectele juridice pentru că este electronică.",
+        "Este o semnătură electronică simplă în sensul Legii nr. 214/2024 și al Regulamentului (UE) nr. 910/2014 (eIDAS); nu i se pot refuza efectele juridice pentru că este electronică.",
       ],
     },
     {
@@ -120,7 +120,7 @@ export const termsEn: LegalDocumentBody = {
         "Confirm your email address from the link received within {{confirmationHours}}, or the registration expires. If a place is free, it is held for {{holdMinutes}} while you read and sign the declaration — or, at an event that asks for the confirmation of participation a few days before the start, until the confirmation deadline shown on its page; only the signature confirms the registration.",
         "With no place left, you join the waiting list in order of confirmation; when a place frees up, the first on the list has {{offerHours}} to sign before the offer passes to the next.",
         "You sign by typing your full name and ticking that you accept; the platform records the name, your identity document's series and number, the moment and a fingerprint of the exact text. The signed declaration reaches you by email as a PDF.",
-        "This is a simple electronic signature under Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them and Regulation (EU) no. 910/2014 (eIDAS); it cannot be denied legal effect for being electronic.",
+        "This is a simple electronic signature under Law no. 214/2024 and Regulation (EU) no. 910/2014 (eIDAS); it cannot be denied legal effect for being electronic.",
       ],
     },
     {

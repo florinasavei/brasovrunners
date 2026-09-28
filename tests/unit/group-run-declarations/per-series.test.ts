@@ -180,7 +180,7 @@ describe("§523 the series sentence without a place", () => {
     const values: Record<string, string> = { ...base, ...(seriesMergeValues(groupRunTrailRo, placeless) as Record<string, string>) };
     expect(values.seriesPlace).toBe("");
     const text = JSON.stringify(mergeLegalBody(groupRunTrailRo, values));
-    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura de marți — în fiecare marți, la 18:30 — la care particip de la semnare");
+    expect(text).toContain("Declarația este valabilă pentru toate alergările seriei Tura de marți — în fiecare marți, la 18:30 — și nu trebuie semnată din nou la fiecare alergare");
     expect(text).not.toContain("cu plecare de obicei din");
     expect(text).not.toContain("Declarația este pentru alergarea de grup");
     expect(text.match(/Declarația este valabilă pentru toate alergările seriei/g)).toHaveLength(1);
@@ -189,7 +189,7 @@ describe("§523 the series sentence without a place", () => {
   it("reads the same in English", () => {
     const values = { ...base, ...(seriesMergeValues(groupRunTrailEn, { ...placeless, rhythm: "every Tuesday at 18:30" }) as Record<string, string>) };
     const text = JSON.stringify(mergeLegalBody(groupRunTrailEn, values));
-    expect(text).toContain("valid for every run of the series Tura de marți — every Tuesday at 18:30 — that I take part in");
+    expect(text).toContain("valid for every run of the series Tura de marți — every Tuesday at 18:30 — and need not be signed again for each run");
     expect(text).not.toContain("usually starting from");
     expect(text).not.toContain("This declaration is for the group run");
   });
