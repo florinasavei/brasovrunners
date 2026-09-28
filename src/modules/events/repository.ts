@@ -20,6 +20,15 @@ const unlessToBeAnnounced = <T>(fact: SQL<T> | AnyColumn) =>
   sql<T | null>`CASE WHEN ${events.locationToBeAnnounced} THEN NULL ELSE ${fact} END`;
 
 /**
+ * A date, or null while the date is to be announced (`DECISIONS.md` §NNN) — the place's discipline
+ * (§328) applied to the start, the end and the race's start. In SQL, so a surface that forgets the
+ * flag shows no date at all, never the provisional one the organizer typed.
+ */
+const unlessDateToBeAnnounced = <C extends AnyColumn>(column: C) =>
+  // Decoded as the column is (a `Date`), and typed as possibly null, which the column's own type is not.
+  sql`CASE WHEN ${events.dateToBeAnnounced} THEN NULL ELSE ${column} END`.mapWith(column) as SQL<C["_"]["data"] | null>;
+
+/**
  * The place's name as a page reads it: the language's own when the club gave one (migration
  * `0059`), else the event's — never the other language's (BR-REQ-040-02) — and nothing at all
  * while the place is to be announced.
@@ -65,10 +74,13 @@ const PUBLIC_COLUMNS = {
   // What it is run on; null on a meetup (`DECISIONS.md` §61).
   surface: events.surface,
   eventStatus: events.eventStatus,
+  // Every read over these columns is of a dated event (`publishedIn` keeps the undated out); an
+  // undated one is read through `UNDATED_PUBLIC_COLUMNS`, where all three are null (§NNN).
   startsAt: events.startsAt,
   endsAt: events.endsAt,
   // The gun time, when it differs from when the event begins. Null on an ordinary run.
   raceStartsAt: events.raceStartsAt,
+  dateToBeAnnounced: events.dateToBeAnnounced,
   timezone: events.timezone,
   // The meeting point on a map, as the organizer pasted it: stored, never assembled, because
   // AGENTS.md §8 forbids a provider hostname under src/. Null while the place is to be
@@ -172,8 +184,31 @@ const PUBLIC_COLUMNS = {
  * the join, and it is what keeps BR-REQ-040-02 true — a locale with no translation row is a 404
  * in that locale and never a fallback to the other language.
  */
-const publishedIn = (locale: Locale) =>
+const publishedAnyDateIn = (locale: Locale) =>
   and(eq(events.editorialStatus, "PUBLISHED"), eq(eventTranslations.locale, locale));
+
+/**
+ * The same, for every read that places an event in time — the listing, the calendar, the feed,
+ * the months, the past — and so of dated events only (§NNN). An event whose date is to be
+ * announced is on none of them: its provisional date would sort it, file it under a month and
+ * put it in a calendar app. It is read only through `listUndatedPublishedEvents` and
+ * `findPublishedEventBySlug`, whose columns carry no date at all.
+ */
+const publishedIn = (locale: Locale) => and(publishedAnyDateIn(locale), eq(events.dateToBeAnnounced, false));
+
+/**
+ * `PUBLIC_COLUMNS` for a read that may meet an event whose date is to be announced: the start, the
+ * end and the race's start are null while it is (§NNN), in SQL, as the place is (§328).
+ */
+const UNDATED_PUBLIC_COLUMNS = {
+  ...PUBLIC_COLUMNS,
+  startsAt: unlessDateToBeAnnounced(events.startsAt),
+  endsAt: unlessDateToBeAnnounced(events.endsAt),
+  raceStartsAt: unlessDateToBeAnnounced(events.raceStartsAt),
+  // The programme's rows are instants too — «Sâmbătă, 20 nov., 16:00» names the day as surely as
+  // the start does — so an undated event has no programme on the page until its date is announced.
+  scheduleItems: sql<unknown>`CASE WHEN ${events.dateToBeAnnounced} THEN NULL ELSE ${publicScheduleItems} END`.mapWith(events.scheduleItems),
+};
 
 /**
  * The row shape the public pages receive.
@@ -562,11 +597,44 @@ export async function findPublishedEventBySlug<T extends Record<string, unknown>
   slug: string,
 ) {
   const [row] = await db
-    .select(PUBLIC_COLUMNS)
+    .select(UNDATED_PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(and(publishedIn(locale), eq(eventTranslations.slug, slug)))
+    .where(and(publishedAnyDateIn(locale), eq(eventTranslations.slug, slug)))
     .limit(1);
 
   return row;
+}
+
+/**
+ * Every published event's address in one locale, dated or not (§NNN) — the sitemap's rows, which
+ * need the page and when it was first published, never a date: one query, as before the date could
+ * be held back.
+ */
+export async function listPublishedEventAddresses(db: Database, locale: Locale) {
+  return db
+    .select({ id: events.id, slug: eventTranslations.slug, publishedAt: events.publishedAt })
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(publishedAnyDateIn(locale))
+    .orderBy(asc(events.startsAt));
+}
+
+/** An event's page as it reads: its date is null while it is to be announced (§NNN). */
+export type PublicEventPage = NonNullable<Awaited<ReturnType<typeof findPublishedEventBySlug>>>;
+
+/**
+ * The published events whose date is to be announced (§NNN), for the listing's own section under
+ * the dated ones: never in a month, a calendar or a feed. Their dates are null in SQL; they are
+ * ordered by when they were published, the newest announcement last, and only while going ahead.
+ */
+export async function listUndatedPublishedEvents(db: Database, locale: Locale) {
+  return db
+    .select(UNDATED_PUBLIC_COLUMNS)
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    // Going ahead only: a dated event leaves the listing when it has passed, and one with no date
+    // never passes — so a cancelled one leaves the section when it is cancelled (its page stays).
+    .where(and(publishedAnyDateIn(locale), eq(events.dateToBeAnnounced, true), eq(events.eventStatus, "SCHEDULED")))
+    .orderBy(asc(events.publishedAt), asc(events.id));
 }

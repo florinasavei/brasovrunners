@@ -30,12 +30,13 @@ import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
   findEventForRegistrationById,
   findLatestPastEvent,
+  listPublishedEventAddresses,
+  listUndatedPublishedEvents,
   findPublishedEventBySlug,
   findPublishedTranslations,
   findPublishedTranslationsForEvents,
   listPastEvents,
   listPublishedEventEndings,
-  listPublishedEvents,
   listPublishedEventsBetween,
   listUpcomingEvents,
 } from "@/modules/events/repository";
@@ -138,6 +139,14 @@ export async function cachedUpcomingEvents(locale: Locale, now: Date) {
   return publicRead(["events.upcoming", locale, window], ["events"], () => listUpcomingEvents(getDb(), locale, now));
 }
 
+/**
+ * `listUndatedPublishedEvents`: the listing's «Data se anunță» section (§NNN). No clock: an event
+ * with no date is on it whatever the time, until the organizer announces the date.
+ */
+export async function cachedUndatedEvents(locale: Locale) {
+  return publicRead(["events.undated", locale], ["events"], () => listUndatedPublishedEvents(getDb(), locale));
+}
+
 /** `findLatestPastEvent`: the listing's last resort between seasons (§167). */
 export async function cachedLatestPastEvent(locale: Locale, now: Date) {
   const window = await listingWindow(locale, now);
@@ -184,7 +193,8 @@ export async function cachedPublishedTranslations(eventId: string) {
 export async function cachedSitemapEvents(locale: Locale) {
   return publicRead(["events.sitemap", locale], ["events"], async () => {
     const db = getDb();
-    const rows = await listPublishedEvents(db, locale);
+    // The dated ones and those whose date is to be announced (§NNN): each has its page.
+    const rows = await listPublishedEventAddresses(db, locale);
     const translations = groupById(
       await findPublishedTranslationsForEvents(db, rows.map((event) => event.id)),
       (row) => row.eventId,

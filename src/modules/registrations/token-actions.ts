@@ -86,6 +86,7 @@ async function loadEventForRegistration(
     startsAt: event.startsAt,
     registrationOpensAt: event.registrationOpensAt,
     registrationOpensSoon: event.registrationOpensSoon,
+    dateToBeAnnounced: event.dateToBeAnnounced,
     registrationClosesAt: event.registrationClosesAt,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,

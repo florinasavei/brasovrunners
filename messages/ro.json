@@ -39,6 +39,7 @@
     }
   },
   "Events": {
+    "undatedTitle": "Data se anunță",
     "title": "Evenimente",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
@@ -163,6 +164,7 @@
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "locationToBeAnnounced": "Locația se anunță în curând",
+    "dateToBeAnnounced": "Data se anunță în curând",
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
@@ -761,6 +763,7 @@
       "empty": "Nu există niciun eveniment în baza de date.",
       "featured": "Principal",
       "placeToBeAnnounced": "Locație neanunțată",
+      "dateToBeAnnounced": "Dată neanunțată",
       "preview": "Previzualizare",
       "edit": "Editează",
       "editNamed": "Editează {title}",
@@ -1033,6 +1036,8 @@
       "placeToBeAnnounced": "Locația se anunță mai târziu",
       "placeToBeAnnouncedHelp": "Pornit, peste tot scrie „Locația se anunță în curând”, iar locul și harta nu apar. Ce completezi rămâne nepublicat până oprești comutatorul.",
       "placeUnpublished": "Nepublicat cât timp locația se anunță mai târziu.",
+      "dateToBeAnnounced": "Data se anunță mai târziu",
+      "dateToBeAnnouncedHelp": "Bifat, peste tot scrie „Data se anunță în curând”; data de mai sus rămâne nepublicată și înscrierile rămân „se deschid în curând”.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "special": "Ediție specială",
@@ -1607,6 +1612,7 @@
             "untitled": "fără titlu"
           },
           "when": {
+            "tba": "Data se anunță mai târziu",
             "none": "Data nu e aleasă încă",
             "raceStart": "startul cursei {time}",
             "duration": "{duration}"

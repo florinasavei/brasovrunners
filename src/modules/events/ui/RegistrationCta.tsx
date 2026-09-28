@@ -9,7 +9,7 @@ import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
-import type { PublicEvent } from "../repository";
+import type { PublicEventPage } from "../repository";
 import { fillPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
@@ -32,7 +32,8 @@ export default async function RegistrationCta({
   event,
   now,
 }: {
-  event: PublicEvent;
+  /** An event page's read: undated while its date is to be announced, and then «în curând» (§NNN). */
+  event: PublicEventPage;
   now: Date;
 }) {
   const t = await getTranslations("Event");

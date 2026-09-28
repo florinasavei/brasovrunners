@@ -120,6 +120,7 @@ describe("BR-REQ-040-03 criterion 4 the share picture's date is the picture's la
     type: "Concurs",
     cancelled: "Anulat",
     locationToBeAnnounced: "—",
+    dateToBeAnnounced: "—",
     distanceKm: (km: string) => `${km} km`,
     elevationM: (m: string) => `${m} m`,
   };

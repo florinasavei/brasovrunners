@@ -25,7 +25,8 @@ import { isStravaLink, takesRegistrations } from "../domain/event-type";
 import { CLUB_LOCALITY } from "../domain/place";
 import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
-import type { PublicEvent } from "../repository";
+import type { PublicEventPage } from "../repository";
+import { datedOrNull } from "../domain/dated";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import CardRegistration, { cardRegistrationLine } from "./CardRegistration";
 import { readRegistrationDoor } from "./registration-door";
@@ -174,7 +175,12 @@ export default async function EventFacts({
   cardWeather = null,
   raceWeek = false,
 }: {
-  event: PublicEvent;
+  /**
+   * An event page's read, whose date is null while it is to be announced (§NNN) — only the page
+   * and its preview meet one: every listing read is of dated events. The «Când» row then says
+   * «Data se anunță în curând» and nothing else of time.
+   */
+  event: PublicEventPage;
   now: Date;
   variant?: "full" | "compact";
   /**
@@ -238,7 +244,8 @@ export default async function EventFacts({
   // local time regardless of where the page is opened.
   // The date starts its line, so it takes a capital (§349): "Sâmbătă, 21 nov. 2026".
   const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
-  const dateLong = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
+  const startsAt = event.startsAt;
+  const dateLong = startsAt === null ? t("dateToBeAnnounced") : formatDay(startsAt, { locale, timeZone: event.timezone, style: "long" });
   /**
    * The card's "when" line must fit on one line at 320 and 360 pixels (§366, amended §375 — the
    * owner, 2026-09-24, of the row whose clock and time had wrapped to a second line: "This should
@@ -258,8 +265,8 @@ export default async function EventFacts({
    * times do. Flex wrapping breaks the line only when the row does not fit, so a year-carrying
    * card that fits — a desktop's, a short weekday's — stays one line.
    */
-  const dateWithinYear = compact && event.startsAt.getTime() - now.getTime() >= 0 && event.startsAt.getTime() - now.getTime() < 365 * 24 * 60 * 60 * 1000;
-  const dateShort = dateWithinYear ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", year: false }) : null;
+  const dateWithinYear = compact && startsAt !== null && startsAt.getTime() - now.getTime() >= 0 && startsAt.getTime() - now.getTime() < 365 * 24 * 60 * 60 * 1000;
+  const dateShort = dateWithinYear && startsAt !== null ? formatDay(startsAt, { locale, timeZone: event.timezone, style: "long", year: false }) : null;
   const date: ReactNode = dateShort ? (
     <>
       <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
@@ -350,14 +357,16 @@ export default async function EventFacts({
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
     const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
+    // No time to say while the date is to be announced (§NNN): the sentence alone.
+    if (startsAt === null) return [day];
     if (event.raceStartsAt) {
       return [
         day,
         <>
           {clock}
           {boldTime
-            ? t.rich("gatheringAtBold", { time: time(event.startsAt), strong })
-            : t("gatheringAt", { time: time(event.startsAt) })}
+            ? t.rich("gatheringAtBold", { time: time(startsAt), strong })
+            : t("gatheringAt", { time: time(startsAt) })}
         </>,
         boldTime
           ? t.rich("raceStartAtBold", { time: time(event.raceStartsAt), strong })
@@ -368,7 +377,7 @@ export default async function EventFacts({
       day,
       <>
         {clock}
-        {boldTime ? <strong>{time(event.startsAt)}</strong> : time(event.startsAt)}
+        {boldTime ? <strong>{time(startsAt)}</strong> : time(startsAt)}
       </>,
     ];
   };
@@ -620,8 +629,10 @@ export default async function EventFacts({
     // The state of registration and, where the page has one, its door (§409): read through the
     // page's own `readRegistrationDoor` — one cached entry for an open race, nothing for any
     // other card — never a formula of this file's own.
-    const registration = mentionsRegistration
-      ? cardRegistrationLine(t, locale, event, now, await readRegistrationDoor(event, now), raceWeek)
+    // A card is always of a dated event (the listing reads no other, §NNN).
+    const dated = datedOrNull(event);
+    const registration = mentionsRegistration && dated
+      ? cardRegistrationLine(t, locale, dated, now, await readRegistrationDoor(dated, now), raceWeek)
       : null;
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.

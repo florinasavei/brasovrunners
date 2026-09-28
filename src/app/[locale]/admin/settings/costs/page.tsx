@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
 import { formatCalendarDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
-import { listPublishedEvents } from "@/modules/events/repository";
+import { listPublishedEvents, listUndatedPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { storedMediaBytes } from "@/modules/media/references";
 import {
@@ -139,7 +139,8 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   const jobsHealthy = jobs.every((job) => job.status === "ok");
   // The listing's own query, so "published" here means exactly what a visitor sees; a fee
   // announced on one reopens a money question (§50).
-  const published = await listPublishedEvents(db, locale);
+  // The dated events and those whose date is to be announced (§NNN): both are on the site.
+  const published = [...(await listPublishedEvents(db, locale)), ...(await listUndatedPublishedEvents(db, locale))];
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
   const volume = await readEmailVolumeToday(db, now);
   // The plan the club says it is on (§100): its price is a row on the cost table below.

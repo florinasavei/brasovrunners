@@ -241,6 +241,8 @@ function eventFieldsFrom(form: FormData) {
     // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —
     // the state every event was in before the switch existed.
     locationToBeAnnounced: form.get("event.locationToBeAnnounced") === "on",
+    // «Data se anunță mai târziu» (§NNN): read only when the form carried its marker, as §451's box.
+    dateToBeAnnounced: form.get("event.dateToBeAnnounced.present") === "1" ? form.get("event.dateToBeAnnounced") === "on" : undefined,
     // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,

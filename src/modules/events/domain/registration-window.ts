@@ -11,7 +11,14 @@ export type RegistrationMode = "NONE" | "INTERNAL" | "EXTERNAL";
 export type RegistrationWindowInput = {
   registrationMode: RegistrationMode;
   eventStatus: "SCHEDULED" | "CANCELLED" | "COMPLETED";
-  startsAt: Date;
+  /** Null while the date is to be announced (§NNN): a public read withholds it in SQL. */
+  startsAt: Date | null;
+  /**
+   * The date is to be announced (§NNN). While true an internal registration is `NOT_YET_OPEN`
+   * whatever the provisional date, the window and the clock say — a server read that holds the
+   * provisional `startsAt` passes this; a public read passes `startsAt: null`, which says the same.
+   */
+  dateToBeAnnounced?: boolean;
   registrationOpensAt: Date | null;
   /**
    * «Înscrierile se deschid în curând» (§451): announced with no date. While true an internal
@@ -41,13 +48,18 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
   if (event.eventStatus !== "SCHEDULED") return "EVENT_CANCELLED";
 
   if (event.registrationMode === "NONE") return "NOT_APPLICABLE";
+  // A date still to be announced (§NNN) holds every registration at "soon", the club's own and the
+  // organizer's form alike: nobody signs up for a day nobody has named. There is no day to count a
+  // minimum age on and no start to close at, and a provisional date that passed must not close the
+  // «Anunță-mă» list either.
+  if (event.dateToBeAnnounced || event.startsAt === null) return "NOT_YET_OPEN";
   if (event.registrationMode === "EXTERNAL") return "EXTERNAL";
 
   // «Se deschid în curând» (§451): the organizer has announced the event and not the opening.
   // Nothing opens it but the organizer switching this off; no date is involved, so no clock can.
   // The close still closes it: a window that never opened is over once its closing has passed,
   // so an event that started while "soon" says closed, and its "Anunță-mă" list is dropped.
-  if (event.registrationOpensSoon) return now >= registrationClosingInstant(event) ? "CLOSED" : "NOT_YET_OPEN";
+  if (event.registrationOpensSoon) return now >= (event.registrationClosesAt ?? event.startsAt) ? "CLOSED" : "NOT_YET_OPEN";
 
   // BR-REQ-011-01 criterion 4: absent opening means registration opens when the event is
   // published in this locale. An unpublished translation has no public page at all, so this
@@ -73,7 +85,7 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
  * named once so the two cannot drift.
  */
 export function registrationHasClosed(
-  event: Pick<RegistrationWindowInput, "registrationClosesAt" | "startsAt">,
+  event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date },
   now: Date,
 ): boolean {
   return now >= registrationClosingInstant(event);
@@ -84,7 +96,7 @@ export function registrationHasClosed(
  * which is also when the race numbers settle and "here is your race number" goes (§214), as the
  * forecast on `/admin/emails` says it (§383).
  */
-export function registrationClosingInstant(event: Pick<RegistrationWindowInput, "registrationClosesAt" | "startsAt">): Date {
+export function registrationClosingInstant(event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date }): Date {
   return event.registrationClosesAt ?? event.startsAt;
 }
 
@@ -97,7 +109,8 @@ export function registrationClosingInstant(event: Pick<RegistrationWindowInput, 
  */
 export function upcomingRegistrationOpening(event: RegistrationWindowInput, now: Date): Date | null {
   if (registrationState(event, now) !== "NOT_YET_OPEN") return null;
-  if (event.registrationOpensSoon) return null;
+  // «În curând» has no date to show, and neither has an event whose date is to be announced (§NNN).
+  if (event.registrationOpensSoon || event.dateToBeAnnounced || event.startsAt === null) return null;
   return event.registrationOpensAt ?? event.publishedAt;
 }
 
@@ -111,6 +124,6 @@ export function upcomingRegistrationOpening(event: RegistrationWindowInput, now:
  * never disagree.
  */
 export function openRegistrationClosing(event: RegistrationWindowInput, now: Date): Date | null {
-  if (registrationState(event, now) !== "OPEN") return null;
+  if (registrationState(event, now) !== "OPEN" || event.startsAt === null) return null;
   return event.registrationClosesAt ?? event.startsAt;
 }

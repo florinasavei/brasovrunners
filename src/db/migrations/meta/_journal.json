@@ -715,6 +715,13 @@
       "when": 1790541805744,
       "tag": "0104_difficulty_level",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1790573949136,
+      "tag": "0105_date_to_be_announced",
+      "breakpoints": true
     }
   ]
 }

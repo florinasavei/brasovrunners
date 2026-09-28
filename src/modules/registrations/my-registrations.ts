@@ -286,6 +286,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
     startsAt: event.startsAt,
     registrationOpensAt: event.registrationOpensAt,
     registrationOpensSoon: event.registrationOpensSoon,
+    dateToBeAnnounced: event.dateToBeAnnounced,
     registrationClosesAt: event.registrationClosesAt,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,

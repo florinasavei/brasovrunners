@@ -14,7 +14,7 @@ import { registrations } from "@/db/schema/registrations";
 import { countBackofficeStaff } from "@/modules/staff-identity/repository";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
-import { listPublishedEvents } from "@/modules/events/repository";
+import { listPublishedEvents, listUndatedPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import {
@@ -277,8 +277,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     checkJobHealth(db, "email-outbox", now, budget.effects.jobFloorMinutes),
     checkJobHealth(db, "registration-maintenance", now, budget.effects.jobFloorMinutes),
   ]);
-  // The listing's own query, so "published" here means exactly what a visitor sees.
-  const published = await listPublishedEvents(db, locale);
+  // The listing's own queries, so "published" here means exactly what a visitor sees — the dated
+  // events and those whose date is to be announced (§NNN), which the listing shows in a section.
+  const published = [...(await listPublishedEvents(db, locale)), ...(await listUndatedPublishedEvents(db, locale))];
   const publishedEventCount = published.length;
   /**
    * Is any published event announcing a fee? `events.cost_type = 'PAID'`.

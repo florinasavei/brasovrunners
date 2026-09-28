@@ -101,6 +101,12 @@ export type EventForRegistration = {
    * reads the row passes it; absent on a partial row (a fixture) is the column's default, false.
    */
   registrationOpensSoon?: boolean;
+  /**
+   * The date is to be announced (§NNN): nobody registers at any door, the desk's included — there
+   * is no day to count the minimum age on, and `startsAt` is only the organizer's provisional note.
+   * Absent on a partial row (a fixture) is the column's default, false.
+   */
+  dateToBeAnnounced?: boolean;
   registrationClosesAt: Date | null;
   capacity: number | null;
   raceId: string | null;
@@ -168,6 +174,10 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
   if (event.registrationMode !== "INTERNAL") {
     throw new DomainError("VALIDATION_ERROR", "this event does not accept local registration");
   }
+  // Before the desk's exception: a date still to be announced (§NNN) takes nobody anywhere.
+  if (event.dateToBeAnnounced) {
+    throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
+  }
   if (atTheDesk) {
     if (event.eventStatus !== "SCHEDULED") {
       throw new DomainError("VALIDATION_ERROR", `the event is ${event.eventStatus}`);
@@ -181,6 +191,7 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
       startsAt: event.startsAt,
       registrationOpensAt: event.registrationOpensAt,
       registrationOpensSoon: event.registrationOpensSoon ?? false,
+      dateToBeAnnounced: event.dateToBeAnnounced ?? false,
       registrationClosesAt: event.registrationClosesAt,
       publishedAt: event.publishedAt,
     },
@@ -1359,6 +1370,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     */
     const locked = await repo.lockEventForCapacity(tx, event.id);
     if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+    // Asked again under the lock (§NNN): the date held back by a save that committed after the
+    // caller read the row. The save counts registrations under this same lock, so a submission and
+    // the switch cannot both pass — one waits for the other and finds it.
+    if (locked.dateToBeAnnounced) {
+      throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
+    }
 
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
     if (origin.anotherPerson && origin.anotherPerson.participantId !== participant.id) {

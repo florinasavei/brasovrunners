@@ -13,7 +13,8 @@ import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
 import { placeNameIn } from "@/modules/events/domain/place";
 import { withoutPlaces } from "@/modules/events/domain/schedule";
-import type { PublicEvent } from "@/modules/events/repository";
+import { type PublicEventPage } from "@/modules/events/repository";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventAgeRule from "@/modules/events/ui/EventAgeRule";
 import EventFacts from "@/modules/events/ui/EventFacts";
@@ -96,14 +97,17 @@ export default async function PreviewEventPage({ params }: Props) {
   // The place not announced yet (§328) is withheld here exactly as the public query withholds it,
   // so the preview shows the sentence the page will show — including the programme rows' places.
   const placeLater = event.locationToBeAnnounced;
-  const preview: PublicEvent = {
+  // The date not announced yet (§NNN), withheld the same way: the preview says «Data se anunță».
+  const dateLater = event.dateToBeAnnounced;
+  const preview: PublicEventPage = {
     id: event.id,
     type: event.type,
     surface: event.surface,
     eventStatus: event.eventStatus,
-    startsAt: event.startsAt,
-    endsAt: event.endsAt,
-    raceStartsAt: event.raceStartsAt,
+    startsAt: dateLater ? null : event.startsAt,
+    endsAt: dateLater ? null : event.endsAt,
+    raceStartsAt: dateLater ? null : event.raceStartsAt,
+    dateToBeAnnounced: dateLater,
     timezone: event.timezone,
     mapUrl: placeLater ? null : event.mapUrl,
     // «Coordonate» (§416): withheld with the place, as the public query withholds them.
@@ -161,7 +165,9 @@ export default async function PreviewEventPage({ params }: Props) {
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   // The forecast the public page will show (§402): a draft within seven days of its start reads it too.
-  const weather = await forecastForEvent(preview, now);
+  // None while the date is to be announced (§NNN), as on the page.
+  const datedPreview = datedOrNull(preview);
+  const weather = datedPreview ? await forecastForEvent(datedPreview, now) : null;
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

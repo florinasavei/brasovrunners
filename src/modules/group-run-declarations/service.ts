@@ -114,10 +114,15 @@ export async function findSignableEvent<T extends Record<string, unknown>>(db: D
       startsAt: events.startsAt,
       minAge: events.minAge,
       timezone: events.timezone,
+      dateToBeAnnounced: events.dateToBeAnnounced,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
+  // A run whose date is to be announced (§NNN) has nothing to sign for yet: its start is only the
+  // organizer's provisional note, and the signed PDF and its email would print it. Not signable, as
+  // the page (which answers 404) says — asked here too, for a stale form or a post to the action.
+  if (!row || row.dateToBeAnnounced) return undefined;
   return row;
 }
 

@@ -120,6 +120,7 @@ describe("BR-REQ-011-01 criterion 19 the share picture", () => {
     type: "Concurs",
     cancelled: "Anulat",
     locationToBeAnnounced: SENTENCE,
+    dateToBeAnnounced: "Data se anunță în curând",
     distanceKm: (km: string) => `${km} km`,
     elevationM: (m: string) => `${m} m`,
   };

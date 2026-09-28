@@ -286,6 +286,15 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
       ["registrationOpensAt"],
     );
   }
+  // A date still to be announced (§NNN) holds registration at «în curând»: an opening date is an
+  // answer to a question the event cannot ask yet, refused like §451's rather than dropped.
+  if (fields.dateToBeAnnounced === true && registrationOpensAt) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "registrationOpensAt: registration cannot have an opening date while the event's date is to be announced",
+      ["registrationOpensAt"],
+    );
+  }
   if (
     registrationOpensAt &&
     registrationClosesAt &&
@@ -309,6 +318,59 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * §12.3 requires an approved declaration on an internal event, and it cannot be a CHECK because
  * "approved" lives in another table.
  */
+/**
+ * «Data se anunță mai târziu» (§NNN), what it may not be switched on for:
+ *
+ * - **a series** — a rule that makes dates, or a date it made: a series is its dates;
+ * - **an event anybody registered for** — hiding its date would be a postponement nobody was told
+ *   of, with reminders and deadlines still counted from the date they were given. Postponing is
+ *   the organizer's own act: a new date and «Anunță participanții», or a cancellation.
+ *
+ * Checked only when the switch goes on: an event already undated has nobody registered (no door
+ * takes anybody while it is), and switching it off is always allowed. The series is asked here,
+ * before the save's transaction; the registrations inside it, under the lock
+ * (`assertNobodyRegisteredForUndated`).
+ */
+async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>(
+  db: Database<T>,
+  fields: EventFieldsInput,
+  current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "repeatRule" | "repeatOf"> | null,
+): Promise<void> {
+  if (fields.dateToBeAnnounced !== true) return;
+  // The listing leads with a dated event (§470): one with no date cannot be the one it leads with,
+  // and marking it would clear the mark from the event that does (`clearFeaturedExcept`).
+  if (fields.featured) {
+    throw new DomainError("VALIDATION_ERROR", "featured: an event whose date is to be announced cannot lead the listing", ["featured"]);
+  }
+  if (current?.dateToBeAnnounced === true) return;
+  if (current && (current.repeatRule !== null || current.repeatOf !== null)) {
+    throw new DomainError("VALIDATION_ERROR", "dateToBeAnnounced: a date of a series cannot be announced later", ["dateToBeAnnounced"]);
+  }
+}
+
+/**
+ * The second half of `assertDateToBeAnnouncedAllowed`, inside the save's transaction: nobody may be
+ * registered when the switch goes on. Counted behind the event row's lock — the one every
+ * submission takes before it inserts (`submitRegistration`, which asks the flag again under it) —
+ * so a runner pressing «Trimite» as the organizer presses «Salvează» is either counted here or
+ * refused there, never registered against a date that has just been withdrawn.
+ */
+async function assertNobodyRegisteredForUndated<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  fields: EventFieldsInput,
+  current: Pick<EditableEvent, "id" | "dateToBeAnnounced">,
+): Promise<void> {
+  if (fields.dateToBeAnnounced !== true || current.dateToBeAnnounced) return;
+  await lockEventForCapacity(tx, current.id);
+  if ((await countRegistrationsForEvent(tx, current.id)) > 0) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "dateToBeAnnounced: people are registered for this date; give the new date and tell them, or cancel the event",
+      ["dateToBeAnnounced"],
+    );
+  }
+}
+
 async function assertCoherentRegistrationBlock<T extends Record<string, unknown>>(
   db: Database<T>,
   fields: EventFieldsInput,
@@ -491,6 +553,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // switch writes nothing, so no script opens a registration the organizer holds shut by not
     // mentioning it. The editor and the create form always post it.
     ...(fields.registrationOpensSoon === undefined ? {} : { registrationOpensSoon: fields.registrationOpensSoon }),
+    // «Data se anunță mai târziu» (§NNN), by the same discipline. While it is on, an internal
+    // registration is held at «se deschid în curând» (§451) whatever the box said — so announcing the
+    // date later opens nothing by itself: the organizer unticks «în curând» when they mean it.
+    ...(fields.dateToBeAnnounced === undefined ? {} : { dateToBeAnnounced: fields.dateToBeAnnounced }),
+    ...(fields.dateToBeAnnounced === true && fields.registrationMode === "INTERNAL" ? { registrationOpensSoon: true } : {}),
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
     participantListVisibility: fields.participantListVisibility,
@@ -1483,6 +1550,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
 
   const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, fields, now);
+  await assertDateToBeAnnouncedAllowed(db, fields, current);
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
@@ -1494,6 +1562,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
    * landing between the count and the write waits rather than slipping past it.
    */
   const saved = await db.transaction(async (tx) => {
+    await assertNobodyRegisteredForUndated(tx, fields, current);
     if (fields.capacity !== null) {
       await lockEventForCapacity(tx, input.eventId);
       const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
@@ -1999,6 +2068,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
     }
     await assertCoherentRegistrationBlock(db, parsedEventFields, now);
+    await assertDateToBeAnnouncedAllowed(db, parsedEventFields, current);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
@@ -2039,6 +2109,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // before this transaction do not see that write on their own.
     let discountNoteCleared = false;
     if (parsedEventFields && times) {
+      await assertNobodyRegisteredForUndated(tx, parsedEventFields, current);
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
        * BR-REQ-034-02 criterion 3). The event row is locked first — the serialization point
@@ -2281,6 +2352,8 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
 
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
+  // A new event has nobody registered and repeats only after it exists (`repeatEvent` asks then).
+  await assertDateToBeAnnouncedAllowed(db, parsed, null);
   const times = resolveTimes(parsed);
   // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
   const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);
@@ -2590,6 +2663,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // A copy of an event whose place is not announced is not announced either (§328): the
     // hidden place travels with it and stays hidden until somebody switches it on.
     locationToBeAnnounced: source.locationToBeAnnounced,
+    // And one whose date is not announced keeps it held back (§NNN): its start is the source's
+    // provisional note. `repeatEvent` refuses such a source, so only a duplicate carries this.
+    dateToBeAnnounced: source.dateToBeAnnounced,
     difficulty: source.difficulty,
     difficultyLevel: source.difficultyLevel,
     costType: source.costType,
@@ -2705,6 +2781,11 @@ export async function repeatEvent<T extends Record<string, unknown>>(
 
   const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  // An event whose date is to be announced (§NNN) has no date to repeat from: its start is the
+  // organizer's provisional note, and a series would publish that note on every date it made.
+  if (source.dateToBeAnnounced) {
+    throw new DomainError("VALIDATION_ERROR", "repeat: an event whose date is to be announced cannot repeat", ["repeat"]);
+  }
   if (source.repeatOf) {
     throw new DomainError("VALIDATION_ERROR", "this date is part of a series already; the series repeats from its first event");
   }

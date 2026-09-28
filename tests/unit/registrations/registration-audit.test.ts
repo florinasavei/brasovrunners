@@ -39,6 +39,7 @@ describe("§420 §104 the public form hands the allocator the participation wind
     startsAt: new Date("2026-11-21T07:00:00.000Z"),
     registrationOpensAt: null,
     registrationOpensSoon: false,
+    dateToBeAnnounced: false,
     registrationClosesAt: null,
     capacity: 100,
     raceId: null,

@@ -12,7 +12,8 @@ import { riseIn } from "@/theme/motion";
 import { featuredCard, specialCard } from "@/theme/surfaces";
 import type { WeatherReading } from "@/modules/weather/domain/forecast";
 import { raceWeek } from "../domain/race-week";
-import type { PublicEvent } from "../repository";
+import type { PublicEventPage } from "../repository";
+import { datedOrNull } from "../domain/dated";
 import CardDoor from "./CardDoor";
 import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
 import EventExcerpt from "./EventExcerpt";
@@ -70,7 +71,8 @@ export default async function EventCard({
   featured,
   seriesDates,
 }: {
-  event: PublicEvent;
+  /** Undated only in the listing's «Data se anunță» section (§NNN): no countdown, «Când» says so. */
+  event: PublicEventPage;
   index: number;
   now: Date;
   /** The forecast at the start (§416), read by the listing for every card at once (`forecastsForEvents`); null outside the seven days or on any failure. */
@@ -89,7 +91,8 @@ export default async function EventCard({
   const page = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } });
   // The last days before the start (§78; seven unless the club changed it, §377), counted on the
   // event's own calendar — the featured card only.
-  const week = featured ? raceWeek(event, now, featured) : null;
+  const dated = datedOrNull(event);
+  const week = featured && dated ? raceWeek(dated, now, featured) : null;
   const tEvents = featured ? await getTranslations("Events") : null;
   const rhythm = seriesDates && seriesDates.length > 1 ? await rhythmLabel(seriesDates, event.timezone, locale) : null;
   // The rule behind the word, on hover, on a tap and to a screen reader (§486): «Se repetă în fiecare marți, la 18:30».
@@ -146,7 +149,7 @@ export default async function EventCard({
         {/* The countdown (§78), the lead's alone and only in race week: "În 3 zile, sâmbătă, 21 nov.
             2026, la 10:00" — the noun agreeing with the number (§377), the date inline (§349, §452).
             In the club's blue and bold, at the card's own size; a group's gap above it like any group. */}
-        {week && tEvents && (
+        {week && tEvents && dated && (
           <Typography
             component="p"
             variant="body1"
@@ -155,7 +158,7 @@ export default async function EventCard({
           >
             {tEvents(week.days === 0 ? "raceWeek.today" : week.days === 1 ? "raceWeek.tomorrow" : "raceWeek.inDays", {
               days: durationPhrase(locale, week.days, "days"),
-              when: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
+              when: formatDay(dated.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
             })}
           </Typography>
         )}

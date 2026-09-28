@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { buildCalendar } from "@/modules/events/ical";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
 import { env } from "@/shared/config/env";
 
@@ -16,7 +17,9 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, { params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   const known = routing.locales.find((candidate) => candidate === locale);
-  const event = known ? await eventBySlugWithLastGood(known, slug) : undefined;
+  const found = known ? await eventBySlugWithLastGood(known, slug) : undefined;
+  // No file while the date is to be announced (§NNN): a calendar entry is a date, and the page offers none.
+  const event = found ? datedOrNull(found) : null;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({

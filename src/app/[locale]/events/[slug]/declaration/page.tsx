@@ -18,6 +18,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { groupRunMergeValues } from "@/modules/group-run-declarations/facts";
 import { signatureCoversSeries } from "@/modules/group-run-declarations/series";
 import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, groupRunAsksBirthDate, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
@@ -76,7 +77,9 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
 
   const now = new Date();
   // The cached row, or the database's own at a red month's miss (§493): this page reads it anyway.
-  const event = await formEventBySlug(locale, slug);
+  const found = await formEventBySlug(locale, slug);
+  // A group run whose date is to be announced (§NNN) takes no signature yet: nothing to sign for.
+  const event = found ? datedOrNull(found) : null;
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key) notFound();
 
