@@ -3,7 +3,7 @@
  * Merge branches into the branch checked out, resolving the conflicts every batch has — the
  * integrate step of `docs/DISPATCHER.md`, and the first step of `.github/workflows/release.yml` (§NNN).
  *
- * Usage: yarn batch:merge <ref> [<ref> …] [--no-probe]
+ * Usage: yarn batch:merge <ref> [<ref> …] [--no-probe] [--no-checks]
  *        yarn batch:merge origin/qa                       bring a branch up to date with qa
  *        yarn batch:merge feat/a feat/b feat/c            integrate a batch, in that order
  *
@@ -21,8 +21,19 @@
  *
  * After the merges: the catalogues lose any key git's line merge left twice; when the journal was
  * rebuilt, the snapshots are re-linked in journal order and the newest one's content refreshed from
- * the merged schema by a throwaway `drizzle-kit generate` (skipped with `--no-probe`); and, when
- * `origin/main` is known, every migration production has must be unchanged in this tree.
+ * the merged schema by a throwaway `drizzle-kit generate` (skipped with `--no-probe`); every
+ * migration production (`origin/main`) and QA (`origin/qa`) already applied must be unchanged in
+ * this tree, each database's newer ones sorting after it; and, in a checkout with the repository's
+ * `package.json`, `yarn migrations:check` and `yarn typecheck` must pass (skipped with
+ * `--no-checks`) — a union-resolved test that no longer compiles stops here, not after the push.
+ * Any of these failing stops the run (exit 2) with the merges committed, for a person to fix.
+ *
+ * Two siblings that picked the same migration number both add `meta/NNNN_snapshot.json`: that
+ * add/add conflict has no rule, and the stop says so — renumber one branch's migration by hand
+ * (its SQL file, its snapshot and its journal tag) before merging again.
+ *
+ * Unlike the dispatcher's manual integration, it does not cut the `batch/<date>-<letter>` branch:
+ * check that branch out from `origin/qa` first and run this in it.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
@@ -32,9 +43,10 @@ import { conflictKind, dedupeJsonKeys, mergeJson3, rebuildJournal, relinkSnapsho
 
 const argv = process.argv.slice(2);
 const PROBE = !argv.includes("--no-probe");
+const CHECKS = !argv.includes("--no-checks");
 const refs = argv.filter((a) => !a.startsWith("--"));
 if (refs.length === 0) {
-  console.error("Usage: yarn batch:merge <ref> [<ref> …] [--no-probe]");
+  console.error("Usage: yarn batch:merge <ref> [<ref> …] [--no-probe] [--no-checks]");
   process.exit(1);
 }
 
@@ -57,6 +69,14 @@ const stage = (n, file) => {
 
 const branch = git("branch", "--show-current").trim() || "HEAD";
 let journalRebuilt = false;
+
+/** A migration file or snapshot among the unresolved paths: two siblings picked the same number. */
+function sameNumberHint(paths) {
+  const same = paths.filter((p) => /^src\/db\/migrations\/(meta\/\d{4}_snapshot\.json|\d{4}_[^/]+\.sql)$/.test(p));
+  return same.length
+    ? `\n  Two branches added migration number ${[...new Set(same.map((p) => p.match(/(\d{4})_/)[1]))].join(", ")}: renumber one by hand — its SQL file, its meta snapshot and its journal tag — then merge again.`
+    : "";
+}
 
 /** The conflicted paths of the merge in progress. */
 const conflicted = () => git("diff", "--name-only", "--diff-filter=U").trim().split("\n").filter(Boolean);
@@ -121,7 +141,7 @@ for (const ref of refs) {
   if (paths.length === 0) stop(`git merge ${ref} failed without a conflict:\n  ${(merged.stderr || merged.stdout).trim()}`);
   console.log(`merging ${ref}: ${paths.length} conflicted path(s)`);
   const { ok, without } = resolveAll(paths);
-  if (!ok) stop(`merge conflict on ${ref} that no rule resolves: ${without.join(", ")}\n  The merge is left in progress: resolve those paths, commit, and run this again (or git merge --abort).`);
+  if (!ok) stop(`merge conflict on ${ref} that no rule resolves: ${without.join(", ")}${sameNumberHint(without)}\n  The merge is left in progress: resolve those paths, commit, and run this again (or git merge --abort).`);
   git("commit", "--no-verify", "-q", "-m", `${message} (resolved by rule: ${paths.join(", ")})`);
   console.log(`merged ${ref} — resolved by rule`);
 }
@@ -194,13 +214,23 @@ function refreshNewestSnapshot(journal, journalText, snapFile) {
   console.log(`  snapshots: ${newest} refreshed from the merged schema; what the siblings' SQL already applies:\n${sqlText.trim().split("\n").slice(0, 14).join("\n")}`);
 }
 
-// Production's migrations, unchanged.
-if (gitMay("rev-parse", "--verify", "--quiet", "origin/main^{commit}").status === 0 && existsSync(JOURNAL)) {
-  const shipped = gitMay("show", `origin/main:${JOURNAL}`);
-  if (shipped.status === 0) {
-    const problems = shippedJournalProblems(JSON.parse(readFileSync(JOURNAL, "utf8")), JSON.parse(shipped.stdout));
-    if (problems.length) stop(`the journal differs from production's:\n  ${problems.join("\n  ")}`);
-    console.log("journal: every migration production has is unchanged");
+// The migrations each deployed database already applied, unchanged: production's (main) and QA's
+// (qa, which migrates on every push). A rebuilt journal that moved one of their `when`s would be
+// skipped there without an error.
+for (const [ref, where] of [["origin/main", "production"], ["origin/qa", "QA"]]) {
+  if (gitMay("rev-parse", "--verify", "--quiet", `${ref}^{commit}`).status !== 0 || !existsSync(JOURNAL)) continue;
+  const shipped = gitMay("show", `${ref}:${JOURNAL}`);
+  if (shipped.status !== 0) continue;
+  const problems = shippedJournalProblems(JSON.parse(readFileSync(JOURNAL, "utf8")), JSON.parse(shipped.stdout));
+  if (problems.length) stop(`the journal differs from ${where}'s (${ref}):\n  ${problems.join("\n  ")}`);
+  console.log(`journal: every migration ${where} has is unchanged`);
+}
+
+// The tree the merges made still holds together — only in the repository's own checkout.
+if (CHECKS && existsSync("package.json") && /"typecheck"\s*:/.test(readFileSync("package.json", "utf8"))) {
+  for (const script of ["migrations:check", "typecheck"]) {
+    const r = spawnSync("yarn", [script], { encoding: "utf8", stdio: "inherit", shell: process.platform === "win32", timeout: 600_000 });
+    if (r.status !== 0) stop(`yarn ${script} fails on the merged tree — the merges are committed; fix it on this branch, commit, and run this again`);
   }
 }
 console.log(`done: ${git("log", "--oneline", "-1").trim()}`);

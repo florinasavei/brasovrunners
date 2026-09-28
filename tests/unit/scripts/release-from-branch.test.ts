@@ -6,6 +6,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { PLACEHOLDER } from "../../../scripts/land-entry.mjs";
 import { todayIn } from "../../../scripts/land-tree.mjs";
 
+// An id SPECS.md does not define, built so docs:check does not read it as a reference.
+const UNKNOWN = ["BR", "REQ", "099", "09"].join("-");
+
 /**
  * §NNN — the landing and the merge run end to end on a throwaway repository, the way
  * `.github/workflows/release.yml` runs them: `yarn batch:merge origin/qa`, then
@@ -140,6 +143,40 @@ describe("§NNN yarn docs:land --tree lands the facts a branch carries", () => {
     expect(empty.status).toBe(1);
     expect(empty.stderr).toMatch(/no \.release\/\*\.json on this branch/);
   });
+
+  it("refuses, unattended, what needs a person — docsNotes and a requirement SPECS.md lacks — dry run or not, and says so in the run's summary", () => {
+    const { dir, git, put, read } = repo();
+    const from = "BR-V9.40-2031-01-01";
+    put("CLAUDE.md", `**Baseline \`${from}\`**\n\n- \`/admin/tasks\`: what the club still owes\n`);
+    put("DECISIONS.md", `<!-- PROJECT_BASELINE: ${from} -->\n\n**Baseline \`${from}\`**\n\n## 12. Old\n\nOld.\n`);
+    put("CHANGELOG.md", `## ${from}\n\n- old.\n`);
+    put("SPECS.md", "#### BR-REQ-041-01 Pages\n\n1. First.\n\n**Verification:** tests.\n");
+    put(
+      ".release/feat-x.json",
+      JSON.stringify({
+        branch: "feat/x",
+        decisionsTitle: "X",
+        decisionsSection: "Body.",
+        changelogLine: `- **X**. ${PLACEHOLDER}.`,
+        specsCriteria: [{ requirement: UNKNOWN, text: `Gone (<today's date>, \`DECISIONS.md\` ${PLACEHOLDER}).` }],
+        docsNotes: "SETUP.md needs a paragraph",
+      }),
+    );
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    git("update-ref", "refs/remotes/origin/qa", "HEAD");
+    const summary = path.join(dir, "summary.md");
+    for (const args of [["--tree"], ["--tree", "--apply"]]) {
+      const run = spawnSync("node", [LAND, ...args], { cwd: dir, encoding: "utf8", env: { ...process.env, GITHUB_STEP_SUMMARY: summary } });
+      expect(run.status, args.join(" ")).toBe(1);
+      expect(run.stderr).toMatch(/--tree cannot land what needs a person/);
+      expect(run.stderr).toMatch(/docsNotes left for a person .*SETUP\.md needs a paragraph/);
+      expect(run.stderr).toContain(`a requirement SPECS.md does not have: ${UNKNOWN}`);
+    }
+    expect(read("CLAUDE.md")).toContain(from);
+    expect(existsSync(path.join(dir, ".release/feat-x.json"))).toBe(true);
+    expect(read("summary.md")).toMatch(/### The landing stopped/);
+  });
 });
 
 describe("§NNN yarn batch:merge resolves the conflicts every batch has, and stops on the rest", () => {
@@ -178,6 +215,7 @@ describe("§NNN yarn batch:merge resolves the conflicts every batch has, and sto
     expect(spawnSync("node", [MERGE, "qa", "--no-probe"], { cwd: dir, encoding: "utf8", env: ENV }).stdout).toContain("already merged qa");
   });
 
+  // Different numbers: what the journal looks like once a same-number sibling was renumbered by hand (the test below).
   it("rebuilds the journal two sibling migrations collided in, and re-links their snapshots", () => {
     const { dir, git, put, read } = repo();
     const journal = (...entries: Array<[string, number]>) =>
@@ -212,6 +250,39 @@ describe("§NNN yarn batch:merge resolves the conflicts every batch has, and sto
     ]);
     expect(JSON.parse(read("src/db/migrations/meta/0003_snapshot.json")).prevId).toBe("id-2");
     expect(git("status", "--porcelain").trim()).toBe("");
+  });
+
+  it("stops when two siblings picked the same migration number, and says to renumber one by hand", () => {
+    // The real case: siblings cut from the same qa both take the next number, so both add
+    // meta/0002_snapshot.json — an add/add conflict no rule resolves.
+    const { dir, git, put } = repo();
+    const journal = (...entries: Array<[string, number]>) =>
+      JSON.stringify({ version: "7", dialect: "postgresql", entries: entries.map(([tag, when], idx) => ({ idx, version: "7", when, tag, breakpoints: true })) }, null, 2) + "\n";
+    const snapshot = (id: string, prevId: string) => JSON.stringify({ id, prevId, tables: {} }, null, 2) + "\n";
+    put("src/db/migrations/0001_a.sql", "CREATE TABLE a ();\n");
+    put("src/db/migrations/meta/0001_snapshot.json", snapshot("id-1", "00000000-0000-0000-0000-000000000000"));
+    put("src/db/migrations/meta/_journal.json", journal(["0001_a", 1000]));
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    git("checkout", "-qb", "feat/mine");
+    put("src/db/migrations/0002_mine.sql", "ALTER TABLE a ADD COLUMN m int;\n");
+    put("src/db/migrations/meta/0002_snapshot.json", snapshot("id-2m", "id-1"));
+    put("src/db/migrations/meta/_journal.json", journal(["0001_a", 1000], ["0002_mine", 3000]));
+    git("add", "-A");
+    git("commit", "-qm", "mine");
+    git("checkout", "-q", "qa");
+    put("src/db/migrations/0002_yours.sql", "ALTER TABLE a ADD COLUMN y int;\n");
+    put("src/db/migrations/meta/0002_snapshot.json", snapshot("id-2y", "id-1"));
+    put("src/db/migrations/meta/_journal.json", journal(["0001_a", 1000], ["0002_yours", 2000]));
+    git("add", "-A");
+    git("commit", "-qm", "yours");
+    git("checkout", "-q", "feat/mine");
+
+    const run = spawnSync("node", [MERGE, "qa", "--no-probe"], { cwd: dir, encoding: "utf8", env: ENV });
+    expect(run.status).toBe(2);
+    expect(run.stderr).toMatch(/no rule resolves: .*src\/db\/migrations\/meta\/0002_snapshot\.json/);
+    expect(run.stderr).toMatch(/Two branches added migration number 0002: renumber one by hand/);
+    expect(existsSync(path.join(dir, ".git", "MERGE_HEAD"))).toBe(true);
   });
 
   it("stops on a conflict no rule resolves, names it, and leaves the merge for a person", () => {

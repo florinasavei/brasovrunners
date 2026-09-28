@@ -33,7 +33,10 @@
  *
  * It stops, before writing anything, on a blank fix report (a round with no result or no summary), a blank
  * `decisionsTitle`, a blank bullet and a malformed `.release/` entry; a manifest item's `title` and
- * `changelog` override the results'.
+ * `changelog` override the results'. With `--tree` — unattended on GitHub Actions — it also stops
+ * on anything a person would have to finish: an entry's `docsNotes`, a criterion for a requirement
+ * SPECS.md lacks, a placeholder line no branch wrote (`land-tree.mjs`'s `handWork`). Under Actions
+ * (`GITHUB_STEP_SUMMARY` set) the numbers, those lists and a stop are written to the run's summary.
  *
  * manifest.json (it lives outside the repository, beside the saved results; it names local paths):
  *   {
@@ -67,6 +70,7 @@ import {
   ENTRY_DIR,
   nextBaseline,
   normalizeBaseline,
+  handWork,
   numberForLine,
   orderEntries,
   releaseTitle,
@@ -76,8 +80,21 @@ import {
   withReleasedRow,
 } from "./land-tree.mjs";
 
+/** On GitHub Actions, lines for the run's summary page — what the owner reads on a phone; nothing elsewhere. */
+function summary(markdown) {
+  if (!process.env.GITHUB_STEP_SUMMARY) return;
+  try {
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${markdown}\n`);
+  } catch {
+    // A summary that cannot be written is not a reason to fail a landing.
+  }
+}
+
+const FENCE = "`".repeat(3);
+
 function fail(message) {
   console.error(`\n  ${message}\n`);
+  summary(`### The landing stopped\n\n${FENCE}text\n${message}\n${FENCE}\n`);
   process.exit(1);
 }
 
@@ -369,6 +386,24 @@ if (manual.length) console.log(`\n§NNN lines no branch wrote (a merge resolved 
 if (missing.length) console.log(`\nrequirements not found in SPECS.md — add their criteria by hand:\n  ${missing.join("\n  ")}`);
 const notes = entries.filter((e) => String(e.raw?.docsNotes ?? "").trim()).map((e) => `§${e.n}: ${e.raw.docsNotes.trim()}`);
 if (notes.length) console.log(`\ndocsNotes — text other documents need, by hand:\n  ${notes.join("\n  ")}`);
+
+// Unattended (--tree, on GitHub Actions from a phone) nobody reads a log: hand work stops the
+// landing before a file is written, dry run or not, and the run's summary says what and where.
+if (TREE) {
+  const refused = handWork({ docsNotes: notes, missing, manual });
+  if (refused.length) fail(`--tree cannot land what needs a person:\n    ${refused.join("\n    ")}`);
+}
+summary(
+  [
+    `### Landing \`${from}\` → \`${to}\`${APPLY ? "" : " (dry run)"}`,
+    "",
+    ...entries.map((e) => `- §${e.n} ← \`${e.branch ?? e.source}\`: ${e.title}`),
+    ...(notes.length ? ["", "**Text other documents need, by hand:**", ...notes.map((n) => `- ${n}`)] : []),
+    ...(missing.length ? ["", "**Requirements not in SPECS.md:**", ...missing.map((m) => `- ${m}`)] : []),
+    ...(manual.length ? ["", "**Decision placeholders to number by hand:**", ...manual.map((m) => `- \`${m}\``)] : []),
+    "",
+  ].join("\n"),
+);
 
 const dirty = [...files].filter(([, f]) => f.dirty);
 if (!APPLY) {

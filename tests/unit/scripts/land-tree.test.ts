@@ -6,6 +6,7 @@ import {
   currentBaseline,
   duplicateBranches,
   entryPathOf,
+  handWork,
   nextBaseline,
   normalizeBaseline,
   numberForLine,
@@ -17,6 +18,9 @@ import {
   withBatchLine,
   withReleasedRow,
 } from "../../../scripts/land-tree.mjs";
+
+// An id SPECS.md does not define, built so docs:check does not read it as a reference.
+const UNKNOWN = ["BR", "REQ", "099", "09"].join("-");
 
 /**
  * §NNN — the release facts travel with the branch: one `.release/<slug>.json` per change, landed
@@ -161,5 +165,31 @@ describe("§NNN which change a placeholder line belongs to", () => {
   it("leaves a line already on the base alone, and a merge's line for a person when several changes land", () => {
     expect(numberForLine({ sha: "old", numberOf, inBatch, uncommitted, onlyNumber: 530 })).toBeNull();
     expect(numberForLine({ sha: "mmm", numberOf, inBatch, uncommitted, onlyNumber: null })).toBeNull();
+  });
+});
+
+describe("§NNN an entry checked on its pull request, and what an unattended landing refuses", () => {
+  const entry = {
+    branch: "feat/x",
+    decisionsTitle: "X",
+    decisionsSection: "Body.",
+    changelogLine: "- **X**.",
+    specsCriteria: [{ requirement: "BR-REQ-041-01", text: "t" }, { requirement: UNKNOWN, text: "t" }],
+  };
+
+  it("names a requirement SPECS.md does not define when it is given the defined ones", () => {
+    expect(validateEntry(entry, ".release/feat-x.json")).toEqual([]);
+    expect(validateEntry(entry, ".release/feat-x.json", { requirements: new Set(["BR-REQ-041-01"]) })).toEqual([
+      `.release/feat-x.json: specsCriteria[1].requirement ${UNKNOWN} is not a requirement in SPECS.md`,
+    ]);
+  });
+
+  it("lists docsNotes, missing requirements and unnumbered lines as hand work, and nothing when there is none", () => {
+    expect(handWork({})).toEqual([]);
+    const work = handWork({ docsNotes: ["§1: SETUP.md"], missing: [`${UNKNOWN} (§1)`], manual: ["a.ts:1 x"] });
+    expect(work).toHaveLength(3);
+    expect(work[0]).toMatch(/^docsNotes left for a person/);
+    expect(work[1]).toContain(UNKNOWN);
+    expect(work[2]).toMatch(/a\.ts:1 x/);
   });
 });

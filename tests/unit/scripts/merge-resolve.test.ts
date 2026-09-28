@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   conflictKind,
   dedupeJsonKeys,
+  mergeImportLines,
   mergeJson3,
   rebuildJournal,
   relinkSnapshots,
@@ -68,7 +69,18 @@ describe("§NNN the catalogues merged by key", () => {
 });
 
 describe("§NNN a test file both sides appended to", () => {
-  it("keeps our lines then theirs, one import per module with the longer list, the file's line ending", () => {
+  it("merges two imports of one module into one carrying both sides' specifiers", () => {
+    const text = ["<<<<<<< HEAD", 'import { a, c } from "./x";', "=======", 'import { a, b } from "./x";', ">>>>>>> feat/y"].join("\n");
+    expect(unionConflicts(text).text).toBe('import { a, c, b } from "./x";');
+    expect(mergeImportLines('import type { A } from "./t";', 'import type { B as C } from "./t";')).toBe('import type { A, B as C } from "./t";');
+    // A type import and a value import, or a default import, are not one line: both are kept.
+    expect(mergeImportLines('import type { A } from "./t";', 'import { a } from "./t";')).toBeNull();
+    expect(mergeImportLines('import x from "./t";', 'import { a } from "./t";')).toBeNull();
+    const both = unionConflicts(["<<<<<<< HEAD", 'import x from "./t";', "=======", 'import { a } from "./t";', ">>>>>>> y"].join("\n")).text;
+    expect(both).toBe('import x from "./t";\nimport { a } from "./t";');
+  });
+
+  it("keeps our lines then theirs, one import per module with both lists, the file's line ending", () => {
     const text = [
       "<<<<<<< HEAD",
       'import { a } from "./x";',

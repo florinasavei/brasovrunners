@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { withoutWorkflow } from "../../../scripts/ship-checks.mjs";
+import { timesTable, withoutWorkflow } from "../../../scripts/ship-checks.mjs";
 
 /**
  * §NNN — one workflow ships a pull request: `.github/workflows/release.yml`, started by the label
@@ -23,18 +23,63 @@ describe("§NNN release.yml — who starts a release", () => {
     expect(steps).toContain('[ "$base" = "qa" ]');
   });
 
-  it("runs one release at a time and never cancels one halfway", () => {
-    expect(workflow).toMatch(/\nconcurrency:\n {2}group: release\n {2}cancel-in-progress: false\n/);
+  it("runs one release at a time and never cancels one halfway — on the job, so another label's skipped run never enters the group", () => {
+    expect(workflow).not.toMatch(/\nconcurrency:/);
+    const job = workflow.slice(workflow.indexOf("\n  ship:\n"), workflow.indexOf("\n    steps:\n"));
+    expect(job).toMatch(/\n {4}if: >-\n/);
+    expect(job).toMatch(/\n {4}concurrency:\n {6}group: release\n {6}cancel-in-progress: false\n/);
+  });
+
+  it("refuses a person without write access before anything else", () => {
+    const first = steps.slice(0, steps.indexOf("\n      - name: Which pull request"));
+    expect(first).toContain('gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" --jq .permission');
+    expect(first).toMatch(/admin\|maintain\|write\) ;;/);
+    expect(workflow).toContain("ACTOR: ${{ github.triggering_actor }}");
+  });
+});
+
+describe("§NNN release.yml — the dry run and the summary page", () => {
+  it("has a dry run, by hand only, that lands on the runner, shows the diff and pushes and ships nothing", () => {
+    expect(workflow).toMatch(/\n {6}dry_run:\n {8}description: .*\n {8}required: false\n {8}type: boolean\n {8}default: false\n/);
+    expect(workflow).toContain("DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}");
+    expect(steps).toContain("if: env.DRY_RUN == 'true' && steps.pr.outputs.state == 'OPEN'");
+    expect(steps).toContain("git show --stat HEAD");
+    expect(steps).toContain("if: steps.pr.outputs.state == 'OPEN' && env.DRY_RUN != 'true'"); // the push
+    const ship = steps.slice(steps.indexOf("- name: Ship\n"));
+    expect(ship).toMatch(/^- name: Ship\n {8}id: ship\n {8}if: env\.DRY_RUN != 'true'\n/);
+  });
+
+  it("writes every step's outcome, and ship's timing, to the run's summary page", () => {
+    expect((steps.match(/GITHUB_STEP_SUMMARY/g) ?? []).length).toBeGreaterThan(10);
+    const last = steps.slice(steps.indexOf("- name: The summary"));
+    expect(last).toMatch(/^- name: The summary\n {8}if: always\(\)\n/);
+    for (const id of ["check", "pr", "merge", "land", "push", "ship"]) expect(last).toContain(`\${{ steps.${id}.outcome }}`);
+    expect(last).toContain("timesTable");
+    const table = timesTable(
+      `{"release":"BR-V9.40-2031-01-01","outcome":"old"}\n` +
+        JSON.stringify({ release: "BR-V9.41-2031-01-02", outcome: "stopped: a | b", totalSeconds: 125, steps: [{ name: "checks", seconds: 65 }] }) +
+        "\n",
+    );
+    expect(table).toContain("### Ship's steps, BR-V9.41-2031-01-02 (m:ss)");
+    expect(table).toContain("| checks | 1:05 |");
+    expect(table).toContain("| **Total** — stopped: a / b | 2:05 |");
+    expect(timesTable("")).toBe("");
+  });
+
+  it("gives ship production's baseline — main's — as the previous one, whatever qa carries", () => {
+    const ship = steps.slice(steps.indexOf("- name: Ship\n"));
+    expect(ship).toContain("FROM=$(git show origin/main:CLAUDE.md");
+    expect(ship).not.toContain("steps.land.outputs.from");
   });
 });
 
 describe("§NNN release.yml — the token and what a person typed", () => {
-  it("reads with its own token and writes only through RELEASE_TOKEN, which it refuses to run without", () => {
+  it("reads with its own token and writes only through SHIP_TOKEN, which it refuses to run without", () => {
     expect(workflow).toMatch(/\npermissions:\n {2}contents: read\n/);
     expect(workflow).not.toMatch(/: write\b/);
-    expect(workflow).toContain("GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}");
-    expect(workflow).toMatch(/uses: actions\/checkout@v4\n {8}with:\n(?: {10}.*\n)*? {10}token: \$\{\{ secrets\.RELEASE_TOKEN \}\}\n/);
-    expect(steps).toContain('[ -n "$GH_TOKEN" ] || missing="$missing the secret RELEASE_TOKEN;"');
+    expect(workflow).toContain("GH_TOKEN: ${{ secrets.SHIP_TOKEN }}");
+    expect(workflow).toMatch(/uses: actions\/checkout@v4\n {8}with:\n(?: {10}.*\n)*? {10}token: \$\{\{ secrets\.SHIP_TOKEN \}\}\n/);
+    expect(steps).toContain('[ -n "$GH_TOKEN" ] || missing="$missing the secret SHIP_TOKEN;"');
     expect(workflow).toContain("SHIP_PRODUCTION_URL: ${{ vars.SHIP_PRODUCTION_URL }}");
   });
 

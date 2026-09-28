@@ -40,8 +40,13 @@ const blank = (value) => typeof value !== "string" || !value.trim();
  * holds `branch`, `decisionsTitle`, `decisionsSection` and `changelogLine`, and may hold
  * `specsCriteria` (each a full `BR-REQ-NNN-NN` id and a text), `docsNotes` and `batchLine` —
  * the short clause for the CLAUDE.md batch line and the queue's Released row.
+ *
+ * With `requirements` (the ids SPECS.md defines), a criterion naming one SPECS.md does not have
+ * is a problem too — `yarn docs:check` passes them, so a bad entry fails on its pull request,
+ * not at release time. `docsNotes` is allowed here (a PC landing prints it for a person);
+ * `handWork` says whether an unattended landing can take the entry.
  */
-export function validateEntry(entry, label = "entry") {
+export function validateEntry(entry, label = "entry", { requirements } = {}) {
   if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [`${label}: not a JSON object`];
   const problems = [];
   for (const field of ["branch", "decisionsTitle", "decisionsSection", "changelogLine"]) {
@@ -53,6 +58,7 @@ export function validateEntry(entry, label = "entry") {
       entry.specsCriteria.forEach((c, i) => {
         if (!c || typeof c !== "object") return problems.push(`${label}: specsCriteria[${i}] is not an object`);
         if (!REQUIREMENT.test(String(c.requirement ?? ""))) problems.push(`${label}: specsCriteria[${i}].requirement must be a full BR-REQ-NNN-NN id, got "${c.requirement}"`);
+        else if (requirements && !requirements.has(c.requirement)) problems.push(`${label}: specsCriteria[${i}].requirement ${c.requirement} is not a requirement in SPECS.md`);
         if (blank(c.text)) problems.push(`${label}: specsCriteria[${i}].text is blank`);
       });
     }
@@ -63,6 +69,23 @@ export function validateEntry(entry, label = "entry") {
   if (!blank(entry.branch) && !blank(label) && label.endsWith(".json") && !label.endsWith(`/${slugOf(entry.branch)}.json`)) {
     problems.push(`${label}: the file is named for another branch — "${entry.branch}" writes ${entryPathOf(entry.branch)}`);
   }
+  return problems;
+}
+
+/**
+ * What an unattended landing (`--tree`, on GitHub Actions) cannot do and must refuse: text an
+ * entry leaves for a person in `docsNotes`, requirements SPECS.md lacks, and decision-placeholder
+ * lines no branch wrote. Each is a sentence; empty means the landing needs nobody. A branch writes the
+ * README, SETUP and docs text itself (`.release/README.md`), so `docsNotes` stays empty.
+ *
+ * @param {{ docsNotes?: string[], missing?: string[], manual?: string[] }} work
+ * @returns {string[]}
+ */
+export function handWork({ docsNotes = [], missing = [], manual = [] }) {
+  const problems = [];
+  for (const note of docsNotes) problems.push(`docsNotes left for a person — write it on the branch and empty the field: ${note}`);
+  for (const m of missing) problems.push(`a criterion for a requirement SPECS.md does not have: ${m}`);
+  for (const m of manual) problems.push(`a ${PLACEHOLDER} line no branch wrote, to number by hand: ${m}`);
   return problems;
 }
 

@@ -493,7 +493,7 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
     messageType,
     locale: allocated.locale,
     recipientEmail,
-    // The declaration's message starts the hold (§NNN); a family's held request says so too (`familyHeld`).
+    // The declaration's message starts the hold (§513); a family's held request says so too (`familyHeld`).
     payload: messageType === "COMPLETE_DECLARATION" ? startingDeadline(held ? { familyHeld: true } : {}) : {},
     idempotencyKey,
     now,
@@ -1702,7 +1702,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       A new registration of a sitting (§519): its verification email waits with the sitting's others,
       and the sitting — opened by this form when it is the first to hold anything — names it among
       the registrations its one button confirms. Outside a sitting, the email goes at once. Either
-      way it is the message that starts the link (`startingDeadline`, §NNN): its send re-bases it.
+      way it is the message that starts the link (`startingDeadline`, §513): its send re-bases it.
     */
     const holdVerification = async (registration: Registration) => {
       if (!inSitting) {

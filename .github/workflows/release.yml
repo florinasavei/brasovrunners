@@ -16,13 +16,19 @@ name: release
 #   3. runs `yarn ship` (scripts/ship.mjs), exactly as on the PC: the checks, the merge into `qa`,
 #      the `qa` run, the release PR, the gated migration approved, production's `/api/health`.
 #
-# It needs two things set once in the repository's settings, never in this file (the repository is
-# public; `SETUP.md` carries the procedure):
-#   - the secret `RELEASE_TOKEN`: a token of an account allowed to merge into `qa` and `main` and to
-#     approve the `production` environment. GitHub's own `GITHUB_TOKEN` cannot do this job: a push or
-#     a merge made with it starts no workflow, so the landing commit would never be tested, the
-#     `qa` run `ship` waits for would never start, and `migrate.yml` would never run on `main`;
-#   - the variable `SHIP_PRODUCTION_URL`: production's origin, which `ship` asks for its health.
+# Run by hand with `dry_run` ticked, it does steps 1 and 2 on the runner only, shows the landing
+# commit and the diff it would push on the run's summary page, and pushes and ships nothing — the
+# rehearsal before a first real press. Every step writes its outcome to that summary page, so a
+# phone reads what happened without opening a log.
+#
+# It needs, set once in the repository's settings and never in this file (the repository is
+# public; `SETUP.md` § 41 has the clicks, `docs/RUNBOOKS.md` § Release from the phone the use):
+#   - the secret `SHIP_TOKEN`: a fine-grained token of an account allowed to merge into `qa` and
+#     `main` and to approve the `production` environment. GitHub's own `GITHUB_TOKEN` cannot do this
+#     job: a push or a merge made with it starts no workflow, so the landing commit would never be
+#     tested, the `qa` run `ship` waits for would never start, and `migrate.yml` would never run;
+#   - the variable `SHIP_PRODUCTION_URL`: production's origin, which `ship` asks for its health;
+#   - the label `ship`.
 
 on:
   workflow_dispatch:
@@ -36,17 +42,17 @@ on:
         required: false
         type: string
         default: ""
+      dry_run:
+        description: "Dry run: land on the runner and show the diff; push nothing, ship nothing"
+        required: false
+        type: boolean
+        default: false
   pull_request:
     types: [labeled]
 
-# The job reads with its own token and writes only through RELEASE_TOKEN.
+# The job reads with its own token and writes only through SHIP_TOKEN.
 permissions:
   contents: read
-
-# One release at a time, and a release is never cancelled halfway by the next request.
-concurrency:
-  group: release
-  cancel-in-progress: false
 
 jobs:
   ship:
@@ -55,25 +61,59 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'ship' && github.event.pull_request.head.repo.full_name == github.repository)
+    # One release at a time, and a release is never cancelled halfway by the next request. On the
+    # job, not the workflow: every label added to any pull request starts a run, and a run skipped by
+    # the `if` above must never enter the group — GitHub cancels a pending run when a newer one
+    # queues in the same group, so a label such as `bug` would silently cancel a queued release.
+    concurrency:
+      group: release
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     # A release waits on CI twice and on the migration; ship itself gives up well before this.
     timeout-minutes: 300
+    defaults:
+      run:
+        shell: bash
     env:
-      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      GH_TOKEN: ${{ secrets.SHIP_TOKEN }}
       PR: ${{ inputs.pr || github.event.pull_request.number }}
       BASELINE_INPUT: ${{ inputs.baseline }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
       SHIP_PRODUCTION_URL: ${{ vars.SHIP_PRODUCTION_URL }}
+      ACTOR: ${{ github.triggering_actor }}
     steps:
-      - name: The release token and production's address are set
+      - name: The ship token and production's address are set, and the person may release
+        id: check
         run: |
           missing=""
-          [ -n "$GH_TOKEN" ] || missing="$missing the secret RELEASE_TOKEN;"
+          [ -n "$GH_TOKEN" ] || missing="$missing the secret SHIP_TOKEN;"
           [ -n "$SHIP_PRODUCTION_URL" ] || missing="$missing the variable SHIP_PRODUCTION_URL;"
           if [ -n "$missing" ]; then
-            echo "::error::Set once in the repository's Settings → Secrets and variables → Actions:$missing (SETUP.md has the steps)"
+            echo "::error::Set once in the repository's Settings → Secrets and variables → Actions:$missing (SETUP.md § 41 has the steps)"
+            echo "**Stopped:** set once in Settings → Secrets and variables → Actions:$missing (SETUP.md § 41)." >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          case "$PR" in ''|*[!0-9]*) echo "::error::'$PR' is not a pull request number"; exit 1 ;; esac
+          case "$PR" in ''|*[!0-9]*) echo "::error::'$PR' is not a pull request number"; echo "**Stopped:** '$PR' is not a pull request number." >> "$GITHUB_STEP_SUMMARY"; exit 1 ;; esac
+          # The label starts a merge into main and a production migration with SHIP_TOKEN: anyone
+          # who can add a label (the triage role can) must not be able to. Write access, or stop.
+          if ! permission=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" --jq .permission 2> "$RUNNER_TEMP/permission.err"); then
+            why="GitHub refused to say what $ACTOR may do here — SHIP_TOKEN expired or lacks a permission (SETUP.md § 41), or $ACTOR is no collaborator:$(head -c 300 "$RUNNER_TEMP/permission.err")"
+            echo "::error::$why"
+            echo "**Stopped:** $why" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          case "$permission" in
+            admin|maintain|write) ;;
+            *)
+              echo "::error::$ACTOR has '$permission' on this repository; a release needs write access"
+              echo "**Stopped:** $ACTOR has '$permission' on this repository; a release needs write access." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+              ;;
+          esac
+          if [ "$DRY_RUN" = "true" ]; then mode="a dry run: nothing is pushed or shipped"; else mode="a release"; fi
+          echo "## Release of PR #$PR — $mode" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Started by $ACTOR ($permission)." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Which pull request
         id: pr
@@ -83,24 +123,26 @@ jobs:
           base=$(jq -r .baseRefName "$RUNNER_TEMP/pr.json")
           head=$(jq -r .headRefName "$RUNNER_TEMP/pr.json")
           cross=$(jq -r .isCrossRepository "$RUNNER_TEMP/pr.json")
-          [ "$base" = "qa" ] || { echo "::error::PR #$PR goes into $base; a release starts from a pull request into qa"; exit 1; }
-          [ "$cross" = "false" ] || { echo "::error::PR #$PR comes from a fork; only a branch of this repository is released"; exit 1; }
+          refuse() { echo "::error::$1"; echo "**Stopped:** $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+          [ "$base" = "qa" ] || refuse "PR #$PR goes into $base; a release starts from a pull request into qa"
+          [ "$cross" = "false" ] || refuse "PR #$PR comes from a fork; only a branch of this repository is released"
           case "$state" in
             OPEN) ref="$head" ;;
             MERGED) ref="qa" ;;
-            *) echo "::error::PR #$PR is $state"; exit 1 ;;
+            *) refuse "PR #$PR is $state" ;;
           esac
           echo "state=$state" >> "$GITHUB_OUTPUT"
           echo "head=$head" >> "$GITHUB_OUTPUT"
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
           jq -r .title "$RUNNER_TEMP/pr.json" > "$RUNNER_TEMP/pr-title.txt"
           echo "PR #$PR ($state): $head → $base"
+          echo "- PR #$PR is $state: \`$head\` → \`$base\`." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.pr.outputs.ref }}
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ secrets.SHIP_TOKEN }}
 
       - run: corepack enable
       - uses: actions/setup-node@v4
@@ -116,24 +158,42 @@ jobs:
           git fetch --quiet origin qa main
 
       - name: Up to date with qa
+        id: merge
         if: steps.pr.outputs.state == 'OPEN'
-        run: node scripts/merge-branches.mjs origin/qa
+        run: |
+          set +e
+          node scripts/merge-branches.mjs origin/qa > "$RUNNER_TEMP/merge.txt" 2>&1
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/merge.txt"
+          if [ "$code" -ne 0 ]; then
+            {
+              echo ""
+              echo "### Bringing the branch up to date with qa stopped"
+              echo ""
+              echo '```text'
+              tail -n 40 "$RUNNER_TEMP/merge.txt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit "$code"
+          fi
+          echo "- Up to date with qa: $(git log -1 --format='%h %s')." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Land the release facts
         id: land
         env:
           STATE: ${{ steps.pr.outputs.state }}
         run: |
-          baseline_of() { grep -oE '\*\*Baseline `BR-V[0-9]+\.[0-9]+-[0-9]{4}-[0-9]{2}-[0-9]{2}`\*\*' | head -n 1 | tr -d '*`' | sed 's/^Baseline //'; }
+          baseline_of() { grep -oE '\*\*Baseline `BR-V[0-9]+\.[0-9]+-[0-9]{4}-[0-9]{2}-[0-9]{2}`\*\*' | sed -n 1p | tr -d '*`' | sed 's/^Baseline //'; }
           qa=$(git show origin/qa:CLAUDE.md | baseline_of)
           here=$(baseline_of < CLAUDE.md)
           if [ "$STATE" = "MERGED" ]; then
-            # Already in qa: ship continues from its step 3; production runs main's baseline.
+            # Already in qa: ship continues from its step 3.
             {
-              echo "from=$(git show origin/main:CLAUDE.md | baseline_of)"
               echo "to=$qa"
               echo "title=$(cat "$RUNNER_TEMP/pr-title.txt")"
             } >> "$GITHUB_OUTPUT"
+            echo "- Already merged into qa: ships \`$qa\` as it is." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           if ls .release/*.json > /dev/null 2>&1; then
@@ -142,7 +202,21 @@ jobs:
             else
               node scripts/land-batch.mjs --tree --apply
             fi
-            yarn docs:check
+            set +e
+            yarn docs:check > "$RUNNER_TEMP/docs-check.txt" 2>&1
+            code=$?
+            set -e
+            cat "$RUNNER_TEMP/docs-check.txt"
+            if [ "$code" -ne 0 ]; then
+              {
+                echo "### docs:check refused the landed tree"
+                echo ""
+                echo '```text'
+                tail -n 40 "$RUNNER_TEMP/docs-check.txt"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit "$code"
+            fi
             to=$(grep -E '^to=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)
             title=$(grep -E '^title=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)
             git add -A
@@ -154,41 +228,112 @@ jobs:
           numbered, the CLAUDE.md batch line and the queue's Released row. Written by the release
           workflow; CI runs the full yarn check on the pull request.
           EOF
+            echo "- Landed \`$to\`: $title." >> "$GITHUB_STEP_SUMMARY"
           elif [ "$here" != "$qa" ]; then
             echo "no .release/ entry, and the branch already carries $here over qa's $qa: landed by hand"
             {
-              echo "from=$qa"
               echo "to=$here"
               echo "title=$(cat "$RUNNER_TEMP/pr-title.txt")"
             } >> "$GITHUB_OUTPUT"
+            echo "- No \`.release/\` entry; the branch was landed by hand as \`$here\`." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::error::Nothing to release: the branch has no .release/*.json and still carries qa's baseline $qa. Add the change's entry (.release/README.md) and label it again."
+            echo "**Stopped:** nothing to release — the branch has no \`.release/*.json\` and still carries qa's baseline \`$qa\`. Add the change's entry (\`.release/README.md\`) and label it again." >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
+      - name: What the push would carry (dry run)
+        if: env.DRY_RUN == 'true' && steps.pr.outputs.state == 'OPEN'
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head }}
+        run: |
+          git show --stat HEAD
+          git diff "origin/$HEAD_REF" HEAD
+          # A file first, then its head: `git diff | head` would end git with SIGPIPE under pipefail.
+          git diff "origin/$HEAD_REF" HEAD -- DECISIONS.md CHANGELOG.md SPECS.md CLAUDE.md docs/QUEUE.md .release > "$RUNNER_TEMP/docs.diff"
+          {
+            echo ""
+            echo "### Dry run: what the push would carry"
+            echo ""
+            echo "Nothing was pushed and nothing shipped. Run it again with dry run off, or add the label \`ship\`, to release."
+            echo ""
+            echo '```text'
+            git show --stat --format='%h %s' HEAD
+            echo ""
+            git diff --stat "origin/$HEAD_REF" HEAD
+            echo '```'
+            echo ""
+            echo "<details><summary>The documents' diff</summary>"
+            echo ""
+            echo '```diff'
+            head -c 400000 "$RUNNER_TEMP/docs.diff"
+            echo '```'
+            echo ""
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Push the landing
-        if: steps.pr.outputs.state == 'OPEN'
+        id: push
+        if: steps.pr.outputs.state == 'OPEN' && env.DRY_RUN != 'true'
         env:
           HEAD_REF: ${{ steps.pr.outputs.head }}
         run: |
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$HEAD_REF")" ]; then
             git push origin "HEAD:$HEAD_REF"
+            echo "- Pushed the landing to \`$HEAD_REF\`: $(git log -1 --format='%h')." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "nothing new to push"
+            echo "- Nothing new to push." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Ship
+        id: ship
+        if: env.DRY_RUN != 'true'
         env:
-          FROM: ${{ steps.land.outputs.from }}
           TO: ${{ steps.land.outputs.to }}
           TITLE: ${{ steps.land.outputs.title }}
           SHIP_TIMES_FILE: ${{ runner.temp }}/ship-times.jsonl
           # This job is a check on the pull requests it ships; ship must not wait for itself.
           SHIP_SKIP_WORKFLOW: release
-        run: node scripts/ship.mjs "$PR" "$TO" "$FROM" "$TITLE"
+        run: |
+          # The previous baseline is what production runs — main's — whatever qa carries: a release
+          # that stopped after merging into qa leaves qa ahead, and ship's first step waits for
+          # production to report this one.
+          FROM=$(git show origin/main:CLAUDE.md | grep -oE '\*\*Baseline `BR-V[0-9]+\.[0-9]+-[0-9]{4}-[0-9]{2}-[0-9]{2}`\*\*' | sed -n 1p | tr -d '*`' | sed 's/^Baseline //')
+          echo "- Shipping \`$FROM\` → \`$TO\`." >> "$GITHUB_STEP_SUMMARY"
+          node scripts/ship.mjs "$PR" "$TO" "$FROM" "$TITLE"
+
+      - name: The summary
+        if: always()
+        env:
+          CHECK: ${{ steps.check.outcome }}
+          WHICH: ${{ steps.pr.outcome }}
+          MERGE: ${{ steps.merge.outcome }}
+          LAND: ${{ steps.land.outcome }}
+          PUSH: ${{ steps.push.outcome }}
+          SHIPPED: ${{ steps.ship.outcome }}
+          TIMES: ${{ runner.temp }}/ship-times.jsonl
+        run: |
+          {
+            echo ""
+            echo "### Step by step"
+            echo ""
+            echo "| Step | Outcome |"
+            echo "| --- | --- |"
+            echo "| The token, the address, the permission | ${CHECK:-not run} |"
+            echo "| Which pull request | ${WHICH:-not run} |"
+            echo "| Up to date with qa | ${MERGE:-not run} |"
+            echo "| Land the release facts | ${LAND:-not run} |"
+            echo "| Push the landing | ${PUSH:-not run} |"
+            echo "| Ship | ${SHIPPED:-not run} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Ship's own timing (its last line in the times file), as a table rather than a thrown-away file.
+          if [ -s "$TIMES" ]; then
+            node --input-type=module -e 'import { readFileSync } from "node:fs"; import { timesTable } from "./scripts/ship-checks.mjs"; process.stdout.write(timesTable(readFileSync(process.env.TIMES, "utf8")));' >> "$GITHUB_STEP_SUMMARY" || true
+          fi
 
       - name: Say so on the pull request
-        if: always() && steps.pr.outputs.state != ''
+        if: always() && steps.pr.outputs.state != '' && env.DRY_RUN != 'true'
         env:
           OUTCOME: ${{ job.status }}
           TO: ${{ steps.land.outputs.to }}
@@ -198,7 +343,7 @@ jobs:
           if [ "$OUTCOME" = "success" ]; then
             gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "Released ${TO:-the release}: production reports it. $RUN_URL" || true
           else
-            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME) — the log says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME) — the run's summary page says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
             # The label comes off, so adding it again starts the release again.
             [ "$LABELLED" = "true" ] && gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label ship || true
           fi

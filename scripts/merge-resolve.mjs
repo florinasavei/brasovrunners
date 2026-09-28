@@ -91,11 +91,32 @@ export function mergeJson3(base, ours, theirs) {
 
 const moduleOf = (line) => line.match(/from\s+["']([^"']+)["']/)?.[1] ?? null;
 
+/** A one-line named import, `import [type] { a, b as c } from "m";`, as its parts; null for any other line. */
+const NAMED_IMPORT = /^(\s*import\s+(?:type\s+)?)\{([^{}]*)\}(\s*from\s+["'][^"']+["'];?\s*)$/;
+
+/**
+ * Two imports of the same module as one: every specifier either side names, ours first in our
+ * order, then theirs that are new. Null when either line is not a one-line named import or they
+ * differ in `import type` — the caller then keeps both lines rather than guess.
+ */
+export function mergeImportLines(ours, theirs) {
+  const o = ours.match(NAMED_IMPORT);
+  const t = theirs.match(NAMED_IMPORT);
+  if (!o || !t || o[1].replace(/\s+/g, " ") !== t[1].replace(/\s+/g, " ")) return null;
+  const names = (list) => list.split(",").map((s) => s.trim()).filter(Boolean);
+  const merged = [...names(o[2])];
+  for (const n of names(t[2])) if (!merged.includes(n)) merged.push(n);
+  return `${o[1]}{ ${merged.join(", ")} }${o[3]}`;
+}
+
 /**
  * Every conflict block of a text file resolved as the union: our lines, then theirs that are not
- * already there — an import from a module both sides import keeps the longer specifier list. For
- * a test file, where both sides appended a case, that is what a person would do. Throws if a
- * marker would remain. Returns { text, blocks }.
+ * already there — an import from a module both sides import becomes one import with both sides'
+ * specifiers (`mergeImportLines`); two imports of one module it cannot read as one-line named
+ * imports are both kept, for the typecheck to judge. For a test file, where both sides appended a
+ * case, that is what a person would do. A line both sides changed differently is kept in both
+ * versions: CI's typecheck and the tests judge it, and `yarn batch:merge` runs the typecheck
+ * before it says done. Throws if a marker would remain. Returns { text, blocks }.
  */
 export function unionConflicts(text) {
   const eol = text.includes("\r\n") ? "\r\n" : "\n";
@@ -119,8 +140,9 @@ export function unionConflicts(text) {
       if (t.trim() !== "" && merged.includes(t)) continue;
       const mod = moduleOf(t);
       const j = mod && /^\s*import\b/.test(t) ? merged.findIndex((o) => /^\s*import\b/.test(o) && moduleOf(o) === mod) : -1;
-      if (j >= 0) {
-        if (t.length > merged[j].length) merged[j] = t;
+      const one = j >= 0 ? mergeImportLines(merged[j], t) : null;
+      if (one) {
+        merged[j] = one;
         continue;
       }
       merged.push(t);

@@ -210,6 +210,29 @@ export function formatDuration(ms) {
 }
 
 /**
+ * The last release in a `SHIP_TIMES_FILE` as a Markdown table (§NNN) — what the release workflow
+ * writes to its run's summary page, so the owner reads ship's steps on a phone. Empty for no line.
+ *
+ * @param {string} jsonl  the times file's text: one JSON record per line, the newest last
+ */
+export function timesTable(jsonl) {
+  const line = String(jsonl ?? "").trim().split("\n").filter(Boolean).at(-1);
+  if (!line) return "";
+  const record = JSON.parse(line);
+  const cell = (text) => String(text).replace(/\|/g, "/").replace(/\r?\n/g, " ");
+  return [
+    "",
+    `### Ship's steps, ${cell(record.release)} (m:ss)`,
+    "",
+    "| Step | m:ss |",
+    "| --- | --- |",
+    ...(record.steps ?? []).map((s) => `| ${cell(s.name)} | ${formatDuration(s.seconds * 1000)} |`),
+    `| **Total** — ${cell(record.outcome)} | ${formatDuration(record.totalSeconds * 1000)} |`,
+    "",
+  ].join("\n");
+}
+
+/**
  * The clock `ship` keeps of itself (§504): each step from its start to the next one's, and the
  * whole. `report()` counts a step still open up to now, so a stop says where the time went too;
  * `onStepEnd` hears each step the moment it ends, so a long release shows its times as it goes.
