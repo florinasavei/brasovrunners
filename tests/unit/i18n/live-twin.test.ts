@@ -5,7 +5,7 @@ import { isStaticPublicAnswer, LIVE_SEGMENT, liveTwinPathname, mayBeSignedIn, ST
 import { PREFETCHED_PATHNAMES } from "@/i18n/prefetch";
 
 /**
- * §NNN (amending §333) — which request the static page cannot answer, and so goes to the page's
+ * §549 (amending §333) — which request the static page cannot answer, and so goes to the page's
  * live twin: an address whose query the page reads, or an event page asked with a session cookie.
  */
 const search = (query: string) => new URLSearchParams(query);
@@ -64,7 +64,7 @@ describe("mayBeSignedIn", () => {
 });
 
 /**
- * §NNN — a static page's answer tells the browser what Vercel's CDN tells it: keep it, but ask
+ * §549 — a static page's answer tells the browser what Vercel's CDN tells it: keep it, but ask
  * again before every use. `next start` would otherwise hand the browser `stale-while-revalidate`,
  * and the browser would show a page from before the last save.
  */

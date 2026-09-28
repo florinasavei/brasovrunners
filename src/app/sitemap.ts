@@ -38,7 +38,7 @@ import { env } from "@/shared/config/env";
  * text is saved — each of which expires them. Each cached read carries its rows' alternates
  * already grouped, one query per kind for the whole list (`public-cache/reads.ts`).
  *
- * Still made per request, and the one public response that stays so on purpose (§NNN): at the app's
+ * Still made per request, and the one public response that stays so on purpose (§549): at the app's
  * root it has no parameter to defer, so a static sitemap would be prerendered by `next build` — which
  * has no database in CI and files a build-time answer under no cache tag, so no save could expire
  * it. Its shared-cache lifetime is `next.config.ts`'s `headers()` instead (an hour, then served once

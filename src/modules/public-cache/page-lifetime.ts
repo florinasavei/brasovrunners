@@ -3,7 +3,7 @@ import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-asyn
 import { cache } from "react";
 
 /**
- * How long the CDN may keep a static public page (§NNN, amending §333 and §489).
+ * How long the CDN may keep a static public page (§549, amending §333 and §489).
  *
  * ## Why the pages are static now
  *
@@ -106,7 +106,7 @@ async function lifetimeMark(): Promise<number> {
 }
 
 /**
- * What Next is doing on this call's behalf (§NNN): making a response it will keep — a static page's
+ * What Next is doing on this call's behalf (§549): making a response it will keep — a static page's
  * render (ISR, Next's `prerender-legacy` without Cache Components) or a `force-static` handler's —
  * or answering one request, or neither as far as can be told.
  *

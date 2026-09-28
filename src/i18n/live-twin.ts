@@ -2,7 +2,7 @@ import { DEV_STAFF_COOKIE } from "@/modules/staff-identity/dev-staff-cookie";
 import { PREFETCHED_PATHNAMES } from "./prefetch";
 
 /**
- * Which request a static public page cannot answer, and the live twin that answers it (§NNN,
+ * Which request a static public page cannot answer, and the live twin that answers it (§549,
  * amending §333).
  *
  * The listing, the calendar and an event page are static for an anonymous visitor at their bare
@@ -68,7 +68,7 @@ const STATIC_PAGES: readonly RegExp[] = [...PREFETCHED_PATHNAMES].map(
 );
 
 /**
- * What the browser is told about a static public page's answer (§NNN): `public, max-age=0,
+ * What the browser is told about a static public page's answer (§549): `public, max-age=0,
  * must-revalidate` — keep it, but ask again (with its ETag) before every use.
  *
  * Next hands the page's ISR lifetime to whoever asked, as `s-maxage=N, stale-while-revalidate=…`.

@@ -2,13 +2,13 @@ import type { NeonBudgetLevel } from "./domain/neon-budget";
 
 /**
  * The month's budget level this instance last read — what a public page's render is told, never
- * asked for (§447; since §NNN, a review finding, without a request of its own).
+ * asked for (§447; since §549, a review finding, without a request of its own).
  *
  * ## Why a page never asks
  *
  * The public cache stretches its ceiling by the level and, at red, answers a miss from the cache
  * alone (`public-cache/cache.ts`); the resting page names the period's end from it
- * (`resilience/last-good.ts`). Both run inside a static page's render (ISR, §NNN), and a request to
+ * (`resilience/last-good.ts`). Both run inside a static page's render (ISR, §549), and a request to
  * Neon's API made there is the render's own: the shared reading's `next: { revalidate: 900 }`
  * lowered the page's lifetime to fifteen minutes, and a no-store one would have turned the page
  * dynamic («Page changed from static to dynamic at runtime»). So this module holds the answer and

@@ -93,7 +93,7 @@ for (const [label, args] of [
 }
 
 /*
-  The public pages a production build made since it started (§NNN): `next start` keeps each static
+  The public pages a production build made since it started (§549): `next start` keeps each static
   page it renders under `.next/server/app/<locale>/`, and they outlive a restart — so after a reseed
   they would still show the old seed's events and free places until a write expired them. They are
   made again on their next visit; nothing the build itself wrote lives there (no public page is

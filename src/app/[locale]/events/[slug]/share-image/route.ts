@@ -29,7 +29,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   });
   image.headers.set("Content-Disposition", `attachment; filename="${slug}-${shape}.png"`);
   /*
-    Kept by the CDN for an hour, then served once more while it is drawn again (§NNN): the file
+    Kept by the CDN for an hour, then served once more while it is drawn again (§549): the file
     depends on `?shape=`, so it stays a function, and a shared cache is what spares it being drawn
     for every download. The same picture for everyone, never a person's; an hour is how long a
     changed title may take to reach a picture somebody saves, and the Open Graph one follows the

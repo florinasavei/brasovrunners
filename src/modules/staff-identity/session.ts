@@ -34,7 +34,7 @@ import { DEV_STAFF_COOKIE } from "./dev-staff-cookie";
  * closed to a member without any of them naming the role.
  */
 
-/** The development switcher's cookie, from a module with no request in it: the proxy reads its name too (§NNN). */
+/** The development switcher's cookie, from a module with no request in it: the proxy reads its name too (§549). */
 export { DEV_STAFF_COOKIE };
 
 /**

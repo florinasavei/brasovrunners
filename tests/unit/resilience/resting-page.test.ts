@@ -27,7 +27,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
     throw Object.assign(new Error("NEXT_REDIRECT"), { redirectTo: url });
   },
 }));
-/** What kind of render the read is part of (`renderKind`, §NNN), and the hold it asks Next for. */
+/** What kind of render the read is part of (`renderKind`, §549), and the hold it asks Next for. */
 const workUnit = vi.hoisted(() => ({ store: undefined as undefined | { type: string } }));
 vi.mock("next/dist/server/app-render/work-unit-async-storage.external", () => ({
   workUnitAsyncStorage: { getStore: () => workUnit.store },
@@ -62,11 +62,11 @@ beforeEach(() => {
 });
 
 /*
-  §NNN — on a production server the public pages are static, and a static render must never read
+  §549 — on a production server the public pages are static, and a static render must never read
   `headers()` (it sets the page's revalidate to 0 before throwing, and Next answers 500 instead of
   the redirect). So there the way back is read only in a render Next answers per request.
 */
-describe("§NNN the way to the resting page on a production server", () => {
+describe("§549 the way to the resting page on a production server", () => {
   const inProductionServer = () => {
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.stubEnv("NODE_ENV", "production");

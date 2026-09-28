@@ -8,7 +8,7 @@ import {
 } from "@/modules/diagnostics/budget-level";
 
 /**
- * §NNN (amending §447), a review finding — the public cache read the governor's level inside a
+ * §549 (amending §447), a review finding — the public cache read the governor's level inside a
  * static page's render, and a stale memo started a request to Neon's API there: the render's own,
  * which shortened the page to the shared reading's fifteen minutes. The render is now told the
  * level this instance last read, and asks nothing.
@@ -19,7 +19,7 @@ const later = (ms: number) => new Date(AT.getTime() + ms);
 
 beforeEach(() => forgetKnownBudget());
 
-describe("§NNN the governor's level on a page is the last known one, never a request", () => {
+describe("§549 the governor's level on a page is the last known one, never a request", () => {
   it("is unknown on an instance that has heard no reading", () => {
     expect(peekNeonBudgetLevel(AT)).toBe("unknown");
     expect(lastKnownBudget(AT)).toBeNull();
@@ -54,7 +54,7 @@ describe("§NNN the governor's level on a page is the last known one, never a re
   });
 });
 
-describe("§NNN every governor reading tells the page's level", () => {
+describe("§549 every governor reading tells the page's level", () => {
   afterEach(() => {
     vi.doUnmock("@/shared/config/env");
     vi.resetModules();

@@ -13,7 +13,7 @@ import { brandFonts } from "@/theme/pdf/fonts";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 /**
- * Static (§NNN): the picture is the club's name and one sentence of the catalogue, the same until the
+ * Static (§549): the picture is the club's name and one sentence of the catalogue, the same until the
  * next deploy — made on its first request and kept by the CDN, never drawn again for each link
  * preview a crawler asks for. The ceiling is the public pages' day.
  */

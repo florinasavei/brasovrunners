@@ -102,7 +102,7 @@ export default function proxy(request: NextRequest) {
 
   /*
     The listing, the calendar and an event page are static for an anonymous visitor at their bare
-    address (§NNN): the CDN answers them. A request whose query the page reads (a filter, a month,
+    address (§549): the CDN answers them. A request whose query the page reads (a filter, a month,
     `?lista=`), or an event page asked with a session cookie (the staff "edit" button, §135), is
     rewritten to the page's live twin under `/<locale>/live/…`, rendered per request as before — the
     visitor's address unchanged. next-intl has already resolved the route: its rewrite names the
@@ -120,7 +120,7 @@ export default function proxy(request: NextRequest) {
       return NextResponse.rewrite(target, { headers });
     }
     /*
-      A static page's answer, off Vercel: the browser is told what Vercel's CDN tells it (§NNN,
+      A static page's answer, off Vercel: the browser is told what Vercel's CDN tells it (§549,
       `STATIC_PAGE_BROWSER_CACHE_CONTROL` says why). Next keeps a `Cache-Control` already on the
       response rather than writing its own `s-maxage`, and its ISR copy is kept all the same. On
       Vercel nothing is set here: the CDN reads Next's `s-maxage` and strips it itself. Only on a

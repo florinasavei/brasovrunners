@@ -120,7 +120,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.waitForURL(/saved=event/);
 
     /*
-      BR-REQ-040-02 on the static route (§NNN): before the publish, a stranger's visit is a 404 —
+      BR-REQ-040-02 on the static route (§549): before the publish, a stranger's visit is a 404 —
       never the other language — and the static route keeps that answer like any page (asked
       twice, the second is the cache's). The publish below must expire it through its tags.
     */
@@ -144,7 +144,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.waitForURL(/saved=PUBLISHED/);
 
     /*
-      A stranger's visit is the CDN's (§NNN): the bare page is static — made on the first request,
+      A stranger's visit is the CDN's (§549): the bare page is static — made on the first request,
       the same copy for the next, with a shared-cache lifetime — and has no staff button. `request`
       carries none of the signed-in page's cookies. The page itself is read below by the signed-in
       browser, which the proxy sends to the live twin for the edit button.
@@ -155,7 +155,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     const again = await request.get(`/ro/evenimente/${slug}`);
     expect(again.headers()["x-nextjs-cache"]).toBe("HIT");
     // The browser is told what Vercel's CDN tells it — keep it, but ask again before every use —
-    // never Next's `stale-while-revalidate`, which would show it a page from before the save (§NNN).
+    // never Next's `stale-while-revalidate`, which would show it a page from before the save (§549).
     expect(again.headers()["cache-control"]).toBe("public, max-age=0, must-revalidate");
     expect(await again.text()).toContain(ROUTE_LINK);
     // The address's own question, or a session, is the live twin's: per request, never shared.
@@ -246,7 +246,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 
-    // The save expired the stranger's static copy (§NNN, through the rows' own tags, §333): the
+    // The save expired the stranger's static copy (§549, through the rows' own tags, §333): the
     // next anonymous visit is the page as saved, never the cached one with the route still on it.
     const afterSave = await request.get(`/ro/evenimente/${slug}`);
     expect(afterSave.status()).toBe(200);

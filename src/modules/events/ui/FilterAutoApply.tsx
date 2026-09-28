@@ -19,7 +19,7 @@ import { useEffect, useRef, useTransition } from "react";
  *
  * Takes strings only, and renders an empty span: nothing crosses the boundary but data (§370).
  *
- * **The panel stays open across the first tick** (§NNN). The bare listing and calendar are static
+ * **The panel stays open across the first tick** (§549). The bare listing and calendar are static
  * pages the CDN answers, and a filtered address is their live twin — another route to the router
  * (`i18n/live-twin.ts`) — so the first tick, and the way back to no filter, mount the page afresh,
  * and the `<details>` would shut under the reader's finger. The tick itself says the panel was

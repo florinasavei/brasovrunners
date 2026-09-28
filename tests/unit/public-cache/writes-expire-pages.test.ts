@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { PublicContent } from "@/modules/public-cache/cache";
 
 /**
- * §NNN (amending §333) — every backoffice write behind a public page expires it through
+ * §549 (amending §333) — every backoffice write behind a public page expires it through
  * `revalidatePublicContent`.
  *
  * Since the public pages are static (ISR), a write that forgets the call no longer leaves only a
@@ -234,7 +234,7 @@ function reach(key: string, seen = new Set<string>()): { kinds: Set<string>; wri
 
 const sorted = (values: Iterable<string>) => [...values].sort();
 
-describe("§NNN — every write behind a public page expires it through revalidatePublicContent", () => {
+describe("§549 — every write behind a public page expires it through revalidatePublicContent", () => {
   it("walks the files the table names", () => {
     const missing = Object.keys(WRITES).filter((key) => !FUNCTIONS.get(key)?.exported);
     expect(missing, "a verb in the table that is no longer an exported function — rename or remove it here").toEqual([]);

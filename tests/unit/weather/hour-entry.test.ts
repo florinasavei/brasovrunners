@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN, a review finding (nit) — the fresh request a stale forecast asks for is a data-cache entry
+ * §549, a review finding (nit) — the fresh request a stale forecast asks for is a data-cache entry
  * keyed by the hour, which nothing reads after its hour; with an hour's `revalidate` of its own, an
  * entry written late in the hour outlived it, one per place per hour. Its lifetime is now what is
  * left of its hour.
@@ -36,7 +36,7 @@ afterEach(() => {
   calls.entries.length = 0;
 });
 
-describe("§NNN the hour's own forecast entry ends with its hour", () => {
+describe("§549 the hour's own forecast entry ends with its hour", () => {
   it("counts what is left of the hour, at least a second, never more than the hour", () => {
     const top = Date.UTC(2026, 8, 24, 9);
     expect(secondsLeftInHour(top)).toBe(WEATHER_CACHE_SECONDS);

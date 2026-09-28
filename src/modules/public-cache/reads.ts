@@ -135,7 +135,7 @@ async function listingWindow(locale: Locale, now: Date): Promise<string> {
 }
 
 /**
- * `clockWindow`, and the static page being rendered kept no longer than the window's end (§NNN,
+ * `clockWindow`, and the static page being rendered kept no longer than the window's end (§549,
  * amending §333): the key already says the answer changes then, so the page that shows it must
  * be made again then too — the CDN would otherwise serve an event that ended as upcoming until
  * midnight. A "passed" boundary changes a millisecond after its instant, so the page is held a

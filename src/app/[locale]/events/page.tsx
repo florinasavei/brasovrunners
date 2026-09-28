@@ -48,7 +48,7 @@ type Props = {
   params: Promise<{ locale: string }>;
   /**
    * The address's query — passed only by the live twin (`app/[locale]/live/events/page.tsx`), which
-   * the proxy sends a filtered visit to (§NNN). This static route never reads Next's `searchParams`:
+   * the proxy sends a filtered visit to (§549). This static route never reads Next's `searchParams`:
    * reading it would render every visit per request again.
    */
   query?: Promise<ListingQuery>;
@@ -76,7 +76,7 @@ type ListingQuery = {
 const isNight = (event: PublicEventPage) => event.startsAt !== null && clubNightEvent({ ...event, startsAt: event.startsAt }).night;
 
 /**
- * Static, made on its first visit and kept by the CDN (§NNN, amending §333): the bare listing is
+ * Static, made on its first visit and kept by the CDN (§549, amending §333): the bare listing is
  * the same for every anonymous visitor. It is made again when a write expires what it shows (the
  * rows' own tags, §333), when its clock says it reads differently — the next event ending, a
  * registration door opening or closing, midnight (`public-cache/page-lifetime.ts`) — and at the
@@ -142,7 +142,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
-  // The countdown and every "în 3 zile" are the day's (§76, §78): the static page is made again at midnight (§NNN).
+  // The countdown and every "în 3 zile" are the day's (§76, §78): the static page is made again at midnight (§549).
   await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);
 
   /*
@@ -172,7 +172,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // and that section, under the cards, is what it has to show.
   const { events, hasUpcoming }: Listing = !listing.hasUpcoming && undatedRows.length > 0 ? { events: [], hasUpcoming: false } : listing;
   // The race-week countdown counts days on each event's own wall clock (`raceWeek`, §78): an event
-  // kept in another zone turns its day at that zone's midnight, so the page is made again then too (§NNN).
+  // kept in another zone turns its day at that zone's midnight, so the page is made again then too (§549).
   await holdPageUntil(events.map((event) => nextWallMidnight(now, event.timezone)), now);
   // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
   // internal event among these rows, the entry its card and its page read too, and nothing for any

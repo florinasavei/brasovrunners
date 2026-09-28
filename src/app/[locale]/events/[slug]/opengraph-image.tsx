@@ -9,7 +9,7 @@ import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
  * file; the picture itself is drawn in `modules/events/share-image.tsx`, shared with the
  * square one for Instagram.
  *
- * Drawn from the cached row (§333), once (§NNN, amending §333): static, made on its first request
+ * Drawn from the cached row (§333), once (§549, amending §333): static, made on its first request
  * and kept by the CDN, so every link preview a crawler fetches is neither a database wake nor a
  * function run; an event save expires the row and, through its tag, the picture. A literal, as Next
  * requires: `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).

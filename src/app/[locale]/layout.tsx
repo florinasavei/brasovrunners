@@ -109,7 +109,7 @@ type Props = {
 };
 
 /**
- * No locale is prerendered at build (§NNN, amending §333): the public pages are static, and a page
+ * No locale is prerendered at build (§549, amending §333): the public pages are static, and a page
  * made at build would be made from the build's database — CI has none — and filed under no cache
  * tag (`publicRead` reads straight through during `next build`), so no write could ever expire it.
  * An empty list is Next's own way of saying "make each page on its first visit, then keep it"

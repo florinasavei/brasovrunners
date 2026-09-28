@@ -5,7 +5,7 @@ import { PREFETCHED_PATHNAMES, prefetchFor } from "@/i18n/prefetch";
 import { PUBLIC_PAGE_CEILING_SECONDS } from "@/modules/public-cache/page-lifetime";
 
 /**
- * §NNN (amending §333, §489) — the public pages are static and the CDN answers them.
+ * §549 (amending §333, §489) — the public pages are static and the CDN answers them.
  *
  * Vercel Hobby's Active CPU was at 3 h 02 m of 4 h, with nearly every edge request starting a
  * function: every public page rendered per request. Now a page that is the same for every
@@ -70,7 +70,7 @@ const LIVE_TWINS = {
 } as const;
 
 /**
- * Public routes that stay per request, each with its reason. The rule (§NNN): a public page is
+ * Public routes that stay per request, each with its reason. The rule (§549): a public page is
  * static unless it names here why not. Growing this list is a decision for `DECISIONS.md`, not
  * for this file.
  */
@@ -123,7 +123,7 @@ function publicRouteFiles(): string[] {
 const dynamicOf = (file: string) => /^export const dynamic = "([^"]+)";$/m.exec(source(file))?.[1] ?? null;
 const revalidateOf = (file: string) => /^export const revalidate = (\d+);$/m.exec(source(file))?.[1] ?? null;
 
-describe("§NNN the public routes' segment config", () => {
+describe("§549 the public routes' segment config", () => {
   it("names every public route: static, a live twin, per request with its reason, or rendering nothing", () => {
     const named = [...STATIC_PAGES, ...STATIC_HANDLERS, ...Object.keys(LIVE_TWINS), ...Object.keys(PER_REQUEST), ...Object.keys(NEVER_RENDERED), ...Object.keys(BUILT_ONCE)];
     // Each named once…
@@ -243,7 +243,7 @@ const REQUEST_READERS_ALLOWED: Record<string, string> = {
   */
 };
 
-describe("§NNN a static public route never reads the request while it renders", () => {
+describe("§549 a static public route never reads the request while it renders", () => {
   const touchesRequest = (file: string) => /from "next\/headers"/.test(source(file));
 
   it.each([...STATIC_PAGES, ...STATIC_HANDLERS, "src/app/[locale]/layout.tsx"])("%s reaches no cookie or header read but the known ones", (route) => {
@@ -267,7 +267,7 @@ describe("§NNN a static public route never reads the request while it renders",
     revalidate to 0 and throws, and at runtime an ISR page answers 500 («Page changed from static to
     dynamic at runtime») — only inside `unstable_cache` is a no-store fetch harmless, and whether a
     call sits inside one is not something a source walk can see. So no server file a static route
-    reaches writes any of them (§NNN, a review finding: the weather's stale refresh was a bare
+    reaches writes any of them (§549, a review finding: the weather's stale refresh was a bare
     no-store fetch). A request that must never be stored names no cache mode inside `unstable_cache`.
   */
   const optsOutOfStatic = (file: string) =>
@@ -275,7 +275,7 @@ describe("§NNN a static public route never reads the request while it renders",
 
   /**
    * Files a static route reaches that write one, each with why no static render runs it. Empty since
-   * §NNN, and shrinking it was the point: `diagnostics/neon.ts` stood here while the budget governor's
+   * §549, and shrinking it was the point: `diagnostics/neon.ts` stood here while the budget governor's
    * background refresh ran inside a page's render — a request of the render's own, which shortened
    * the page to the shared reading's fifteen minutes and would have made it dynamic had it been a
    * no-store one. A render is now told the last known level (`diagnostics/budget-level.ts`) and
@@ -290,7 +290,7 @@ describe("§NNN a static public route never reads the request while it renders",
     expect(offenders).toEqual([]);
   });
 
-  it.each([...STATIC_PAGES, ...STATIC_HANDLERS, "src/app/[locale]/layout.tsx"])("%s reaches no request to Neon's API: the governor's level is the last known one (§NNN)", (route) => {
+  it.each([...STATIC_PAGES, ...STATIC_HANDLERS, "src/app/[locale]/layout.tsx"])("%s reaches no request to Neon's API: the governor's level is the last known one (§549)", (route) => {
     const closure = serverClosure(route);
     const neon = ["src/modules/diagnostics/neon.ts", "src/modules/diagnostics/neon-budget.ts"].filter((file) => closure.has(file)).map((file) => (closure.get(file) ?? []).join(" → "));
     expect(neon).toEqual([]);
@@ -324,13 +324,13 @@ describe("§NNN a static public route never reads the request while it renders",
 });
 
 /**
- * The links a static page renders (§NNN). Next prefetches a `<Link>` as soon as it is in view, and a
+ * The links a static page renders (§549). Next prefetches a `<Link>` as soon as it is in view, and a
  * prefetch of a per-request address — the contact form, «Membri», the register form, a live twin —
  * starts a function on a visit the CDN otherwise answers alone. So every Next link a static page can
  * render either names a static page at its bare address literally, or says its `prefetch`: `false`,
  * or `prefetchFor(href)` (`i18n/prefetch.ts`), which allows only the static pages.
  */
-describe("§NNN a static public page never prefetches a per-request address", () => {
+describe("§549 a static public page never prefetches a per-request address", () => {
   /** Every file a route reaches, server and client alike: the header and the footer are client islands, and their links are what is prefetched. */
   function wholeClosure(routes: readonly string[]): Set<string> {
     const seen = new Set(routes);

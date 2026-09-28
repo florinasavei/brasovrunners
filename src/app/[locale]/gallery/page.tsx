@@ -21,7 +21,7 @@ import { DENSITY } from "@/theme/density";
 type Props = { params: Promise<{ locale: string }> };
 
 /**
- * Static, made on its first visit and kept by the CDN (§NNN, amending §333); an album save expires
+ * Static, made on its first visit and kept by the CDN (§549, amending §333); an album save expires
  * it through the rows' own tag, and a day is the ceiling. A literal, as Next requires: it equals
  * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
  */

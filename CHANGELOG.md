@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.24-2026-09-27
+
+- **The public pages are served from the CDN** — the listing, the calendar, every event page, the club's pages, the gallery, the legal texts, the calendar files and the share pictures are made once and kept until a save changes them or their clock turns, so a visitor or a crawler no longer starts a server for each page; filters, a chosen month, the participants' pages and a signed-in organizer still get the page made for them, and no link on a cached page fetches a page made per request ahead of the press. §549.
 ## BR-V2.23-2026-09-27
 
 - **Fewer words on the registration form and the contact page** — a helper under a field only where the label is not enough (19 help texts → 10, 12 helpers under a box → 6), the contact page's intro in two short sentences and 35 → 21 (RO) / 44 → 26 (EN) words above its form, and shorter sentences on the steps, the screen after the form, «Înscrierile mele» and the FAQ; a cancelled event is still named first on the manage page; the legal texts, the consents and every email untouched. §546.

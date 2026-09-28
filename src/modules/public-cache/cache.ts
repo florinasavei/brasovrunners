@@ -24,10 +24,10 @@ import { buildInfo } from "@/shared/config/build-info";
  *
  * ## What is cached, and what is not
  *
- * **The rows, and since §NNN the pages too.** §333 cached only the rows and left every public page
+ * **The rows, and since §549 the pages too.** §333 cached only the rows and left every public page
  * rendering per request, because the pages read the address (`?type=`, `?month=`, `?lista=`,
  * `?interest=`), the clock and — on an event page — the session, for the "edit" button. Since
- * §NNN (amending §333) the bare listing, calendar, event page and standing pages are static (ISR):
+ * §549 (amending §333) the bare listing, calendar, event page and standing pages are static (ISR):
  * a read here, made while a page is prerendered, files the page under the same `public:<kind>`
  * tags, so the write that expires the rows expires the pages that showed them, in the CDN too;
  * the clock-keyed reads hold the page to their next instant (`page-lifetime.ts`); and a request
@@ -233,7 +233,7 @@ export async function publicRead<T>(
     if (copy) {
       // The page says it shows a saved copy, and from when (§493): nothing failed, but the database was not asked.
       noteSavedCopyServed(copy.takenAt);
-      // A static page made from a copy is kept a minute, never a day (§NNN).
+      // A static page made from a copy is kept a minute, never a day (§549).
       await holdPageFor(DEGRADED_PAGE_SECONDS);
       return copy.value;
     }

@@ -244,7 +244,7 @@ export default function SiteNav({
             <>
             {/*
               inline-flex so the anchor's box is the 44px entry, not a line of text. The contact
-              form and «Membri» are rendered per request, so they are not prefetched (§NNN).
+              form and «Membri» are rendered per request, so they are not prefetched (§549).
             */}
             <Link
               href={item.href}

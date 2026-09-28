@@ -1,5 +1,5 @@
 /**
- * Whether a link may be prefetched (§NNN, amending §333).
+ * Whether a link may be prefetched (§549, amending §333).
  *
  * The public pages that are the same for every stranger are static: the CDN answers them, and a
  * prefetch of one is a CDN hit too. Every other address a public page links to is rendered per

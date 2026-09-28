@@ -113,7 +113,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const now = new Date();
   const deadlines = await cachedDeadlines();
-  // A static event page is made again when the list closes (§NNN), or the CDN would keep the names.
+  // A static event page is made again when the list closes (§549), or the CDN would keep the names.
   await holdPageUntil([publicListClosesAt(event, deadlines)], now);
   if (!publicListStillOpen(event, now, deadlines)) return null;
 

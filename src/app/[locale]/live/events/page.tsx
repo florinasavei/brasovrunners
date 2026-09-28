@@ -1,7 +1,7 @@
 import EventsPage from "../../events/page";
 
 /**
- * The listing's live twin (§NNN, amending §333): the same page, rendered per request, for a visit
+ * The listing's live twin (§549, amending §333): the same page, rendered per request, for a visit
  * whose address asks something — a filter (`?type=RACE`, §413), `?view=` — which the static
  * listing cannot answer from the CDN. The proxy rewrites such a visit here; the address the
  * visitor sees is `/ro/evenimente?type=RACE` as before (`i18n/live-twin.ts`). Its metadata is the

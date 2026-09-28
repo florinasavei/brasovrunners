@@ -14,7 +14,7 @@ import { env } from "@/shared/config/env";
  * Public, like the event; the file says nothing the page does not — and reads the same cached
  * row the page does (§333).
  *
- * Static, like the page (§NNN, amending §129 and §333): made on its first request, kept by the CDN
+ * Static, like the page (§549, amending §129 and §333): made on its first request, kept by the CDN
  * until a save of the event expires the row it was made from (the row's tag files the file too), or
  * until the event's own clock changes what its description says. A literal, as Next requires:
  * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
@@ -22,7 +22,7 @@ import { env } from "@/shared/config/env";
 export const dynamic = "force-static";
 export const revalidate = 86400;
 
-/** Made on its first request, never at build: no event is known before the database is asked (§NNN). */
+/** Made on its first request, never at build: no event is known before the database is asked (§549). */
 export function generateStaticParams(): { locale: string; slug: string }[] {
   return [];
 }
@@ -35,7 +35,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const event = found ? datedOrNull(found) : null;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const now = new Date();
-  // Where registration stands is in the description (§159): kept until the door's next change (§NNN).
+  // Where registration stands is in the description (§159): kept until the door's next change (§549).
   await holdPageUntil(eventClockInstants(event), now);
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({
@@ -49,7 +49,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `attachment; filename="${slug}.ics"`,
-      // No Cache-Control of its own (§NNN): Next writes the static response's, and a save expires the CDN's copy.
+      // No Cache-Control of its own (§549): Next writes the static response's, and a save expires the CDN's copy.
     },
   });
 }

@@ -35,9 +35,9 @@ export type { EventForecast } from "./domain/forecast";
  * wanted it "exact pe locația selectată" (§416), so each event reads its own place (below) — eight
  * days of hours, a few kilobytes, kept in Next's data cache for an hour under the tag
  * `weather:forecast` (`WEATHER_CACHE_TAG`), keyed by the rounded place. The page that shows it is
- * static (§NNN) and the entry's one-hour `revalidate` holds that page to the hour.
+ * static (§549) and the entry's one-hour `revalidate` holds that page to the hour.
  *
- * **Every request goes through the data cache on a server that has one** (§NNN, a review finding).
+ * **Every request goes through the data cache on a server that has one** (§549, a review finding).
  * A fetch made outside `unstable_cache` while a static page renders is that render's own: with
  * `cache: "no-store"` Next 16 marks the render dynamic, and an ISR page answers 500 («Page changed
  * from static to dynamic at runtime»). So the fetch names no cache mode at all (inside
@@ -158,7 +158,7 @@ export async function fetchOpenMeteo(
     response = await fetchImpl(openMeteoUrl(place), {
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(timeoutMs),
-      // No `cache` mode (§NNN): inside `unstable_cache` Next never stores this fetch, and outside it
+      // No `cache` mode (§549): inside `unstable_cache` Next never stores this fetch, and outside it
       // (a test, `next dev`) an unconfigured fetch is not stored either — whereas `cache: "no-store"`
       // in a static page's render would turn that page dynamic (the module's comment says how).
     });
@@ -244,7 +244,7 @@ export function forecastHour(now: number): number {
 
 /**
  * Seconds from `now` to the end of its hour, at least one: how long the hour's own entry stands
- * (`refreshedOpenMeteo`, §NNN).
+ * (`refreshedOpenMeteo`, §549).
  */
 export function secondsLeftInHour(now: number): number {
   const hourMs = WEATHER_CACHE_SECONDS * 1000;
@@ -261,12 +261,12 @@ function askOpenMeteoThisHour(...[latitude, longitude]: [latitude: number, longi
 }
 
 /**
- * The fresh request a stale entry asks for (§NNN): the same answer, in its own data-cache entry keyed
+ * The fresh request a stale entry asks for (§549): the same answer, in its own data-cache entry keyed
  * by the place and the hour. A new hour is a miss, which `unstable_cache` fills before it answers, so
  * the visitor after a quiet spell still reads this hour's forecast; the request stays inside the
  * cache, never the static page's own; and every visitor of that hour shares the one request.
  *
- * **Its lifetime ends with its hour** (§NNN, a review finding). The key names the hour, so nothing
+ * **Its lifetime ends with its hour** (§549, a review finding). The key names the hour, so nothing
  * reads the entry after it; with the forecast's own hour as its `revalidate`, entries written late in
  * an hour outlived it, one per place per hour, and only a `weather:forecast` expiry named them. So
  * the entry's `revalidate` is what is left of its hour (`secondsLeftInHour`): it is stale the moment
@@ -345,7 +345,7 @@ export function readClubForecast(deps: ForecastDeps = {}): Promise<ForecastRead>
  * stale-while-revalidate, while the revalidation it starts runs behind it. Hiding the row there
  * would hide the forecast from exactly the visitor who came back, although Open-Meteo would answer
  * straight away; so that request asks Open-Meteo again, within the same three seconds, and shows
- * that answer — through the hour's own data-cache entry (`refreshedOpenMeteo`, §NNN), so the request
+ * that answer — through the hour's own data-cache entry (`refreshedOpenMeteo`, §549), so the request
  * is never a bare fetch inside a static page's render and the hour's visitors share it. Only when
  * that request fails too is there no forecast: then it is an outage, and the
  * old answer is never shown as current.
@@ -363,7 +363,7 @@ export async function readForecast(at: Coordinates, deps: ForecastDeps = {}): Pr
   const place = roundPlace(at);
   const ask = () =>
     deps.fetch ? fetchOpenMeteo(deps.fetch, () => now, deps.timeoutMs, place) : fetchOpenMeteo(fetch, Date.now, WEATHER_TIMEOUT_MS, place);
-  // On a server with a data cache every request is a cached entry's (§NNN): the hour's entry for
+  // On a server with a data cache every request is a cached entry's (§549): the hour's entry for
   // the stale path too, never a bare fetch inside a static page's render.
   const fromDataCache = !deps.fetch && dataCacheAvailable();
   const cached = deps.cached ?? (fromDataCache ? () => cachedOpenMeteo(place.latitude, place.longitude) : null);

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.23-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.24-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.23-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.24-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -287,7 +287,7 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
 
 - **`middleware.ts` does not exist here.** Next 16 renamed it to `proxy.ts`, with the export
   renamed to match. The Node runtime is the only one it supports.
-- **The public pages are static, and a production build keeps what it made** (§NNN). The
+- **The public pages are static, and a production build keeps what it made** (§549). The
   listing, the calendar, an event page, the standing pages, the gallery, the legal pages, the
   `.ics` files and the Open Graph pictures are made on their first visit and kept (ISR), expired
   by the write that changes them — the same `revalidatePublicContent(...)` every write already

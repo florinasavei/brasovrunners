@@ -11,7 +11,7 @@ const budget = vi.hoisted(() => ({
 }));
 
 vi.mock("@/shared/config/env", () => ({ env: { APP_ENV: "test", STORAGE_MODE: "fake", APP_BASE_URL: "https://example.test" } }));
-/* The level this instance last read (`budget-level.ts`, §NNN): never a request to Neon from a page's render. */
+/* The level this instance last read (`budget-level.ts`, §549): never a request to Neon from a page's render. */
 vi.mock("@/modules/diagnostics/budget-level", () => ({
   lastKnownBudget: () => {
     budget.calls += 1;

@@ -17,7 +17,7 @@ type Props = Omit<ButtonProps, "href"> & Pick<ComponentProps<typeof Link>, "href
  * component across the server/client boundary fails at prerender with "Functions cannot be
  * passed directly to Client Components". Both halves are client-side in here, so it is fine.
  *
- * Prefetched only when the target is a static public page (§NNN): the register form, «Zona membrilor»
+ * Prefetched only when the target is a static public page (§549): the register form, «Zona membrilor»
  * and the sign-in are rendered per request, and a prefetch of one would start a function per view.
  */
 export default function ButtonLink({ href, children, ...props }: Props) {

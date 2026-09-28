@@ -24,7 +24,7 @@ import type { GlyphName } from "@/modules/events/ui/glyphs";
  * so it already carries its locale prefix, and prefixing it again would give `/ro/ro/…`. What
  * is rendered is still an ordinary `<a href="…">` with the whole query in it.
  *
- * Never prefetched (§NNN): nearly every chip's href carries a query — a filter, a month, a year, a
+ * Never prefetched (§549): nearly every chip's href carries a query — a filter, a month, a year, a
  * layout — and such an address is the page's live twin, rendered per request; a prefetch per chip
  * in view would start a function for every visit to a page the CDN otherwise answers alone. The
  * press still navigates softly; it waits for its answer instead of finding it ready.
