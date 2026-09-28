@@ -114,25 +114,19 @@ describe("§444 the print's banner", () => {
   });
 });
 
-describe("§444 «Confirmă aici» hands a spare only to a walk-in", () => {
-  const walkIn = { kind: "REAL", source: "STAFF", bibNumber: null, provisionalBibNumber: 3, bibPrintedAt: null };
+describe("§444 §NNN «Confirmă aici» hands a spare to a row that wears no number yet", () => {
+  const unnumbered = { kind: "REAL", bibNumber: null, bibPrintedAt: null };
 
-  it("offers the spare to a staff walk-in, although the entry drew a provisional number like every row", () => {
-    expect(handsSpareAtConfirm(walkIn)).toBe(true);
-    // A row holding no number at all is a walk-in whatever its origin: nothing to keep.
-    expect(handsSpareAtConfirm({ ...walkIn, source: "PUBLIC", provisionalBibNumber: null })).toBe(true);
+  it("offers the spare to any real registration not numbered yet — nobody is numbered before the confirmation", () => {
+    expect(handsSpareAtConfirm(unnumbered)).toBe(true);
   });
 
-  it("leaves an online runner's provisional number theirs: no spare box, the confirmation adopts it", () => {
-    expect(handsSpareAtConfirm({ ...walkIn, source: "PUBLIC", provisionalBibNumber: 57 })).toBe(false);
-  });
-
-  it("never swaps a printed or settled bib, and a test registration wears none", () => {
+  it("never swaps a number a row already wears or a printed bib, and a test registration wears none", () => {
     const printed = new Date("2026-11-20T18:00:00Z");
-    expect(handsSpareAtConfirm({ ...walkIn, source: "PUBLIC", bibNumber: 57, provisionalBibNumber: null, bibPrintedAt: printed })).toBe(false);
-    expect(handsSpareAtConfirm({ ...walkIn, bibPrintedAt: printed })).toBe(false);
-    expect(handsSpareAtConfirm({ ...walkIn, bibNumber: 57, provisionalBibNumber: null })).toBe(false);
-    expect(handsSpareAtConfirm({ ...walkIn, kind: "TEST" })).toBe(false);
+    expect(handsSpareAtConfirm({ ...unnumbered, bibNumber: 57, bibPrintedAt: printed })).toBe(false);
+    expect(handsSpareAtConfirm({ ...unnumbered, bibPrintedAt: printed })).toBe(false);
+    expect(handsSpareAtConfirm({ ...unnumbered, bibNumber: 57 })).toBe(false);
+    expect(handsSpareAtConfirm({ ...unnumbered, kind: "TEST" })).toBe(false);
   });
 
   it("is what the desk row's spare box and its «out» sentence are gated on", () => {

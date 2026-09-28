@@ -169,7 +169,6 @@ export async function GET(request: Request): Promise<Response> {
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
-        provisionalBibNumber: row.provisionalBibNumber,
         checkedInAt: row.checkedInAt,
         emailBounced: row.emailRejectedReason !== null,
         termsVersion: row.termsVersion,
@@ -212,7 +211,6 @@ export async function GET(request: Request): Promise<Response> {
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,
-      provisionalBibNumber: row.provisionalBibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
       emailBounced: row.emailRejectedReason !== null,
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.

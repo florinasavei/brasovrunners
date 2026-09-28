@@ -146,7 +146,7 @@ function familyFactsPart(facts: readonly FamilyFact[]): EmailBodyPart {
 }
 
 /** A family confirmation's words for its blocks (§519), one language's. */
-type FamilyConfirmedWords = { number: string; provisional: string; noNumber: string; code: string; qr: string };
+type FamilyConfirmedWords = { number: string; noNumber: string; code: string; qr: string };
 
 /**
  * Names as one phrase in the email's language (§519, the owner's answer of 2026-09-27): commas, and
@@ -170,13 +170,9 @@ function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>):
  * (`renderBilingual`), as for one person's QR. The plain-text half reads one line per fact.
  */
 function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords): EmailBodyPart {
-  const numberText = (person: (typeof people)[number]) =>
-    person.raceNumber === null ? words.noNumber : person.provisional ? `${person.raceNumber} ${words.provisional}` : String(person.raceNumber);
+  const numberText = (person: (typeof people)[number]) => (person.raceNumber === null ? words.noNumber : String(person.raceNumber));
   const blocks = people.map((person) => {
-    const number =
-      person.raceNumber === null
-        ? escapeHtml(words.noNumber)
-        : `<strong style="font-size:20px">${person.raceNumber}</strong>${person.provisional ? ` ${escapeHtml(words.provisional)}` : ""}`;
+    const number = person.raceNumber === null ? escapeHtml(words.noNumber) : `<strong style="font-size:20px">${person.raceNumber}</strong>`;
     return [
       `<div data-email-part="family-person" style="margin:0 0 14px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">`,
       `<p style="margin:0 0 8px;font-size:17px;line-height:1.4"><strong>${escapeHtml(person.name)}</strong></p>`,
@@ -483,12 +479,6 @@ export type TemplateData = {
    * already registered (§199, §235). One sentence goes in front of the body saying so.
    */
   alreadyRegistered?: boolean;
-  /**
-   * The race number in this message is the provisional one (§214, §237): it is shown so
-   * the runner has it, and said to be provisional because the settle at the close may
-   * move it.
-   */
-  bibProvisional?: boolean;
   eventTitle?: string;
   /** The event's title in the other language, for the bilingual message's second half (§373, email follow-up). */
   eventTitleOther?: string;
@@ -511,7 +501,7 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
-  /** The race number, once given (§87) — on the confirmation and the reminder. */
+  /** The race number, given at the confirmation (§87, §NNN) — on the confirmation and the reminder, never before. */
   bibNumber?: number;
   /** The event's map link and Strava event link, when set (§81). */
   eventMapUrl?: string;
@@ -749,8 +739,8 @@ export type TemplateData = {
   /**
    * A family's one confirmation (§519; the owner: «în mail trebuie să vină toate QR-urile pentru toată
    * familia»): everybody confirmed by the family's one button, in the order the forms were sent — the
-   * name, the desk code and its QR (never on a club copy, §320), and the race number (`raceNumberOf`),
-   * provisional or not, or null while there is none. Set, the confirmation is the family's, and it
+   * name, the desk code and its QR (never on a club copy, §320), and the race number each person's
+   * own confirmation gave (`raceNumberOf`, §NNN), or null while there is none. Set, the confirmation is the family's, and it
    * greets everybody by `firstName` (the name's first word when absent), in that order (§519).
    */
   familyConfirmed?: ReadonlyArray<{
@@ -759,7 +749,6 @@ export type TemplateData = {
     checkinCode?: string;
     qrUrl?: string;
     raceNumber: number | null;
-    provisional: boolean;
   }>;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
@@ -1349,9 +1338,6 @@ const T = {
       bib
         ? `Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, cu numărul ${bib} — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
         : "Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
-    /** Appended when the number in this message can still change (§237). */
-    bibProvisional: (n: number) =>
-      `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
     /**
      * The reminder of a night event (§394), after the body whoever wrote it — «Alergare de
      * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
@@ -1445,7 +1431,6 @@ const T = {
       ],
       words: {
         number: "Număr de concurs",
-        provisional: "(provizoriu: se stabilește la închiderea înscrierilor)",
         noNumber: "încă fără număr",
         code: "Codul pentru masă",
         qr: "Cod QR",
@@ -1851,9 +1836,6 @@ const T = {
       bib
         ? `We are glad you are keen! __You are already registered__ for this event, with number ${bib} — no second registration was created. Below is the one you have.`
         : "We are glad you are keen! __You are already registered__ for this event, so no second registration was created — below is the registration you already have.",
-    /** Appended when the number in this message can still change (§237). */
-    bibProvisional: (n: number) =>
-      `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
     /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
     nightEvent: (night: NightReminderLine) => {
       const label = night.isGroupRun ? "Night run" : "Night event";
@@ -1915,7 +1897,6 @@ const T = {
       ],
       words: {
         number: "Race number",
-        provisional: "(provisional: settled when registration closes)",
         noNumber: "no number yet",
         code: "Desk code",
         qr: "QR code",
@@ -2047,8 +2028,7 @@ function subscribersPhrase(locale: EmailLocale, count: number): string {
 }
 
 /**
- * The sentences the update and the cancellation add after the body (§331) — machinery, like the
- * provisional-number line (§237), so a club that rewrote the message's words (§247) still sends
+ * The sentences the update and the cancellation add after the body (§331) — machinery, so a club that rewrote the message's words (§247) still sends
  * the new place and the reason: they are statements about the event, not about how the club
  * likes to write. One line per kind the save changed, in the order a runner reads a morning — on
  * again, where, when, the programme — then the organizer's note, or the reason.
@@ -2073,7 +2053,7 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
  * The part of one message the club may rewrite (§247), as the platform writes it: the subject and
  * the body, and nothing the platform adds around a body — not the club copy's first line (§320),
  * not "you were already registered" (§235), not the update's new place or the cancellation's
- * reason (§331), not "this number is provisional" (§237). Those are sent whoever wrote the words,
+ * reason (§331). Those are sent whoever wrote the words,
  * so a club text that repeated them would say them twice.
  *
  * The editor's starting text is built from this (§359, `email-copy-fields.ts`), with every field of
@@ -2138,7 +2118,6 @@ export function buildTemplateContent(
         name: person.name,
         firstName: person.firstName,
         raceNumber: person.raceNumber,
-        provisional: person.provisional,
       })),
     };
     actionUrl = undefined;
@@ -2161,10 +2140,10 @@ export function buildTemplateContent(
 
     Only the subject and the body. The greeting, the facts line, the action button and its
     token, the QR, the links and the sign-off are the message's machinery and stay in code —
-    and so do the two sentences below that the platform adds *around* a body: "you were already
-    registered" (§235) and "this number is provisional" (§237). Both are statements about the
-    state of a registration rather than about how the club likes to write, and a club that
-    rewrote the confirmation would otherwise silently lose them.
+    and so does the sentence below that the platform adds *around* a body: "you were already
+    registered" (§235). It is a statement about the state of a registration rather than about
+    how the club likes to write, and a club that rewrote the confirmation would otherwise
+    silently lose it.
   */
   // The organizer's message is written per send (§364): there is no stored wording to apply, and a
   // hand-made entry for it in the setting must not replace what the organizer wrote this time.
@@ -2313,8 +2292,7 @@ export function buildTemplateContent(
         : []),
       // Whose registration this is, under the parent's greeting (§419).
       ...(guardianName ? [copy.guardianIntro(data.participantName)] : []),
-      // The number when the message carries one: a settled number, or the provisional one the
-      // desk gave, whichever this registration actually has (§286).
+      // The number when the message carries one: a confirmed registration's (§286, §NNN).
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
@@ -2382,7 +2360,7 @@ export function buildTemplateContent(
               : entry.body(data)),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
-        this registration and the text in force, like the provisional number (§237): on the request
+        this registration and the text in force: on the request
         to sign and on the freed place, which asks the same signature.
       */
       ...(guardianName && (messageType === "COMPLETE_DECLARATION" || messageType === "WAITLIST_SPOT_OFFER")
@@ -2405,8 +2383,7 @@ export function buildTemplateContent(
         : []),
       /*
         A night event (§394, the question §382 left open): the reminder of a date that starts after
-        dusk says the sunset and to bring a light. After the body, like the provisional number below
-        — a fact about this date, not a matter of how the club writes — so a reminder the club
+        dusk says the sunset and to bring a light. After the body — a fact about this date, not a matter of how the club writes — so a reminder the club
         reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
       */
       ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
@@ -2429,11 +2406,6 @@ export function buildTemplateContent(
       // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),
       ...newsletterLines(messageType, locale, data),
-      // After the body, not before it: the number is in the body already, and this only
-      // qualifies it (§237).
-      ...(data.bibProvisional && data.bibNumber !== undefined
-        ? [copy.bibProvisional(data.bibNumber)]
-        : []),
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
       // In the facts box instead when the kept form is in hand (§468).

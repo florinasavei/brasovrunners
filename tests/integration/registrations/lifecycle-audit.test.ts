@@ -22,10 +22,10 @@ import { sendHoldEmails } from "../../helpers/outbox";
  * - a desk entry that races a family member's public submission is refused, never confirms the
  *   other runner on the paper (BR-REQ-037-05, BR-REQ-037-07);
  * - no waiting-list offer is made once registration has closed (BR-REQ-035-02 criterion 3);
- * - a lapsed declaration hold gives its provisional number back, so the desk can re-allocate it
- *   after the settle (§160, §214, §220);
- * - the settle numbers only the places the capacity formula counts (AGENTS.md §10.5 invariant 3);
- * - an offer carries a provisional number, from the queue and from the desk (§214);
+ * - a lapsed declaration hold held no number, so the desk re-allocates it later with a free one
+ *   (§160, §NNN);
+ * - nothing is numbered at the close: a number comes with each confirmation (§NNN);
+ * - an offer carries no number until it is confirmed, from the queue and from the desk (§NNN);
  * - the verification link dies with the registration's own link (BR-REQ-031-03 criterion 2, §377);
  * - the desk's counters leave test registrations out (§30, AGENTS.md §12.6);
  * - "Înscrierile mele" names the runner of a closed registration too (§389).
@@ -380,28 +380,31 @@ describe("§420 BR-REQ-035-02 criterion 3 no waiting-list offer once registratio
   });
 });
 
-describe("§420 §160 §214 §220 a lapsed declaration hold gives its provisional number back", () => {
-  it("so the desk can re-allocate it after the settle, with a free number, instead of a duplicate-key error", async () => {
+describe("§420 §160 §NNN a lapsed declaration hold held no number, so the desk re-allocates it later with a free one", () => {
+  it("so the desk can confirm it on race morning, with the next number, instead of a duplicate-key error", async () => {
     const staff = await admin();
     const event = await createEvent({ capacity: 2 });
     const ana = await allocated(event, "Ana");
     const bogdan = await allocated(event, "Bogdan", at(2));
-    expect([ana.provisionalBibNumber, bogdan.provisionalBibNumber]).toEqual([1, 2]);
+    // A held place carries no number: it comes with the confirmation (§NNN).
+    expect([ana.bibNumber, bogdan.bibNumber]).toEqual([null, null]);
     expect((await allocated(event, "Cristi", at(4))).status).toBe("WAITLISTED");
     await sendHoldEmails(db, at(4));
 
     // Two hours on: somebody waits, so the oldest lapsed hold goes to the queue (§160).
     await runRegistrationMaintenance(db, at(120));
     const lapsed = await reread(ana.id);
-    expect([lapsed.status, lapsed.expiryReason, lapsed.provisionalBibNumber]).toEqual(["EXPIRED", "DECLARATION_HOLD_LAPSED", null]);
+    expect([lapsed.status, lapsed.expiryReason, lapsed.bibNumber]).toEqual(["EXPIRED", "DECLARATION_HOLD_LAPSED", null]);
 
     const cristi = await rowOf(event, "Cristi");
     await signDeclaration(db, event, cristi.id, await signingInput(db, at(125), "Cristi Pop"), at(125));
     await signDeclaration(db, event, bogdan.id, await signingInput(db, at(130), "Bogdan Pop"), at(130));
+    // In the order they signed: Cristi first.
+    expect([(await reread(cristi.id)).bibNumber, (await reread(bogdan.id)).bibNumber]).toEqual([1, 2]);
     await runRegistrationMaintenance(db, at(60, CLOSES_AT));
     await unregister(db, event, cristi.id, "ADMIN", at(90, CLOSES_AT));
 
-    // Race morning: Ana at the desk with her paper.
+    // Race morning: Ana at the desk with her paper. Cristi's 1 stays retired.
     const raceMorning = at(-60, STARTS_AT);
     const done = await confirmByStaff(db, event, ana.id, staff, raceMorning);
     expect(done.status).toBe("CONFIRMED");
@@ -409,7 +412,7 @@ describe("§420 §160 §214 §220 a lapsed declaration hold gives its provisiona
       .map((row) => row.bibNumber)
       .filter((number): number is number => number !== null);
     expect(new Set(finals).size).toBe(finals.length);
-    expect(done.bibNumber).not.toBeNull();
+    expect(done.bibNumber).toBe(3);
   });
 });
 
@@ -424,11 +427,11 @@ describe("§420 §160 once registration has closed, a lapsed declaration hold st
     await sendHoldEmails(db, at(5));
 
     // Registration is closed, and Ana's thirty-minute hold is long past its own deadline. Somebody
-    // waits, so the hold is released as §160 says (its number with it, §220) — only the offer is
+    // waits, so the hold is released as §160 says — only the offer is
     // withheld, by `fillAvailableSpots`, because it would be born lapsed.
     await runRegistrationMaintenance(db, at(60, CLOSES_AT));
     const released = await reread(ana.id);
-    expect([released.status, released.expiryReason, released.provisionalBibNumber]).toEqual(["EXPIRED", "DECLARATION_HOLD_LAPSED", null]);
+    expect([released.status, released.expiryReason, released.bibNumber]).toEqual(["EXPIRED", "DECLARATION_HOLD_LAPSED", null]);
     expect((await reread(bogdan.id)).status).toBe("WAITLISTED");
     expect(await outbox("WAITLIST_SPOT_OFFER")).toHaveLength(0);
 
@@ -440,29 +443,30 @@ describe("§420 §160 once registration has closed, a lapsed declaration hold st
   });
 });
 
-describe("§420 AGENTS.md §10.5 invariant 3 the settle numbers only the places the capacity formula counts", () => {
-  it("an unconfirmed address gets no final number and no BIB_ASSIGNED, and joins the waiting list without one", async () => {
+describe("§420 §NNN AGENTS.md §10.5 invariant 3 nothing is numbered at the close", () => {
+  it("an unconfirmed address gets no number and no BIB_ASSIGNED, and joins the waiting list without one", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await confirmed(event, "Ana");
     const beforeClose = at(-60, CLOSES_AT);
     const bogdan = await submit(event, "Bogdan", beforeClose);
-    expect(bogdan.provisionalBibNumber).toBe(2);
+    expect(bogdan.bibNumber).toBeNull();
 
     await runRegistrationMaintenance(db, at(15, CLOSES_AT));
-    const settledAna = await reread(ana.id);
-    const unsettled = await reread(bogdan.id);
-    expect(settledAna.bibNumber).toBe(1);
-    expect([unsettled.status, unsettled.bibNumber, unsettled.provisionalBibNumber]).toEqual(["PENDING_EMAIL_CONFIRMATION", null, null]);
-    expect((await outbox("BIB_ASSIGNED")).map((row) => row.registrationId)).toEqual([ana.id]);
+    const numberedAna = await reread(ana.id);
+    const unconfirmed = await reread(bogdan.id);
+    expect(numberedAna.bibNumber).toBe(1);
+    expect([unconfirmed.status, unconfirmed.bibNumber]).toEqual(["PENDING_EMAIL_CONFIRMATION", null]);
+    // No settle, so no message of its own: Ana's number rode on her confirmation.
+    expect(await outbox("BIB_ASSIGNED")).toHaveLength(0);
 
     await confirmEmail(db, event, bogdan.id, at(30, CLOSES_AT));
     const waiting = await reread(bogdan.id);
-    expect([waiting.status, waiting.bibNumber, waiting.provisionalBibNumber]).toEqual(["WAITLISTED", null, null]);
+    expect([waiting.status, waiting.bibNumber]).toEqual(["WAITLISTED", null]);
   });
 });
 
-describe("§420 §214 an offered place carries a provisional number", () => {
-  it("from the waiting list: offered with a number, and signed keeping it", async () => {
+describe("§420 §NNN an offered place carries no number until it is confirmed", () => {
+  it("from the waiting list: offered with no number, and numbered when signed", async () => {
     const event = await createEvent({ capacity: 1 });
     const ana = await allocated(event, "Ana");
     await allocated(event, "Bogdan", at(5));
@@ -470,14 +474,14 @@ describe("§420 §214 an offered place carries a provisional number", () => {
 
     const offered = await rowOf(event, "Bogdan");
     expect(offered.status).toBe("WAITLIST_OFFERED");
-    expect(offered.provisionalBibNumber).toBe(1);
+    expect(offered.bibNumber).toBeNull();
 
     await signDeclaration(db, event, offered.id, await signingInput(db, at(20), "Bogdan Pop"), at(20));
     const signed = await reread(offered.id);
-    expect([signed.status, signed.bibNumber, signed.provisionalBibNumber]).toEqual(["CONFIRMED", null, 1]);
+    expect([signed.status, signed.bibNumber]).toEqual(["CONFIRMED", 1]);
   });
 
-  it("from the desk's promotion: before the close it keeps a provisional number, after it that number is its final one", async () => {
+  it("from the desk's promotion: numbered at the promotion's confirmation, before the close and after it", async () => {
     const staff = await admin();
     const event = await createEvent({ capacity: 1 });
     await confirmed(event, "Ana");
@@ -487,16 +491,13 @@ describe("§420 §214 an offered place carries a provisional number", () => {
     await db.update(events).set({ capacity: 2 }).where(eq(events.id, event.id));
 
     const early = await promoteFromWaitlistByStaff(db, event, bogdan.id, staff, at(20));
-    expect([early.status, early.bibNumber, early.provisionalBibNumber]).toEqual(["CONFIRMED", null, 2]);
+    expect([early.status, early.bibNumber]).toEqual(["CONFIRMED", 2]);
 
     await runRegistrationMaintenance(db, at(15, CLOSES_AT));
-    // And one more on race week, after the numbers were settled.
+    // And one more on race week.
     await db.update(events).set({ capacity: 3 }).where(eq(events.id, event.id));
     const late = await promoteFromWaitlistByStaff(db, event, cristi.id, staff, at(30, CLOSES_AT));
-    expect(late.status).toBe("CONFIRMED");
-    expect(late.provisionalBibNumber).toBeNull();
-    // Numbered without a gap: 1 and 2 were settled, and the drawn number is adopted, not skipped.
-    expect(late.bibNumber).toBe(3);
+    expect([late.status, late.bibNumber]).toEqual(["CONFIRMED", 3]);
   });
 });
 
@@ -520,7 +521,7 @@ describe("§420 BR-REQ-031-03 criterion 2 the confirmation link lapses with the 
     const row = await submit(event, "Ana");
 
     const after = await confirmEmail(db, event, row.id, at(49 * 60));
-    expect([after.status, after.expiryReason, after.provisionalBibNumber]).toEqual(["EXPIRED", "EMAIL_CONFIRMATION_LAPSED", null]);
+    expect([after.status, after.expiryReason, after.bibNumber]).toEqual(["EXPIRED", "EMAIL_CONFIRMATION_LAPSED", null]);
     const [participant] = await db.select().from(participants).where(eq(participants.id, row.participantId));
     expect(participant.emailVerifiedAt).toBeNull();
     expect(await outbox("COMPLETE_DECLARATION")).toHaveLength(0);

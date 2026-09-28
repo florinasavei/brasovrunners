@@ -387,24 +387,12 @@ export const registrations = pgTable(
     bibNumber: integer("bib_number"),
 
     /**
-     * The number held for this registration while it can still change (`DECISIONS.md` §214).
-     *
-     * The owner, looking at his own row stuck on "waiting for the email": "I need the BID to be
-     * reserved ASAP". A number that arrives only at confirmation arrives after the two steps
-     * most likely to strand somebody — an email that does not come, a declaration nobody has
-     * read yet — so the club cannot plan and the runner cannot ask about a number they do not
-     * have.
-     *
-     * **It is the opposite of `bib_number` in the one way that matters: it is released.** A
-     * provisional number belongs to a registration *while it occupies a place*, and the moment
-     * the place goes — cancelled, expired, pushed onto the waiting list — the number goes back
-     * into the pool for the next person. That is safe precisely because it is never printed and
-     * never emailed: nothing exists in the world that has to keep matching it. `bib_number`
-     * is the opposite and stays so — once given it is never reissued, because two people
-     * wearing 17 is the failure that rule exists to prevent.
-     *
-     * Unique per event while it is set, like `bib_number` and for the same reason, and drawn
-     * under the event row's lock — the serialization point capacity already uses (§10.6).
+     * **Retired since `DECISIONS.md` §NNN; nothing writes it.** From §214 to §NNN a number was held
+     * here from the form until the close, and shown as «provizoriu». Now a number exists only once a
+     * registration is confirmed, in `bib_number`. The column stays, expand-only, until a contract
+     * release drops it: the maintenance job empties it once (`bibs.ts#releaseLegacyHeldNumbers` —
+     * a confirmed row keeps its number there, every other row loses it), and until that has run
+     * every draw still reads it as taken.
      */
     provisionalBibNumber: integer("provisional_bib_number"),
 
@@ -514,10 +502,7 @@ export const registrations = pgTable(
       "registrations_provisional_bib_number_positive",
       sql`${t.provisionalBibNumber} IS NULL OR ${t.provisionalBibNumber} > 0`,
     ),
-    // The same guarantee for the number held before confirmation (§214). It is released when
-    // the place is, so this index is what makes a released number safe to hand to the next
-    // person: the release and the draw both happen under the event row's lock, and this is
-    // what would surface a mistake rather than let two rows quietly share a number.
+    // The retired column's index (§214, §NNN): it holds exactly the rows the one data step empties.
     uniqueIndex("registrations_event_provisional_bib_unique")
       .on(t.eventId, t.provisionalBibNumber)
       .where(sql`${t.provisionalBibNumber} IS NOT NULL`),

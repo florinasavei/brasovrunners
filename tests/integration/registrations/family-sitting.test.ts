@@ -738,10 +738,10 @@ describe("§519 the fix round of 2026-09-27", () => {
     const positions = inOrder.map((row) => message.text.indexOf(row.registeredName, blocks));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    // Each person's number is their own confirmation's (§NNN): they signed in this order, one by one.
+    expect(inOrder.map((row) => row.bibNumber)).toEqual([1, 2, 3]);
     for (const row of inOrder) {
-      const number = row.bibNumber ?? row.provisionalBibNumber;
-      expect(number).not.toBeNull();
-      expect(message.text).toContain(`Număr de concurs: ${number}`);
+      expect(message.text).toContain(`Număr de concurs: ${row.bibNumber}`);
       expect(message.text).toContain(`Codul pentru masă: ${row.checkinCode}`);
     }
     expect(message.text).toContain("Toate înscrierile mele");
@@ -750,7 +750,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     const [participant] = await db.select().from(participants);
     const steps = familySigningSteps(await listFamilySigningRows(db, participant.id, event.id), { originId: null, originSignable: false, signedIds: [] });
     expect(steps.map((step) => step.registeredName)).toEqual(["Ana Pop", "Ion Pop", "Radu Pop"]);
-    expect(steps.map((step) => step.raceNumber?.value)).toEqual(inOrder.map((row) => row.bibNumber ?? row.provisionalBibNumber));
+    expect(steps.map((step) => step.raceNumber)).toEqual(inOrder.map((row) => row.bibNumber));
   });
   it("a person who signs after the family's confirmation has left gets their own, as before", async () => {
     const event = await createEvent();

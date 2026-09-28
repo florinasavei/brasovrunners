@@ -708,11 +708,9 @@
       "exportExcel": "Export to Excel",
       "readOnlyNotice": "You can read the list, the export and the numbers, but not change them. On race day you work from “Race day”.",
       "columnBib": "Race number (BIB)",
-      "bibColumnHint": "The race number:\n– 2* — provisional, may still change.\n– 1 (bold) — final, emailed to the runner.\n– 1 ✓ — final and printed.",
-      "bibProvisionalShort": "provisional",
-      "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
-      "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
-      "bibHeldNow": "Race number: {number} — provisional until registration closes.",
+      "bibColumnHint": "The race number:\n– — — not confirmed yet; the number comes with the confirmation.\n– 12 — given at the confirmation and emailed.\n– 12 ✓ — printed.",
+      "bibSettled": "Race number: {number}, given at the confirmation and emailed. If you change it, the person is emailed the new one, and the old one is never given to anybody else.",
+      "bibSettledPrinted": "Race number: {number}. It is printed, so it no longer changes.",
       "bibNone": "No race number yet.",
       "bibChange": "Change the number",
       "bibPrinted": "Bib printed",
@@ -934,7 +932,7 @@
       "givePlaceTitle": "Give them a place?",
       "givePlaceBody": "{name} gets a free place ahead of the waiting list, and the confirmation with the race number.",
       "setBibTitle": "Save the number?",
-      "setBibBody": "The number stays this person's and is never given to anybody else.",
+      "setBibBody": "The person is emailed the number. A number once given is never given to anybody else.",
       "resendTitle": "Send the email again?",
       "resendBody": "The email for the current state goes to {name} again, with a new link; the link in the old email stops working.",
       "reminderTitle": "Send the reminder?",
@@ -1365,7 +1363,7 @@
       "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
-      "bibStartNumberHelp": "1 by default. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "bibStartNumberHelp": "1 by default. Use 100 or 500 to give each distance its own band — numbers are given in order of confirmation, counting up from here.",
       "minAge": "Minimum age to take part",
       "reminder": {
         "label": "The reminder before the start",
@@ -3604,7 +3602,7 @@
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
       "spareMark": "on-the-spot entry",
-      "helpMore": "Numbers are given in order of registration and never change. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
+      "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -3692,7 +3690,6 @@
       "rowHelp": "On each row: type the race number (if they have none) → “Save no.”; when the person has arrived → “Mark present”. Somebody who has not signed the declaration signs it on paper → “Confirm on paper”.",
       "givePlace": "Give a place",
       "bibField": "Race number (BIB)",
-      "bibProvisional": "Provisional number: it is settled when registration closes.",
       "saveBib": "Save no.",
       "checkIn": "Mark present",
       "undoCheckIn": "Undo",
@@ -3941,7 +3938,7 @@
             "eventTitle": "The event's title, in this text's language",
             "eventLocationName": "The meeting point, by its name in this text's language; while it is not announced, the sentence that says so",
             "eventStartsAtFormatted": "The start's date and time, in the event's time zone, written in this text's language",
-            "bibNumber": "The race number, possibly the provisional one until registration closes",
+            "bibNumber": "The race number, given at the confirmation",
             "checkinCode": "The desk code the participant collects their number with",
             "currentStatus": "The registration's status when the message is sent",
             "holdExpiresAtFormatted": "Until when the place is held, while that deadline is ahead",
@@ -4128,7 +4125,7 @@
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)"
         },
         "help": {
-          "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
+          "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
           "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
           "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
           "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
@@ -4172,7 +4169,6 @@
           "lastCall": "the last call to sign, to those who have not signed yet",
           "participation": "the participation confirmation opens, to those who have not signed yet",
           "nextInLine": "a held place lapses; it goes to the next on the waiting list",
-          "bibs": "registration closes; race numbers become final",
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
           "newsletter": "the newsletter, to the topic's subscribers"
@@ -4539,7 +4535,7 @@
                 "«See the bibs» to check them on screen.",
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
                 "Print at actual size (100%) and cut on the line.",
-                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
+                "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers."
               ]
             },
@@ -5864,7 +5860,6 @@
         "what": {
           "confirmed": "Confirmed. The code for the registration desk: {code}. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
           "number": "Race number: {number}",
-          "numberProvisional": "Race number: {number} (provisional: settled when registration closes)",
           "noNumber": "Race number: none yet",
           "waitlisted": "On the waiting list: an email comes if a place frees up.",
           "later": "Later: sign from the link emailed for this person.",
@@ -5974,7 +5969,6 @@
       "empty": "You have no active registration at the moment.",
       "code": "Access code",
       "bib": "Race number",
-      "bibProvisional": "Provisional number. It is settled when registration closes, and you get it by email then.",
       "cancel": "Withdraw from this registration",
       "cancelledTitle": "Registration cancelled",
       "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",

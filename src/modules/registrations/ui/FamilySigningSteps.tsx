@@ -18,19 +18,15 @@ import { type FamilyStep, familyStepWordsKey } from "../domain/family-signing";
  *
  * A confirmed person's race number beside the desk code, on every line and on the last screen (§519;
  * the owner, of this list: «aici vreau să văd și BIB-urile»): the one helper the family's confirmation
- * email and the export read (`raceNumberOf`, §87, §94, §173), provisional and said so, or «încă fără
- * număr» while none is given (§420).
+ * email and the export read (`raceNumberOf`, §173, §NNN) — the number each person's own confirmation
+ * gave — or «încă fără număr» while none is given.
  */
 export default async function FamilySigningSteps({ steps, detailed = false }: { steps: readonly FamilyStep[]; detailed?: boolean }) {
   const t = await getTranslations("Registrations");
 
   const stateWords = (step: FamilyStep) => t(`declare.family.state.${familyStepWordsKey(step)}`);
   const numberWords = (step: FamilyStep) =>
-    step.raceNumber === null
-      ? t("declare.family.what.noNumber")
-      : step.raceNumber.settled
-        ? t("declare.family.what.number", { number: step.raceNumber.value })
-        : t("declare.family.what.numberProvisional", { number: step.raceNumber.value });
+    step.raceNumber === null ? t("declare.family.what.noNumber") : t("declare.family.what.number", { number: step.raceNumber });
 
   const whatNext = (step: FamilyStep) => {
     if (step.status === "CONFIRMED" && step.checkinCode) return t("declare.family.what.confirmed", { code: step.checkinCode });

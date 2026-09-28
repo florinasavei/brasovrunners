@@ -277,25 +277,15 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
                   />
                   <Box>
-                    {/*
-                      The number the runner has (§214). Before registration closes it is the
-                      provisional one, and it is said so in a sentence beneath rather than left
-                      to look final: this is the number they will quote to a volunteer, and the
-                      one thing worse than not showing it is showing it as settled when it is not.
-                    */}
-                    {raceNumberOf(item) && (
+                    {/* The number the confirmation gave, beside the QR it is handed against (§NNN). */}
+                    {raceNumberOf(item) !== null && (
                       <>
                         <Typography variant="body2" color="text.secondary">
                           {t("mine.bib")}
                         </Typography>
                         <Typography sx={{ fontWeight: 700, fontSize: "1.75rem", color: "primary.main" }}>
-                          {raceNumberOf(item)?.value}
+                          {raceNumberOf(item)}
                         </Typography>
-                        {!raceNumberOf(item)?.settled && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                            {t("mine.bibProvisional")}
-                          </Typography>
-                        )}
                       </>
                     )}
                     <Typography variant="body2" color="text.secondary">

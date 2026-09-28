@@ -260,20 +260,16 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
     expect(acceptance.method).toBe("PAPER");
   });
 
-  it("keeps a number given by hand when the hold behind it expires, and never offers it again", async () => {
+  it("retires the number a preferential one replaced, and never offers either again (§NNN)", async () => {
     const event = await createInternalEvent(10);
-    const { registration } = await enter(event, "numbered@example.org");
-    await confirmEmail(db, event, registration.id, NOW);
+    const { registration } = await enter(event, "numbered@example.org", { fastTrack: true });
+    expect(registration.bibNumber).toBe(1);
     await setBibNumberByStaff(db, volunteer, registration.id, 7, NOW);
 
-    const afterStart = new Date(event.startsAt.getTime() + 5 * 60_000);
-    await runRegistrationMaintenance(db, afterStart);
-
-    const [expired] = await db.select().from(registrations).where(eq(registrations.id, registration.id));
-    expect(expired.status).toBe("EXPIRED");
-    // Expiry touches the status and nothing else: a number that was printed is not handed to
-    // somebody else because the person who had it never signed.
-    expect(expired.bibNumber).toBe(7);
+    const [numbered] = await db.select().from(registrations).where(eq(registrations.id, registration.id));
+    expect(numbered.bibNumber).toBe(7);
+    // 1 was emailed with the confirmation and 7 is worn: neither is offered.
+    expect(await suggestFreeBibNumbers(db, event.id, 1, 4)).toEqual([2, 3, 4, 5]);
     expect(await suggestFreeBibNumbers(db, event.id, 5, 4)).toEqual([5, 6, 8, 9]);
   });
 
@@ -351,14 +347,13 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "ana@example.org", { fastTrack: true });
     await enter(event, "pending@example.org", { at: new Date(NOW.getTime() + 60_000) });
-    // Numbered when the place was taken (§214) — the event's first number (§173). It is the
-    // provisional column while the window is open, and the desk reads whichever is set.
-    expect(a.registration.provisionalBibNumber).toBe(1);
+    // Numbered by the confirmation the fast track made (§NNN) — the event's first number (§173).
+    expect(a.registration.bibNumber).toBe(1);
     await checkInByStaff(db, volunteer, a.registration.id, "in", NOW);
 
     const byCode = await findRegistrationByCheckinCode(db, a.registration.checkinCode as string, "ro");
     expect(byCode?.id).toBe(a.registration.id);
-    expect(byCode?.provisionalBibNumber).toBe(1);
+    expect(byCode?.bibNumber).toBe(1);
     expect(byCode?.checkedInByName).toBe("Volunteer");
 
     const byName = await listDeskRegistrations(db, { eventId: event.id, query: "ana@", locale: "ro" });
@@ -384,7 +379,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   it("finds a cancelled runner by their settled number, so the desk can say why nothing is handed out", async () => {
     const event = await createInternalEvent(10);
     const ana = await enter(event, "ana@example.org", { fastTrack: true });
-    // The window is open, so the number is provisional; typing one by hand settles it (§230).
+    // Confirmed on the spot with 1; a preferential 27 replaces it (§105, §NNN).
     await setBibNumberByStaff(db, admin, ana.registration.id, 27, NOW);
     await cancelRegistrationByStaff(db, admin, ana.registration.id, "accidentare", new Date(NOW.getTime() + 60_000));
 
@@ -401,92 +396,88 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §311 — the exception BR-REQ-037-08 criterion 4 names is a **settled** number. A provisional
-   * one is printed nowhere, so a row that is over never answers to it — including the lapsed
-   * declaration hold, whose sweep leaves the provisional column set.
+   * §NNN — a number exists only once a registration is confirmed, so the desk finds nobody by a
+   * number before then: a pending row shows «—» and answers to no digits.
    */
-  it("does not find a lapsed row by the provisional number it kept, and still finds a live one by it", async () => {
+  it("does not find an unconfirmed row by a number, and finds it by its own once the desk confirms it (§NNN)", async () => {
     const event = await createInternalEvent(10);
-    const bob = await enter(event, "bob@example.org", { fastTrack: true });
-    const held = bob.registration.provisionalBibNumber;
-    expect(held).toBe(1);
-    const byHeld = () => listDeskRegistrations(db, { eventId: event.id, query: String(held), locale: "ro" });
-    expect((await byHeld()).map((row) => row.id)).toEqual([bob.registration.id]);
+    const bob = await enter(event, "bob@example.org");
+    expect(bob.registration.bibNumber).toBeNull();
+    const byOne = () => listDeskRegistrations(db, { eventId: event.id, query: "1", locale: "ro" });
+    expect(await byOne()).toEqual([]);
 
-    // What the DECLARATION_HOLD_LAPSED sweep writes: the status and its pair, nothing else.
-    await db
-      .update(registrations)
-      .set({ status: "EXPIRED", expiredAt: NOW, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: NOW })
-      .where(eq(registrations.id, bob.registration.id));
-    expect((await findRegistrationById(db, bob.registration.id))?.provisionalBibNumber).toBe(1);
-
-    expect(await byHeld()).toEqual([]);
+    await confirmRegistrationByStaff(db, volunteer, bob.registration.id, NOW);
+    expect((await byOne()).map((row) => row.id)).toEqual([bob.registration.id]);
   });
 
   /**
-   * §173 — numbers run in order from the event's own start, and a confirmed runner's number is
-   * settled. §94's random draw is gone: sequential is how every race does it, it is a list a
-   * volunteer can check off, and the band a number falls in says which start line it belongs on.
+   * §173, §NNN — numbers run in order from the event's own start, in the order registrations are
+   * **confirmed**, not the order they were sent: nothing is drawn before the confirmation.
    */
-  it("numbers in order of registration, from the event's own first number (§214)", async () => {
-    // §214 moved the draw from confirmation to registration: the number is held with the
-    // place, so it exists before the declaration and before the email is even confirmed. It
-    // is provisional until the window closes, which is why `bib_number` is still empty here.
+  it("numbers in order of confirmation, from the event's own first number (§NNN)", async () => {
     const event = await createInternalEvent(10);
-    const a = await enter(event, "a@example.org", { fastTrack: true });
-    const b = await enter(event, "b@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 60_000) });
-    expect(a.registration.provisionalBibNumber).toBe(1);
-    expect(b.registration.provisionalBibNumber).toBe(2);
+    const a = await enter(event, "a@example.org");
+    const b = await enter(event, "b@example.org", { at: new Date(NOW.getTime() + 60_000) });
+    // Sent, not confirmed: no number on either.
     expect(a.registration.bibNumber).toBeNull();
     expect(b.registration.bibNumber).toBeNull();
+
+    // b is confirmed first, so b is 1 although a registered first.
+    await confirmRegistrationByStaff(db, volunteer, b.registration.id, new Date(NOW.getTime() + 120_000));
+    await confirmRegistrationByStaff(db, volunteer, a.registration.id, new Date(NOW.getTime() + 180_000));
+    expect((await findRegistrationById(db, b.registration.id))?.bibNumber).toBe(1);
+    expect((await findRegistrationById(db, a.registration.id))?.bibNumber).toBe(2);
 
     const hundreds = await createInternalEvent(10, { bibStartNumber: 100 });
     const c = await enter(hundreds, "c@example.org", { fastTrack: true });
     const d = await enter(hundreds, "d@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 60_000) });
-    expect(c.registration.provisionalBibNumber).toBe(100);
-    expect(d.registration.provisionalBibNumber).toBe(101);
+    expect(c.registration.bibNumber).toBe(100);
+    expect(d.registration.bibNumber).toBe(101);
   });
 
-  it("refuses to change a number that has been settled, whoever asks", async () => {
+  it("refuses to change a printed number, or to clear a confirmed runner's, whoever asks", async () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "a@example.org", { fastTrack: true });
-    // Settled: the runner has been emailed this number and it may already be printed (§173,
-    // §214). Written directly rather than by closing the window, so the refusal is what is
-    // under test and not the job that produces it.
-    await db.update(registrations).set({ bibNumber: 1, provisionalBibNumber: null }).where(eq(registrations.id, a.registration.id));
+    expect(a.registration.bibNumber).toBe(1);
 
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, 9, NOW))).toBe("VALIDATION_ERROR");
-    // Clearing it is a change too.
+    // Clearing would leave a confirmed runner with none and a number retired for nothing.
     expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, null, NOW))).toBe("VALIDATION_ERROR");
+    // On paper, it stays on paper (§311).
+    await db.update(registrations).set({ bibPrintedAt: NOW }).where(eq(registrations.id, a.registration.id));
+    expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, 9, NOW))).toBe("VALIDATION_ERROR");
 
     const unchanged = await findRegistrationById(db, a.registration.id);
     expect(unchanged?.bibNumber).toBe(1);
   });
 
-  it("gives a number by hand before confirmation, refuses a duplicate and a nonsense value", async () => {
+  it("gives a preferential number on a confirmed registration only, retires the one it replaced, refuses a duplicate and a nonsense value (§105, §NNN)", async () => {
     const event = await createInternalEvent(10);
     const confirmed = await enter(event, "a@example.org", { fastTrack: true });
     const waiting = await enter(event, "b@example.org", { at: new Date(NOW.getTime() + 60_000) });
-    const other = await enter(event, "c@example.org", { at: new Date(NOW.getTime() + 120_000) });
+    const other = await enter(event, "c@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 120_000) });
+    expect([confirmed.registration.bibNumber, other.registration.bibNumber]).toEqual([1, 2]);
 
-    // A preferential number, chosen among the free ones, before anything is printed (§105).
-    const given = await setBibNumberByStaff(db, volunteer, waiting.registration.id, 7, NOW);
+    // Before the confirmation there is no number to change: it comes with the confirmation.
+    expect(await codeOf(setBibNumberByStaff(db, volunteer, waiting.registration.id, 7, NOW))).toBe("VALIDATION_ERROR");
+
+    // A preferential number, chosen among the free ones, replaces the one the confirmation gave.
+    const given = await setBibNumberByStaff(db, volunteer, confirmed.registration.id, 7, NOW);
     expect(given.bibNumber).toBe(7);
     expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 7, NOW))).toBe("CONFLICT");
+    // 1 was sent to the runner with the confirmation: retired, never given again.
+    expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 1, NOW))).toBe("CONFLICT");
     expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 0, NOW))).toBe("VALIDATION_ERROR");
     expect(await codeOf(setBibNumberByStaff(db, volunteer, other.registration.id, 1.5, NOW))).toBe("VALIDATION_ERROR");
+    expect(await suggestFreeBibNumbers(db, event.id, 1, 3)).toEqual([3, 4, 5]);
 
-    // Not yet confirmed, so nothing is emailed: the number travels with the confirmation.
-    const quiet = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, waiting.registration.id)))
-      .filter((row) => row.messageType === "BIB_ASSIGNED");
-    expect(quiet).toHaveLength(0);
+    // The runner is told the new number, once.
+    const told = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, confirmed.registration.id))).filter(
+      (row) => row.messageType === "BIB_ASSIGNED",
+    );
+    expect(told.map((row) => row.payloadJson)).toEqual([{ bibNumber: 7 }]);
 
     const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.bib_set"));
-    expect(entry.metadataJson).toEqual({ from: null, to: 7 });
-    // And the confirmed one is untouched by any of it: it still holds the provisional number
-    // it was given when it took its place (§214), and no final one, because the window is open.
-    expect(confirmed.registration.provisionalBibNumber).toBe(1);
-    expect(confirmed.registration.bibNumber).toBeNull();
+    expect(entry.metadataJson).toEqual({ eventId: event.id, from: 1, to: 7 });
   });
 
   /**

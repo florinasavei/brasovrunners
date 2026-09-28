@@ -349,7 +349,9 @@ describe("§446 the confirmation registers the person, and everybody signs alone
     const [anaDone, mariaDone] = await rowsOf(event.id);
     expect([anaDone.status, mariaDone.status]).toEqual(["CONFIRMED", "CONFIRMED"]);
     expect(anaDone.checkinCode).not.toBe(mariaDone.checkinCode);
-    expect(anaDone.provisionalBibNumber ?? anaDone.bibNumber).not.toBe(mariaDone.provisionalBibNumber ?? mariaDone.bibNumber);
+    // Each gets their own number at their own confirmation (§NNN), in the order they signed.
+    const numberOf = new Map([anaDone, mariaDone].map((row) => [row.registeredName, row.bibNumber]));
+    expect([numberOf.get("Ana Pop"), numberOf.get("Maria Pop")]).toEqual([1, 2]);
 
     // "Înscrierile mele" lists both, each by name (§77).
     const mine = await listActiveRegistrationsForParticipant(db, ana.participantId, "ro", at(13));
