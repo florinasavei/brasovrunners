@@ -62,6 +62,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   withdrawInterestAction: [],
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
+  eraseGroupRunDeclarationsAction: ["batchEraseAction"],
   assignBibNumbersAction: ["assignAction"],
   // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],

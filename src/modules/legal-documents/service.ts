@@ -989,6 +989,20 @@ export async function planDraftApproval<T extends Record<string, unknown>>(db: D
   );
 }
 
+/** Every named draft still in the plan and still `ready`, or the whole press refused (`approveDrafts`). */
+function assertDraftsReady(plan: readonly DraftApprovalItem[], ids: readonly string[]): void {
+  for (const id of ids) {
+    const item = plan.find((candidate) => candidate.row.id === id);
+    if (!item) throw new DomainError("NOT_FOUND", "no such draft");
+    if (item.outcome !== "ready") {
+      throw new DomainError(
+        "CONFLICT",
+        `version ${item.row.key} ${item.row.version} is no longer ready to approve (${item.outcome}); nothing was approved`,
+      );
+    }
+  }
+}
+
 /**
  * The drafts the page listed, approved in one press (§NNN) — each by `approveVersion`, the
  * one-version verb, in one transaction: all of them or none.
@@ -1010,19 +1024,13 @@ export async function approveDrafts<T extends Record<string, unknown>>(
   const ids = [...new Set(versionIds)];
   if (ids.length === 0) throw new DomainError("VALIDATION_ERROR", "no draft was named to approve", ["versionId"]);
 
-  const plan = await planDraftApproval(db);
-  for (const id of ids) {
-    const item = plan.find((candidate) => candidate.row.id === id);
-    if (!item) throw new DomainError("NOT_FOUND", "no such draft");
-    if (item.outcome !== "ready") {
-      throw new DomainError(
-        "CONFLICT",
-        `version ${item.row.key} ${item.row.version} is no longer ready to approve (${item.outcome}); nothing was approved`,
-      );
-    }
-  }
-
+  // Checked twice, like the batch delete: before the transaction, so a refusal names the draft
+  // before anything is opened, and again inside it, against the rows the approvals will change —
+  // a draft that lost readiness between the two (a newer draft saved in another tab, a
+  // placeholder typed back in) refuses the whole press there too.
+  assertDraftsReady(await planDraftApproval(db), ids);
   await db.transaction(async (tx) => {
+    assertDraftsReady(await planDraftApproval(tx), ids);
     for (const id of ids) await approveVersion(tx, actor, id, now);
   });
   // After the commit as well: `approveVersion` revalidated inside the transaction, before the

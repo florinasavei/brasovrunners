@@ -20,7 +20,7 @@ import { groupRunMergeValues } from "@/modules/group-run-declarations/facts";
 import { signedStateFor } from "@/modules/group-run-declarations/domain";
 import { hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
-import { eraseGroupRunDeclaration, type GroupRunSigningInput, signGroupRunDeclaration } from "@/modules/group-run-declarations/service";
+import { eraseGroupRunDeclaration, eraseGroupRunDeclarations, type GroupRunSigningInput, signGroupRunDeclaration } from "@/modules/group-run-declarations/service";
 import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pdf";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { renderGroupRunDeclarationPdf } from "@/modules/group-run-declarations/pdf";
@@ -1012,5 +1012,76 @@ describe("§440 a group run's minimum age at the signing door", () => {
     await renderOutboxMessage(claimed(signed), db, NOW);
     const drawn = watched.pdfInputs.at(-1) as DeclarationPdfInput;
     expect(drawn.entries[0].values?.minimumAge).toBe("18 ani");
+  });
+});
+
+describe("§NNN erasing the ticked ones in one press", () => {
+  /** Three people sign the same run; their three row ids, in signing order. */
+  async function threeSignatures(eventId: string): Promise<string[]> {
+    const ids: string[] = [];
+    for (const [name, email] of [["Ana Popescu", "ana@example.ro"], ["Ion Ionescu", "ion@example.ro"], ["Maria Pop", "maria@example.ro"]]) {
+      const signed = await signGroupRunDeclaration(db, await input(eventId, { typedName: name, email }), NOW);
+      if (signed.outcome !== "signed") throw new Error(`${name} not signed`);
+      ids.push(signed.id);
+    }
+    return ids;
+  }
+
+  it("erases the two ticked, each through the single erase's path — two audit rows, their messages gone — and leaves the third", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun();
+    await updateClubNotices(db, await admin(), { declarations: { to: ARCHIVE, cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: [] } }, NOW);
+    const [first, second, third] = await threeSignatures(event.id);
+    const actor = await admin("SUPERADMIN");
+
+    expect(await eraseGroupRunDeclarations(db, actor, { eventId: event.id, ids: [first, second], reason: "au cerut ștergerea" }, NOW)).toEqual({ erased: 2 });
+
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.id)).toEqual([third]);
+    // Only the third's two messages are left: the signer's copy and the archive copy.
+    const outbox = await db.select().from(emailOutbox);
+    expect(outbox).toHaveLength(2);
+    expect(outbox.every((row) => (row.payloadJson as { groupRunDeclarationId?: string }).groupRunDeclarationId === third)).toBe(true);
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.group_run_declaration_erased"));
+    expect(trail).toHaveLength(2);
+    for (const row of trail) {
+      expect(row).toMatchObject({ actorStaffUserId: actor.id, entityType: "event", entityId: event.id, participantId: null });
+      expect(row.metadataJson).toMatchObject({ reason: "au cerut ștergerea", declarationVersion: 1 });
+      // Who acted and why, never who had signed (§67).
+      expect(JSON.stringify(row.metadataJson)).not.toMatch(/Popescu|Ionescu|example\.ro/);
+    }
+  });
+
+  it("refuses a set that changed since the dialog counted it — one already erased — and erases nothing", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun();
+    const [first, second, third] = await threeSignatures(event.id);
+    const actor = await admin();
+    // Another tab erased the first meanwhile.
+    await eraseGroupRunDeclaration(db, actor, { id: first, reason: "a cerut ștergerea" }, NOW);
+
+    await expect(eraseGroupRunDeclarations(db, actor, { eventId: event.id, ids: [first, second], reason: "curățenie" }, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
+    expect((await db.select().from(groupRunDeclarations)).map((row) => row.id).sort()).toEqual([second, third].sort());
+    // Only the single erase's row: the refused press wrote none.
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.group_run_declaration_erased"))).toHaveLength(1);
+
+    // A signature of another run is not this run's to erase, whatever was posted.
+    const other = await trailRun({}, { ro: "Alta", en: "Another" });
+    const [foreign] = await threeSignatures(other.id);
+    await expect(eraseGroupRunDeclarations(db, actor, { eventId: event.id, ids: [second, foreign], reason: "curățenie" }, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(5);
+  });
+
+  it("is the Administrator's, asks why, and needs something ticked", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun();
+    const ids = await threeSignatures(event.id);
+    for (const role of ["MODERATOR", "DEV", "CONTRIBUTOR", "COPYWRITER"] as const) {
+      await expect(eraseGroupRunDeclarations(db, await admin(role), { eventId: event.id, ids, reason: "asked" }, NOW), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    const actor = await admin();
+    await expect(eraseGroupRunDeclarations(db, actor, { eventId: event.id, ids, reason: "  " }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["reason"] });
+    await expect(eraseGroupRunDeclarations(db, actor, { eventId: event.id, ids: [], reason: "asked" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["declarationIds"] });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(3);
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.group_run_declaration_erased"))).toHaveLength(0);
   });
 });

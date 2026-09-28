@@ -221,6 +221,8 @@ test.describe("legal documents: every text at once", () => {
     const tools = page.getByTestId("legal-batch-tools");
     const ticks = page.locator('[data-testid="legal-batch-tick"]:visible input[type="checkbox"]');
     const labelsOf = async () => Promise.all((await ticks.all()).map(async (tick) => (await tick.getAttribute("aria-label")) ?? ""));
+    // The list streams in behind «Se încarcă…»: read the ticks once the tools are on the page.
+    await expect(tools).toBeVisible();
     const before = new Set(await labelsOf());
 
     // Regenerate: the dialog names the texts, nothing is in force, the toast counts the drafts.
@@ -258,6 +260,8 @@ test.describe("legal documents: every text at once", () => {
       timeout: 30_000,
     });
     await hydrated(page);
-    expect(new Set(await labelsOf())).toEqual(before);
+    // After the redirect the list streams in again: polled, not read once while it still loads.
+    await expect(tools).toBeVisible();
+    await expect.poll(async () => new Set(await labelsOf())).toEqual(before);
   });
 });

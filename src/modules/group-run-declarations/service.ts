@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
@@ -281,9 +281,7 @@ export async function eraseGroupRunDeclaration<T extends Record<string, unknown>
   input: { id: string; reason: string },
   now: Date,
 ): Promise<{ eventId: string }> {
-  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", "erasing a declaration is an Administrator's");
-  const reason = input.reason.trim();
-  if (reason === "" || reason.length > ERASE_REASON_MAX) throw new DomainError("VALIDATION_ERROR", "reason: say why", ["reason"]);
+  const reason = assertMayErase(actor, input.reason);
   if (!isUuid(input.id)) throw new DomainError("NOT_FOUND", "no such declaration");
 
   return db.transaction(async (tx) => {
@@ -293,17 +291,81 @@ export async function eraseGroupRunDeclaration<T extends Record<string, unknown>
       .where(eq(groupRunDeclarations.id, input.id))
       .limit(1);
     if (!row) throw new DomainError("NOT_FOUND", "no such declaration");
-    await recordAuditEvent(tx, {
-      actorStaffUserId: actor.id,
-      action: "event.group_run_declaration_erased",
-      entityType: "event",
-      entityId: row.eventId,
-      metadata: { reason, declarationVersion: row.version },
-      now,
-    });
-    // The signer's and the club's messages carry the address and name the row: they go with it.
-    await tx.delete(emailOutbox).where(sql`${emailOutbox.payloadJson}->>'groupRunDeclarationId' = ${row.id}`);
-    await tx.delete(groupRunDeclarations).where(and(eq(groupRunDeclarations.id, row.id), eq(groupRunDeclarations.eventId, row.eventId)));
+    await eraseSignature(tx, actor, row, reason, now);
     return { eventId: row.eventId };
   });
+}
+
+/**
+ * The ticked signatures of one run erased in one press (§NNN; the owner, 2026-09-28: «să pot face
+ * batch delete și la declarații, cu confirmarea numărului șters»).
+ *
+ * Each one exactly as `eraseGroupRunDeclaration` erases one — the same `eraseSignature`: its audit
+ * row first (who and why, never who had signed), its messages, the row — so the batch bypasses
+ * nothing. One reason for all of them, as the batch screen asks once.
+ *
+ * `ids` is the set the confirm dialog counted, and it must still be the run's, whole: a signature
+ * erased meanwhile (another tab, a colleague) or one not of this run refuses the whole press with a
+ * `CONFLICT` and erases nothing, because the Administrator confirmed "N declarations", not the
+ * N − 1 the rows became. One transaction, the rows locked, so two presses never share a signature.
+ */
+export async function eraseGroupRunDeclarations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: { eventId: string; ids: readonly string[]; reason: string },
+  now: Date,
+): Promise<{ erased: number }> {
+  const reason = assertMayErase(actor, input.reason);
+  const ids = [...new Set(input.ids)];
+  if (ids.length === 0) throw new DomainError("VALIDATION_ERROR", "no declaration was ticked", ["declarationIds"]);
+  if (!isUuid(input.eventId)) throw new DomainError("NOT_FOUND", "no such event");
+  if (!ids.every(isUuid)) throw new DomainError("CONFLICT", "the ticked declarations changed; nothing was erased");
+
+  return db.transaction(async (tx) => {
+    const dates = (await listSeriesDatesOf(tx, input.eventId)).map((date) => date.id);
+    if (dates.length === 0) throw new DomainError("NOT_FOUND", "no such event");
+    const rows = await tx
+      .select({ id: groupRunDeclarations.id, eventId: groupRunDeclarations.eventId, version: groupRunDeclarations.declarationVersion })
+      .from(groupRunDeclarations)
+      .where(and(inArray(groupRunDeclarations.id, ids), inArray(groupRunDeclarations.eventId, dates)))
+      .for("update");
+    if (rows.length !== ids.length) {
+      throw new DomainError("CONFLICT", `the ticked declarations changed (${rows.length} of ${ids.length} still there); nothing was erased`);
+    }
+    for (const row of rows) await eraseSignature(tx, actor, row, reason, now);
+    return { erased: rows.length };
+  });
+}
+
+/** The role and the reason every erase asks for (§393, §67): the trimmed reason, or a refusal. */
+function assertMayErase(actor: Pick<StaffUser, "role">, typed: string): string {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", "erasing a declaration is an Administrator's");
+  const reason = typed.trim();
+  if (reason === "" || reason.length > ERASE_REASON_MAX) throw new DomainError("VALIDATION_ERROR", "reason: say why", ["reason"]);
+  return reason;
+}
+
+/**
+ * One signature erased, inside the caller's transaction — the one path the single and the batch
+ * erase share. The audit row first: who acted, why, the event and the version — never who had
+ * signed (`AGENTS.md` §12.12). Then the signer's and the club's messages, which carry the address
+ * and name the row, and the row.
+ */
+async function eraseSignature<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  actor: Pick<StaffUser, "id">,
+  row: { id: string; eventId: string; version: number },
+  reason: string,
+  now: Date,
+): Promise<void> {
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.group_run_declaration_erased",
+    entityType: "event",
+    entityId: row.eventId,
+    metadata: { reason, declarationVersion: row.version },
+    now,
+  });
+  await tx.delete(emailOutbox).where(sql`${emailOutbox.payloadJson}->>'groupRunDeclarationId' = ${row.id}`);
+  await tx.delete(groupRunDeclarations).where(and(eq(groupRunDeclarations.id, row.id), eq(groupRunDeclarations.eventId, row.eventId)));
 }

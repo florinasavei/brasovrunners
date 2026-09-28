@@ -102,6 +102,7 @@ import {
   sendEventThanksAction,
   duplicateEventAction,
   eraseGroupRunDeclarationAction,
+  eraseGroupRunDeclarationsAction,
   repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
@@ -120,7 +121,7 @@ import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string; erased?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -167,7 +168,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin" }));
   // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased } = await searchParams;
   // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
@@ -577,6 +578,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               {t("groupRunDeclarations.erased")}
             </Alert>
           )}
+          {/* The ticked signatures erased in one press (§NNN): how many, the trail as for one. */}
+          {saved === "groupRunDeclarationsErased" && (
+            <Alert severity="success" data-testid="group-run-declarations-erased">
+              {t(`groupRunDeclarations.batchErased.${countForm(countOf(erased), locale)}`, { count: countOf(erased) })}
+            </Alert>
+          )}
           {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
           {saved === "eventSeries" && (
             <Alert severity="success">
@@ -599,7 +606,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased"].includes(saved) &&
+            !["bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -910,6 +917,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   rows={groupRunDeclarationRows}
                   mayErase={canManageRegistrations(staffUser.role)}
                   eraseAction={eraseGroupRunDeclarationAction}
+                  batchEraseAction={eraseGroupRunDeclarationsAction}
+                  runTitle={heading}
                 />
               )}
               {/* 16 — who registered, and what to do with them now: operations, never "Salvează".

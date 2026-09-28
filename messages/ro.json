@@ -4681,7 +4681,7 @@
               ]
             },
             {
-              "title": "Cele cinci texte, înainte de publicarea cursei",
+              "title": "Textele legale ale clubului",
               "steps": [
                 "Într-o singură ședință, toate deodată: «Documente legale» → «Toate textele deodată» → «Regenerează din șabloane» și confirmă. Se face câte o ciornă pentru fiecare text al cărui șablon s-a schimbat; nimic nu intră încă în vigoare.",
                 "Deschide fiecare ciornă din tabel, citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
@@ -4987,7 +4987,24 @@
       "erase": "Șterge declarația",
       "eraseTitle": "Ștergi declarația?",
       "eraseBody": "Declarația și mesajele despre ea se șterg definitiv. În jurnal rămân numele tău și motivul, nu și al celui care a semnat.",
-      "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul."
+      "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul.",
+      "tick": "Bifează declarația semnată de {name}",
+      "ticked": "Declarațiile bifate",
+      "batchTitle": "Șterge mai multe deodată",
+      "batchHelp": "Bifează declarațiile de șters, scrie motivul o singură dată și apasă «Șterge cele bifate». Fiecare rămâne în jurnal cu numele tău și motivul, nu și al celui care a semnat.",
+      "batchErase": "Șterge cele bifate",
+      "batchEraseTitle": "Ștergi declarațiile bifate?",
+      "batchEraseBody": {
+        "one": "Ștergi {count} declarație semnată pentru «{run}»? Nu se poate recupera.",
+        "few": "Ștergi {count} declarații semnate pentru «{run}»? Nu se pot recupera.",
+        "other": "Ștergi {count} de declarații semnate pentru «{run}»? Nu se pot recupera."
+      },
+      "batchChanged": "Declarațiile bifate s-au schimbat între timp — cel puțin una a fost deja ștearsă. Nu s-a șters nimic: reîncarcă pagina și bifează din nou.",
+      "batchErased": {
+        "one": "{count} declarație semnată a fost ștearsă. În jurnal rămân numele tău și motivul.",
+        "few": "{count} declarații semnate au fost șterse. În jurnal rămân numele tău și motivul.",
+        "other": "{count} de declarații semnate au fost șterse. În jurnal rămân numele tău și motivul."
+      }
     },
     "newsletter": {
       "title": "Abonați",
@@ -6511,6 +6528,11 @@
         "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
       },
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
+      "groupRunDeclarationsErased": {
+        "one": "{count} declarație semnată a fost ștearsă.",
+        "few": "{count} declarații semnate au fost șterse.",
+        "other": "{count} de declarații semnate au fost șterse."
+      },
       "shownContactAddress": "Adresa de contact afișată a fost salvată.",
       "siteTint": "Fundalul site-ului a fost salvat.",
       "clubTodoAdded": "Adăugat pe listă.",

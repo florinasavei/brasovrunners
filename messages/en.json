@@ -4681,7 +4681,7 @@
               ]
             },
             {
-              "title": "The five texts, before the race is published",
+              "title": "The club's legal texts",
               "steps": [
                 "In one sitting, all at once: «Legal documents» → «Every text at once» → «Regenerate from the templates» and confirm. One draft is made for each text whose template changed; nothing takes effect yet.",
                 "Open each draft from the table, read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
@@ -4987,7 +4987,24 @@
       "erase": "Erase the declaration",
       "eraseTitle": "Erase the declaration?",
       "eraseBody": "The declaration and the messages about it are deleted for good. The log keeps your name and the reason, never the signer's.",
-      "erased": "The declaration was erased. The log keeps your name and the reason."
+      "erased": "The declaration was erased. The log keeps your name and the reason.",
+      "tick": "Tick the declaration signed by {name}",
+      "ticked": "The ticked declarations",
+      "batchTitle": "Erase several at once",
+      "batchHelp": "Tick the declarations to erase, write the reason once and press «Erase the ticked ones». Each stays in the log with your name and the reason, never the signer's.",
+      "batchErase": "Erase the ticked ones",
+      "batchEraseTitle": "Erase the ticked declarations?",
+      "batchEraseBody": {
+        "one": "Erase {count} signed declaration for “{run}”? It cannot be recovered.",
+        "few": "Erase {count} signed declarations for “{run}”? They cannot be recovered.",
+        "other": "Erase {count} signed declarations for “{run}”? They cannot be recovered."
+      },
+      "batchChanged": "The ticked declarations changed meanwhile — at least one was already erased. Nothing was erased: reload the page and tick again.",
+      "batchErased": {
+        "one": "{count} signed declaration was erased. The log keeps your name and the reason.",
+        "few": "{count} signed declarations were erased. The log keeps your name and the reason.",
+        "other": "{count} signed declarations were erased. The log keeps your name and the reason."
+      }
     },
     "newsletter": {
       "title": "Subscribers",
@@ -6511,6 +6528,11 @@
         "other": "{count} pictures got their phone sizes; failed: {failed} (the file is missing from storage or is not a picture — see “Pictures”); left: {left}."
       },
       "groupRunDeclarationErased": "The declaration was erased.",
+      "groupRunDeclarationsErased": {
+        "one": "{count} signed declaration was erased.",
+        "few": "{count} signed declarations were erased.",
+        "other": "{count} signed declarations were erased."
+      },
       "shownContactAddress": "The contact address shown was saved.",
       "siteTint": "The site's background was saved.",
       "clubTodoAdded": "Added to the list.",

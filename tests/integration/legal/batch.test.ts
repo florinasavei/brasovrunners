@@ -221,6 +221,29 @@ describe("every legal text at once (§NNN)", () => {
       expect(await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", "ro", LATER)).toBeUndefined();
     });
 
+    it("re-checks inside the transaction: a draft that lost readiness after the plan refuses the whole press", async () => {
+      const terms = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("t1") }, NOW);
+      const privacy = await createDraftVersion(db, admin, { key: "PRIVACY_NOTICE", translations: translations("p1") }, NOW);
+      expect((await planDraftApproval(db)).every((item) => item.outcome === "ready")).toBe(true);
+
+      // Another tab saves a newer TERMS draft after the press planned and before its transaction
+      // reads the rows: the press's own transaction opens on top of it.
+      const racing = new Proxy(db, {
+        get(target, property, receiver) {
+          if (property !== "transaction") return Reflect.get(target, property, receiver);
+          return (callback: (tx: unknown) => Promise<unknown>) =>
+            target.transaction(async (tx) => {
+              await createDraftVersion(tx, admin, { key: "TERMS", translations: translations("t2") }, NOW);
+              return callback(tx);
+            });
+        },
+      });
+      expect(await codeOf(approveDrafts(racing, admin, [terms, privacy], LATER))).toBe("CONFLICT");
+      // Nothing approved, not even the draft that stayed ready.
+      expect((await db.select().from(legalDocuments)).some((row) => row.isApproved)).toBe(false);
+      expect(await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", "ro", LATER)).toBeUndefined();
+    });
+
     it("is the Administrator's", async () => {
       const id = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("t1") }, NOW);
       expect(await codeOf(approveDrafts(db, organizer, [id], LATER))).toBe("FORBIDDEN");
