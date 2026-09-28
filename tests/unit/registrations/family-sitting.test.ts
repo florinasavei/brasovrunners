@@ -315,8 +315,8 @@ describe("§519 the fix round of the second review", () => {
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: true })).toBe("familyEach");
     expect(doneFamilySentence({ names: ["Ana Pop"], atOnce: true })).toBeNull();
     expect(doneFamilySentence(null)).toBeNull();
-    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
-    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, unknown> } };
+    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, unknown> } };
     expect(ro.Registration.done.familyEach).toBe("Fiecare persoană primește emailul ei.");
     expect(en.Registration.done.familyEach).toBe("Each person gets their own email.");
     expect(ro.Registration.sitting.leadNamed).toBe("Formularul lui {name} pentru {event} a ajuns.");
@@ -448,7 +448,7 @@ describe("§536 no sitting without a press", () => {
   });
 
   it("words the short screen in both catalogues: the form in, when it leaves, one true sentence under «Da»", async () => {
-    type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, string> } };
+    type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, unknown> } };
     const ro = (await import("../../../messages/ro.json")).default as unknown as Catalogue;
     const en = (await import("../../../messages/en.json")).default as unknown as Catalogue;
     // «pentru», never the colloquial «lui» before a feminine name in -a (the review of 2026-09-28, nit 4).
@@ -465,8 +465,8 @@ describe("§536 no sitting without a press", () => {
     expect(ro.Registration.sitting.addHintAtOnce).toBe("Fiecare persoană primește emailul ei.");
     for (const key of ["addHint", "addHintOn", "addHintLeft", "addHintAtOnce"]) {
       expect(en.Registration.sitting[key]).toBeTruthy();
-      expect(ro.Registration.sitting[key].length).toBeLessThanOrEqual(200);
-      expect(en.Registration.sitting[key].length).toBeLessThanOrEqual(200);
+      expect(String(ro.Registration.sitting[key]).length).toBeLessThanOrEqual(200);
+      expect(String(en.Registration.sitting[key]).length).toBeLessThanOrEqual(200);
     }
     // «Gata» stays, on the sitting's screen after «Da» (§519).
     expect(ro.Registration.sitting.done).toBe("Nu, gata — trimite-mi emailul");

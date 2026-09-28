@@ -6,6 +6,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDay } from "@/i18n/dates";
+import { countForm } from "@/i18n/count-form";
 import type { Database } from "@/db/types";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
@@ -113,7 +114,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         <Box sx={{ mb: 2 }} data-testid="queue-family-reservations">
           <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
             <FamilyRestroomIcon fontSize="small" aria-hidden="true" />
-            {t("queue.familyTitle", { count: reserved.length })}
+            {t(`queue.familyTitle.${countForm(reserved.length, locale)}`, { count: reserved.length })}
           </Typography>
           <Box component="ol" sx={{ m: 0, pl: 0, listStyle: "none" }}>
             {reserved.map((row) => (

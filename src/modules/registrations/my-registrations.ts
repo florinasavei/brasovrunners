@@ -162,7 +162,8 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
         inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
       ),
     )
-    .orderBy(asc(events.startsAt), asc(registrations.id));
+    // A family's people in the order their forms were sent (§NNN), as the family's email lists them.
+    .orderBy(asc(events.startsAt), asc(registrations.createdAt), asc(registrations.id));
 
   // "I am here" opens the club's hours before the start (§377), read once for the whole list.
   const deadlines = rows.length > 0 ? await currentDeadlines(db) : null;

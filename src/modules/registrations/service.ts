@@ -2046,7 +2046,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         const restarted = await repo.transitionRegistration(tx, {
           id: existing.id,
           to: "PENDING_EMAIL_CONFIRMATION",
-          changes: { ...carriedFields, emailLinkExpiresAt: linkExpiresAt },
+          /*
+            An old hold goes (§NNN): a restarted row waiting for its address holds no place, whatever a
+            cancelled declaration hold or offer left in the column — only a family sitting's form reserves
+            one, below (`holdVerification`), so a single registration is never counted before its address.
+          */
+          changes: { ...carriedFields, emailLinkExpiresAt: linkExpiresAt, holdExpiresAt: null },
           now,
         });
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.

@@ -54,6 +54,7 @@ import { reservedUntilPhrase } from "@/modules/registrations/domain/family-reser
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied } from "@/modules/registrations/repository";
 import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
+import { waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
 import {
   extendHeldVerificationLink,
@@ -735,8 +736,12 @@ async function renderRow(
   if (typeof sittingId === "string") {
     const found = await findSittingById(db, sittingId);
     const people = found && sittingStillOpen(found, now) ? await sittingPeople(db, found, now) : null;
-    // A person with no reservation (none was free, or it lapsed) waits for a place only while the event is full (§NNN).
-    const full = people && people.registrations.some((person) => person.holdExpiresAt === null) ? await eventIsFull(db, found!.eventId, now) : false;
+    /*
+      A person with no reservation (none was free, or it lapsed) waits for a place only while the event
+      is full and its waiting list takes them (§NNN). With the line closed nothing is promised: the press
+      names them among the refused, as §519 names any refusal.
+    */
+    const full = people && people.registrations.some((person) => person.holdExpiresAt === null) ? await waitlistTakesNewcomer(db, found!.eventId, now) : false;
     const listed = people
       ? [
           /*
@@ -760,7 +765,9 @@ async function renderRow(
       data.familySittingPeople = listed;
       data.familyRegistered = await registeredOnAddress(db, found.eventId, found.participantId, found.registrationIds);
       // …and with their state (§NNN): a person confirmed before is said so, and asked nothing again.
-      data.familyRegisteredStates = await registeredOnAddressWithStates(db, found.eventId, found.participantId, found.registrationIds);
+      // Only the ones this message does not list (the review of 2026-09-28): a sitting's person who confirmed
+      // from an earlier email is no longer pending, so they are said here as «confirmat», never dropped.
+      data.familyRegisteredStates = await registeredOnAddressWithStates(db, found.eventId, found.participantId, people!.registrations.map((person) => person.id));
       data.addressCap = (await readAddressCap(db)).cap.registrationsPerAddress;
       // Somebody listed already got an email of their own before «Da» (§536): one line says this button covers them too.
       if (
@@ -1213,16 +1220,17 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
 }
 
 /**
- * Whether a newcomer would find no place now (§NNN): the allocator's own formula, read as the public
- * count reads it (`readPublicAvailability`'s counts), for the family message's «pe lista de așteptare».
- * An uncapped event is never full.
+ * Whether a newcomer would join the waiting list now (§NNN): no place by the allocator's own formula,
+ * read as the public count reads it (`readPublicAvailability`'s counts), and a line that still takes
+ * somebody (§348) — for the family message's «pe lista de așteptare». An uncapped event is never full.
  */
-async function eventIsFull(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
-  const [event] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
+async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date): Promise<boolean> {
+  const [event] = await db.select({ capacity: events.capacity, waitlistCapacity: events.waitlistCapacity }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event || event.capacity === null) return false;
-  const occupied = computeOccupied(await countOccupied(db, eventId, now));
+  const counts = await countOccupied(db, eventId, now);
   const waiting = await countEligibleWaitlisted(db, eventId);
-  return computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted: waiting }) === 0;
+  const full = computePublicAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting }) === 0;
+  return full && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
 }
 
 /**

@@ -118,7 +118,8 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
   const [typed = "", kept = ""] = (opened.w ?? "").split("\t");
   const reservedUntil = opened.u ? new Date(Number(opened.u)) : null;
   return {
-    reservedUntil: reservedUntil && Number.isFinite(reservedUntil.getTime()) ? reservedUntil : null,
+    // Absent rather than null on a half with none (before «Da», or written before it was kept).
+    ...(reservedUntil && Number.isFinite(reservedUntil.getTime()) ? { reservedUntil } : {}),
     sittingId: opened.s ? opened.s : null,
     seed: seedOf(opened.r),
     joined: opened.j === "1" ? true : undefined,

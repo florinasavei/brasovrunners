@@ -32,6 +32,7 @@ import {
   withdrawFromManageAction,
 } from "./actions";
 import { DENSITY } from "@/theme/density";
+import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -111,6 +112,12 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         <Stack spacing={3}>
           {/* The race will not run (§331): said first, and no race-day block under it. */}
           {live?.eventCancelled && <Alert severity="info">{t("mine.eventCancelled")}</Alert>}
+          {/* Who came with this person (§NNN): the other people on the address, as «Înscrierile mele» names them. */}
+          {live && live.family.length > 0 && (
+            <Box>
+              <FamilyChip label={t("mine.family")} members={live.family.map((name) => ({ name }))} testId="manage-family" />
+            </Box>
+          )}
           {confirmed?.registration.checkinCode && !confirmed.eventCancelled && (
             <Box component="section">
               <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
