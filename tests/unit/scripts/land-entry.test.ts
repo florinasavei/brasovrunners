@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { entryFromResults, isBlankFixReport, mergeCriteria, rewriteFreeSectionRefs, withoutHousekeeping } from "../../../scripts/land-entry.mjs";
+import { entryFromResults, isBlankFixReport, mergeCriteria, PLACEHOLDER, rewriteFreeSectionRefs, withoutHousekeeping } from "../../../scripts/land-entry.mjs";
 
 /**
  * §426 — what `yarn docs:land` lands from one item's saved results. The cases are the defects
@@ -200,12 +201,24 @@ describe("§426 docs:land — a SPECS criterion needs a full BR-REQ id", () => {
   });
 });
 
-describe("§426 docs:land — a literal §N above the next free number becomes §426", () => {
-  it("rewrites a body's, a bullet's and a criterion's §999 to §426, above the threshold", () => {
+describe("§426 docs:land — a literal §N above the next free number becomes the placeholder", () => {
+  it("rewrites a body's, a bullet's and a criterion's §999 to the placeholder, above the threshold", () => {
     const entry = { title: "A title", body: "See §999 for the rule.", changelog: "- x §999.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §999 says so." }] };
     const rewrites = rewriteFreeSectionRefs(entry, 400);
-    expect(entry).toEqual({ title: "A title", body: "See §426 for the rule.", changelog: "- x §426.", criteria: [{ requirement: "BR-REQ-051-01", text: "1. (new) §426 says so." }] });
-    expect(rewrites).toEqual(["§999 → §426", "§999 → §426", "§999 → §426"]);
+    expect(entry).toEqual({
+      title: "A title",
+      body: `See ${PLACEHOLDER} for the rule.`,
+      changelog: `- x ${PLACEHOLDER}.`,
+      criteria: [{ requirement: "BR-REQ-051-01", text: `1. (new) ${PLACEHOLDER} says so.` }],
+    });
+    expect(rewrites).toEqual([`§999 → ${PLACEHOLDER}`, `§999 → ${PLACEHOLDER}`, `§999 → ${PLACEHOLDER}`]);
+  });
+
+  it("is the placeholder, never a number — the landing of §426 numbered its own literal, so a guess landed citing §426 (§535)", () => {
+    expect(PLACEHOLDER).toBe(["§", "N", "N", "N"].join(""));
+    // At most the one citation of the decision that fixed it; the code builds the placeholder in two pieces.
+    const source = readFileSync("scripts/land-entry.mjs", "utf8");
+    expect(source.split(PLACEHOLDER).length - 1).toBeLessThanOrEqual(1);
   });
 
   it("leaves a §N at or below the threshold alone — it names a decision that already exists", () => {

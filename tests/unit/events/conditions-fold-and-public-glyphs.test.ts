@@ -67,10 +67,10 @@ describe("§498 «Condiții de participare»", () => {
   it("asks for the declaration without calling it optional: no «Dacă vrei», no \"If you wish\"", () => {
     // Once for every date of the run since §523.
     expect(ro.Event.groupRunDeclaration.line).toBe(
-      "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
+      "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei.",
     );
     expect(en.Event.groupRunDeclaration.line).toBe(
-      "Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole {event} series; the club keeps it while you keep coming to the runs and deletes it when you ask.",
+      "Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole {event} series; the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal.",
     );
     for (const line of [ro.Event.groupRunDeclaration.line, en.Event.groupRunDeclaration.line]) {
       expect(line).not.toMatch(/Dacă vrei|If you wish/i);

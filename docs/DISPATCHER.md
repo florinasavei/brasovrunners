@@ -38,8 +38,10 @@ building, what waits on me, and the usage band you are working in.
    Save every result, as returned, to the session's scratchpad as `item-<tag>.json` —
    `yarn docs:land` reads those files.
 4. **Integrate.** When two to four branches are `ship` (or `ship-with-fixes` with nits only), branch
-   `batch/<date>-<letter>` from `origin/qa` with `--no-track`, merge them, resolve conflicts
-   (the Conflict merge card), `yarn typecheck && yarn lint`.
+   `batch/<date>-<letter>` from `origin/qa` with `--no-track`, check it out, and
+   `yarn batch:merge feat/a feat/b …`: the journal, the catalogues and the tests resolved by rule,
+   sibling snapshots re-linked, `yarn migrations:check` and `yarn typecheck` at the end; any
+   other conflict stops it (the Conflict merge card), and the same command resumes. Then `yarn lint`.
 5. **Land.** A manifest beside the results, `yarn docs:land <manifest> --apply`, then the
    `docs/QUEUE.md` rows and the CLAUDE.md batch line by hand, `yarn check`, commit, push, PR
    into `qa`.
@@ -161,7 +163,11 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   `{ "baseline": { "from", "to" }, "date", "base": "origin/qa", "items": [{ "branch", "chain", "rounds" }] }` —
   then `yarn docs:land <manifest>` (a dry run: the numbers, the SPECS criteria, any `§NNN`
   written by a merge) and `--apply`. By hand after it: the `docs/QUEUE.md` rows, the CLAUDE.md
-  batch line, and every `§NNN` it listed.
+  batch line, and every `§NNN` it listed. A branch's own `.release/` entry lands too, after the
+  manifest's items (the manifest's item wins for a branch it names), and is deleted. With no
+  saved results at all — a batch of branches that each carry their entry —
+  `yarn docs:land --tree [--to BR-V2.NN]` needs no manifest: the next baseline, today in Brașov,
+  and it writes the batch line and the Released row itself.
 - **Commit:** run `yarn docs:check`, then `git commit --no-verify` — not the hook's full
   `yarn check`, which took about ten minutes of every release (§504). CI runs the full
   `yarn check` on the batch PR minutes later, and every merged branch already passed the hook.
@@ -180,6 +186,29 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   PR only once that run is green, so the release PR's run finds the tree tested and skips; at
   the end, and at any stop, it prints each step's m:ss and appends one JSON line to
   `SHIP_TIMES_FILE` (§504).
+
+### Cloud loop
+
+- **When:** the PC is off — the owner on holiday, working from a phone through Claude Code on
+  the web or cloud agents.
+- **Run:** one session per change, cut from `qa` (`docs/VIBECODING.md`: the cloud session sets
+  itself up). The session commits the code, the documentation the change needs, and its
+  `.release/<branch-slug>.json` (`.release/README.md`), pushes the branch and opens the pull
+  request into `qa` through the GitHub tools. The pull request's `docs-check` checks the entry.
+  Then the owner adds the label **ship** — `.github/workflows/release.yml` merges `qa` in by rule,
+  lands the entry, pushes the landing and runs `yarn ship` (`docs/RUNBOOKS.md` § Release from the
+  phone). One pull request per release; the next label waits for the running one.
+- **Several changes in one release:** a session cuts `batch/<date>-<letter>` from `origin/qa`,
+  runs `yarn batch:merge` with the branches, pushes, and opens one pull request carrying every
+  entry; one label lands them all, numbered in the order the entries were added.
+- **What a branch writes, and what that costs:** a branch writes its own README index row, its
+  SETUP or `docs/*.md` section and its CLAUDE.md command line; the landing alone writes
+  `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md`, the baseline, CLAUDE.md's batch line and `docs/QUEUE.md`'s Released row (§ Rules the
+  dispatcher keeps). The cost: two siblings that touch the same README, SETUP or CLAUDE.md lines
+  conflict, and `yarn batch:merge` stops on that file by design — no rule resolves prose — so a
+  person or a merge agent resolves it, commits, and runs the same command again.
+- **When the PC is back:** nothing to reconcile — every landed text is in the repository;
+  `docs/QUEUE.md`'s Released rows were written by the landings.
 
 ### Status sweep
 
@@ -211,8 +240,12 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - A feature branch, a PR into `qa`, never a push to `qa` or `main`; the release is the `qa → main`
   PR (`SETUP.md` § Contributing).
 - Every code PR bumps the baseline and opens its CHANGELOG section (`yarn docs:land` does it).
-- Implementers never edit `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md` or a baseline marker; the
-  dispatcher lands their text.
+- Implementers never edit `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md`, a baseline marker, or
+  CLAUDE.md's baseline and batch lines; the dispatcher (or `release.yml`) lands their text from
+  the branch's `.release/` entry. They do write the rest of the documentation their change needs,
+  on the branch: a README index row for a new file, a SETUP or `docs/*.md` section, a line in
+  CLAUDE.md's command list — so an unattended landing has nothing left for a person, and the
+  entry's `docsNotes` stays empty.
 - The owner's standing rules go into every brief: every text the club types is Română and
   English, both or neither; legal texts and emails carry placeholders, never a hardcoded value.
 - The rules that cannot be broken (CLAUDE.md) outrank speed, and so does the public repository.

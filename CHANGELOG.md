@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.19-2026-09-27
+
+- **The group-run self-declaration per the counsel's second pass, and version lines without a weekday:** the template is valid for the whole series and signed once, until it is withdrawn or replaced by a new version. Health is the runner's own assessment, and the organiser assesses nobody medically. The text is kept for as long as it is needed, never "three years from the signing". A group run is not a guiding service, said once. It names «momentul semnării», never a time stamp. The privacy notice and the archive email say the same. Every legal version line now reads «Versiunea 6, în vigoare din 28 septembrie 2026». §534.
+- **Releases from a phone**: a branch carries its DECISIONS, CHANGELOG and SPECS text in `.release/<branch>.json`, and the label `ship` on its pull request into `qa` (or the **release** workflow) brings it up to date with `qa`, lands the text as the next `BR-V2.NN` and ships it to production; `yarn batch:merge` and `yarn docs:land --tree` do the same on the PC. §535.
+- **One person's registration email is never held any more**: the screen after the form says to open the inbox and asks one question, «Mai înscrii pe cineva cu aceeași adresă?», with the one answer «Da, încă o persoană». Only that press holds the email that has not left yet, until the next form, so a family still gets one message. «Nu, gata — trimite-mi emailul» is gone §536.
 ## BR-V2.18-2026-09-27
 
 - **An event can be published before its date or its time is known**: «Data se anunță mai târziu» and «Ora se anunță mai târziu» in «Când și unde». The site then says «Data se anunță în curând», or the day with «Ora se anunță în curând», on the page, the card and the share picture, and lists the event in its own «Data sau ora se anunță» section: never in a month, the calendar or the feed. Registration stays at «se deschid în curând» until the start is announced and the organizer opens it; the typed date and hour stay the organizer's unpublished note. Not on a series, on an event people already registered for, or on the lead event. Migration `0105`. §533.

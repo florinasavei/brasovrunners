@@ -108,7 +108,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     const editor = main.getByTestId("email-copy-VERIFY_REGISTRATION_EMAIL");
     const words = editor.locator(".ProseMirror");
     await expect(words).toContainText("Am primit o înscriere la {eventTitle} pe numele {participantName}, trimisă cu această adresă de email.");
-    await expect(words).toContainText("Linkul este valabil {confirmationHours}");
+    await expect(words).toContainText("Linkul e valabil {confirmationHours}");
     await expect(words).not.toContainText("Crosul de toamnă");
     // The fields are a legend under the box now (§373, email follow-up), the ones this text uses first (§419).
     const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");

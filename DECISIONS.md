@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.18-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.19-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.18-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20616,3 +20616,148 @@ A duplicate keeps the switch, the provisional date with it (as a duplicate keeps
 - the share picture reading «Data se anunță în curând».
 
 Baseline `BR-V2.18-2026-09-27`.
+
+## 534. The group-run self-declaration per the counsel's second pass; every legal version line with the whole date in words
+
+**Date:** 2026-09-28. **Context:** the owner relayed a second counsel review of the optional group-run self-declaration (§393, §503, §523): fifteen points on its validity, the health statement, retention, the guiding-service disclaimer and the signature wording, plus the way every legal text's version line names its date.
+
+**Decided — the two group-run templates (asphalt, trail; RO and EN):**
+
+- **Validity.** Signed once, it covers the whole series «până când este retrasă sau înlocuită cu o versiune nouă», never «fără termen de încetare». It applies «începând cu data semnării», so the run held on the day of signing is covered. Counsel wrote «după data semnării»; the deviation is put to the owner as a question.
+- **Health.** The runner states it as their own assessment («din câte cunosc»). The next sentence says the organiser does not and cannot assess anyone medically. No medical question is asked. The health statement's basis stays art. 9(2)(f) GDPR.
+- **Retention by purpose.** The active declaration is kept while it is needed for the runs it applies to. After a withdrawal requested at the club's contact address, it is no longer used for any later run. A copy is kept only as long as the establishment, exercise or defence of a legal claim needs it, with the three-year general limitation period in view, and is then deleted. «Trei ani de la semnare» is gone, because it was untrue of a declaration that is still active.
+- **Scope of the service.** The opening says once that this is a group run, not a (mountain) guiding service with individual supervision. The repeats are dropped.
+- **Liability.** Art. 1355(4) and art. 1371 of the Civil Code stay. The text never says «în nicio situație».
+- **Signature.** The text names «momentul semnării» as the platform records it, and cites Legea nr. 214/2024 by number alone. The template and the signing page therefore never read as a qualified time stamp.
+- Signing stays optional, the series is named only through `{{series}}`, and `{{minimumAge}}` is unchanged.
+
+**Decided — every text that describes the declaration says the same retention.**
+
+- The privacy notice, sections 3 and 7:
+  - The group-run paragraph says the declaration covers every date «până când o retragi sau este înlocuită cu o versiune nouă».
+  - An older version is kept as evidence «după aceeași regulă ca o declarație retrasă».
+  - It no longer says «fără termen» or «ștergem doar la cererea ta».
+- The signer's own email, series and one-off, in both languages: the club keeps it while it is needed for the runs it applies to; after a withdrawal it no longer uses it, keeps a copy at most for the limitation period, then deletes it.
+- The run page's line and the backoffice fold's help say the same in fewer words. The help stays under §511's 200 characters.
+- The club's archive email says the same.
+- The Gmail clean-up step on `/admin/tasks` says the same. Its query excludes the group-run archive by that email's own subject prefix, «Declarație semnată (alergare de grup)» / "Signed declaration (group run)". A race whose title contains "group run" is therefore not left out of the three-year clean-up.
+
+**Decided — Legea nr. 214/2024 by its number alone** in the privacy notice's race-signature paragraph and in the terms. The race declaration and its PDF label keep the full title until the club next revises them.
+
+**Decided — the version line.** Every legal version line reads «Versiunea 6, în vigoare din 28 septembrie 2026»: the whole date, the month in words, no weekday, in the club's time zone. It goes through one helper, `formatDateInWords` in `src/i18n/dates.ts`, which the typed birth date also uses. It applies on:
+
+- the terms and the privacy notice pages;
+- both signing pages and every declaration PDF;
+- the legal-document PDF the club archives and hands to counsel;
+- the `/admin/legal` list;
+- the document's backoffice page and the delete confirmation.
+
+A version line records the day a text took effect. «luni, 28 sept.» reads as an appointment and an abbreviation.
+
+**Consequences:**
+
+- The texts in force on production change only when the club approves new versions from the platform's templates (`/admin/legal`, «pornește de la textul platformei»), the same click as for the earlier template updates.
+- No migration and no setting.
+
+**Tests:**
+
+- The forbidden and required phrases in both templates are pinned in both languages.
+- The notice's retention sentences, including the not.toMatch on «fără termen» / «ștergem doar la cererea ta», are pinned.
+- The signer's and the archive email sentences are pinned.
+- The date helper is tested in both languages.
+- The legal-document PDF route is called with a date that is still the 27th in UTC and must say «În vigoare din 28 septembrie 2026».
+
+An older version's group-run signature is kept as evidence of what the signer accepted then, until the signer asks for it to be erased. The platform deletes nothing on its own, and the notice now says exactly this. The club's archive copy follows one rule: keep it while the declaration is active, and after a withdrawal at most three years, then delete it.
+
+Baseline `BR-V2.19-2026-09-27`.
+
+## 535. A pull request is landed and shipped from GitHub: the release facts travel with the branch
+
+**Context.** The owner, before a holiday: "we must prepare the ground for working directly on GitHub in the future — I leave on Thursday". From then on he works from a phone, through Claude Code on the web and cloud agents, with the PC off. Every release so far needed that PC: a change's DECISIONS section, CHANGELOG bullet and SPECS criteria lived in the dispatcher's scratchpad as a workflow's saved result, the merge resolvers in a scratch folder, and `yarn ship` ran from the PC's checkout.
+
+**Decision.**
+
+- **The release facts travel with the branch.** One `.release/<branch-slug>.json` per change — the fields an implementer already returns (`branch`, `decisionsTitle`, `decisionsSection`, `changelogLine`, `specsCriteria`, `batchLine`) — committed with the code (`.release/README.md`). `yarn docs:land --tree [--to BR-V2.NN]` lands them with no manifest: the next `BR-V2.NN` after CLAUDE.md's, dated today in Brașov, the CLAUDE.md batch line and the queue's Released row written too, the entries deleted in the landing commit. A manifest landing takes the tree's entries after its own items, the manifest's item winning for a branch it names. With one entry, every decision placeholder the batch wrote is that entry's, the merge with `qa` included.
+- **Checked on the pull request, not at release time.** `yarn docs:check` validates every `.release/*.json`: the required fields, the file named for its branch, one entry per branch, and each criterion's requirement defined in SPECS.md.
+- **An unattended landing refuses hand work.** With `--tree` the landing stops before writing anything — dry run or not — on an entry's `docsNotes`, a criterion for a requirement SPECS.md lacks, and a placeholder line no branch wrote (`land-tree.mjs`'s `handWork`). Nobody reads a CI log on a phone.
+- **A branch writes its own documentation, except the landing's.** Implementers and fixers (`br-chain`, `br-fix-round`) now write the README index row for a new file, the SETUP or `docs/*.md` section and the CLAUDE.md command line their change needs, on the branch, and leave the entry's `docsNotes` empty. They still never touch DECISIONS, CHANGELOG, SPECS, a baseline marker, CLAUDE.md's batch lines or the queue's Released rows. Without this, any change that adds a script fails the landing's `yarn docs:check` on its missing README row, and a SETUP text would be lost in a log.
+- **The landing tools live in the repository.** `yarn batch:merge <ref> …` (`scripts/merge-branches.mjs`, rules in `scripts/merge-resolve.mjs`) merges refs with the journal rebuilt, the catalogues merged by key, test files as the union — two imports of one module become one import carrying both sides' specifiers — duplicate catalogue keys dropped, sibling snapshots re-linked and the newest refreshed. It then checks that every migration production (`origin/main`) and QA (`origin/qa`) already applied is unchanged, and runs `yarn migrations:check` and `yarn typecheck` on the merged tree. Any other conflict or failure stops it (exit 2). Two siblings that picked the same migration number both add `meta/NNNN_snapshot.json`; that add/add conflict has no rule, and the stop says to renumber one by hand. It does not cut the `batch/<date>-<letter>` branch: the dispatcher checks that out first.
+- **One workflow ships a pull request.** `.github/workflows/release.yml`, started by the label `ship` on a pull request into `qa` or by hand with its number, merges `qa` in, lands, runs `yarn docs:check`, pushes the landing commit and runs `yarn ship` with the `SHIP_TOKEN` secret (GitHub's own token starts no workflow with its pushes and merges) and the `SHIP_PRODUCTION_URL` variable. `ship` leaves the release workflow's own check out, so it never waits for itself, and is given production's baseline — `main`'s — as the previous one, so a release that stopped after merging into `qa` does not wait an hour for a baseline production never reported.
+  - **A dry run first.** Run by hand with `dry_run`, it merges and lands on the runner only and shows the landing commit and the documents' diff on the run's summary page; nothing is pushed or shipped. It is the owner's first press (`SETUP.md` § 41, `docs/RUNBOOKS.md` § Release from the phone).
+  - **Plain words on a phone.** Every step writes its outcome to the run's summary page: the landing's numbers, a stop's reason, docs:check's refusal, a step-by-step table, and ship's own timing (`timesTable`), which used to go to a file the runner threw away.
+  - **Who may press.** The first step asks GitHub for the person's permission and stops unless it is write or admin: the label starts a merge into `main` and a production migration with the owner's token, and the triage role can add labels. A fork's pull request is never released.
+  - **One at a time, never cancelled.** The concurrency group sits on the job, not the workflow: every label added to any pull request starts a run, and a run skipped by the job's condition must never enter the group, where it would cancel a queued release.
+- **Placeholders that merges left on `qa`.** Twenty-nine decision placeholders written by conflict resolutions in the V2.13 and V2.14 batches were never numbered — a manifest landing lists such lines for a hand decision, and nobody took it. They are numbered now by the section each branch landed as (§511, §513, §515, §516, §519, §520, §522); the phone's landing refuses such a line instead of listing it.
+- **A literal the landing had numbered.** `land-entry.mjs`'s `rewriteFreeSectionRefs` returned "§426" instead of the placeholder: the landing of §426 had numbered the function's own literal. The placeholder is now built in two pieces.
+
+**Refused.** Letters in the baseline (`BR-V2.17B` for a phone release) — every kit, the health check, `ship` and `docs:check` read two digits after the dot. A second workflow per branch list: one label- or number-driven workflow covers a single PR and a batch PR alike. Letting the landing write `docsNotes` into documents by itself: free text has no place to go, and a branch knows where its text belongs.
+
+**Consequences.** The workflow is proven on GitHub only; the tests hold its shape — the trigger, the token, the permission check, the dry run, the concurrency on the job, the summary, the order of the three tools — and run the landing and the merge end to end on throwaway repositories. Before the first release from the phone the owner creates the token with its scopes, the variable and the label, and runs the dry run once.
+
+**Amends §368, §374, §426, §501 and §504 (2026-09-28).** §368's chain rules: implementers and fixers now write the README, SETUP and docs text their change needs. §374's continuation past a merged batch PR and §504's one-tree ship run unchanged, now also from GitHub. §426's `docs:land` gains `--tree` and refuses hand work unattended. §501's cloud session is where a change made from the phone comes from.
+
+**The merge installs again when qa changed the dependencies.** When the merges changed `package.json` or `yarn.lock`, `yarn batch:merge` runs `yarn install --immutable` before the snapshot probe and the checks. The installed dependencies are the pre-merge tree's, and a typecheck against them would fail with «Cannot find module» on a branch whose code is fine.
+
+**qa's merge tool, not the branch's.** `release.yml` runs `qa`'s own copy of `merge-branches.mjs` and `merge-resolve.mjs`. A branch cut before the tool existed, or with older rules, is merged by the current ones. A `qa` without the tool stops with a sentence saying to release that one from the PC.
+
+**A conflicted pull request gets no run from the label.** GitHub starts no `pull_request` workflow while the branch cannot merge into its base, so the label does nothing and leaves nothing to read. A run by hand with the PR's number starts regardless and merges `qa` in by rule. The workflow's header, `SETUP.md` § 41 and the runbook say so.
+
+**One release can wait.** GitHub keeps one pending run per concurrency group, the newest, so a newer request replaces the one waiting. Release one pull request, then label the next.
+
+**A typed baseline never goes backwards.** `--to` must come after the current baseline by major and minor (`typedBaseline`). A phone's `2.1` for `2.18` is refused before anything is written.
+
+**Named differently from the brief.**
+- `docs/pending/` became `.release/`.
+- `yarn land:merge` became `yarn batch:merge`, with no batch branch cut.
+- `yarn docs:land --pending` became `--tree`.
+- `release-one.yml` was folded into `release.yml`'s `pr` input.
+
+**What the PC still does.** It keeps the manifest landing, which prints hand work instead of refusing it. `yarn ship` still runs by hand from its checkout, exactly as the workflow runs it.
+
+**The relaxed chain rule, accepted, and its cost.** Branches now write their own README, SETUP and docs text. Two siblings touching the same document conflict in a file `yarn batch:merge` has no rule for, and the merge stops and names it for a person.
+
+**Where the relaxed rule's cost is written (2026-09-28).** `docs/DISPATCHER.md` § Cloud loop says what a branch writes and what only the landing writes. It also says what that costs: two siblings that change the same README, SETUP or CLAUDE.md lines conflict, and `yarn batch:merge` stops on that file by design, for a person or a merge agent. `docs/RUNBOOKS.md` § Release from the phone → When it stops gives the same stop as a bullet, with the sentence to give a Claude Code on the web session. The example baseline in `land-batch.mjs`'s header stays a fixed old value (`BR-V1.81` → `BR-V1.82`), so no landing's sweep rewrites it and no merge with `qa` conflicts on it.
+
+Baseline `BR-V2.19-2026-09-27`.
+
+## 536. The first form's email is never held; «Da, încă o persoană» opens the family sitting (amending §519)
+
+**The owner, 2026-09-28**, on the screen after the registration form: «partea asta e cam ciudata, adica sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite mailul"?». Since §519, every public form's email waited in the outbox for «Gata» or the club's window. So one person registering alone saw a button that looked like the only way to get their email.
+
+**Decision: no sitting without a press.** The first form is an ordinary form again. Its email is due at once, on the club's delivery timing (§513), and no `family_sittings` row is written. The screen after it is the inbox's own screen («Aproape gata, Ana!»). Under the address, one bold line says when the email leaves: «Emailul pleacă la HH:MM (următoarea trecere programată)» on the scheduled default, or «Emailul pleacă acum» under «imediat». The time is the outbox's next expected pass on the club's clock, from the same settings as the wait sentence. Then comes one question, «Mai înscrii pe cineva cu aceeași adresă?», with one answer, «Da, încă o persoană», and the owner's sentence under it: «Dacă da, ținem emailul și îl trimitem o singură dată, pentru toți.». There is no «Gata» on this screen; leaving the page is the no.
+
+**«Da» opens the sitting.** The first form hands the browser a seed in its sealed half: the registration it created or restarted, or the kept form of §446, and the message it queued. The seed seals to one length whatever it names, so the cookie still says nothing about the address (§39). The press opens the sitting with that person in it. It holds the first email until the window's end if the email has not left yet. If the email has already left, nothing is taken back: the family message still names that person, and its one button confirms everybody, the first person included.
+
+**From «Da» on, §519 unchanged.** Nothing the sitting holds leaves before «Gata» or the window in «Termene». The window is counted again from every form and every «Da». From the second person on, the held messages become one family message with one idempotency key per sitting. A family therefore gets one email however many people it registers, whatever pass of the outbox comes between forms, and under «imediat» too; no older family email's button is ever superseded. After each form sent from that press, the screen is §519's sitting screen: the people so far, «Gata — trimite-mi emailul», the minutes left, and the press that fires by itself at the window's end.
+
+Only the form that «Da» opened continues a sitting. A second plain form from the same browser is a first form again: its own email, nothing held, nothing merged. The same person sent twice without «Da» is the ordinary re-send; «already waiting to leave» is said only inside a sitting that holds that person's message.
+
+**Why not "hold only until the next form".** The first attempt at this change released what «Da» held on the next form. A family of three then got up to three emails. Each newer family message killed the older one's button, and the sitting screen with «Gata» was gone. Holding from the press keeps §519's promise of one email for the family while leaving a single registration untouched.
+
+«Termene» → the family window's help now says it in one sentence: after «Da, încă o persoană», the family's email waits for «Gata» at most that many minutes after the last form, then leaves once for everybody; at 0, each email leaves at once. No migration, no new setting.
+
+The review round of 2026-09-28 (the owner's asks and the review's nits F0, F1 and F2) made the screen after the first form short. It shows the heading, then exactly three lines and one button: «Formularul lui {name} a ajuns.», «Emailul pleacă la {HH:MM}.» or «Emailul pleacă acum.», and «Mai înscrii pe cineva cu aceeași adresă?» with «Da, încă o persoană». Under the button there is one sentence, and it is always true of the email the line above names. While the email still waits for the scheduled pass it reads «Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.». When it leaves at once it reads «Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.». At a window of 0 it reads «Fiecare persoană primește emailul ei.». There are no «Ce urmează» steps and no §513 wait box on this screen, so the time is said once, in one shape. The other inbox screens keep their steps and the bold wait line, and no longer show a leaving-time line. The leaving time is one function, `emailLeavesWords`: HH:MM on the club's clock today, the short day and time otherwise. The queue panel on /admin/settings/emails uses it for each row's next attempt, so the screen and the panel cannot name different times for one message.
+
+The verification email now says first what to press and what follows. Its subject is «Confirmă adresa — {eventTitle}». Its first line is «Apasă butonul ca să confirmi adresa. Apoi semnezi declarația și primești codul QR.». Every registration on the site goes from the address to the declaration, because the allocator writes PENDING_DECLARATION or the waiting list, and there is no registration without a declaration (§29). One sentence is therefore true for every event. The waiting list tells the runner itself when the event is full. The link's life is one line, «Linkul e valabil {confirmationHours}; fără confirmare, înscrierea expiră.», from «Termene». The §419 lines follow unchanged. The email now also carries the §392 facts block, which it did not before. The editor's starting text keeps every field a placeholder. The club's copy keeps its «[Copie club]» mark, its note and no button.
+
+A family's one message opens with «Un singur buton: confirmi adresa și cele {count} înscrieri, apoi semnezi declarațiile pe rând.». With one person it reads «Un singur buton: confirmi adresa și înscrierea, apoi semnezi declarația.». Then comes one line per person with the birth date in words, then «Confirm și semnez declarațiile ({count})» and the link's life. The «Ce se întâmplă dacă apeși» row is gone, because the first line says it. A sitting's family message is never superseded, and an earlier person's own email keeps a working button, so the message never says the older button stopped working. When someone it names already got an email of their own before «Da», it adds «Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.».
+
+The family's one confirmation already existed, so no message type was added. Its intro is one line, «Toți cei de mai jos sunt înscriși la {event}; sub fiecare nume, numărul, codul și QR-ul de arătat la masă.», over one block per person. The club's copy, which has no code and no QR, reads «…; sub fiecare nume, numărul de concurs.». A person's own confirmation is unchanged.
+
+The held marker (`sittingHeld`) is written only when a message is actually held. The first form queues its verification email unmarked. «Da» marks it only when it takes that email in while it still waits (review nit F1).
+
+When a message leaves is said by one function, `emailLeavesWords`, for both the screen after the first form and every row of §529's queue panel: now; today as the bare hour, which the sentence introduces with «la»/«at»; or another day as the inline short date, which brings its own «la» before the hour. So «Emailul către ana@… pleacă la 13:15.» and «Emailul către ana@… pleacă mar., 29 sept. 2026, la 10:00.» never double the «la» and never put one before a weekday (§452). The panel reads «Pleacă: 12:00 (estimat).» for the same instant. The held row's «Ținut până {until}» keeps the full date, because «până 10:15» is not Romanian.
+
+Confirming an address runs the allocator, which may put the person on the waiting list, so neither the verification email nor the family message promises a declaration outright. They say «Dacă mai e loc, semnezi apoi declarația…» and «…semnezi pe rând declarațiile celor care mai au loc», which is true of both outcomes.
+
+The sentence under «Da, încă o persoană» names the club's window as the action read it: «cel mult {window}». A hold is released by the next form, by «Nu mai înscriu pe nimeni — trimite emailul» or when the window ends, so «at most» is exact where «until the next form» was not.
+
+The screen after the first form tells the leaving time from an instant stored when the form was sent, never one worked out again at render (the review of 2026-09-28). The submit action works out when that form's email leaves, once, and stores it in the family cookie as one letter and an ISO instant, always 25 characters: `s` and the scheduled pass, or `i` when the request sent the email itself. The timing is a club setting, never the address's, so the cookie's length still says nothing about what the address holds (§39). The screen reads the stored instant. Once the pass has come, it says «Emailul către … a plecat.», and the sentence under «Da» stops promising to hold that email: it says the next email covers everybody. Before the pass, that sentence names its deadline: «Dacă apeși „Da” până la 13:15, …», or «până marți, 29 septembrie, la 10:00» on another day, with no «la» before a weekday (§452). The time is written in the long form without the year («pleacă marți, 29 septembrie, la 10:00»; EN «leaves on …»). The queue panel keeps the short form with its year, through the same function.
+
+The short screen's heading is the plain «Aproape gata!»: the name is said once, in «Formularul pentru Ana a ajuns.».
+
+A first «Da» can find nothing left to open from its seed: the first person may have confirmed their address from the email that left before the press, or their kept form may have lapsed. That person's email is not the sitting's, so the names the browser lists afterwards start without them. A form that left no seed (a re-send, or the address at its limit) keeps its name, because what the address held before this browser is never read back (§39).
+
+When «Da» takes in a kept form's REGISTER_ANOTHER_PERSON, it marks the message `familyHeld`, never `sittingHeld`, which changes a verification link's life. The /admin/emails queue then counts it as the family's hold, with its «Ținut până …» line. The queue's family test is one bracketed, never-null condition. Unbracketed, it had counted a flagged row as a retry too, and left an unflagged retry uncounted.
+
+Baseline `BR-V2.19-2026-09-27`.
