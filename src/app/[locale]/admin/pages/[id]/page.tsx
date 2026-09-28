@@ -21,7 +21,7 @@ import { RecallHidden } from "@/shared/forms/recall";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   allowedTransitions,
-  canEditEventFields,
+  isEditorial,
   canEditTexts,
   canReadContent,
 } from "@/modules/staff-identity/domain/roles";
@@ -88,13 +88,13 @@ export default async function EditPagePage({ params, searchParams }: Props) {
     Two questions, two capabilities, because the two actions assert different things (§222).
 
     One flag answered both and answered one of them wrongly: `savePage` asserts
-    `canEditTexts` (service.ts) while this read `canEditEventFields`, which an Organizer has —
+    `canEditTexts` (service.ts) while this read `canEditEventFields`, which an Organizer then had —
     so the day the screen opened for them they would have been shown the editor and refused on
-    save. `deletePage` really does assert `canEditEventFields`, which is the wider of the two
+    save. `deletePage` asserts `isEditorial` (`canEditEventFields` until §542), the wider of the two
     and is left exactly as it is.
   */
   const maySave = canEditTexts(actor.role);
-  const mayDelete = canEditEventFields(actor.role);
+  const mayDelete = isEditorial(actor.role);
   // The page as the questions name it (§384): its title in the backoffice's language.
   const pageTitle = translations.find((row) => row.locale === locale)?.title ?? t("pages.untitled");
 

@@ -82,7 +82,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
-  let organizer: StaffUser;
+  let settingsEditor: StaffUser;
   let copywriter: StaffUser;
 
   beforeAll(async () => {
@@ -93,7 +93,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
   beforeEach(async () => {
     await resetTables(db);
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
-    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "MODERATOR" }).returning();
+    [settingsEditor] = await db.insert(staffUsers).values({ email: "settings-editor@dev.test", displayName: "Mihai", role: "ADMIN" }).returning();
     [copywriter] = await db.insert(staffUsers).values({ email: "copy@dev.test", displayName: "Ioana", role: "COPYWRITER" }).returning();
   });
 
@@ -117,10 +117,10 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
     const reviewed = await transitionEvent(db, { actor: admin, eventId: id, expectedVersion: (await rowOf(id)).version, to: "IN_REVIEW", now: NOW });
     return transitionEvent(db, { actor: admin, eventId: id, expectedVersion: reviewed.version, to: "PUBLISHED", now: NOW });
   };
-  /** The Organizer's save of the event's fields: no words, as the editor posts it for that role. */
-  const saveAsOrganizer = async (id: string, fields: Record<string, unknown>, scope?: "all") =>
+  /** The settings-only save of the event's fields (the Administrator's since §542): no words. */
+  const saveSettingsOnly = async (id: string, fields: Record<string, unknown>, scope?: "all") =>
     saveEventAndTranslations(db, {
-      actor: organizer,
+      actor: settingsEditor,
       eventId: id,
       expectedVersion: (await rowOf(id)).version,
       fields: { ...EVENT_FIELDS, ...fields },
@@ -141,10 +141,10 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       expect(await namesOf(created.id)).toEqual({ ro: RO_PLACE, en: RO_PLACE });
     });
 
-    it("is the Organizer's: written with the event's fields under the event's version, leaving the words' versions alone", async () => {
+    it("is the settings' save: written with the event's fields under the event's version, leaving the words' versions alone", async () => {
       const created = await create();
       const before = await listTranslationsForEvent(db, created.id);
-      await saveAsOrganizer(created.id, { locationName: "Stadionul Tineretului", locationNameEn: "Youth Stadium" });
+      await saveSettingsOnly(created.id, { locationName: "Stadionul Tineretului", locationNameEn: "Youth Stadium" });
 
       expect((await rowOf(created.id)).locationName).toBe("Stadionul Tineretului");
       expect((await rowOf(created.id)).version).toBe(created.version + 1);
@@ -166,11 +166,11 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
 
     it("refuses a blank name in either language, naming that language's box — unless the place is to be announced", async () => {
       const created = await create();
-      expect(await refusalOf(saveAsOrganizer(created.id, { locationNameEn: "  " }))).toEqual({ code: "VALIDATION_ERROR", fields: ["locationNameEn"] });
-      expect(await refusalOf(saveAsOrganizer(created.id, { locationName: "" }))).toEqual({ code: "VALIDATION_ERROR", fields: ["locationName"] });
+      expect(await refusalOf(saveSettingsOnly(created.id, { locationNameEn: "  " }))).toEqual({ code: "VALIDATION_ERROR", fields: ["locationNameEn"] });
+      expect(await refusalOf(saveSettingsOnly(created.id, { locationName: "" }))).toEqual({ code: "VALIDATION_ERROR", fields: ["locationName"] });
       expect(await namesOf(created.id)).toEqual({ ro: RO_PLACE, en: EN_PLACE });
 
-      await saveAsOrganizer(created.id, { locationToBeAnnounced: true, locationName: "", locationNameEn: "" });
+      await saveSettingsOnly(created.id, { locationToBeAnnounced: true, locationName: "", locationNameEn: "" });
       expect(await namesOf(created.id)).toEqual({ ro: null, en: null });
       expect((await rowOf(created.id)).locationName).toBeNull();
     });
@@ -179,7 +179,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       const created = await create();
       const withoutEnglish = Object.fromEntries(Object.entries(EVENT_FIELDS).filter(([key]) => key !== "locationNameEn"));
       await saveEventAndTranslations(db, {
-        actor: organizer,
+        actor: settingsEditor,
         eventId: created.id,
         expectedVersion: created.version,
         fields: { ...withoutEnglish, locationName: "Poiana Brașov" },
@@ -217,7 +217,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
 
       // The editor posts what the boxes showed; the save writes it to both rows.
       await saveEventAndTranslations(db, {
-        actor: organizer,
+        actor: settingsEditor,
         eventId: event.id,
         expectedVersion: published.version,
         fields: { ...EVENT_FIELDS, locationName: box("ro"), locationNameEn: box("en") },
@@ -232,9 +232,9 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       const event = await legacy();
       const rows = await listTranslationsForEvent(db, event.id);
       const englishBox = placeInBox(event, rows.find((row) => row.locale === "en")?.locationName);
-      // The organizer changes the Romanian box and leaves the English one as it opened: the old name.
+      // The Administrator changes the Romanian box and leaves the English one as it opened: the old name.
       await saveEventAndTranslations(db, {
-        actor: organizer,
+        actor: settingsEditor,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, locationName: "Parcul Titulescu", locationNameEn: englishBox },
@@ -246,11 +246,11 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
     });
 
     it("keeps the English the editor posted once its box ran: put back to the old name, it stays (found by re-review)", async () => {
-      // The box followed the Romanian on the screen, and the organizer put the English back —
+      // The box followed the Romanian on the screen, and the Administrator put the English back —
       // "Parcul Tractorul" is its English name too, under the line that says the English stayed.
       const event = await legacy({ locationAddress: null });
       await saveEventAndTranslations(db, {
-        actor: organizer,
+        actor: settingsEditor,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, locationName: "Parcul Titulescu", locationNameEn: RO_PLACE },
@@ -267,7 +267,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       await db.update(eventTranslations).set({ locationName: "Parcul Tractorul, intrarea nord" }).where(eq(eventTranslations.locale, "ro"));
       const englishBox = placeInBox(event, null);
       await saveEventAndTranslations(db, {
-        actor: organizer,
+        actor: settingsEditor,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, locationName: "Parcul Titulescu", locationNameEn: englishBox },
@@ -294,11 +294,11 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       expect(await namesOf(created.id)).toEqual({ ro: null, en: null });
 
       // The venue is known in Romanian; the English box is left for later, as the switch allows.
-      await saveAsOrganizer(created.id, { locationToBeAnnounced: true, locationName: "Sala Sporturilor", locationNameEn: "" });
+      await saveSettingsOnly(created.id, { locationToBeAnnounced: true, locationName: "Sala Sporturilor", locationNameEn: "" });
       expect(await namesOf(created.id)).toEqual({ ro: "Sala Sporturilor", en: null });
 
       // Announcing it asks for the English name, as it asks for the Romanian one.
-      expect(await refusalOf(saveAsOrganizer(created.id, { locationName: "Sala Sporturilor", locationNameEn: "" }))).toEqual({
+      expect(await refusalOf(saveSettingsOnly(created.id, { locationName: "Sala Sporturilor", locationNameEn: "" }))).toEqual({
         code: "VALIDATION_ERROR",
         fields: ["locationNameEn"],
       });
@@ -396,7 +396,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       // Every date is made with the source's names in both rows.
       for (const date of dates) expect(await namesOf(date.id)).toEqual({ ro: RO_PLACE, en: EN_PLACE });
 
-      const result = await saveAsOrganizer(source.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationName: "Piața Sfatului", locationNameEn: "Council Square" }, "all");
+      const result = await saveSettingsOnly(source.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationName: "Piața Sfatului", locationNameEn: "Council Square" }, "all");
       expect(result.appliedTo).toBe(dates.length);
       for (const date of dates) {
         expect((await rowOf(date.id)).locationName).toBe("Piața Sfatului");
@@ -407,7 +407,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
     it("carries a name changed in English alone, and gives each date a new version", async () => {
       const { source, dates } = await series();
       const versions = dates.map((date) => date.version);
-      await saveAsOrganizer(source.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationNameEn: "Tractorul Park, main gate" }, "all");
+      await saveSettingsOnly(source.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationNameEn: "Tractorul Park, main gate" }, "all");
       for (const [index, date] of dates.entries()) {
         expect(await namesOf(date.id)).toEqual({ ro: RO_PLACE, en: "Tractorul Park, main gate" });
         expect((await rowOf(date.id)).version).toBe(versions[index] + 1);
@@ -424,7 +424,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       expect(englishBox).toBe(RO_PLACE);
 
       // Only the Romanian box changes; the English one is posted as it opened.
-      const result = await saveAsOrganizer(
+      const result = await saveSettingsOnly(
         source.id,
         { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationName: "Parcul Titulescu", locationNameEn: englishBox },
         "all",
@@ -442,9 +442,9 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
       const { source, dates } = await series();
       const [first] = dates;
       // One date at another place, on its own.
-      await saveAsOrganizer(first.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-18T08:00", locationName: "Poiana Brașov", locationNameEn: "Poiana Brașov" });
+      await saveSettingsOnly(first.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-18T08:00", locationName: "Poiana Brașov", locationNameEn: "Poiana Brașov" });
       // A save for all dates that changes only the distance reaches every date, and not its place.
-      await saveAsOrganizer(source.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", distanceMeters: "8000" }, "all");
+      await saveSettingsOnly(source.id, { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", distanceMeters: "8000" }, "all");
       expect((await rowOf(first.id)).distanceMeters).toBe(8000);
       expect(await namesOf(first.id)).toEqual({ ro: "Poiana Brașov", en: "Poiana Brașov" });
       expect((await rowOf(first.id)).locationName).toBe("Poiana Brașov");

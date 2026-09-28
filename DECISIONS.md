@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.21-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.21-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20885,3 +20885,23 @@ Baseline `BR-V2.20-2026-09-27`.
 Roles are unchanged: writing a card stays with the Redactor and the Administrator, checked on the server (BR-REQ-060-01).
 
 Baseline `BR-V2.20-2026-09-27`.
+
+## 542. The Organizer reads the events and changes none of them
+
+**The owner, 2026-09-28:** «Organizatorul nu ar trebui să poată edita evenimentele...»
+
+**Decision.** Every write to an event is the Administrator's (and the Superadministrator's): creating, saving the settings, a series' dates, publishing, unpublishing, archiving, cancelling, the update notice, duplicating, repeating, the pictures and links, the participation window, the bib band and the featured mark. The Redactor keeps the words and «Trimite spre verificare», as §103 gave them. Amends §103 and §204 (the Organizer configured any event the Administrator created), §289 (reading against changing now holds for the event as well as its registrations) and §450 (the Administrator runs the club — its events included).
+
+**How it is asserted.** On the server, through the existing helpers, tightened rather than joined by new checks: `canEditEventFields` is `atLeast(role, "ADMIN")` (it was `isEditorial`), which every event save, the series, the cancellation and the notice already ask; a new `canTransitionEvent` is the table's answer for a role that writes the event's words or settings, so the Organizer and the Tehnic make no move on an event while pages and albums keep the plain `TRANSITIONS` table. Pages, albums and the picture library had borrowed `canEditEventFields` for their own settings; they ask `isEditorial` now, so nothing about them moved. `canMessageParticipants` read `canEditEventFields`; it reads `isEditorial && canReadRegistrations`, so the Organizer keeps «Trimite un mesaj participanților» (§364) and the newsletter (§445).
+
+**What the Organizer keeps, unchanged:** the events list and every event's editor as a read-only view, the registrations list and each registration's page, the export and the race numbers (§289), the queue, the emergency sheet, the race-day desk (§67), the messages to participants and the newsletter, the tasks page's reads. The thank-you after a race, the bib allocation and the spare bibs were already the Administrator's (`canManageRegistrations`) and stay so; the reminder sends itself.
+
+**The screen is honest.** The list's verbs come from one pure function, `eventListVerbs` (the pattern of `pageListVerbs`, §537): the Organizer gets «Deschide» with the eye in place of the pencil «Editează», no «Eveniment nou», no ticks or bulk bar, and a ⋮ of links only — preview, registrations, emergency sheet. The editor opens read-only with one sentence, «Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.», no «Salvare» card and no «Copiază și tradu tot». The «Salvarea ta schimbă doar setările» sentence is gone: the only roles that save the settings also write the texts, so it could no longer be shown. A read-only view, not a 404, because the Redactor's editor already works that way for the settings and the Organizer's queue, numbers and message card live on that page. The guide's Organizator and Administrator sections say the new split in the buttons' words.
+
+**The Tehnic** sits between the Organizer and the Administrator on the ladder, so the threshold takes the event away from it too, and that is decided rather than left open: «Tehnic» is diagnostics (`canEditTexts` already keeps it out of every text), and a role that may not see who registered should not be the one who moves their race. The guide said it «poate corecta setările unui eveniment» and no longer does; the role picker on `/admin/staff` and the `/devs` summary now describe the Organizer as reading the events, the registrations, the export and the numbers, messaging the participants and working the desk without changing an event, and the Tehnic as the technical page alone — no events and no participant data. BUSINESS.md's role table says the same.
+
+**What a reader keeps inside the editor.** A card that is not a setting of the event stays for the role that reads it: «Participare și înscrieri» shows the reader «Setările le schimbă Administratorul.» and, under it, «Alocare și tipărire» — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only for a role that reads the registrations (§289), so the Organizer has it and the Redactor does not. The numbers' routes already asked `canReadRegistrations`; «Alocă numerele» and the spares stay the Administrator's (`canManageRegistrations`). The list's «Deschide» draws the one `preview` glyph of `action-icons.ts`, the eye the row's ⋮ «Previzualizare» already wears (§318).
+
+**The role picker says the split.** `/admin/staff` and the `/devs` summary: the Organizer is «înscrierile și ziua cursei» — reads the events, the registrations, the export and the numbers, messages the participants, works the desk, and creates, sets up and publishes no event; the Tehnic is the technical page, no event and no participant data; the Administrator «conduce clubul: creează, setează, publică și anulează evenimentele», then the registrations, the legal texts, the emails, the plans and the team.
+
+Baseline `BR-V2.21-2026-09-27`.

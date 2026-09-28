@@ -6,7 +6,7 @@ import { parsePickerScope, parsePictureSource, PICKER_LIMIT, pictureUses, usedHe
 import { listMediaAssetsForAdmin } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { isStorageConfigured } from "@/modules/media/storage";
-import { canEditEventFields, canEditTexts } from "@/modules/staff-identity/domain/roles";
+import { isEditorial, canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -96,7 +96,7 @@ export async function GET(request: Request): Promise<Response> {
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canEditTexts(actor.role) && !canEditEventFields(actor.role)) {
+  if (!canEditTexts(actor.role) && !isEditorial(actor.role)) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
   }
   if (!isStorageConfigured()) return NextResponse.json({ assets: [] });

@@ -769,6 +769,8 @@
       "preview": "Preview",
       "edit": "Edit",
       "editNamed": "Edit {title}",
+      "open": "Open",
+      "openNamed": "Open {title}",
       "moreActions": "More actions",
       "registrationsLink": "Registrations ({count})",
       "emergencySheet": "Emergency sheet",
@@ -782,6 +784,7 @@
       "seriesRenewsUntil": "Renews itself: the site creates the dates {horizon} ahead, until {until}.",
       "seriesRenewsForever": "Renews itself: the site creates the dates {horizon} ahead, for ever.",
       "seriesEdit": "Edit the next date",
+      "seriesOpen": "Open the next date",
       "seriesDeleteNote": "A series is deleted from the bar above the list: tick it, then “Delete the ticked ones”.",
       "deskCounts": "{confirmed} confirmed · {checkedIn} here",
       "columnEntries": "Registrations",
@@ -1076,7 +1079,7 @@
       "special": "A special edition",
       "specialHelp": "An edition apart, such as an anniversary or a charity run, with a badge on the card and the page. In a series, the badge stays on this date only.",
       "saveEvent": "Save the event details",
-      "saveCoversSettingsOnly": "Your save changes the settings only; the texts are the editor's.",
+      "readOnly": "The Administrator changes the event; here you can read it. Tell them what you want changed.",
       "version": "version {version}",
       "liveWarning": "Published: every save appears on the site at once, in both languages.",
       "acknowledgeLive": "I understand that I am editing published content.",
@@ -1514,7 +1517,7 @@
       "boxes": {
         "summaryLabel": "Summary",
         "textsReadOnly": "Texts are written by an Editor or an Administrator.",
-        "settingsReadOnly": "Settings are changed by an Organiser or an Administrator.",
+        "settingsReadOnly": "Settings are changed by the Administrator.",
         "kind": {
           "title": "What kind of event",
           "changes": "The type decides what the other boxes ask: a group run has no registration and no programme — the two boxes below say so.",
@@ -1889,9 +1892,9 @@
       "roles": {
         "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
-        "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
-        "DEV": "plus the technical page /devs. No participant data.",
-        "ADMIN": "runs the club: plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
+        "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
+        "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
+        "ADMIN": "runs the club: creates, sets up, publishes and cancels the events; plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
         "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
         "MEMBER": "the members' area of the site, after signing in. No backoffice."
       },
@@ -2484,7 +2487,7 @@
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
           "done": "The team has accounts.",
           "how": [
-            "Open /admin/staff, type the person's email address and pick the role: Organizer (sets up the events) or Administrator (runs the club: registrations, legal texts, the team, this page).",
+            "Open /admin/staff, type the person's email address and pick the role: Organizer (the registrations and race day) or Administrator (runs the club: the events, the registrations, the team).",
             "Superadministrator adds the technical settings; only another Superadministrator can give this role.",
             "“Add” emails them the club's invitation. With the invitation key set (ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account, with a password link.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
@@ -4294,7 +4297,7 @@
               "title": "The top bar: what each tab holds",
               "steps": [
                 "You see only your role's tabs; the rest do not exist for you, and that is fine.",
-                "«Events»: every club event; «New event» and «Edit» are here.",
+                "«Events»: every club event; «New event» and «Edit» are here; a role that only reads sees «Open».",
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
                 "«Race day»: the number pickup desk, on a phone.",
                 "«Gallery» and «Pages» (the standard pages — «Contact», «The team», «FAQ», «Members» — and the club's own pages).",
@@ -4318,9 +4321,9 @@
               "steps": [
                 "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in. Sees a name, a state and a number, never an email address.",
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
-                "The Organizer: reads every registration, the export and the race numbers; changes the event's settings (date, place, route, cost, registration); messages participants. Does not write the texts, publish, cancel or erase a registration, resend emails or assign numbers.",
-                "The Tehnic role: the site's configuration page, for troubleshooting; may correct an event's settings. Does not see the registrations.",
-                "The Administrator runs the club: everything the Organizer and the Redactor do, plus «Create and publish», correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
+                "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk. Does not change an event, cancel or erase a registration.",
+                "The Tehnic role: the site's configuration page, for troubleshooting. Does not change events and does not see the registrations.",
+                "The Administrator runs the club: everything the Organizer and the Redactor do, plus the events («New event», «Edit», «Create and publish»), correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
                 "The Superadministrator: everything the Administrator does, plus the technical settings that can stop the service — «How often the site checks», «The database's limits», the thresholds in «This month's budget» and «Anti-bot» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
               ]
             },
@@ -4486,14 +4489,14 @@
             {
               "title": "What is not yours",
               "steps": [
-                "The event's settings (date, place, places, registration), publishing, the gallery and the registrations. If a text depends on a wrong setting, tell the Organizer or the Administrator."
+                "The event's settings (date, place, places, registration), publishing, the gallery and the registrations. If a text depends on a wrong setting, tell the Administrator."
               ]
             }
           ]
         },
         {
           "title": "Organizer — registrations, numbers, messages",
-          "who": "Role: Organizer (Organizator). You see everything and change the event's settings; you do not publish, cancel or erase registrations.",
+          "who": "Role: Organizer (Organizator). You see the events and every registration, and work with the numbers, the messages and the desk; you do not change the event.",
           "roles": [
             "MODERATOR"
           ],
@@ -4531,7 +4534,7 @@
             {
               "title": "Download and print the race numbers",
               "steps": [
-                "«Events» → «Edit» on the race.",
+                "«Events» → «Open» on the race.",
                 "Open the «Taking part and registration» card, then «Allocate and print».",
                 "«See the bibs» to check them on screen.",
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
@@ -4551,7 +4554,7 @@
             {
               "title": "Send a message to the participants",
               "steps": [
-                "«Events» → «Edit» → the «Registrations received» card → «Send a message to participants».",
+                "«Events» → «Open» → the «Registrations received» card → «Send a message to participants».",
                 "Under «Who receives it» pick the group (everyone, «Only the confirmed», the waiting list or those without a declaration) and see how many they are.",
                 "Write the «Subject» and the «Message», in Romanian and in English.",
                 "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
@@ -4573,46 +4576,23 @@
               "title": "Get race day ready",
               "steps": [
                 "Print the numbers (see above).",
-                "«Events» → «Edit» → «Registrations received»: print a few «Paper declaration form (PDF)» and, if it is there, «Paper declaration form for a minor (PDF)».",
+                "«Events» → «Open» → «Registrations received»: print a few «Paper declaration form (PDF)» and, if it is there, «Paper declaration form for a minor (PDF)».",
                 "There too, «Emergency sheet»: the phones and emergency contacts of everyone confirmed, on one page. Take it to the race and destroy it afterwards.",
                 "Volunteers: ask an administrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
                 "On race day: «Race day» in the top bar."
               ]
             },
             {
-              "title": "Change a setting of the event",
+              "title": "A change to the event",
               "steps": [
-                "«Events» → «Edit».",
-                "Open the card: «When and where», «The course», «What kind of event» (the cost is inside it) or «Taking part and registration». Change what is needed.",
-                "At the bottom, in the «Save» card, on a published event tick «I understand that I am editing published content.».",
-                "Must the participants know? Tick «Tell participants about the change» and write the note in both languages.",
-                "Press «Save». The texts (the title, the description) are not yours to save: tell the Administrator what is wrong."
-              ]
-            },
-            {
-              "title": "The club's difficulty scale",
-              "steps": [
-                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
-                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
-                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
-                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
-              ]
-            },
-            {
-              "title": "The English in one press",
-              "steps": [
-                "Write in Romanian every box you change: the place, the programme's rows, the links' labels, the partners' descriptions, the note to the participants. The title and the description stay the Administrator's, as above.",
-                "At the top of the editor press «Copy and translate everything: RO → EN». Every box you may edit goes, translated, into its English twin. If the English already has text, it asks: «Replace everything» or «Only the empty ones». Is the button grey? The server has no DeepL key yet, or its credit (1,000,000 characters, given once) is spent: ask an Administrator for a new key or credit (the steps are under Tasks → Club).",
-                "Read the English and correct what reads wrong.",
-                "Press «Save». The translate press saves nothing: until «Save», nothing changes on the site."
+                "«Events» → «Open»: see the event with all its cards, without «Save».",
+                "Write to the Administrator what must change: the date, the place, the route, the cost, the places, the registration or the texts. Only they tell the participants about it."
               ]
             },
             {
               "title": "The signed declarations",
               "steps": [
-                "All of an event's: «Events» → «Edit» → «Registrations received» → «Signed declarations (PDF)».",
+                "All of an event's: «Events» → «Open» → «Registrations received» → «Signed declarations (PDF)».",
                 "One person's: open the registration → «Signed declaration (PDF)».",
                 "They carry identity documents: keep them only in the club's archive."
               ]
@@ -4620,14 +4600,15 @@
             {
               "title": "What the Administrator does, not you",
               "steps": [
-                "Creating and publishing events, cancelling or erasing registrations, resending emails, «Assign numbers», marking numbers printed and sending the thank-you. Tell them what needs doing."
+                "Creating, changing, publishing, duplicating and cancelling events, and telling the participants about a change.",
+                "Cancelling or erasing registrations, resending emails, «Assign numbers», marking numbers printed and sending the thank-you. Tell them what needs doing."
               ]
             }
           ]
         },
         {
           "title": "Administrator — events, registrations, emails",
-          "who": "Role: Administrator or Superadministrator.",
+          "who": "Role: Administrator or Superadministrator. Only you create, set up, publish and cancel the events; the Redactor writes their texts.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -6252,9 +6233,9 @@
     "roleSummary": {
       "CONTRIBUTOR": "the race-number desk, and nothing else",
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
-      "MODERATOR": "creates and configures events, publishes, the gallery",
-      "DEV": "plus the configuration page. No participant data",
-      "ADMIN": "runs the club: plus registrations, participants, export, legal texts, the team, deleting an event",
+      "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, keeps the gallery; changes no event",
+      "DEV": "the configuration page; changes no event, no participant data",
+      "ADMIN": "runs the club: creates, sets up, publishes and cancels the events; plus registrations, export, legal texts, the team, deleting an event",
       "SUPERADMIN": "plus the technical settings that can stop the service, and naming another Superadministrator",
       "MEMBER": "the members' area of the site. No backoffice"
     },

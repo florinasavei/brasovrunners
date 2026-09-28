@@ -20,14 +20,8 @@ import {
   type EditableTranslation,
   listEventsForBackoffice,
 } from "@/modules/content/events/repository";
-import {
-  canCreateEvent,
-  canDeleteEvent,
-  canReadContent,
-  canHardDeleteEvent,
-  canReadRegistrations,
-  canTransition,
-} from "@/modules/staff-identity/domain/roles";
+import { canReadContent, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { eventListVerbs } from "@/modules/content/events/event-list-verbs";
 import {
   EDITORIAL_STATUS_LABEL,
   REGISTRATION_MODE_LABEL,
@@ -89,6 +83,8 @@ export const dynamic = "force-dynamic";
 
 /** The bulk form is the bar above the table (§114) and owns the checkboxes inside the table. */
 const BULK_FORM = "bulk-archive";
+/** The eye of «Deschide» for a reader (§542): the one `preview` glyph the row's ⋮ «Previzualizare» draws too (§318). */
+const PreviewGlyph = ACTION_ICONS.preview;
 
 type EventRow = {
   event: EditableEvent;
@@ -260,8 +256,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // Who may use the line's fixes, asked as the server asks it (BR-REQ-060-01): publishing is the
   // Administrator's crossing into public view (§201), and the series' switch is `canCreateEvent`,
   // as in the Recurență box — switching it *on* asks for publishing too (`setRepeatPublish`).
-  const mayPublish = canTransition(staffUser.role, "IN_REVIEW", "PUBLISHED", false);
-  const maySwitchSeries = canCreateEvent(staffUser.role) && mayPublish;
+  // Every verb of the list, as its service asserts it (§542, `eventListVerbs`): the Organizer reads.
+  const verbs = eventListVerbs(staffUser.role);
+  const mayPublish = verbs.publish;
+  const maySwitchSeries = verbs.switchSeries;
 
   const columns: readonly AdminColumn<ListRow>[] = [
     {
@@ -595,7 +593,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           {t("nav.events")}
         </Typography>
 
-        {canCreateEvent(staffUser.role) && (
+        {verbs.create && (
           // `component="a"` with a resolved path, not `component={Link}`: MUI's Button is a
           // Client Component, and passing a component reference from a Server Component to one
           // is refused by React outright.
@@ -671,14 +669,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       </Box>
 
       {/* The bulk verbs, above the ticks they act on (§114): all, N ticked, publish, archive, delete. */}
-      {lines.length > 0 && canCreateEvent(staffUser.role) && (
+      {lines.length > 0 && verbs.select && (
         <BulkBar
           formId={BULK_FORM}
           uiLocale={locale}
           back={back}
           publish={bulkPublishEventsAction}
           archive={bulkArchiveEventsAction}
-          remove={canDeleteEvent(staffUser.role) ? bulkDeleteEventsAction : undefined}
+          remove={verbs.remove ? bulkDeleteEventsAction : undefined}
           labels={{
             selectAll: t("events.bulkSelectAll"),
             selected: t("events.bulkSelected", { count: "{count}" }),
@@ -728,7 +726,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             spacing={0.5}
             sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 0.5 }}
           >
-            {canCreateEvent(staffUser.role) && (
+            {verbs.select && (
               <Checkbox
                 name="eventRef"
                 // The version travels with the tick, so a bulk archive still carries the version
@@ -754,7 +752,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {/*
               The pen, with the word from `sm` up: on a phone the row has a checkbox, this and
               the disclosure to fit, and an outlined "EDITEAZĂ" took a third of it. The
-              accessible name is the full sentence either way.
+              accessible name is the full sentence either way. A role that changes nothing on the
+              event (§542: the Organizer, the Tehnic) gets the eye and «Deschide» — the same
+              editor, read-only.
             */}
             <Button
               component="a"
@@ -764,13 +764,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               })}
               variant="outlined"
               size="small"
-              aria-label={t("events.editNamed", { title: translations[0]?.title ?? event.id })}
-              title={isSeries ? t("events.seriesEdit") : t("events.edit")}
+              aria-label={t(verbs.edit ? "events.editNamed" : "events.openNamed", { title: translations[0]?.title ?? event.id })}
+              title={verbs.edit ? (isSeries ? t("events.seriesEdit") : t("events.edit")) : isSeries ? t("events.seriesOpen") : t("events.open")}
+              data-testid={verbs.edit ? "event-row-edit" : "event-row-open"}
               sx={{ textTransform: "none", minHeight: 40, minWidth: 40, px: { xs: 1, sm: 1.5 }, gap: 0.75 }}
             >
-              <PencilIcon />
+              {verbs.edit ? <PencilIcon /> : <PreviewGlyph aria-hidden sx={{ fontSize: 18 }} />}
               <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {t("events.edit")}
+                {verbs.edit ? t("events.edit") : t("events.open")}
               </Box>
             </Button>
 
@@ -778,121 +779,128 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               Duplicate, Delete, the preview and the registrations behind "⋮" — a context menu
               (`EventRowMenu`). The verbs are the two hidden forms beside it, each a Server
               Action the menu submits after its confirmation; the role and the version guard
-              stay on the server.
+              stay on the server. Every reader gets the ⋮ for its links (§542); the verbs in it
+              are only the ones `eventListVerbs` grants.
             */}
-            {canCreateEvent(staffUser.role) && (
-              <>
-                {/* Each verb's form asks its own question (§384); the menu only submits it. */}
-                <ActionForm
-                  id={`duplicate-${event.id}`}
-                  action={duplicateEventAction}
-                  hidden
-                  confirm={{ title: t("confirm.duplicateTitle"), body: t("confirm.duplicateBody"), confirmLabel: t("editor.duplicate"), cancelLabel: words.cancel }}
-                >
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="eventId" value={event.id} />
-                  <input type="hidden" name="back" value={back} />
-                </ActionForm>
-                {canDeleteEvent(staffUser.role) && (entries === 0 || entries === testEntries) && !isSeries && (
-                  <ActionForm
-                    id={`delete-${event.id}`}
-                    action={deleteEventAction}
-                    hidden
-                    confirm={{ title: t("confirm.deleteTitle"), body: t("confirm.deleteBody"), confirmLabel: t("editor.delete"), cancelLabel: words.cancel, destructive: true }}
-                  >
-                    <input type="hidden" name="uiLocale" value={locale} />
-                    <input type="hidden" name="eventId" value={event.id} />
-                    <input type="hidden" name="back" value={back} />
-                  </ActionForm>
-                )}
-                <RowMenu
-                  ariaLabel={t("events.moreActions")}
-                  items={[
-                    {
-                      kind: "link",
-                      icon: "preview",
-                      label: t("events.preview"),
-                      href: getPathname({ locale, href: { pathname: "/preview/events/[id]", params: { id: event.id } } }),
-                    },
-                    {
-                      kind: "link",
-                      icon: "registrations",
-                      label: t("events.registrationsLink", { count: entries }),
-                      href: `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`,
-                    },
-                    /*
-                      The emergency sheet (§322), for an event with its own queue and one date:
-                      the phones, the contacts and the health notes of everyone confirmed, on one
-                      printable page. A series' ⋮ belongs to a folded group of dates and could
-                      not say which one's sheet it meant, as with the hard delete below.
-                    */
-                    ...(canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && !isSeries
-                      ? [
-                          {
-                            kind: "link" as const,
-                            icon: "emergency" as const,
-                            label: t("events.emergencySheet"),
-                            href: getPathname({ locale, href: { pathname: "/admin/events/[id]/urgente", params: { id: event.id } } }),
-                          },
-                        ]
-                      : []),
-                    {
-                      kind: "submit",
-                      icon: "duplicate",
-                      label: t("editor.duplicate"),
-                      formId: `duplicate-${event.id}`,
-                    },
-                    // Administrator only, and the service refuses an event with registrations
-                    // against it: the reason replaces the verb, because a count is something an
-                    // organizer can act on and a button that fails is not. A series is deleted
-                    // from the bulk actions, all its dates at once (§113).
-                    ...(canDeleteEvent(staffUser.role)
-                      ? isSeries
-                        ? [{ kind: "note" as const, label: t("events.seriesDeleteNote") }]
-                        : entries > testEntries
-                        ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries - testEntries }) }]
-                        : [
-                            {
-                              kind: "submit" as const,
-                              icon: "delete" as const,
-                              label: t("editor.delete"),
-                              formId: `delete-${event.id}`,
-                              color: "error" as const,
-                            },
-                          ]
-                      : []),
-                    /*
-                      The hard delete, and it is deliberately the last item and a *link* rather
-                      than a verb: it opens a screen that says what would be destroyed and asks
-                      for the event's title to be typed (BR-REQ-037-06). It sits directly under
-                      the note above, so the organizer who has just been told "2 people have
-                      registered" has the one answer to that on the same menu, instead of no
-                      answer at all — which is where this started.
-
-                      Not offered for a series: this erases one date, and a ⋮ that belongs to a
-                      folded group of dates could not say which. Not in the bulk bar either, at
-                      any count: a bulk hard delete is how somebody loses a season.
-                    */
-                    ...(canHardDeleteEvent(staffUser.role) && !isSeries
-                      ? [
-                          {
-                            kind: "link" as const,
-                            // The bin with the cross, as on the screen it opens and on the
-                            // registration's own erase (§318): not the plain bin of "Șterge".
-                            icon: "erase" as const,
-                            color: "error" as const,
-                            label: t("events.hardDelete"),
-                            href: getPathname({
-                              locale,
-                              href: { pathname: "/admin/events/[id]/erase", params: { id: event.id } },
-                            }),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </>
+            {/* Each verb's form asks its own question (§384); the menu only submits it. */}
+            {verbs.duplicate && (
+              <ActionForm
+                id={`duplicate-${event.id}`}
+                action={duplicateEventAction}
+                hidden
+                confirm={{ title: t("confirm.duplicateTitle"), body: t("confirm.duplicateBody"), confirmLabel: t("editor.duplicate"), cancelLabel: words.cancel }}
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <input type="hidden" name="back" value={back} />
+              </ActionForm>
             )}
+            {verbs.remove && (entries === 0 || entries === testEntries) && !isSeries && (
+              <ActionForm
+                id={`delete-${event.id}`}
+                action={deleteEventAction}
+                hidden
+                confirm={{ title: t("confirm.deleteTitle"), body: t("confirm.deleteBody"), confirmLabel: t("editor.delete"), cancelLabel: words.cancel, destructive: true }}
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <input type="hidden" name="back" value={back} />
+              </ActionForm>
+            )}
+            <RowMenu
+              ariaLabel={t("events.moreActions")}
+              items={[
+                {
+                  kind: "link",
+                  icon: "preview",
+                  label: t("events.preview"),
+                  href: getPathname({ locale, href: { pathname: "/preview/events/[id]", params: { id: event.id } } }),
+                },
+                ...(verbs.readRegistrations
+                  ? [
+                      {
+                        kind: "link" as const,
+                        icon: "registrations" as const,
+                        label: t("events.registrationsLink", { count: entries }),
+                        href: `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`,
+                      },
+                    ]
+                  : []),
+                /*
+                  The emergency sheet (§322), for an event with its own queue and one date:
+                  the phones, the contacts and the health notes of everyone confirmed, on one
+                  printable page. A series' ⋮ belongs to a folded group of dates and could
+                  not say which one's sheet it meant, as with the hard delete below.
+                */
+                ...(verbs.readRegistrations && event.registrationMode === "INTERNAL" && !isSeries
+                  ? [
+                      {
+                        kind: "link" as const,
+                        icon: "emergency" as const,
+                        label: t("events.emergencySheet"),
+                        href: getPathname({ locale, href: { pathname: "/admin/events/[id]/urgente", params: { id: event.id } } }),
+                      },
+                    ]
+                  : []),
+                ...(verbs.duplicate
+                  ? [
+                      {
+                        kind: "submit" as const,
+                        icon: "duplicate" as const,
+                        label: t("editor.duplicate"),
+                        formId: `duplicate-${event.id}`,
+                      },
+                    ]
+                  : []),
+                // Administrator only, and the service refuses an event with registrations
+                // against it: the reason replaces the verb, because a count is something an
+                // organizer can act on and a button that fails is not. A series is deleted
+                // from the bulk actions, all its dates at once (§113).
+                ...(verbs.remove
+                  ? isSeries
+                    ? [{ kind: "note" as const, label: t("events.seriesDeleteNote") }]
+                    : entries > testEntries
+                    ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries - testEntries }) }]
+                    : [
+                        {
+                          kind: "submit" as const,
+                          icon: "delete" as const,
+                          label: t("editor.delete"),
+                          formId: `delete-${event.id}`,
+                          color: "error" as const,
+                        },
+                      ]
+                  : []),
+                /*
+                  The hard delete, and it is deliberately the last item and a *link* rather
+                  than a verb: it opens a screen that says what would be destroyed and asks
+                  for the event's title to be typed (BR-REQ-037-06). It sits directly under
+                  the note above, so the organizer who has just been told "2 people have
+                  registered" has the one answer to that on the same menu, instead of no
+                  answer at all — which is where this started.
+
+                  Not offered for a series: this erases one date, and a ⋮ that belongs to a
+                  folded group of dates could not say which. Not in the bulk bar either, at
+                  any count: a bulk hard delete is how somebody loses a season.
+                */
+                ...(verbs.hardDelete && !isSeries
+                  ? [
+                      {
+                        kind: "link" as const,
+                        // The bin with the cross, as on the screen it opens and on the
+                        // registration's own erase (§318): not the plain bin of "Șterge".
+                        icon: "erase" as const,
+                        color: "error" as const,
+                        label: t("events.hardDelete"),
+                        href: getPathname({
+                          locale,
+                          href: { pathname: "/admin/events/[id]/erase", params: { id: event.id } },
+                        }),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </Stack>
           );
         }}

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { allowedTransitions, EDITORIAL_STATUSES, eventEditorTransitions, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { allowedTransitions, canTransitionEvent, EDITORIAL_STATUSES, eventEditorTransitions, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
  * BR-REQ-051-01 — «Publică» on a draft's own editor, one press, as «Creează și publică» on the
@@ -24,7 +24,7 @@ describe("§423 the editor's verbs on a draft", () => {
     for (const role of STAFF_ROLES) {
       if (role === "ADMIN" || role === "SUPERADMIN") continue;
       for (const from of EDITORIAL_STATUSES) {
-        expect(eventEditorTransitions(role, from, true), `${role} from ${from}`).toEqual(allowedTransitions(role, from, true));
+        expect(eventEditorTransitions(role, from, true), `${role} from ${from}`).toEqual(allowedTransitions(role, from, true).filter((to) => canTransitionEvent(role, from, to, true)));
       }
     }
   });
@@ -32,7 +32,7 @@ describe("§423 the editor's verbs on a draft", () => {
   it("changes nothing from any state but a draft", () => {
     for (const role of STAFF_ROLES) {
       for (const from of EDITORIAL_STATUSES.filter((status) => status !== "DRAFT")) {
-        expect(eventEditorTransitions(role, from, false), `${role} from ${from}`).toEqual(allowedTransitions(role, from, false));
+        expect(eventEditorTransitions(role, from, false), `${role} from ${from}`).toEqual(allowedTransitions(role, from, false).filter((to) => canTransitionEvent(role, from, to, false)));
       }
     }
   });

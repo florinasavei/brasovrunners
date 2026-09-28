@@ -4,7 +4,7 @@ import { addPhoto, addStoredPhoto } from "@/modules/content/gallery/service";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
 import { parseImageQuality } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
-import { canEditEventFields } from "@/modules/staff-identity/domain/roles";
+import { isEditorial } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -32,7 +32,7 @@ export async function POST(
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canEditEventFields(actor.role)) {
+  if (!isEditorial(actor.role)) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
   }
   if (!isStorageConfigured()) {
