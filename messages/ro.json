@@ -7073,6 +7073,12 @@
       "limited": "Ai cerut deja de câteva ori în ultima oră. Verifică-ți căsuța (și dosarul Spam) sau încearcă din nou mai târziu.",
       "unavailable": "Abonarea la noutăți nu este disponibilă acum. Încearcă mai târziu."
     },
+    "leave": {
+      "open": "Vreau să mă dezabonez",
+      "intro": "Scrie adresa pe care primești noutățile. Îți trimitem pe ea linkul de unde te dezabonezi.",
+      "submit": "Trimite-mi linkul",
+      "sent": "Dacă adresa e abonată, ai primit un email cu linkul de gestionare."
+    },
     "linkInvalid": "Linkul nu mai este valabil",
     "contactLink": "Mergi la pagina de contact",
     "confirm": {

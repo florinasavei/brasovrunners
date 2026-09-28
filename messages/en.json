@@ -7073,6 +7073,12 @@
       "limited": "You have already asked a few times in the last hour. Check your inbox (and the Spam folder) or try again later.",
       "unavailable": "Subscribing to the news is not available right now. Try again later."
     },
+    "leave": {
+      "open": "I want to unsubscribe",
+      "intro": "Type the address you receive the news at. We send it the link where you unsubscribe.",
+      "submit": "Send me the link",
+      "sent": "If the address is subscribed, you have received an email with the link to manage it."
+    },
     "linkInvalid": "This link is no longer valid",
     "contactLink": "Go to the contact page",
     "confirm": {

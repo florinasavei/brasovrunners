@@ -1,6 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
+import UnsubscribeOutlinedIcon from "@mui/icons-material/UnsubscribeOutlined";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -9,7 +10,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { submitNewsletterAction } from "@/app/[locale]/contact/actions";
+import { requestNewsletterManageLinkAction, submitNewsletterAction } from "@/app/[locale]/contact/actions";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -23,12 +24,17 @@ import NewsletterDialogButton from "./NewsletterDialogButton";
 import {
   NEWSLETTER_DIALOG_ID,
   NEWSLETTER_ERROR_SUMMARY_ID,
+  NEWSLETTER_LEAVE_ID,
   NEWSLETTER_SECTION_ID,
   NEWSLETTER_TRIGGER_ID,
   newsletterDialogOpen,
+  newsletterLeaveRefused,
   type NewsletterBox,
+  type NewsletterLeaveOutcome,
   type NewsletterOutcome,
 } from "./newsletter-box";
+
+const NEWSLETTER_LEAVE_ERROR_ID = "newsletter-leave-errors";
 
 type Props = {
   locale: Locale;
@@ -47,6 +53,10 @@ type Props = {
    * token again and every later press would answer "tick it again" until the page was reloaded.
    */
   attempt: string;
+  /** «Vreau să mă dezabonez»'s answer (`?nleave=`), or nothing. */
+  leaveOutcome: NewsletterLeaveOutcome | null;
+  /** The address typed there before a refusal, from the sealed draft. */
+  leaveTyped: string | undefined;
 };
 
 /**
@@ -64,7 +74,7 @@ type Props = {
  * The page draws this only while the privacy notice in force describes the newsletter
  * (`cachedNewsletterOffered`): nothing is collected before the club's approved text says why.
  */
-export default async function NewsletterSignup({ locale, outcome, refused, typed, siteKey, renderedAt, attempt }: Props) {
+export default async function NewsletterSignup({ locale, outcome, refused, typed, siteKey, renderedAt, attempt, leaveOutcome, leaveTyped }: Props) {
   const t = await getTranslations("Newsletter");
   const contactPath = getPathname({ locale, href: "/contact" });
   const open = newsletterDialogOpen(outcome);
@@ -82,6 +92,9 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
         : outcome === "limited"
           ? t("errors.limited")
           : null;
+  const leaveOpen = newsletterLeaveRefused(leaveOutcome);
+  // A malformed address is said under its box; the check and the hour's limit above the form.
+  const leaveErrorText = leaveOutcome === "captcha" ? t("errors.captcha") : leaveOutcome === "limited" ? t("errors.limited") : null;
 
   return (
     <Box
@@ -327,6 +340,89 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
 
             <SubmitButton label={t("submit")} pendingLabel={t("submitting")} size="large" fullWidth>
               <MarkEmailUnreadOutlinedIcon />
+            </SubmitButton>
+          </Stack>
+        </form>
+      </Box>
+
+      {/*
+        «Vreau să mă dezabonez» (§NNN): for somebody with no newsletter at hand, whose every message
+        carries the way out. A native fold, so it opens without a script; the answer is one sentence
+        whatever the address is, and the link to leave goes to the mailbox, never to this page.
+      */}
+      {leaveOutcome === "sent" && (
+        <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
+          {t("leave.sent")}
+        </Alert>
+      )}
+      <Box
+        component="details"
+        id={NEWSLETTER_LEAVE_ID}
+        open={leaveOpen}
+        data-testid="newsletter-leave"
+        sx={{ mt: 1.5, scrollMarginTop: 16, "&[open] > summary": { mb: 1 } }}
+      >
+        <Box
+          component="summary"
+          data-testid="newsletter-leave-open"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.75,
+            minHeight: TAP_TARGET.minHeight,
+            cursor: "pointer",
+            listStyle: "none",
+            "&::-webkit-details-marker": { display: "none" },
+            color: "text.secondary",
+            fontSize: "0.9375rem",
+            textDecoration: "underline",
+            textUnderlineOffset: "3px",
+            "&:hover": { color: "text.primary" },
+            "&:focus-visible": { outline: "3px solid", outlineColor: "primary.light", outlineOffset: 2 },
+          }}
+        >
+          <UnsubscribeOutlinedIcon aria-hidden="true" sx={{ fontSize: 20 }} />
+          {t("leave.open")}
+        </Box>
+
+        {leaveErrorText && (
+          <Alert severity="error" id={NEWSLETTER_LEAVE_ERROR_ID} role="alert" tabIndex={-1} sx={{ mb: 2 }}>
+            {leaveErrorText}
+          </Alert>
+        )}
+
+        <form action={requestNewsletterManageLinkAction} data-testid="newsletter-leave-form">
+          <Stack spacing={2} sx={{ maxWidth: 480 }}>
+            <Typography variant="body2" color="text.secondary">
+              {t("leave.intro")}
+            </Typography>
+            <input type="hidden" name="locale" value={locale} />
+            {/* Bots fill every field; a human never sees or fills this one. */}
+            <input
+              type="text"
+              name="honeypot"
+              autoComplete="off"
+              tabIndex={-1}
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
+            />
+            <input type="hidden" name="renderedAt" value={renderedAt} />
+            <TextField
+              id="newsletter-leave-email"
+              // Its own name: the contact form and the pop-up post addresses of their own on this page.
+              name="newsletterLeaveEmail"
+              type="email"
+              label={t("email")}
+              required
+              autoComplete="email"
+              fullWidth
+              defaultValue={leaveTyped}
+              error={leaveOutcome === "invalid"}
+              helperText={leaveOutcome === "invalid" ? t("errors.email") : undefined}
+            />
+            {siteKey && <BotCheck siteKey={siteKey} locale={locale} attempt={attempt} />}
+            <SubmitButton label={t("leave.submit")} pendingLabel={t("submitting")} variant="outlined" size="medium">
+              <UnsubscribeOutlinedIcon />
             </SubmitButton>
           </Stack>
         </form>

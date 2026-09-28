@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
-import { mintNewsletterLink, newsletterMessagesTo, newsletterSubscription, seedConfirmedSubscriber } from "./support/newsletter";
+import { mintNewsletterLink, newsletterManageRequestsTo, newsletterMessagesTo, newsletterSubscription, seedConfirmedSubscriber } from "./support/newsletter";
 
 /**
  * §445 — the backoffice's «Newsletter» entry (the owner, 2026-09-26: "un meniu suplimentar în
@@ -122,6 +122,9 @@ test.describe("§445 the newsletter's own backoffice page", () => {
   }
 
   test("the Organizer opens «Newsletter» and finds the composer, without the Administrator's withdrawal", async ({ page }) => {
+    // A row of the Organizer's own to read, so «no Dezabonează» is said of a drawn row, not an empty table.
+    const email = `e2e-news-organizer-${Date.now().toString(36)}@test.invalid`;
+    await seedConfirmedSubscriber(email, ["BIG_EVENTS"]);
     await signIn(page, "Dev Moderator");
     await expect(page.getByRole("tab", { name: "Newsletter" })).toBeVisible();
     expect((await page.goto("/ro/admin/newsletter"))?.status()).toBe(200);
@@ -131,7 +134,13 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     // The Organizer reads «Abonați» and its CSV, and is offered no «Dezabonează» (§NNN).
     await expect(page.locator("#main").getByTestId("newsletter-subscribers")).toBeVisible();
     await expect(page.getByTestId("newsletter-subscribers-csv")).toHaveCount(1);
-    await expect(page.getByTestId("newsletter-subscriber-unsubscribe")).toHaveCount(0);
+    // The seeded address through the list's own search: the fold opens by itself on a filter.
+    await page.goto(`/ro/admin/newsletter?q=${encodeURIComponent(email)}#newsletter-subscribers`);
+    const table = page.locator("#main").getByTestId("newsletter-subscribers-table");
+    await expect(table.getByTestId("newsletter-subscriber-row")).toHaveCount(1);
+    await expect(table.getByTestId("newsletter-subscriber-email")).toHaveText(email);
+    await expect(table.getByTestId("newsletter-subscriber-unsubscribe")).toHaveCount(0);
+    await expect(table.getByRole("button", { name: "Dezabonează" })).toHaveCount(0);
   });
 });
 
@@ -183,6 +192,36 @@ test.describe("§445 the newsletter pop-up on the contact page", () => {
 
     await dialog.getByTestId("newsletter-close").click();
     await expect(dialog).toBeHidden();
+  });
+
+  test("«Vreau să mă dezabonez» opens a one-box form that answers one sentence whatever the address, and mails the link only to a subscriber (§NNN)", async ({ page }) => {
+    const subscriber = address();
+    const stranger = `stranger-${address()}`;
+    await seedConfirmedSubscriber(subscriber, ["BIG_EVENTS"]);
+
+    for (const email of [subscriber, stranger]) {
+      await page.goto("/ro/contact", { waitUntil: "networkidle" });
+      const fold = page.getByTestId("newsletter-leave");
+      const opener = fold.getByTestId("newsletter-leave-open");
+      // A quiet link with a glyph, a thumb's height, the form folded under it.
+      await expect(opener).toContainText("Vreau să mă dezabonez");
+      await expect(opener.locator("svg")).toHaveCount(1);
+      expect((await opener.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(fold.locator('[name="newsletterLeaveEmail"]')).toBeHidden();
+      await opener.click();
+      await fold.locator('[name="newsletterLeaveEmail"]').fill(email);
+      await page.waitForTimeout(HUMAN_PAUSE_MS);
+      await fold.getByRole("button", { name: "Trimite-mi linkul" }).click();
+      await expect(page).toHaveURL(/nleave=sent/, { timeout: 30_000 });
+      // The same sentence for both: the page says nothing about whether an address is on the list.
+      await expect(page.getByTestId("newsletter-leave-sent")).toHaveText("Dacă adresa e abonată, ai primit un email cu linkul de gestionare.");
+    }
+    expect(await newsletterManageRequestsTo(subscriber)).toBe(1);
+    expect(await newsletterManageRequestsTo(stranger)).toBe(0);
+    // Nothing changed by the request: the subscriber leaves from the link's page, not from this form.
+    expect((await newsletterSubscription(subscriber))?.confirmed).toBe(true);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 
   test("refuses no topic inside the pop-up, keeping the address; then says 'check your inbox'", async ({ page }) => {

@@ -129,7 +129,8 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * like the contact form's. Every accepted post sends one message — the confirmation link, or the
    * link to an existing subscription — to an address nobody has proven, so the bucket belongs to
    * that mailbox: three an hour is a person who did not see the first email, and not a stranger
-   * filling somebody's inbox.
+   * filling somebody's inbox. «Vreau să mă dezabonez» under the same button (§NNN) spends the same
+   * bucket, so the two forms together still put at most three messages an hour in one mailbox.
    */
   "newsletter-subscribe": { limit: 3, windowMs: 60 * 60_000 },
   /**

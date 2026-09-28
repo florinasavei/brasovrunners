@@ -11,7 +11,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { parseSubscriberListQuery } from "@/modules/newsletter/domain/subscriber-list";
 import { sendNewsletter, unsubscribeNewsletterSubscriber } from "@/modules/newsletter/service";
-import { listNewsletterSubscribers } from "@/modules/newsletter/subscribers";
+import { exportNewsletterSubscribers, listNewsletterSubscribers } from "@/modules/newsletter/subscribers";
 import { issueNewsletterToken } from "@/modules/newsletter/tokens";
 import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { enqueueEmail } from "@/modules/notifications/outbox";
@@ -158,6 +158,11 @@ describe("§NNN the newsletter's subscribers, their CSV, the unsubscribe, and th
     // A fragment is a way to find a row, over the address as typed and its canonical form.
     expect((await list({ q: "GOOGLEMAIL" })).rows.map((row) => row.email)).toEqual(["Ana.Pop+club@GoogleMail.com"]);
     expect((await list({ q: "pop@gmail" })).rows.map((row) => row.email)).toEqual(["Ana.Pop+club@GoogleMail.com"]);
+    // A well-formed address that is only part of a longer one is still a part: the canonical match
+    // finds nothing, and the "contains" finds the row — over the canonical form, and over the typed one.
+    expect((await list({ q: "pop@gmail.co" })).rows.map((row) => row.email)).toEqual(["Ana.Pop+club@GoogleMail.com"]);
+    expect((await list({ q: "A.Pop+club@googlemail.co" })).rows.map((row) => row.email)).toEqual(["Ana.Pop+club@GoogleMail.com"]);
+    expect((await list({ q: "on@example.org" })).rows.map((row) => row.email)).toEqual(["ion@example.org"]);
     // `%` and `_` are literal, never a pattern matching everybody.
     expect((await list({ q: "%" })).rows).toEqual([]);
   });
@@ -188,6 +193,19 @@ describe("§NNN the newsletter's subscribers, their CSV, the unsubscribe, and th
     expect(link("expired@example.org")).toEqual({ kind: "expired" });
     expect(link("sending@example.org")).toEqual({ kind: "sending" });
     expect(link("confirmed@example.org")).toEqual({ kind: "confirmed" });
+
+    // A confirmed row whose tokens and outbox would say otherwise is still «Confirmat»: the link's
+    // subqueries run for a pending row alone.
+    const confirmed = rows.find((row) => row.email === "confirmed@example.org");
+    if (!confirmed) throw new Error("the confirmed row is listed");
+    await issueNewsletterToken(db, { subscriberId: confirmed.id, purpose: "CONFIRM", expiresAt: liveUntil, now: NOW });
+    expect((await list()).rows.find((row) => row.email === "confirmed@example.org")?.link).toEqual({ kind: "confirmed" });
+
+    // The CSV's read: the same rows, newest first, and no link state at all.
+    const exported = await exportNewsletterSubscribers(db, parseSubscriberListQuery({}), 10);
+    expect(exported.map((row) => row.email)).toEqual(rows.map((row) => row.email));
+    expect(exported.every((row) => !("link" in row))).toBe(true);
+    expect((await exportNewsletterSubscribers(db, parseSubscriberListQuery({ state: "pending" }), 2)).map((row) => row.email)).toEqual(["sending@example.org", "expired@example.org"]);
   });
 
   it("serves the CSV to an Organizer — BOM, the table's columns, the filter — records it without an address, and refuses a volunteer", async () => {

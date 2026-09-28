@@ -6,7 +6,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { parseSubscriberListQuery } from "@/modules/newsletter/domain/subscriber-list";
 import { buildSubscribersCsv, subscribersCsvFileName } from "@/modules/newsletter/subscribers-csv";
-import { listNewsletterSubscribers } from "@/modules/newsletter/subscribers";
+import { exportNewsletterSubscribers } from "@/modules/newsletter/subscribers";
 import { topicWords } from "@/modules/newsletter/topic-words";
 import { canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -41,7 +41,8 @@ export async function GET(request: Request): Promise<Response> {
   const query = parseSubscriberListQuery(Object.fromEntries(url.searchParams));
   const now = new Date();
   const db = getDb();
-  const list = await listNewsletterSubscribers(db, query, now, CSV_LIMIT);
+  // The subscribers table alone: the file has no link-state column, so the table's subqueries are not run.
+  const rows = await exportNewsletterSubscribers(db, query, CSV_LIMIT);
 
   const t = await getTranslations({ locale, namespace: "Admin" });
   const words = topicWords(locale);
@@ -54,7 +55,7 @@ export async function GET(request: Request): Promise<Response> {
       subscribed: t("newsletter.subscribers.columns.since"),
       confirmed: t("newsletter.subscribers.columns.confirmedOn"),
     },
-    list.rows.map((row) => ({
+    rows.map((row) => ({
       email: row.email,
       language: row.locale.toUpperCase(),
       topics: row.topics.map((topic) => words[topic]).join("; "),
@@ -69,7 +70,7 @@ export async function GET(request: Request): Promise<Response> {
     action: "newsletter.subscribers_exported",
     entityType: "newsletter",
     entityId: null,
-    metadata: { searched: query.q !== "", topic: query.topic, state: query.state, rowCount: list.rows.length },
+    metadata: { searched: query.q !== "", topic: query.topic, state: query.state, rowCount: rows.length },
     now,
   });
 

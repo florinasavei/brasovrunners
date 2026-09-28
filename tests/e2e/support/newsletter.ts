@@ -92,6 +92,18 @@ export async function newsletterMessagesTo(email: string): Promise<number> {
   });
 }
 
+/** How many «Vreau să mă dezabonez» links were queued for an address (§NNN): the confirmation message marked `request: manage`. */
+export async function newsletterManageRequestsTo(email: string): Promise<number> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query<{ n: string }>(
+      `SELECT count(*) AS n FROM email_outbox
+        WHERE message_type = 'NEWSLETTER_CONFIRM' AND payload_json->>'request' = 'manage' AND lower(recipient_email) = lower($1)`,
+      [email],
+    );
+    return Number(rows[0]?.n ?? 0);
+  });
+}
+
 /** The subscription as stored: its topics, and whether it is confirmed — or null once it is gone. */
 export async function newsletterSubscription(email: string): Promise<{ topics: string[]; confirmed: boolean } | null> {
   return withDatabase(async (client) => {

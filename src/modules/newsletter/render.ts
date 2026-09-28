@@ -18,7 +18,7 @@ import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
 import { normalizeTopics } from "./domain/topics";
 import { topicsPhrase } from "./topic-words";
-import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS } from "./tokens";
+import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS, NEWSLETTER_MANAGE_REQUEST } from "./tokens";
 
 type RendererDb = Parameters<EmailRenderer>[1];
 
@@ -117,6 +117,8 @@ export async function renderNewsletterRow(
     if (subscriber.confirmedAt !== null) {
       // Already subscribed: nothing to confirm, and the owner of the address changes things there.
       data.newsletterAlready = true;
+      // Asked for from «Vreau să mă dezabonez» (§NNN): the same link, words that say what was asked.
+      if ((payload as { request?: unknown }).request === NEWSLETTER_MANAGE_REQUEST) data.newsletterManageRequest = true;
       actionUrl = await manageUrl();
     } else {
       // The double opt-in's link, for the club's email-link window (§377), superseding the last one.

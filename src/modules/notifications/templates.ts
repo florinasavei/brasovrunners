@@ -860,6 +860,8 @@ export type TemplateData = {
   newsletterTopicsOther?: string;
   /** The confirmation message went to an address already subscribed: its action is the subscriber's own page. */
   newsletterAlready?: boolean;
+  /** …and it was asked for from the contact page's «Vreau să mă dezabonez» (§NNN), not by subscribing again. */
+  newsletterManageRequest?: boolean;
   /** The subscriber's own page — the topics and "unsubscribe" — on every newsletter message; never on anything else. */
   newsletterManageUrl?: string;
   /** A newsletter's own words (§445): this half's subject and body, and the other half's. */
@@ -1334,7 +1336,12 @@ const T = {
       subject: (d: TemplateData) => (d.newsletterAlready ? `Abonamentul tău la noutățile ${CLUB_NAME}` : `Confirmă abonarea la noutățile ${CLUB_NAME}`),
       greeting: () => "Salut,",
       body: (d: TemplateData) =>
-        d.newsletterAlready
+        d.newsletterManageRequest
+          ? [
+              "Cineva — probabil tu — a cerut, pe pagina noastră de contact, linkul abonamentului la noutăți pentru această adresă.",
+              "Cu butonul de mai jos te dezabonezi de la tot sau îți schimbi temele. Dacă nu ai cerut tu, ignoră emailul: abonamentul rămâne cum e.",
+            ]
+          : d.newsletterAlready
           ? [
               "Cineva — probabil tu — a cerut din nou, pe pagina noastră de contact, noutățile clubului pe această adresă. Ești deja abonat(ă), așa că nu s-a schimbat nimic.",
               "Cu butonul de mai jos vezi temele alese; acolo le poți schimba sau te poți dezabona.",
@@ -1883,7 +1890,12 @@ const T = {
       subject: (d: TemplateData) => (d.newsletterAlready ? `Your subscription to ${CLUB_NAME}'s news` : `Confirm your subscription to ${CLUB_NAME}'s news`),
       greeting: () => "Hello,",
       body: (d: TemplateData) =>
-        d.newsletterAlready
+        d.newsletterManageRequest
+          ? [
+              "Someone — probably you — asked, on our contact page, for the link to this address's subscription to the club's news.",
+              "With the button below you unsubscribe from everything or change your topics. If it was not you, ignore this email: the subscription stays as it is.",
+            ]
+          : d.newsletterAlready
           ? [
               "Someone — probably you — asked again, on our contact page, for the club's news at this address. You are already subscribed, so nothing has changed.",
               "The button below shows the topics you chose; you can change them there or unsubscribe.",
