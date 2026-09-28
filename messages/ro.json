@@ -6156,6 +6156,7 @@
       "title": "Înscriere de familie la {event}",
       "titlePlain": "Înscriere de familie",
       "intro": "De pe adresa {email} s-a trimis formularul pentru {people}. Locurile sunt rezervate, dar nimeni nu e confirmat încă: verifică lista și apasă butonul o singură dată.",
+      "introLapsed": "De pe adresa {email} s-a trimis formularul pentru {people}. Locurile nu mai sunt rezervate: confirmă oricum și fiecare primește un loc dacă mai e liber, altfel unul pe lista de așteptare.",
       "joining": "Se înscriu acum",
       "personLabel": "{n}. {name}",
       "born": "Data nașterii: {date}",

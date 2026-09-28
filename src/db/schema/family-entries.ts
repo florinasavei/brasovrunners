@@ -86,8 +86,9 @@ export type FamilySitting = typeof familySittings.$inferSelect;
  * - `sitting_key` is the id the browser's sealed half carries (§519): a sitting's id, or the random
  *   one it carries before any sitting row exists (a first form that wrote nothing). A form that opens
  *   a sitting under that random id adopts the holds by it.
- * - `slot` makes the opening press's hold one per sitting (`press`), however often its half is replayed;
- *   a form's is its own.
+ * - `slot` makes a hold one per person of the sitting (`family-place-slot.ts`: a keyed digest of the
+ *   sitting's key and the runner's name key, never the name), however often a form or the press is
+ *   replayed; `press` only for a person with no name to key.
  * - `expires_at` is the sitting's `reserved_until`: the hold lapses with the family's reservations, or
  *   goes when the family's email is confirmed.
  */

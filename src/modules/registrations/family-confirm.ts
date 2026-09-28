@@ -11,7 +11,7 @@ import { findParticipantById } from "@/modules/participants/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { readAddressCap } from "./address-cap";
 import { ANOTHER_LINK_INVALID } from "./domain/family";
-import { PRESS_SLOT } from "./domain/family-sitting";
+import { familyPlaceSlot } from "./family-place-slot";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { birthDateText, deleteFamilyEntry, findFamilyEntryByToken, personOfEntry, registeredOnAddress } from "./family-entries";
 import { familyRegistrationOpen } from "./family-gate";
@@ -131,7 +131,8 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
       sitting's deadline (§NNN): confirmed from its own email, the hold goes before the person is
       allocated, so their own held place is never counted against them.
     */
-    if (entry.sittingId) await releaseFamilyPlaceHold(tx, entry.sittingId, PRESS_SLOT);
+    // The person's own slot (`familyPlaceSlot`, round four): the one the opening press held for them.
+    if (entry.sittingId) await releaseFamilyPlaceHold(tx, entry.sittingId, familyPlaceSlot(entry.sittingId, personOfEntry(entry).legalName));
 
     const created = await submitRegistration(
       tx,

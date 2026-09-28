@@ -43,7 +43,7 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
-// The sitting's screen, rendered with the real catalogues (finding 3: its words are the same for every address).
+// The family's confirmation page, rendered with the real catalogues (round four: past the deadline it says the places lapsed).
 vi.mock("next-intl/server", async (importOriginal) => {
   const { createTranslator } = await import("next-intl");
   const catalogues = {
@@ -67,7 +67,7 @@ const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { listFamilyReservationsForEvent } = await import("@/modules/registrations/admin-repository");
 const { familyOf } = await import("@/modules/registrations/family-marker");
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
-const { default: FamilySittingNext } = await import("@/modules/registrations/ui/FamilySittingNext");
+const { default: FamilySittingConfirm } = await import("@/modules/registrations/ui/FamilySittingConfirm");
 const { NextIntlClientProvider } = await import("next-intl");
 const catalogues = {
   ro: (await import("../../../messages/ro.json")).default,
@@ -218,29 +218,15 @@ async function refusal(promise: Promise<unknown>) {
   throw new Error("expected a refusal");
 }
 
-/** The sitting's screen as the browser's half feeds it (`register/page.tsx`), with one address for every case. */
-async function screen(people: { name: string; birthDate: string; waitlist?: boolean }[], until: Date | null, now: Date): Promise<string> {
-  const page = (await FamilySittingNext({
-    email: "adresa@example.ro",
-    names: people.map((person) => person.name),
-    reservation: { people, until },
-    sameBirthDate: null,
-    releaseInMs: WINDOW_MS,
-    firstName: people.at(-1)?.name.split(" ")[0] ?? null,
-    eventTitle: "Crosul familiei",
-    atOnce: false,
-    windowMinutes: 10,
-    locale,
-    slug: "crosul-familiei",
-    continueAction: async () => undefined,
-    releaseAction: async () => undefined,
-    now,
-  })) as ReactElement;
+/** The page the family's email opens (`registrations/family/[token]/page.tsx`), rendered from the link it reads. */
+async function confirmPage(link: Awaited<ReturnType<typeof readFamilySittingLink>>): Promise<string> {
+  if (!link.ok) throw new Error("the page could not read its link");
+  const page = (await FamilySittingConfirm({ locale, token: "t", link, action: async () => undefined })) as ReactElement;
   const stream = await renderToReadableStream(
     createElement(NextIntlClientProvider, { locale, messages: catalogues[locale] } as unknown as ComponentProps<typeof NextIntlClientProvider>, page),
   );
   await stream.allReady;
-  return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "").replace(/ id="[^"]*"/g, "");
+  return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
 }
 
 describe("BR-REQ-034-01 a family sitting reserves every place the moment its form is sent (§NNN)", () => {
@@ -347,6 +333,33 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
   });
 });
 
+describe("BR-REQ-031-01 the page the family's email opens says whether the places still hold (§NNN, the review of 2026-09-28, round four)", () => {
+  it("before the deadline: reserved, nobody confirmed yet; past it, while the link still lives: the places lapsed, and the press allocates what is free", async () => {
+    const event = await createEvent(50);
+    const { sittingId } = await start(event, "Ana", 0);
+    await send(event, "Mihai", 1, sittingId);
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const { secret } = await familyMessage(at(3));
+
+    const before = await confirmPage(await readFamilySittingLink(db, secret!, "ro", at(4), { charge: false }));
+    expect(before).toContain("Locurile sunt rezervate, dar nimeni nu e confirmat încă");
+    expect(before).not.toContain("Locurile nu mai sunt rezervate");
+
+    // Minute 41: the deadline (40) is past, the link (48 hours) is not.
+    const late = await readFamilySittingLink(db, secret!, "ro", at(41), { charge: false });
+    expect(late).toMatchObject({ ok: true, reserved: false });
+    const after = await confirmPage(late);
+    expect(after).toContain("Locurile nu mai sunt rezervate: confirmă oricum și fiecare primește un loc dacă mai e liber, altfel unul pe lista de așteptare.");
+    expect(after).not.toContain("Locurile sunt rezervate");
+
+    // …and the press still allocates what is free: two places, both taken now.
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: [], fitnessAcknowledged: true }, at(42));
+    if (!press.ok) throw new Error("the press did nothing");
+    expect((await rows()).map((row) => row.status)).toEqual(["PENDING_DECLARATION", "PENDING_DECLARATION"]);
+    expect(await available(event, at(42))).toBe(48);
+  });
+});
+
 describe("BR-REQ-034-02 a family's unconfirmed places go back through the allocator (§NNN)", () => {
   it("once the deadline is past, the three places are free again and the waiting list is served", async () => {
     const event = await createEvent(3);
@@ -450,7 +463,7 @@ describe("BR-REQ-034-02 the deadline is the first form's, and nothing moves it (
   });
 });
 
-describe("BR-REQ-031-01 a form that writes no registration holds a place: the count and the screen are the same whatever the address holds (§NNN; §39, AGENTS.md §19.4)", () => {
+describe("BR-REQ-031-01 a form that writes no registration holds a place: the count and the places are the same whatever the address holds (§NNN; §39, AGENTS.md §19.4)", () => {
   type Case = "fresh" | "holdsTheFirstPerson" | "atItsLimit";
 
   /**
@@ -458,7 +471,8 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
    * an address that is fresh, that already holds Ana (registered from another device, her address not
    * confirmed yet), or that already carries the limit with three other people. `full`: the event's one
    * place taken by somebody on another address first. Returns the public count after each step, the
-   * places the browser's half would carry, the deadline, and the screen after the third form.
+   * places the browser's half would carry and the deadline. The screen, from the real actions' cookie, is
+   * `family-reservations-actions.test.ts`.
    */
   async function family(kind: Case, capacity: number, address: string, full = false) {
     const event = await createEvent(capacity);
@@ -500,13 +514,8 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
     }
     const fourth = await refusal(send(event, "Luca", 6, sittingId, mail, { people: places.length, reservedUntil: opened.reservedUntil }));
     counts.push(await available(event, at(6)));
-    const people = ["Ana Pop", "Mihai Pop", "Ioana Pop"].map((name, index) => ({
-      name,
-      birthDate: BIRTH_DATES[name.split(" ")[0]],
-      ...(places[index] === "waitlist" ? { waitlist: true } : {}),
-    }));
-    const html = await screen(people, opened.reservedUntil, at(5));
-    return { counts, places, fourth, reservedUntil: opened.reservedUntil?.toISOString(), html };
+    // The screen the browser renders is proven from the cookie the real actions write (`family-reservations-actions.test.ts`).
+    return { counts, places, fourth, reservedUntil: opened.reservedUntil?.toISOString() };
   }
 
   async function everyCase(capacity: number, full = false) {
@@ -525,14 +534,11 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
     expect(fresh.counts).toEqual([50, 49, 48, 47, 47]);
     expect(fresh.places).toEqual(["reserved", "reserved", "reserved"]);
     expect(fresh.fourth).toEqual({ code: "VALIDATION_ERROR", fields: ["sittingAtCap"] });
-    expect(fresh.html).toContain("Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la 13:40.");
-    expect(fresh.html.match(/ — loc rezervat</g)).toHaveLength(3);
     for (const other of [holds, limit]) {
       expect(other.counts).toEqual(fresh.counts);
       expect(other.places).toEqual(fresh.places);
       expect(other.fourth).toEqual(fresh.fourth);
       expect(other.reservedUntil).toBe(fresh.reservedUntil);
-      expect(other.html).toBe(fresh.html);
     }
     // What the held places are: rows naming no person, counted until the deadline.
     const holdsRows = await db.select().from(familyPlaceHolds);
@@ -547,15 +553,11 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
     expect(fresh.counts).toEqual([0, 0, 0, 0, 0]);
     expect(fresh.places).toEqual(["waitlist", "waitlist", "waitlist"]);
     expect(fresh.fourth).toEqual({ code: "VALIDATION_ERROR", fields: ["sittingAtCap"] });
-    expect(fresh.html).toContain("Înscriere de familie: Ana, Mihai, Ioana — 3 persoane pe lista de așteptare.");
-    expect(fresh.html.match(/ — pe lista de așteptare, după confirmare</g)).toHaveLength(3);
-    expect(fresh.html).not.toContain("loc rezervat");
     for (const other of [holds, limit]) {
       expect(other.fourth).toEqual(fresh.fourth);
       expect(other.reservedUntil).toBe(fresh.reservedUntil);
       expect(other.counts).toEqual(fresh.counts);
       expect(other.places).toEqual(fresh.places);
-      expect(other.html).toBe(fresh.html);
     }
   });
 

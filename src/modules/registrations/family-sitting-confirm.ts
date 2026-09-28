@@ -67,6 +67,12 @@ export type FamilySittingLink =
       /** Who the address held at the event before the sitting, as "Ana P." (`registeredOnAddress`). */
       registered: string[];
       registrationsPerAddress: number;
+      /**
+       * Whether the sitting's places are still reserved now (§NNN; the review of 2026-09-28, round four):
+       * its fixed deadline is ahead. The link lives longer than the places, so past it the page says they
+       * lapsed and that the press still allocates what is free.
+       */
+      reserved: boolean;
     }
   | { ok: false };
 
@@ -96,6 +102,7 @@ export async function readFamilySittingLink<T extends Record<string, unknown>>(
       people: listed,
       registered: await registeredOnAddress(tx, sitting.eventId, sitting.participantId, sitting.registrationIds),
       registrationsPerAddress: (await readAddressCap(tx)).cap.registrationsPerAddress,
+      reserved: sitting.reservedUntil !== null && sitting.reservedUntil.getTime() > now.getTime(),
     };
   });
 }

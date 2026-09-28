@@ -297,10 +297,13 @@ describe("§519 one person in a sitting", () => {
 describe("§540 a kept form held inside a live sitting says it is the family's hold", () => {
   it("the REGISTER_ANOTHER_PERSON queued in the sitting carries `familyHeld`, and the queue counts it as the family's", async () => {
     const event = await createEvent();
-    // Ana registered before, outside any sitting; Ion's form is sent after «Da» (joined), the seed spent:
-    // the form opens its own sitting, and its kept form's message is held in it.
+    /*
+      Ana registered before, outside any sitting; Ion's first form is kept (§446) and «Da» takes it in,
+      holding its message in the sitting. Since §NNN a form sent after «Da» writes a registration instead
+      of a kept form, so the one kept form a sitting still holds is its first form's.
+    */
     await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
-    const sittingId = await send(event, "Ion", 1, null);
+    const sittingId = await start(event, "Ion", 1);
     expect(sittingId).not.toBeNull();
     const [held] = (await outbox()).filter((row) => row.messageType === "REGISTER_ANOTHER_PERSON");
     expect(held.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());

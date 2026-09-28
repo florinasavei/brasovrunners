@@ -141,7 +141,14 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     form takes a place — its registration's, or a held one where it wrote none — and a correction of a
     name typed before keeps the place it had (`withSittingPerson`).
   */
-  const priorPeople = continuing && liveSitting ? liveSitting.people : [];
+  /*
+    Past the sitting's deadline (§NNN; the review of 2026-09-28, round four) its places have lapsed, and
+    this form opens a new sitting with its own: the people sent before it are not this sitting's, so
+    they are neither listed nor marked reserved on its screen — its email covers them no more than the
+    count does. Read from this browser's half and the clock alone, the same for every address (§39).
+  */
+  const lapsed = continuing && liveSitting?.reservedUntil != null && liveSitting.reservedUntil.getTime() <= now.getTime();
+  const priorPeople = continuing && liveSitting && !lapsed ? liveSitting.people : [];
   const typedPerson = withSittingPerson(priorPeople, { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
   const newPerson = continuing && isNewSittingPerson(priorPeople, typedPerson);
 
@@ -188,7 +195,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
           joined: continuing,
           newPerson,
           people: priorPeople.length,
-          reservedUntil: continuing ? (liveSitting?.reservedUntil ?? null) : null,
+          reservedUntil: continuing && !lapsed ? (liveSitting?.reservedUntil ?? null) : null,
         },
       },
     );
@@ -287,7 +294,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         wrote it at the opening «Da» or at the form that opened a new sitting after it — the first form's
         instant, the club's window and hold, the event's close and start: the same for every address (§39).
       */
-      reservedUntil: continuing && !atOnce ? (reservedUntil ?? prior?.reservedUntil ?? null) : null,
+      reservedUntil: continuing && !atOnce ? (reservedUntil ?? (lapsed ? null : (prior?.reservedUntil ?? null))) : null,
     },
     path,
     now,
@@ -362,7 +369,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
             { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
             familySittingHeldUntil(now, deadlines),
             now,
-            opening ? { firstWindowEnd: sitting.heldUntil } : null,
+            // The first form's person, as this half typed it: only picks the slot of their held place (§NNN).
+            opening ? { firstWindowEnd: sitting.heldUntil, firstName: sitting.people[0]?.name ?? null } : null,
           )
         : null;
     const opened = continued?.sittingId ?? null;

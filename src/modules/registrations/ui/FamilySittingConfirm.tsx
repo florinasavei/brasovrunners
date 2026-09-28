@@ -40,7 +40,10 @@ export default async function FamilySittingConfirm({ locale, token, link, refuse
 
   return (
     <Stack spacing={2} data-testid="family-sitting-confirm">
-      <Typography>{t("familySitting.intro", { email: link.email, people: people(count) })}</Typography>
+      {/* The places hold until the sitting's deadline, the link for longer (§NNN): past it, said so. */}
+      <Typography data-testid="family-sitting-intro">
+        {t(link.reserved ? "familySitting.intro" : "familySitting.introLapsed", { email: link.email, people: people(count) })}
+      </Typography>
 
       {refused === "fitnessAcknowledged" && (
         <Alert severity="warning" data-testid="family-refused">

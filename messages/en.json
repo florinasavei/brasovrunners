@@ -6156,6 +6156,7 @@
       "title": "Family registration for {event}",
       "titlePlain": "Family registration",
       "intro": "The form was sent from {email} for {people}. The places are reserved, but nobody is confirmed yet: check the list and press the button once.",
+      "introLapsed": "The form was sent from {email} for {people}. The places are no longer reserved: confirm anyway, and each person gets a place if one is still free, or else one on the waiting list.",
       "joining": "Joining now",
       "personLabel": "{n}. {name}",
       "born": "Date of birth: {date}",

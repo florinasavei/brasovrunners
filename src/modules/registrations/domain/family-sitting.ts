@@ -44,8 +44,9 @@ export const SITTING_SENT_PARAM = "sent";
 export const SITTING_AT_CAP = "sittingAtCap";
 
 /**
- * The slot of the hold the opening «Da» takes when the first form wrote no registration (§NNN,
- * `family_place_holds`): one per sitting, however often the browser's half is replayed.
+ * The slot of a held place whose person has no name to key it by (§NNN, `family_place_holds`): one per
+ * sitting, however often the browser's half is replayed. Every other hold is one per person
+ * (`family-place-slot.ts`, the review of 2026-09-28, round four).
  */
 export const PRESS_SLOT = "press";
 
