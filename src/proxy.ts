@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
-import { liveTwinPathname, mayBeSignedIn } from "@/i18n/live-twin";
+import { isStaticPublicAnswer, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
 import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
@@ -110,13 +110,23 @@ export default function proxy(request: NextRequest) {
   */
   if (!location) {
     const internal = new URL(response.headers.get("x-middleware-rewrite") ?? url.href, url);
-    const twin = liveTwinPathname(internal.pathname, url.searchParams, mayBeSignedIn(request.cookies.getAll().map((cookie) => cookie.name)));
+    const signedIn = mayBeSignedIn(request.cookies.getAll().map((cookie) => cookie.name));
+    const twin = liveTwinPathname(internal.pathname, url.searchParams, signedIn);
     if (twin) {
       const target = new URL(twin, url);
       target.search = url.search;
       const headers = new Headers(response.headers);
       headers.delete("x-middleware-next");
       return NextResponse.rewrite(target, { headers });
+    }
+    /*
+      A static page's answer, off Vercel: the browser is told what Vercel's CDN tells it (§NNN,
+      `STATIC_PAGE_BROWSER_CACHE_CONTROL` says why). Next keeps a `Cache-Control` already on the
+      response rather than writing its own `s-maxage`, and its ISR copy is kept all the same. On
+      Vercel nothing is set here: the CDN reads Next's `s-maxage` and strips it itself.
+    */
+    if (process.env.VERCEL !== "1" && isStaticPublicAnswer(internal.pathname, url.searchParams, signedIn)) {
+      response.headers.set("Cache-Control", STATIC_PAGE_BROWSER_CACHE_CONTROL);
     }
   }
 

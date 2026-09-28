@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LIVE_SEGMENT, liveTwinPathname, mayBeSignedIn } from "@/i18n/live-twin";
+import { isStaticPublicAnswer, LIVE_SEGMENT, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
+import { PREFETCHED_PATHNAMES } from "@/i18n/prefetch";
 
 /**
  * §NNN (amending §333) — which request the static page cannot answer, and so goes to the page's
@@ -57,5 +58,34 @@ describe("mayBeSignedIn", () => {
   it("is not fooled by the cookies every visitor may carry", () => {
     expect(mayBeSignedIn([])).toBe(false);
     expect(mayBeSignedIn(["br_flash", "authjs.csrf-token", "authjs.callback-url", "theme"])).toBe(false);
+  });
+});
+
+/**
+ * §NNN — a static page's answer tells the browser what Vercel's CDN tells it: keep it, but ask
+ * again before every use. `next start` would otherwise hand the browser `stale-while-revalidate`,
+ * and the browser would show a page from before the last save.
+ */
+describe("isStaticPublicAnswer", () => {
+  it("is every static public page at its bare address, in both locales", () => {
+    for (const path of ["/ro/events", "/en/events/crosul", "/ro/calendar", "/ro/faq", "/en/team", "/ro/gallery", "/ro/gallery/album", "/ro/pages/despre", "/ro/legal/terms", "/en/legal/privacy"]) {
+      expect(isStaticPublicAnswer(path, search(""), false), path).toBe(true);
+    }
+    // Next's own `_rsc` and a share's `utm_*` still reach the static page.
+    expect(isStaticPublicAnswer("/ro/events", search("_rsc=abc&utm_source=x"), false)).toBe(true);
+    expect(PREFETCHED_PATHNAMES.size).toBe(10);
+  });
+
+  it("is never a twin's answer, a page rendered per request, or the backoffice", () => {
+    expect(isStaticPublicAnswer("/ro/events", search("type=RACE"), false)).toBe(false);
+    expect(isStaticPublicAnswer("/ro/events/crosul", search(""), true)).toBe(false);
+    expect(isStaticPublicAnswer("/ro/events/crosul/register", search(""), false)).toBe(false);
+    expect(isStaticPublicAnswer("/ro/contact", search(""), false)).toBe(false);
+    expect(isStaticPublicAnswer("/ro/admin/events/new", search(""), true)).toBe(false);
+    expect(isStaticPublicAnswer("/ro/live/events", search("type=RACE"), false)).toBe(false);
+  });
+
+  it("says what Vercel's CDN sends the browser for an s-maxage page", () => {
+    expect(STATIC_PAGE_BROWSER_CACHE_CONTROL).toBe("public, max-age=0, must-revalidate");
   });
 });

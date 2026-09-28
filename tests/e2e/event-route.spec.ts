@@ -154,7 +154,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     expect(first.status()).toBe(200);
     const again = await request.get(`/ro/evenimente/${slug}`);
     expect(again.headers()["x-nextjs-cache"]).toBe("HIT");
-    expect(again.headers()["cache-control"]).toMatch(/s-maxage=\d+/);
+    // The browser is told what Vercel's CDN tells it — keep it, but ask again before every use —
+    // never Next's `stale-while-revalidate`, which would show it a page from before the save (§NNN).
+    expect(again.headers()["cache-control"]).toBe("public, max-age=0, must-revalidate");
     expect(await again.text()).toContain(ROUTE_LINK);
     // The address's own question, or a session, is the live twin's: per request, never shared.
     expect((await request.get(`/ro/evenimente/${slug}?lista=2`)).headers()["cache-control"]).toMatch(/no-store/);
