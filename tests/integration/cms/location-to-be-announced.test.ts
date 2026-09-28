@@ -15,12 +15,8 @@ import {
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels } from "@/modules/events/calendar-labels";
 import { buildCalendar, googleCalendarUrl } from "@/modules/events/ical";
-import {
-  findEventNotificationDetails,
-  findPublishedEventBySlug,
-  listPublishedEvents,
-  listUpcomingEvents,
-} from "@/modules/events/repository";
+import { findEventNotificationDetails, findPublishedEventBySlug, listPublishedEvents, listUpcomingEvents } from "@/modules/events/repository";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import { renderOutboxMessage } from "@/modules/notifications/render";
@@ -197,7 +193,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
 
     it("says it in the calendar file, in Google's link and in the structured data, and names nothing else", async () => {
       await published();
-      const row = (await findPublishedEventBySlug(db, "ro", "crosul-de-iarna"))!;
+      const row = datedOrNull((await findPublishedEventBySlug(db, "ro", "crosul-de-iarna"))!)!;
       const event = toCalendarEvent(row, "ro", NOW);
 
       const ics = buildCalendar({ events: [event], baseUrl: "https://example.test", name: "x", labels: calendarLabels("ro") });
@@ -220,7 +216,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
       expect(leaks(JSON.stringify(jsonLd))).toEqual([]);
 
       // The English calendar in its own words.
-      const en = (await findPublishedEventBySlug(db, "en", "winter-cross"))!;
+      const en = datedOrNull((await findPublishedEventBySlug(db, "en", "winter-cross"))!)!;
       expect(buildCalendar({ events: [toCalendarEvent(en, "en", NOW)], baseUrl: "https://example.test", name: "x", labels: calendarLabels("en") })).toContain(SENTENCE_EN);
     });
 
@@ -302,7 +298,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
       });
       expect(announced.placeAnnounced).toBe(true);
 
-      const ro = (await findPublishedEventBySlug(db, "ro", "crosul-de-iarna"))!;
+      const ro = datedOrNull((await findPublishedEventBySlug(db, "ro", "crosul-de-iarna"))!)!;
       expect(ro).toMatchObject({ locationName: SECRET_NAME, mapUrl: SECRET_MAP, locationToBeAnnounced: false });
       expect(readScheduleItems(ro.scheduleItems)[0]?.place).toBe(SECRET_ROW_PLACE);
       expect((await findPublishedEventBySlug(db, "en", "winter-cross"))?.locationName).toBe(SECRET_EN_NAME);

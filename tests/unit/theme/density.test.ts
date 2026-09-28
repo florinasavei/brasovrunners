@@ -203,6 +203,10 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapXs", sm: 1.5, xsBefore: 3 }, // §480: gapSm → gapXs
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  // «Data se anunță» (§533): a section of its own under the cards, spaced as the past fold is, its
+  // heading a group's gap above its grid. New sites, so each xsBefore is its sm.
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   // One grid for the upcoming cards and the past fold since §470 (`CARD_GRID_SX`) — it was three
   // copies, one per shape `ListingBody` returned and one in the fold.
   { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5 },

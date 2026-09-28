@@ -26,6 +26,8 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
     type: t(`type.${event.type}`),
     cancelled: t("cancelled"),
     locationToBeAnnounced: t("locationToBeAnnounced"),
+    dateToBeAnnounced: t("dateToBeAnnounced"),
+    timeToBeAnnounced: t("timeToBeAnnounced"),
     distanceKm: (km) => t("distanceKm", { km }),
     elevationM: (m) => t("elevationM", { m }),
   });

@@ -11,14 +11,17 @@ decision or a click only the club can make · **released** — on production, wi
 
 ## Release plan (2026-09-28, morning)
 
-What the next release carries. A line moves to «Released» below when its baseline is on production. `BR-V2.13` to `BR-V2.16` landed overnight (00:05–03:06 on 2026-09-28); production and QA run `BR-V2.16` on schema `0104`.
+What the next release carries. A line moves to «Released» below when its baseline is on production. `BR-V2.13` to `BR-V2.17` landed on 2026-09-28 (00:05–10:45); production and QA run `BR-V2.17` on schema `0104`; `BR-V2.18` brings `0105`.
 
-### BR-V2.17 — today
+### BR-V2.18 — today (the owner, from the phone)
 
-- **The cleanup after the night.** This page brought to the truth; the registration queue panel lists a waiting-list offer whose email is still queued, as the count already holds it; the guide's legal-texts task names the one-press approval; dead code removed; a ceiling on every CI job, so a hung spec turns red in half an hour instead of six.
-- **The difficulty explained where it is drawn.** A tooltip on every gauge («Ușor 2 — nivelul 2 din 15») and the club's scale behind a «?» in the editor.
-- **The backoffice's event list** searched by name, filtered by state (upcoming, past, drafts, published, archived, cancelled) and sorted by date, name or state, kept in the address, working without JavaScript.
-- **The legal texts in one press** (asked 2026-09-28): regenerate every legal text from its current template at once, and delete in one press — within the rules that an approved text is never rewritten and a version somebody accepted is kept (§46, §316).
+- **An event published before its date or its time is known** — «Data se anunță mai târziu» / «Ora se anunță mai târziu» in «Când și unde»; the site says «Data se anunță în curând» (or the day with «Ora se anunță în curând»), the listing's own «Data sau ora se anunță» section, registration «în curând», nothing in the calendar, the feed or the .ics; migration `0105` (§533).
+
+### BR-V2.19 — next
+
+- **A form's email is never held before «Da»** — the family sitting begins on «Da, încă o persoană»; the screen after the form asks one question and states one true time; the emails say what to press.
+- **The group-run declaration template** after the owner's second counsel pass.
+- **A release from the phone** — the label `ship` on a PR into qa runs the landing and the release on GitHub Actions; `.release/<branch>.json` carries a change's facts.
 
 ## Building
 
@@ -31,7 +34,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.17` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.18` |
 
 ## Next, queued
 
@@ -65,6 +68,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.18` | an event published before its date or its time is known — «Data se anunță mai târziu» and «Ora se anunță mai târziu» in «Când și unde»; the site says «Data se anunță în curând», or the day with «Ora se anunță în curând», lists the event in its own «Data sau ora se anunță» section and keeps it out of every month, the calendar, the feed and the .ics; registration stays «în curând» until the organizer opens it; refused on a series, on an event with registrations and on the lead event; migration `0105` (the owner, from the phone; §533) |
 | `BR-V2.17` | the backoffice events list searched by name, filtered by state — viitoare, încheiate, ciorne, publicate, arhivate, anulate — and sorted by date, name or state, all in the address and without JavaScript (§527) · every difficulty gauge says its exact level of fifteen in a tooltip — «Ușor 2 — nivelul 2 din 15» — and a «?» in the editor explains the club's scale with its own examples (§528) · the outbox panel says when the emails leave — the next scheduled run, each row's own time — and carries the on/off switch for scheduled delivery (§529) · «Mărimea textului» — the public pages' text size as a club setting, Mic / Normal / Mare / Foarte mare, the owner's own change from his phone (§530) · the cleanup after the night — the queue and the map brought to the truth, the review leftovers of V2.13–V2.16 (the offer rule in the queue panel, the glyph guard, plain words over toasts and steps), dead exports and orphan keys (§531) · every legal text regenerated from its template in one press, every draft approved in one press, versions deleted in bulk under the existing rules (§532) |
 | `BR-V2.16` (2026-09-28 03:06) | «Întrebări frecvente» — a platform page the club fills with questions and rich-text answers in both languages, native folds with deep links, `FAQPage` structured data; Pagini in «standard» and «personalizate» groups; migration `0103` (§525) · the difficulty as five bands × three steps — ușor, mediu, greuț, greu, foarte greu, each 1·2·3 — one level column backfilled from the old five values, the gauge with step dots, the club's scale in the guide; migration `0104` (§526) |
 | `BR-V2.15` (2026-09-28 02:28) | the members' zone — a «Membru» role below the volunteer with the same Zitadel sign-in and no backoffice, the public «Beneficiile membrilor» page with the sign-in button, one members-only page behind the sign-in, bulk invitations; migration `0102` (§524) |

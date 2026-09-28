@@ -151,6 +151,8 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
       startsAt: events.startsAt,
       registrationOpensAt: events.registrationOpensAt,
       registrationOpensSoon: events.registrationOpensSoon,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
     })

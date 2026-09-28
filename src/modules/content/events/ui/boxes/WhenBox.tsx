@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, savedDurationMinutes, splitDuration } from "../../duration";
@@ -114,6 +115,25 @@ export default async function WhenBox({
             required={eventInputConstraints("startsAtWallTime").required}
           />
           {inSeries && <BoxNote>{t("editor.boxes.when.series")}</BoxNote>}
+          {/* «Data se anunță mai târziu» (§533), the place's switch for the date (§328): the date
+              above stays, as the organizer's provisional note, and is published when this goes off.
+              Not on a series (a series is its dates; the service refuses it there). The marker says
+              the form carried the box, so an unticked one reads as "off", not "not edited". */}
+          {!inSeries && (
+            <Box data-testid="date-to-be-announced">
+              <input type="hidden" name="event.dateToBeAnnounced.present" value="1" />
+              <CheckboxField name="event.dateToBeAnnounced" defaultChecked={event?.dateToBeAnnounced ?? false}>
+                {t("editor.dateToBeAnnounced")}
+              </CheckboxField>
+              <BoxNote>{t("editor.dateToBeAnnouncedHelp")}</BoxNote>
+              {/* «Ora se anunță mai târziu» (§533): the day is published, the hour above is not. */}
+              <input type="hidden" name="event.timeToBeAnnounced.present" value="1" />
+              <CheckboxField name="event.timeToBeAnnounced" defaultChecked={event?.timeToBeAnnounced ?? false}>
+                {t("editor.timeToBeAnnounced")}
+              </CheckboxField>
+              <BoxNote>{t("editor.timeToBeAnnouncedHelp")}</BoxNote>
+            </Box>
+          )}
           {/* Only a race has a gun time apart from the meeting time (§71); hidden, not removed. */}
           <OnlyForType type="RACE" selectName="event.type" initialType={initialType}>
             <WallTimeField

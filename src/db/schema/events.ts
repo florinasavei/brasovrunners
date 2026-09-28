@@ -384,6 +384,30 @@ export const events = pgTable(
     locationToBeAnnounced: boolean("location_to_be_announced").notNull().default(false),
 
     /**
+     * The date is not announced yet (`DECISIONS.md` §533; the owner, 2026-09-28: "events with no
+     * date specified, as I can already do without a location").
+     *
+     * The same shape as the place's switch above (§328): a state of the event, not an empty field.
+     * While it is true, every public reader is handed no date at all — `events/repository.ts`
+     * returns null for the start, the end and the race's start, in SQL, so a surface that forgets
+     * the flag shows nothing rather than the provisional date — and each surface says "Data se
+     * anunță în curând" where the date would be. `starts_at` keeps whatever the organizer typed,
+     * for staff and the backoffice's order, and is published the moment this goes back to false.
+     * Registration stays shut meanwhile: the service holds `registration_opens_soon` on (§451).
+     */
+    dateToBeAnnounced: boolean("date_to_be_announced").notNull().default(false),
+
+    /**
+     * The time is not announced yet, the day is (`DECISIONS.md` §533; the owner, 2026-09-28: "the
+     * same with the time — the time may still change"). Read with `date_to_be_announced` as one
+     * rule, "the start is not announced": registration stays «în curând», the calendar and the feed
+     * leave the event out, and every public reader is handed no start — only the day, as a date
+     * with no time (`announcedDay` in `events/repository.ts`), which the page, the card and the
+     * share picture say with «Ora se anunță în curând». When both are on, the date wins: no day.
+     */
+    timeToBeAnnounced: boolean("time_to_be_announced").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —

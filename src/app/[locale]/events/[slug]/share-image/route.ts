@@ -22,6 +22,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     type: t(`type.${event.type}`),
     cancelled: t("cancelled"),
     locationToBeAnnounced: t("locationToBeAnnounced"),
+    dateToBeAnnounced: t("dateToBeAnnounced"),
+    timeToBeAnnounced: t("timeToBeAnnounced"),
     distanceKm: (km) => t("distanceKm", { km }),
     elevationM: (m) => t("elevationM", { m }),
   });
