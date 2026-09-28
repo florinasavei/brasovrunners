@@ -1,40 +1,17 @@
 /**
- * The club's visual identity, in one file.
+ * The club's visual identity as named tokens: the theme reads these, components read the theme
+ * (`AGENTS.md` §3.2). The only file in `src/` allowed to name a colour.
  *
- * PLACEHOLDER. Every value below is a stand-in until the club supplies the real logo, the
- * t-shirt colours and the club typeface. It is written as a single set of named tokens so that
- * arrival is an edit to this file and nothing else: `AGENTS.md` §3.2 forbids wrappers around
- * MUI, so the theme reads these and components read the theme.
- *
- * What must be replaced, and what to replace it with:
- *
- *   colour   sampled from the t-shirt, as hex. Keep the token names; change the values.
- *   logo     drop the real SVGs over `public/brand/*.svg`, same filenames, same viewBox
- *            proportions, or update LOGO below if the proportions differ.
- *   font     see FONT below. A licence permitting web embedding is required before a typeface
- *            is self-hosted — many licences that cover print do not, and shipping one that
- *            does not is redistribution the club would be liable for.
- *
- * Nothing here is a rule that carries trust, so this file is not priority-1. It is, however,
- * the only place in `src/` allowed to name a colour.
+ * PLACEHOLDER until the club supplies the logo, the t-shirt colours and the typeface: keep the
+ * token names, change the values; drop real SVGs over `public/brand/*.svg` (same viewBox, or
+ * update LOGO). A typeface needs a licence that permits web embedding before it is self-hosted.
  */
 
 /**
- * The palette.
- *
- * `blue` is taken from the club's own logo file, where every path is filled `#0000ff` — pure
- * sRGB blue. It is not sampled from the t-shirt, whose blue is a navy-to-cyan gradient and
- * visibly not this colour. Which of the two is the brand blue is an open question for the club;
- * until it is answered, the supplied vector file wins, because it is the only place the colour
- * is stated as a value rather than photographed under a lamp.
- *
- * `blueInk` exists because pure blue is a poor UI colour even when it passes contrast: it is
- * the default unvisited-link colour of every browser, so buttons and headings set in it read
- * as unstyled. It is used for large flat areas; the logo keeps its exact blue.
- *
- * `ink` is not pure black and `paper` is not pure white: full-contrast black on white is
- * harsher on a phone in daylight than the near-neutrals below, and both still clear the
- * contrast ratio asserted in `tests/unit/theme/brand.test.ts`.
+ * `blue` is the logo file's own fill (`#0000ff`), not the t-shirt's gradient; which is the brand
+ * blue is open for the club. `blueInk` is for hover and large fills, since pure blue reads as an
+ * unstyled link. `ink`/`paper` are near-neutrals, softer than black on white; every pair is
+ * asserted in `tests/unit/theme/brand.test.ts`.
  */
 export const COLOR = {
   /** Primary, exactly as the supplied logo states it. 8.22:1 on paper, 8.59:1 on a card. */
@@ -56,42 +33,27 @@ export const COLOR = {
 } as const;
 
 /**
- * The same brand after dark (`DECISIONS.md` §93; the owner: "I need a dark theme switcher").
- *
- * Not an inversion: pure blue on near-black is 2.4:1 and unreadable, so the primary lifts to
- * a lighter blue of the same hue (`blue`), and the ink-blue hover becomes the lighter `blueInk`
- * so the order — resting, then hover — reads the same way. Paper and surface are warm greys,
- * not black, for the reason `paper` is not white. The orange stays; it was chosen as a fill
- * under dark text, and that pair holds on either scheme. Every pair below is asserted in
- * `tests/unit/theme/brand.test.ts` exactly as the light ones are.
+ * The dark scheme (§93). Not an inversion: pure blue on near-black is 2.4:1, so the primary lifts
+ * to a lighter blue of the same hue and hover is lighter still. The orange stays (it sits under
+ * dark text on either scheme). Asserted in `tests/unit/theme/brand.test.ts`.
  */
 export const COLOR_DARK = {
   /** Primary as text and outlines: 7.6:1 on the dark page. */
   blue: "#7b9cff",
   /** Hover and pressed states, lighter still. */
   blueInk: "#a3b8ff",
-  /** Page background. */
   paper: "#111318",
-  /** Card and surface background, one step lighter than the page. */
+  /** One step lighter than the page. */
   surface: "#1a1d24",
-  /** Body text. */
   ink: "#f3f2ee",
-  /** Secondary text. */
   inkMuted: "#b5b2a9",
-  /** Hairlines and dividers. */
   line: "#2c3038",
 } as const;
 
 /**
- * The public pages' background tints the club may choose from (§488, «Aspectul site-ului» under
- * Pagini → «Aspect»). Light scheme only: after dark the page stays `COLOR_DARK.paper`.
- *
- * The owner asked for "a slight shade of blue (club colours)": white, the club's blue laid over
- * white at about 4 % and about 8 %, and a blue-grey. Each is a page colour under white cards, so
- * every text colour that sits on it has to clear AA and the cards have to stay visible without the
- * page turning into a wash — `tests/unit/theme/brand.test.ts` asserts both over every preset, and
- * the same two rules refuse a «Personalizat» colour the club types
- * (`modules/appearance/domain/tint-contrast.ts`).
+ * The public pages' background tints the club may choose (§488). Light scheme only. Text on each
+ * must clear AA and white cards must stay visible — asserted in `tests/unit/theme/brand.test.ts`,
+ * and the same rules refuse a custom colour (`modules/appearance/domain/tint-contrast.ts`).
  */
 export const SITE_TINT = {
   /** «Alb»: the platform's page colour, unchanged — the default. */
@@ -105,21 +67,10 @@ export const SITE_TINT = {
 } as const;
 
 /**
- * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
- * body, to white at the hem. It is the most distinctive thing the club already owns, and the
- * one part of the identity that is theirs rather than generic.
- *
- * DERIVED FROM A PHOTOGRAPH, and that is a real caveat. Sampling a vertical line down
- * `docs/brand/tricou-bvr.jpg` gives this ramp:
- *
- *   #0d1c3d → #09254b → #0f3c60 → #295572 → (white)
- *
- * The photo is warm-lit and underexposed, so those samples are duller and greyer than the
- * garment: the shirt reads as a vivid royal-to-cyan on a screen, and the measured values do
- * not. The stops below keep the sampled *structure* — same hue progression, same direction —
- * with saturation restored to what the fabric actually looks like. They are a proposal, not a
- * measurement. The authoritative values are in the print file the kit supplier holds; ask for
- * them before this ships anywhere a member will compare it against a shirt.
+ * The club kit's gradient, navy at the shoulders to cyan towards the hem. A proposal, not a
+ * measurement: sampled from the underexposed `docs/brand/tricou-bvr.jpg`
+ * (#0d1c3d → #09254b → #0f3c60 → #295572) with saturation restored. The kit supplier's print
+ * file is authoritative.
  */
 export const GRADIENT = {
   /** Shoulders. */
@@ -128,22 +79,13 @@ export const GRADIENT = {
   mid: "#12508f",
   /** Approaching the hem. */
   light: "#3aa0d8",
-  /**
-   * Top to bottom, the way the shirt is worn. Kept as a CSS value rather than assembled at
-   * each use, so every surface that carries it carries the same one.
-   */
+  /** Top to bottom, the way the shirt is worn. */
   vertical: "linear-gradient(180deg, #0b1f4d 0%, #12508f 55%, #3aa0d8 100%)",
 
   /**
-   * The two tints the site's own surfaces are allowed to end on (`DECISIONS.md` §166; the
-   * owner: "I need more gradients and shiny Front-End stuff").
-   *
-   * NOT the kit ramp above. A hero carries a heading, two paragraphs, a countdown and a
-   * button, so its background has to stay a *surface*: these are the card colour walked a
-   * few steps towards the club's blue, which is about as far as a background can move before
-   * body text on it stops clearing AA. `tests/unit/theme/brand.test.ts` asserts ink and
-   * muted ink against both ends of both schemes, which is what makes that a rule rather than
-   * a claim. The kit ramp stays for a surface that carries no text.
+   * The tints the site's text-carrying surfaces end on (§166): the card colour walked towards the
+   * club's blue only as far as body text still clears AA (asserted in `brand.test.ts`). The kit
+   * ramp above is for surfaces without text.
    */
   heroTint: "#e9eeff",
   /** The same step after dark: the dark card colour, walked towards the dark blue. */
@@ -151,14 +93,9 @@ export const GRADIENT = {
 } as const;
 
 /**
- * The gradients as CSS values, light and dark, assembled once.
- *
- * A component picks one of these and its `[data-dark]` twin — MUI writes the scheme onto
- * `<html>` as a valueless `data-light` / `data-dark` attribute (`theme.ts`,
- * `cssVariables.colorSchemeSelector`), so a plain object selector is enough and no component
- * needs `theme.applyStyles`, which is a function and therefore cannot cross into a MUI client
- * component from a Server Component (`AGENTS.md` §14.1). `src/theme/surfaces.ts` holds the
- * ready-made `sx` fragments; this is the vocabulary they are written in.
+ * The gradients as CSS values, light and dark. Components pair each with a `[data-dark]` selector
+ * (MUI's `colorSchemeSelector`) rather than `theme.applyStyles`, a function that cannot cross into
+ * a client component (`AGENTS.md` §14.1). `surfaces.ts` holds the ready-made `sx` fragments.
  */
 export const SURFACE_GRADIENT = {
   /** The featured event's box, and any other surface that carries text. 160°: light from above-left. */
@@ -173,41 +110,19 @@ export const SURFACE_GRADIENT = {
 } as const;
 
 /**
- * Two font roles, not one family.
- *
- * A club typeface almost always arrives as a display face — good in a wordmark and a heading,
- * tiring in a paragraph of event details at 320 px. Splitting the roles now means the arriving
- * font changes `display` and leaves body text alone, rather than forcing a choice between an
- * unbranded site and an unreadable one.
- *
- * Both currently resolve to Roboto, which the locale layout loads through `next/font/local` from
- * `src/theme/fonts/` — never from Google at build (§460) — one WOFF2 per weight carrying the
- * `latin-ext` characters, required for ș, ț, ă, â and î. When the club font arrives:
- *
- *   1. put the files in `src/theme/fonts/` (WOFF2; convert OTF/TTF first),
- *   2. in `src/app/[locale]/layout.tsx` add
- *        const brand = localFont({ src: "...", variable: "--font-brand-display", display: "swap" })
- *      from `next/font/local`, and add `brand.variable` to the body class,
- *   3. change `display` below to `var(--font-brand-display)`,
- *   4. check ș and ț actually render — a display face often omits them, and a missing glyph
- *      falls back mid-word, which looks worse than not branding the heading at all.
+ * Two font roles, so an arriving club display face changes headings and leaves body text alone.
+ * Both are Roboto for now, loaded by the locale layout through `next/font/local` from
+ * `src/theme/fonts/` (§460), with `latin-ext` for ș, ț, ă, â, î. To add a club font: put the
+ * WOFF2 files in `src/theme/fonts/`, add a `localFont({ variable: "--font-brand-display" })` in
+ * `src/app/[locale]/layout.tsx`, point `display` at it, and check ș and ț render.
  */
 export const FONT = {
   display: "var(--font-roboto)",
   body: "var(--font-roboto)",
   /**
-   * Facón, the face the club's kit is printed in. Loaded by the locale layout from
-   * `src/theme/fonts/`, and used in exactly one component: `shared/ui/Wordmark`, which heads
-   * the listing, the calendar and the contact page (2026-09-22) and nothing else.
-   *
-   * It is confined to that one string for a hard reason, not a stylistic one. The font
-   * contains 129 characters and NONE of them are Romanian — not ș or ț in either encoding,
-   * and not ă, â or î either. `Brașov` cannot be set in it; the ș falls back mid-word to
-   * Roboto. Anything rendered from the message catalogues would eventually hit one of those
-   * letters, which is why this is not the `display` role.
-   *
-   * Its fallback is Roboto 900 italic, which is not an approximation chosen by eye: the
-   * designer's read-me names "Roboto Black Italic" as the base font Facón was drawn from.
+   * Facón, the kit's face, used only by `shared/ui/Wordmark`. It has no Romanian letters at all
+   * (no ș, ț, ă, â, î), so it can never be the `display` role. The fallback, Roboto Black Italic,
+   * is the face the designer drew Facón from.
    */
   wordmark: "var(--font-facon)",
   /** Used when a webfont has not loaded yet, and when it fails to. */
@@ -215,53 +130,25 @@ export const FONT = {
 } as const;
 
 /**
- * The wordmark, as a logotype rather than as the club's name. At the head of the listing, the
- * calendar and the contact page, in the kit face (`shared/ui/Wordmark`).
- *
- * Deliberately unaccented and deliberately not from the message catalogues. It matches the
- * kit, which is printed BRASOV RUNNERS, and it is the same in both locales because a logotype
- * is not translated. `tests/unit/theme/brand.test.ts` asserts it stays ASCII — put an ș in
- * here and Facón cannot render it.
- *
- * The club's actual name, correctly spelled, is `CLUB_NAME` below, and is what prose, page
- * titles and the header link's accessible name use.
+ * The logotype, as printed on the kit. ASCII on purpose — Facón cannot render ș — and untranslated;
+ * asserted in `tests/unit/theme/brand.test.ts`. The club's spelled name is `CLUB_NAME`.
  */
 export const WORDMARK = "BRASOV RUNNERS";
 
 /**
- * The club's name — the **one** place it is written (§369). A runner's club on their
- * registration (`DECISIONS.md` §215), the From line's default, the page title, the header's and
- * the wordmark's accessible name, the JSON-LD organiser, the share pictures, the calendar, the
- * PDFs' Author, and every catalogue sentence that names the club, which takes it as `{club}`.
- *
- * Until §369 the catalogues carried a second copy under `Site.name`, "free to differ between
- * the locales one day". A proper name is not translated, and two copies are two things to rename
- * and one to forget, so the catalogues no longer hold the name at all:
- * `tests/unit/notifications/no-hardcoded-values.test.ts` refuses it in `src/` outside this file
- * and the seeds, and in every message of both catalogues. The same distinction `WORDMARK` draws
- * above, from the other side: that is a logotype, this is the name.
+ * The club's name — the one place it is written (§369); catalogue sentences take it as `{club}`.
+ * `tests/unit/notifications/no-hardcoded-values.test.ts` refuses it elsewhere in `src/` and in
+ * the catalogues.
  */
 export const CLUB_NAME = "Brașov Runners";
 
 /**
- * The logo assets and their intrinsic proportions.
- *
- * Dimensions are here so a layout can reserve the right space before the SVG loads; a logo
- * that changes size on load pushes the page around on a slow connection.
- *
- * Paths are root-relative and resolve under `public/`. They are not absolute URLs, so
- * `AGENTS.md` §8 does not apply — nothing here needs `APP_BASE_URL`. The `SportsOrganization`
- * JSON-LD does need an absolute logo URL (BR-REQ-052-02) and must build it from
- * `APP_BASE_URL` at the point of use, never by pasting a host in here.
+ * The logo assets and their intrinsic proportions, so a layout reserves space before the SVG
+ * loads. Root-relative under `public/`; the JSON-LD's absolute logo URL is built from
+ * `APP_BASE_URL` at the point of use (`AGENTS.md` §8, BR-REQ-052-02).
  */
 export const LOGO = {
-  /**
-   * The full lockup: the mountain range over BRASOV RUNNERS.
-   *
-   * Too wide and too detailed for a header — at a height that fits one, the wordmark inside it
-   * is about four pixels tall. Use it where the logo is the subject: the brand sheet, an Open
-   * Graph image, print.
-   */
+  /** The full lockup: the mountain range over BRASOV RUNNERS. */
   lockup: {
     src: "/brand/logo.svg",
     onDark: "/brand/logo-white.svg",
@@ -269,14 +156,7 @@ export const LOGO = {
     width: 2880,
     height: 1188,
   },
-  /**
-   * The mountains alone, cropped from the same artwork.
-   *
-   * The mountains alone, with the wordmark cropped out. The header used this for a day; it
-   * shows the lockup now, because the club's name belongs in the club's own lettering
-   * (`SiteHeader.tsx` records both attempts). Kept for the places a wider, shorter shape fits
-   * better than a 2.42:1 lockup.
-   */
+  /** The mountains alone, with the wordmark cropped out; for places a wider, shorter shape fits. */
   mark: {
     src: "/brand/logo-mark.svg",
     onDark: "/brand/logo-mark-white.svg",
@@ -287,61 +167,26 @@ export const LOGO = {
 } as const;
 
 /**
- * The size of the header lockup, as fluid CSS rather than fixed pixels.
- *
- * The mark is 3.2:1 and the wordmark is a wide, heavy face, so at a fixed 28px the two came to
- * 307px beside each other — wider than the 288px of content a 320px phone leaves after the
- * container's padding, which pushed the whole page into a horizontal scroll (BR-REQ-041-01
- * criterion 1). A fixed size that fits the narrowest phone would then look undersized on a
- * desktop, so both scale with the viewport and stop at a maximum.
- *
- * `clamp` rather than a breakpoint: the failure is continuous — every width below roughly
- * 360px overflows by a different amount — so the fix should be continuous too. A breakpoint at
- * 360 would leave 361px overflowing.
- *
- * MARK_HEIGHT_PX is the upper bound, used for the `width`/`height` attributes that reserve the
- * box before the SVG loads; the CSS below overrides the drawn size.
- */
-/**
- * The header logo's height. Taller than the 28px the mountains alone used, because the header
- * shows the **lockup** now (2026-09-17, the owner's instruction): the wordmark is roughly the
- * bottom quarter of that artwork, so at 28px it rendered about seven pixels tall — present and
- * unreadable, which is what made the mark-plus-live-text pairing worth trying in the first place.
- * At 44px the lettering is about eleven pixels and reads; at 2.42:1 the logo is then ~107px wide,
- * which still leaves room for the navigation at 320px (BR-REQ-041-01 criterion 1). 40px since
- * §158 (the owner: "the header and the footer must be smaller, on mobile smaller still"):
- * ten pixels of lettering, ~97px wide.
+ * The header lockup's height. `HEADER_MARK_HEIGHT_PX` is the upper bound for the `width`/`height`
+ * attributes; the `clamp` scales it with the viewport so the header never overflows a 320px
+ * phone (BR-REQ-041-01 criterion 1). At 40px (§158) the lettering is about ten pixels.
  */
 export const HEADER_MARK_HEIGHT_PX = 40;
 export const HEADER_MARK_HEIGHT = "clamp(30px, 8vw, 40px)";
 /**
- * What clears the sticky site header, in pixels, below `sm` and from `sm` up: the theme's
- * `scroll-padding-top` (`theme.ts`) and the toasts' top offset (`ToastRegion`) read this one
- * pair, so the two never drift apart. The environment notice sits above the header and is not
- * sticky (`SiteHeader`): on QA, at the very top of a page, a toast may overlap the header's lower
- * edge by that notice's height — accepted, since it scrolls away and production shows no notice.
+ * What clears the sticky header, below `sm` and from `sm` up; read by `theme.ts`'s
+ * `scroll-padding-top` and `ToastRegion`'s offset. The non-sticky QA notice above the header is
+ * not counted.
  */
 export const HEADER_CLEARANCE_PX = { xs: 72, sm: 76 } as const;
-/**
- * How wide the page is. One value, used by the header, the footer, the environment notice and
- * every public and backoffice page, so "allow a wider screen" (the owner, twice on 2026-09-17:
- * `md` → `lg` → `xl`) is this line. MUI's `xl` is 1536px; `false` would make the page fluid
- * with only the gutters. Prose keeps `PROSE_MEASURE` inside it whatever this says.
- */
+/** How wide every page is, header to footer. Prose stays within `PROSE_MEASURE`. */
 export const PAGE_WIDTH = "xl" as const;
 
-/**
- * How wide a column of running text may be. About 75 characters at body size: the range
- * typography has settled on for reading, and the reason a wider page (`lg`, 2026-09-17) does
- * not mean wider paragraphs. Applied to prose pages, never to the header or lists.
- */
+/** How wide running text may be: about 75 characters at body size. Prose pages only. */
 export const PROSE_MEASURE = "60rem";
 
 /**
- * The wordmark's size (`shared/ui/Wordmark`: the listing, the calendar and the contact page). A
- * display face, but a signature rather than a banner — 4rem was "way too big" (the owner,
- * 2026-09-17), 2.5rem still a bit; it caps at 2rem. Measured: the face renders
- * about 10.5× its font size wide, so the 1.25rem floor (210px) fits well inside the 288px a 320px
- * viewport leaves inside the gutters (BR-REQ-041-01 criterion 1).
+ * The wordmark's size. Facón renders about 10.5× its font size wide, so the 1.25rem floor
+ * (210px) fits a 320px viewport's 288px (BR-REQ-041-01 criterion 1).
  */
 export const WORDMARK_SIZE = "clamp(1.25rem, 4vw, 2rem)";

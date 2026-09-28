@@ -19,10 +19,8 @@ import {
 } from "./preview";
 
 /**
- * The theme lab's controls (BR-REQ-090-06). A client island because the setting is this
- * browser's alone — a cookie the server never reads (`AppTheme.tsx` says why) — so a Server
- * Action would be the wrong tool: it would have to set a cookie on a response the server then
- * ignores. "Apply" writes the cookie and opens the homepage, which is where the effect is.
+ * The theme lab's controls (BR-REQ-090-06). Client-side because the preview is a cookie only
+ * this browser reads (`AppTheme.tsx`). "Apply" writes it and opens the homepage.
  */
 export default function ThemeLabForm({
   labels,

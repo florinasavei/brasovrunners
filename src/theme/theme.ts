@@ -7,27 +7,17 @@ const EXCLAMATION_SVG =
   "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-2h2zm0-4h-2V7h2z%27/%3E%3C/svg%3E";
 
 /**
- * The MUI theme, assembled from the brand tokens.
- *
- * No colour is named here and none may be: `src/theme/brand.ts` is the only file in `src/`
- * allowed to hold a hex value, so replacing the placeholder identity with the club's is one
- * edit to one file (AGENTS.md §3.2 — no wrappers, no second way to do this).
- *
- * The primary is the club's own blue, taken from their logo file. The secondary is still a
- * placeholder awaiting owner approval (AGENTS.md §29).
+ * The MUI theme, assembled from the brand tokens. No colour is named here: `brand.ts` is the only
+ * file in `src/` allowed to (AGENTS.md §3.2). The secondary is a placeholder (AGENTS.md §29).
  */
-/**
- * What the theme lab may vary (`theme/preview.ts`, BR-REQ-090-06): the two font roles and the
- * corner radius. Everything else — colour, spacing, the header — is the brand and stays.
- */
+/** What the theme lab may vary (`theme/preview.ts`, BR-REQ-090-06); the rest is the brand. */
 export type ThemeOptions = { display: string; body: string; radius: number };
 
 export const DEFAULT_THEME_OPTIONS: ThemeOptions = { display: FONT.display, body: FONT.body, radius: 10 };
 
 export const buildTheme = (options: ThemeOptions) => createTheme({
-  // CSS variables avoid the server/client flicker MUI documents for the App Router. The
-  // scheme is chosen by `data-light` / `data-dark` on <html>, which `InitColorSchemeScript`
-  // sets before paint from what the visitor chose or what their device says (§93).
+  // CSS variables avoid the App Router's server/client flicker; `InitColorSchemeScript` sets
+  // `data-light` / `data-dark` on <html> before paint (§93).
   cssVariables: { colorSchemeSelector: "data" },
   modularCssLayers: true,
   colorSchemes: {
@@ -35,9 +25,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
       palette: {
         primary: {
           main: COLOR.blue,
-          // Hover and pressed states. Not a contrast fix: the club's blue is 8.22:1 on the page
-          // background and passes AA as text on its own — `tests/unit/theme/brand.test.ts`
-          // asserts that rather than assuming it.
+          // Hover and pressed states, not a contrast fix (the blue passes AA; `brand.test.ts`).
           dark: COLOR.blueInk,
           contrastText: COLOR.paper,
         },
@@ -58,43 +46,22 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     },
   },
   typography: {
-    // Provided by next/font/local in the locale layout, from `src/theme/fonts/` (§460): each
-    // file carries latin and latin-ext together, which covers ș, ț, ă, â, î.
+    // Self-hosted by the locale layout (§460), latin-ext included for ș, ț, ă, â, î.
     fontFamily: `${options.body}, ${FONT.fallback}`,
-    // Headings take the display role, so an arriving club typeface changes these and leaves
-    // body text alone. Both resolve to Roboto until one arrives — see brand.ts.
+    // Headings take the display role (see `FONT` in brand.ts).
     h1: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "2rem", fontWeight: 500 },
     h2: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "1.5rem", fontWeight: 500 },
   },
   shape: { borderRadius: options.radius },
-  /*
-    The page is wider than MUI's own `xl` (§252; the owner: "the website can span a bit wider
-    and there is too much whitespace overall").
-
-    `PAGE_WIDTH` is `xl` and every page reads it, so widening the page is this one number
-    rather than nineteen `maxWidth` props. 1760 is about as wide as a two-column card row wants
-    to be before the eye has to travel; prose inside it is still held to `PROSE_MEASURE`, so
-    nothing that is read line by line got wider — only the room the cards, the calendar grid
-    and the backoffice tables have.
-  */
+  // `xl` is wider than MUI's default (§252): every page's `PAGE_WIDTH` is `xl`, so this one
+  // number sets the page width; prose stays within `PROSE_MEASURE`.
   breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 2040 } },
   components: {
     /*
-      An invalid field says so on the field itself (§309; the owner: "I want an exclamation
-      adornment on the invalid fields so it stands out!"). The red helper text under a field
-      is easy to scroll past on a phone; a red mark inside the box is not.
-
-      CSS only, in the theme, so every form on the site gets it — the registration form, the
-      contact form, the declaration, the backoffice — with no component edited and no
-      JavaScript: it shows on a field the server refused (MUI marks it `Mui-error`) and on one
-      the browser refused (`:user-invalid` — only once the person has typed and left it, or
-      pressed send, never on a pristine form), which also gets the red outline MUI keeps for
-      the first case. A masked pseudo-element painted in the error colour, so it follows the
-      dark scheme through the CSS variables; decorative (the helper text and the error summary
-      carry the words, §47), so it is invisible to a screen reader, which is right.
-
-      Not on a select (its arrow lives there), not on a field that already has an end
-      adornment (a unit, a button), and at the top rather than the middle of a multi-line box.
+      An exclamation mark inside every invalid field (§309), CSS only so every form gets it:
+      on a server-refused field (`Mui-error`) and a browser-refused one (`:user-invalid`, never
+      on a pristine form). Decorative — the helper text and error summary carry the words (§47).
+      Skipped on a select and on a field with an end adornment; top-aligned when multi-line.
     */
     MuiOutlinedInput: {
       styleOverrides: {
@@ -128,13 +95,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
         },
       },
     },
-    /*
-      Cards carry less air (§252; the owner: "there is too much whitespace overall and padding").
-
-      MUI's default is 16 pixels and 24 at the bottom of the last block, which on a listing of
-      cards is a third of what the eye has to travel between two titles. Twelve, and the same
-      at the foot, so a card is its content and a margin rather than a frame around a frame.
-    */
+    // Tighter than MUI's 16/24px card padding (§252).
     MuiCardContent: {
       styleOverrides: {
         root: { padding: 12, "&:last-child": { paddingBottom: 12 } },
@@ -143,27 +104,10 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     MuiCssBaseline: {
       styleOverrides: (theme) => ({
         /**
-         * Room for the sticky header above anything the browser scrolls to.
-         *
-         * The header is `position: sticky` on every page, so an anchor jump — `#admin-alert`
-         * after a backoffice action, a skip link, an error summary's link to the field it
-         * names — lands the target at the very top of the viewport, underneath it. The
-         * backoffice was the visible case: every Server Action redirects to `#admin-alert`
-         * precisely so the outcome is not missed at the top of a long list, and after a long
-         * list the alert arrived hidden behind the header. The elements set
-         * `scrollMarginTop: 16`, which was written for a page with no sticky header and
-         * clears nothing.
-         *
-         * `scroll-padding-top` on the scroll container fixes every anchor on the site at once,
-         * rather than each element remembering the header's height. The two values are the
-         * header's own two heights: one row everywhere since 2026-09-17, 8px of padding on a
-         * phone and 16px from `sm` up.
-         *
-         * And room for the sticky footer below it (§324), for the same reason at the other
-         * edge: what the browser scrolls into view at the bottom — a field or a button reached
-         * with Tab, the send button under a long form — landed behind the bar (WCAG 2.4.11,
-         * focus not obscured). The footer is one row at every width since §372 (`SiteFooter`):
-         * at most 28px tall on a phone and 44px from `sm` up, plus its border and a little air.
+         * Room for the sticky header above any anchor or focus target the browser scrolls to
+         * (`#admin-alert`, skip links, error-summary links), and for the sticky footer below
+         * (§324, §372; WCAG 2.4.11 focus not obscured): at most 28px on a phone, 44px from `sm`,
+         * plus border and air.
          */
         html: {
           scrollPaddingTop: HEADER_CLEARANCE_PX.xs,
@@ -171,10 +115,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
           "@media (min-width:600px)": { scrollPaddingTop: HEADER_CLEARANCE_PX.sm, scrollPaddingBottom: 52 },
         },
 
-        /**
-         * The site's motion, as named keyframes emitted once (`theme/motion.ts` says where
-         * each is used and why every one of them sits behind `prefers-reduced-motion`).
-         */
+        /** The site's keyframes, emitted once; `motion.ts` names and guards them. */
         [`@keyframes ${KEYFRAMES.fade}`]: {
           from: { opacity: 0 },
           to: { opacity: 1 },
@@ -187,9 +128,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
           from: { boxShadow: "none" },
           to: { boxShadow: theme.shadows[2] },
         },
-        // The loader's stride (§166). Transform only, so it composites and never reflows the
-        // skeleton it sits in; the lean is two degrees, which reads as running rather than
-        // wobbling at the 20–24px the figure is drawn at.
+        // The loader's stride (§166). Transform only, so it never reflows the skeleton.
         [`@keyframes ${KEYFRAMES.run}`]: {
           "0%, 100%": { transform: "translateY(0) rotate(-3deg)" },
           "50%": { transform: "translateY(-3px) rotate(3deg)" },

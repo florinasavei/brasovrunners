@@ -1,21 +1,10 @@
 /**
- * Motion, in one place: how long, what curve, and the switch that turns all of it off.
+ * Motion: durations, curve and guards. Every animation is CSS in `sx`, no client island for
+ * decoration (`AGENTS.md` §1.5, §18.3).
  *
- * Every animation on the site is **CSS**, written into `sx` on Server Components and emitted
- * with the page — no `Fade`, no `Grow`, no client island earns its place for decoration
- * (`AGENTS.md` §1.5, §18.3). The one JS transition is the nav menu's, and MUI owns that.
- *
- * `MOTION_OK` is the guard, and it is opt-*in*: a rule under it animates only for a reader who
- * has not asked their system for less motion (`AGENTS.md` §18.2). Written as the positive media
- * query rather than a `reduce` override so the static state is the default — a browser that
- * evaluates neither shows the page still, and a keyframe with `opacity: 0` at the start can
- * never leave content invisible because a later rule failed to apply.
- *
- * `HOVER_OK` keeps hover effects to devices that hover. On a phone `:hover` sticks after a tap,
- * so a card that lifts on hover would stay lifted after the visitor came back to the list.
- *
- * Keyframe names are declared once, globally, in `theme.ts` (`MuiCssBaseline`), and referenced
- * by name here — one emission per page rather than one per element that uses them.
+ * `MOTION_OK` is opt-in (`AGENTS.md` §18.2): the static state is the default, so a failed rule
+ * never leaves content at a keyframe's `opacity: 0`. `HOVER_OK` keeps hover to devices that
+ * hover, since `:hover` sticks after a tap. Keyframes are emitted once in `theme.ts`.
  */
 
 /** Milliseconds. Short, because nothing here is the point of the page. */
@@ -39,13 +28,7 @@ export const KEYFRAMES = {
   run: "br-run",
 } as const;
 
-/**
- * A card, chip or row that lifts under the pointer.
- *
- * Transform and shadow only — both compositor properties, so the lift costs no layout on a
- * list of forty cards. The transition is unconditional (a transition has no effect when nothing
- * changes) and the hover state is behind `HOVER_OK`.
- */
+/** A card, chip or row that lifts under the pointer; transform and shadow only, no layout. */
 export const liftOnHover = {
   transition: `transform ${DURATION.fast}ms ${EASE}, box-shadow ${DURATION.fast}ms ${EASE}`,
   [HOVER_OK]: {
@@ -58,12 +41,8 @@ export const liftOnHover = {
 } as const;
 
 /**
- * Content that arrives — the listing's cards, the hero.
- *
- * `both` fills so the element sits at its end state after the animation and at its start state
- * during any delay; `index` staggers a list so the cards arrive in reading order. Capped at
- * five: past the first screen nobody is watching, and a delay that grows with the list would
- * make the fortieth card appear two seconds after the page.
+ * Content that arrives — the listing's cards, the hero. `index` staggers a list in reading order,
+ * capped at five so a long list's last card is not delayed by seconds.
  */
 export function riseIn(index = 0) {
   return {
@@ -79,42 +58,22 @@ export const fadeIn = {
 } as const;
 
 /**
- * Content that has just streamed in, behind a `<Suspense>` boundary (`DECISIONS.md` §166).
- *
- * Shorter than `fadeIn`: the reader has already been looking at a skeleton of the same shape
- * in the same box, so this is the swap settling rather than an arrival, and 400ms there reads
- * as the page still loading. Opacity only — the box was already the right size, and moving it
- * would undo the whole point of the skeleton.
+ * Content streamed in behind a `<Suspense>` skeleton (§166): shorter than `fadeIn`, opacity only,
+ * since the skeleton already held the box.
  */
 export const fadeInSoft = {
   [MOTION_OK]: { animation: `${KEYFRAMES.fade} ${DURATION.base}ms ${EASE} both` },
 } as const;
 
 /**
- * The loading figure: a small runner that bobs and leans on the spot.
- *
- * The one animation on the site that repeats, and the only reason it is allowed to: it says
- * "still working" for as long as that is true, and stops existing the moment it is not. The
- * cycle is deliberately longer than the 150–400ms the rest of the site uses — a 250ms loop is
- * a twitch, not a stride — and it moves nothing but `transform`, so a skeleton carrying one
- * costs no layout.
- *
- * Under `MOTION_OK` like everything else, so a reader who asked for less motion gets the
- * figure standing still. It is never the only signal: the element carrying it always has an
- * accessible name saying the page is loading.
+ * The loading figure, a runner bobbing on the spot: the site's only repeating animation. 900ms
+ * reads as a stride; its element always carries an accessible "loading" name.
  */
 export const runInPlace = {
   [MOTION_OK]: { animation: `${KEYFRAMES.run} 900ms ${EASE} infinite` },
 } as const;
 
-/**
- * MUI's `Skeleton animation="wave"` is the shimmer, and this is the switch that turns it off.
- *
- * The wave is drawn by the component's own `::after` pseudo-element, which is emitted by MUI
- * and therefore not written behind `MOTION_OK` the way this file's own rules are. Rather than
- * re-implement the shimmer to get the guard the right way round, the guard is added: a reader
- * who asked for less motion gets the same grey shapes, still.
- */
+/** Stops MUI's `Skeleton animation="wave"` shimmer (its own `::after`) under reduced motion. */
 export const shimmerOffForReducedMotion = {
   "@media (prefers-reduced-motion: reduce)": { "&::after": { animation: "none" } },
 } as const;

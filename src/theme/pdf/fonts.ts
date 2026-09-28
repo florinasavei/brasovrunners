@@ -2,10 +2,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 /**
- * The two Roboto files the PDF sheet embeds, for the pictures `next/og` draws — the share
- * cards (`DECISIONS.md` §90) and the bibs (§94). Satori's bundled fallback has one weight,
- * so without these a race number is never bold. Literal paths, so the files are traced into
- * each function that reads them; read once per process.
+ * Roboto regular and bold for `next/og` pictures — share cards (§90) and bibs (§94); Satori's
+ * fallback has one weight. Literal paths so the files are traced into each function.
  */
 type OgFont = { name: string; data: ArrayBuffer; weight: 400 | 700; style: "normal" };
 

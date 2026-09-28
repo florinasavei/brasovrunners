@@ -8,13 +8,9 @@ import { parseThemePreview, PREVIEW_FONTS, THEME_PREVIEW_COOKIE, type ThemePrevi
 import { buildTheme, theme } from "./theme";
 
 /**
- * The one client boundary the theme needs. Everything below it can stay a Server Component.
- *
- * It also applies the theme lab's preview (`preview.ts`, BR-REQ-090-06), read from a cookie
- * *here*, in the browser, and never on the server: reading a cookie in the root layout would
- * make every page of the site dynamic for everybody, to serve a setting one person chose for
- * one browser. The cost is a repaint for that one person after hydration, which is what a
- * preview is. The server snapshot is "no preview", so the first client render matches it.
+ * The theme's one client boundary. It applies the theme lab's preview (BR-REQ-090-06) from a
+ * cookie read in the browser only: reading it in the root layout would make every page dynamic.
+ * The server snapshot is "no preview", so hydration matches.
  */
 function readPreviewCookie(): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|; )${THEME_PREVIEW_COOKIE}=([^;]*)`));
@@ -40,9 +36,7 @@ export default function AppTheme({ children }: { children: ReactNode }) {
   );
 
   return (
-    // Light until the visitor presses the switch — never the device's setting (§93); the
-    // choice lives in localStorage under MUI's own key and the layout's script applies it
-    // before the first paint.
+    // Light until the visitor presses the switch, never the device's setting (§93).
     <ThemeProvider theme={active} defaultMode="light">
       <CssBaseline />
       {/* Every rem on the site — MUI's own type scale included — follows the root size. */}

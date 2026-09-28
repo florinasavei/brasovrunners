@@ -1,16 +1,9 @@
 /**
- * The theme playground (BR-REQ-090-06): try the site with bigger type, another face or
- * rounder corners, in one browser, without a deploy.
+ * The theme playground (BR-REQ-090-06): bigger type, another face or rounder corners, in one
+ * browser via a cookie the server never reads (`AppTheme.tsx`). Pure values and parsing.
  *
- * Pure values and parsing only — no React, no cookie API — so the same rules serve the
- * `/devs/theme` form, the client boundary that applies a preview, and a unit test. The
- * preview lives in a cookie this browser alone reads (`AppTheme.tsx`): the server never
- * sees it, so every page stays exactly as cacheable as it was, and nobody else's page changes.
- *
- * Fonts are the ones the locale layout already self-hosts through `next/font` (their CSS
- * variables are always defined, and a browser only downloads a face a style actually uses),
- * plus two that need no file at all. The list is the whole allowlist: a cookie naming
- * anything else is ignored, never interpolated into CSS.
+ * `PREVIEW_FONTS` is the whole allowlist: a cookie naming anything else is ignored, never
+ * interpolated into CSS.
  */
 
 export const THEME_PREVIEW_COOKIE = "br-theme-preview";
