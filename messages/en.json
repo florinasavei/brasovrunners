@@ -708,7 +708,7 @@
       "exportExcel": "Export to Excel",
       "readOnlyNotice": "You can read the list, the export and the numbers, but not change them. On race day you work from “Race day”.",
       "columnBib": "Race number (BIB)",
-      "bibColumnHint": "The race number:\n– — — not confirmed yet; the number comes with the confirmation.\n– 12 — given at the confirmation and emailed.\n– 12 ✓ — printed.",
+      "bibColumnHint": "The race number:\n– «—»: not confirmed yet; the number comes with the confirmation.\n– 12: given at the confirmation and emailed.\n– 12 ✓: printed.",
       "bibSettled": "Race number: {number}, given at the confirmation and emailed. If you change it, the person is emailed the new one, and the old one is never given to anybody else.",
       "bibSettledPrinted": "Race number: {number}. It is printed, so it no longer changes.",
       "bibNone": "No race number yet.",

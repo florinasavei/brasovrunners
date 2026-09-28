@@ -72,6 +72,10 @@ export const PLACE_HOLDING_STATUSES: readonly RegistrationStatus[] = [
   "CONFIRMED",
 ];
 
+export function holdsAPlace(status: RegistrationStatus): boolean {
+  return (PLACE_HOLDING_STATUSES as readonly string[]).includes(status);
+}
+
 /**
  * The two states a registration ends in (§10.5): no place, no priority for one, and nothing
  * left to happen to it except a restart, which re-enters at the front of the machine.

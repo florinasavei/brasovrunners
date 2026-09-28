@@ -1,0 +1,45 @@
+{
+  "branch": "fix/race-numbers-only-once-confirmed",
+  "decisionsTitle": "A race number only once a registration is confirmed; nothing is «provizoriu»",
+  "decisionsSection": "**The owner, 2026-09-28 17:56:** «faza cu numerele de concurs provizorii e ciudată». The dispatcher proposed that a number appears only when the registration is confirmed; the owner answered «da» at 18:10.\n\n**Decision (amending §173, §214, §420, §105).** A race number exists only once a registration is confirmed: the address proved **and** the declaration signed, online or on paper at the desk. It is drawn at that moment and at no other — inside the confirmation's own transaction, under the event row's lock the confirmation already holds (§10.6) — as the lowest free number from the event's own first number (§173), never a spare of the desk's reservation (§444). Since no number is ever released, the numbers follow the order of confirmation and are never reused: a cancelled confirmed registration keeps its number, retired (§311), and a restarted one gets that same number back at its new confirmation. A test registration never gets one (§30).\n\n**Nothing before the confirmation.** No number is drawn at the form, with the address's confirmation, with a declaration hold or with a waiting-list offer, and none is shown: not on the screen after the form, not in the verification, declaration or offer emails (the confirmed email carries it), not on «Înscrierile mele» or beside a QR, not in the backoffice list and page («—»), not at the desk, not in the CSV or the Excel export (an empty cell). One pure rule decides what every surface shows (`raceNumberOf`): the number of a confirmed registration, the retired number of a cancelled or expired one, and nothing for any other state, whatever the row holds. The bib sheet lists confirmed registrations only, as before. The public participant list never showed numbers and still does not.\n\n**§214's provisional number and its settle at the close are gone.** No «provizoriu» / «provisional» is left for numbers in either catalogue; the close no longer renumbers anybody or sends «here is your race number», so the «Următoarele emailuri automate» panel no longer lists it. `registrations.provisional_bib_number` and `events.bibs_settled_at` stay in the schema, written by nothing and read only by the one data step below — no migration in this change; a later contract release drops them.\n\n**The desk and the hand-typed number.** A paper confirmation at the desk (§67) and a walk-in confirmed on the spot get their number at that press, in the same order; the volunteer may hand a pre-printed spare instead (§444), checked again under the lock. §105's preferential number is typed on a **confirmed** registration only; the number it replaces was already emailed with the confirmation, so it is retired through the change's audit row (`registration.bib_set`, now naming the event), never given to anybody else, and the new one is emailed.\n\n**A family (§543).** Every person of a family sitting gets their own number at their own confirmation — the person who signs first gets the lower number — shown beside their own QR and desk code; a person still at the declaration shows none. The family-screens change's slot beside the QR reads the same `raceNumberOf`, «—» before a number exists.\n\n**The data already on production — one data step in the maintenance job, not a migration.** The first maintenance run after the deploy (`bibs.ts#releaseLegacyHeldNumbers`, one transaction) turns what the old column holds into either a race number or nothing: a **confirmed** real registration with only an old held number keeps it as its race number, because its confirmation already showed it, and is emailed `BIB_ASSIGNED` once if its race is still ahead; **every other** held number — an address not confirmed, a declaration not signed, an offer, the waiting list, a cancelled or expired row — is cleared, so that registration gets its number at its confirmation. A kept number another row already wears is not kept (the row is left for «Alocă numerele»). Until the step has run, every draw still treats the old column's numbers as taken, so nobody is drawn a number somebody was shown. Idempotent: a second run finds nothing and sends nothing; proven in PGlite.\n\n**Refused.** A migration to clear the numbers: the rows must be read against their state and a runner told, which a SQL step cannot do, and a data step in the job is retryable. Dropping the old columns now: a contract release after this one does it (AGENTS.md §7.6). Renumbering the confirmed at the close: a number once emailed never moves (§173).",
+  "changelogLine": "- **A race number only once the registration is confirmed** — drawn at the confirmation (the address proved and the declaration signed, online or on paper at the desk) in the order of confirmation from the event's first number, never reused; nothing «provizoriu» anywhere, «—» in the backoffice and an empty cell in the export before it; each person of a family gets theirs at their own confirmation; the numbers held before this release are kept by the confirmed and cleared from everybody else by the first maintenance run. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "A registration has no race number at the form, at the address's confirmation, with a declaration hold or with a waiting-list offer; the number is drawn when the registration is confirmed, under the event row's lock (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "Three registrations confirmed in a different order than they were sent are numbered in the order of confirmation, from the event's own first number (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "A cancelled confirmed registration keeps its number retired, and the next confirmation takes the next number; a test registration gets none at its confirmation (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "Every surface shows a number only for a confirmed registration (a cancelled or expired one keeps its retired number): «—» in the backoffice list and page before it, an empty cell in the CSV and the Excel export (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "No message prints a number for a registration that is not confirmed, whatever the row holds, and the confirmed email carries the number; no «provizoriu» / «provisional» is left for numbers in either catalogue (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "The first maintenance run after the release keeps an old held number on a confirmed registration as its race number and emails it once if the race is ahead, clears every other held number, never keeps a number another row wears, and changes nothing on a second run (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-038-01",
+      "text": "A preferential number is typed on a confirmed registration only; the number it replaces is retired and never drawn again (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-037-07",
+      "text": "A paper confirmation at the desk gets its number at that press, in the order of confirmation, or the spare the volunteer hands, checked again under the lock (2026-09-28, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-037-08",
+      "text": "Each person of a family on one address gets their own number at their own confirmation, shown beside their own QR; a person still at the declaration shows none (2026-09-28, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": ""
+}

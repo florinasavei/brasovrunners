@@ -1,6 +1,30 @@
 import { describe, expect, it } from "vitest";
 import type { RegistrationStatus } from "@/db/schema/registrations";
-import { printedNumbersACancelWouldVoid } from "@/modules/registrations/domain/race-number";
+import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
+
+/**
+ * BR-REQ-038-01, `DECISIONS.md` §NNN (amending §173, §420) — the number every surface shows: a
+ * confirmed registration's, a finished one's kept retired, and nothing before the confirmation.
+ */
+describe("§NNN the race number a surface shows", () => {
+  it("shows a confirmed registration's number, and none while it has none", () => {
+    expect(raceNumberOf({ status: "CONFIRMED", bibNumber: 12 })).toBe(12);
+    expect(raceNumberOf({ status: "CONFIRMED", bibNumber: null })).toBeNull();
+  });
+
+  it("keeps a cancelled or expired registration's number, retired, so a printed bib can be pulled", () => {
+    expect(raceNumberOf({ status: "CANCELLED", bibNumber: 7 })).toBe(7);
+    expect(raceNumberOf({ status: "EXPIRED", bibNumber: 8 })).toBe(8);
+  });
+
+  it("shows nothing before the confirmation, whatever the row holds", () => {
+    const before: RegistrationStatus[] = ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED"];
+    for (const status of before) {
+      expect(raceNumberOf({ status, bibNumber: 9 }), status).toBeNull();
+      expect(raceNumberOf({ status, bibNumber: null }), status).toBeNull();
+    }
+  });
+});
 
 /**
  * BR-REQ-038-01 criterion 16, `DECISIONS.md` §311 — what the registrations list names beside its

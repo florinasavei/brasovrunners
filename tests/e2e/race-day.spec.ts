@@ -199,19 +199,15 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await expect(deskRow).toHaveCount(1);
     const code = (await deskRow.locator("span, p").filter({ hasText: /^[A-HJ-NP-Z2-9]{10}$/ }).first().textContent()) as string;
 
-    // The registration's own page. The window is open, so the number is provisional (§214);
-    // saving it by hand settles it (§230) — which is what makes it printable.
+    // The registration's own page. Confirmed at the desk, so the number came with that
+    // confirmation (§NNN) — nothing to save by hand before it can be printed.
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
     await hydrated(page);
     await page.getByRole("link", { name: `Deschide înscrierea lui ${name}` }).click();
     await expect(page).toHaveURL(/\/admin\/registrations\/[0-9a-f-]{36}/);
     const detailUrl = page.url();
-    await page.locator("summary", { hasText: "Schimbă numărul" }).click();
-    await page.getByRole("button", { name: "Salvează nr." }).click();
-    await confirmDialog(page, "Salvezi numărul?");
-    await page.waitForURL(/saved=bibSet/);
-    const settled = (await page.getByText(/Numărul de concurs este \d+/).textContent()) as string;
-    const bib = (settled.match(/Numărul de concurs este (\d+)/) as RegExpMatchArray)[1];
+    const settled = (await page.getByText(/Numărul de concurs: \d+, dat la confirmare/).textContent()) as string;
+    const bib = (settled.match(/Numărul de concurs: (\d+)/) as RegExpMatchArray)[1];
 
     // "This bib is on paper" from the list's ⋮ menu (§264).
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);

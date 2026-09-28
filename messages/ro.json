@@ -708,7 +708,7 @@
       "exportExcel": "Exportă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele, dar nu le poți modifica. În ziua cursei lucrezi de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
-      "bibColumnHint": "Numărul de concurs:\n– — — înscrierea nu e confirmată încă; numărul vine la confirmare.\n– 12 — dat la confirmare și trimis pe email.\n– 12 ✓ — tipărit.",
+      "bibColumnHint": "Numărul de concurs:\n– «—»: înscrierea nu e confirmată încă; numărul vine la confirmare.\n– 12: dat la confirmare și trimis pe email.\n– 12 ✓: tipărit.",
       "bibSettled": "Numărul de concurs: {number}, dat la confirmare și trimis pe email. Dacă îl schimbi, persoana primește noul număr pe email, iar cel vechi nu se mai dă nimănui.",
       "bibSettledPrinted": "Numărul de concurs: {number}. E tipărit, deci nu se mai schimbă.",
       "bibNone": "Nu are încă un număr de concurs.",
