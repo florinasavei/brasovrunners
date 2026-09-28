@@ -849,7 +849,36 @@
         "other": "{count} could not be published: a language is incomplete, or they changed meanwhile."
       },
       "hardDelete": "Permanent deletion…",
-      "eventErased": "Event permanently deleted, together with {erased} registrations."
+      "eventErased": "Event permanently deleted, together with {erased} registrations.",
+      "listFormLabel": "Search and filter the events",
+      "listSearch": "Search for an event",
+      "listSearchHelp": "The title, the page address or the place, in either language.",
+      "listState": "State",
+      "listStateAll": "All",
+      "listStates": {
+        "DRAFT": "Draft",
+        "IN_REVIEW": "In review",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived",
+        "CANCELLED": "Cancelled",
+        "UPCOMING": "Upcoming",
+        "PAST": "Past"
+      },
+      "listSort": "Order",
+      "listSorts": {
+        "club": "The club's: featured, then soonest",
+        "date": "By date",
+        "title": "By title",
+        "entries": "By registrations"
+      },
+      "listDir": "Direction",
+      "listDirNatural": "The chosen order's own",
+      "listDirAsc": "Ascending",
+      "listDirDesc": "Descending",
+      "listApply": "Apply",
+      "listInUse": "Filters on · results: {shown}",
+      "listNone": "Every event, in the club's order",
+      "listEmpty": "No event matches. Change the search or the state, or clear the filters."
     },
     "confirm": {
       "cancel": "Never mind",

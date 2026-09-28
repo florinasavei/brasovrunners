@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -54,7 +55,18 @@ import RoutePills from "@/modules/events/ui/RoutePills";
 import { buildRoutePills } from "@/modules/events/ui/route-pills";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
-import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import Panel from "@/shared/ui/Panel";
+import {
+  EVENT_LIST_SORTS,
+  EVENT_LIST_STATES,
+  eventListParams,
+  eventListQueryInUse,
+  matchesEventList,
+  naturalDir,
+  parseEventListQuery,
+  sortEventLines,
+} from "@/modules/content/events/list-query";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -160,7 +172,15 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   // Race day, give or take: from the day before the start to the day after (§83).
   const DAY = 24 * 60 * 60_000;
-  const rows: EventRow[] = events.map((row) => ({
+  // The search, the state and the order, from the address (§NNN) — a GET form writes them, so
+  // the list is a place to bookmark and it works with JavaScript off. The filter narrows the
+  // dates before they are grouped (`list-query.ts` says why); the order is applied to the lines.
+  const listQuery = parseEventListQuery(current);
+  const listParams = eventListParams(listQuery);
+  const narrowed = eventListQueryInUse(listQuery);
+  const rows: EventRow[] = events
+    .filter((row) => matchesEventList(row.event, row.translations, listQuery, now))
+    .map((row) => ({
     ...row,
     entries: entriesByEvent.get(row.event.id)?.total ?? 0,
     testEntries: entriesByEvent.get(row.event.id)?.test ?? 0,
@@ -175,7 +195,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
    * Grouped after the fetch, so the list's own order — featured first, then soonest — is the
    * order of the lines; the group sits where its first occurrence was.
    */
-  const lines: ListRow[] = await Promise.all(
+  const grouped: ListRow[] = await Promise.all(
     groupSeries(rows.map((row) => ({ row, type: row.event.type, title: row.translations[0]?.title ?? row.event.id, startsAt: row.event.startsAt }))).map(
       async (series) => {
         const members = series.members.map((member) => member.row);
@@ -197,14 +217,30 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     ),
   );
 
-  const query = parseListQuery(current, {
-    // The list's order is the club's own — featured first, then soonest — and it is the order an
-    // organizer thinks in. A sortable column here would be sorting away the thing that puts the
-    // next race at the top.
-    sortable: [],
-    defaultSort: "startsAt",
-    defaultPerPage: 100,
-  });
+  /*
+    The list's order is the club's own by default — featured first, then soonest — the order an
+    organizer thinks in, and nothing in the address changes it until somebody asks for another
+    (§NNN): by date, by title or by registrations, from the form or a column's heading.
+  */
+  const lines = sortEventLines(
+    grouped,
+    // What each line shows: the next date's title and start, and the whole line's registrations.
+    ({ members, next }) => ({
+      title: next.translations[0]?.title ?? next.event.id,
+      startsAt: next.event.startsAt,
+      entries: members.reduce((sum, member) => sum + member.entries, 0),
+    }),
+    listQuery,
+    locale,
+  );
+
+  // The page and its size, as every backoffice list reads them; the sort is this list's own.
+  const query = {
+    ...parseListQuery(current, { sortable: [], defaultSort: "club", defaultPerPage: 100 }),
+    sort: listQuery.sort,
+    dir: listQuery.dir,
+  };
+  const pageLines = lines.slice(query.offset, query.offset + query.limit);
 
   const basePath = getPathname({ locale, href: "/admin" });
 
@@ -252,6 +288,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "title",
       label: t("events.columnTitle"),
+      sortable: true,
+      initialDir: naturalDir("title"),
       primary: true,
       render: ({ members, next, sentence, notes }) => {
         const { event, translations } = next;
@@ -474,6 +512,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "date",
       label: t("events.columnDate"),
+      sortable: true,
+      initialDir: naturalDir("date"),
       hideBelow: "md",
       render: ({ members }) =>
         members.length > 1
@@ -483,6 +523,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "entries",
       label: t("events.columnEntries"),
+      sortable: true,
+      initialDir: naturalDir("entries"),
       align: "right",
       hideBelow: "lg",
       render: ({ members, next }) => {
@@ -592,6 +634,91 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         )}
       </Stack>
 
+      {/*
+        Search, state and order (§NNN): a plain GET form with native selects, so the list's state
+        is the address — bookmarked, kept across a Server Action's redirect back, and working with
+        JavaScript off, like the registrations list's filters and the public listing's (§413).
+        Closed on arrival (§336) unless something in the address is shaping the list (§269).
+      */}
+      <Panel
+        glyph="filters"
+        title={t("panels.filters")}
+        aside={narrowed ? t("events.listInUse", { shown: lines.length }) : t("events.listNone")}
+        collapsible
+        openWhen={{ inUse: narrowed }}
+        id="events-filters"
+        data-testid="events-filters"
+      >
+        <Box component="form" method="get" action={basePath} role="search" aria-label={t("events.listFormLabel")}>
+          {query.perPage !== 100 && <input type="hidden" name="perPage" value={String(query.perPage)} />}
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
+            <TextField
+              name="q"
+              type="search"
+              label={t("events.listSearch")}
+              helperText={t("events.listSearchHelp")}
+              defaultValue={listQuery.q}
+              autoComplete="off"
+              slotProps={{ htmlInput: { maxLength: 100 } }}
+              sx={{ minWidth: 240, flexGrow: 1 }}
+            />
+            <TextField
+              select
+              name="state"
+              label={t("events.listState")}
+              defaultValue={listQuery.state ?? ""}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ minWidth: 200 }}
+            >
+              <option value="">{t("events.listStateAll")}</option>
+              {EVENT_LIST_STATES.map((state) => (
+                <option key={state} value={state}>
+                  {t(`events.listStates.${state}`)}
+                </option>
+              ))}
+            </TextField>
+            <TextField
+              select
+              name="sort"
+              label={t("events.listSort")}
+              defaultValue={listQuery.sort}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ minWidth: 200 }}
+            >
+              {EVENT_LIST_SORTS.map((sort) => (
+                <option key={sort} value={sort}>
+                  {t(`events.listSorts.${sort}`)}
+                </option>
+              ))}
+            </TextField>
+            {/* Read only for date, title and registrations; empty is each order's own first
+                direction (soonest, A to Z, most), so a changed order never inherits a stale one. */}
+            <TextField
+              select
+              name="dir"
+              label={t("events.listDir")}
+              defaultValue={listQuery.sort === "club" || listQuery.dir === naturalDir(listQuery.sort) ? "" : listQuery.dir}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ minWidth: 200 }}
+            >
+              <option value="">{t("events.listDirNatural")}</option>
+              <option value="asc">{t("events.listDirAsc")}</option>
+              <option value="desc">{t("events.listDirDesc")}</option>
+            </TextField>
+            <Stack direction="row" sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
+              <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
+                {t("events.listApply")}
+              </GlyphButton>
+              {narrowed && (
+                <GlyphButton icon="clearFilter" href={basePath} variant="text" sx={TAP_TARGET}>
+                  {t("list.clear")}
+                </GlyphButton>
+              )}
+            </Stack>
+          </Stack>
+        </Box>
+      </Panel>
+
       {/* The bulk verbs, above the ticks they act on (§114): all, N ticked, publish, archive, delete. */}
       {lines.length > 0 && canCreateEvent(staffUser.role) && (
         <BulkBar
@@ -621,10 +748,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       <AdminTable
         caption={t("events.tableCaption")}
         columns={columns}
-        rows={lines}
+        rows={pageLines}
         rowKey={({ key }) => key}
         basePath={basePath}
-        currentParams={{}}
+        // The search and the state ride along on every sort, size and page link.
+        currentParams={{ ...listParams, perPage: query.perPage !== 100 ? String(query.perPage) : undefined }}
         query={query}
         total={lines.length}
         labels={{
@@ -636,7 +764,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           actions: t("list.actions"),
           sortBy: (column) => t("list.sortBy", { column }),
         }}
-        empty={<Typography variant="body1">{t("events.empty")}</Typography>}
+        empty={<Typography variant="body1">{narrowed && events.length > 0 ? t("events.listEmpty") : t("events.empty")}</Typography>}
         rowActions={({ members, next }) => {
           const { event, translations } = next;
           const entries = members.reduce((sum, member) => sum + member.entries, 0);

@@ -849,7 +849,36 @@
         "other": "{count} nu au putut fi publicate: o limbă e incompletă sau au fost modificate între timp."
       },
       "hardDelete": "Ștergere definitivă…",
-      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
+      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri.",
+      "listFormLabel": "Caută și filtrează evenimentele",
+      "listSearch": "Caută un eveniment",
+      "listSearchHelp": "Titlul, adresa paginii sau locul, în oricare limbă.",
+      "listState": "Starea",
+      "listStateAll": "Toate",
+      "listStates": {
+        "DRAFT": "Ciornă",
+        "IN_REVIEW": "În verificare",
+        "PUBLISHED": "Publicat",
+        "ARCHIVED": "Arhivat",
+        "CANCELLED": "Anulat",
+        "UPCOMING": "Viitoare",
+        "PAST": "Trecute"
+      },
+      "listSort": "Ordinea",
+      "listSorts": {
+        "club": "A clubului: evidențiat, apoi cel mai apropiat",
+        "date": "După dată",
+        "title": "După titlu",
+        "entries": "După înscrieri"
+      },
+      "listDir": "Direcția",
+      "listDirNatural": "Cea firească a ordinii alese",
+      "listDirAsc": "Crescător",
+      "listDirDesc": "Descrescător",
+      "listApply": "Aplică",
+      "listInUse": "Filtre active · rezultate: {shown}",
+      "listNone": "Toate evenimentele, în ordinea clubului",
+      "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele."
     },
     "confirm": {
       "cancel": "Renunță",
