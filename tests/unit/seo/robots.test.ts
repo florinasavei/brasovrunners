@@ -33,6 +33,9 @@ describe("§NNN robots.txt on production", () => {
     "/en/calendar?year=2027&view=list",
     "/ro/evenimente/crosul-aniversar?lista=2",
     "/en/events/anniversary-cross?interest=1",
+    "/en/events/anniversary-cross?since=1727500000",
+    "/ro/evenimente/crosul-aniversar?declaratie=abc",
+    "/ro/evenimente/crosul-aniversar?fbclid=x&lista=3",
     "/ro/live/events",
     "/en/live/events/anniversary-cross",
     "/ro/evenimente/crosul-aniversar/inscriere",
@@ -43,7 +46,7 @@ describe("§NNN robots.txt on production", () => {
     "/ro/inscrieri/ale-mele",
     "/ro/noutati/abonament/abc",
     "/en/newsletter/confirm/abc",
-    "/ro/events/crosul-aniversar/share-image",
+    "/ro/events/crosul-aniversar/share-image?shape=og",
     "/api/health",
     "/ro/admin",
   ])("keeps a crawler out of %s", (address) => {
@@ -58,6 +61,12 @@ describe("§NNN robots.txt on production", () => {
     "/ro/evenimente/crosul-aniversar",
     "/en/events/anniversary-cross",
     "/ro/events/crosul-aniversar/opengraph-image",
+    "/ro/events/crosul-aniversar/opengraph-image?abc123",
+    // Next's content-hash query on an English event's picture: its path is the public one.
+    "/en/events/anniversary-cross/opengraph-image?abc123",
+    "/en/events/anniversary-cross?fbclid=x",
+    // One of the event's two JSON-LD images.
+    "/ro/events/crosul-aniversar/share-image",
     "/ro/intrebari",
     "/ro/galerie",
     "/ro/termeni",

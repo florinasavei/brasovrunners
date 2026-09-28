@@ -1,3 +1,5 @@
+import { DEV_STAFF_COOKIE } from "@/modules/staff-identity/dev-staff-cookie";
+
 /**
  * Which request a static public page cannot answer, and the live twin that answers it (§NNN,
  * amending §333).
@@ -45,7 +47,7 @@ function asksSomething(search: URLSearchParams): boolean {
  */
 export function mayBeSignedIn(cookieNames: Iterable<string>): boolean {
   for (const name of cookieNames) {
-    if (name === "br_dev_staff" || /^(__Secure-)?authjs\.session-token(\.\d+)?$/.test(name)) return true;
+    if (name === DEV_STAFF_COOKIE || /^(__Secure-)?authjs\.session-token(\.\d+)?$/.test(name)) return true;
   }
   return false;
 }

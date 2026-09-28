@@ -103,6 +103,6 @@ async function lifetimeMark(): Promise<number> {
 }
 
 /** A production Next server, not `next build`: the only place a page is kept by ISR. */
-function pagesAreCachedHere(): boolean {
+export function pagesAreCachedHere(): boolean {
   return process.env.NEXT_RUNTIME === "nodejs" && process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build";
 }

@@ -8,7 +8,7 @@ import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { DatabaseRestingError, isColdMiss } from "./breaker";
 import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
 import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
-import { DEGRADED_PAGE_SECONDS, holdPageFor } from "@/modules/public-cache/page-lifetime";
+import { DEGRADED_PAGE_SECONDS, holdPageFor, pagesAreCachedHere } from "@/modules/public-cache/page-lifetime";
 import {
   type Envelope,
   isSnapshotTooOld,
@@ -265,13 +265,25 @@ export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours
  * Send the reader to the short resting page (§447), naming the address they were on — which the
  * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
  * a request (a test, a script) there is no header, and the way back is the site's root.
+ *
+ * On a production server the header is never read, and the way back is the site's root (§NNN): the
+ * public pages are static there, and in a static render `headers()` sets the render's revalidate to
+ * 0 before it throws, so catching the throw does not undo it — Next then answers 500 («Page changed
+ * from static to dynamic at runtime») instead of the resting page. A render cannot ask whether it is
+ * static without Next's internals, so the live twins and the form pages lose the way back too, on
+ * this one path only (a red month's cold miss with no copy); the resting page's own link still
+ * leads home. The redirect is held a minute first, so the CDN never keeps it for a day.
  */
 async function sendToRestingPage(): Promise<never> {
   let back: string | null = null;
-  try {
-    back = (await headers()).get(REQUEST_PATH_HEADER);
-  } catch {
-    back = null;
+  if (pagesAreCachedHere()) {
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
+  } else {
+    try {
+      back = (await headers()).get(REQUEST_PATH_HEADER);
+    } catch {
+      back = null;
+    }
   }
   redirect(restingPageHref(back));
 }

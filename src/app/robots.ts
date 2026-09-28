@@ -14,6 +14,9 @@ import { env } from "@/shared/config/env";
  * open owner decision. No AI user-agent is named here in either direction until it is taken —
  * inventing a policy would misrepresent the club.
  */
+/** The query keys an event page reads, each of which makes it the live twin's render (`i18n/live-twin.ts`, §NNN). */
+const EVENT_PAGE_QUERY_KEYS = ["lista", "interest", "since", "declaratie"] as const;
+
 export default function robots(): MetadataRoute.Robots {
   if (env.APP_ENV !== "production") {
     return { rules: [{ userAgent: "*", disallow: "/" }] };
@@ -57,19 +60,23 @@ export default function robots(): MetadataRoute.Robots {
               canonical to the bare page (§342, §413) and each the live twin's render (`?` is a
               literal prefix here: `/ro/evenimente?` blocks `/ro/evenimente?type=RACE`, never
               `/ro/evenimente`).
-            - An event page with a query: a start list's `?lista=` pages (names, §32), the interest
-              box's outcome — `*` is the path wildcard Google and Bing read.
+            - An event page asked one of the keys it reads — a start list's `?lista=` pages (names,
+              §32), the interest box's outcome (`?interest=`, `?since=`), the signer's link
+              (`?declaratie=`) — first or after another key; `*` is the path wildcard Google and Bing
+              read. Never `/<events>/*?` alone: Next writes an Open Graph picture's address with a
+              content-hash query (`/en/events/<slug>/opengraph-image?<hash>`), and a link card's
+              crawler (LinkedInBot, Twitterbot) obeys robots.txt.
             - The live twins themselves (`/<locale>/live/…`), never linked.
             - The forms and the pages behind an emailed link: registration, the group run's
               declaration, every token page, the newsletter's two.
-            - The share picture to download: a function per shape; the Open Graph one stays open.
+            - The share picture asked for a shape (`?shape=`): a function per shape. The bare one
+              stays open, as every Open Graph picture: it is one of the event's JSON-LD images.
           */
           "/ro/evenimente?",
           "/en/events?",
           "/ro/calendar?",
           "/en/calendar?",
-          "/ro/evenimente/*?",
-          "/en/events/*?",
+          ...EVENT_PAGE_QUERY_KEYS.flatMap((key) => ["/ro/evenimente/*", "/en/events/*"].flatMap((base) => [`${base}?${key}=`, `${base}&${key}=`])),
           "/ro/live/",
           "/en/live/",
           "/ro/evenimente/*/inscriere",
@@ -81,7 +88,7 @@ export default function robots(): MetadataRoute.Robots {
           "/ro/inscrieri/",
           "/ro/noutati/",
           "/en/newsletter/",
-          "/*/share-image",
+          "/*/share-image?",
         ],
       },
     ],

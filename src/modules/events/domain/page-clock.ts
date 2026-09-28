@@ -1,6 +1,7 @@
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { publicListClosesAt, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { WEATHER_WINDOW_DAYS, weatherInstant } from "@/modules/weather/domain/forecast";
+import { SIGNING_GRACE_MINUTES } from "@/modules/group-run-declarations/domain";
 import { registrationClosingInstant } from "./registration-window";
 import { fromWallTimeInput, toWallTimeInput } from "./zoned-time";
 
@@ -17,7 +18,10 @@ import { fromWallTimeInput, toWallTimeInput } from "./zoned-time";
  *
  * Covered here, per event:
  * - the start, the race's own start and the end — upcoming becomes past, the countdown and the
- *   desk's words (§76–§79), the group run's signing window (§393);
+ *   desk's words (§76–§79);
+ * - the group run's signing close, `SIGNING_GRACE_MINUTES` after the start (§393, `signingOpen`),
+ *   where the declaration's section leaves the page — named for every event, since an instant too
+ *   many costs one render and the page clock does not know which events offer one;
  * - the registration window — opens, closes (`registrationState`, the door §409, «în curând» §451,
  *   the interest box §146);
  * - the weather window — seven days before the start the forecast line appears (§402), and from
@@ -45,7 +49,7 @@ export function eventClockInstants(event: ClockedEvent, deadlines?: Pick<Deadlin
   const instants: (Date | null | undefined)[] = [event.registrationOpensAt];
   const startsAt = event.startsAt;
   if (startsAt) {
-    instants.push(startsAt, event.raceStartsAt, event.endsAt);
+    instants.push(startsAt, event.raceStartsAt, event.endsAt, new Date(startsAt.getTime() + SIGNING_GRACE_MINUTES * 60_000));
     instants.push(registrationClosingInstant({ registrationClosesAt: event.registrationClosesAt ?? null, startsAt }));
     instants.push(new Date(weatherInstant({ startsAt, raceStartsAt: event.raceStartsAt }).getTime() - WEATHER_WINDOW_DAYS * DAY_MS));
     const window = confirmationWindow({ ...event, startsAt });

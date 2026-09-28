@@ -172,9 +172,11 @@ function serverClosure(route: string): Map<string, string[]> {
  */
 const REQUEST_READERS_ALLOWED: Record<string, string> = {
   /*
-    `headers()` only on a red month's cold miss with no copy (§447): the reader is sent to the
-    resting page, and in a static render that read marks the render per request (revalidate 0),
-    so the redirect is never the page the CDN keeps. Nothing else in the file touches the request.
+    `headers()` only on a red month's cold miss with no copy (§447), and only outside a production
+    server (`next dev`, a test): on a production server it is never called, because in a static
+    render it sets revalidate 0 before throwing and Next answers 500 («Page changed from static to
+    dynamic at runtime»), not the resting page. There the way back is the site's root and the
+    redirect is held a minute. Nothing else in the file touches the request.
   */
   "src/modules/resilience/last-good.ts": "the resting page's way back, on a cold miss only",
   /*

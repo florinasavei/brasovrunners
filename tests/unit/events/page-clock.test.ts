@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { eventClockInstants, nextWallMidnight } from "@/modules/events/domain/page-clock";
+import { SIGNING_GRACE_MINUTES } from "@/modules/group-run-declarations/domain";
 
 /**
  * §NNN (amending §333) — the instants at which a page that shows an event reads differently, so
@@ -8,7 +9,7 @@ import { eventClockInstants, nextWallMidnight } from "@/modules/events/domain/pa
 const iso = (dates: Date[]) => dates.map((date) => date.toISOString()).sort();
 
 describe("eventClockInstants", () => {
-  it("names the start, the end, the registration window, the weather window and the confirmation window", () => {
+  it("names the start, the end, the signing close, the registration window, the weather window and the confirmation window", () => {
     const instants = eventClockInstants({
       startsAt: new Date("2026-11-21T07:00:00.000Z"),
       endsAt: new Date("2026-11-21T11:00:00.000Z"),
@@ -24,11 +25,17 @@ describe("eventClockInstants", () => {
         new Date("2026-11-19T20:00:00.000Z"), // registration closes
         new Date("2026-11-21T07:00:00.000Z"), // the start
         new Date("2026-11-21T11:00:00.000Z"), // the end
+        new Date("2026-11-21T08:00:00.000Z"), // a group run's signing close, an hour after the start (§393)
         new Date("2026-11-14T07:00:00.000Z"), // the forecast's seven days (§402) and the confirmation window's opening (§104)
         new Date("2026-11-14T07:00:00.000Z"),
         new Date("2026-11-19T07:00:00.000Z"), // the confirmation deadline
       ]),
     );
+  });
+
+  it("names a group run's signing close, SIGNING_GRACE_MINUTES after the start, where its declaration leaves the page (§393)", () => {
+    const instants = iso(eventClockInstants({ startsAt: new Date("2026-10-04T06:00:00.000Z") }));
+    expect(instants).toContain(new Date(Date.parse("2026-10-04T06:00:00.000Z") + SIGNING_GRACE_MINUTES * 60_000).toISOString());
   });
 
   it("reads the weather window from the race's own start when it has one", () => {

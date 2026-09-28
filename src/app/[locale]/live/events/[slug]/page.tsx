@@ -1,5 +1,8 @@
 import { unstable_rethrow } from "next/navigation";
-import EventDetailPage from "../../../events/[slug]/page";
+import type { Metadata } from "next";
+import EventDetailPage, { generateMetadata as eventMetadata } from "../../../events/[slug]/page";
+import { absoluteUrl } from "@/modules/events/share-links";
+import { SHARE_SHAPES } from "@/modules/events/share-image";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -13,7 +16,26 @@ import { env } from "@/shared/config/env";
  */
 export const dynamic = "force-dynamic";
 
-export { generateMetadata } from "../../../events/[slug]/page";
+/**
+ * The event page's own metadata, plus its Open Graph picture: Next writes `og:image` only for the
+ * segment that holds the `opengraph-image` file, and this twin is a segment of its own — without
+ * the line below a link shared as `?lista=2` or read by a crawler with a cookie would carry the
+ * locale's picture, not the event's.
+ */
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const metadata = await eventMetadata(props);
+  if (!metadata.openGraph) return metadata;
+  const { locale, slug } = await props.params;
+  return {
+    ...metadata,
+    openGraph: {
+      ...metadata.openGraph,
+      images: [{ url: absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/opengraph-image`), ...SHARE_SHAPES.og, type: "image/png" }],
+    },
+  };
+}
+
+type MetadataProps = Parameters<typeof eventMetadata>[0];
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
