@@ -6,6 +6,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -108,7 +109,7 @@ const text = (html: string) => html.replace(/<[^>]+>/g, "");
 async function row(slug = "cros") {
   const event = await findPublishedEventBySlug(db, locale, locale === "ro" ? slug : `${slug}-en`);
   if (!event) throw new Error("the event did not publish");
-  return event;
+  return datedOrNull(event)!;
 }
 const card = async (slug = "cros") => markup(createElement(EventCard, { event: await row(slug), index: 0, now: NOW }));
 const page = async (slug = "cros") => markup(await RegistrationCta({ event: await row(slug), now: NOW }));

@@ -35,6 +35,7 @@ import ShareLinks from "@/modules/events/ui/ShareLinks";
 import { instagramFileName } from "@/modules/events/instagram-share";
 import { absoluteUrl, eventPageUrl } from "@/modules/events/share-links";
 import { toCalendarEvent } from "@/modules/events/calendar";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { googleCalendarUrl } from "@/modules/events/ical";
 import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -175,12 +176,16 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   // The forecast for the start (§402): read on the server, from Open-Meteo through the data cache,
   // only within seven days of it; null — and no row — otherwise or when the service did not answer.
-  const weather = await forecastForEvent(event, now);
+  // An event whose date is to be announced (§533) has no forecast, no structured data (a
+  // `SportsEvent` requires its `startDate`), no calendar entry and no countdown: `dated` is null.
+  const dated = datedOrNull(event);
+  const weather = dated ? await forecastForEvent(dated, now) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+      {dated && (
       <JsonLd
         data={sportsEventJsonLd(
-          event,
+          dated,
           eventUrl(locale, slug),
           CLUB_NAME,
           [absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/opengraph-image`), absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/share-image`)],
@@ -188,6 +193,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           locale,
         )}
       />
+      )}
 
       <LastGoodNotice read={read} />
 
@@ -287,7 +293,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             window={
               (() => {
                 // "Confirm a week before" only while that week is ahead (§104).
-                const w = confirmationWindow(event);
+                const w = dated && confirmationWindow(dated);
                 return w && w.opensAt.getTime() > now.getTime()
                   ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
                   : null;
@@ -304,10 +310,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           title={event.title}
           imageHref={`/${locale}/events/${slug}/share-image`}
           fileName={instagramFileName(slug)}
-          calendar={{
-            icsHref: `/${locale}/events/${slug}/calendar.ics`,
-            googleUrl: googleCalendarUrl(toCalendarEvent(event, locale, now), { locale, t }),
-          }}
+          calendar={
+            dated ? {
+              icsHref: `/${locale}/events/${slug}/calendar.ics`,
+              googleUrl: googleCalendarUrl(toCalendarEvent(dated, locale, now), { locale, t }),
+            } : undefined
+          }
         />
       </Box>
 
@@ -402,13 +410,15 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
               organizer offered it and the club has approved the text of its surface. */}
           {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
-          <DeclarationOffer event={event} locale={locale} slug={slug} now={now} viewToken={declaratie} />
+          {/* Nothing to sign for while the date is to be announced (§533). */}
+          {dated && <DeclarationOffer event={dated} locale={locale} slug={slug} now={now} viewToken={declaratie} />}
         </Box>
         <OpenFoldFromHash />
       </Box>
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
-      <StartList event={event} page={lista} />
+      {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
+      {dated && <StartList event={dated} page={lista} />}
     </Container>
   );
 }

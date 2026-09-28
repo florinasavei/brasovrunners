@@ -10,13 +10,8 @@ import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
 import { hasRouteDescription, partitionEventLinks } from "@/modules/events/domain/route-section";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
-import {
-  type EventNotificationRow,
-  eventNotificationDetailsIn,
-  findEventNotificationRows,
-  findEventStartsAt,
-  findPublishedEventBySlug,
-} from "@/modules/events/repository";
+import { type EventNotificationRow, eventNotificationDetailsIn, findEventNotificationRows, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
@@ -968,7 +963,9 @@ async function renderRow(
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
     eventDetails?.slug
   ) {
-    const published = await findPublishedEventBySlug(db, locale, eventDetails.slug);
+    // Dated only: an event whose date is to be announced (§533) has no calendar entry to attach.
+    const found = await findPublishedEventBySlug(db, locale, eventDetails.slug);
+    const published = found ? datedOrNull(found) : null;
     if (published) {
       const ics = buildCalendar({
         events: [toCalendarEvent(published, locale, now)],

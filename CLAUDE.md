@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.17-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.18-2026-09-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.17-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.18-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -129,6 +129,7 @@ sections and in `CHANGELOG.md`.
   A place may be **"to be announced"** — withheld in SQL from every public surface and email until
   the switch goes off (§328); **"Linkuri și fișiere"**, up to twelve labelled links per event (a GPX on
   Drive, a PDF, an album) under `#links` (§332).
+- **The start to be announced** (§533): «Data se anunță mai târziu» / «Ora se anunță mai târziu» in «Când și unde» — the start withheld in SQL, the page, the card and the share picture saying «Data se anunță în curând» (or the day with «Ora se anunță în curând»), the listing's own «Data sau ora se anunță» section, nothing in a month, the calendar, the feed or the .ics; registration «în curând» at every door until the organizer opens it; refused on a series, on an event anybody registered for and on the lead event; migration `0105`.
 - **Night events** (§394, the tooltip §415, the pill «Noapte» §428): whether a date is a night event is computed, never stored — a start at or after civil dusk (or before civil dawn)
   at the club's place (`CLUB_COORDINATES`, default Brașov) on that date, through the NOAA solar algorithm in the platform; the pill «Eveniment de
   noapte» keeps the headlamp glyph and says the sunset; a series answers per date; the editor's «Eveniment de noapte: Automat / Da / Nu» overrides
@@ -350,6 +351,7 @@ sections and in `CHANGELOG.md`.
 - **Batch 38 (2026-09-27, `BR-V2.15`):** the members' zone — a «Membru» role below the volunteer with the same Zitadel sign-in and no backoffice, the public «Beneficiile membrilor» page with the sign-in button, one members-only page behind the sign-in, bulk invitations; migration `0102` (§524).
 - **Batch 39 (2026-09-27, `BR-V2.16`):** «Întrebări frecvente» — a platform page the club fills with questions and rich-text answers in both languages, native folds with deep links, `FAQPage` structured data; Pagini in «standard» and «personalizate» groups; migration `0103` (§525) · the difficulty as five bands × three steps — ușor, mediu, greuț, greu, foarte greu, each 1·2·3 — one level column backfilled from the old five values, the gauge with step dots, the club's scale in the guide; migration `0104` (§526).
 - **Batch 40 (2026-09-27, `BR-V2.17`):** the backoffice events list searched by name, filtered by state — viitoare, încheiate, ciorne, publicate, arhivate, anulate — and sorted by date, name or state, all in the address and without JavaScript (§527) · every difficulty gauge says its exact level of fifteen in a tooltip — «Ușor 2 — nivelul 2 din 15» — and a «?» in the editor explains the club's scale with its own examples (§528) · the outbox panel says when the emails leave — the next scheduled run, each row's own time — and carries the on/off switch for scheduled delivery (§529) · «Mărimea textului» — the public pages' text size as a club setting, Mic / Normal / Mare / Foarte mare, the owner's own change from his phone (§530) · the cleanup after the night — the queue and the map brought to the truth, the review leftovers of V2.13–V2.16 (the offer rule in the queue panel, the glyph guard, plain words over toasts and steps), dead exports and orphan keys (§531) · every legal text regenerated from its template in one press, every draft approved in one press, versions deleted in bulk under the existing rules (§532).
+- **Batch 41 (2026-09-28, `BR-V2.18`):** an event published before its date or its time is known — «Data se anunță mai târziu» and «Ora se anunță mai târziu» in «Când și unde»; the site says «Data se anunță în curând», or the day with «Ora se anunță în curând», lists the event in its own «Data sau ora se anunță» section and keeps it out of every month, the calendar, the feed and the .ics; registration stays «în curând» until the organizer opens it; refused on a series, on an event with registrations and on the lead event; migration `0105` (the owner, from the phone; §533).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price under «Setări» → «Costuri» (§516, §41,

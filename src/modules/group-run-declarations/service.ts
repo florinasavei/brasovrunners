@@ -5,6 +5,7 @@ import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument } from "@/modules/legal-documents/domain/merge-fields";
@@ -114,10 +115,16 @@ export async function findSignableEvent<T extends Record<string, unknown>>(db: D
       startsAt: events.startsAt,
       minAge: events.minAge,
       timezone: events.timezone,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
+  // A run whose date is to be announced (§533) has nothing to sign for yet: its start is only the
+  // organizer's provisional note, and the signed PDF and its email would print it. Not signable, as
+  // the page (which answers 404) says — asked here too, for a stale form or a post to the action.
+  if (!row || startHeldBack(row)) return undefined;
   return row;
 }
 

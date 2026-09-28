@@ -4,7 +4,8 @@ import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { distanceInKm } from "./domain/event-type";
-import type { PublicEvent } from "./repository";
+import { announcedDayInstant } from "./domain/dated";
+import type { PublicEventPage } from "./repository";
 
 /**
  * The picture an event becomes when its link is pasted into Facebook, WhatsApp or a message —
@@ -27,11 +28,12 @@ export const SHARE_SHAPES = {
 export type ShareShape = keyof typeof SHARE_SHAPES;
 
 export type ShareImageEvent = Pick<
-  PublicEvent,
+  PublicEventPage,
   | "title"
   | "type"
   | "startsAt"
   | "raceStartsAt"
+  | "announcedDay"
   | "timezone"
   | "locationName"
   | "locationToBeAnnounced"
@@ -49,6 +51,10 @@ export async function eventShareImage(
     cancelled: string;
     /** "Locația se anunță în curând" (§328), where the meeting point would be. */
     locationToBeAnnounced: string;
+    /** "Data se anunță în curând" (§533), where the date and the time would be. */
+    dateToBeAnnounced: string;
+    /** "Ora se anunță în curând" (§533), after the day, when only the time is held back. */
+    timeToBeAnnounced: string;
     distanceKm: (km: string) => string;
     elevationM: (m: string) => string;
   },
@@ -60,8 +66,13 @@ export async function eventShareImage(
   const square = shape === "square";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
   // "Duminică, 11 oct. 2026": the long form, starting its line (§349), in the picture's language.
-  const date = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
-  const time = formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone });
+  // While the date is to be announced (§533) the query withheld it, and the picture says so instead.
+  const when =
+    event.startsAt === null
+      ? event.announcedDay
+        ? `${formatDay(announcedDayInstant(event.announcedDay), { locale, timeZone: "UTC", style: "long" })} · ${labels.timeToBeAnnounced}`
+        : labels.dateToBeAnnounced
+      : `${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" })} · ${formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone })}`;
   const km = distanceInKm(event.distanceMeters);
   const route = [
     km !== null ? labels.distanceKm(new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km)) : null,
@@ -115,7 +126,7 @@ export async function eventShareImage(
           <div style={{ display: "flex", fontSize: titleSize, fontWeight: 700, lineHeight: 1.1, textWrap: "balance" }}>{event.title}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: square ? 38 : 34, opacity: 0.95 }}>
             <div style={{ display: "flex" }}>
-              {date} · {time}
+              {when}
             </div>
             {place && <div style={{ display: "flex" }}>{place}</div>}
           </div>

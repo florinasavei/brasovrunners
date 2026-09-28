@@ -41,6 +41,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 const { saveEventAndTranslationsAction, createEventAction } = await import("@/app/[locale]/admin/actions");
 const { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } = await import("@/modules/content/events/service");
 const { findPublishedEventBySlug } = await import("@/modules/events/repository");
+const { datedOrNull } = await import("@/modules/events/domain/dated");
 const { clubNightEvent } = await import("@/modules/events/night-event");
 
 const NOW = new Date("2026-09-25T10:00:00.000Z");
@@ -179,7 +180,7 @@ describe("BR-REQ-050-02 the editor's action persists «Eveniment de noapte»", (
       { actor: admin, fields: { ...FIELDS, startsAtWallTime: "2027-06-16T19:00", nightOverride: true, translations: TRANSLATIONS }, now: NOW },
     );
     await db.update(events).set({ editorialStatus: "PUBLISHED", publishedAt: NOW }).where(eq(events.id, created.id));
-    const read = async () => (await findPublishedEventBySlug(db, "ro", "running-up-that-hill"))!;
+    const read = async () => datedOrNull((await findPublishedEventBySlug(db, "ro", "running-up-that-hill"))!)!;
     // "Da" in June: a night event whatever the sun does.
     expect((await read()).nightOverride).toBe(true);
     expect(clubNightEvent(await read()).night).toBe(true);

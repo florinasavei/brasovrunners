@@ -18,6 +18,7 @@ import { calendarLabels } from "@/modules/events/calendar-labels";
 import { placeInBox, placeNameIn } from "@/modules/events/domain/place";
 import { buildCalendar } from "@/modules/events/ical";
 import { findEventNotificationDetails, findPublishedEventBySlug } from "@/modules/events/repository";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -323,13 +324,13 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
 
     it("the calendar file and the structured data of the English page", async () => {
       await publishedEvent();
-      const en = (await findPublishedEventBySlug(db, "en", "the-cross"))!;
+      const en = datedOrNull((await findPublishedEventBySlug(db, "en", "the-cross"))!)!;
       const ics = buildCalendar({ events: [toCalendarEvent(en, "en", NOW)], baseUrl: "https://example.test", name: "x", labels: calendarLabels("en") }).replace(/\r\n /g, "");
       expect(ics).toContain(`LOCATION:${EN_PLACE}`);
       expect(ics).not.toContain(RO_PLACE);
       const jsonLd = sportsEventJsonLd(en, "https://example.test/en/events/the-cross", "Brașov Runners", [], "en");
       expect(jsonLd.location).toMatchObject({ "@type": "Place", name: EN_PLACE });
-      const ro = (await findPublishedEventBySlug(db, "ro", "crosul"))!;
+      const ro = datedOrNull((await findPublishedEventBySlug(db, "ro", "crosul"))!)!;
       expect(sportsEventJsonLd(ro, "https://example.test/ro/evenimente/crosul", "Brașov Runners", [], "ro").location).toMatchObject({ name: RO_PLACE });
     });
 

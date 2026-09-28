@@ -3,7 +3,7 @@ import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import { registrationDoorOpen } from "../domain/listing-filter";
 import { type PublicFill, publicFill, registrationCta, type RegistrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
-import type { PublicEvent } from "../repository";
+import type { PublicEvent, PublicEventPage } from "../repository";
 
 /**
  * What the one registration door says for an event right now: the state `registrationCta` picks,
@@ -36,7 +36,7 @@ export type RegistrationDoor =
  * (§348), off the same row the count was taken against, so neither line costs more. On the
  * listing that is one cached entry per open race card, and nothing for any other card (§409).
  */
-export async function readRegistrationDoor(event: PublicEvent, now: Date): Promise<RegistrationDoor> {
+export async function readRegistrationDoor(event: PublicEventPage, now: Date): Promise<RegistrationDoor> {
   let availablePlaces: number | null = null;
   let capacity: number | null = null;
   let waitlistRoom: number | null = null;
@@ -85,7 +85,7 @@ export async function readRegistrationDoor(event: PublicEvent, now: Date): Promi
  * open internal event on the page, the same entry its card and its page read, and nothing for any
  * other row. The reads run side by side, once per event however often it appears in `events`.
  */
-export async function readRegistrationDoors(events: readonly PublicEvent[], now: Date): Promise<(event: PublicEvent) => boolean> {
+export async function readRegistrationDoors(events: readonly PublicEvent[], now: Date): Promise<(event: { id: string }) => boolean> {
   const unique = new Map(events.map((event) => [event.id, event]));
   const doors = new Map<string, boolean>();
   await Promise.all(
