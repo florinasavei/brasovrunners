@@ -162,7 +162,9 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const label = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[1] ?? "";
     // The visible words, hidden from a screen reader; the heard words in a span clipped to one pixel.
     expect(label).toContain(`<span aria-hidden="true">${shown}</span>`);
-    expect(/<span class="MuiBox-root [^"]*">([^<]*)$/.exec(label)?.[1]).toBe(heard);
+    // The first clipped span; the level of fifteen follows in a second one (the tooltip's words, §NNN).
+    expect(/<span class="MuiBox-root [^"]*">([^<]*)</.exec(label)?.[1]).toBe(heard);
+    expect(label).toContain(` — ${pills[0]!.tooltip}`);
     expect(html).not.toMatch(/aria-label=/);
   });
 });

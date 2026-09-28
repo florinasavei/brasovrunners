@@ -1,6 +1,14 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
-import { DIFFICULTY_STEPS, difficultyBandOf, difficultyLevelOf, difficultyStepOf, type StoredDifficulty } from "../domain/difficulty";
+import {
+  DIFFICULTY_LEVEL_COUNT,
+  DIFFICULTY_STEPS,
+  difficultyBandOf,
+  difficultyExampleKey,
+  difficultyLevelOf,
+  difficultyStepOf,
+  type StoredDifficulty,
+} from "../domain/difficulty";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
 import { difficultyLevelGlyph } from "./difficulty-glyphs";
@@ -8,7 +16,7 @@ import type { GlyphName } from "./glyphs";
 
 /**
  * A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary
- * (§112), its words, and — only the night pill's (§394) — a tooltip that says why. `srSuffix`
+ * (§112), its words, and — the night pill's (§394) and the difficulty's (§NNN) — a tooltip that says why. `srSuffix`
  * adds extra words a screen reader reads right after `label`, never shown, while the visible
  * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
@@ -130,17 +138,30 @@ export function routePillParts(
  * «Mediu 2» — and, for a screen reader, «Dificultate: mediu, treapta 2 din 3». Every word from the
  * catalogue (`Event.difficultyValues`, `difficultyBandWords`, `difficultyLevelShort`,
  * `difficultyLevelSr`), never a string written here.
+ *
+ * **The tooltip names the level of fifteen (§NNN)** — «Nivelul 5 din 15: o alergare mai lungă» — the
+ * gauge's position said in numbers, with the owner's own example for it (§526). The same sentence
+ * rides in `srSuffix`, the night pill's way (§428): a plain, unfocusable chip never lets a keyboard
+ * or a screen reader open a tooltip, so the words are in the chip's own accessible name, and
+ * `GlyphChip` then leaves the tooltip's description off rather than read them twice.
  */
 function difficultyPillOf(level: number, t: Translate): Pill {
   const band = difficultyBandOf(level);
   const step = difficultyStepOf(level);
   const steps = DIFFICULTY_STEPS.length;
+  const tooltip = t("difficultyLevelTooltip", {
+    level,
+    levels: DIFFICULTY_LEVEL_COUNT,
+    example: t(`difficultyExamples.${difficultyExampleKey(level)}`),
+  });
   return {
     glyph: difficultyLevelGlyph(level),
     label: t("difficultyLevelShort", { band: t(`difficultyValues.${band}`), step }),
     srLabel: t("difficultyLevelSr", { band: t(`difficultyBandWords.${band}`), step, steps }),
     // Where no chip is drawn — the emails' facts block (§392): «Mediu, treapta 2 din 3».
     plain: t("difficultyWithStep", { band: t(`difficultyValues.${band}`), step, steps }),
+    tooltip,
+    srSuffix: tooltip,
   };
 }
 

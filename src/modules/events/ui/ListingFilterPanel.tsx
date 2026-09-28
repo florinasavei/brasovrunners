@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { DIFFICULTY_BANDS, DIFFICULTY_LEVEL_COUNT, difficultyBandLevels, type DifficultyBand } from "@/modules/events/domain/difficulty";
 import {
   activeFilterCount,
   FILTER_FLAGS,
@@ -112,6 +113,9 @@ export default async function ListingFilterPanel({
     }
   };
 
+  const bandTitle = (band: DifficultyBand): string =>
+    tEvent("difficultyBandTitle", { band: tEvent(`difficultyValues.${band}`), ...difficultyBandLevels(band), levels: DIFFICULTY_LEVEL_COUNT });
+
   // What the address ticks, in the panel's own order: the active chips, and the island's state.
   const ticked: { group: FilterGroup | FilterFlag; value: string }[] = [
     ...FILTER_GROUPS.flatMap((group) => (filter[group] as string[]).map((value) => ({ group, value }))),
@@ -120,8 +124,12 @@ export default async function ListingFilterPanel({
 
   const option = (group: FilterGroup | FilterFlag, value: string, checked: boolean) => {
     const Icon = GLYPHS[glyph(group, value)];
+    // A band's gauge names the levels it ticks on hover (§NNN): «Greuț: nivelurile 7–9 din 15». A
+    // native `title`, not MUI's `Tooltip`, so the panel stays a Server Component that works without
+    // a script; the band's word is what a screen reader hears, as before.
+    const title = group === "difficulty" && isDifficultyBand(value) ? bandTitle(value) : undefined;
     return (
-      <Box component="label" key={`${group}=${value}`} sx={FILTER_OPTION_SX}>
+      <Box component="label" key={`${group}=${value}`} sx={FILTER_OPTION_SX} title={title}>
         <span>
           <input type="checkbox" name={group} value={value} defaultChecked={checked} />
           <Icon aria-hidden="true" />
@@ -224,4 +232,8 @@ export default async function ListingFilterPanel({
   );
 }
 
-const FIELDSET_SX = { border: 0, p: 0, m: 0, minWidth: 0 } as const;
+function isDifficultyBand(value: string): value is DifficultyBand {
+  return (DIFFICULTY_BANDS as readonly string[]).includes(value);
+}
+
+const FIELDSET_SX ={ border: 0, p: 0, m: 0, minWidth: 0 } as const;

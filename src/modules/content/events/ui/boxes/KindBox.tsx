@@ -140,6 +140,7 @@ export default async function KindBox({
               words={{
                 label: t("editor.fields.difficultyStep"),
                 help: t("editor.difficultyStepHelp"),
+                scale: t("editor.difficultyStepHelpMore"),
                 choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
               }}
             />
