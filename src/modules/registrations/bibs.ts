@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -23,7 +23,7 @@ import {
   type SpareState,
   spareStateOf,
 } from "./domain/spare-bibs";
-import { holdsAPlace, TERMINAL_STATUSES } from "./domain/state-machine";
+import { TERMINAL_STATUSES } from "./domain/state-machine";
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -47,21 +47,40 @@ async function bandOf<T extends Record<string, unknown>>(
 }
 
 /**
- * Every number this event has on somebody — settled, provisional, and erased (§214, §311) — and
- * every number a print stepped over (§444, `skippedSpareNumbers`), as one set, for the checks that
- * ask "is this one free" rather than "which is the next".
+ * The numbers the rows of this event wear (§173, §NNN): every `bib_number`, whatever the row's
+ * status — a cancelled runner keeps theirs, retired — and any number still left in the old
+ * `provisional_bib_number` column. Nothing writes that column since §NNN: a number exists only
+ * once a registration is confirmed. It is read here only until `releaseLegacyHeldNumbers` has run
+ * once on this database (the maintenance job), so a number shown before this release is never
+ * drawn for somebody else in the minutes between the deploy and that run.
  */
-async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Set<number>> {
+async function wornNumbers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  exceptRegistrationId?: string,
+): Promise<Set<number>> {
   const rows = await db
-    .select({ number: registrations.bibNumber, provisional: registrations.provisionalBibNumber })
+    .select({ id: registrations.id, number: registrations.bibNumber, legacy: registrations.provisionalBibNumber })
     .from(registrations)
     .where(eq(registrations.eventId, eventId));
   const taken = new Set<number>();
   for (const row of rows) {
+    if (row.id === exceptRegistrationId) continue;
     if (row.number !== null) taken.add(row.number);
-    if (row.provisional !== null) taken.add(row.provisional);
+    if (row.legacy !== null) taken.add(row.legacy);
   }
-  for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
+  return taken;
+}
+
+/**
+ * Every number this event has on somebody — worn, and retired (erased or replaced by hand, §311,
+ * §NNN) — and every number a print stepped over (§444, `skippedSpareNumbers`), as one set, for the
+ * checks that ask "is this one free" rather than "which is the next". The rows first, then the
+ * audit rows (`erasedBibNumbers` says why).
+ */
+async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Set<number>> {
+  const taken = await wornNumbers(db, eventId);
+  for (const number of await retiredBibNumbers(db, eventId)) taken.add(number);
   for (const number of await skippedSpareNumbers(db, eventId)) taken.add(number);
   return taken;
 }
@@ -69,9 +88,9 @@ async function numbersInUse<T extends Record<string, unknown>>(db: Database<T>, 
 /**
  * The numbers inside the desk's reservation that were never printed blank (§444): an extension
  * reached past them while a runner held them, so the print stepped over them and wrote them in its
- * audit row (`planSpareReservation`, `skipped`). Such a number stays its runner's — the close keeps
- * it — and when it is released (a hold that lapsed) it is nobody's: inside the band, so no draw
- * gives it, and never a spare, because no blank bib carries it. Read from the audit rows, as the
+ * audit row (`planSpareReservation`, `skipped`). Such a number stays its runner's, and one that was
+ * cleared since (a number held before §NNN, `releaseLegacyHeldNumbers`) is nobody's: inside the
+ * band, so no draw gives it, and never a spare, because no blank bib carries it. Read from the audit rows, as the
  * erased numbers are (§311): a fact about a past print, not a column on the event.
  */
 async function skippedSpareNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
@@ -95,9 +114,9 @@ async function skippedSpareNumbers<T extends Record<string, unknown>>(db: Databa
  * Two operations, both the Administrator's. **Assigning** gives every confirmed, real
  * registration of one event that has no number yet the next free number counting up from the
  * event's own `bib_start_number`, in order of confirmation, and touches nothing else: a number
- * once given is never renumbered, so a bib printed on Friday is still right on Sunday. Since
- * §87 a registration draws its number the moment it is confirmed, so the batch is for events
- * confirmed before that and for numbers released since. **Listing** is what the printed sheet
+ * once given is never renumbered, so a bib printed on Friday is still right on Sunday. A
+ * registration draws its number the moment it is confirmed and at no other (§87, §NNN), so the
+ * batch is for a confirmed row that somehow has none. **Listing** is what the printed sheet
  * and the start line read.
  *
  * Test registrations never get a number and never appear on a sheet: they are omitted from
@@ -160,10 +179,39 @@ export async function erasedBibNumbers<T extends Record<string, unknown>>(
 }
 
 /**
+ * The numbers a staff member **replaced** by hand on a confirmed registration at this event
+ * (§105, §NNN). Since §NNN every confirmation draws its number at once and the confirmation email
+ * carries it, so the preferential number typed afterwards replaces a number the runner was already
+ * told. That old number is retired like a cancelled one — handing it to the next confirmation
+ * would make two people who each believe they are 27. It lives in the change's own audit row
+ * (`registration.bib_set`, `from`, with the event since §NNN), read back as the erased ones are.
+ * A replacement written before §NNN named no event and replaced only a number nobody had been
+ * sent as final, so it retires nothing.
+ */
+async function replacedBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
+  const rows = await db
+    .select({ number: sql<number>`(${auditLogs.metadataJson} ->> 'from')::integer`.mapWith(Number) })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.action, "registration.bib_set"),
+        sql`${auditLogs.metadataJson} ->> 'eventId' = ${eventId}`,
+        sql`${auditLogs.metadataJson} ->> 'from' ~ '^[0-9]{1,5}$'`,
+      ),
+    );
+  return rows.map((row) => row.number);
+}
+
+/** Every number retired at this event without a row wearing it: erased (§311) or replaced by hand (§NNN). */
+export async function retiredBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
+  return [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId))];
+}
+
+/**
  * The next free number at this event, counting up from the event's own start (§173, reversing
- * §94).
+ * §94) — drawn at the moment a registration is confirmed, and at no other (§NNN).
  *
- * **In order of registration, from the race's own first number.** §94 drew at random, on the
+ * **In order of confirmation, from the race's own first number.** §94 drew at random, on the
  * owner's instruction at the time ("the bibs must be generated randomly"); he reversed it
  * (2026-09-20): "cred că ar fi mai ușor să dăm numerele de concurs în ordinea înscrierii, așa
  * se face de obicei, dar există un prefix de cursă — spre exemplu numerele pot începe cu 1
@@ -174,15 +222,15 @@ export async function erasedBibNumbers<T extends Record<string, unknown>>(
  *
  * What does **not** change: a number once given is never taken back or reissued, so a bib
  * printed on Friday is still right on Sunday; a cancelled registration keeps its number, which
- * is how two people avoid both wearing 17; an erased one's stays taken through its audit row
- * (`erasedBibNumbers`, §311), because "lowest free" would otherwise go straight back to it; and
- * the whole draw happens under the event row's lock, the same serialization point capacity uses
- * (§10.6), so two confirmations cannot reach the same free number.
+ * is how two people avoid both wearing 17; an erased or replaced one stays taken through its
+ * audit row (`retiredBibNumbers`, §311, §NNN), because "lowest free" would otherwise go straight
+ * back to it; and the whole draw happens under the event row's lock, the same serialization
+ * point capacity uses (§10.6), so two confirmations cannot reach the same free number.
  *
- * A gap is left where a number was released or typed by hand out of order, and the next
- * registration fills it — "the lowest free number at or above the start" rather than "the last
- * one plus one", because the second would skip a hundred numbers the day somebody enters 900
- * by hand.
+ * Since no number is ever released, "the lowest free number" is the next one in confirmation
+ * order. The one gap it fills is a number typed by hand out of order — "the lowest free number
+ * at or above the start" rather than "the last one plus one", because the second would skip a
+ * hundred numbers the day somebody enters 900 by hand.
  */
 export async function pickBibNumber<T extends Record<string, unknown>>(
   tx: Database<T>,
@@ -190,26 +238,9 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   taken: Set<number> = new Set(),
   startNumber?: number,
 ): Promise<number> {
-  /*
-    Both columns, and the second one is not decoration (§220).
-
-    A final number must not collide with a provisional one somebody is currently holding. It
-    can happen after the settle: registration has closed, two people are entered at the desk
-    and each is given a provisional number, and the first of them to be confirmed goes through
-    here — which, reading `bib_number` alone, would hand them the number the *other* one is
-    looking at. The partial unique index would not catch it, because the two live in different
-    columns, and the first anybody would know is two runners at the start line with one number.
-  */
-  const worn = await tx
-    .select({ number: registrations.bibNumber, provisional: registrations.provisionalBibNumber })
-    .from(registrations)
-    .where(eq(registrations.eventId, eventId));
-  for (const row of worn) {
-    if (row.number !== null) taken.add(row.number);
-    if (row.provisional !== null) taken.add(row.provisional);
-  }
-  // And the numbers erased rows wore (§311), after the rows — `erasedBibNumbers` says why.
-  for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
+  for (const number of await wornNumbers(tx, eventId)) taken.add(number);
+  // And the retired numbers (§311, §NNN), after the rows — `erasedBibNumbers` says why.
+  for (const number of await retiredBibNumbers(tx, eventId)) taken.add(number);
 
   // The caller inside a transaction that already holds the event row usually passes the start;
   // it is read when it did not, and the desk's spares always are (§444): never drawn here.
@@ -225,266 +256,94 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   throw new DomainError("VALIDATION_ERROR", `every race number from ${start} to ${ceiling} is taken at this event`);
 }
 
-/**
- * The lowest provisional number free at this event, from the event's own band (§214).
- *
- * **It reuses a released number, and that is the whole difference from `pickBibNumber`.** The
- * final number is never reissued, because a bib printed on Friday has to still be right on
- * Sunday. A provisional number is printed nowhere and emailed to nobody, so the only cost of
- * reuse is none, and the benefit is real: the sequence stays dense, so the number a runner sees
- * before the race closes is usually the number they end up with, and the club can read the list
- * and know how many people it has.
- *
- * "Taken" therefore means *held right now* — by a live, place-holding registration — and also
- * by any final number already given at this event, so the two sequences cannot point at the
- * same runner's chest from two columns.
- */
-export async function pickProvisionalBibNumber<T extends Record<string, unknown>>(
-  tx: Database<T>,
-  eventId: string,
-  taken: Set<number> = new Set(),
-  startNumber?: number,
-): Promise<number> {
-  const held = await tx
-    .select({ provisional: registrations.provisionalBibNumber, final: registrations.bibNumber })
-    .from(registrations)
-    .where(eq(registrations.eventId, eventId));
-  for (const row of held) {
-    // A final number is taken for ever (it may have been printed); a provisional one only
-    // while somebody is actually holding it.
-    if (row.final !== null) taken.add(row.final);
-    if (row.provisional !== null) taken.add(row.provisional);
-  }
-  // An erased row's final number is taken for ever too (§311): a provisional 27 handed out
-  // after the erasure would be promoted to a final 27 the moment its holder confirmed.
-  for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
-
-  // Nor a spare (§444): a provisional number becomes the final one at the close or at the
-  // confirmation after it, so a spare drawn here would be a spare on an online runner's bib.
-  const { start, spare } = await bandOf(tx, eventId, startNumber);
-
-  const ceiling = ceilingFor(start);
-  for (let candidate = start; candidate <= ceiling; candidate += 1) {
-    if (!taken.has(candidate) && !isSpareNumber(spare, candidate)) {
-      taken.add(candidate);
-      return candidate;
-    }
-  }
-  throw new DomainError("VALIDATION_ERROR", `every race number from ${start} to ${ceiling} is taken at this event`);
-}
-
-/**
- * Give this registration a provisional number if it should have one and does not (§214).
- *
- * Called from the allocator's own paths, which already hold the event row's lock — the same
- * serialization point capacity uses (§10.6), and the reason two registrations arriving together
- * cannot both draw 12. It is written to be safe to call twice: a row that already has one keeps
- * it, so a restart or a second allocation never renumbers somebody.
- *
- * A `TEST` registration gets none, for the reason it appears in no count the club is given
- * (`AGENTS.md` §12.6): a number is the most physical count there is.
- */
-export async function ensureProvisionalBibNumber<T extends Record<string, unknown>>(
-  tx: Database<T>,
-  input: { eventId: string; registrationId: string; bibStartNumber?: number; now: Date },
-): Promise<number | null> {
-  const [row] = await tx
-    .select({
-      status: registrations.status,
-      kind: registrations.kind,
-      provisional: registrations.provisionalBibNumber,
-      final: registrations.bibNumber,
-    })
-    .from(registrations)
-    .where(eq(registrations.id, input.registrationId))
-    .limit(1);
-  if (!row) return null;
-  if (row.kind !== "REAL") return null;
-  if (!holdsAPlace(row.status)) return null;
-  // Already settled, or already held: never renumber somebody who has a number.
-  if (row.final !== null) return row.final;
-  if (row.provisional !== null) return row.provisional;
-
-  const number = await pickProvisionalBibNumber(tx, input.eventId, new Set(), input.bibStartNumber);
-  await tx
-    .update(registrations)
-    .set({ provisionalBibNumber: number, updatedAt: input.now })
-    .where(eq(registrations.id, input.registrationId));
-  return number;
-}
-
-/** One runner numbered by the settle, and everything the message to them needs. */
-export type SettledBib = {
+/** One confirmed runner whose number shown before §NNN is kept as their race number, and what the message to them needs. */
+export type KeptLegacyNumber = {
   registrationId: string;
   participantId: string;
+  eventId: string;
   locale: "ro" | "en";
   recipientEmail: string;
   bibNumber: number;
+  /** The race is scheduled and still ahead: only then is the runner told (a past or cancelled one needs no bib). */
+  raceAhead: boolean;
 };
 
 /**
- * The statuses a close numbers (§420): the ones the capacity formula counts as a place
- * (`domain/capacity.ts#computeOccupied` — confirmed, a declaration hold, an offer). Not
- * `PLACE_HOLDING_STATUSES`, which adds `PENDING_EMAIL_CONFIRMATION` so a provisional number can be
- * drawn at submission (§214): an address nobody has proved takes no place (AGENTS.md §10.5
- * invariant 3, §10.6 rule 6), so on a full race it can confirm onto the waiting list — and a final
- * number, which is never taken back (§173), would then be worn by somebody with no place, and
- * emailed to an unproved address as "you are in".
+ * The one data step of §NNN: what the old `provisional_bib_number` column still holds becomes
+ * either a race number or nothing, once.
+ *
+ * Before §NNN a number was drawn at submission and shown as «provizoriu» until the close, when the
+ * settle renumbered everybody. Now a number exists only once a registration is confirmed. So, on
+ * a database that ran the old code:
+ *
+ * - a **confirmed** real registration with only an old held number keeps it, as its race number —
+ *   it was confirmed, and it was told that number (the confirmation said it, marked «provizoriu»).
+ *   Guarded against a number another row of the event already wears, which the old draws made
+ *   impossible; such a row is left with no number, for «Alocă numerele» to give it one;
+ * - **every other** held number is cleared: an address not confirmed, a declaration not signed, an
+ *   offer, the waiting list, a cancelled or expired row. They get a number at their confirmation,
+ *   in the order of confirmation, like everybody after this release.
+ *
+ * Both statements in one transaction, so no reader sees a number both kept and cleared. It needs
+ * no event lock: every draw still reads the old column as taken until this has run (`wornNumbers`),
+ * so no confirmation can reach a number this step is about to keep. Idempotent — the second run
+ * finds nothing, on the partial unique index `registrations_event_provisional_bib_unique`, which
+ * holds exactly the rows with a number in the column — so the maintenance job runs it every time.
+ * A test registration never had a number and is never given one (§30).
  */
-const NUMBERED_AT_SETTLE = ["PENDING_DECLARATION", "WAITLIST_OFFERED", "CONFIRMED"] as const;
-
-/**
- * Who a close numbers — and so who is sent "here is your race number" — at one event: a real
- * registration occupying a place with no final number. The settle and the forecast on
- * `/admin/emails` (§383) read the same condition.
- */
-export function awaitingSettledNumber() {
-  return and(
-    eq(registrations.kind, "REAL"),
-    isNull(registrations.bibNumber),
-    inArray(registrations.status, [...NUMBERED_AT_SETTLE]),
-  );
-}
-
-/**
- * Turn the provisional sequence into the final one, once, when registration closes
- * (`DECISIONS.md` §214).
- *
- * ## Why a recompaction and not simply "keep the number you were given"
- *
- * The provisional sequence is dense while it is being handed out and full of holes by the end:
- * people cancel, email confirmations lapse, holds expire, and every one of those releases a
- * number in the middle. Printing that is printing a sheet with gaps — 1, 2, 5, 6, 9 — and a
- * box of bibs a volunteer cannot count off. So at the close every runner still holding a place
- * is renumbered into one unbroken run from the event's own band.
- *
- * **This is the only moment a number moves**, and it is why the provisional one is never
- * emailed. After this the ordinary rule resumes: a final number is never reissued and never
- * renumbered (§173).
- *
- * ## The order
- *
- * By the provisional number itself, which is registration order. Somebody who registered first
- * ends up with a lower number than somebody who registered later, and — because the holes are
- * usually few — most people keep the number they had been looking at.
- *
- * ## What "still holding a place" means
- *
- * Everyone the club has to print a bib for: confirmed, and also those who have not signed yet.
- * A declaration can be signed on paper at the desk on race day (§67), so an unsigned
- * registration is a person who may well run, and a race with no bib for them is the failure
- * this is trying to avoid. A number already given by hand (§105) is kept and reserved, so the
- * sequence closes around it. An address not yet confirmed at the close is not "still holding a
- * place" in this sense (§420): it is not numbered here, and gives its provisional number back —
- * nobody can print a bib for an address that has not agreed to come.
- * Only `NUMBERED_AT_SETTLE` — `PENDING_DECLARATION`, `WAITLIST_OFFERED`, `CONFIRMED` — is settled;
- * `PENDING_EMAIL_CONFIRMATION` is released first, in the same transaction, below.
- *
- * Idempotent through `events.bibs_settled_at`: the job sees the same closed event every few
- * minutes and must do this exactly once.
- */
-export async function settleBibNumbers<T extends Record<string, unknown>>(
-  tx: Database<T>,
-  input: { eventId: string; bibStartNumber: number; bibsSettledAt: Date | null; now: Date },
-): Promise<SettledBib[]> {
-  if (input.bibsSettledAt !== null) return [];
-
-  /*
-    An address still unconfirmed at the close is not numbered (§420), and gives back the
-    provisional number it drew at submission, in the same transaction. The recompaction below
-    reads only final numbers as taken, so it may hand that number to somebody else as theirs — and
-    a later confirmation of this row would adopt its own provisional number (§220) and collide on
-    the unique index. Released, a late confirmation that does get a place draws a fresh number the
-    way any post-close confirmation does (`ensureProvisionalBibNumber`, `pickBibNumber`).
-  */
-  await tx
-    .update(registrations)
-    .set({ provisionalBibNumber: null, updatedAt: input.now })
-    .where(
-      and(
-        eq(registrations.eventId, input.eventId),
-        eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
-        isNotNull(registrations.provisionalBibNumber),
-      ),
-    );
-
-  const waiting = await tx
-    .select({
-      id: registrations.id,
-      participantId: registrations.participantId,
-      locale: registrations.locale,
-      recipientEmail: participants.deliveryEmail,
-      provisional: registrations.provisionalBibNumber,
-    })
-    .from(registrations)
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .where(and(eq(registrations.eventId, input.eventId), awaitingSettledNumber()))
-    // Registration order, by the number they were already shown; the id breaks a tie, and a
-    // row with no provisional number at all (given a place before this existed) goes last.
-    .orderBy(
-      sql`${registrations.provisionalBibNumber} asc nulls last`,
-      asc(registrations.createdAt),
-      asc(registrations.id),
-    );
-
-  // Numbers already final at this event — one typed by hand, or a confirmation that happened
-  // after a previous close. The sequence closes around them rather than colliding.
-  const worn = await tx
-    .select({ number: registrations.bibNumber })
-    .from(registrations)
-    .where(and(eq(registrations.eventId, input.eventId), isNotNull(registrations.bibNumber)));
-  // Erased registrations' numbers too (§311): the recompaction runs from the band's start, so
-  // it is the one pass certain to reach an erased 27 if nothing said it was taken.
-  const taken = new Set([...worn.map((row) => row.number as number), ...(await erasedBibNumbers(tx, input.eventId))]);
-  // And the desk's spares (§444): the run closes around them, as around a number typed by hand —
-  // a spare is printed blank for a walk-in, and the settled sequence is printed with names.
-  const { spare } = await bandOf(tx, input.eventId, input.bibStartNumber);
-
-  /*
-    A provisional number inside the desk's reservation is its holder's for good (§444): an extension
-    of the reservation reached past it while they held it, and the print stepped over it, so no
-    blank bib carries it. Moved out of the band here, it would be counted a free spare nobody
-    printed — the desk would suggest it. So it becomes the final number as it is, taken before the
-    run closes around the rest; only a collision (which the draws make impossible) falls back to
-    the run.
-  */
-  const keptInBand = new Set<string>();
-  for (const row of waiting) {
-    if (row.provisional !== null && isSpareNumber(spare, row.provisional) && !taken.has(row.provisional)) {
-      taken.add(row.provisional);
-      keptInBand.add(row.id);
-    }
-  }
-
-  const settled: SettledBib[] = [];
-  let candidate = input.bibStartNumber;
-  for (const row of waiting) {
-    let number: number;
-    if (keptInBand.has(row.id)) {
-      number = row.provisional as number;
-    } else {
-      while (taken.has(candidate) || isSpareNumber(spare, candidate)) candidate += 1;
-      number = candidate;
-      taken.add(number);
-      candidate += 1;
-    }
-    await tx
+export async function releaseLegacyHeldNumbers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<{ kept: KeptLegacyNumber[]; cleared: number }> {
+  return db.transaction(async (tx) => {
+    const kept = await tx
       .update(registrations)
-      // The provisional number goes with it: one number per runner, and the column that said
-      // "this can still change" must not be left behind saying something else.
-      .set({ bibNumber: number, provisionalBibNumber: null, updatedAt: input.now })
-      .where(eq(registrations.id, row.id));
-    settled.push({
-      registrationId: row.id,
-      participantId: row.participantId,
-      locale: row.locale,
-      recipientEmail: row.recipientEmail,
-      bibNumber: number,
-    });
-  }
-
-  await tx.update(events).set({ bibsSettledAt: input.now }).where(eq(events.id, input.eventId));
-  return settled;
+      .set({ bibNumber: sql`${registrations.provisionalBibNumber}`, provisionalBibNumber: null, updatedAt: now })
+      .where(
+        and(
+          isNotNull(registrations.provisionalBibNumber),
+          isNull(registrations.bibNumber),
+          eq(registrations.status, "CONFIRMED"),
+          eq(registrations.kind, "REAL"),
+          sql`NOT EXISTS (SELECT 1 FROM ${registrations} AS "worn" WHERE "worn"."event_id" = ${registrations.eventId} AND "worn"."bib_number" = ${registrations.provisionalBibNumber})`,
+        ),
+      )
+      .returning({
+        registrationId: registrations.id,
+        participantId: registrations.participantId,
+        eventId: registrations.eventId,
+        locale: registrations.locale,
+        bibNumber: registrations.bibNumber,
+      });
+    const cleared = await tx
+      .update(registrations)
+      .set({ provisionalBibNumber: null, updatedAt: now })
+      .where(isNotNull(registrations.provisionalBibNumber))
+      .returning({ id: registrations.id });
+    if (kept.length === 0) return { kept: [], cleared: cleared.length };
+    const addresses = await tx
+      .select({ id: participants.id, email: participants.deliveryEmail })
+      .from(participants)
+      .where(inArray(participants.id, [...new Set(kept.map((row) => row.participantId))]));
+    const emailOf = new Map(addresses.map((row) => [row.id, row.email]));
+    const ahead = await tx
+      .select({ id: events.id })
+      .from(events)
+      .where(and(inArray(events.id, [...new Set(kept.map((row) => row.eventId))]), eq(events.eventStatus, "SCHEDULED"), gt(events.startsAt, now)));
+    const aheadIds = new Set(ahead.map((row) => row.id));
+    return {
+      kept: kept.map((row) => ({
+        registrationId: row.registrationId,
+        participantId: row.participantId,
+        eventId: row.eventId,
+        locale: row.locale,
+        recipientEmail: emailOf.get(row.participantId) ?? "",
+        bibNumber: row.bibNumber as number,
+        raceAhead: aheadIds.has(row.eventId),
+      })),
+      cleared: cleared.length,
+    };
+  });
 }
 
 export async function assignBibNumbers<T extends Record<string, unknown>>(
@@ -506,7 +365,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
 
     const waiting = await tx
-      .select({ id: registrations.id, provisional: registrations.provisionalBibNumber })
+      .select({ id: registrations.id })
       .from(registrations)
       .where(
         and(
@@ -514,39 +373,26 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
           eq(registrations.status, "CONFIRMED"),
           eq(registrations.kind, "REAL"),
           isNull(registrations.bibNumber),
+          // Not a row whose number shown before §NNN the data step is about to keep (§286: the
+          // number they were told is the number they keep) — never a second number for one runner.
+          isNull(registrations.provisionalBibNumber),
         ),
       )
       // Confirmation order, then the id as a stable tie-break for two confirmed in one instant.
       .orderBy(asc(registrations.confirmedAt), asc(registrations.id));
 
+    /*
+      Since §NNN a confirmation draws its own number, so this finds only a registration confirmed
+      before §87 or one whose old held number could not be kept (`releaseLegacyHeldNumbers`) — a
+      gap to fill, in confirmation order, never anybody moved.
+    */
     const taken = new Set<number>();
     const given: number[] = [];
     for (const row of waiting) {
-      /*
-        A provisional number is **kept**, not replaced (§286; the owner, looking at a row:
-        "cum pot avea prezenta marcata dar numar cu steluta?").
-
-        The desk hands somebody a number on race morning and writes it in
-        `provisional_bib_number`; the list draws it lighter, with an asterisk, precisely because
-        it is not settled yet. Confirming one registration already promotes it (`service.ts`) —
-        the batch did not, and looked only for rows with no *final* number. So a runner who had
-        been told "you are 5", and had walked away with 5 written on their hand, was quietly
-        given 100 by the button, while the screen still showed `5*` beside them.
-
-        Two numbers for one person, one of them on the start line and neither of them wrong
-        anywhere the club could see it. The promotion is the fix: the number they were told is
-        the number they keep.
-      */
-      // A provisional number is always its holder's, inside the desk's reservation too (§444):
-      // the print reserves only numbers nobody has, so one there was held before the print.
-      const number =
-        row.provisional ?? (await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber));
+      const number = await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber);
       taken.add(number);
       given.push(number);
-      await tx
-        .update(registrations)
-        .set({ bibNumber: number, provisionalBibNumber: null, updatedAt: now })
-        .where(eq(registrations.id, row.id));
+      await tx.update(registrations).set({ bibNumber: number, updatedAt: now }).where(eq(registrations.id, row.id));
     }
 
     if (waiting.length > 0) {
@@ -605,22 +451,10 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
   from?: number,
   count = 8,
 ): Promise<number[]> {
-  // Both columns (§214): a provisional number is one somebody is already looking at on their
-  // own page, so offering it as free is offering to give two people the same number — the
-  // unique index would refuse the second, and the organizer would meet the refusal after
-  // typing. Cancelled *final* numbers stay taken, as in the batch (§79); a cancelled
-  // provisional one was released when the place was, so it is genuinely free again.
-  const rows = await db
-    .select({ bibNumber: registrations.bibNumber, provisional: registrations.provisionalBibNumber })
-    .from(registrations)
-    .where(eq(registrations.eventId, eventId));
-  const taken = new Set<number>();
-  for (const row of rows) {
-    if (row.bibNumber !== null) taken.add(row.bibNumber);
-    if (row.provisional !== null) taken.add(row.provisional);
-  }
-  // Nor an erased registration's number (§311): offering it would be offering a refusal.
-  for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
+  // Cancelled numbers stay taken, as in the batch (§79), and so do erased and replaced ones
+  // (§311, §NNN): offering one would be offering a refusal.
+  const taken = await wornNumbers(db, eventId);
+  for (const number of await retiredBibNumbers(db, eventId)) taken.add(number);
   // From the event's own band unless the caller asked from somewhere (§173): suggesting 1, 2, 3
   // at a race whose numbers start at 500 offers numbers nobody would print. Never a desk spare
   // (§444): a preferential number is printed with a name, and a spare is printed without one —
@@ -751,28 +585,16 @@ export async function reserveSpareBibs<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether a number typed at the desk is somebody's already (§444): settled or provisional on
- * another registration of this event, or worn by one that was erased (§311). The unique index
- * catches only the settled column; a provisional number somebody is looking at would otherwise be
- * given away by hand and collide when its holder is confirmed and adopts it (§220).
+ * Whether a number typed at the desk is somebody's already (§444): worn by another registration of
+ * this event — a cancelled one's included, retired — or retired by an erasure or a replacement by
+ * hand (§311, §NNN). The unique index catches a worn one only.
  */
 export async function bibNumberInUse<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { eventId: string; number: number; exceptRegistrationId?: string },
 ): Promise<boolean> {
-  const [row] = await db
-    .select({ id: registrations.id })
-    .from(registrations)
-    .where(
-      and(
-        eq(registrations.eventId, input.eventId),
-        sql`(${registrations.bibNumber} = ${input.number} OR ${registrations.provisionalBibNumber} = ${input.number})`,
-        input.exceptRegistrationId ? sql`${registrations.id} <> ${input.exceptRegistrationId}` : undefined,
-      ),
-    )
-    .limit(1);
-  if (row) return true;
-  return (await erasedBibNumbers(db, input.eventId)).includes(input.number);
+  if ((await wornNumbers(db, input.eventId, input.exceptRegistrationId)).has(input.number)) return true;
+  return (await retiredBibNumbers(db, input.eventId)).includes(input.number);
 }
 
 /**
@@ -987,8 +809,7 @@ export async function markBibsPrinted<T extends Record<string, unknown>>(
  * One registration's bib, marked printed or not (§264) — the reprint of a single bib, which is
  * what happens when one comes out of the printer creased.
  *
- * The same rule as the batch: the row must have a settled number, be confirmed and be real. A
- * registration with only a provisional number has nothing to print (§214).
+ * The same rule as the batch: the row must have a number, be confirmed and be real.
  */
 export async function setBibPrinted<T extends Record<string, unknown>>(
   db: Database<T>,

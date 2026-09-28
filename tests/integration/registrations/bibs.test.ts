@@ -5,7 +5,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationKind, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { assignBibNumbers, BIB_RANGE, findEventForBibs, listBibs, pickBibNumber } from "@/modules/registrations/bibs";
+import { assignBibNumbers, BIB_RANGE, findEventForBibs, listBibs, pickBibNumber, releaseLegacyHeldNumbers } from "@/modules/registrations/bibs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -107,34 +107,35 @@ describe("BR-REQ-038-01 race numbers", () => {
   });
 
   /**
-   * `DECISIONS.md` §286 — the number somebody was told at the desk is the number they keep.
+   * `DECISIONS.md` §286, §NNN — the number somebody was told is the number they keep.
    *
-   * The desk writes a number into `provisional_bib_number` on race morning and the list draws it
-   * with an asterisk, because it is not settled. Confirming one registration promotes it; the
-   * batch did not, and looked only for rows with no *final* number — so a runner who had been
-   * told "you are 5", and had 5 written on their hand, was quietly given the next free number
-   * while the screen still showed 5 beside them. Two numbers for one person, neither of them
-   * visibly wrong.
+   * Before §NNN a confirmed runner could hold a number in the old `provisional_bib_number` column
+   * (shown as «provizoriu»). The one data step keeps it as their race number
+   * (`releaseLegacyHeldNumbers`); until it has run, the batch leaves that row alone rather than
+   * give it a second number, and never draws the held number for somebody else.
    */
-  it("keeps the number the desk already gave, instead of handing out a second one (§286)", async () => {
+  it("keeps the number a confirmed runner was told before §NNN, instead of handing out a second one (§286)", async () => {
     await register("La ghișeu", { provisional: 5, confirmedAt: new Date("2026-09-01T10:00:00Z") });
     await register("Pe net", { confirmedAt: new Date("2026-09-02T10:00:00Z") });
 
     const result = await assignBibNumbers(db, { actor: admin, eventId });
-    expect(result).toMatchObject({ assigned: 2 });
+    expect(result).toMatchObject({ assigned: 1 });
+
+    const kept = await releaseLegacyHeldNumbers(db, new Date("2026-09-03T10:00:00Z"));
+    expect(kept.kept.map((row) => row.bibNumber)).toEqual([5]);
 
     const rows = await db
       .select({
         name: registrations.registeredName,
         bib: registrations.bibNumber,
-        provisional: registrations.provisionalBibNumber,
+        held: registrations.provisionalBibNumber,
       })
       .from(registrations);
 
     const desk = rows.find((row) => row.name === "La ghișeu");
     expect(desk?.bib).toBe(5);
-    // And it stops being provisional: one number, in one column, from here on.
-    expect(desk?.provisional).toBeNull();
+    // One number, in one column, from here on.
+    expect(desk?.held).toBeNull();
 
     // The other runner is numbered from the band and never collides with the kept number.
     const online = rows.find((row) => row.name === "Pe net");

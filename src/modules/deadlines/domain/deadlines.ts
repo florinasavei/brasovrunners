@@ -58,7 +58,7 @@ export type DeadlineRule = {
  *
  * The bounds are what keeps a slip of the finger from doing harm, each with its reason:
  * - the **email link** at least 12 hours (a link that dies overnight is a registration lost) and
- *   at most a week (an unconfirmed address holds a provisional race number meanwhile, §214);
+ *   at most a week (a registration nobody confirmed lingers that long);
  * - the **declaration hold** 10 to 120 minutes: shorter cannot be read and signed on a phone,
  *   longer is a place kept from the queue by somebody who walked away. Well under a day, which is
  *   what `render.ts` and `queueParticipationConfirmations` tell a window's hold apart by (§104);

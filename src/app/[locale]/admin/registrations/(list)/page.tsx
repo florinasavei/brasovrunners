@@ -111,8 +111,6 @@ function isRegistrationStatus(value: string | undefined): value is RegistrationS
  * cancelling several at once is the bulk form below the table, and everything about one person —
  * rename, cancel, erase — is on their own page, which is where §15.11's four verbs live in full.
  */
-/** Present for a screen reader, absent on screen (the usual clip pattern; `"1px"`, since MUI reads `1` as 100%). */
-const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
 export default async function AdminRegistrationsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -395,9 +393,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       label: t("registrations.columnJourney"),
       // "3/6" cannot say what the six are (§200).
       hint: t("registrations.journey.legend"),
-      // The number the runner has, settled or not (§214): the chip said "nr. 42" and would
-      // otherwise say nothing at all for everybody registered before the window closes.
-      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)?.value ?? null} variant="compact" />,
+      // The number once the registration is confirmed (§NNN): the chip says "nr. 42".
+      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)} variant="compact" />,
     },
     {
       /*
@@ -407,15 +404,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */
       key: "bib",
       label: t("registrations.columnBib"),
-      // What "2*", a bold "1" and the tick mean (§313; the owner: "not sure what that is!") — a
-      // tap-friendly hint, because the cell's own `title` never shows on a phone.
+      // What «—», a bold number and the tick mean (§313, §NNN) — a tap-friendly hint, because the
+      // cell's own `title` never shows on a phone.
       hint: t("registrations.bibColumnHint"),
       sortable: true,
       /*
-        Whichever number the runner has (§214). Before the window closes it is the provisional
-        one, shown in a lighter weight with an asterisk and explained by the column's own hint:
-        the club needs to see it — that is the whole reason it exists — and also needs to know
-        it is not the one to print.
+        The number once the registration is confirmed (§NNN, `raceNumberOf`), and «—» before: a
+        number exists only from the confirmation, in confirmation order. A registration that is over
+        keeps its number, retired, so a printed bib can be found and pulled (§311).
       */
       render: (row) => {
         const number = raceNumberOf(row);
@@ -427,37 +423,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           );
         }
         return (
-          <Box
-            component="span"
-            title={number.settled ? undefined : t("registrations.bibProvisional")}
-            sx={{
-              // The containing block of the visually hidden "provizoriu" (§313). Without it that
-              // absolutely positioned span escaped the table's horizontal scroll area — a scroller
-              // is not a containing block unless positioned — and stretched the whole page to about
-              // 600 px on a 320 px phone, so the browser zoomed out and every tap on the page landed
-              // somewhere else (the race-day e2e on mobile, red on every qa push since #132).
-              position: "relative",
-              fontVariantNumeric: "tabular-nums",
-              fontWeight: number.settled ? 700 : 500,
-              color: number.settled ? "text.primary" : "text.secondary",
-            }}
-          >
-            {number.value}
-            {number.settled ? null : (
-              <>
-                <span aria-hidden="true">*</span>
-                {/* The asterisk, said in a word to a screen reader, which would otherwise read "star". */}
-                <Box component="span" sx={VISUALLY_HIDDEN}>{` ${t("registrations.bibProvisionalShort")}`}</Box>
-              </>
-            )}
+          <Box component="span" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700, color: "text.primary" }}>
+            {number}
             {/*
               Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
               reason the editor's toolbar has words on it: the printer emoji renders as a broken
               box on the owner's own machine. It is the club's own record — set by the mark, never
-              by a download — and it is only ever shown on a settled number, because a provisional
-              one is printed nowhere.
+              by a download.
             */}
-            {number.settled && row.bibPrintedAt !== null && (
+            {row.bibPrintedAt !== null && (
               <Box
                 component="span"
                 title={t("registrations.bibPrintedOn", {
@@ -1218,7 +1192,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {(() => {
               const verbs = rowVerbsFor(row.status, actor.role, {
                 checkedIn: row.checkedInAt !== null,
-                // A settled number is the only printable one (§214, §264).
+                // A number is printable once the registration is confirmed (§264, §NNN).
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
               });
               const hidden = (

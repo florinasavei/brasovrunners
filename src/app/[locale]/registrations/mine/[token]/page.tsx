@@ -299,12 +299,12 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               {/* No desk code or QR for a race that will not run: the desk is closed (§331). */}
               {/*
                 The QR with the person's name and race number beside it (§NNN): a family's codes
-                told apart at a glance. The number is the registration's own, «—» while none is
-                given; it exists once the registration is confirmed, so nothing says «provisional».
+                told apart at a glance. The number is the one rule's (`raceNumberOf`), «—» while none
+                is given; it exists once the registration is confirmed, and nothing qualifies it.
               */}
               {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (
                 <Box sx={{ mb: 1.5 }}>
-                  <QrWithName checkinCode={item.checkinCode} registeredName={item.registeredName} bibNumber={item.bibNumber} size={160} words={qrWords} />
+                  <QrWithName checkinCode={item.checkinCode} registeredName={item.registeredName} status={item.status} bibNumber={item.bibNumber} size={160} words={qrWords} />
                 </Box>
               )}
 

@@ -173,14 +173,14 @@ describe("§331 a cancelled event allocates nothing and mails nothing on its own
     expect(confirmed.status).toBe("PENDING_EMAIL_CONFIRMATION");
     const row = await statusOf(pending.id);
     expect(row.status).toBe("PENDING_EMAIL_CONFIRMATION");
-    // The address was not marked verified, and the number held since submission (§214) is untouched.
+    // The address was not marked verified, and no number was drawn (§NNN).
     expect(row.emailConfirmedAt).toBeNull();
-    expect(row.provisionalBibNumber).toBe(pending.provisionalBibNumber);
+    expect(row.bibNumber).toBeNull();
     expect(await allQueued()).toBe(before);
     expect(await queuedOf("COMPLETE_DECLARATION")).toBe(0);
   });
 
-  it("the close settles no number and mails none on a cancelled event, and the job leaves its queue alone", async () => {
+  it("the close numbers nobody and mails nothing on a cancelled event, and the job leaves its queue alone", async () => {
     const event = await createEvent(1);
     const ana = await enter(event, "ana@example.test");
     expect(ana.status).toBe("PENDING_DECLARATION");
@@ -190,7 +190,7 @@ describe("§331 a cancelled event allocates nothing and mails nothing on its own
     const before = await allQueued();
 
     const run = await runRegistrationMaintenance(db, AFTER_CLOSE);
-    expect(run.bibsSettled).toBe(0);
+    expect(run.legacyNumbersKept).toBe(0);
     expect(run.eventsProcessed).toBe(0);
     expect(await queuedOf("BIB_ASSIGNED")).toBe(0);
     expect(await allQueued()).toBe(before);

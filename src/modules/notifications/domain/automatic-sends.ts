@@ -1,6 +1,5 @@
 import { type Deadlines, reminderHoursFor, reminderOpensAt } from "@/modules/deadlines/domain/deadlines";
 import {
-  registrationClosingInstant,
   registrationState,
   type RegistrationWindowInput,
 } from "@/modules/events/domain/registration-window";
@@ -30,6 +29,7 @@ export const AUTOMATIC_SEND_KEYS = {
   reminder: (registrationId: string) => `registration:${registrationId}:reminder`,
   lastCall: (registrationId: string) => `registration:${registrationId}:sign-reminder`,
   participation: (registrationId: string) => `registration:${registrationId}:confirm-participation`,
+  // The number a confirmation before §NNN was shown as «provizoriu», told once when it was kept (`bibs.ts#releaseLegacyHeldNumbers`).
   bibs: (registrationId: string) => `registration:${registrationId}:bib-settled`,
 } as const;
 
@@ -189,10 +189,3 @@ export function nextInLineOffers(input: {
   return nextInLineReleases(input).filter((release) => release.at.getTime() < lastOfferBefore);
 }
 
-// --- Race numbers settle (§214) -----------------------------------------------------------------
-
-/**
- * The instant an event's numbers settle and "here is your race number" goes — the instant
- * `registrationHasClosed`, which the job asks, turns true.
- */
-export const bibsSettleAt = registrationClosingInstant;

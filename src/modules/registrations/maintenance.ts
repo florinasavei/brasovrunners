@@ -5,10 +5,9 @@ import { materializeStandingRepeats } from "@/modules/content/events/service";
 import { readDeadlinesForRun } from "@/modules/deadlines/deadlines";
 import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
-import { registrationHasClosed } from "@/modules/events/domain/registration-window";
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { settleBibNumbers, type SettledBib } from "./bibs";
+import { releaseLegacyHeldNumbers } from "./bibs";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { purgeLapsedFamilyEntries } from "./family-entries";
 import { purgeLapsedFamilySittings } from "./family-sitting";
@@ -48,8 +47,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   confirmationsQueued: number;
   /** "Registration is open" messages queued this run to the addresses left ahead of the window (§146). */
   interestsNotified: number;
-  /** Race numbers settled by a registration window closing in this run (§214). */
-  bibsSettled: number;
+  /**
+   * Race numbers shown before §NNN that a confirmed registration keeps, told to the runner this run
+   * (`releaseLegacyHeldNumbers`) — once per database, zero on every run after the first.
+   */
+  legacyNumbersKept: number;
   /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
   familyEntriesPurged: number;
   /**
@@ -71,6 +73,21 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   */
   const settings = await readDeadlinesForRun(db);
 
+  /*
+    The one data step of §NNN, first: a number exists only once a registration is confirmed, so
+    what the old held-number column still holds is kept by a confirmed registration and cleared
+    from every other one. Idempotent and cheap — the partial index holds exactly the rows it
+    touches, none after the first run — so it runs every time rather than being remembered. A
+    failure is retryable: every draw still treats the old column as taken meanwhile.
+  */
+  let kept: Awaited<ReturnType<typeof releaseLegacyHeldNumbers>>["kept"] = [];
+  let legacyFailed = false;
+  try {
+    kept = (await releaseLegacyHeldNumbers(db, now)).kept;
+  } catch {
+    legacyFailed = true;
+  }
+
   const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now, settings);
 
   /*
@@ -90,18 +107,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   const eventIds = await repo.findEventsNeedingMaintenance(db, now);
-  let errorCount = familyPurgeFailed ? 1 : 0;
-  let retryableErrorCount = familyPurgeFailed ? 1 : 0;
-  /**
-   * Everyone numbered by a close in this run, collected across the per-event transactions and
-   * written to afterwards (§214).
-   *
-   * The messages are queued outside the loop on purpose: each event's transaction holds a lock
-   * on its own row, and queueing an email inside it lengthens the one thing every registration
-   * at that event is waiting behind. Failing to queue is also recoverable — the number is
-   * already written and the club can send it again — while failing to *number* is not.
-   */
-  const settled: SettledBib[] = [];
+  let errorCount = (familyPurgeFailed ? 1 : 0) + (legacyFailed ? 1 : 0);
+  let retryableErrorCount = errorCount;
 
   for (const eventId of eventIds) {
     try {
@@ -110,8 +117,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
         if (!event) return;
         /*
           A cancelled event is left as it was cancelled (§331), and a completed one as it
-          finished (§82): no hold expired, no offer made, no number settled — and so no
-          `BIB_ASSIGNED` to a runner whose race will not run. The scan selects scheduled events
+          finished (§82): no hold expired and no offer made. The scan selects scheduled events
           only; this is the same rule under the lock, for a cancellation saved between the scan
           and this line.
         */
@@ -142,28 +148,6 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
           now,
           settings,
         );
-
-        /*
-          The numbers settle when registration closes (§214).
-
-          Inside the same per-event transaction, which already holds `FOR UPDATE` on the event
-          row — the serialization point every number is drawn under (§10.6) — and after
-          `fillAvailableSpots`, so the last waiting-list offer the close produced is numbered
-          with everybody else rather than left out of the sheet.
-
-          `bibsSettledAt` makes it once-only: this job sees the same closed event every few
-          minutes, and a second pass would renumber people who have already been told.
-        */
-        if (registrationHasClosed(event, now) && event.bibsSettledAt === null) {
-          settled.push(
-            ...(await settleBibNumbers(tx, {
-              eventId: event.id,
-              bibStartNumber: event.bibStartNumber,
-              bibsSettledAt: event.bibsSettledAt,
-              now,
-            })),
-          );
-        }
       });
     } catch {
       // One event's failure must not stop the run from reaching the rest — each event's work
@@ -174,20 +158,16 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
-   * "Here is your race number" (§214), to everybody a close has just numbered.
-   *
-   * This is the **only** message that ever carries a number, and that is the whole shape of
-   * the feature: a provisional number is shown and never sent, because it can still move; a
-   * final number cannot move, so it is sent. `BIB_ASSIGNED` already exists and already says
-   * exactly this — it is what a number typed by hand sends (§105).
-   *
-   * One per registration, ever, by its own key: an event settles once, and a key that survives
-   * every later run is what makes a retried job harmless.
+   * "Here is your race number" (§105's `BIB_ASSIGNED`), once, to a confirmed runner whose number
+   * shown before §NNN is now theirs for good — their confirmation said it was «provizoriu» and
+   * promised the final one. Only for a race still ahead: a past or cancelled one needs no bib.
+   * Queued after the data step's own transaction, and one per registration ever, by its own key,
+   * so a retried run sends nothing twice.
    */
-  let bibsSettled = 0;
+  let legacyNumbersKept = 0;
   try {
     await db.transaction(async (tx) => {
-      for (const row of settled) {
+      for (const row of kept.filter((item) => item.raceAhead)) {
         const inserted = await enqueueEmail(tx, {
           participantId: row.participantId,
           registrationId: row.registrationId,
@@ -198,12 +178,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
           idempotencyKey: AUTOMATIC_SEND_KEYS.bibs(row.registrationId),
           now,
         });
-        if (inserted) bibsSettled += 1;
+        if (inserted) legacyNumbersKept += 1;
       }
     });
   } catch {
-    // The numbers are written and the club can send them again from the list. A failure here
-    // is a message nobody got, not a race with no bibs.
+    // The numbers are written; a failure here is a message nobody got, not a race with no bibs.
     errorCount += 1;
   }
 
@@ -345,7 +324,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     remindersQueued,
     confirmationsQueued,
     interestsNotified,
-    bibsSettled,
+    legacyNumbersKept,
     familyEntriesPurged,
     retryableErrorCount,
   };

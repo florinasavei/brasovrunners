@@ -1,6 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { compareFamilyOrder } from "./family-sitting";
-import { type RaceNumber, raceNumberOf } from "./race-number";
+import { raceNumberOf } from "./race-number";
 
 /**
  * The declarations of a family on one address, signed as a wizard (§471, over §389 and §446).
@@ -35,9 +35,8 @@ export type FamilySigningRow = {
   checkinCode?: string | null;
   /** Whether a declaration acceptance exists for the registration — signed on a link or on paper (§67). */
   declared?: boolean;
-  /** The race number's two columns (§214), for the number beside the desk code (`raceNumberOf`). */
+  /** The race number (§NNN), for the number beside the desk code (`raceNumberOf`). */
   bibNumber?: number | null;
-  provisionalBibNumber?: number | null;
   /** The place in the family's order (§519, `compareFamilyOrder`), when the family's one button confirmed it. */
   familyRank?: number | null;
 };
@@ -68,8 +67,12 @@ export type FamilyStep = {
   state: FamilyStepState;
   holdExpiresAt: Date | null;
   checkinCode: string | null;
-  /** The number the person has, settled or provisional (`raceNumberOf`, §420), or null while there is none. */
-  raceNumber: RaceNumber | null;
+  /**
+   * The number the person's own confirmation gave (`raceNumberOf`, §NNN), or null before it: each
+   * person of a family gets theirs at their own confirmation. The slot beside the QR a later change
+   * fills with the name and the number on every QR.
+   */
+  raceNumber: number | null;
 };
 
 export type FamilyStepsInput = {
@@ -129,7 +132,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
       state,
       holdExpiresAt: row.holdExpiresAt ?? null,
       checkinCode: row.checkinCode ?? null,
-      raceNumber: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null }),
+      raceNumber: raceNumberOf({ status: row.status, bibNumber: row.bibNumber ?? null }),
     };
   });
 }

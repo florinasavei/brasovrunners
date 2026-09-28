@@ -94,9 +94,8 @@ test.describe("§383 the upcoming automatic emails on /admin/emails", () => {
 
     await openFold(panel);
     const rows = panel.getByTestId("upcoming-email").filter({ hasText: title });
-    // The reminder a day from now, and the race number when registration closes at the start (§214).
-    await expect(rows).toHaveCount(2);
-    await expect(rows.nth(1)).toHaveAttribute("data-type", "BIB_ASSIGNED");
+    // The reminder a day from now, and nothing at the close: the number came with the confirmation (§NNN).
+    await expect(rows).toHaveCount(1);
     const row = rows.first();
     await expect(row).toHaveAttribute("data-type", "EVENT_REMINDER");
     await expect(row.getByTestId("upcoming-email-recipients")).toHaveText("1 destinatar acum");

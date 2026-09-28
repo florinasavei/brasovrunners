@@ -154,8 +154,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         <ActionLinkNotice locale={locale} status={spent} />
       ) : (
         <Stack spacing={3}>
-          {/* The race will not run (§331): said first, and no race-day block under it. */}
-          {live.eventCancelled && <Alert severity="info">{t("mine.eventCancelled")}</Alert>}
+          {/* The race will not run (§331): said first, and no race-day block under it. This page has no
+              «Eveniment anulat» chip, so its own line names the cancellation (§NNN). */}
+          {live.eventCancelled && <Alert severity="info">{t("manage.eventCancelled")}</Alert>}
           {/*
             A family on the address (§NNN): one heading with the family glyph, the marker naming the
             others (the family branch's «Familie»), and a card per person below.
@@ -211,6 +212,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <QrWithName
                       checkinCode={confirmed}
                       registeredName={one.registeredName}
+                      status={one.status}
                       bibNumber={one.bibNumber}
                       size={200}
                       words={qrWords}

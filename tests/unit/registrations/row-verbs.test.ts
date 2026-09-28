@@ -153,7 +153,7 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
         expect(verbs, `${status}/${printed}`).not.toContain("unmarkBibPrinted");
       }
     }
-    // A provisional number is printed nowhere (§214): nothing to mark even when confirmed.
+    // No number (confirmed before §87): nothing to mark even when confirmed.
     expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } })).not.toContain(
       "markBibPrinted",
     );
@@ -238,7 +238,7 @@ describe("§264 the bib's printing mark", () => {
     expect(
       rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } }),
     ).not.toContain("markBibPrinted");
-    // A provisional number is exactly this case (§214): the club sees it, nobody prints it.
+    // A registration not confirmed yet has no number at all (§NNN): nobody prints it.
     expect(
       rowVerbsFor("PENDING_EMAIL_CONFIRMATION", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } }),
     ).not.toContain("markBibPrinted");

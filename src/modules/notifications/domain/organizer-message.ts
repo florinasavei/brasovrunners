@@ -51,8 +51,8 @@ export function isParticipantMessageAudience(value: unknown): value is Participa
  * in every copy, and the desk code (`{checkinCode}`) is something only the participant may hold,
  * which a message written for everybody at once has no business spelling out.
  *
- * `{bibNumber}` is the settled race number, empty for whoever does not have one yet: a
- * provisional number printed without its "provisional" line (§237) would read as final.
+ * `{bibNumber}` is the race number of a confirmed registration, empty for whoever is not
+ * confirmed yet: a number exists only from the confirmation (§NNN).
  */
 export const ORGANIZER_MESSAGE_PLACEHOLDERS = [
   "participantName",

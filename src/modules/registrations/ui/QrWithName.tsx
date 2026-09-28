@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import type { RegistrationStatus } from "@/db/schema/registrations";
 import { env } from "@/shared/config/env";
 import { qrIdentity } from "../domain/qr-identity";
 
@@ -17,6 +18,8 @@ export type QrWords = {
 type Props = {
   checkinCode: string;
   registeredName: string;
+  /** With the number, what `raceNumberOf` asks (§NNN): a number is shown once confirmed, and never before. */
+  status: RegistrationStatus;
   bibNumber: number | null;
   /** The picture's side in pixels: 200 on «Gestionează înscrierea», 160 on «Înscrierile mele». */
   size: number;
@@ -27,14 +30,14 @@ type Props = {
  * One person's QR code with their name and race number beside it (§NNN; the owner, 2026-09-28: a
  * family's three codes looked the same). The name in bold, then «Număr de concurs: 12» — «—» while
  * none is given — then the access code the desk types when the camera fails. The number is the
- * registration's own (`qrIdentity`): it exists once the registration is confirmed, so nothing here
- * says «provisional».
+ * one rule's (`qrIdentity` through `raceNumberOf`): it exists once the registration is confirmed, and
+ * nothing here qualifies it.
  *
  * A Server Component, synchronous: the page hands it its words, so the page renders as one tree.
  * Strings in, the picture a hosted PNG from `APP_BASE_URL` (AGENTS.md §8).
  */
-export default function QrWithName({ checkinCode, registeredName, bibNumber, size, words }: Props) {
-  const who = qrIdentity({ registeredName, bibNumber });
+export default function QrWithName({ checkinCode, registeredName, status, bibNumber, size, words }: Props) {
+  const who = qrIdentity({ registeredName, status, bibNumber });
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" } }} data-testid="qr-with-name">
       <Box

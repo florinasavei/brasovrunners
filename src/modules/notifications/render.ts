@@ -523,8 +523,7 @@ async function renderRow(
       data.organizerBody = words.body[locale];
       data.organizerBodyOther = words.body[other];
     }
-    // The settled number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`): a provisional one would print
-    // without the line that says it can still move (§237).
+    // A confirmed registration's number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`, §NNN).
     if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
   }
   /*
@@ -660,7 +659,7 @@ async function renderRow(
   // The club's own notice (§245) needs the number and nothing else the runner's copy carries:
   // no check-in code and no QR, because neither means anything in a club mailbox.
   if (row.messageType === "CLUB_CONFIRMATION_NOTICE" && registration) {
-    data.bibNumber = registration.bibNumber ?? undefined;
+    data.bibNumber = raceNumberOf(registration) ?? undefined;
   }
 
   if (
@@ -680,27 +679,18 @@ async function renderRow(
       data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
     }
     /*
-      The number the runner has, settled or not (§237; the owner: "peste tot trebuie să
-      apară BID-ul!!").
-
-      §214 stopped writing `bib_number` until the window closes, and this line read only
-      that column — so the confirmation went out with a QR, a check-in code and no number,
-      for a runner who had been looking at number 2 on their own page since they
-      registered. Absent is worse than provisional: it reads as "you have not been given
-      one", and the desk is where they find out otherwise.
-
-      So it is sent, and it is **labelled** when it can still move — which is the condition
-      §214 attached to emailing it at all. The settle sends `BIB_ASSIGNED` with the final
-      one, so nobody is left holding only the provisional figure.
+      The number the confirmation gave (§NNN; the owner: "peste tot trebuie să apară BID-ul!!"):
+      drawn in the same transaction that confirmed the registration, so the confirmation carries
+      it, and it never moves afterwards. Only these messages of a confirmed registration carry a
+      number; the verification link and the declaration request say nothing about one.
     */
-    data.bibNumber = registration.bibNumber ?? registration.provisionalBibNumber ?? undefined;
-    data.bibProvisional = registration.bibNumber === null && registration.provisionalBibNumber !== null;
+    data.bibNumber = raceNumberOf(registration) ?? undefined;
   }
 
   /*
     A family's one confirmation (§519): one block per person, headed by the name — the QR code and the
     desk code the desk hands the number against, and the race number from the one helper the page and
-    the export read (`raceNumberOf`: settled, or provisional and said so, §237), or «încă fără număr».
+    the export read (`raceNumberOf`: the number each person's own confirmation gave, §NNN), or «încă fără număr».
     A code is given here to a person confirmed before codes existed, as above. The club's copy names
     the people and their numbers, never a code or a QR (§320).
   */
@@ -718,8 +708,7 @@ async function renderRow(
         // The greeting's word for this person (§519): the first word of the first name typed.
         ...(person.firstName?.trim() ? { firstName: person.firstName.trim().split(/\s+/)[0] } : {}),
         ...(clubCopy || !code ? {} : { checkinCode: code, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${code}.png` }),
-        raceNumber: number?.value ?? null,
-        provisional: number !== null && !number.settled,
+        raceNumber: number,
       });
     }
     data.familyConfirmed = people;

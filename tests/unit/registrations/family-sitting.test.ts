@@ -305,9 +305,9 @@ describe("§519 the family's one confirmation", () => {
     eventTitle: "Crosul familiei",
     eventTitleOther: "The family cross",
     familyConfirmed: [
-      { name: "Ana Pop", checkinCode: "AAA111", qrUrl: "https://example.test/api/registrations/qr/AAA111.png", raceNumber: 12, provisional: false },
-      { name: "Ion Pop", checkinCode: "BBB222", qrUrl: "https://example.test/api/registrations/qr/BBB222.png", raceNumber: 13, provisional: true },
-      { name: "Radu Pop", checkinCode: "CCC333", qrUrl: "https://example.test/api/registrations/qr/CCC333.png", raceNumber: null, provisional: false },
+      { name: "Ana Pop", checkinCode: "AAA111", qrUrl: "https://example.test/api/registrations/qr/AAA111.png", raceNumber: 12 },
+      { name: "Ion Pop", checkinCode: "BBB222", qrUrl: "https://example.test/api/registrations/qr/BBB222.png", raceNumber: 13 },
+      { name: "Radu Pop", checkinCode: "CCC333", qrUrl: "https://example.test/api/registrations/qr/CCC333.png", raceNumber: null },
     ],
   };
   const params = { to: "familia.pop@example.ro", locale: "ro" as const, idempotencyKey: "k", messageType: "REGISTRATION_CONFIRMED" as const };
@@ -316,9 +316,11 @@ describe("§519 the family's one confirmation", () => {
     const email = buildOutgoingEmail({ ...params, data, actionUrl: "https://example.test/ro/inscrieri/ale-mele/secret" });
     expect(email.subject).toContain("Confirmat: 3 persoane la Crosul familiei");
     expect(email.subject).toContain("Confirmed: 3 people for The family cross");
-    for (const words of ["Număr de concurs: 12", "Număr de concurs: 13 (provizoriu", "Număr de concurs: încă fără număr", "Codul pentru masă: BBB222", "Race number: 12", "Toate înscrierile mele"]) {
+    for (const words of ["Număr de concurs: 12", "Număr de concurs: 13", "Număr de concurs: încă fără număr", "Codul pentru masă: BBB222", "Race number: 12", "Toate înscrierile mele"]) {
       expect(email.text).toContain(words);
     }
+    // Each person's own confirmation's number, plainly (§NNN).
+    expect(email.text).not.toContain("provizoriu");
     // The pictures once, in the first half: the second repeats the words.
     expect(email.html.split('<img src="https://example.test/api/registrations/qr/')).toHaveLength(4);
   });

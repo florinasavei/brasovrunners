@@ -265,7 +265,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
           column uses, so the page never contradicts the row that led here. */}
-      <StaffJourney journey={journeyOf(registration)} bibNumber={raceNumberOf(registration)?.value ?? null} variant="full" />
+      <StaffJourney journey={journeyOf(registration)} bibNumber={raceNumberOf(registration)} variant="full" />
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
@@ -462,83 +462,70 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           )}
           {registration.status === "CONFIRMED" && (
             <>
-              {/* Only where there is a gap to fill (§173): a confirmed runner's number is
-                  settled — they have it in their inbox and it may be printed — so the service
-                  refuses a change, and a box that always refuses invites the press. The number
-                  itself is on the journey above. */}
-              {registration.bibNumber === null ? (
-                /*
-                  The number, and the way to change it folded underneath (§232; the owner: "I
-                  wanna simplify that part with the BID changing").
-
-                  It had grown into four things stacked up — a sentence, a prefilled box, a
-                  button and a list of every free number at the event — for a screen whose
-                  question is almost always just "what number does this person have". So the
-                  answer is one line, and the change is a `<details>` that opens on the rare
-                  occasion somebody wants it: the same idiom the registrations list uses for
-                  its destructive verbs and the public form for its optional groups, which
-                  costs no client island and opens with JavaScript off.
-
-                  Changing it by hand is still §105's preferential number, and still settles
-                  it (§230) — which is why the free numbers stay, inside, where somebody who
-                  has decided to change it can read them.
-                */
-                <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
-                  <Typography variant="body2">
-                    {registration.provisionalBibNumber !== null
-                      ? tr("registrations.bibHeldNow", { number: registration.provisionalBibNumber })
-                      : tr("registrations.bibNone")}
-                  </Typography>
-                  {/* The box spans the section, whatever the Stack does with its other children.
-                      A refused number comes back in its box with the fold open (§315). */}
+              {/*
+                The number, drawn at the confirmation (§NNN), and the way to change it folded
+                underneath (§232; the owner: "I wanna simplify that part with the BID changing").
+                The answer is one line; the change is a `<details>` that opens on the rare occasion
+                somebody wants §105's preferential number — the same idiom the list uses for its
+                destructive verbs, no client island, opens with JavaScript off. Offered while the
+                bib is not printed: `setBibNumberByStaff` refuses a printed one (§311), and a box
+                that always refuses invites the press. The old number is retired, never given again.
+              */}
+              <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+                <Typography variant="body2" color={registration.bibNumber === null ? "text.primary" : "text.secondary"}>
+                  {registration.bibNumber === null
+                    ? tr("registrations.bibNone")
+                    : registration.bibPrintedAt !== null
+                      ? tr("registrations.bibSettledPrinted", { number: registration.bibNumber })
+                      : tr("registrations.bibSettled", { number: registration.bibNumber })}
+                </Typography>
+                {/* Replacing a number already emailed is the Administrator's (§NNN); filling a gap is any desk role's. */}
+                {registration.bibPrintedAt === null && (registration.bibNumber === null || mayManage) && (
+                  /* The box spans the section. A refused number comes back in its box with the fold open (§315). */
                   <Box sx={{ alignSelf: "stretch" }}>
-                  <ActionForm
-                    action={setBibNumberAction}
-                    messages={bibRefusal}
-                    confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
-                    scope="bib"
-                    data-testid="set-bib-form"
-                  >
-                  <RecallDetails sx={BOXED_DISCLOSURE_SX}>
-                    <Typography component="summary" variant="body2" color="primary">
-                      <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
-                      {tr("registrations.bibChange")}
-                    </Typography>
-                    <Box>
-                      {deskHidden}
-                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                        <RecallField
-                          name="bibNumber"
-                          type="number"
-                          label={tr("registrations.bibNumber")}
-                          size="small"
-                          defaultValue={registration.provisionalBibNumber ?? ""}
-                          slotProps={{ htmlInput: { min: 1, max: 99999 } }}
-                          sx={{ width: 140 }}
-                        />
-                        <GlyphButton icon="number" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                          {tr("desk.saveBib")}
-                        </GlyphButton>
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                        {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
-                      </Typography>
-                    </Box>
-                  </RecallDetails>
-                  </ActionForm>
+                    <ActionForm
+                      action={setBibNumberAction}
+                      messages={bibRefusal}
+                      confirm={{ title: tr("confirm.setBibTitle"), body: tr("confirm.setBibBody"), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("desk.saveBib"), cancelLabel: words.cancel }}
+                      scope="bib"
+                      data-testid="set-bib-form"
+                    >
+                      <RecallDetails sx={BOXED_DISCLOSURE_SX}>
+                        <Typography component="summary" variant="body2" color="primary">
+                          <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
+                          {tr("registrations.bibChange")}
+                        </Typography>
+                        <Box>
+                          {deskHidden}
+                          <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                            <RecallField
+                              name="bibNumber"
+                              type="number"
+                              label={tr("registrations.bibNumber")}
+                              size="small"
+                              defaultValue=""
+                              slotProps={{ htmlInput: { min: 1, max: 99999 } }}
+                              sx={{ width: 140 }}
+                            />
+                            <GlyphButton icon="number" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                              {tr("desk.saveBib")}
+                            </GlyphButton>
+                          </Stack>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                            {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                          </Typography>
+                        </Box>
+                      </RecallDetails>
+                    </ActionForm>
                   </Box>
-                </Stack>
-              ) : (
-                <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {tr("registrations.bibSettled", { number: registration.bibNumber })}
-                  </Typography>
-                  {/*
+                )}
+                {registration.bibNumber !== null && (
+                  /*
                     This one bib, on its own A4 page (§180). The same route the event's sheet
                     uses, asked for a range of exactly one and the one-per-page layout — so
                     there is one renderer, one authorization check and one design, and a
                     volunteer who has to reprint a single number does not download two hundred.
-                  */}
+                  */
                   <GlyphButton
                     icon="print"
                     href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
@@ -547,8 +534,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   >
                     {tr("registrations.downloadBib")}
                   </GlyphButton>
-                </Stack>
-              )}
+                )}
+              </Stack>
               <ActionForm
                 action={checkInAction}
                 data-testid="checkin-form"

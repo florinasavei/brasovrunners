@@ -709,11 +709,9 @@
       "exportExcel": "Exportă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele, dar nu le poți modifica. În ziua cursei lucrezi de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
-      "bibColumnHint": "Numărul de concurs:\n– 2* — provizoriu, se poate schimba.\n– 1 (îngroșat) — definitiv, trimis alergătorului.\n– 1 ✓ — definitiv și tipărit.",
-      "bibProvisionalShort": "provizoriu",
-      "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
-      "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
-      "bibHeldNow": "Numărul de concurs: {number} — provizoriu până la închiderea înscrierilor.",
+      "bibColumnHint": "Numărul de concurs:\n– «—»: înscrierea nu e confirmată încă; numărul vine la confirmare.\n– 12: dat la confirmare și trimis pe email.\n– 12 ✓: tipărit.",
+      "bibSettled": "Numărul de concurs: {number}, dat la confirmare și trimis pe email. Dacă îl schimbi, persoana primește noul număr pe email, iar cel vechi nu se mai dă nimănui.",
+      "bibSettledPrinted": "Numărul de concurs: {number}. E tipărit, deci nu se mai schimbă.",
       "bibNone": "Nu are încă un număr de concurs.",
       "bibChange": "Schimbă numărul",
       "bibPrinted": "BID printat",
@@ -936,7 +934,7 @@
       "givePlaceTitle": "Îi dai un loc?",
       "givePlaceBody": "{name} primește un loc liber înaintea listei de așteptare și confirmarea, cu numărul de concurs.",
       "setBibTitle": "Salvezi numărul?",
-      "setBibBody": "Numărul rămâne al acestei persoane și nu se mai dă altcuiva.",
+      "setBibBody": "Persoana primește numărul pe email. Un număr dat o dată nu se mai dă altcuiva.",
       "resendTitle": "Retrimiți emailul?",
       "resendBody": "Emailul stării curente pleacă din nou către {name}, cu un link nou; linkul din emailul vechi nu mai merge.",
       "reminderTitle": "Trimiți reminderul?",
@@ -1367,7 +1365,7 @@
       "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
-      "bibStartNumberHelp": "Implicit 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "bibStartNumberHelp": "Implicit 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea confirmării, de aici în sus.",
       "minAge": "Vârsta minimă de participare",
       "reminder": {
         "label": "Reminderul dinaintea startului",
@@ -3619,7 +3617,7 @@
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
       "spareMark": "înscris la fața locului",
-      "helpMore": "Numerele se dau în ordinea înscrierii și nu se schimbă. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii."
+      "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii."
     },
     "emergency": {
       "title": "Fișă de urgență — confidențial. Se distruge după eveniment.",
@@ -3707,7 +3705,6 @@
       "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu are unul) → „Salvează nr.”; când persoana a ajuns → „Marchează prezent”. Cine nu a semnat declarația o semnează pe hârtie → „Confirmă pe hârtie”.",
       "givePlace": "Dă-i un loc",
       "bibField": "Număr de concurs (BIB)",
-      "bibProvisional": "Număr provizoriu: se stabilește definitiv la închiderea înscrierilor.",
       "saveBib": "Salvează nr.",
       "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
@@ -3796,7 +3793,7 @@
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța clubului pentru declarații, doar pentru înscrieri reale. Actul de identitate apare mascat.",
-        "BIB_ASSIGNED": "O dată, când se închid înscrierile și numerele devin definitive, și când cineva dă de mână numărul unei înscrieri confirmate. Cu codul QR.",
+        "BIB_ASSIGNED": "Când cineva dă de mână numărul unei înscrieri confirmate. Cu codul QR.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
         "REGISTRATION_OPENED": "Când se deschid înscrierile, o dată, către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului.",
         "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token.",
@@ -3826,7 +3823,7 @@
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
         "DECLARATION_ARCHIVE": "odată cu declarația semnată, către arhivă",
-        "BIB_ASSIGNED": "la închiderea înscrierilor, sau când numărul e dat de mână",
+        "BIB_ASSIGNED": "când numărul e dat de mână",
         "STAFF_INVITATION": "când e adăugat un coleg",
         "REGISTRATION_OPENED": "când se deschid înscrierile",
         "CLUB_CONFIRMATION_NOTICE": "la fiecare confirmare, către club",
@@ -3956,7 +3953,7 @@
             "eventTitle": "Titlul evenimentului, în limba acestui text",
             "eventLocationName": "Locul de întâlnire, cu numele din limba acestui text; cât timp nu e anunțat, fraza care spune asta",
             "eventStartsAtFormatted": "Data și ora startului, în fusul evenimentului, scrise în limba acestui text",
-            "bibNumber": "Numărul de concurs, poate cel provizoriu până se închid înscrierile",
+            "bibNumber": "Numărul de concurs, dat la confirmare",
             "checkinCode": "Codul de la masă, cu care participantul își ridică numărul",
             "currentStatus": "Starea înscrierii în momentul trimiterii",
             "holdExpiresAtFormatted": "Până când îi e ținut locul, cât timp termenul nu a trecut",
@@ -4143,7 +4140,7 @@
           "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)"
         },
         "help": {
-          "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră și numărul provizoriu se eliberează.",
+          "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
           "holdMinutes": "Pentru un eveniment fără fereastră de confirmare, sau aflat deja în ea. O cursă mai departe de fereastră ține locul până la termenul ales pe eveniment.",
           "offerHours": "Cât are primul de pe listă ca să semneze; niciodată după închiderea înscrierilor sau după start.",
           "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare și înscrieri”.",
@@ -4187,7 +4184,6 @@
           "lastCall": "ultimul apel la semnat, către cei care nu au semnat încă",
           "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
           "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
-          "bibs": "se închid înscrierile; numerele de concurs devin finale",
           "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
           "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
           "newsletter": "newsletterul, către abonații temei"
@@ -4278,7 +4274,7 @@
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
-        "BIB_ASSIGNED": "Automat la închidere, sau când un organizator scrie numărul din pagina înscrierii ori de la masă. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
+        "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "REGISTER_ANOTHER_PERSON": "Nu se creează nicio înscriere, iar ecranul spune „verifică-ți emailul” ca oricând. Dacă adresa are deja {people}, emailul spune doar asta, fără link."
       }
     },
@@ -4554,7 +4550,7 @@
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
-                "Numerele se dau în ordinea înscrierii, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
+                "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul."
               ]
             },
@@ -5961,7 +5957,6 @@
         "what": {
           "confirmed": "Confirmat. Codul pentru masa de înscrieri: {code}. Confirmarea, cu codul QR și PDF-ul declarației, vine pe email.",
           "number": "Număr de concurs: {number}",
-          "numberProvisional": "Număr de concurs: {number} (provizoriu: se stabilește la închiderea înscrierilor)",
           "noNumber": "Număr de concurs: încă fără număr",
           "waitlisted": "Pe lista de așteptare: primește un email dacă se eliberează un loc.",
           "later": "Mai târziu: semnează din linkul primit pe email pentru această persoană.",

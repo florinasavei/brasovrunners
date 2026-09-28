@@ -11,6 +11,7 @@
  * treats as "the rest of this is literal text" and does not print.
  */
 
+import type { RegistrationStatus } from "@/db/schema/registrations";
 import { raceNumberOf } from "./domain/race-number";
 
 const FORMULA_PREFIXES = ["=", "+", "-", "@"];
@@ -60,10 +61,8 @@ export type RegistrationCsvRow = {
   guardianIdDocument: string;
   submittedAt: string;
   confirmedAt: string;
-  /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
+  /** The race number, drawn at the confirmation (BR-REQ-038-01, §NNN); empty before it, never 0. */
   bibNumber?: number | null;
-  /** The number held before the settle (§214). */
-  provisionalBibNumber?: number | null;
   /** Race day and the provider's verdict, the two columns an organizer sorts by afterwards (§83). */
   checkedInAt: string;
   emailBounced: boolean;
@@ -114,9 +113,6 @@ const HEADER = [
   // "Race number (BIB)", not "Bib": the club calls it that everywhere else in the backoffice
   // (§180), and a spreadsheet column is the one place a volunteer meets the word cold.
   "Race number (BIB)",
-  // Whether that number is the settled one (§214). Its own column rather than a marker
-  // inside the number, because the number column is read as a number by every spreadsheet.
-  "Number settled",
   "Checked in",
   "Email bounced",
   // Last (§425), so a script that reads the columns by position still finds every earlier one.
@@ -152,8 +148,8 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.guardianIdDocument,
         row.submittedAt,
         row.confirmedAt,
-        String(raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.value ?? ""),
-        raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.settled ? "Yes" : "",
+        // Empty until the registration is confirmed (§NNN): the one helper every screen reads.
+        String(raceNumberOf({ status: row.status as RegistrationStatus, bibNumber: row.bibNumber ?? null }) ?? ""),
         row.checkedInAt,
         row.emailBounced ? "Yes" : "",
         String(row.termsVersion ?? ""),

@@ -344,12 +344,17 @@ describe("§446 the confirmation registers the person, and everybody signs alone
     // Each confirms and signs alone — her own name, her own signature, her own number and desk code.
     await confirmEmail(db, event, ana.id, at(10));
     await signFor(event, ana.id, "Ana Pop", at(11));
+    // Ana's confirmation gave Ana a number; Maria, still at her declaration, has none yet (§NNN).
+    const halfway = new Map((await rowsOf(event.id)).map((row) => [row.registeredName, row.bibNumber]));
+    expect([halfway.get("Ana Pop"), halfway.get("Maria Pop")]).toEqual([1, null]);
     expect(await refusal(signFor(event, maria.id, "Ana Pop", at(11)))).toEqual({ code: "VALIDATION_ERROR", fields: ["typedName"] });
     await signFor(event, maria.id, "Maria Pop", at(12));
     const [anaDone, mariaDone] = await rowsOf(event.id);
     expect([anaDone.status, mariaDone.status]).toEqual(["CONFIRMED", "CONFIRMED"]);
     expect(anaDone.checkinCode).not.toBe(mariaDone.checkinCode);
-    expect(anaDone.provisionalBibNumber ?? anaDone.bibNumber).not.toBe(mariaDone.provisionalBibNumber ?? mariaDone.bibNumber);
+    // Each gets their own number at their own confirmation (§NNN), in the order they signed.
+    const numberOf = new Map([anaDone, mariaDone].map((row) => [row.registeredName, row.bibNumber]));
+    expect([numberOf.get("Ana Pop"), numberOf.get("Maria Pop")]).toEqual([1, 2]);
 
     // "Înscrierile mele" lists both, each by name (§77).
     const mine = await listActiveRegistrationsForParticipant(db, ana.participantId, "ro", at(13));

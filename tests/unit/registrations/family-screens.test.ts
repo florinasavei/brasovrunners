@@ -100,9 +100,11 @@ describe("§NNN «Înscriu încă o persoană cu această adresă» is one quiet
 });
 
 describe("§NNN the name and the race number beside every QR", () => {
-  it("reads the name and the registration's own race number, «—» before one is given, never «provisional»", () => {
-    expect(qrIdentity({ registeredName: " Ana Pop ", bibNumber: 12 })).toEqual({ name: "Ana Pop", number: "12" });
-    expect(qrIdentity({ registeredName: "Ioana Pop", bibNumber: null })).toEqual({ name: "Ioana Pop", number: NO_RACE_NUMBER });
+  it("reads the name and the race number through raceNumberOf, «—» before one is given, never «provisional»", () => {
+    expect(qrIdentity({ registeredName: " Ana Pop ", status: "CONFIRMED", bibNumber: 12 })).toEqual({ name: "Ana Pop", number: "12" });
+    expect(qrIdentity({ registeredName: "Ioana Pop", status: "CONFIRMED", bibNumber: null })).toEqual({ name: "Ioana Pop", number: NO_RACE_NUMBER });
+    // A number on a row not confirmed (a restarted registration) is not shown: the one rule decides.
+    expect(qrIdentity({ registeredName: "Ion Pop", status: "PENDING_DECLARATION", bibNumber: 7 })).toEqual({ name: "Ion Pop", number: NO_RACE_NUMBER });
     expect(NO_RACE_NUMBER).toBe("—");
     expect(words("ro")("qr.number", { number: "12" })).toBe("Număr de concurs: 12");
     expect(words("en")("qr.number", { number: NO_RACE_NUMBER })).toBe("Race number: —");

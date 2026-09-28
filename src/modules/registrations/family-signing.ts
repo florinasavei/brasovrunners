@@ -321,7 +321,6 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
       checkinCode: registrations.checkinCode,
       // The race number beside the desk code (§87, §94, §173; the owner: «aici vreau să văd și BIB-urile»).
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       // Qualified by hand: inside a one-table select Drizzle prints a column bare, and a bare "id"
       // in the subquery would be the acceptance's own.
       declared: sql<boolean>`exists (select 1 from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`,

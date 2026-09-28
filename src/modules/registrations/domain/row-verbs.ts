@@ -37,8 +37,7 @@ export type RowVerb =
    * "This bib is on paper" — or is not, for a reprint (§264).
    *
    * Offered only where there is something to print: a confirmed, real registration with a
-   * *settled* number. A provisional one (§214) is printed nowhere by design, so a row holding
-   * one has nothing to mark.
+   * number (§NNN: a number exists only from the confirmation).
    */
   | "markBibPrinted"
   | "unmarkBibPrinted"
@@ -95,8 +94,7 @@ export function rowVerbsFor(
   if (status === "CONFIRMED") verbs.push(options.checkedIn ? "undoCheckIn" : "checkIn");
 
   /*
-    The printing mark (§264). Only with a settled number, because a provisional one is never
-    printed, and only for whoever may manage registrations: the sheet is a read that the
+    The printing mark (§264). Only with a number, and only for whoever may manage registrations: the sheet is a read that the
     Organizer has too (§289), and this is the club's record of having put it on paper.
 
     And only while CONFIRMED (§311). A cancelled registration keeps its settled number and its
