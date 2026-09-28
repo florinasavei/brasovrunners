@@ -28,46 +28,21 @@ import { CARD_FRAME_SX, cardFrameGeometry, cropImageSx } from "./image-layout";
 const ResetGlyph = ACTION_ICONS.reset;
 
 /**
- * The crop box: drag a rectangle over the photograph and that is what the site shows
- * (`DECISIONS.md` §241).
+ * The crop box (§241): a rectangle over an untouched photograph, stored as four fractions for CSS
+ * (`image-layout.ts`). Written rather than installed: crop libraries are canvases and export
+ * pipelines (`AGENTS.md` §1.5).
  *
- * ## Why this is written rather than installed
- *
- * Every cropping library on npm is a canvas, a zoom gesture, a rotation and an export pipeline,
- * and it is larger than this editor. What the club needs is one rectangle over a picture whose
- * pixels are never touched — the stored file stays exactly as it was uploaded, and the four
- * fractions are handed to CSS (`image-layout.ts`). That is a pointer listener and a box, and
- * the standing instruction is to prefer nothing over a dependency (`AGENTS.md` §1.5).
- *
- * ## Two gestures, and a third for a keyboard
- *
- * Dragging **outside** the current rectangle draws a new one; dragging **inside** it moves the
- * one that is there, which is the gesture people expect from a photo application and the one
- * that makes small corrections possible at all. A drag smaller than a twentieth of the picture
- * is a click that missed, and changes nothing.
- *
- * The rectangle is also focusable: arrows move it, `Shift` with them resizes it, and the line
- * underneath says in words where it is and how big — because a control that only answers a
- * pointer is a control a keyboard cannot use (`AGENTS.md` §18).
- *
- * ## Shapes and the card's centre (§454)
- *
- * The owner, 2026-09-26: "I need some predefined crops and sizes for aspect ratios". A row of
- * buttons above the photograph — «Liber», 16∶9, 4∶3, 1∶1, 4∶5 (`picture-frame.ts`): a shape draws
- * the largest rectangle of it, centred on what was there, and holds the shape while the rectangle
- * is drawn again or resized. What is stored is still §241's four fractions.
- *
- * In the short description (`card`), every listing card draws the picture in the same 16∶9 frame,
- * so the box also shows that frame — a dashed outline over the photograph and a small copy of the
- * card's picture underneath, drawn by the card's own function — and offers «Centrul pe card»: tap
- * where the subject is, and the card's frame is centred there.
+ * Drag outside the rectangle to draw, inside to move; a drag under `MIN_FRACTION` is a missed
+ * click. Arrows move it and `Shift`+arrows resize it, described in words (`AGENTS.md` §18).
+ * Shape presets hold their ratio while drawing (§454). On a `card` picture the box also shows the
+ * listing's 16∶9 frame and offers «Centrul pe card», the focal point.
  */
 
-/** What one arrow press moves or resizes: fine enough to aim, coarse enough to get there. */
+/** One arrow press, as a fraction of the picture. */
 const STEP = 0.02;
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
-/** Four decimals, the same precision the schema and the geometry keep. */
+/** Four decimals, as the schema keeps. */
 const round = (value: number) => Math.round(value * 10_000) / 10_000;
 const rounded = (crop: ImageCrop): ImageCrop => ({
   x: round(crop.x),
@@ -82,28 +57,23 @@ type Drag =
   | { mode: "move"; fromX: number; fromY: number; start: ImageCrop }
   | { mode: "focus" };
 
-/** What a press on the photograph changes: the crop, or — on a card's picture — its centre. */
 type Target = "crop" | "focus";
 
 export type ImageCropLabels = {
-  /** The section's own name, and the rectangle's accessible name. */
+  /** Also the rectangle's accessible name. */
   title: string;
   help: string;
   reset: string;
-  /** "{w}% × {h}%, from the left {x}%, from the top {y}%" — substituted here. */
+  /** Placeholders `{w}`, `{h}`, `{x}`, `{y}`, substituted here. */
   position: string;
-  /** «Format» and the five shapes' names. */
   presets: string;
   preset: Record<CropPreset, string>;
-  /** What a press changes: the crop, or the card's centre — the group's name and its two choices. */
   target: string;
   targetCrop: string;
   targetFocus: string;
-  /** How to pick the card's centre, "the middle of the picture", and where it is ("{x}", "{y}"). */
   focusHelp: string;
   focusReset: string;
   focusPosition: string;
-  /** The small copy of the card's picture. */
   cardPreview: string;
 };
 
@@ -121,36 +91,28 @@ export default function ImageCropBox({
   testId = "rich-text-crop",
 }: {
   src: string;
-  /** The photograph's own size: a shape is a pixel ratio, and this turns it into fractions. */
+  /** Converts a shape's pixel ratio into fractions. */
   intrinsic: Intrinsic;
   /** What is stored: `null` is the whole photograph. */
   crop: ImageCrop | null;
   onChange: (crop: ImageCrop | null) => void;
-  /** The card's centre, when the club picked one (§454). */
+  /** §454. */
   focus?: ImageFocus | null;
   onFocusChange?: (focus: ImageFocus | null) => void;
-  /** A picture in the short description, which the listing card draws in its 16∶9 frame. */
+  /** A short-description picture, drawn in the listing card's 16∶9 frame. */
   card?: boolean;
-  /** The shapes this picture may take; all five unless a place narrows them. */
   presets?: readonly CropPreset[];
-  /**
-   * The shape held when nothing is stored and after «Fără decupaj» (§485): «Liber» by default,
-   * 16∶9 for a film's poster, whose box has that shape — the other shapes stay offered, and the
-   * page shows the largest 16∶9 part of whichever rectangle is drawn.
-   */
+  /** The shape held with no crop stored (§485): «Liber» by default, 16∶9 for a film's poster. */
   resting?: CropPreset;
   labels: ImageCropLabels;
-  /** The photograph's own test id: two boxes can be on one screen (a picture's, a poster's). */
+  /** Two boxes can share a screen (a picture's, a poster's). */
   testId?: string;
 }) {
   const surface = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
-  /** The rectangle being dragged, before it is worth storing; `null` between gestures. */
   const [draft, setDraft] = useState<ImageCrop | null>(null);
   const [draftFocus, setDraftFocus] = useState<ImageFocus | null>(null);
-  /** The shape held after «Fără decupaj»: the place's own, else «Liber» where it is offered, else the first. */
   const restingPreset: CropPreset = resting && presets.includes(resting) ? resting : presets.includes("free") ? "free" : presets[0];
-  /** The shape held while drawing: the one the stored crop was drawn with, or the resting one. */
   const [preset, setPreset] = useState<CropPreset>(() => {
     const stored = presetOf(crop, intrinsic);
     return presets.includes(stored) ? stored : restingPreset;
@@ -161,7 +123,6 @@ export default function ImageCropBox({
   const shown = draft ?? crop ?? WHOLE_IMAGE;
   const shownFocus = draftFocus ?? focus;
 
-  /** Where the pointer is, as a fraction of the picture. */
   const pointAt = (event: { clientX: number; clientY: number }) => {
     const rect = surface.current?.getBoundingClientRect();
     if (!rect || rect.width === 0 || rect.height === 0) return null;
@@ -178,7 +139,6 @@ export default function ImageCropBox({
     onFocusChange?.(next && { x: round(clamp01(next.x)), y: round(clamp01(next.y)) });
   };
 
-  /** Arrows move the rectangle; `Shift` with them resizes it — in its shape, when one is held. */
   const nudge = (dx: number, dy: number, resize: boolean) => {
     const from = crop ?? WHOLE_IMAGE;
     if (resize && ratio !== null) {
@@ -199,7 +159,6 @@ export default function ImageCropBox({
     commit(next);
   };
 
-  /** A shape pressed: its largest rectangle, centred on what was there; «Liber» keeps the crop. */
   const choosePreset = (next: CropPreset) => {
     setPreset(next);
     if (next !== "free") commit(presetCrop(next, intrinsic, crop));
@@ -219,7 +178,7 @@ export default function ImageCropBox({
     .replace("{y}", pct(shown.y));
   const centre = focalPoint(crop, shownFocus);
   const focusPosition = labels.focusPosition.replace("{x}", pct(centre.x)).replace("{y}", pct(centre.y));
-  /** The card's frame over the photograph, and the copy of the card's picture: one function, the card's. */
+  // The card's own functions, so the preview cannot drift from the listing.
   const frame = card ? frameCrop(draft ?? crop, shownFocus, intrinsic) : null;
   const preview = card ? cardFrameGeometry({ crop: draft ?? crop, focus: shownFocus, ...intrinsic }) : null;
 
@@ -228,7 +187,7 @@ export default function ImageCropBox({
       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         {labels.title}
       </Typography>
-      {/* The shapes (§454). 44 pixels tall: a thumb presses these on a phone (BR-REQ-041-01 criterion 6). */}
+      {/* 44 px tall for a thumb (BR-REQ-041-01 criterion 6). */}
       <ToggleButtonGroup
         exclusive
         size="small"
@@ -331,7 +290,6 @@ export default function ImageCropBox({
             commitFocus(draftFocus);
             return;
           }
-          // A drag that drew nothing is a click that missed: leave what was there.
           if (!draft || (gesture?.mode === "draw" && (draft.w < MIN_FRACTION || draft.h < MIN_FRACTION))) {
             setDraft(null);
             return;
@@ -344,13 +302,9 @@ export default function ImageCropBox({
           setDraftFocus(null);
         }}
       >
-        {/* The whole photograph, always: the crop is what is *shown* of it, and the organizer
-            has to see what they are leaving out. `draggable` off, or the browser's own image
-            drag starts instead of the gesture. */}
+        {/* `draggable` off, or the browser's image drag replaces the gesture. */}
         <Box component="img" src={src} alt="" draggable={false} sx={{ display: "block", width: "100%", height: "auto" }} />
-        {/* The rectangle. The shadow with no blur and a very large spread is what dims
-            everything outside it — one element rather than four, and it cannot fall out of
-            step with the box it surrounds. */}
+        {/* A huge unblurred shadow dims everything outside the rectangle, in one element. */}
         <Box
           tabIndex={focusing ? -1 : 0}
           role="group"
@@ -374,7 +328,6 @@ export default function ImageCropBox({
             "&:focus-visible": { outline: 2, outlineColor: "secondary.main", outlineOffset: 2 },
           }}
         />
-        {/* The card's 16∶9 frame inside the crop, dashed: what every listing card shows (§454). */}
         {frame && (
           <Box
             aria-hidden
@@ -391,7 +344,6 @@ export default function ImageCropBox({
             }}
           />
         )}
-        {/* The card's centre: a ring, focusable in its own mode so the arrows move it. */}
         {card && (
           <Box
             tabIndex={focusing ? 0 : -1}
@@ -448,7 +400,6 @@ export default function ImageCropBox({
               <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
                 {labels.cardPreview}
               </Typography>
-              {/* The card's own frame and geometry (`image-layout.ts`), so this cannot drift from the listing. */}
               <Box sx={{ ...CARD_FRAME_SX, maxWidth: 240 }} data-testid="rich-text-card-preview">
                 <Box component="img" src={src} alt="" draggable={false} sx={cropImageSx(preview.geometry)} />
               </Box>

@@ -4,11 +4,7 @@ import type RichTextEditor from "./RichTextEditor";
 
 type Translate = Awaited<ReturnType<typeof getTranslations<"Admin.richText">>>;
 
-/**
- * The editor's control names, from the catalogue, for the two forms that mount it. One place,
- * so a control added to the editor is named in both forms or in neither — a client island
- * cannot read the catalogue itself (`RichTextEditor`'s own doc).
- */
+/** The editor's control names from the catalogue, shared by both forms that mount it. */
 export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextEditor>[0]["labels"] {
   return {
     bold: rt("bold"),
@@ -34,14 +30,13 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     tableDeleteRow: rt("tableDeleteRow"),
     tableDeleteColumn: rt("tableDeleteColumn"),
     tableDelete: rt("tableDelete"),
-    // §263: one control per choice, and the borders one is named after the state it is in, so
-    // the tooltip says "lines: rows only" rather than "cycle the lines".
+    // Named after the current state, not the action (§263).
     tableBorders: {
       all: rt("tableBordersAll"),
       rows: rt("tableBordersRows"),
       none: rt("tableBordersNone"),
     },
-    // §271: one name per state, so the tooltip says which colour the table is in.
+    // One name per state (§271).
     tableBorderColour: {
       default: rt("tableBorderColourDefault"),
       strong: rt("tableBorderColourStrong"),
@@ -61,7 +56,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     linkApply: rt("linkApply"),
     linkRemove: rt("linkRemove"),
     linkCancel: rt("linkCancel"),
-    // Raw, with its `{count}`: the island substitutes the number itself (§273).
+    // `rt.raw` here and below: the island fills the placeholders itself (§273).
     words: rt.raw("words") as string,
     preview: rt("preview"),
     previewShort: rt("previewShort"),
@@ -71,8 +66,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     image: rt("image"),
     imageUploading: rt("imageUploading"),
     imageFailed: rt("imageFailed"),
-    // The quality beside the upload and what the picture became (§414).
-    // Four levels since §437.
+    // §414, §437.
     imageQuality: {
       legend: rt("imageQualityLegend"),
       low: rt("imageQualityLow"),
@@ -87,14 +81,12 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       }),
     },
     imageChoose: rt("imageChoose"),
-    // Raw, with their placeholders: the island says the chosen file's pixels and weight (§437).
     imageChosen: {
       chosen: rt.raw("imageChosen") as string,
       sent: rt.raw("imageSent") as string,
       lighter: rt.raw("imageLighter") as string,
     },
     imagePixels: rt.raw("imagePixels") as string,
-    // Raw, with its six placeholders: the island substitutes the facts itself.
     imageStored: {
       template: rt.raw("imageStored") as string,
       topRung: rt.raw("imageStoredTopRung") as string,
@@ -116,7 +108,6 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageCrop: rt("imageCrop"),
     imageCropHelp: rt("imageCropHelp"),
     imageCropReset: rt("imageCropReset"),
-    // Raw, with its four placeholders: the island substitutes the percentages itself.
     imageCropPosition: rt.raw("imageCropPosition") as string,
     // The shapes and the card's centre (§454).
     imageShapes: {
@@ -133,19 +124,16 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       targetFocus: rt("imageCropTargetFocus"),
       focusHelp: rt("imageFocusHelp"),
       focusReset: rt("imageFocusReset"),
-      // Raw, with its two placeholders: the island substitutes the percentages itself.
       focusPosition: rt.raw("imageFocusPosition") as string,
       cardPreview: rt("imageCardPreview"),
     },
     imageUploadShapeHelp: rt("imageUploadShapeHelp"),
-    // Raw, with its placeholder: the island names the shape itself.
     imageUploadCropped: rt.raw("imageUploadCropped") as string,
     imageRemove: rt("imageRemove"),
     imageDone: rt("imageDone"),
     imageClose: rt("imageClose"),
     imagePanel: rt("imagePanel"),
     imageNoAltOne: rt("imageNoAltOne"),
-    // Raw, with its `{count}` placeholder: the island substitutes the number itself.
     imageNoAltMany: rt.raw("imageNoAltMany") as string,
     imageFromGallery: rt("imageFromGallery"),
     imageShort: rt("imageShort"),
@@ -163,13 +151,12 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
       page: rt("imageGallerySourcePage"),
       team: rt("imageGallerySourceTeam"),
     },
-    // The first chip, for the place the text belongs to (§485).
+    // The first chip: the text's own place (§485).
     imageGalleryHere: {
       event: rt("imageGalleryHereEvent"),
       album: rt("imageGalleryHereAlbum"),
       page: rt("imageGalleryHerePage"),
     },
-    // Raw, with its placeholders: the island says the picture's name and size itself (§485).
     imageFromGalleryPicked: rt.raw("imageFromGalleryPicked") as string,
     youtube: rt("youtube"),
     youtubeShort: rt("youtubeShort"),

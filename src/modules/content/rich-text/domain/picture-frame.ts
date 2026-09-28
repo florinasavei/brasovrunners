@@ -1,32 +1,16 @@
 import type { ImageCrop, ImageFocus } from "./schema";
 
 /**
- * The shapes a picture is drawn in, as fractions of the stored photograph (§454; the owner,
- * 2026-09-26, of a listing card whose portrait photograph stood twice as tall as its neighbours':
- * "this card looks different than the others… I need some predefined crops and sizes for aspect
- * ratios").
+ * Crop presets and the listing card's 16∶9 frame, as pure arithmetic (§454).
  *
- * Two things live here, both pure arithmetic so the editor, the renderer and the tests read one
- * rule:
- *
- * - **The presets.** Four fixed shapes the crop box (§241) and the upload bar offer — 16∶9, the
- *   card's own; 4∶3, a camera's; 1∶1, a square; 4∶5, Instagram's portrait — plus «Liber», the
- *   free rectangle §241 already drew. A preset is only a way of *drawing* the crop: what is stored
- *   is still the four fractions §241 stores, so the page, the card and every body written before
- *   read it unchanged.
- * - **The card's frame.** Every picture on a listing card is drawn in the same 16∶9 window, so a
- *   row of cards is one height whatever was uploaded. The window covers the part the organizer
- *   cropped (the whole photograph when nothing was) and sits as near as it can to the focal point
- *   the club picked — the middle of that part when nobody picked one.
- *
- * Everything is a fraction: `x`, `y`, `w`, `h` of the stored photograph, as the crop is. A pixel
- * ratio becomes a fraction ratio through the photograph's own size — `k` below — which is why
- * nothing here works for a picture whose size was never stored (§241's refusal, kept).
+ * A preset only draws the crop; what is stored is still §241's four fractions. The card frame is
+ * the largest 16∶9 window inside the crop, as near the focal point as it fits, so a row of cards
+ * is one height. All values are fractions of the stored photograph; pixel ratios convert through
+ * its intrinsic size (`k`), so nothing here works without one (§241).
  */
 
-/** The listing card's picture frame: wide, the shape of a phone held sideways and of a film. */
 export const CARD_FRAME_RATIO = 16 / 9;
-/** The same, as CSS writes it — exact, rather than a rounded decimal. */
+/** Exact, for CSS `aspect-ratio`. */
 export const CARD_FRAME_ASPECT = "16 / 9";
 
 export const CROP_PRESETS = ["free", "16:9", "4:3", "1:1", "4:5"] as const;
@@ -41,10 +25,10 @@ export const PRESET_RATIOS: Record<FixedPreset, number> = {
   "4:5": 4 / 5,
 };
 
-/** The photograph's own size in pixels, as the upload route recorded it. */
+/** Pixel size as the upload route recorded it. */
 export type Intrinsic = { width: number; height: number };
 
-/** Never smaller than a twentieth of the picture in either direction — the crop box's own floor. */
+/** The crop box's floor, per direction. */
 export const MIN_FRACTION = 0.05;
 
 const WHOLE: ImageCrop = { x: 0, y: 0, w: 1, h: 1 };
@@ -53,19 +37,12 @@ const clamp = (value: number, low: number, high: number) => Math.min(high, Math.
 const round = (value: number) => Math.round(value * 10_000) / 10_000;
 const rounded = (crop: ImageCrop): ImageCrop => ({ x: round(crop.x), y: round(crop.y), w: round(crop.w), h: round(crop.h) });
 
-/**
- * How many fractions of the height one fraction of the width is, for a rectangle of `ratio`:
- * a rectangle `w` wide (of the photograph's width) is `w · k` tall (of its height).
- */
+/** `k`: a rectangle of `ratio` that is `w` of the width is `w · k` of the height. */
 function heightPerWidth(ratio: number, intrinsic: Intrinsic): number {
   return intrinsic.width / (intrinsic.height * ratio);
 }
 
-/**
- * The largest rectangle of `ratio` inside `region`, centred as near `centre` as it can be while
- * staying inside it. This is `object-fit: cover` written as a crop: the frame keeps the whole of
- * one of the region's dimensions and cuts the other.
- */
+/** The largest `ratio` rectangle inside `region`, as near `centre` as fits (`object-fit: cover` as a crop). */
 function largestInside(region: ImageCrop, ratio: number, intrinsic: Intrinsic, centre: { x: number; y: number }): ImageCrop {
   const k = heightPerWidth(ratio, intrinsic);
   let w = region.w;
@@ -85,20 +62,15 @@ function largestInside(region: ImageCrop, ratio: number, intrinsic: Intrinsic, c
 const middleOf = (region: ImageCrop) => ({ x: region.x + region.w / 2, y: region.y + region.h / 2 });
 
 /**
- * The crop a preset draws: the largest rectangle of its shape in the photograph, centred on the
- * crop already drawn (so switching from 4∶3 to 16∶9 keeps the same subject) or on the middle of
- * the photograph. `null` — the whole picture — when the photograph already has that shape.
+ * Centred on the existing crop, so switching presets keeps the subject. `null` when the
+ * photograph already has that shape.
  */
 export function presetCrop(preset: FixedPreset, intrinsic: Intrinsic, around: ImageCrop | null = null): ImageCrop | null {
   const frame = rounded(largestInside(WHOLE, PRESET_RATIOS[preset], intrinsic, middleOf(around ?? WHOLE)));
   return frame.w >= 0.999 && frame.h >= 0.999 ? null : frame;
 }
 
-/**
- * Which preset a stored crop was drawn with, within a hundredth of its ratio — so the crop box
- * opens with the right button pressed and keeps that shape while the rectangle is moved. «Liber»
- * for no crop and for any other shape.
- */
+/** The preset whose ratio is within 1% of the crop's; «Liber» otherwise. */
 export function presetOf(crop: ImageCrop | null, intrinsic: Intrinsic): CropPreset {
   if (!crop) return "free";
   const ratio = (crop.w * intrinsic.width) / (crop.h * intrinsic.height);
@@ -109,11 +81,7 @@ export function presetOf(crop: ImageCrop | null, intrinsic: Intrinsic): CropPres
   return "free";
 }
 
-/**
- * A rectangle dragged with a preset's shape held: from where the drag began, as far towards the
- * pointer as the larger of the two movements says, and never past the photograph's edge in the
- * direction of the drag.
- */
+/** A drag with the shape held: sized by the larger movement, clipped at the photograph's edge. */
 export function drawLocked(
   from: { x: number; y: number },
   to: { x: number; y: number },
@@ -135,10 +103,7 @@ export function drawLocked(
   };
 }
 
-/**
- * `Shift` with an arrow, with a preset's shape held: the width grows or shrinks by `dw` and the
- * height follows it, from the same top-left corner, inside the photograph and above the floor.
- */
+/** `Shift`+arrow with the shape held: resize from the top-left corner, within the floor and the edge. */
 export function resizeLocked(crop: ImageCrop, dw: number, ratio: number, intrinsic: Intrinsic): ImageCrop {
   const k = heightPerWidth(ratio, intrinsic);
   const floor = Math.max(MIN_FRACTION, MIN_FRACTION / k);
@@ -147,18 +112,11 @@ export function resizeLocked(crop: ImageCrop, dw: number, ratio: number, intrins
   return rounded({ x: crop.x, y: crop.y, w, h: w * k });
 }
 
-/**
- * The point the card's frame is centred on: the club's own, or the middle of what was cropped.
- */
 export function focalPoint(crop: ImageCrop | null, focus: ImageFocus | null): { x: number; y: number } {
   return focus ?? middleOf(crop ?? WHOLE);
 }
 
-/**
- * The part of the photograph a listing card shows: the largest 16∶9 rectangle inside the crop
- * (the whole photograph when there is none), as near the focal point as it can sit. A crop drawn
- * with the 16∶9 preset is its own frame, exactly.
- */
+/** The card's window; a crop drawn with the 16∶9 preset is its own frame. */
 export function frameCrop(
   crop: ImageCrop | null,
   focus: ImageFocus | null,

@@ -95,63 +95,33 @@ import ImageCropBox, { type ImageCropLabels } from "./ImageCropBox";
 import { cardFrameGeometry, cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 
-/** Floating-UI's placement for the table's bar: above the table, created once. */
+/** Created once: a new identity re-registers the bubble menu's plugin. */
 const TABLE_BAR_OPTIONS = { placement: "top" } as const;
 
 /**
- * The two floating bars, above the sticky toolbar (§361, §363). Tiptap appends a bar to the
- * writing area and positions it with no stacking order of its own, so the toolbar's `zIndex: 2`
- * painted over it: a table at the top of the body had its bar — every table verb — hidden behind
- * the toolbar it sat under, and a word selected on the first lines had the bar over it drawn
- * *under* the toolbar, which the owner saw as "three empty buttons" (2026-09-24: "I can't see
- * these buttons in the rich text editor"): the bottoms of the three buttons below the toolbar,
- * their glyphs behind it.
+ * The floating bars sit above the sticky toolbar's `zIndex: 2` (§361, §363).
  *
- * **On the `Paper` we render, never on `BubbleMenu`'s `style`.** §361 passed `{ zIndex: 3 }` as the
- * menu's `style` prop, and it worked under `next dev` and nowhere else. Tiptap 3.31 copies `style`
- * and the `data-*`/`aria-*` props onto the menu's element in a helper whose loop is a
- * `new Set([...])` annotated `@__PURE__` with `.forEach(…)` called on it; the production minifier
- * takes the annotation for the whole call, finds its result unused and deletes it — the built
- * chunk has no trace of the style code at all. So nothing passed to `BubbleMenu` beyond the plugin's own props (`editor`,
- * `pluginKey`, `shouldShow`, `options`) exists in production, and a unit test keeps it that way.
- *
- * The menu's element has `z-index: auto` and `opacity: 1` while shown, so it makes no stacking
- * context of its own: a positioned `Paper` inside it is stacked with the toolbar's, and 3 is one
- * above it — far below MUI's app bar, tooltips and popovers.
+ * Set on our `Paper`, never via `BubbleMenu`'s `style`: Tiptap 3.31 copies `style`/`data-*`/
+ * `aria-*` in a `@__PURE__`-annotated call the production minifier deletes, so only the plugin's
+ * own props (`editor`, `pluginKey`, `shouldShow`, `options`) survive; a unit test enforces it. The
+ * menu element makes no stacking context, so 3 stacks with the toolbar, below MUI's overlays.
  */
 const FLOATING_BAR_SX = { position: "relative", zIndex: 3 } as const;
 
 /**
- * The writing area's own box: a generous minimum, because a page body that looks like a one-line
- * field invites a one-line page. One object for the two places that draw it — Tiptap's `.tiptap`
- * and the stand-in shown until Tiptap has mounted — so the two are always the same height.
- *
- * **Why the stand-in** (found by CI on BR-V1.80, not by anything that batch changed). Tiptap
- * builds its editor only in the browser, after hydration (`immediatelyRender: false`, below), and
- * until then the writing area was an empty `div`, zero pixels tall. The moment it mounted, it
- * grew to this box and pushed everything under it down — 272 pixels on `/admin/emails`, where
- * "Salvează textul" and "Înlocuiește cu câmpurile" stand under each message's editor. A press in
- * that first second landed on the gap the button had just left and did nothing: no request, no
- * answer, the page as it was. With the stand-in the area has its height from the first paint, and
- * the stand-in goes in the same render that brings Tiptap's element in, so nothing below moves.
+ * The writing area's box, shared by `.tiptap` and the stand-in drawn until Tiptap mounts after
+ * hydration, so the layout does not jump on mount and a press never lands on a moved button.
  */
 const WRITING_AREA_BOX = { minHeight: 240, p: 2 } as const;
 
-/**
- * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
- * the text should resemble microsoft word!"). They were the toolbar's first glyphs; since §361
- * every button wears one, from the same family.
- */
+/** Word's glyphs for the three alignments (§274). */
 const ALIGN_ICON = {
   left: FormatAlignLeftIcon,
   center: FormatAlignCenterIcon,
   right: FormatAlignRightIcon,
 } as const;
 
-/**
- * A picture's or a film's place in the column, drawn beside the words (§521: a glyph on every
- * button): the whole width as justified text, a side as that side's alignment.
- */
+/** A picture's or film's placement as an alignment glyph (§521). */
 const PLACEMENT_ICON = {
   block: FormatAlignJustifyIcon,
   left: FormatAlignLeftIcon,
@@ -159,33 +129,12 @@ const PLACEMENT_ICON = {
 } as const;
 
 /**
- * The editor an organizer writes a page in: what they see is what the page will show.
+ * The WYSIWYG editor for editorial bodies. Only `/admin` imports it, so Tiptap never reaches a
+ * public page (`AGENTS.md` §14.1, §1.5).
  *
- * ## Why this is the one client island in the editorial forms
- *
- * Text formatting is a live thing — you select a word and press bold — and there is no way to do
- * it on the server. Everything around it stays a Server Component (`AGENTS.md` §14.1), and
- * because only `/admin` imports this file, Next never sends Tiptap to a visitor reading an event
- * page. That matters: the editor and ProseMirror together are larger than the whole public site,
- * and the public pages are what every visitor pays for (§1.5).
- *
- * ## How it reaches the server
- *
- * A hidden input holds `JSON.stringify(doc)` and is updated on every keystroke, so the
- * surrounding `<form>` and its Server Action are unchanged — the field is still one string named
- * by the caller, exactly as the textarea was. If this island fails to load, the hidden input
- * still carries the body it was given, so a save writes the text back unchanged rather than
- * blanking somebody's page.
- *
- * ## The toolbar wears Material glyphs (§361)
- *
- * It had words and characters on it — "B", "•—", "⊞", "🔗", "↶", "Imagine" — because the picture
- * emoji rendered as a broken box on the owner's machine (2026-09-18), and a character is whatever
- * the reader's font makes of it. A Material glyph is an SVG: the same picture on every machine,
- * at one size, in one colour. The backoffice already loads `@mui/icons-material` for its buttons
- * (§318), so it costs no dependency. Every control is a `ToolbarButton`, which says its full name
- * as its accessible name and as a tooltip; "H2" and "H3" stay words, because a heading level is
- * read faster as its name than as any picture.
+ * A hidden input posts `JSON.stringify(doc)`, so the form and its Server Action are unchanged;
+ * if the island fails to load, it still carries the original body and a save changes nothing.
+ * Toolbar controls are `ToolbarButton`s with Material glyphs (§361).
  */
 function RichTextEditorIsland({
   name,
@@ -197,41 +146,23 @@ function RichTextEditorIsland({
   pictureScope,
   labels,
 }: {
-  /** The form field the JSON is posted as — the same name the textarea used. */
+  /** The form field the JSON is posted as. */
   name: string;
-  /** Whatever is stored today: a document, an old-shape body, or nothing. */
+  /** A document, an old-shape body, or nothing. */
   initialBody: unknown;
   label: string;
-  /**
-   * What this body belongs to, for the accessible name alone — a language, usually. The editorial
-   * forms show one editor per language under a heading that names it, so a sighted reader knows
-   * which is which; without this, somebody tabbing through hears "Text" twice and has no way to
-   * tell them apart.
-   */
+  /** For the accessible name only, usually the language, so twin editors are distinguishable. */
   accessibleSuffix?: string;
   /**
-   * Which halves of the toolbar this body may use (`DECISIONS.md` §270).
-   *
-   * An email's words are written in this same editor, and a mail client can draw neither a
-   * picture the reader's client has not blocked, nor a film, nor a table narrow enough for a
-   * phone — `notifications/domain/email-rich-text.ts` argues each. The server refuses those
-   * nodes there whatever arrives, so this is not the guard; it is what keeps the toolbar from
-   * offering a button whose result the save would reject. Absent means the whole toolbar, which
-   * is what every editorial form wants.
+   * Toolbar halves this body may use (§270): emails have no media or tables
+   * (`email-rich-text.ts`). Not the guard, which is the server; it hides buttons a save would reject.
    */
   features?: { media?: boolean; tables?: boolean };
-  /**
-   * The body is an event's short description, whose pictures every listing card draws in one
-   * 16∶9 frame (§454): the picture's panel then shows that frame and offers the card's centre.
-   */
+  /** An event's short description: the picture panel shows the card's 16∶9 frame (§454). */
   cardPictures?: boolean;
-  /**
-   * The event, album or page this text belongs to, when it is stored already (§485): every
-   * «Din galerie» in it then opens on «Acest eveniment» (resp. album, page) — the pictures that
-   * place already uses. Plain data, never an element: a Server Component hands it over.
-   */
+  /** The stored owner of this text, so «Din galerie» opens on its pictures (§485). Plain data (§370). */
   pictureScope?: PickerScope;
-  /** Translated control names. Passed in, because a client island cannot read the catalogue. */
+  /** Translated control names; a client island cannot read the catalogue. */
   labels: {
     bold: string;
     italic: string;
@@ -240,7 +171,7 @@ function RichTextEditorIsland({
     bulletList: string;
     orderedList: string;
     quote: string;
-    /** Where a paragraph or a heading sits in the column (§213): the full name, and the letter. */
+    /** §213. */
     align: Record<BlockAlignment, string>;
     alignShort: Record<BlockAlignment, string>;
     table: string;
@@ -249,9 +180,9 @@ function RichTextEditorIsland({
     tableDeleteRow: string;
     tableDeleteColumn: string;
     tableDelete: string;
-    /** §263: how the table is drawn, where its text sits, and whether it has a header row. */
+    /** §263. */
     tableBorders: Record<TableBorders, string>;
-    /** §271: the two colours, each named by the state it is in. */
+    /** §271; named by the current state. */
     tableBorderColour: Record<TableBorderColour, string>;
     tableHeaderFill: Record<TableHeaderFill, string>;
     tableValign: string;
@@ -261,9 +192,9 @@ function RichTextEditorIsland({
     linkApply: string;
     linkRemove: string;
     linkCancel: string;
-    /** §273: how much has been written, with its `{count}` placeholder. */
+    /** §273; `{count}` placeholder. */
     words: string;
-    /** §271: the pop-up that shows the body as the page will draw it. */
+    /** §271. */
     preview: string;
     previewShort: string;
     previewClose: string;
@@ -272,67 +203,54 @@ function RichTextEditorIsland({
     image: string;
     imageUploading: string;
     imageFailed: string;
-    /** The choice beside the upload and what the picture became (§414). */
+    /** §414. */
     imageQuality: ImageQualityLabels;
     imageChoose: string;
     imageChosen: ChosenFactsLabels;
-    /** With `{width}` and `{height}`: the selected picture's stored size (§437). */
+    /** `{width}`, `{height}` placeholders (§437). */
     imagePixels: string;
     imageStored: StoredFactsLabels;
     imageAlt: string;
     imageAltHelp: string;
     imageCaption: string;
     imageSize: string;
-    /** Where the picture sits: a band across the column, or floated with the text beside it. */
     imageAlign: string;
     imageAlignBlock: string;
     imageAlignLeft: string;
     imageAlignRight: string;
     imageAlignHelp: string;
-    /** The crop box (§241): its name, how to use it, "the whole picture", and where it is. */
+    /** §241. */
     imageCrop: string;
     imageCropHelp: string;
     imageCropReset: string;
     imageCropPosition: string;
-    /**
-     * The shapes, the card's centre and its preview (§454), in the crop box's own shape; the
-     * upload bar's shape choice (`imageUploadShapeHelp`) reuses the shapes' names.
-     */
+    /** §454; the upload bar reuses the shapes' names. */
     imageShapes: Omit<ImageCropLabels, "title" | "help" | "reset" | "position">;
     imageUploadShapeHelp: string;
-    /** After the stored facts, the shape the upload went in with (§454); raw, `{shape}` substituted here. */
+    /** §454; `{shape}` substituted here. */
     imageUploadCropped: string;
     imageRemove: string;
     imageDone: string;
-    /** The ✕ on the picture's panel, and the panel's own heading (§258). */
+    /** §258. */
     imageClose: string;
     imagePanel: string;
-    /**
-     * The nag under the editor, one picture and several. Two strings rather than a function:
-     * props cross the server boundary, and the client island substitutes the count itself.
-     */
+    /** Two strings, not a function: props cross the server boundary. */
     imageNoAltOne: string;
     imageNoAltMany: string;
     imageFromGallery: string;
-    /**
-     * The words the three media buttons wore until §361, like `alignShort` and `previewShort`
-     * before them: every button wears a glyph now and says its long label. Not drawn; kept while
-     * the catalogue still has them.
-     */
+    /** Not drawn since §361; kept while the catalogue has them. */
     imageShort: string;
     imageFromGalleryShort: string;
     imageGalleryLoading: string;
     imageGalleryEmpty: string;
     imageGalleryClose: string;
-    /** The picker's name box, and its "nothing matches" (§485). */
+    /** §485. */
     imageGalleryFilter: string;
     imageGalleryNoMatch: string;
-    /** The picker's «Folosită în» chips (§485). */
     imageGallerySourceLegend: string;
     imageGallerySources: Record<Exclude<PictureSource, "here">, string>;
-    /** The picker's first chip for the place the text belongs to (§485), one word per kind. */
     imageGalleryHere: Record<PickerScopeKind, string>;
-    /** What a picture from the gallery became; raw, `{name}`, `{width}`, `{height}` substituted here (§485). */
+    /** `{name}`, `{width}`, `{height}` substituted here (§485). */
     imageFromGalleryPicked: string;
     youtube: string;
     youtubeShort: string;
@@ -341,12 +259,12 @@ function RichTextEditorIsland({
     youtubeInvalid: string;
     youtubeCaption: string;
     youtubeRemove: string;
-    /** The club's own poster choice (§403, "să pot pune thumbnail"): pick, replace, or fall back to YouTube's own. */
+    /** §403. */
     youtubePoster: string;
     youtubePosterUploading: string;
     youtubePosterFailed: string;
     youtubePosterUseYoutube: string;
-    /** A poster from the gallery, and its crop (§485): the button, the box's name, how, "the middle", and before a poster exists. */
+    /** §485. */
     youtubePosterFromGallery: string;
     youtubePosterCrop: string;
     youtubePosterCropHelp: string;
@@ -357,26 +275,23 @@ function RichTextEditorIsland({
   const initialDoc = readRichText(initialBody);
   const [value, setValue] = useState(() => JSON.stringify(initialDoc));
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
-  /** The YouTube panel: closed, or the address being typed, with a refusal when it is not one. */
+  /** `null` while the YouTube panel is closed. */
   const [youtubeDraft, setYoutubeDraft] = useState<string | null>(null);
   const [youtubeInvalid, setYoutubeInvalid] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
   const [posterState, setPosterState] = useState<"idle" | "uploading" | "failed">("idle");
   const posterFileInputRef = useRef<HTMLInputElement>(null);
   /**
-   * The picture bar (§414): the toolbar's picture control opens it rather than the file dialog,
-   * so the quality is chosen beside the upload; the file input itself stays mounted, and a paste
-   * or a drop uses the same remembered choice. `stored` is what the last upload became.
+   * The picture bar (§414) puts the quality choice beside the upload; paste and drop use the same
+   * remembered choice. `stored` is what the last upload became.
    */
   const [imageBarOpen, setImageBarOpen] = useState(false);
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
-  /** The shape the last upload went in with, said after its stored facts (§454). */
   const [storedShape, setStoredShape] = useState<CropPreset>("free");
   /**
-   * The shape a new upload starts in (§454): «Liber», the whole photograph as before, or one of
-   * the presets, stored as §241's crop and changeable afterwards in the picture's panel. Mirrored
-   * in a ref, because a paste or a drop calls the `insertImage` Tiptap kept from the first render.
+   * A new upload's shape (§454), stored as §241's crop. Mirrored in a ref: paste and drop call the
+   * `insertImage` Tiptap captured on the first render.
    */
   const [uploadShape, setUploadShapeState] = useState<CropPreset>("free");
   const uploadShapeRef = useRef<CropPreset>("free");
@@ -384,41 +299,23 @@ function RichTextEditorIsland({
     uploadShapeRef.current = next;
     setUploadShapeState(next);
   };
-  /**
-   * The picture going up, or the last one (§437; the owner: "să știu ce încarc"): the chosen
-   * file's pixels and weight from the moment it is decoded, and what the browser sent of it.
-   */
+  /** The file going up, or the last one: its pixels and weight, and what was sent (§437). */
   const [chosen, setChosen] = useState<ChosenFacts | null>(null);
-  /**
-   * What the last poster became (§414), with its address: shown in a film's panel only while that
-   * film's poster is this one, so another film selected afterwards never shows these facts.
-   */
+  /** Keyed by address, so another selected film never shows these facts (§414). */
   const [posterStored, setPosterStored] = useState<{ src: string; facts: StoredFacts } | null>(null);
-  /** The poster going up, or the last one (§437), the same facts as a picture's. */
   const [posterChosen, setPosterChosen] = useState<ChosenFacts | null>(null);
-  /**
-   * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
-   * taken once when the dialog opens rather than read on every keystroke, and `null` while it is
-   * shut so nothing is rendered twice behind it.
-   */
+  /** The preview's markup, taken once on open (§271); `null` while shut. */
   const [preview, setPreview] = useState<string | null>(null);
   /**
-   * The two props the table's bar is given, kept stable between renders.
-   *
-   * `BubbleMenu` registers a ProseMirror plugin from its props, and a new function or object
-   * identity on every render re-registers it — which dispatches a transaction, which renders
-   * again. That is React error #185, "maximum update depth exceeded", and it took the whole
-   * editor island down the moment it mounted: no toolbar, no language tabs, and an e2e suite
-   * that failed on "no tab named English" rather than on anything about tables.
+   * Stable across renders: `BubbleMenu` re-registers its plugin on a new prop identity, which
+   * dispatches a transaction and re-renders — React error #185, an infinite loop.
    */
   const showOverTable = useCallback(({ editor: current }: { editor: Editor }) => current.isActive("table"), []);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
   /*
-    The hidden value is written by React, which fires no event a form can hear, so every write is
-    announced with a bubbling `input` from the hidden box itself (§350): the event editor's tab
-    marks ("· incomplet") and the "missing for publication" list re-read the form on `input`.
-    Not on mount — nothing was typed yet.
+    React's writes to the hidden value fire no event, so each is announced as a bubbling `input`
+    for the form's listeners (§350). Not on mount.
   */
   const hiddenValue = useRef<HTMLInputElement>(null);
   const announced = useRef(value);
@@ -428,45 +325,29 @@ function RichTextEditorIsland({
     hiddenValue.current?.dispatchEvent(new Event("input", { bubbles: true }));
   }, [value]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  /** «Din galerie» for a picture in the text: open or shut; the picker asks for the list itself. */
   const [galleryOpen, setGalleryOpen] = useState(false);
-  /**
-   * The picture last taken from the gallery, said like an upload's stored facts (§485): its name,
-   * its size and the shape it went in with — so a choice from the gallery is told what it became
-   * exactly as an upload is.
-   */
+  /** The picture last taken from the gallery, reported like an upload (§485). */
   const [picked, setPicked] = useState<{ name: string; width: number; height: number; shape: CropPreset } | null>(null);
-  /** «Din galerie» for the selected film's poster (§485). */
   const [posterGalleryOpen, setPosterGalleryOpen] = useState(false);
   /**
-   * A poster's own size, measured in this browser when the node does not carry it — YouTube's
-   * thumbnail stored by a save (§403) and a club poster from before §414. The crop box needs the
-   * photograph's ratio; the master's natural size is the stored size, so measuring is exact.
+   * A poster's size measured in the browser when the node lacks it (YouTube's thumbnail, pre-§414
+   * posters); the crop box needs the ratio, and the master's natural size is exact.
    */
   const [measuredPoster, setMeasuredPoster] = useState<{ src: string; width: number; height: number } | null>(null);
   /**
-   * The picture's panel, closed by hand (§258; the owner: "ar trebui să pot anula sau închide
-   * pur și simplu").
-   *
-   * Selecting a picture is how the panel opens, and a selected picture is a state Tiptap owns —
-   * so "closed" cannot be the absence of a selection without also deselecting the picture the
-   * organizer is looking at. It is a dismissal instead, remembered against the position of the
-   * node it was dismissed for, so pressing the same picture again opens it and moving to
-   * another picture opens that one's.
+   * The picture panel closed by hand (§258): a dismissal remembered by node position, since the
+   * selection that opens it is Tiptap's and must not be cleared.
    */
   const [dismissedAt, setDismissedAt] = useState<number | null>(null);
 
   const editor = useEditor({
-    // Next renders this component's tree on the server first; Tiptap needs a DOM. Without this,
-    // the editor is built during SSR and hydration mismatches.
+    // Tiptap needs a DOM; building during SSR would mismatch on hydration.
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         /**
-         * The allowlist of `AGENTS.md` §11.3, stated as the things StarterKit ships that it does
-         * not include. Leaving one on would let an organizer write something the server then
-         * refuses to save — a failure they would meet at the end of a long edit, with no
-         * explanation. Adding one of these is a rule change, in both places at once.
+         * `AGENTS.md` §11.3's allowlist: StarterKit nodes the server would refuse. Enabling one is
+         * a rule change here and in `schema.ts`.
          */
         codeBlock: false,
         code: false,
@@ -476,47 +357,19 @@ function RichTextEditorIsland({
         hardBreak: false,
         heading: { levels: [2, 3] },
         link: {
-          // A click inside the editor should move the caret, not navigate away from the form.
           openOnClick: false,
           protocols: ["http", "https", "mailto"],
         },
       }),
-      /**
-       * Pictures between paragraphs (§72, §73): a block, never inline, with the stored
-       * variant's size carried so the page reserves the space. The address comes from the
-       * upload route alone — there is no "paste a URL" path, and `parseHTML` is empty so a
-       * pasted `<img>` from another site is dropped here rather than refused at save time.
-       * The size is a share of the column, rendered here as the same inline width the page
-       * uses; the caption shows on hover and in the picture's own panel.
-       */
-      /**
-       * A YouTube film (§110): an atom block holding the video id and a caption. Shown in the
-       * editor as the film's own thumbnail with a play mark — enough to see what is there
-       * without loading a player inside a form. `parseHTML` is empty: a pasted embed from
-       * elsewhere is dropped here, and the only way in is the address panel below, which keeps
-       * nothing but the id.
-       */
       YoutubeNode,
-      /*
-        Left, centred or right, on a paragraph or a heading (§213). A global attribute rather
-        than a dependency: `@tiptap/extension-text-align` is this object with a command around
-        it, and the standing instruction is to prefer nothing over a package (§1.5). The
-        alignment is written as it will render, so the editor shows the page's own arrangement.
-      */
       BlockAlign,
-      /*
-        Tables (§196). `TableKit` is the table node with its row, cell and header in one import.
-
-        `resizable` was false, because a column width is a pixel measurement made on somebody's
-        laptop and this site's hard target is a 320-pixel column. §271 turns it on: what dragging
-        an edge says is "this column is about twice that one", the stored pixels are read as a
-        proportion, and the page lays the table out from a `<colgroup>` of percentages. The
-        handle is drawn by `EDITOR_TABLE_SX` — ProseMirror renders an element with no styles of
-        its own, so without a rule the gesture is invisible.
-      */
+      // Tables (§196); resized widths are read as proportions (§271).
       TableKit.configure({ table: { resizable: true } }),
-      /* The borders and the vertical alignment of a table (§263), above. */
       TableStyle,
+      /*
+        Pictures (§72, §73): blocks only; `parseHTML` is empty so a pasted foreign `<img>` is
+        dropped here rather than refused at save. The address comes only from the upload route.
+      */
       Image.configure({ inline: false, allowBase64: false }).extend({
         parseHTML() {
           return [];
@@ -535,12 +388,7 @@ function RichTextEditorIsland({
               default: 100,
               renderHTML: (attrs) => ({ style: `width: ${attrs.widthPercent ?? 100}%` }),
             },
-            /**
-             * Where the picture sits in the column: a band across it, or floated left or right
-             * with the text wrapping around. Shown here as the page will show it on a wide
-             * screen — `mergeAttributes` merges this `style` with the width's, declaration by
-             * declaration — so what the organizer sees is what the page does (§73's rule, kept).
-             */
+            /** As the page draws it on a wide screen; `mergeAttributes` merges this `style` with the width's. */
             align: {
               default: "block",
               renderHTML: (attrs) =>
@@ -550,25 +398,15 @@ function RichTextEditorIsland({
                     }
                   : {},
             },
-            /**
-             * The part of the photograph the page will show (§241). It renders no attribute of
-             * its own — four fractions are not an HTML attribute — because the node's own
-             * `renderHTML` below turns them into the window the page uses.
-             */
+            /** §241; drawn by the node's `renderHTML` below, not as an attribute. */
             crop: { default: null, renderHTML: () => ({}) },
-            /** The listing card's centre (§454): drawn by the card alone, never by this editor. */
+            /** §454; drawn only by the listing card. */
             focus: { default: null, renderHTML: () => ({}) },
           };
         },
         /**
-         * What the editor draws, and the reason the crop is visible while it is being chosen:
-         * the same window `RichText` renders, from the same geometry (`image-layout.ts`).
-         *
-         * Without a crop this returns exactly what Tiptap's own Image returns — one `<img>` —
-         * so a body that has none is edited in markup identical to yesterday's. With one, the
-         * block's size and side stay on the window (that is the `style` the width and align
-         * attributes produced) and the photograph inside it is magnified and pulled to the
-         * chosen corner.
+         * The same crop window `RichText` renders (`image-layout.ts`); without a crop, Tiptap's
+         * plain `<img>`. Size and side stay on the window.
          */
         renderHTML({ node, HTMLAttributes }) {
           const merged = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes) as Record<string, string>;
@@ -587,17 +425,16 @@ function RichTextEditorIsland({
       }),
     ],
     content: initialDoc.content?.length ? initialDoc : EMPTY_DOC,
-    // Re-rendered by `useEditorState` below, on what the toolbar reads — not on every transaction.
+    // `useEditorState` below re-renders on what the island draws instead.
     shouldRerenderOnTransaction: false,
     onUpdate: ({ editor: current }) => {
-      // One document per keystroke, read once (§371): `getJSON` walks the whole text.
+      // `getJSON` walks the whole text: read once per update (§371).
       const doc = current.getJSON();
       setValue(JSON.stringify(doc));
       setMissingAlt(countMissingAlt(doc));
       setWords(countWords(current.getText()));
     },
     editorProps: {
-      // A picture pasted or dropped as a *file* goes through the same upload as the control.
       handlePaste: (_view, event) => {
         const file = Array.from(event.clipboardData?.files ?? []).find((f) => f.type.startsWith("image/"));
         if (!file) return false;
@@ -615,28 +452,16 @@ function RichTextEditorIsland({
         "aria-label": accessibleSuffix ? `${label} — ${accessibleSuffix}` : label,
         role: "textbox",
         "aria-multiline": "true",
-        // The field this writes into. Two editors on one form are otherwise indistinguishable
-        // from the outside, which makes a test assert against whichever happens to be first.
+        // Distinguishes two editors on one form.
         "data-field": name,
       },
     },
   });
 
-  /*
-    **What re-renders the island (§371): the document, the selection and the marks to come — the
-    three things the toolbar, the picture's panel and the table's bar are drawn from
-    (`editor-look.ts`).** `shouldRerenderOnTransaction` re-rendered it on every transaction, and
-    Tiptap dispatches one for a focus and one for a blur that change none of them: leaving the box
-    to press "Salvează" re-rendered the whole toolbar — four hundred components — inside the press,
-    a tenth of a second on a phone, for a screen that did not change.
-  */
+  // Re-render only when `editorLook` changes (§371): focus and blur transactions redrew the toolbar.
   useEditorState({ editor, selector: ({ editor: current }) => editorLook(current?.state), equalityFn: sameEditorLook });
 
-  /*
-    «Tradu din română» (§464): a translated document arrives as a window event naming this box,
-    and replaces the document the way a paste of the whole would — through the editor, so the
-    hidden value, the word count and the tab marks follow as they do for typing. Nothing is saved.
-  */
+  // A translation fill (§464) goes through the editor, so the hidden value and counts follow.
   useEffect(() => {
     if (!editor) return;
     const onFill = (event: Event) => {
@@ -648,10 +473,7 @@ function RichTextEditorIsland({
     return () => window.removeEventListener(RICH_TEXT_FILL_EVENT, onFill);
   }, [editor, name]);
 
-  /**
-   * Shrink in the browser, post to `/api/admin/media`, insert the answer as an image node.
-   * One file at a time; a failure is a sentence under the toolbar, never a lost body.
-   */
+  /** Shrink, upload, insert as an image node; a failure is a sentence, never a lost body. */
   const insertImage = async (file: File) => {
     setImageState("uploading");
     setImageBarOpen(false);
@@ -661,12 +483,10 @@ function RichTextEditorIsland({
     try {
       const uploaded = await uploadPicture(file, setChosen);
       setStored(uploaded.stored ?? null);
-      // The shape chosen in the bar, as a crop of the stored photograph (§454); «Liber» is none.
       const shape = uploadShapeRef.current;
       const crop = shape === "free" ? null : presetCrop(shape, { width: uploaded.width, height: uploaded.height });
       setStoredShape(crop ? shape : "free");
-      // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
-      // and an empty alt is what the nag under the editor counts.
+      // Empty alt, never the file name; the missing-alt nag counts it.
       editor
         ?.chain()
         .focus()
@@ -679,15 +499,8 @@ function RichTextEditorIsland({
   };
 
   /**
-   * The club's own poster for the selected film (§403, "să pot pune thumbnail"): the same
-   * shrink-and-upload `insertImage` uses, written to the *selected* youtube node's `poster`
-   * rather than inserted as a picture of its own. `posterSource: "club"` is what keeps
-   * `attachYoutubePosters` from ever replacing it with YouTube's own thumbnail on a later save.
-   *
-   * At the chosen quality, like every other upload, with the same facts under it (§414, found by
-   * re-review: the poster went up at «Medie» whatever was chosen, and said nothing). Its size
-   * goes on the node beside its address, `posterWidth` / `posterHeight`, because the page draws
-   * the poster from its ladder (`RichTextVideo`) and a `srcset` needs the master's width.
+   * Uploads the selected film's poster (§403, §414). `posterSource: "club"` stops
+   * `attachYoutubePosters` replacing it; the size feeds the page's `srcset`.
    */
   const pickPoster = async (file: File) => {
     setPosterState("uploading");
@@ -698,7 +511,7 @@ function RichTextEditorIsland({
       editor
         ?.chain()
         .focus()
-        // A new poster starts uncropped: the rectangle drawn over the old one means nothing on this one.
+        // A new poster starts uncropped.
         .updateAttributes("youtube", { poster: uploaded.src, posterSource: "club", posterWidth: uploaded.width, posterHeight: uploaded.height, posterCrop: null })
         .run();
       setPosterStored(uploaded.stored ? { src: uploaded.src, facts: uploaded.stored } : null);
@@ -708,12 +521,7 @@ function RichTextEditorIsland({
     }
   };
 
-  /**
-   * A poster from the gallery (§485): any picture the club stored — an upload, or a film's own
-   * automatic poster — written to the selected film exactly as an uploaded poster is, `club`
-   * included, so the automatic fetch never replaces it. Uncropped, like an upload; the crop box
-   * under it is where the club picks the part the box shows.
-   */
+  /** A gallery picture as the poster (§485), treated exactly like an uploaded one. */
   const pickPosterFromGallery = (picture: StoredPicture) => {
     editor
       ?.chain()
@@ -726,24 +534,15 @@ function RichTextEditorIsland({
     setPosterGalleryOpen(false);
   };
 
-  /**
-   * The selected picture, when one is: ProseMirror marks the node's own element, and that
-   * element is what the panel anchors to. Read on every render — the selection is state the
-   * editor owns, and `useEditorState` above re-renders on every change of it.
-   */
+  /** The element ProseMirror marks as selected, which the panel anchors to. */
   const selectedImage = editor?.isActive("image")
     ? (editor.view.dom.querySelector("img.ProseMirror-selectednode, .rt-crop.ProseMirror-selectednode") as HTMLElement | null)
     : null;
-  /*
-    The table's own two choices (§263), read where the toolbar is built. `getAttributes` on a
-    caret outside a table answers `{}`, so the fallbacks are the defaults and the controls are
-    only rendered inside one anyway.
-  */
+  // §263, §271. Outside a table `getAttributes` answers `{}`, so these fall back to the defaults.
   const tableBorders: TableBorders =
     (editor?.getAttributes("table").borders as TableBorders | null) ?? "all";
   const tableValign: TableValign =
     (editor?.getAttributes("table").valign as TableValign | null) ?? "top";
-  /** The two colours (§271), read the same way and defaulting the same way. */
   const tableBorderColour: TableBorderColour =
     (editor?.getAttributes("table").borderColour as TableBorderColour | null) ?? "default";
   const tableHeaderFill: TableHeaderFill =
@@ -754,7 +553,6 @@ function RichTextEditorIsland({
   const imageNodeAt = selectedImage ? (editor?.state.selection.from ?? null) : null;
   const imagePanelOpen = Boolean(selectedImage) && imageNodeAt !== dismissedAt;
   const closeImagePanel = () => setDismissedAt(imageNodeAt);
-  /** The selected film, for its own panel (§110): caption it, or remove it. */
   const selectedVideo = editor?.isActive("youtube")
     ? (editor.view.dom.querySelector(".rt-youtube.ProseMirror-selectednode") as HTMLElement | null)
     : null;
@@ -762,12 +560,7 @@ function RichTextEditorIsland({
   // Without `.focus()`: the panel's own field keeps the caret, and the node stays selected.
   const setImageAttr = (attrs: Record<string, unknown>) => editor?.chain().updateAttributes("image", attrs).run();
 
-  /**
-   * "Choose one already uploaded" (§73): the same list the pictures page shows, asked for by the
-   * picker when it opens and never before. Since §485 it goes in exactly as an upload does — in
-   * the shape chosen in the bar, as a crop of the stored photograph (§454), with the same crop box
-   * in its panel afterwards — and the line under the toolbar says what it became.
-   */
+  /** A stored picture, inserted exactly as an upload is, in the bar's shape (§73, §454, §485). */
   const insertStored = (picture: StoredPicture) => {
     const shape = uploadShapeRef.current;
     const crop = shape === "free" ? null : presetCrop(shape, { width: picture.width, height: picture.height });
@@ -783,10 +576,7 @@ function RichTextEditorIsland({
     setGalleryOpen(false);
   };
 
-  /*
-    The selected film's poster size, when its node does not say (§485): measured once per address
-    from the stored master itself, which is what the crop box needs and what the page will draw.
-  */
+  // Measured once per address when the node lacks a size (§485).
   const selectedPosterSrc = typeof videoAttrs?.poster === "string" && videoAttrs.poster ? videoAttrs.poster : null;
   const selectedPosterSized = typeof videoAttrs?.posterWidth === "number" && typeof videoAttrs?.posterHeight === "number";
   useEffect(() => {
@@ -810,7 +600,7 @@ function RichTextEditorIsland({
         ? { width: measuredPoster.width, height: measuredPoster.height }
         : null;
 
-  /** The address becomes an id, or a refusal under the field; nothing else is kept (§110). */
+  /** Only the id is kept (§110). */
   const applyYoutube = () => {
     const id = youtubeVideoId((youtubeDraft ?? "").trim());
     if (!id) {
@@ -822,13 +612,8 @@ function RichTextEditorIsland({
   };
 
   /**
-   * Align every paragraph and heading the selection touches, in one transaction.
-   *
-   * One `command` holding both `updateAttributes` calls rather than a chain of them: a chain
-   * stops at the first step that answers false, and a selection inside a paragraph has no
-   * heading to update — so the chain would align the paragraph and then, on a selection that
-   * spans both, silently do half the job depending on which came first. `left` is written as
-   * `null`, because the default is the absence of the attribute, not a third value.
+   * One `command`, not a chain: a chain stops at the first false step (no heading to update), and
+   * a mixed selection would be half aligned. `left` is stored as absence (`null`).
    */
   const setAlign = (align: BlockAlignment) =>
     editor
@@ -858,15 +643,8 @@ function RichTextEditorIsland({
       </Typography>
 
       {/*
-        The preview (§271). What it shows is the editor's own markup under the page's rules and
-        **without the editing aids** — no dashed cell guides, no resize handle, no selection
-        shading — because the question a preview answers is "which of these lines will the reader
-        see". `PREVIEW_CONTENT_SX` is the same description `.tiptap` uses, keyed under the
-        dialog instead, so the two cannot drift (§263's rule, applied to a third surface).
-
-        The markup is this browser's own editor state, never anything fetched or stored: it is
-        the document the author is looking at, rendered back to them. What is *saved* still goes
-        through the server's allowlist, which is the boundary that matters (`domain/schema.ts`).
+        The preview (§271): the page's rules without the editing aids. The HTML is this browser's
+        own editor state, never fetched or stored; saves still pass the server's allowlist.
       */}
       <Dialog open={preview !== null} onClose={() => setPreview(null)} fullWidth maxWidth="md" scroll="paper">
         <DialogTitle>{labels.preview}</DialogTitle>
@@ -880,7 +658,7 @@ function RichTextEditorIsland({
         </DialogActions>
       </Dialog>
 
-      {/* The value the form posts. Present and correct even before the editor has loaded. */}
+      {/* Correct even before the editor has loaded. */}
       <input ref={hiddenValue} type="hidden" name={name} value={value} readOnly />
 
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
@@ -889,16 +667,7 @@ function RichTextEditorIsland({
           spacing={0.5}
           role="toolbar"
           aria-label={accessibleSuffix ? `${label} — ${accessibleSuffix}` : label}
-          /*
-            Sticky (§273). A description runs to several screens and the toolbar sat at the top
-            of it: to make a word bold two screens down, the writer scrolled up, lost the
-            selection, and scrolled back. Every editor people already know keeps its toolbar in
-            view, and the alternative — a floating bar — is the bubble menu below, which is for
-            the selection rather than for the whole body.
-
-            `top: 0` against the page's own scroller, and a background of its own: without one
-            the text scrolls visibly under a transparent bar.
-          */
+          // Sticky (§273), with its own background so text does not show through.
           sx={{
             flexWrap: "wrap",
             gap: 0.5,
@@ -955,8 +724,6 @@ function RichTextEditorIsland({
             active={editor?.isActive("blockquote") ?? false}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           />
-          {/* Left, centred, right (§213), in Word's three glyphs (§274). The full name is the
-              accessible name and the tooltip. */}
           {BLOCK_ALIGNMENTS.map((align) => (
             <ToolbarButton
               key={align}
@@ -966,11 +733,7 @@ function RichTextEditorIsland({
               onClick={() => setAlign(align)}
             />
           ))}
-          {/*
-            One button inserts a table; the rest of the verbs appear only while the caret is
-            inside one (§196). A toolbar that showed "add a row" to somebody writing a paragraph
-            is four dead controls.
-          */}
+          {/* The other table verbs are on the bar over the table (§196, §274). */}
           {features.tables !== false && (
           <ToolbarButton
             label={labels.table}
@@ -991,12 +754,7 @@ function RichTextEditorIsland({
               )
             }
           />
-          {/*
-            A picture from the phone or the computer is the picture with a plus; one already
-            uploaded is the library of them; a film is the play mark. They were words (2026-09-18)
-            because the picture emoji rendered as a broken box; a Material glyph cannot (§361).
-            The play mark and not YouTube's own logo: Material's brand glyphs were refused (§90).
-          */}
+          {/* The play mark, not YouTube's logo: brand glyphs were refused (§90). */}
           {features.media !== false && (
           <>
           <ToolbarButton
@@ -1045,8 +803,6 @@ function RichTextEditorIsland({
             active={false}
             onClick={() => editor?.chain().focus().redo().run()}
           />
-          {/* Last, and an eye (§274): it is about the whole body rather than about the caret,
-              so it belongs at the end of the row and not among the verbs that change text. */}
           <ToolbarButton
             label={labels.preview}
             icon={VisibilityIcon}
@@ -1091,7 +847,6 @@ function RichTextEditorIsland({
           </Stack>
         )}
 
-        {/* The picture bar (§414): the quality beside the upload, then the file. */}
         {imageBarOpen && (
           <Stack
             direction="row"
@@ -1099,7 +854,6 @@ function RichTextEditorIsland({
             data-testid="rich-text-image-bar"
           >
             <ImageQualityChoice value={imageQuality} onChange={setImageQuality} labels={labels.imageQuality} />
-            {/* The shape it goes in with (§454): a crop of the stored photograph, never its pixels. */}
             <UploadShapeChoice
               value={uploadShape}
               onChange={setUploadShape}
@@ -1117,7 +871,6 @@ function RichTextEditorIsland({
           </Stack>
         )}
 
-        {/* What is going up (§437): the chosen file's pixels and weight, and what is sent of it. */}
         {chosen && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, pt: 0.5 }} aria-live="polite" data-testid="rich-text-image-chosen">
             {describeChosenImage(chosen, labels.imageChosen, document.documentElement.lang || "ro")}
@@ -1131,12 +884,10 @@ function RichTextEditorIsland({
         {imageState === "idle" && stored && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-stored">
             {describeStoredImage(stored, labels.imageStored, document.documentElement.lang || "ro")}
-            {/* The file is the whole photograph; the shape is a crop over it, and the line says so (§454). */}
             {storedShape !== "free" && ` · ${labels.imageUploadCropped.replace("{shape}", labels.imageShapes.preset[storedShape])}`}
           </Typography>
         )}
 
-        {/* A picture taken from the gallery (§485), said like an upload: its size and its shape. */}
         {imageState === "idle" && picked && (
           <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 0.5 }} aria-live="polite" data-testid="rich-text-image-picked">
             {labels.imageFromGalleryPicked
@@ -1147,11 +898,7 @@ function RichTextEditorIsland({
           </Typography>
         )}
 
-        {/*
-          «Din galerie» (§73, §485): the shape first — the same choice, the same state, as the
-          upload bar's — then every stored picture. A film's automatic poster is left out: a
-          picture in a text carries an uploaded picture's address (§72).
-        */}
+        {/* No automatic film posters here: a picture must be an uploaded one (§72, §485). */}
         {galleryOpen && (
           <Box data-testid="rich-text-gallery">
             <Box sx={{ px: 1, pt: 1 }}>
@@ -1195,7 +942,7 @@ function RichTextEditorIsland({
               onChange={(event) => setLinkDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
-                  // Inside a form: Enter here must apply the link, not submit the page.
+                  // Enter must not submit the surrounding form.
                   event.preventDefault();
                   applyLink();
                 }
@@ -1224,27 +971,14 @@ function RichTextEditorIsland({
 
         <Box
           sx={{
-            // The writing area itself (`WRITING_AREA_BOX`).
             "& .tiptap": {
               ...WRITING_AREA_BOX,
               outline: "none",
               "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: -2 },
-              // A floated picture at the end of the body would otherwise hang out of the
-              // writing area and over whatever the form puts beneath it.
+              // Contains a trailing float.
               "&::after": { content: '""', display: "table", clear: "both" },
             },
-            /*
-              A picture is never wider than the column, here as on the page; the selected one is
-              outlined so the panel beside it is plainly about *this* picture.
-
-              **And every picture shows its own edges while writing** (§274; the owner: "the
-              pictures inside the editor should have borders so I know how they wrap"). A
-              photograph with a pale sky in it ends somewhere the eye cannot find, and where it
-              ends is exactly the question when it is floated and the paragraphs run beside it.
-              A dashed hairline says where the box is, the same one a table's cells wear (§271),
-              and it is an `outline` so it takes no layout and the text does not shift by a pixel
-              when a picture is resized or moved to the other side.
-            */
+            // Dashed edges show where each picture ends (§274); an `outline`, so it costs no layout.
             "& .tiptap img": {
               display: "block",
               maxWidth: "100%",
@@ -1256,26 +990,17 @@ function RichTextEditorIsland({
               outline: (theme: { palette: { divider: string } }) => `1px dashed ${theme.palette.divider}`,
               outlineOffset: 2,
             },
-            // The selection wins over the guide: three pixels of the club's blue, not a hairline.
             "& .tiptap img.ProseMirror-selectednode": {
               outline: 3,
               outlineColor: "primary.main",
               outlineOffset: 2,
             },
-            /*
-              A cropped picture (§241) is the same block with a window around it: the window
-              carries the width and the side, so it takes the margins the picture had, and it is
-              what ProseMirror marks as selected — the outline and the panel's anchor both move
-              to it. The photograph inside carries its own inline rules and overrides the ones
-              above, which are what an uncropped picture still gets.
-            */
+            // A cropped picture's window (§241) takes the margins and the selection outline.
             "& .tiptap .rt-crop": {
               mx: "auto",
               my: 2,
               cursor: "pointer",
               borderRadius: 1,
-              // The same edges an uncropped picture shows (§274) — a cropped one is the picture
-              // whose boundary is hardest to guess, so it is the one that needs them most.
               outline: (theme: { palette: { divider: string } }) => `1px dashed ${theme.palette.divider}`,
               outlineOffset: 2,
             },
@@ -1295,22 +1020,11 @@ function RichTextEditorIsland({
               fontStyle: "italic",
             },
             "& .tiptap ul, & .tiptap ol": { pl: 3 },
-            /* A table is drawn here exactly as the page draws it (§263). The editor had no table
-               rules at all: a grid on the page was an unstyled table in the form, which is the
-               whole of "tabelele arată strange". */
+            // Tables drawn exactly as the page draws them (§263).
             ...EDITOR_TABLE_SX,
           }}
         >
-          {/*
-            The table's own verbs, over the table (§274; the owner: "the tables icons should
-            appear above the table, I have way too many icons now!").
-
-            Six controls that only ever apply inside a table were sitting in a toolbar that is
-            read while writing a paragraph — the row had grown to twenty buttons. A bubble menu
-            keyed on the caret being inside a table puts them where the table is and takes them
-            off the toolbar entirely; `shouldShow` is what decides, so the bar is absent the
-            moment the caret leaves.
-          */}
+          {/* The table's verbs, over the table while the caret is inside one (§274). */}
           {editor && features.tables !== false && (
             <BubbleMenu
               editor={editor}
@@ -1323,8 +1037,6 @@ function RichTextEditorIsland({
                 data-floating-bar="table"
                 sx={{ ...FLOATING_BAR_SX, display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}
               >
-              {/* A row is the rows glyph and a column the columns glyph; the corner says whether
-                  the press adds one or deletes the one the caret is in (§361). */}
               <ToolbarButton
                 label={labels.tableAddRow}
                 icon={TableRowsIcon}
@@ -1353,12 +1065,7 @@ function RichTextEditorIsland({
                 active={false}
                 onClick={() => editor?.chain().focus().deleteColumn().run()}
               />
-              {/*
-                How the table is drawn (§263; the owner: "la tabele ar trebui să pot alege border
-                and stuff, ca să pot folosi tabelele și ca și layout"). One control that cycles
-                grid → rows → none, showing what it is on rather than what it will do, because
-                three separate buttons for one three-valued choice is three buttons.
-              */}
+              {/* Cycles all → rows → none, showing the current state (§263). */}
               <ToolbarButton
                 label={labels.tableBorders[tableBorders]}
                 icon={TABLE_BORDER_ICON[tableBorders]}
@@ -1373,8 +1080,7 @@ function RichTextEditorIsland({
                     .run()
                 }
               />
-              {/* Top or middle. Horizontal centring is the paragraph's own alignment, three
-                  buttons to the left — a cell holds paragraphs, so it is already there. */}
+              {/* Horizontal centring is the paragraph's own alignment. */}
               <ToolbarButton
                 label={labels.tableValign}
                 icon={VerticalAlignCenterIcon}
@@ -1387,13 +1093,7 @@ function RichTextEditorIsland({
                     .run()
                 }
               />
-              {/*
-                The two colours (§271), each a control that cycles its own closed set and is
-                named after the state it is in — the same shape the borders control has, for the
-                same reason: a named control can say "lines: blue" and a colour picker cannot say
-                anything at all. The glyphs are the ones every office suite draws for the two:
-                the pen over a line for the lines' colour, the bucket for a fill.
-              */}
+              {/* Each cycles its closed set, named after the current state (§271). */}
               <ToolbarButton
                 label={labels.tableBorderColour[tableBorderColour]}
                 icon={BorderColorIcon}
@@ -1412,16 +1112,12 @@ function RichTextEditorIsland({
                   editor?.chain().focus().updateAttributes("table", { headerFill: next === "default" ? null : next }).run();
                 }}
               />
-              {/* A layout table has no header row, and a table that grew one by accident has no
-                  other way to lose it. Tiptap's own command: it converts the row in place. The
-                  glyph is a box whose top band is filled — a table with its header row. */}
               <ToolbarButton
                 label={labels.tableHeaderRow}
                 icon={WebAssetIcon}
                 active={editor?.isActive("tableHeader") ?? false}
                 onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
               />
-              {/* The bin, as deleting wears everywhere in the backoffice (§318). */}
               <ToolbarButton
                 label={labels.tableDelete}
                 icon={DeleteIcon}
@@ -1433,15 +1129,7 @@ function RichTextEditorIsland({
             </BubbleMenu>
           )}
 
-          {/*
-            The bar over a selection (§273; the owner: "I want that rich text editor to be almost
-            as good as word … or at least close to WordPress, [the Administrator] is used to WordPress").
-
-            Three verbs, because a bubble menu is for what somebody does *to the words they just
-            selected* — make them bold, make them a link — and everything structural stays in the
-            toolbar above, which is sticky now. `@tiptap/react/menus` is a subpath of a package
-            already installed: no new dependency (§1.5).
-          */}
+          {/* The selection bar (§273): inline verbs only; structure stays in the toolbar. */}
           {editor && (
             <BubbleMenu editor={editor}>
               <Paper elevation={3} data-floating-bar="selection" sx={{ ...FLOATING_BAR_SX, display: "flex", gap: 0.5, p: 0.5 }}>
@@ -1468,48 +1156,27 @@ function RichTextEditorIsland({
               </Paper>
             </BubbleMenu>
           )}
-          {/* The writing area's height before Tiptap has mounted (`WRITING_AREA_BOX`): nothing to read, nothing to focus. */}
           {!editor && <Box aria-hidden sx={WRITING_AREA_BOX} data-testid="rich-text-reserved" />}
           <EditorContent editor={editor} />
         </Box>
       </Box>
 
-      {/*
-        How much is written (§273), which every editor people know shows and which answers the
-        question an organizer actually has about a description: is this two sentences or two
-        screens. Counted from the editor's own text rather than from a package.
-      */}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="rich-text-words">
         {labels.words.replace("{count}", String(words))}
       </Typography>
 
-      {/* Dimmed, not a block: a picture without alt text is a page that still publishes, and
-          a sentence somebody reads before they save. */}
+      {/* A notice, not a block: a picture without alt text still publishes. */}
       {missingAlt > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="rich-text-missing-alt">
           {missingAlt === 1 ? labels.imageNoAltOne : labels.imageNoAltMany.replace("{count}", String(missingAlt))}
         </Typography>
       )}
 
-      {/*
-        The picture's own panel: click a picture, say what it shows, caption it, choose its
-        size, or remove it. Anchored to the picture and kept inside the viewport; it closes
-        when the selection moves anywhere else, and "Done" moves it past the picture.
-      */}
       <Popper
         open={imagePanelOpen}
         anchorEl={selectedImage}
         placement="bottom-start"
-        /*
-          It floated over the header and the navigation on a wide screen (§258; the owner:
-          "editorul de poze rămâne floating în dreapta random").
-
-          Three modifiers and nothing clever: `flip` puts it above the picture when there is no
-          room below, `preventOverflow` keeps it inside the writing area's own box rather than
-          the viewport — so a picture floated to the right edge no longer pushes the panel over
-          the page's chrome — and `offset` leaves eight pixels so it reads as attached to the
-          picture and not as part of it.
-        */
+        // Kept inside the writing area's clipping box, not the viewport, so it never covers the page chrome (§258).
         modifiers={[
           { name: "offset", options: { offset: [0, 8] } },
           { name: "flip", options: { padding: 8 } },
@@ -1521,8 +1188,6 @@ function RichTextEditorIsland({
           elevation={6}
           sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto" }}
           data-testid="rich-text-image-panel"
-          // Escape closes it, like every dialog on the platform — and the keyboard is how
-          // somebody who has just been nudging the crop box with the arrows will reach for it.
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.stopPropagation();
@@ -1531,20 +1196,17 @@ function RichTextEditorIsland({
           }}
         >
           <Stack spacing={1.5}>
-            {/* A heading and a way out. The panel used to offer "Gata", which moves the caret
-                past the picture — useful, and not the same thing as "close this". */}
             <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {labels.imagePanel}
               </Typography>
-              {/* A glyph-only button says its word on hover and focus, like the toolbar's (§361). */}
               <Tooltip title={labels.imageClose}>
                 <Button size="small" color="inherit" onClick={closeImagePanel} aria-label={labels.imageClose} sx={{ minWidth: 44 }}>
                   <CloseIcon aria-hidden fontSize="small" />
                 </Button>
               </Tooltip>
             </Stack>
-            {/* The picture's own size, whenever it is selected (§437): what was stored, not what the page draws. */}
+            {/* The stored size, not the drawn one (§437). */}
             {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (
               <Typography variant="body2" color="text.secondary" data-testid="rich-text-image-pixels">
                 {labels.imagePixels.replace("{width}", String(imageAttrs.width)).replace("{height}", String(imageAttrs.height))}
@@ -1602,13 +1264,7 @@ function RichTextEditorIsland({
                 value={String(imageAttrs?.align ?? "block")}
                 onChange={(_event, align: string | null) => {
                   if (align === null) return;
-                  /**
-                   * Floating a picture that takes the whole column leaves no column to write in,
-                   * so the two controls move together: choosing left or right from a full-width
-                   * picture halves it, in the same transaction, and the four widths stay there
-                   * to change afterwards. The alternative — letting the organizer press "left"
-                   * and see nothing happen — is the worse of the two surprises.
-                   */
+                  // A full-width float leaves no column to write in: choosing a side halves it.
                   const widthPercent =
                     align !== "block" && Number(imageAttrs?.widthPercent ?? 100) === 100
                       ? 50
@@ -1631,15 +1287,10 @@ function RichTextEditorIsland({
                 {labels.imageAlignHelp}
               </Typography>
             </Box>
-            {/*
-              The crop (§241). Only for a picture whose own size is stored: the window the page
-              draws is shaped from the photograph's ratio, and a picture from before the upload
-              route recorded it would be cropped here and shown whole everywhere else — a lie in
-              the one place this feature exists to stop telling.
-            */}
+            {/* Only with a stored size: without it the page cannot shape the window (§241). */}
             {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (
               <ImageCropBox
-                // One box per picture: the shape it holds is that picture's, not the last one's.
+                // One box per picture, so the held shape is never the last picture's.
                 key={`${String(imageAttrs.src ?? "")}@${imageNodeAt ?? ""}`}
                 src={String(imageAttrs.src ?? "")}
                 intrinsic={{ width: imageAttrs.width, height: imageAttrs.height }}
@@ -1676,7 +1327,7 @@ function RichTextEditorIsland({
         </Paper>
       </Popper>
 
-      {/* The film's own panel (§110): a caption, how wide it is, which side (§266), or remove it. */}
+      {/* The film's panel (§110, §266). */}
       <Popper
         open={Boolean(selectedVideo)}
         anchorEl={selectedVideo}
@@ -1697,10 +1348,6 @@ function RichTextEditorIsland({
               }}
               slotProps={{ htmlInput: { maxLength: 500 } }}
             />
-            {/*
-              The same two questions a picture answers, and the same answers (§266): the film is
-              a figure in the text now, so "how big" and "where" are the organizer's to set.
-            */}
             <Box>
               <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
                 {labels.imageSize}
@@ -1731,8 +1378,7 @@ function RichTextEditorIsland({
                 value={String(videoAttrs?.align ?? "block")}
                 onChange={(_event, align: string | null) => {
                   if (align === null) return;
-                  // A film floated at the full width leaves no column to write in, so choosing a
-                  // side halves it in the same transaction — the picture's own rule.
+                  // The picture's rule: choosing a side halves a full-width film.
                   const widthPercent =
                     align !== "block" && Number(videoAttrs?.widthPercent ?? 100) === 100 ? 50 : undefined;
                   editor
@@ -1755,12 +1401,9 @@ function RichTextEditorIsland({
               </ToggleButtonGroup>
             </Box>
             {/*
-              The club's own poster (§403, "să pot pune thumbnail"): the same upload `insertImage`
-              uses, written to this node's `poster` rather than inserted as a picture of its own.
-              "Use YouTube's" only shows once a club poster is picked — it clears `posterSource`
-              so `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
+              The club's poster (§403, §414). "Use YouTube's" clears `posterSource`, so
+              `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
             */}
-            {/* The same choice as every upload (§414), remembered with it: a poster with lettering wants «Mare». */}
             <ImageQualityChoice
               value={imageQuality}
               onChange={setImageQuality}
@@ -1777,7 +1420,6 @@ function RichTextEditorIsland({
               >
                 {posterState === "uploading" ? labels.youtubePosterUploading : labels.youtubePoster}
               </Button>
-              {/* A picture the club already stored, as the poster (§485): the gallery every other picture comes from. */}
               <Button
                 size="small"
                 startIcon={<PhotoLibraryIcon fontSize="small" />}
@@ -1810,7 +1452,7 @@ function RichTextEditorIsland({
               <GalleryPicker
                 onPick={pickPosterFromGallery}
                 onClose={() => setPosterGalleryOpen(false)}
-                // Every stored picture, a film's automatic poster included: it is a poster already.
+                // Automatic film posters included.
                 withPosters
                 labels={{
                   loading: labels.imageGalleryLoading,
@@ -1827,12 +1469,8 @@ function RichTextEditorIsland({
               />
             )}
             {/*
-              The poster's crop (§485): the part the film's 16∶9 box shows, over whichever poster
-              the film has — the club's, one from the gallery, or YouTube's own once a save stored
-              it. Every shape a picture takes is offered, 16∶9 — the box's own, so the rectangle is
-              exactly what the page draws — pressed first; another shape shows its largest 16∶9 part,
-              the listing card's arithmetic (`cardFrameGeometry`). Without a crop the box shows the
-              middle, which is what the rectangle starts on.
+              The poster's crop (§485), 16∶9 first; other shapes show their largest 16∶9 part
+              (`cardFrameGeometry`). Uncropped, the box shows the middle.
             */}
             {selectedPosterSrc && posterIntrinsic ? (
               <ImageCropBox
@@ -1910,42 +1548,10 @@ function RichTextEditorIsland({
 }
 
 /**
- * Alignment for a paragraph or a heading (§213; the owner: "centrare / aliniere elemente în rich
- * text editor").
- *
- * ## Why this is eleven lines rather than a package
- *
- * `@tiptap/extension-text-align` is exactly one `addGlobalAttributes` block and a command that
- * calls `updateAttributes`. The standing instruction is to prefer nothing over a dependency
- * (`AGENTS.md` §1.5), and §196 took the table package precisely because *that* one is selection
- * and transform work nobody should re-implement. This is an attribute.
- *
- * ## The two fences
- *
- * **`parseHTML` clamps to the closed set.** A paste from Word or Google Docs carries
- * `text-align: justify`, `start`, `end` or an inherited value, and anything but the three words
- * the schema knows would be a body the server then refuses to save — a refusal the organizer
- * meets at the end of a long edit. Anything unrecognised reads as no alignment at all.
- *
- * **`renderHTML` says nothing for the default**, so the editor's own DOM carries a
- * `text-align` declaration only where somebody chose one — the same discipline the renderer
- * keeps, and the reason the two look identical.
- */
-/**
- * The table's own two choices (§263): how it is drawn, and where in a cell the text sits.
- *
- * A global attribute on the `table` node rather than a fork of `TableKit`, which is the same
- * shape `BlockAlign` uses for a paragraph's alignment and needs no package: `addGlobalAttributes`
- * is the documented way to put an attribute on a node another extension owns.
- *
- * **The default emits nothing.** `all` and `top` are what every table already looks like, so a
- * table nobody has restyled writes no attribute at all — its stored JSON stays byte-identical
- * and the editor's own default CSS applies. Only a choice away from the default reaches the DOM,
- * as `data-borders` / `data-valign`, which is what `table-layout.ts` keys the editor's rules on.
- *
- * `parseHTML` validates rather than trusting: the value comes back from the editor's own DOM on
- * an undo or a copy inside the document, and an unknown string there would become an attribute
- * the server's allowlist then refuses — a save that fails for a reason nobody can see.
+ * A table's borders, vertical alignment and colours (§263, §271) as global attributes on
+ * `table`. Defaults emit nothing, so unstyled tables keep byte-identical JSON; choices reach the
+ * DOM as the `data-*` attributes `table-layout.ts` keys on. `parseHTML` accepts only the closed
+ * sets, so a copy or undo cannot produce a value the server refuses.
  */
 const TableStyle = Extension.create({
   name: "tableStyle",
@@ -1972,8 +1578,6 @@ const TableStyle = Extension.create({
             parseHTML: (element: HTMLElement) =>
               element.getAttribute("data-valign") === "middle" ? "middle" : null,
           },
-          /* The line colour and the header's fill (§271), the same shape as the two above:
-             only a choice away from the default reaches the DOM or the stored JSON. */
           borderColour: {
             default: null,
             renderHTML: (attrs: Record<string, unknown>) =>
@@ -2006,11 +1610,7 @@ const TableStyle = Extension.create({
   },
 });
 
-/**
- * What the borders control shows: the state it is in, in Material's three border glyphs (§361)
- * — the solid grid, the rows alone, and the dotted grid of a table that draws no lines. They
- * replaced the box-drawing characters "▦", "▤" and "▢", which a font draws as it likes.
- */
+/** The borders control shows its current state (§361). */
 const TABLE_BORDER_ICON: Record<TableBorders, ComponentType<SvgIconProps>> = {
   all: BorderAllIcon,
   rows: BorderHorizontalIcon,
@@ -2019,6 +1619,11 @@ const TABLE_BORDER_ICON: Record<TableBorders, ComponentType<SvgIconProps>> = {
 
 const ALIGNABLE = ["paragraph", "heading"] as const;
 
+/**
+ * Paragraph and heading alignment (§213) as a global attribute, not
+ * `@tiptap/extension-text-align` (§1.5). `parseHTML` clamps pastes (`justify`, `start`…) to the
+ * closed set so the server never refuses them; the default emits nothing, as on the page.
+ */
 const BlockAlign = Extension.create({
   name: "blockAlign",
   addGlobalAttributes() {
@@ -2044,16 +1649,9 @@ const BlockAlign = Extension.create({
 });
 
 /**
- * The YouTube block (§110, §266): an atom, so the caret never enters it; selectable, so a click
- * opens its panel; shown as the film's thumbnail from YouTube's image host with a play mark and
- * the caption beneath — the editor is the backoffice, where a request to Google for a thumbnail
- * is the organizer's own doing, unlike a reader's page, which fetches nothing until pressed.
- *
- * **It carries the picture's two attributes since §266** — how much of the column it takes and
- * which side it sits on — and draws itself at that size here, because a film the organizer sized
- * to half the column and saw full-width in the editor is the editor lying. The width is written
- * as an inline style for the same reason the crop's is: ProseMirror owns this DOM, so there is no
- * `sx` to give it.
+ * The YouTube block (§110, §266): an atom showing the thumbnail with a play mark, sized and sided
+ * like a picture via inline styles. Fetching from YouTube's image host is fine here: the
+ * backoffice, unlike a reader's page. `parseHTML` is empty: only the address panel inserts one.
  */
 const YoutubeNode = Node.create({
   name: "youtube",
@@ -2065,17 +1663,13 @@ const YoutubeNode = Node.create({
     return {
       videoId: { default: null },
       caption: { default: "" },
-      // The defaults emit nothing: a film stored before §266 keeps its exact JSON.
       widthPercent: { default: 100 },
       align: { default: "block" },
-      // The club's own poster (§403) — declared here so it survives the editor's round trip
-      // (`getJSON`/`setContent`) instead of being dropped as an attribute Tiptap never heard of.
+      // Declared so the poster attributes survive `getJSON`/`setContent` (§403, §414, §485).
       poster: { default: null },
       posterSource: { default: null },
-      // A club poster's size (§414), for the page's `srcset`; null for YouTube's own thumbnail.
       posterWidth: { default: null },
       posterHeight: { default: null },
-      // The part of the poster the box shows (§485), drawn here as the page draws it.
       posterCrop: { default: null },
     };
   },
@@ -2086,14 +1680,8 @@ const YoutubeNode = Node.create({
     const id = String(node.attrs.videoId ?? "");
     const percent = Number(node.attrs.widthPercent ?? 100);
     const align = String(node.attrs.align ?? "block");
-    // A club-chosen poster shows here too — an organizer who picked one should see it while
-    // placing the film, not YouTube's own thumbnail underneath it.
     const posterSrc = typeof node.attrs.poster === "string" && node.attrs.poster ? node.attrs.poster : `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-    /*
-      A cropped poster (§485) in the page's own 16∶9 window: the card frame's arithmetic, as
-      `RichTextVideo` draws it, written as the inline CSS this DOM accepts. Without a crop — or a
-      size to shape it from — the poster is drawn whole, as before.
-    */
+    // A cropped poster (§485) in the same 16∶9 window `RichTextVideo` draws; else whole.
     const framed =
       node.attrs.posterCrop && typeof node.attrs.poster === "string" && node.attrs.poster
         ? cardFrameGeometry({ crop: node.attrs.posterCrop as ImageCrop, width: node.attrs.posterWidth, height: node.attrs.posterHeight })
@@ -2105,10 +1693,7 @@ const YoutubeNode = Node.create({
           ["img", { src: posterSrc, alt: "", style: cropImageCss(framed.geometry) }],
         ]
       : ["img", { src: posterSrc, alt: "", style: "display:block;width:100%;border-radius:4px" }];
-    /*
-      The page's geometry, in the one form this DOM accepts. A floated film gets the gutter the
-      text wraps against on its inner side, which is what `imageFigureSx` does with `mr`/`ml`.
-    */
+    // `imageFigureSx`'s geometry as inline CSS.
     const box = [
       "position:relative",
       `width:${percent}%`,
@@ -2125,11 +1710,7 @@ const YoutubeNode = Node.create({
   },
 });
 
-/**
- * The shape a new picture goes in with (§454) — an upload's, and since §485 a picture taken from
- * the gallery too, one state for both so the choice made in one is the choice in the other. A
- * crop of the stored photograph, never its pixels. 44 pixels tall: a thumb presses these.
- */
+/** A new picture's shape, uploads and gallery alike (§454, §485); 44 px for a thumb. */
 function UploadShapeChoice({
   value,
   onChange,
@@ -2169,31 +1750,20 @@ function UploadShapeChoice({
   );
 }
 
-/** How many pictures the document holds with nothing for a screen reader to say. */
 function countMissingAlt(doc: unknown): number {
   const content = (doc as { content?: { type?: string; attrs?: { alt?: unknown } }[] })?.content ?? [];
   return content.filter((node) => node.type === "image" && !String(node.attrs?.alt ?? "").trim()).length;
 }
 
-/**
- * Words in a piece of text: runs of anything that is not a space.
- *
- * Deliberately not Tiptap's `CharacterCount`, which is another extension to install and
- * configure for a number this line computes exactly as well (§1.5: prefer nothing).
- */
+/** Not Tiptap's `CharacterCount`: one line does it (§1.5). */
 function countWords(text: string): number {
   const trimmed = text.trim();
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
 }
 
 /**
- * After a refused submit the body comes back as it was typed (`DECISIONS.md` §315): the
- * recalled JSON is the document, keyed on the answer so Tiptap re-mounts from it rather than
- * keep what it held before the press. With nothing recalled this is the island as it was.
- *
- * `override` is a document that arrived after the refusal and wins over the recalled one — a
- * translation filled into a fold that was still shut (`LazyRichTextEditor`, §464). Without it the
- * fold would open on the recalled English, and its hidden value would post that old text.
+ * After a refused submit the island re-mounts from the posted body (§315). `override`, a
+ * translation filled while the fold was shut (§464), wins over the recalled one.
  */
 export default function RichTextEditor({
   override,

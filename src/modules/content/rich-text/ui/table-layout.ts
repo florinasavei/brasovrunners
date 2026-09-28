@@ -9,40 +9,14 @@ import {
 } from "../domain/schema";
 
 /**
- * How a table is drawn — on the page and in the editor, from one description (`DECISIONS.md`
- * §263).
- *
- * Separated from `RichText` for the reason `image-layout.ts` is: the interesting part is that
- * the editor and the page must agree. Until now they did not agree at all — the page drew every
- * table with a full grid and a shaded header, and the editor drew whatever the browser does with
- * an unstyled `<table>`, which is no lines anywhere. That is the whole of the owner's "tabelele
- * arată strange": an organizer set up a table against one drawing and published another.
- *
- * The three border choices are the club's three real cases:
- *
- * - `all` — a grid, which is what a table of cut-offs or waves wants, and what every table
- *   written before §263 keeps.
- * - `rows` — horizontal rules only. A price list reads better without vertical lines, and this
- *   is what most printed timetables do.
- * - `none` — nothing at all, which is what makes a table usable as a layout: two columns of text
- *   side by side on a standing page, with no lines announcing a table that isn't one.
- *
- * `valign` is `top` (as before) or `middle`, because a layout of two short paragraphs beside a
- * picture reads wrongly pinned to the top of a tall row.
- *
- * The header cell keeps its weight in every variant and loses its shading in `none`: a bold
- * first row is a heading, a shaded one is a table's chrome, and a layout wants the first without
- * the second. `scope` on the `<th>` is unaffected by any of this — the semantics of the table
- * are not a style choice (`AGENTS.md` §18.2).
+ * How a table is drawn, on the page, in the editor and in the preview, from one description so
+ * they agree (§263, §271). Borders: `all` (a grid; the default for older tables), `rows`
+ * (horizontal rules only), `none` (a layout table). `scope` on `<th>` is semantics, never style
+ * (`AGENTS.md` §18.2).
  */
 /**
- * The four line colours and the four header fills (§271), as palette names.
- *
- * Palette names rather than values, so each is one colour in the light scheme and the right
- * other colour after dark — `theme.ts` holds both, and `brand.ts` is the only file allowed a
- * hex value at all. A filled header carries its own ink with it: `primary` and `secondary` both
- * define a `contrastText`, and a blue header with the body's near-black text on it is the pair
- * `tests/unit/theme/brand.test.ts` exists to prevent.
+ * Palette names, not values, so dark mode follows (`brand.ts` alone holds hex values). A filled
+ * header carries its own `contrastText` ink (`tests/unit/theme/brand.test.ts`).
  */
 const BORDER_COLOUR: Record<TableBorderColour, string> = {
   default: "divider",
@@ -60,14 +34,11 @@ const HEADER_FILL: Record<TableHeaderFill, { backgroundColor?: string; color?: s
 
 export const TABLE_PADDING = { px: 1.5, py: 1 } as const;
 
-/** The `sx` for the `<table>` itself: the cell rules that the chosen borders imply. */
 export function tableSx(attrs: Parameters<typeof tableStyleOf>[0]) {
   const { borders, valign, borderColour, headerFill } = tableStyleOf(attrs);
   return {
     borderCollapse: "collapse",
-    // Never narrower than it needs to be, never forced wider than the column. A table whose
-    // columns were sized (§271) is laid out from its `<colgroup>` instead, which `fixed` is
-    // what makes the browser honour.
+    // A table with sized columns (§271) is laid out from its `<colgroup>` instead, under `fixed`.
     minWidth: "min(100%, 28rem)",
     "& td, & th": {
       ...TABLE_PADDING,
@@ -77,25 +48,14 @@ export function tableSx(attrs: Parameters<typeof tableStyleOf>[0]) {
     },
     "& th": {
       fontWeight: 700,
-      /*
-        A borderless table is a layout, and a layout wants a bold first row without a table's
-        chrome — so `none` borders keep the weight and drop the shading, as they have since
-        §263. An explicit fill overrides that: somebody who chose blue for a layout's header row
-        meant it.
-      */
+      // `none` borders keep the weight but drop the default shading (§263); an explicit fill wins.
       ...(headerFill === "default" && borders === "none" ? {} : HEADER_FILL[headerFill]),
     },
     "& p:last-of-type": { mb: 0 },
   } as const;
 }
 
-/**
- * The lines themselves, which is all that separates the three variants.
- *
- * `rows` is a bottom border per cell rather than a border on the row: `border-collapse` merges
- * adjacent cell borders, so this draws exactly one rule between two rows and one under the last
- * — the shape a timetable has — without a rule down either side.
- */
+/** `rows` is a bottom border per cell: under `border-collapse` that is one rule between rows, none at the sides. */
 function cellBorderSx(borders: TableStyle["borders"], colour: TableBorderColour) {
   const borderColor = BORDER_COLOUR[colour];
   if (borders === "none") return { border: 0 };
@@ -104,23 +64,8 @@ function cellBorderSx(borders: TableStyle["borders"], colour: TableBorderColour)
 }
 
 /**
- * The same three drawings, for the editor's writing area.
- *
- * The editor cannot take an `sx` per node — ProseMirror owns that DOM — so the table's choice
- * rides on a `data-borders` attribute the node writes, and these are the rules keyed on it. The
- * default is written as its own selector rather than as a bare `& .tiptap table` rule so that a
- * table with `data-borders="none"` needs no `!important` to undo it.
- *
- * `.selectedCell` is ProseMirror's own class for a cell inside a selection; without a rule a
- * borderless table gives no feedback at all about what a "delete column" is about to take.
- */
-/**
- * Every table rule, keyed under one ancestor selector (§271).
- *
- * Written once and asked for twice: the writing area keys them under `.tiptap`, and the preview
- * dialog under itself. The two must agree by construction rather than by somebody remembering to
- * change both — which is the whole of §263's reasoning, applied a second time now that there is
- * a third place a table is drawn.
+ * Every table rule under one ancestor selector, keyed on the `data-*` attributes the node writes
+ * (ProseMirror owns the DOM, so no per-node `sx`). Used by the writing area and the preview (§271).
  */
 function tableRulesUnder(scope: string): Record<string, object> {
   return {
@@ -129,7 +74,6 @@ function tableRulesUnder(scope: string): Record<string, object> {
       width: "100%",
       tableLayout: "auto",
       my: 2,
-      // The resize handle is positioned against the table.
       position: "relative",
     },
     [`& ${scope} table[data-borders='rows']`]: tableSx({ borders: "rows" }),
@@ -154,14 +98,7 @@ function tableRulesUnder(scope: string): Record<string, object> {
   };
 }
 
-/**
- * What the preview dialog draws (§271; the owner: "I also want a preview in a pop-up").
- *
- * The same rules as the writing area with the editing aids left out: no dashed cell guides, no
- * resize handle, no selection shading. That difference *is* the preview — the question it
- * answers is "which of these lines will the reader see", and a preview that kept the guides
- * could not answer it.
- */
+/** The preview dialog (§271): the writing area's rules without its editing aids. */
 export const PREVIEW_CONTENT_SX = {
   ...tableRulesUnder(""),
   "& img": { maxWidth: "100%", height: "auto" },
@@ -182,24 +119,14 @@ export const EDITOR_TABLE_SX = {
     position: "relative",
   },
   /*
-    **The writing area always shows where the cells are** (§271; the owner: "in the editor I
-    want lines visible for layout"). A table used as a layout draws nothing on the page, and a
-    table of rows draws no verticals — in both cases the writer was typing into an invisible
-    grid. A dashed hairline says "a cell edge is here, and it will not print".
-
-    `outline` rather than `border`, so the guide costs no layout and the cells do not move when
-    the lines are switched; the colour is read from the theme because `sx` maps palette names
-    for `borderColor` and not for an outline.
+    Dashed guides where the page draws no line (§271). `outline`, not `border`, so the guides cost
+    no layout; the colour comes from the theme because `sx` maps palette names for no outline.
   */
   "& .tiptap table[data-borders='none'] td, & .tiptap table[data-borders='none'] th, & .tiptap table[data-borders='rows'] td, & .tiptap table[data-borders='rows'] th": {
     outline: (theme: { palette: { divider: string } }) => `1px dashed ${theme.palette.divider}`,
     outlineOffset: -1,
   },
-  /*
-    The column-resize handle ProseMirror draws while a table is being sized (§271). It renders
-    nothing of its own, so without these two rules dragging a column edge is an invisible
-    gesture nobody discovers.
-  */
+  // ProseMirror's column-resize handle has no look of its own (§271).
   "& .tiptap .column-resize-handle": {
     position: "absolute",
     right: "-2px",

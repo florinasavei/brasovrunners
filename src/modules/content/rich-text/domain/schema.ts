@@ -1,49 +1,22 @@
 import { z } from "zod";
 
 /**
- * The editorial body, as stored: Tiptap/ProseMirror JSON restricted to the node and mark set
- * `AGENTS.md` §11.3 allows, and nothing else.
+ * The editorial body as stored: Tiptap/ProseMirror JSON restricted to the allowlist of
+ * `AGENTS.md` §11.3. The browser posts whatever it likes, so this module alone decides what a
+ * body may contain, and the renderer draws through the same set.
  *
- * ## Why a schema of our own rather than trusting the editor
- *
- * The editor runs in the club's browser, so what arrives at the server is whatever that browser
- * chose to post — a different build, a stale tab, or somebody typing into the network panel.
- * §11.3 is explicit: validate on the server, reject unknown nodes, marks and attributes, and
- * render through the same allowlist. This module is that allowlist, and it is the only thing
- * that decides what a body may contain.
- *
- * ## Why the output type is the canonical stored shape
- *
- * Each node's attributes are read with `z.object`, which **drops** keys it does not name. Tiptap
- * emits `target`, `rel` and `class` on a link; none of them survive parsing, so the stored
- * document carries an `href` and the renderer decides the rest (an external link gets its own
- * `rel`, every time, rather than trusting one that was stored years ago). Node *types* are a
- * different matter and are a discriminated union: an unknown type is refused, not stripped,
- * because dropping a node would silently delete something the club wrote.
- *
- * ## What is deliberately not here
- *
- * - **Nested lists.** A list item holds paragraphs. Nesting is one `z.lazy` away and nothing has
- *   asked for it; recursion costs legibility (§1.5 rule 2) and buys a sub-bullet.
- * - **Images.** §11.3 allows a media-library reference "if implemented", and there is no media
- *   library: no bucket, no upload route, and uploads are the one unguarded surface in §19.4.
- *   When that exists, an `image` node joins this union and the renderer grows one case.
- * - **Code, strike, underline, horizontal rules, hard breaks.** Tiptap's StarterKit ships them;
- *   §11.3 does not list them, so `RichTextEditor` switches them off and this schema would refuse
- *   them anyway. Adding one is a rule change, not a configuration change.
+ * Attributes are read with `z.object`, which drops unnamed keys (Tiptap's link `target`, `rel`,
+ * `class`); the renderer decides those. Unknown node types are refused, not stripped, so nothing
+ * the club wrote is silently deleted. Not allowed: nested lists (§1.5 rule 2); code, strike,
+ * underline, rules, hard breaks — adding one is a rule change.
  */
 
 /** `http(s)` and `mailto` for the outside world, a rooted path for this site, and nothing else. */
 const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
 
 /**
- * A link target that cannot become script execution.
- *
- * `javascript:alert(1)` is a valid URL whose protocol is `javascript:`, and an `href` is one of
- * the few places a string becomes code. Anything that parses as absolute must carry a protocol
- * from the set above; anything else is accepted only as a site-relative path, which cannot carry
- * a protocol at all. `//evil.example` is refused with it: it parses as protocol-relative and is
- * an off-site jump that does not look like one.
+ * A link target that cannot become script (`javascript:`): an absolute URL needs a safe protocol,
+ * anything else must be a rooted path. `//host` is refused as a disguised off-site jump.
  */
 function isSafeHref(value: string): boolean {
   if (value.startsWith("//")) return false;
@@ -71,32 +44,18 @@ const linkMark = z.object({
 
 const mark = z.discriminatedUnion("type", [boldMark, italicMark, linkMark]);
 
-/**
- * Text, with its marks. Empty strings are refused: ProseMirror does not produce them, and one
- * arriving means something built this document by hand.
- */
+/** Empty strings are refused: ProseMirror never produces them. */
 const textNode = z.object({
   type: z.literal("text"),
   text: z.string().min(1),
   marks: z.array(mark).optional(),
 });
 
-/** Inline content is text alone until a media library exists. */
 const inlineContent = z.array(textNode).optional();
 
 /**
- * Where a line of text sits in its column (`DECISIONS.md` §213; the owner: "centrare / aliniere
- * elemente în rich text editor").
- *
- * A closed set of three words, exactly as a picture's `align` is (§193) and its `widthPercent` is
- * a closed set of four numbers: the attribute names a rendering the renderer knows, never a CSS
- * value somebody typed. `justify` is **not** in it — justified text on a 320-pixel column is
- * rivers of white space, and this site's hard target is that column.
- *
- * **`attrs` is optional on the node, and that is what keeps every stored body byte-identical.**
- * A paragraph written before today parses to a paragraph with no `attrs` at all, not to one
- * carrying `align: "left"`, so the golden-string tests that assert a body parses to exactly
- * itself keep passing and no migration is needed. Absent reads as `left` at render time.
+ * Text alignment (§213): a closed set, never a CSS value; no `justify` (rivers at 320 px).
+ * `attrs` is optional so older bodies parse byte-identical (golden-string tests); absent is `left`.
  */
 export const BLOCK_ALIGNMENTS = ["left", "center", "right"] as const;
 export type BlockAlignment = (typeof BLOCK_ALIGNMENTS)[number];
@@ -107,7 +66,7 @@ const blockAlign = z
 
 const blockAlignAttrs = z.object({ align: blockAlign }).optional();
 
-/** Absent, null, or "left" — all the same thing, read in one place so no caller re-decides it. */
+/** Absent, null and "left" are the same. */
 export function alignmentOf(attrs: { align?: BlockAlignment | null } | undefined): BlockAlignment {
   return attrs?.align ?? "left";
 }
@@ -118,11 +77,7 @@ const paragraphNode = z.object({
   content: inlineContent,
 });
 
-/**
- * Headings start at level 2. Level 1 is the page's own title, rendered by the page and never by
- * the body — two `h1`s on one page is a heading order a screen reader cannot make sense of
- * (`AGENTS.md` §18.2).
- */
+/** Levels 2 and 3 only: the page's title is the one `h1` (`AGENTS.md` §18.2). */
 const headingNode = z.object({
   type: z.literal("heading"),
   attrs: z.object({ level: z.union([z.literal(2), z.literal(3)]), align: blockAlign }),
@@ -141,7 +96,6 @@ const bulletListNode = z.object({
 
 const orderedListNode = z.object({
   type: z.literal("orderedList"),
-  // Tiptap tracks where an ordered list starts counting; anything else it emits is dropped.
   attrs: z.object({ start: z.number().int().min(1).max(9999) }).optional(),
   content: z.array(listItemNode).min(1),
 });
@@ -152,46 +106,13 @@ const blockquoteNode = z.object({
 });
 
 /**
- * A table (`DECISIONS.md` §196; the owner: "ar fi fain să pot face tabele în editor!").
+ * A table (§196), the smallest that carries a few columns of short facts: cells hold paragraphs
+ * or lists, never a table. `colspan`/`rowspan` are kept (bounded) so merged headers survive;
+ * `colwidth` is kept and read as a proportion, never pixels (§271).
  *
- * What a running club puts in one is a schedule of waves, a price list, a table of cut-offs — a
- * few columns of short facts. So the allowlist is deliberately the smallest table that can carry
- * those and nothing that turns a page into a layout:
- *
- * - **Cells hold blocks, not arbitrary documents.** A paragraph or a list, which is what a fact
- *   with a note under it looks like. No table inside a table: nesting is where a text editor
- *   becomes a spreadsheet, and where a phone runs out of width.
- * - **`colspan` and `rowspan` are kept**, because Tiptap emits them for a merged header and a
- *   table that lost its merges on the way through the allowlist would be silently rearranged.
- *   Both are bounded: a span beyond the table is a way to make a page render strangely.
- * - **`colwidth` is kept, and read as a proportion** (§271; the owner: "tabelele ar trebui să
- *   fie mai smart, resizable"). It was dropped for a good reason — a pixel width is measured on
- *   somebody's laptop and this site's hard target is a 320-pixel column — and the reason still
- *   holds for *pixels*. What the organizer is actually saying by dragging a column edge is "this
- *   column is about twice that one", which is a proportion and survives any width. So the number
- *   is stored as the editor measured it and the renderer divides it by the row's total: a
- *   `<colgroup>` of percentages, which is what makes two columns of text a layout rather than a
- *   guess. No table written before today has one, and one without them is laid out exactly as it
- *   was.
- *
- * A header row is `tableHeader` cells, which is Tiptap's own shape; the renderer turns them into
- * `<th>` with a scope, so a screen reader announces which column a figure belongs to.
- *
- * **Two choices about the whole table are kept** (§263; the owner: "la tabele ar trebui să pot
- * alege border and stuff, ca să pot folosi tabelele și ca și layout, și să pot centra info în
- * ele"). Both are on the table rather than the cell, because a table whose cells each carry
- * their own rules is a spreadsheet, and because these are the two questions somebody actually
- * asks — "should this read as a table or hold a layout" and "where in the cell does the text
- * sit". Horizontal centring needs nothing new: a cell holds paragraphs, and a paragraph already
- * carries its own alignment (§213), so the toolbar's own centre button centres a cell's words.
- *
- * - `borders`: `all` — the lines the table has always had — `rows` for horizontal rules only,
- *   which is how a price list reads, or `none`, which is what makes a table usable as a layout.
- * - `valign`: `top`, as it was, or `middle`.
- *
- * Absent means the default, exactly as with a paragraph's alignment: a table stored before today
- * parses to a table with no `attrs` at all, so every golden-string test keeps passing and
- * nothing needs migrating.
+ * `borders` and `valign` are per table, not per cell (§263); horizontal centring is the
+ * paragraph's own alignment (§213). Absent `attrs` means the defaults, so older tables parse
+ * byte-identical.
  */
 export const TABLE_BORDERS = ["all", "rows", "none"] as const;
 export type TableBorders = (typeof TABLE_BORDERS)[number];
@@ -199,16 +120,8 @@ export const TABLE_VALIGNS = ["top", "middle"] as const;
 export type TableValign = (typeof TABLE_VALIGNS)[number];
 
 /**
- * The colour of the lines and of the header row (§271; the owner: "să pot seta culoarea
- * borderului și headerelor, ca să pot face layout din tabele").
- *
- * **Names of the club's own palette, never a colour somebody typed** — the same discipline every
- * other attribute in this file follows, and the reason a body cannot carry CSS. Four lines and
- * four fills is what a schedule, a price list and a two-column layout need; a colour picker
- * would put the club's brand in the hands of whoever is writing a page that day, and would put
- * an unreadable pair on the site the first time somebody chose white on yellow. Each name maps
- * to a palette token in `table-layout.ts`, which is also where the light and dark schemes are
- * kept in step — a hex value here would be one colour in both.
+ * Line and header colours (§271): palette names mapped in `table-layout.ts`, never a typed colour,
+ * so a body carries no CSS and both schemes stay readable.
  */
 export const TABLE_BORDER_COLOURS = ["default", "strong", "blue", "orange"] as const;
 export type TableBorderColour = (typeof TABLE_BORDER_COLOURS)[number];
@@ -229,7 +142,7 @@ type TableStyleAttrs = {
   headerFill?: TableHeaderFill | null;
 };
 
-/** Absent, null, or the default — one place decides, so no renderer re-decides it. */
+/** Absent, null and the default are the same. */
 export function tableStyleOf(attrs: TableStyleAttrs | undefined): TableStyle {
   return {
     borders: attrs?.borders ?? "all",
@@ -240,13 +153,8 @@ export function tableStyleOf(attrs: TableStyleAttrs | undefined): TableStyle {
 }
 
 /**
- * How wide each column is, as a fraction of the table — or `null` when nobody has said.
- *
- * Read from the **first row**, because that is the row a `<colgroup>` describes and the row
- * ProseMirror's own resizing writes to first; a row whose cells were merged carries fewer
- * numbers than the table has columns, and a colgroup built from it would be wrong, so a row
- * carrying a `colspan` is left alone. Widths are normalised here rather than at each renderer:
- * a percentage is the only form that survives a 320-pixel phone.
+ * Column widths as fractions of the table, or `null` when unsized. Read from the first row (what
+ * a `<colgroup>` describes); a first row with a `colspan` gives `null`, its count would be wrong.
  */
 export function tableColumnFractions(
   rows: readonly {
@@ -265,11 +173,8 @@ export function tableColumnFractions(
 const SPAN = z.number().int().min(1).max(20).optional();
 
 /**
- * The column widths ProseMirror writes when an edge is dragged (§271): one number per column the
- * cell spans, in the pixels the editor measured. Bounded, because an unbounded number here is a
- * table that renders off the side of the page; read as a proportion by `tableColumnFractions`,
- * never as pixels. `null` is what ProseMirror stores for a column nobody has sized, and it must
- * survive parsing or a resize of one column would silently reset its neighbours.
+ * ProseMirror's measured pixels per spanned column (§271), read only as proportions. `null` marks
+ * an unsized column and must survive, or resizing one column resets its neighbours.
  */
 const COLWIDTH = z.array(z.number().int().min(10).max(4000).nullable()).max(20).nullish();
 
@@ -306,39 +211,14 @@ const tableNode = z.object({
 });
 
 /**
- * A picture (AGENTS.md §11.3's "media-library image reference", `DECISIONS.md` §72, §73): a
- * block of its own, never inline in a paragraph, so a page is text with pictures between
- * paragraphs rather than a layout. `src` is the address the upload route answered — one of
- * this application's own WebP variants, on the store's public host or the local `/api/media`
- * route — and nothing else: not a data URI, not a third party's image, not a page. `alt` is
- * what a screen reader says; empty means decorative, and it is empty until somebody writes it
- * (a file name is not a description). `caption` is a sentence under the picture, visible to
- * everybody. `width`/`height` are the variant's, so the page reserves the space before the
- * bytes arrive; `widthPercent` is how much of the text column the picture takes on a wide
- * screen — one of four sizes, never a free number, and always the full width on a phone.
- *
- * `align` is where the picture sits in that column: `block` is a band across it, the way every
- * picture written before 2026-09-20 sits and the way every picture sits on a phone, and `left`
- * or `right` floats it so the paragraphs beside it wrap around (the owner: "vreau sa pot seta
- * imaginile ca si «inline» ca sa pot scrie text in stanga sau dreapta lor"). A closed set of
- * three words, exactly as `widthPercent` is a closed set of four numbers: the attribute names a
- * rendering the renderer knows, never a CSS value somebody typed. Absent — every stored document
- * — it reads as `block`, so nothing written before this renders differently.
+ * A picture (§11.3's media reference; §72, §73): a block, never inline. `src` must be one of
+ * this site's stored WebP variants, never a data URI or a third party. Empty `alt` means
+ * decorative. `width`/`height` reserve the space. `widthPercent` and `align` are closed sets,
+ * never CSS; absent reads as 100 and `block`.
  */
 /**
- * `crop` is the part of the photograph the organizer chose to show (`DECISIONS.md` §241; the
- * owner: "what the organizer sees in the editor is not what the site renders").
- *
- * Four fractions of the stored picture — `x`, `y` from its top-left corner, `w`, `h` of its
- * width and height — and never pixels: the same document is rendered at a column's width, at a
- * card's width and inside a 320-pixel phone, and a pixel measured on somebody's laptop means
- * nothing in any of them. Absent, which is every picture written before today, means the whole
- * photograph, so no stored body changes a byte and the renderer emits exactly the markup it
- * emitted yesterday.
- *
- * The rectangle must lie inside the picture — that is what the two refinements say — because a
- * crop that hangs over the edge renders as a band of background the reader cannot explain. Four
- * decimals is finer than any screen this runs on and keeps the stored number short.
+ * `crop` (§241): four fractions of the stored picture, never pixels; absent is the whole
+ * photograph. The refinements keep the rectangle inside the picture.
  */
 const cropFraction = z.number().min(0).max(1);
 const imageCrop = z
@@ -354,30 +234,20 @@ const imageCrop = z
 
 export type ImageCrop = z.infer<typeof imageCrop>;
 
-/** The same rule for a crop kept outside a document — a card of «Echipa»'s photograph (§541). */
+/** For a crop kept outside a document, e.g. «Echipa»'s photograph (§541). */
 export const imageCropSchema = imageCrop;
 
-/** The whole picture, as the crop box shows it before anybody has dragged one. */
 export const WHOLE_IMAGE: ImageCrop = { x: 0, y: 0, w: 1, h: 1 };
 
-/**
- * The crop worth storing, or `null` for "the whole picture".
- *
- * One place decides that a rectangle covering the whole photograph is *not* a crop, so the
- * editor, the renderer and the card never disagree about a body that has one stored as
- * `{0,0,1,1}` — and so dragging a box back out to the edges leaves the document as it was.
- */
+/** `null` for a rectangle covering the whole photograph, decided in one place. */
 export function meaningfulCrop(crop: ImageCrop | null | undefined): ImageCrop | null {
   if (!crop) return null;
   return crop.w >= 0.999 && crop.h >= 0.999 ? null : crop;
 }
 
 /**
- * `focus` is the point a listing card's 16∶9 frame is centred on (§454, `picture-frame.ts`): two
- * fractions of the stored photograph, `x` from the left and `y` from the top. The card draws every
- * picture in the same frame, and this is how the club keeps a face in it rather than a chest.
- * Absent — every picture written before, and one nobody pointed at — the card centres on the
- * middle of the crop. It changes nothing on the event page, which draws the crop whole.
+ * `focus` (§454): the point the listing card's 16∶9 frame centres on, as fractions; absent is the
+ * crop's middle. Ignored on the event page.
  */
 const imageFocus = z.object({ x: cropFraction, y: cropFraction }).strict();
 
@@ -420,38 +290,21 @@ const imageNode = z.object({
       .nullable()
       .optional()
       .transform((value) => meaningfulCrop(value)),
-    // Absent stays absent, so a body stored before keeps its exact JSON through a read and a save.
+    // No transform: absent stays absent, so older JSON round-trips exactly.
     focus: imageFocus.nullable().optional(),
   }),
 });
 
 /**
- * A YouTube film in the text (`DECISIONS.md` §110, §266): the eleven-character video id and
- * nothing else — never a URL, never an iframe, never a third host. The renderer builds the
- * `youtube-nocookie.com` embed from the id, and nothing is fetched from Google until the reader
- * presses (§69). `caption` is the sentence under it, visible to everybody.
- *
- * **`widthPercent` and `align` are the picture's own two attributes, the same closed sets**
- * (§266; the owner: "that YouTube video must be embedded and resizable, not as a separate
- * section"). A film was a full-width bordered block whatever the organizer wanted; it is a
- * figure in the flow now, sized and sided like a photograph, and the geometry is literally the
- * same function — `imageFigureSx`.
- *
- * Absent reads as 100 percent and `block` — the same transform a picture's two attributes have
- * — so a film stored before today is the full-width band it always was and renders the markup
- * it rendered yesterday. What is *stored* is untouched; what is parsed carries the defaults,
- * which is why the golden-string test for a film names them.
+ * A YouTube film (§110, §266): the video id only, never a URL or iframe; the renderer builds the
+ * `youtube-nocookie.com` embed and fetches nothing before the press (§69). `widthPercent` and
+ * `align` are the picture's closed sets, with the same defaults.
  */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 /**
- * The same discipline `imageSrc` holds a picture's `src` to (§72): a poster must be *this site's
- * own* stored copy, never an address a staff request could point anywhere it likes. Without this,
- * a crafted save could set `poster` to a third-party host — a pre-click request that breaks
- * §69/§110 the moment the block renders, exactly the request the facade exists to avoid — or
- * break out of a CSS `url(…)` the way an unescaped interpolation would (found by re-review,
- * `DECISIONS.md` §403). `yt-<elevenCharId>` is the poster's own key prefix
- * (`modules/media/video-poster.ts#posterKeyPrefix`); a club-chosen poster (`posterSource:
- * "club"`) is an ordinary picture upload and so carries the UUID key prefix instead.
+ * A poster must be this site's stored copy (§72, §403): a third-party host would be a pre-click
+ * request (§69, §110) and could break out of a CSS `url(…)`. Keys are `yt-<id>`
+ * (`video-poster.ts#posterKeyPrefix`) or, for a club upload, a UUID.
  */
 const posterSrc = z
   .string()
@@ -479,43 +332,23 @@ const youtubeNode = z.object({
       .optional()
       .transform((value) => value ?? "block"),
     /**
-     * The club's own copy of the film's thumbnail (`DECISIONS.md` §403): the address a save
-     * fetched it to, exactly as an image node stores `src` (§72) — a URL, never an asset id, so
-     * the existing "is a picture referenced" text search (`modules/media/references.ts`) finds
-     * it with no code of its own. Absent or null reads as "no poster stored yet", which the
-     * renderer shows as the text facade `§69` always has.
+     * The stored thumbnail (§403), a URL like `src` so `media/references.ts`'s text search finds
+     * it. Null: none stored yet.
      */
     poster: posterSrc.nullable().optional().transform((value) => value ?? null),
-    /**
-     * Who chose this poster (§403, "să pot pune thumbnail" — the owner's own request, found not
-     * built by re-review): `"club"` once an organizer has picked one through the panel, `null`
-     * or `"youtube"` for the automatic fetch. `attachYoutubePosters` leaves a `"club"` poster
-     * alone even if it were ever asked to refresh an existing one.
-     */
+    /** `"club"` once an organizer picked one; `attachYoutubePosters` never replaces it (§403). */
     posterSource: z
       .union([z.literal("club"), z.literal("youtube")])
       .nullable()
       .optional()
       .transform((value) => value ?? null),
     /**
-     * A club poster's stored size (§414), written by the panel's upload beside its address, so
-     * the page can offer the poster's ladder as a `srcset` — the width is what says which rungs
-     * exist. Absent stays absent (no transform), so a film stored before keeps its exact JSON and
-     * renders its one `src` as it did. Since §485 it is also written when a crop is drawn over
-     * the poster, YouTube's own thumbnail included — the crop's shape needs the photograph's ratio;
-     * `pictureSrcSet` still ignores a `yt-` address, which has no ladder, so the size there only
-     * shapes the window.
+     * The poster's size (§414): the width selects ladder rungs; also written for a crop (§485),
+     * whose shape needs the ratio (a `yt-` poster has no ladder). No transform, for exact JSON.
      */
     posterWidth: z.number().int().min(1).max(12_000).nullable().optional(),
     posterHeight: z.number().int().min(1).max(12_000).nullable().optional(),
-    /**
-     * The part of the poster the film's 16∶9 box shows (§485): §241's four fractions, drawn in
-     * the panel's crop box with the box's own shape, over whichever poster the film has — the
-     * club's upload, a picture from the gallery, or YouTube's own thumbnail. Absent stays absent
-     * (no transform), so a film stored before keeps its exact JSON and is covered, centred, as
-     * it always was. Drawn only with the poster's size beside it: a window cannot be shaped from
-     * a photograph whose ratio nobody recorded.
-     */
+    /** The poster's crop for the 16∶9 box (§485, §241's fractions); needs the poster's size. */
     posterCrop: imageCrop.nullable().optional(),
   }).strict(),
 });
@@ -540,17 +373,12 @@ export type RichTextDoc = z.infer<typeof richTextSchema>;
 export type RichTextBlock = z.infer<typeof blockNode>;
 export type RichTextText = z.infer<typeof textNode>;
 
-/** What an untouched body is. Stored rather than `null`, so a reader never branches on absence. */
+/** Stored rather than `null`, so a reader never branches on absence. */
 export const EMPTY_DOC: RichTextDoc = { type: "doc", content: [] };
 
 /**
- * The shape bodies were stored in before the editor existed: a flat list of sections, each an
- * optional plain-text heading and its plain-text paragraphs, produced by a textarea where a
- * blank line separated paragraphs and `##` began a heading.
- *
- * Legal documents still use it and always will — `content_sha256` is computed over it and
- * published under a version number, so changing the shape would invalidate every hash a
- * participant's acceptance names (`AGENTS.md` §12.5, `DECISIONS.md` §46).
+ * The pre-editor shape: sections of a plain heading and paragraphs. Legal documents keep it for
+ * good, since `content_sha256` is computed over it (`AGENTS.md` §12.5, §46).
  */
 type LegacyBody = { sections: { heading?: string; paragraphs: string[] }[] };
 
@@ -569,16 +397,9 @@ function paragraphsOf(texts: readonly unknown[]): RichTextBlock[] {
 }
 
 /**
- * Read any stored body as a document this application can render.
- *
- * **A read-time adapter rather than a migration**, deliberately. A push starts the deployment and
- * any migration at the same moment, so for a few seconds the running code and the stored rows
- * disagree (`AGENTS.md` §7.6). Converting on read means old rows and new rows both work during
- * that window and for as long afterwards as nobody edits them — the expand half of
- * expand/contract, with the contract half optional and safe to do any time.
- *
- * Anything unrecognisable reads as empty rather than throwing: this runs while rendering a public
- * page, and a body nobody can parse should cost a paragraph, not the whole page.
+ * Any stored body as a renderable document: a read-time adapter rather than a migration, so old
+ * and new rows both work across a deploy (`AGENTS.md` §7.6). Unparseable reads as empty rather
+ * than throwing, since this runs on public pages.
  */
 export function readRichText(value: unknown): RichTextDoc {
   const parsed = richTextSchema.safeParse(value);
@@ -605,21 +426,12 @@ export function readRichText(value: unknown): RichTextDoc {
   return EMPTY_DOC;
 }
 
-/**
- * Parse a body that is about to be **written**, strictly.
- *
- * The opposite policy to `readRichText`: on the way in, anything that does not validate is a
- * refusal, because storing it would mean the club's page contains something this application
- * never agreed to render. Returns the canonical document — unknown attributes already dropped.
- */
+/** Strict parse for writing, unlike `readRichText`: invalid input throws. Unknown attributes are dropped. */
 export function parseRichText(value: unknown): RichTextDoc {
   return richTextSchema.parse(value);
 }
 
-/**
- * The document's words, for an excerpt, a search index or a reading time (§11.3 requires this to
- * be derivable). One line per block, so a heading does not run into the paragraph beneath it.
- */
+/** The document's words (§11.3), one line per block. */
 export function richTextToPlainText(doc: RichTextDoc): string {
   const inline = (content: RichTextText[] | undefined) =>
     (content ?? []).map((node) => node.text).join("");
@@ -637,23 +449,11 @@ export function richTextToPlainText(doc: RichTextDoc): string {
           item.content.map((paragraph) => inline(paragraph.content)),
         );
       case "image":
-        // A picture's words are its alt text and its caption: what a screen reader says and
-        // what everybody reads beneath it. A decorative, uncaptioned picture contributes nothing.
         return [block.attrs.alt, block.attrs.caption];
       case "youtube":
-        // A film's words are its caption; the id is not a word.
         return [block.attrs.caption];
       case "table":
-        /*
-          A table's words are its cells, row by row, each row on one line with its cells
-          separated (§196).
-
-          This projection is what the excerpt, the calendar entry and the search index read, and
-          all three are single-column plain text — so a table has to become sentences rather than
-          a grid. Tab between cells rather than a pipe: a tab is what a spreadsheet takes if
-          somebody pastes the line, and it is invisible where the line is only being counted for
-          words.
-        */
+        // One line per row, cells tab-separated (§196): pastes into a spreadsheet, invisible to word counts.
         return block.content.map((row) =>
           row.content
             .flatMap((cell) => cell.content.flatMap(blockText))
@@ -670,23 +470,22 @@ export function richTextToPlainText(doc: RichTextDoc): string {
     .join("\n");
 }
 
-/** Whether there is anything to render — a body of empty paragraphs is still empty. */
+/** A body of empty paragraphs is still empty. */
 export function isRichTextEmpty(doc: RichTextDoc): boolean {
   return richTextToPlainText(doc).trim() === "";
 }
 
-/** A plain string read as a one-paragraph document — how a short description written before the editor is shown in it. */
+/** A plain string as a one-paragraph document (older short descriptions). */
 export function fromPlainText(text: string | null | undefined): RichTextDoc {
   if (!text || text.trim() === "") return EMPTY_DOC;
   return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] };
 }
 
-/** Whether a body holds anything at all — words, or a picture with nothing said about it. */
+/** Words, or a picture or film without any. */
 export function hasRichTextContent(doc: RichTextDoc): boolean {
   return !isRichTextEmpty(doc) || (doc.content ?? []).some((block) => block.type === "image" || block.type === "youtube");
 }
 
-/** The pictures in a body that a screen reader would have nothing to say for. */
 export function countImagesWithoutAlt(doc: RichTextDoc): number {
   return (doc.content ?? []).filter((block) => block.type === "image" && block.attrs.alt.trim() === "").length;
 }

@@ -9,22 +9,9 @@ import VideoFacade from "@/shared/ui/VideoFacade";
 import { cardFrameGeometry, imageFigureSx } from "./image-layout";
 
 /**
- * A YouTube film inside an editorial body (`DECISIONS.md` §110, §266, §403).
- *
- * ## It is a figure in the text, sized like a picture
- *
- * `widthPercent` and `align` are the picture's own two attributes, drawn by the same function —
- * `imageFigureSx` — so a film beside a paragraph behaves exactly as a photograph beside one.
- *
- * ## The poster is this site's own copy, and the player carries a volume bar
- *
- * `VideoFacade` — drawn only from here since §481 retired the event page's own film section, a
- * film being a figure in a rich text — shows `poster`, the club's stored
- * copy of the thumbnail (`attrs.poster`, filled in by `attachYoutubePosters` at save time), so
- * nothing is fetched from Google until the reader presses play (§69, §110 still stand). The
- * editor's own thumbnail in the backoffice is a separate, organizer-facing request
- * (`i.ytimg.com`, §110) and unaffected by this: it shows an organizer their own footage while
- * placing it, before the poster the reader gets has necessarily been fetched and stored.
+ * A YouTube film in a rich text (§110, §266, §403, §481), sized and aligned like a picture
+ * through `imageFigureSx`. The poster is the club's stored copy (`attachYoutubePosters` at save),
+ * so nothing is fetched from Google until the reader presses play (§69, §110).
  */
 export default async function RichTextVideo({
   videoId,
@@ -40,16 +27,15 @@ export default async function RichTextVideo({
 }: {
   videoId: string;
   caption: string;
-  /** This site's own stored copy of the film's thumbnail, or null while none has been fetched. */
+  /** The stored thumbnail copy, or null while none has been fetched. */
   poster?: string | null;
-  /** A club poster's stored size (§414): with it, the poster is drawn from its ladder. */
+  /** With the stored size, the poster is drawn from its ladder (§414). */
   posterWidth?: number | null;
   posterHeight?: number | null;
-  /** The part of the poster the club chose for the 16∶9 box (§485), as §241's fractions. */
+  /** The club's crop for the 16∶9 box (§485), as §241's fractions. */
   posterCrop?: ImageCrop | null;
-  /** The column the body is drawn in, as `RichText` says it (`media/ladder.ts`). */
   pictures?: PictureColumn;
-  /** The share of the column, as a picture's (§266). */
+  /** Share of the column, as a picture's (§266). */
   widthPercent?: ImageWidthPercent;
   align?: ImageAlignment;
   /** Whether this document floats anything anywhere; see `imageFigureSx`. */
@@ -58,19 +44,12 @@ export default async function RichTextVideo({
   const t = await getTranslations("Event");
   const origin = new URL(env.APP_BASE_URL).origin;
   /*
-    A club poster uploaded since §414 names its smaller siblings, like a picture in the text: the
-    facade is the film's figure — the column's share, the whole card in a card — and the poster
-    covers a 16∶9 box, so a poster wider than that is drawn wider than the box. YouTube's own
-    thumbnail (`yt-<id>`, at most 480 pixels) and a poster from before have no ladder and keep
-    their one `src`.
+    A poster from §414 on has a ladder; YouTube's own thumbnail (`yt-<id>`) and older posters keep
+    one `src`. The poster covers a 16∶9 box, so a wider poster is drawn wider than the box.
   */
   const posterSrcSet = poster ? pictureSrcSet(poster, posterWidth) : undefined;
-  /*
-    The part of the poster the club chose for the 16∶9 box (§485): the listing card's own frame
-    arithmetic, since the film's box is the card's shape — the largest 16∶9 rectangle inside the
-    crop, drawn as §241's window. Without a crop, or without the poster's size, the poster covers
-    the box, centred, as it always did.
-  */
+  // The card's frame arithmetic, since the film's box is the card's shape (§485); without a crop
+  // or a size, the poster covers the box, centred.
   const framed = poster && posterCrop ? cardFrameGeometry({ crop: posterCrop, width: posterWidth, height: posterHeight }) : null;
   const posterSizes = posterSrcSet
     ? pictureSizes(

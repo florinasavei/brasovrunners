@@ -25,24 +25,13 @@ import RichTextVideo from "./RichTextVideo";
 import { tableSx } from "./table-layout";
 
 /**
- * An editorial body, rendered on the server through the same allowlist that validated it
- * (`AGENTS.md` §11.3).
+ * An editorial body, rendered on the server through the allowlist that validated it
+ * (`AGENTS.md` §11.3). A node type with no `case` here cannot reach a page whatever is stored,
+ * which is why the body is walked rather than turned into HTML (no `dangerouslySetInnerHTML`).
  *
- * The renderer is the second half of the security property, and the stronger half: a node type
- * this file has no `case` for cannot appear on a page whatever is stored, because there is no
- * code path that emits it. That is why the body is walked here rather than handed to a
- * HTML-generating helper — no `dangerouslySetInnerHTML`, no virtual DOM on the server, and no
- * third dependency.
- *
- * It takes `unknown` on purpose: `body_json` is untyped at the database boundary, and bodies
- * written before the editor existed are still in the old section shape. `readRichText` is the one
- * place that difference is handled.
- *
- * `links={false}` is the listing card's reading (§366): a link mark is its words and a bare web
- * address is its host ("register.hakuapp.com/…", `shortenUrls`). A card is a summary of a page
- * one press away, its three clamped lines are no place for a link that may be cut in half, and a
- * ninety-character address wrapped over two lines of a card was one of the holes the owner pointed
- * at. The event page keeps every link.
+ * Takes `unknown`: `body_json` is untyped and old bodies have the old shape (`readRichText`).
+ * `links={false}` is the listing card's reading (§366): link marks become their words, bare
+ * addresses their host.
  */
 export default function RichText({
   body,
@@ -52,25 +41,14 @@ export default function RichText({
   body: unknown;
   links?: boolean;
   /**
-   * The column the body is drawn in (§414, `media/ladder.ts`): the event page's wide one by
-   * default, a standing page's measure, or a listing card. It becomes each picture's `sizes`,
-   * which is how the browser picks the smallest stored width that is still sharp there.
-   *
-   * On a listing card every picture is also in the one 16∶9 frame at its focal point (§454) rather
-   * than its natural ratio or the organizer's crop — the featured event's card too, since §470 made
-   * it a card (the hero's summary asked for the frame on its own until then). The event page never
-   * frames.
+   * The column the body is drawn in, for each picture's `sizes` (§414). On `card` every picture
+   * is in the 16∶9 frame at its focal point (§454, §470).
    */
   pictures?: PictureColumn;
 }) {
   const doc = readRichText(body);
   const blocks = doc.content ?? [];
-  /**
-   * A float that runs past the last block would reach into whatever the page puts after the
-   * body — the registration panel, the programme, the next section — and pull it up beside the
-   * picture. One clearing element, rendered only when the body actually floats something, so a
-   * document written before 2026-09-20 emits exactly the markup it emitted yesterday.
-   */
+  /** A float must not reach past the body; the clearing element exists only when something floats. */
   const floats = blocks.some((block) => block.type === "image" && block.attrs.align !== "block");
 
   return (
@@ -83,11 +61,7 @@ export default function RichText({
   );
 }
 
-/**
- * `floats` is whether *this document* floats a picture anywhere. It is false for every body
- * written before the alignment existed, and a false one emits exactly the styles it emitted
- * before: the clearing rules are not merely no-ops there, they are absent.
- */
+/** `floats`: whether this document floats a picture anywhere (see `imageFigureSx`). */
 function renderBlock(
   block: RichTextBlock,
   floats = false,
@@ -96,10 +70,7 @@ function renderBlock(
 ): ReactNode {
   switch (block.type) {
     case "youtube":
-      // Behind one press, like the event's own film (§69, §110): the embed is built from the
-      // id on the server, and nothing is fetched from Google until the reader opens it. Since
-      // §266 it is a figure in the flow with the picture's own width and side, which is why it
-      // takes `floats` as well: a document that floats anything clears around it the same way.
+      // Nothing fetched from Google until the reader presses play (§69, §110); laid out like a picture (§266).
       return (
         <RichTextVideo
           videoId={block.attrs.videoId}
@@ -115,23 +86,12 @@ function renderBlock(
         />
       );
     case "image": {
-      // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
-      // address was validated to be one of this site's own variants (§72). Where the figure
-      // sits in the column — a band, or floated with the text beside it — is `image-layout.ts`,
-      // which is also where the reversal of §73's "never floated" is argued.
-      //
-      // A picture the organizer cropped (§241) is the same <img> inside a window that shows the
-      // rectangle they drew. The window is emitted only when there is a crop, so every picture
-      // written before today renders the markup it rendered yesterday, byte for byte.
+      // The address was validated as this site's own (§72). The crop window (§241) is emitted
+      // only when there is a crop, so uncropped pictures render unchanged.
       if (pictures === "card") return renderFramedPicture(block);
       const crop = cropGeometry(block.attrs.crop, block.attrs);
-      /*
-        The ladder (§414): a picture stored since then names its smaller siblings, and `sizes`
-        says how wide it is drawn here — the column's share of the screen, magnified by the crop
-        when there is one, because a cropped photograph is drawn `1 / crop.w` times its window.
-        A picture from before has no siblings, gets no `srcset`, and renders the markup it
-        rendered yesterday. A card's picture is drawn by `renderFramedPicture` instead.
-      */
+      // The ladder (§414): pictures from before have no `srcset`. A cropped photograph is drawn
+      // `1 / crop.w` times its window.
       const srcSet = pictureSrcSet(block.attrs.src, block.attrs.width);
       const sizes = srcSet
         ? pictureSizes(pictures, block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
@@ -139,8 +99,7 @@ function renderBlock(
       return (
         <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
           {crop ? (
-            // No `width`/`height` attributes inside: the window reserves the space from the
-            // crop's own shape, and the photograph is laid over it at whatever size that takes.
+            // No `width`/`height` inside: the window's `aspect-ratio` reserves the space.
             <Box className="rt-crop" sx={cropWindowSx(crop)}>
               <Box component="img" src={block.attrs.src} srcSet={srcSet} sizes={sizes} alt={block.attrs.alt} loading="lazy" sx={cropImageSx(crop)} />
             </Box>
@@ -166,8 +125,6 @@ function renderBlock(
       );
     }
     case "paragraph":
-      // `textAlign` is emitted only when the organizer chose one (§213): a body written before
-      // alignment existed renders the markup it rendered yesterday, not a rule that says "left".
       return (
         <Typography variant="body1" sx={{ mb: 2, ...blockAlignSx(block.attrs) }}>
           {renderInline(block.content, links)}
@@ -190,7 +147,6 @@ function renderBlock(
       return (
         <Box
           component={block.type === "bulletList" ? "ul" : "ol"}
-          // The browser's own list marker and indent, with the vertical rhythm of a paragraph.
           sx={{ pl: 3, mb: 2, "& li": { mb: 0.5 } }}
           start={block.type === "orderedList" ? block.attrs?.start : undefined}
         >
@@ -222,27 +178,9 @@ function renderBlock(
 
     case "table": {
       /*
-        A table (§196), and the whole of the difficulty is that this site's hard target is a
-        320-pixel column.
-
-        A table cannot reflow: four columns of times and distances are four columns whatever the
-        screen. So the table keeps its shape and the *wrapper* scrolls sideways — one element
-        that scrolls, inside a page that does not, which is the one arrangement a phone handles
-        without the whole layout sliding under the reader's thumb. `maxWidth: 100%` on the
-        wrapper is what keeps the page from growing to the table's width.
-
-        `tabIndex={0}` on the scrolling box is not decoration: a region that scrolls and cannot
-        be reached from a keyboard is unreadable to anybody not using a pointer, and browsers do
-        not make it focusable on their own.
-
-        Header cells become `<th scope>` — a column header says which column, a row header which
-        row — so a screen reader announces "Ora de start, 10:00" rather than "10:00".
-
-        How it is *drawn* — a grid, horizontal rules only, or nothing at all, and where in the
-        cell the text sits — is the organizer's choice since §263 and lives in `table-layout.ts`,
-        which the editor draws from as well. It used to be the block of rules below, which the
-        editor had no copy of: the page showed a grid and the editor showed nothing, so a table
-        was arranged against one drawing and published as another.
+        A table (§196) cannot reflow at 320 px, so the wrapper scrolls sideways inside a page that
+        does not; `tabIndex={0}` makes that region keyboard-reachable. Header cells get `scope` for
+        screen readers. The drawing lives in `table-layout.ts`, shared with the editor (§263).
       */
       const columns = tableColumnFractions(block.content);
       return (
@@ -255,13 +193,7 @@ function renderBlock(
             component="table"
             sx={{
               ...tableSx(block.attrs),
-              /*
-                Column proportions the organizer dragged (§271). `table-layout: fixed` is what
-                makes a browser honour a `<colgroup>` at all — with `auto` it sizes the columns
-                from their contents and the widths are a suggestion it ignores. Only a table that
-                was actually sized gets it; every other table keeps the automatic layout it has
-                always had, which is what a schedule of short facts wants.
-              */
+              // Only a sized table (§271) gets `fixed`, without which the browser ignores `<colgroup>`.
               ...(columns ? { tableLayout: "fixed", width: "100%" } : {}),
             }}
           >
@@ -301,10 +233,8 @@ function renderBlock(
 }
 
 /**
- * A picture on a listing card (§454), the featured event's included since §470: the same 16∶9 frame
- * on every card, over the organizer's crop, centred on the focal point the club picked
- * (`cardFrameGeometry`). The figure's column share and side are overridden by the card's own rules
- * (`CARD_EXCERPT_SX`): the whole card width, never floated. The caption stays under it.
+ * A picture on a listing card in the 16∶9 frame (§454, §470). Width and side are overridden by
+ * the card's `CARD_EXCERPT_SX`.
  */
 function renderFramedPicture(block: Extract<RichTextBlock, { type: "image" }>): ReactNode {
   const frame = cardFrameGeometry(block.attrs);
@@ -333,15 +263,8 @@ function renderFramedPicture(block: Extract<RichTextBlock, { type: "image" }>): 
 }
 
 /**
- * Text and its marks.
- *
- * `rel` and `target` are decided here rather than read from the document (the schema drops both).
- * An off-site link opens in a new tab with `noopener noreferrer`, and a link to this site does
- * not — a rule that then applies to every body ever written, including those written before the
- * rule existed.
- *
- * Without `links` (a listing card, §366) a link mark renders nothing but its words, and every web
- * address written as text — in a link's words or in a sentence — is shortened to its host.
+ * `rel` and `target` are decided here, never read from the document (the schema drops both):
+ * off-site links open in a new tab with `noopener noreferrer`. Without `links` (§366), see above.
  */
 function renderInline(content: RichTextText[] | undefined, links = true): ReactNode {
   return (content ?? []).map((node, index) => {
