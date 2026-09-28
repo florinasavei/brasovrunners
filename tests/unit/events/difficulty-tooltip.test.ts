@@ -159,7 +159,7 @@ describe("§528 the editor's «?» explains the whole scale", () => {
     choices: ro.Admin.editor.difficultySteps,
   };
 
-  it("draws a «?» named by the scale, after the help line and outside the radio group's description", () => {
+  it("draws a «?» named by the scale, beside the toggle (§NNN) and outside the radio group's description", () => {
     const html = renderToStaticMarkup(createElement(DifficultyStepField, { name: "event.difficultyStep", defaultStep: 2, words }));
     expect(html).toContain('data-testid="difficulty-scale-help"');
     expect(html).toContain(`aria-label="${words.scale}"`);
