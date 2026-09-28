@@ -1009,7 +1009,8 @@
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
       "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
-      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”."
+      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
+      "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -2119,7 +2120,7 @@
         "regeneratePending": "Se fac ciornele…",
         "regenerateTitle": "Faci ciorne noi din șabloane ({count})?",
         "regenerateBody": "Se face câte o ciornă nouă pentru: {texts}. Textele în vigoare rămân neschimbate până aprobi ciornele.",
-        "upToDate": "Toate textele au deja cuvintele șabloanelor, în vigoare sau în ciornă.",
+        "upToDate": "Fiecare text are deja cuvintele șablonului în vigoare sau o ciornă care așteaptă să fie citită și aprobată; o ciornă nouă din șablon se face după ce o aprobi sau o ștergi pe aceea.",
         "approveIntro": "Ciorne gata de aprobat: {versions}.",
         "approve": "Aprobă ciornele ({count})",
         "approvePending": "Se aprobă…",
@@ -2129,8 +2130,7 @@
         "held": {
           "superseded": "există o ciornă mai nouă a aceluiași text; șterge-o pe aceasta sau aprob-o de pe pagina ei.",
           "behind": "o versiune aprobată cu număr mai mare este deja oferită, deci aceasta n-ar intra niciodată în vigoare.",
-          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le.",
-          "ready": "gata de aprobat."
+          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le."
         },
         "deleteIntro": "Bifează în tabel versiunile de șters, apoi apasă butonul: vezi lista înainte de ștergere.",
         "deleteTicked": "Șterge versiunile bifate",
@@ -4683,7 +4683,10 @@
             {
               "title": "Cele cinci texte, înainte de publicarea cursei",
               "steps": [
-                "Într-o singură ședință, fiecare de la «Pornește de la șablon»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
+                "Într-o singură ședință, toate deodată: «Documente legale» → «Toate textele deodată» → «Regenerează din șabloane» și confirmă. Se face câte o ciornă pentru fiecare text al cărui șablon s-a schimbat; nimic nu intră încă în vigoare.",
+                "Deschide fiecare ciornă din tabel, citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
+                "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
+                "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate», verifică lista și confirmă. Pentru o versiune aprobată scrii textul cerut (de exemplu „DELETE 2”) și un motiv.",
                 "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
               ]

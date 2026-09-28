@@ -19,6 +19,7 @@ import {
   deletionOrder,
   type DraftApprovalOutcome,
   draftApprovalOutcome,
+  LegalBatchVersionRefused,
   type RegenerationOutcome,
   regenerationOutcome,
 } from "./domain/batch";
@@ -945,18 +946,24 @@ export async function regenerateFromTemplates<T extends Record<string, unknown>>
   const asked = new Set(keys);
   if (asked.size === 0) throw new DomainError("VALIDATION_ERROR", "no text was named to regenerate", ["key"]);
 
-  const plan = await planTemplateRegeneration(db, facts, now);
-  const result: TemplateRegeneration = { created: [], skipped: [] };
-  for (const item of plan) {
-    if (!asked.has(item.key)) continue;
-    if (item.outcome !== "create") {
-      result.skipped.push(item.key);
-      continue;
+  // One transaction for every draft (each `createDraftVersion` nests as a savepoint): a press
+  // that fails at the fourth text leaves no three drafts behind it to explain. No revalidation
+  // after the commit — a draft is on no public page, and expiring the cache for one would only
+  // wake the database for the next visitor (§333).
+  return db.transaction(async (tx) => {
+    const plan = await planTemplateRegeneration(tx, facts, now);
+    const result: TemplateRegeneration = { created: [], skipped: [] };
+    for (const item of plan) {
+      if (!asked.has(item.key)) continue;
+      if (item.outcome !== "create") {
+        result.skipped.push(item.key);
+        continue;
+      }
+      await createDraftVersion(tx, actor, { key: item.key, translations: templateTranslations(item.key, facts) }, now);
+      result.created.push(item.key);
     }
-    await createDraftVersion(db, actor, { key: item.key, translations: templateTranslations(item.key, facts) }, now);
-    result.created.push(item.key);
-  }
-  return result;
+    return result;
+  });
 }
 
 export type DraftApprovalItem = { row: LegalDocumentVersionRow; outcome: DraftApprovalOutcome };
@@ -1062,6 +1069,13 @@ function batchObstacle(row: LegalDocumentVersionRow, facts: DeletionFacts): Doma
  * Checked twice, like the single delete: once before the transaction, so a refusal names what
  * stands in the way before anything is opened, and again inside it, one version at a time in
  * `deletionOrder`, each against the rows as the earlier deletions left them.
+ *
+ * All or none, and not "delete the rest, skip the one that became blocked": the screen asked
+ * `DELETE <n>` and one reason for exactly the approved versions it listed, and an audit row's
+ * reason and the typed count describe that list — deleting a different one under them would make
+ * both untrue. A version that became undeletable between the screen and the press therefore stops
+ * the whole press with `LegalBatchVersionRefused`, which names it (`GDPR 2`); the screen, read
+ * again, lists it under what stays, with the reason, and the rest go on the next press.
  */
 export async function deleteVersionsInBatch<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1081,7 +1095,7 @@ export async function deleteVersionsInBatch<T extends Record<string, unknown>>(
   const facts = await readDeletionFacts(db, rows, versions, input.now);
   rows.forEach((row, index) => {
     const refusal = batchObstacle(row, facts[index]);
-    if (refusal) throw refusal;
+    if (refusal) throw new LegalBatchVersionRefused(row, refusal);
   });
 
   const approvedCount = rows.filter((row) => row.isApproved).length;
@@ -1104,11 +1118,11 @@ export async function deleteVersionsInBatch<T extends Record<string, unknown>>(
       const fresh = await listVersionsForBackoffice(tx);
       const row = fresh.find((candidate) => candidate.id === planned.id);
       if (!row || row.isApproved !== planned.isApproved) {
-        throw new DomainError("CONFLICT", "a version changed while the batch was being deleted");
+        throw new LegalBatchVersionRefused(planned, new DomainError("CONFLICT", "it changed while the batch was being deleted"));
       }
       const [rowFacts] = await readDeletionFacts(tx, [row], fresh, input.now);
       const refusal = batchObstacle(row, rowFacts);
-      if (refusal) throw refusal;
+      if (refusal) throw new LegalBatchVersionRefused(row, refusal);
 
       if (row.isApproved) {
         await destroyApprovedVersion(tx, actor, row, reason, input.now, { batchSize: rows.length });
@@ -1118,7 +1132,9 @@ export async function deleteVersionsInBatch<T extends Record<string, unknown>>(
         .delete(legalDocuments)
         .where(and(eq(legalDocuments.id, row.id), eq(legalDocuments.isApproved, false)))
         .returning({ id: legalDocuments.id });
-      if (!deleted) throw new DomainError("CONFLICT", "a draft was approved while the batch was being deleted");
+      if (!deleted) {
+        throw new LegalBatchVersionRefused(row, new DomainError("CONFLICT", "it was approved while the batch was being deleted"));
+      }
     }
   });
   revalidatePublicContent("legal");

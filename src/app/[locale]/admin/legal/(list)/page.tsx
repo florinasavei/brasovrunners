@@ -52,10 +52,10 @@ import {
   regenerateLegalTemplatesAction,
   withdrawLegalVersionAction,
 } from "../actions";
+import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /** The form the rows' ticks belong to (`form=`), a GET to `/admin/legal/delete` (§NNN). */
 const BATCH_DELETE_FORM = "legal-batch-delete";
-import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 
 type Props = {
   params: Promise<{ locale: string }>;

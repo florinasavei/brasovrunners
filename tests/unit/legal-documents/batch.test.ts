@@ -25,10 +25,27 @@ describe("regenerationOutcome", () => {
     expect(regenerationOutcome("TERMS", "T", rows, "b")).toBe("create");
   });
 
-  it("is draftExists when a draft has the template's words, and reads only its own key", () => {
+  it("is draftExists when a draft of the text is waiting, and reads only its own key", () => {
     const rows = [row({ id: "a", version: 1, contentSha256: "T" }), row({ id: "b", version: 1, key: "PRIVACY_NOTICE", contentSha256: "P" })];
     expect(regenerationOutcome("TERMS", "T", rows, undefined)).toBe("draftExists");
-    expect(regenerationOutcome("TERMS", "P", rows, undefined)).toBe("create");
+    expect(regenerationOutcome("PRIVACY_NOTICE", "T", rows, undefined)).toBe("draftExists");
+    expect(regenerationOutcome("EVENT_DECLARATION", "T", rows, undefined)).toBe("create");
+  });
+
+  it("never offers to supersede a waiting draft whose words the club changed (a placeholder typed in, the long way)", () => {
+    const rows = [
+      row({ id: "a", version: 1, isApproved: true, contentSha256: "OLD" }),
+      row({ id: "d", version: 2, contentSha256: "FILLED-IN" }),
+    ];
+    expect(regenerationOutcome("TERMS", "TEMPLATE", rows, "a")).toBe("draftExists");
+  });
+
+  it("is not held back by a draft numbered below an offered approved version", () => {
+    const rows = [
+      row({ id: "d", version: 1, contentSha256: "STALE" }),
+      row({ id: "a", version: 2, isApproved: true, contentSha256: "OLD" }),
+    ];
+    expect(regenerationOutcome("TERMS", "TEMPLATE", rows, "a")).toBe("create");
   });
 
   it("ignores a withdrawn version's words", () => {

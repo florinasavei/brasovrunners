@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { legalDocumentNumbering, legalDocuments } from "@/db/schema/legal-documents";
@@ -15,7 +15,10 @@ import {
   planDraftApproval,
   planTemplateRegeneration,
   regenerateFromTemplates,
+  updateDraftVersion,
 } from "@/modules/legal-documents/service";
+import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
+import { LegalBatchVersionRefused } from "@/modules/legal-documents/domain/batch";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -125,6 +128,36 @@ describe("every legal text at once (§NNN)", () => {
       }
     });
 
+    it("is one transaction: a failure at the fourth text leaves no draft of the first three", async () => {
+      // A real database refusal on the fourth key of the catalogue, from inside the press.
+      const fourth = LEGAL_DOCUMENT_KEYS[3];
+      await db.execute(
+        sql.raw(`CREATE FUNCTION refuse_fourth_legal_key() RETURNS trigger LANGUAGE plpgsql AS $$
+          BEGIN RAISE EXCEPTION 'refused for the test'; END $$`),
+      );
+      await db.execute(
+        sql.raw(`CREATE TRIGGER refuse_fourth_legal_key BEFORE INSERT ON legal_documents
+          FOR EACH ROW WHEN (NEW.key = '${fourth}') EXECUTE FUNCTION refuse_fourth_legal_key()`),
+      );
+      try {
+        await expect(regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW)).rejects.toThrow();
+        expect(await db.select().from(legalDocuments)).toHaveLength(0);
+      } finally {
+        await db.execute(sql.raw("DROP TRIGGER refuse_fourth_legal_key ON legal_documents"));
+        await db.execute(sql.raw("DROP FUNCTION refuse_fourth_legal_key()"));
+      }
+      // And the same press, unrefused, makes every draft.
+      expect((await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW)).created).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
+    });
+
+    it("never offers a newer template draft over a waiting draft whose placeholder the club filled in", async () => {
+      await regenerateFromTemplates(db, admin, NO_FACTS, ["PRIVACY_NOTICE"], NOW);
+      const [waiting] = await listVersionsForBackoffice(db);
+      await updateDraftVersion(db, admin, waiting.id, translations("filled in"), NOW);
+      expect((await planTemplateRegeneration(db, NO_FACTS, NOW)).find((item) => item.key === "PRIVACY_NOTICE")?.outcome).toBe("draftExists");
+      expect(await regenerateFromTemplates(db, admin, NO_FACTS, ["PRIVACY_NOTICE"], NOW)).toEqual({ created: [], skipped: ["PRIVACY_NOTICE"] });
+    });
+
     it("keeps an unknown fact as its placeholder in the draft, and says so", async () => {
       const plan = await planTemplateRegeneration(db, NO_FACTS, NOW);
       expect(plan.find((item) => item.key === "PRIVACY_NOTICE")?.hasPlaceholders).toBe(true);
@@ -166,7 +199,8 @@ describe("every legal text at once (§NNN)", () => {
         "TERMS 1": "superseded",
         "TERMS 2": "ready",
         "PRIVACY_NOTICE 1": "behind",
-        "EVENT_DECLARATION 1": expect.stringMatching(/^(placeholders|ready)$/),
+        // Without the club's facts the declaration still reads «<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>».
+        "EVENT_DECLARATION 1": "placeholders",
       });
 
       // A page that named a held draft refuses the whole press: nothing approved, not even the ready one.
@@ -238,11 +272,19 @@ describe("every legal text at once (§NNN)", () => {
       expect(floor.highestRetiredVersion).toBe(2);
     });
 
-    it("refuses the whole batch when one version may not go — the text in force — and deletes nothing", async () => {
+    it("refuses the whole batch when one version may not go — the text in force — naming it, and deletes nothing", async () => {
       const [v1, , v3] = await threeNotices();
-      expect(
-        await codeOf(deleteVersionsInBatch(db, admin, { versionIds: [v1, v3], typedConfirmation: "DELETE 2", reason: "curățenie", now: LATER })),
-      ).toBe("CONFLICT");
+      const refusal = await deleteVersionsInBatch(db, admin, {
+        versionIds: [v1, v3],
+        typedConfirmation: "DELETE 2",
+        reason: "curățenie",
+        now: LATER,
+      }).catch((error: unknown) => error);
+      // All or none (the phrase and the reason were given for this list), and the refusal says
+      // which version stopped it, for the batch screen's sentence.
+      expect(refusal).toBeInstanceOf(LegalBatchVersionRefused);
+      expect((refusal as LegalBatchVersionRefused).code).toBe("CONFLICT");
+      expect((refusal as LegalBatchVersionRefused).version).toBe(confirmationPhrase("PRIVACY_NOTICE", 3));
       expect(await db.select().from(legalDocuments)).toHaveLength(3);
       expect(await db.select().from(auditLogs)).toHaveLength(0);
     });

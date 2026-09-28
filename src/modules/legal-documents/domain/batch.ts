@@ -1,4 +1,6 @@
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
+import { DomainError } from "@/shared/errors/domain-error";
+import { confirmationPhrase } from "./confirmation";
 
 /**
  * The three presses over many versions at once on `/admin/legal` (§NNN): regenerate every text
@@ -28,7 +30,13 @@ export type BatchVersion = {
  * - `create` — a new draft from the platform's template, the club's facts written in;
  * - `unchanged` — the text in force (or an approved version above it, not withdrawn) is already
  *   the template, word for word: a draft of the same words would be a version with nothing new;
- * - `draftExists` — a draft with exactly these words is already waiting to be read and approved.
+ * - `draftExists` — a draft of this text is already waiting to be read and approved: one numbered
+ *   above every approved version still offered, whatever its words. Not only a draft with the
+ *   template's exact words: a regenerated draft whose `<PLACEHOLDER>` the club then typed in, or a
+ *   draft made the long way, no longer hashes as the template does, and offering «Regenerează» on
+ *   it would make a newer placeholder draft that supersedes the club's filled-in one. A draft
+ *   numbered below an offered approved version would never take effect (`behind`) and waits for
+ *   nothing, so it does not hold the template back.
  *
  * Never an edit of anything: an existing draft, even an older one of the same key, is left as the
  * club typed it (§46), and an approved text is replaced only by approving the draft (§57).
@@ -47,7 +55,8 @@ export function regenerationOutcome(
     (row) => row.isApproved && row.withdrawnAt === null && (inForce === undefined || row.version >= inForce.version),
   );
   if (approvedFromInForce.some((row) => row.contentSha256 === templateSha256)) return "unchanged";
-  if (ofKey.some((row) => !row.isApproved && row.contentSha256 === templateSha256)) return "draftExists";
+  const highestOffered = Math.max(0, ...approvedFromInForce.map((row) => row.version));
+  if (ofKey.some((row) => !row.isApproved && row.version > highestOffered)) return "draftExists";
   return "create";
 }
 
@@ -90,4 +99,21 @@ export function draftApprovalOutcome(
  */
 export function deletionOrder<T extends Pick<BatchVersion, "key" | "version">>(rows: readonly T[]): T[] {
   return [...rows].sort((a, b) => (a.key === b.key ? a.version - b.version : a.key < b.key ? -1 : 1));
+}
+
+/**
+ * A batch deletion refused because of one version, and which one: `version` is its phrase,
+ * `GDPR 2` — a document code and a number, nothing about any person — so the batch screen names
+ * the version that stopped the press instead of a bare `CONFLICT`, which the backoffice reads as
+ * "somebody else saved meanwhile". The code and the fields are the one-version verb's refusal.
+ */
+export class LegalBatchVersionRefused extends DomainError {
+  readonly version: string;
+
+  constructor(row: Pick<BatchVersion, "key" | "version">, cause: DomainError) {
+    const version = confirmationPhrase(row.key, row.version);
+    super(cause.code, `${version}: ${cause.message}; nothing was deleted`, cause.fields);
+    this.name = "LegalBatchVersionRefused";
+    this.version = version;
+  }
 }

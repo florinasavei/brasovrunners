@@ -11,6 +11,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
+import { LegalBatchVersionRefused } from "@/modules/legal-documents/domain/batch";
 import {
   approveDrafts,
   approvePlatformTemplates,
@@ -177,7 +178,8 @@ export async function approveLegalDraftsAction(_previous: FormOutcome | null, fo
  * draft is, approved versions as one approved version is — the phrase (`DELETE <n>`) and the
  * reason asked once for all of them, an audit row each. A refusal stays on the batch screen,
  * with the reason back in its box and the phrase to type again, as `deleteApprovedLegalVersionAction`
- * does; the three refusals a person can act on are told apart from a race.
+ * does; the refusals a person can act on are told apart from a race, and a version that became
+ * undeletable since the screen was drawn is named by its phrase (`LegalBatchVersionRefused`).
  */
 export async function deleteLegalVersionsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -193,6 +195,10 @@ export async function deleteLegalVersionsAction(_previous: FormOutcome | null, f
     });
   } catch (error) {
     const failure = refused(error, form);
+    // One version stopped the press: say which, by its phrase (`GDPR 2`), whatever the reason.
+    if (error instanceof LegalBatchVersionRefused) {
+      return { ...failure, error: "LEGAL_BATCH_VERSION_BLOCKED", errorValues: { version: error.version }, fields: [] };
+    }
     const named = (field: string) => isDomainError(error) && error.fields.includes(field);
     return {
       ...failure,

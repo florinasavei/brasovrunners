@@ -1009,7 +1009,8 @@
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
       "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
       "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
-      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\"."
+      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
+      "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press."
     },
     "editor": {
       "eventSection": "Event details",
@@ -2119,7 +2120,7 @@
         "regeneratePending": "Making the drafts…",
         "regenerateTitle": "Make new drafts from the templates ({count})?",
         "regenerateBody": "A new draft is made for: {texts}. The texts in force stay as they are until you approve the drafts.",
-        "upToDate": "Every text already has the templates' words, in force or as a draft.",
+        "upToDate": "Every text already has its template's words in force, or a draft waiting to be read and approved; a new draft from the template is made once you approve or delete that one.",
         "approveIntro": "Drafts ready to approve: {versions}.",
         "approve": "Approve the drafts ({count})",
         "approvePending": "Approving…",
@@ -2129,8 +2130,7 @@
         "held": {
           "superseded": "a newer draft of the same text exists; delete this one or approve it from its own page.",
           "behind": "an approved version with a higher number is already offered, so this one would never take effect.",
-          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them.",
-          "ready": "ready to approve."
+          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them."
         },
         "deleteIntro": "Tick the versions to delete in the table, then press the button: you see the list before anything is deleted.",
         "deleteTicked": "Delete the ticked versions",
@@ -4683,7 +4683,10 @@
             {
               "title": "The five texts, before the race is published",
               "steps": [
-                "In one sitting, each from «Start from the template»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
+                "In one sitting, all at once: «Legal documents» → «Every text at once» → «Regenerate from the templates» and confirm. One draft is made for each text whose template changed; nothing takes effect yet.",
+                "Open each draft from the table, read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
+                "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
+                "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions», check the list and confirm. For an approved version you type the text asked for (for example \"DELETE 2\") and a reason.",
                 "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
                 "Until you approve the new notice, the public participant list shows the confirmed only."
               ]
