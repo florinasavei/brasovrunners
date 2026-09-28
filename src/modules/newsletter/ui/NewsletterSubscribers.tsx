@@ -46,9 +46,45 @@ type Props = {
 /** The id the fold, the filter's GET form and the unsubscribe's redirect all land on. */
 export const SUBSCRIBERS_ANCHOR = "newsletter-subscribers";
 
+/**
+ * One table, two layouts by CSS alone (§NNN): a table from `md` up, and below it every row a block
+ * — the address as its headline, each other cell a line with its column's name before it
+ * (`data-label`), the button under them — so each row renders its «Dezabonează» form once, not
+ * once per layout.
+ */
+const TABLE = { display: { xs: "block", md: "table" } } as const;
+const HEAD = { display: { xs: "none", md: "table-header-group" } } as const;
+const BODY = { display: { xs: "flex", md: "table-row-group" }, flexDirection: "column", gap: 1.5 } as const;
 /** A visible line between two rows (§453), none under the last; the theme's divider in both schemes. */
-const ROW_SEPARATOR = { "& > td": { borderBottom: 1, borderColor: "divider", py: 1.25, verticalAlign: "top" } } as const;
-const LAST_ROW = { "& > td": { borderBottom: 0, py: 1.25, verticalAlign: "top" } } as const;
+const ROW = (last: boolean) =>
+  ({
+    display: { xs: "block", md: "table-row" },
+    border: { xs: 1, md: 0 },
+    borderColor: "divider",
+    borderRadius: { xs: 1, md: 0 },
+    p: { xs: 2, md: 0 },
+    "& > td": {
+      display: { xs: "flex", md: "table-cell" },
+      justifyContent: "space-between",
+      alignItems: "baseline",
+      gap: 1,
+      textAlign: { xs: "right", md: "left" },
+      px: { xs: 0, md: 2 },
+      py: { xs: 0.25, md: 1.25 },
+      verticalAlign: "top",
+      borderBottom: { xs: 0, md: last ? 0 : 1 },
+      borderColor: "divider",
+      "&::before": {
+        content: { xs: "attr(data-label)", md: "none" },
+        color: "text.secondary",
+        fontSize: "0.875rem",
+        flexShrink: 0,
+      },
+    },
+    "& > td[data-cell='email']": { display: { xs: "block", md: "table-cell" }, fontWeight: { xs: 700, md: 400 }, fontSize: { xs: "1rem", md: "inherit" }, mb: { xs: 1, md: 0 } },
+    "& > td[data-cell='actions']": { display: { xs: "block", md: "table-cell" }, mt: { xs: 1.5, md: 0 }, textAlign: { xs: "left", md: "right" } },
+    "& > td[data-cell='email']::before, & > td[data-cell='actions']::before": { content: "none" },
+  }) as const;
 const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 700, whiteSpace: "nowrap" } as const;
 
 /**
@@ -59,10 +95,11 @@ const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 
  * state in the address bar, the CSV of the same filter, and the Administrator's «Dezabonează».
  *
  * A fold, closed by default (§336), whose closed line says the counts; it opens by itself while a
- * filter shapes it (`inUse`) or right after an unsubscribe (`saved`). A Server Component: the
- * addresses never reach a client island — the rows are server HTML, and each row's form carries the
- * subscriber's id alone. A table from `md` up and one block per row below it, as `AdminTable` draws
- * (no column is lost at 320 pixels, and nothing scrolls sideways).
+ * filter shapes it (`inUse`) or right after an unsubscribe (`saved`). A Server Component: the rows
+ * are server HTML, and each row's form posts the subscriber's id alone; the address reaches a client
+ * island only as the string of its confirm dialog's title, which the server HTML shows anyway. A
+ * table from `md` up and one block per row below it, switched by CSS on the same elements (no column
+ * is lost at 320 pixels, nothing scrolls sideways, and one form per row, not one per layout).
  */
 export default async function NewsletterSubscribers({ locale, query, list, mayUnsubscribe, saved }: Props) {
   const t = await getTranslations("Admin");
@@ -124,14 +161,13 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
     { key: "confirmedOn", label: t("newsletter.subscribers.columns.confirmedOn"), render: (row) => (row.confirmedAt ? day(row.confirmedAt) : "—") },
   ];
 
-  // Drawn twice per row — the table's cell and the phone's block, one hidden by CSS, as `AdminTable`
-  // draws its row actions — so each form has its own scope.
-  const unsubscribe = (row: NewsletterSubscriberRow, where: "table" | "block") =>
+  // Once per row: the table and the phone's block are the same elements under different CSS.
+  const unsubscribe = (row: NewsletterSubscriberRow) =>
     mayUnsubscribe ? (
       <ActionForm
         action={unsubscribeSubscriberAction}
         messages={messages}
-        scope={`unsubscribe-${where}-${row.id}`}
+        scope={`unsubscribe-${row.id}`}
         confirm={{
           title: t("newsletter.subscribers.unsubscribeTitle", { email: row.email }),
           body: t("newsletter.subscribers.unsubscribeBody"),
@@ -230,9 +266,9 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
           </Typography>
         ) : (
           <>
-            <Box sx={{ display: { xs: "none", md: "block" }, border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden" }}>
-              <Table size="small" aria-label={t("newsletter.subscribers.title")} data-testid="newsletter-subscribers-table">
-                <TableHead>
+            <Box sx={{ border: { md: 1 }, borderColor: "divider", borderRadius: { md: 1 }, overflow: { md: "hidden" } }}>
+              <Table size="small" aria-label={t("newsletter.subscribers.title")} sx={TABLE} data-testid="newsletter-subscribers-table">
+                <TableHead sx={HEAD}>
                   <TableRow sx={{ bgcolor: "action.hover" }}>
                     {columns.map((column) => (
                       <TableCell key={column.key} sx={HEAD_RULE}>
@@ -246,45 +282,23 @@ export default async function NewsletterSubscribers({ locale, query, list, mayUn
                     )}
                   </TableRow>
                 </TableHead>
-                <TableBody>
-                  {list.rows.map((row, index) => (
-                    <TableRow
-                      key={row.id}
-                      hover
-                      data-testid="newsletter-subscriber-row"
-                      data-row-separator={index === list.rows.length - 1 ? "none" : "line"}
-                      sx={index === list.rows.length - 1 ? LAST_ROW : ROW_SEPARATOR}
-                    >
-                      {columns.map((column) => (
-                        <TableCell key={column.key}>{column.render(row)}</TableCell>
-                      ))}
-                      {mayUnsubscribe && <TableCell align="right">{unsubscribe(row, "table")}</TableCell>}
-                    </TableRow>
-                  ))}
+                <TableBody sx={BODY}>
+                  {list.rows.map((row, index) => {
+                    const last = index === list.rows.length - 1;
+                    return (
+                      <TableRow key={row.id} hover data-testid="newsletter-subscriber-row" data-row-separator={last ? "none" : "line"} sx={ROW(last)}>
+                        {columns.map((column) => (
+                          <TableCell key={column.key} data-cell={column.key} data-label={column.label}>
+                            {column.render(row)}
+                          </TableCell>
+                        ))}
+                        {mayUnsubscribe && <TableCell data-cell="actions">{unsubscribe(row)}</TableCell>}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </Box>
-            {/* The phone's blocks (§18.5): the address as the row's headline, every other column labelled under it. */}
-            <Stack component="ul" spacing={1.5} sx={{ display: { xs: "flex", md: "none" }, listStyle: "none", p: 0, m: 0 }}>
-              {list.rows.map((row) => (
-                <Box key={row.id} component="li" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="newsletter-subscriber-block">
-                  <Typography component="div" sx={{ fontWeight: 700, fontSize: "1rem", mb: 1 }}>
-                    {columns[0].render(row)}
-                  </Typography>
-                  <Stack spacing={0.5}>
-                    {columns.slice(1).map((column) => (
-                      <Stack key={column.key} direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", gap: 1 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-                          {column.label}
-                        </Typography>
-                        <Box sx={{ textAlign: "right", minWidth: 0 }}>{column.render(row)}</Box>
-                      </Stack>
-                    ))}
-                  </Stack>
-                  {mayUnsubscribe && <Box sx={{ mt: 1.5 }}>{unsubscribe(row, "block")}</Box>}
-                </Box>
-              ))}
-            </Stack>
           </>
         )}
       </Stack>

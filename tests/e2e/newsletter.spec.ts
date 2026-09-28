@@ -38,9 +38,13 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     const subject = `Testare de încălțăminte ${Date.now().toString(36)}`;
     // One language per tab, the letter in the rich-text editor (§NNN): bold on the first line.
     await compose.getByLabel("Subiect (română)").fill(subject);
-    await compose.getByTestId("newsletter-body-ro").locator(".tiptap").click();
-    await page.keyboard.press("Control+b");
+    const bodyRo = compose.getByTestId("newsletter-body-ro");
+    await bodyRo.locator(".tiptap").click();
     await page.keyboard.type("Sâmbătă, la start.");
+    // The toolbar's own button over the typed line: a shortcut pressed before the first letter did
+    // not reach the editor reliably on a production build.
+    await page.keyboard.press("ControlOrMeta+a");
+    await bodyRo.getByRole("button", { name: "Îngroșat" }).click();
     await compose.getByRole("tab", { name: /English/ }).click();
     await compose.getByLabel("Subiect (engleză)").fill("A shoe test");
     await compose.getByTestId("newsletter-body-en").locator(".tiptap").click();

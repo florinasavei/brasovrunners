@@ -97,6 +97,17 @@ describe("§NNN the newsletter's letter in the rich-text editor", () => {
 
     const foreign = JSON.stringify({ type: "doc", content: [{ type: "image", attrs: { src: "https://elsewhere.example/cat.jpg", alt: "" } }] });
     expect(readPostedNewsletterBody(foreign)).toBe("invalid");
+    // The stored key's own shape on another host — the schema takes it, the letter does not.
+    const tracker = (src: string) => JSON.stringify({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Salut" }] }, { type: "image", attrs: { src, alt: "" } }] });
+    const lookalike = "https://tracker.example/news/0f8fad5b-d9cb-869f-a165-70867728950e/web.webp";
+    expect(readPostedNewsletterBody(tracker(lookalike), "https://pub-store.example")).toBe("invalid");
+    expect(readPostedNewsletterBody(tracker(lookalike), null)).toBe("invalid");
+    expect(readPostedNewsletterBody(tracker("https://pub-store.example.tracker.example/news/0f8fad5b-d9cb-869f-a165-70867728950e/web.webp"), "https://pub-store.example")).toBe("invalid");
+    expect(readPostedNewsletterBody(tracker(OLD), "https://pub-store.example/")).not.toBe("invalid");
+    expect(readPostedNewsletterBody(tracker(LADDERED), null)).not.toBe("invalid");
+    expect(checkNewsletterWords({ subject: { ro: "a", en: "b" }, body: { ro: tracker(lookalike), en: JSON.stringify(LETTER) } }).issues).toEqual([
+      { box: "newsletterBodyRo", problem: "unsupported", names: [] },
+    ]);
 
     // The JSON of a long letter is far longer than its words: only the words are counted.
     const words = "x".repeat(NEWSLETTER_BODY_MAX - 10);

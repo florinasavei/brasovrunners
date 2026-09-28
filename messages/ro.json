@@ -4800,7 +4800,7 @@
               "steps": [
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare; cea mai nouă adresă e prima.",
                 "Scrie adresa, întreagă sau o parte din ea, la «Caută adresa». Alege, dacă vrei, «Tema» și «Starea», apoi apasă «Filtrează». «Șterge filtrele» arată iar toată lista.",
-                "La «În așteptare», rândul spune până când merge linkul de confirmare, sau «Linkul a expirat». O adresă neconfirmată se șterge singură.",
+                "La «În așteptare», rândul spune până când merge linkul de confirmare, sau «Linkul a expirat.» O adresă neconfirmată se șterge singură.",
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură."
               ]
@@ -5369,7 +5369,7 @@
         "link": {
           "live": "Linkul de confirmare merge până {when}.",
           "sending": "Emailul de confirmare n-a plecat încă.",
-          "expired": "Linkul a expirat"
+          "expired": "Linkul a expirat."
         },
         "unsubscribe": "Dezabonează",
         "unsubscribing": "Se dezabonează…",

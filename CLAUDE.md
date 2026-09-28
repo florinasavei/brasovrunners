@@ -459,6 +459,9 @@ it is the authority, this is the summary):
     and a privacy notice that describes the members' zone (§524). `/admin/legal` → «Aprobă acum textele care lipsesc…» approves
     in one press every text that has no approved version; a text already in force is «Versiune nouă» → «Pornește de la șablon»,
     one at a time. A Romanian lawyer should read the declarations first. This covers items 8 and 14 too.
+    Since §NNN the notice's template also says that only the club's organizers and administrators see the newsletter's
+    subscriber list with the addresses and may download it — approve that notice before an Organizer reads the addresses
+    on production.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Treapta» on the fifteen-step scale; the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,

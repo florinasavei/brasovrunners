@@ -482,9 +482,10 @@ export function canMessageParticipants(role: StaffRole): boolean {
  * **Sending the newsletter (§445)** — a message the club writes to every subscriber of one topic.
  * The same people who may write to an event's participants (§364): the Organizer, the
  * Administrator and the Superadministrator — it is the club speaking to people who asked to hear
- * from it, the organizer's own kind of act. Nobody reads an address on the way: the page shows
- * counts. Removing an address by hand (the notice's "or by writing to us") is the Administrator's,
- * as the "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
+ * from it, the organizer's own kind of act. Since §NNN these roles also read the «Abonați» list —
+ * every address — and download its CSV. Removing an address — «Dezabonează» on a row, and the
+ * typed-address withdrawal (the notice's "or by writing to us") — is the Administrator's, as the
+ * "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
  */
 export function canSendNewsletter(role: StaffRole): boolean {
   return canMessageParticipants(role);

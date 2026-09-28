@@ -2,6 +2,7 @@ import { type RichTextDoc, richTextSchema, richTextToPlainText } from "@/modules
 import { placeholdersIn } from "@/modules/notifications/domain/email-copy";
 import { unsupportedNewsletterBlocks } from "@/modules/notifications/domain/email-rich-text";
 import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/forms/both-languages";
+import { env } from "@/shared/config/env";
 
 /**
  * A newsletter as the club writes it on `/admin/newsletter` (§445): a subject and a body, Romanian and
@@ -63,11 +64,32 @@ export function newsletterDocFromText(text: string): RichTextDoc {
 }
 
 /**
- * A body as posted, read: the editor's JSON as a document, a plain string as one (above), and
- * `invalid` for JSON that is not a document this site accepts — a picture from somewhere else, a
- * node nobody offers. Never throws: the refusal names the box.
+ * Whether every picture in a letter is one this club stored: the local `/api/media/…` route or the
+ * store's public address (`R2_PUBLIC_BASE_URL`). The rich-text schema checks only the key's shape
+ * (`<uuid>/web.webp`) and would take it on any https host; a letter goes to every subscriber, so a
+ * crafted post must not put a third party's picture — a tracking pixel — in their inboxes.
  */
-export function readPostedNewsletterBody(value: string | null | undefined): RichTextDoc | "invalid" {
+export function newsletterPicturesAreOwn(doc: RichTextDoc, storeBase: string | null | undefined = env.R2_PUBLIC_BASE_URL): boolean {
+  const base = storeBase ? `${storeBase.replace(/\/+$/, "")}/` : null;
+  const own = (src: string) => src.startsWith("/api/media/") || (base !== null && src.startsWith(base));
+  const walk = (nodes: RichTextDoc["content"]): boolean =>
+    (nodes ?? []).every((node) => {
+      if (node.type === "image") return own(node.attrs.src);
+      const children = (node as { content?: unknown }).content;
+      return Array.isArray(children) ? walk(children as RichTextDoc["content"]) : true;
+    });
+  return walk(doc.content);
+}
+
+/**
+ * A body as posted, read: the editor's JSON as a document, a plain string as one (above), and
+ * `invalid` for JSON that is not a document this site accepts — a picture this club did not store
+ * (`newsletterPicturesAreOwn`), a node nobody offers. Never throws: the refusal names the box.
+ */
+export function readPostedNewsletterBody(
+  value: string | null | undefined,
+  storeBase: string | null | undefined = env.R2_PUBLIC_BASE_URL,
+): RichTextDoc | "invalid" {
   const raw = (value ?? "").trim();
   if (raw === "") return { type: "doc", content: [] };
   if (!raw.startsWith("{")) return newsletterDocFromText(raw);
@@ -79,7 +101,7 @@ export function readPostedNewsletterBody(value: string | null | undefined): Rich
     return newsletterDocFromText(raw);
   }
   const doc = richTextSchema.safeParse(parsed);
-  return doc.success ? doc.data : "invalid";
+  return doc.success && newsletterPicturesAreOwn(doc.data, storeBase) ? doc.data : "invalid";
 }
 
 /** A body's words, as the reader reads them: what the ceiling, the emptiness and the braces are counted on. */

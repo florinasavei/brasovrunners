@@ -4800,7 +4800,7 @@
               "steps": [
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending; the newest address comes first.",
                 "Type the address, whole or part of it, under «Search the address». Choose «Topic» and «State» if you like, then press «Filter». «Clear the filters» shows the whole list again.",
-                "Under «Pending», the row says until when the confirmation link works, or «The link has expired». An address never confirmed is deleted by itself.",
+                "Under «Pending», the row says until when the confirmation link works, or «The link has expired.» An address never confirmed is deleted by itself.",
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
                 "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes."
               ]
@@ -5369,7 +5369,7 @@
         "link": {
           "live": "The confirmation link works until {when}.",
           "sending": "The confirmation email has not left yet.",
-          "expired": "The link has expired"
+          "expired": "The link has expired."
         },
         "unsubscribe": "Unsubscribe",
         "unsubscribing": "Unsubscribing…",

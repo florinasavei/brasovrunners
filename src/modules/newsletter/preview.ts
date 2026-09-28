@@ -22,7 +22,7 @@ export type NewsletterPreview = { subject: string; html: string };
  *
  * The bodies are the editors' documents since §NNN, rendered through the send's own path
  * (`newsletterBodyParts`): the same card, the same pictures at their absolute addresses. A body
- * the send would refuse (a film, a picture from elsewhere) previews as absent.
+ * the send would refuse (a film, a picture this club did not store) previews as absent.
  */
 export async function previewNewsletter<T extends Record<string, unknown>>(
   db: Database<T>,
