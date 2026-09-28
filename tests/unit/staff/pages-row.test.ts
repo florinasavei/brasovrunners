@@ -6,7 +6,7 @@ import { PAGES_ROW_ENTRIES, PAGES_ROW_ROUTE, pagesRowEntryOf } from "@/modules/c
 import { activeAdminTabHref } from "@/modules/staff-identity/domain/admin-tab-match";
 import { SETTINGS_TAB_ROUTE } from "@/modules/staff-identity/domain/settings-tabs";
 import { deletePage, movePageInNav } from "@/modules/content/pages/service";
-import { canEditEventFields, canEditTexts, canReadContent, canTransition, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, isEditorial, canReadContent, canTransition, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { pageListVerbs } from "@/modules/content/pages/page-list-verbs";
 
 /**
@@ -134,22 +134,22 @@ describe("«Pagini»'s row on the club's own pages' editors, and the list's gate
 
   it("keeps the list's writes behind their own gates: a Redactor cannot reorder or delete", async () => {
     const copywriter = { id: "00000000-0000-4000-8000-000000000001", role: "COPYWRITER" as const };
-    expect(canEditEventFields("COPYWRITER")).toBe(false);
+    expect(isEditorial("COPYWRITER")).toBe(false);
     // Refused before the database is asked, so no database is needed to prove it.
     const db = {} as Parameters<typeof movePageInNav>[0];
     await expect(movePageInNav(db, { actor: copywriter, pageId: "x", direction: "up" })).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(deletePage(db, { actor: copywriter, pageId: "x" })).rejects.toMatchObject({ code: "FORBIDDEN" });
     // The arrows are drawn only for a role the move accepts.
-    expect(read("src/app/[locale]/admin/pages/(list)/page.tsx")).toContain("const mayMove = canEditEventFields(actor.role);");
+    expect(read("src/app/[locale]/admin/pages/(list)/page.tsx")).toContain("const mayMove = isEditorial(actor.role);");
   });
 });
 
 describe("the pages list's ⋮ offers each role only the verbs its services accept (BR-REQ-060-01)", () => {
   const STATUSES = ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"] as const;
 
-  it("gates «Șterge» on canEditEventFields, the gate deletePage asserts", () => {
+  it("gates «Șterge» on isEditorial, the gate deletePage asserts", () => {
     for (const role of STAFF_ROLES) {
-      for (const status of STATUSES) expect(pageListVerbs(role, status).remove, `${role} ${status}`).toBe(canEditEventFields(role));
+      for (const status of STATUSES) expect(pageListVerbs(role, status).remove, `${role} ${status}`).toBe(isEditorial(role));
     }
     expect(pageListVerbs("COPYWRITER", "DRAFT").remove).toBe(false);
     expect(pageListVerbs("ADMIN", "DRAFT").remove).toBe(true);

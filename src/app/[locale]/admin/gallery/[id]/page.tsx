@@ -19,7 +19,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import { RecallHidden } from "@/shared/forms/recall";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { isStorageConfigured } from "@/modules/media/storage";
-import { allowedTransitions, canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
+import { allowedTransitions, isEditorial } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
   EDITORIAL_TRANSITION_ICON,
@@ -66,7 +66,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
   const words = await confirmWords();
   const isOwnDraft = album.createdByStaffUserId === actor.id;
   const transitions = allowedTransitions(actor.role, album.editorialStatus, isOwnDraft);
-  const mayEdit = canEditEventFields(actor.role);
+  const mayEdit = isEditorial(actor.role);
   const title = translations.find((row) => row.locale === locale)?.title ?? "";
 
   return (

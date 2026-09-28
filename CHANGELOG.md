@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.21-2026-09-27
+
+- **The Organizer reads the events and changes none** — creating, editing, publishing, cancelling, duplicating, series and the update notice are the Administrator's; the Organizer opens an event with «Deschide», read-only, keeps «Alocare și tipărire» with the numbers' PDF, the registrations, the export, the desk and the messages to participants, and the role picker says the split. §542.
 ## BR-V2.20-2026-09-27
 
 - **«Dificultate» and «Treapta» centred** — in «Ce fel de eveniment» the band select and the 1·2·3 toggle are now on one axis, with the same outline and label, a «?» beside each, and the help line under the toggle. On a phone they stack full width. §537.
