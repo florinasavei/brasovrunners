@@ -849,7 +849,32 @@
         "other": "{count} could not be published: a language is incomplete, or they changed meanwhile."
       },
       "hardDelete": "Permanent deletion…",
-      "eventErased": "Event permanently deleted, together with {erased} registrations."
+      "eventErased": "Event permanently deleted, together with {erased} registrations.",
+      "listFormLabel": "Search and filter the events",
+      "listSearch": "Search for an event",
+      "listSearchHelp": "The title, the page address or the place",
+      "listState": "State",
+      "listStateAll": "All",
+      "listStates": {
+        "UPCOMING": "Upcoming",
+        "PAST": "Ended",
+        "DRAFT": "Drafts",
+        "IN_REVIEW": "In review",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived",
+        "CANCELLED": "Cancelled"
+      },
+      "listSort": "Order",
+      "listSorts": {
+        "date-near": "Date (nearest first)",
+        "date-old": "Date (oldest first)",
+        "title-asc": "Name A–Z",
+        "title-desc": "Name Z–A",
+        "state": "State"
+      },
+      "listApply": "Apply",
+      "listCount": "{shown} of {total} events",
+      "listEmpty": "No event matches. Change the search or the state, or clear the filters."
     },
     "confirm": {
       "cancel": "Never mind",

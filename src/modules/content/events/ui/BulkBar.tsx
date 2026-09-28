@@ -32,6 +32,7 @@ function rowBoxes(formId: string): HTMLInputElement[] {
 export default function BulkBar({
   formId,
   uiLocale,
+  back = "",
   publish,
   archive,
   remove,
@@ -39,6 +40,8 @@ export default function BulkBar({
 }: {
   formId: string;
   uiLocale: string;
+  /** The list's own query string, posted as `back` so the action returns to it (§NNN). */
+  back?: string;
   publish: Action;
   archive: Action;
   /** Absent for a role that may not delete: the button is not rendered, and the server refuses anyway. */
@@ -104,6 +107,7 @@ export default function BulkBar({
         </Typography>
         <form id={formId} ref={form} action={archive} style={{ display: "contents" }}>
           <input type="hidden" name="uiLocale" value={uiLocale} />
+          <input type="hidden" name="back" value={back} />
           {/*
             Dim while nothing is ticked (§170; the owner: "trebe să fie active doar dacă
             selectez ceva"), and each verb wears its glyph ("și butoanele astea au nevoie de

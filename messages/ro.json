@@ -849,7 +849,32 @@
         "other": "{count} nu au putut fi publicate: o limbă e incompletă sau au fost modificate între timp."
       },
       "hardDelete": "Ștergere definitivă…",
-      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
+      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri.",
+      "listFormLabel": "Caută și filtrează evenimentele",
+      "listSearch": "Caută un eveniment",
+      "listSearchHelp": "Titlul, adresa paginii sau locul",
+      "listState": "Starea",
+      "listStateAll": "Toate",
+      "listStates": {
+        "UPCOMING": "Viitoare",
+        "PAST": "Încheiate",
+        "DRAFT": "Ciorne",
+        "IN_REVIEW": "În verificare",
+        "PUBLISHED": "Publicate",
+        "ARCHIVED": "Arhivate",
+        "CANCELLED": "Anulate"
+      },
+      "listSort": "Ordinea",
+      "listSorts": {
+        "date-near": "Data (cele mai apropiate)",
+        "date-old": "Data (cele mai vechi)",
+        "title-asc": "Nume A–Z",
+        "title-desc": "Nume Z–A",
+        "state": "Stare"
+      },
+      "listApply": "Aplică",
+      "listCount": "{shown} din {total} evenimente",
+      "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele."
     },
     "confirm": {
       "cancel": "Renunță",

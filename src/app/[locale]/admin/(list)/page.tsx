@@ -39,7 +39,7 @@ import BulkBar from "@/modules/content/events/ui/BulkBar";
 import RowMenu from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
-import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
+import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type DraftReason, draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
 import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
 import { countForm } from "@/i18n/count-form";
@@ -54,7 +54,20 @@ import RoutePills from "@/modules/events/ui/RoutePills";
 import { buildRoutePills } from "@/modules/events/ui/route-pills";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
-import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import {
+  arrangeEventList,
+  countEventLines,
+  EVENT_LIST_SORTS,
+  EVENT_LIST_STATES,
+  eventListBack,
+  eventListNarrowed,
+  eventListParams,
+  eventListQueryInUse,
+  MAX_EVENT_LIST_QUERY_LENGTH,
+  parseEventListQuery,
+} from "@/modules/content/events/list-query";
+import EventListFields from "@/modules/content/events/ui/EventListFields";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -170,41 +183,43 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         : null,
   }));
 
-  /**
-   * The same title and type is the same event again: one line, the dates folded inside it.
-   * Grouped after the fetch, so the list's own order — featured first, then soonest — is the
-   * order of the lines; the group sits where its first occurrence was.
-   */
+  /*
+    The search, the state and the order, from the address (§NNN) — a GET form writes them, so the
+    list is a place to bookmark and it works with JavaScript off. `arrangeEventList` narrows the
+    dates, groups what is left — the same title and type is the same event again, one line with
+    the dates folded inside it (§113) — and orders the lines, the nearest date first unless the
+    address asks otherwise (`list-query.ts` says why each step sits where it does).
+  */
+  const listQuery = parseEventListQuery(current);
+  const listParams = eventListParams(listQuery);
+  const narrowed = eventListNarrowed(listQuery);
+  const inUse = eventListQueryInUse(listQuery);
+  // Posted by every action form on the list, so the action's redirect returns here (§NNN).
+  const back = eventListBack(current);
+  // The M of «N din M evenimente»: the lines with nothing narrowing them.
+  const allLineCount = countEventLines(rows);
   const lines: ListRow[] = await Promise.all(
-    groupSeries(rows.map((row) => ({ row, type: row.event.type, title: row.translations[0]?.title ?? row.event.id, startsAt: row.event.startsAt }))).map(
-      async (series) => {
-        const members = series.members.map((member) => member.row);
-        const next = members.find((member) => member.event.startsAt.getTime() >= now.getTime()) ?? members[members.length - 1];
-        const usual = members.length > 1 ? usualOf(members.map((member) => member.event)) : { place: null, time: null };
-        const notes = new Map<string, EditionNote>();
-        for (const member of members) {
-          const note = await editionNote(editionDifference(member.event, usual));
-          if (note) notes.set(member.event.id, note);
-        }
-        return {
-          key: series.key,
-          members,
-          next,
-          sentence: members.length > 1 ? await recurrenceSentence(members.map((member) => member.event), next.event.timezone, locale) : null,
-          notes,
-        };
-      },
-    ),
+    arrangeEventList(rows, listQuery, now, locale).map(async ({ key, members, next }) => {
+      const usual = members.length > 1 ? usualOf(members.map((member) => member.event)) : { place: null, time: null };
+      const notes = new Map<string, EditionNote>();
+      for (const member of members) {
+        const note = await editionNote(editionDifference(member.event, usual));
+        if (note) notes.set(member.event.id, note);
+      }
+      return {
+        key,
+        members,
+        next,
+        sentence: members.length > 1 ? await recurrenceSentence(members.map((member) => member.event), next.event.timezone, locale) : null,
+        notes,
+      };
+    }),
   );
 
-  const query = parseListQuery(current, {
-    // The list's order is the club's own — featured first, then soonest — and it is the order an
-    // organizer thinks in. A sortable column here would be sorting away the thing that puts the
-    // next race at the top.
-    sortable: [],
-    defaultSort: "startsAt",
-    defaultPerPage: 100,
-  });
+  // The page and its size, as every backoffice list reads them. The order is the form's one
+  // select, never a column heading's (§NNN): two ways to say one thing would disagree.
+  const query = parseListQuery(current, { sortable: [], defaultSort: "startsAt", defaultPerPage: 100 });
+  const pageLines = lines.slice(query.offset, query.offset + query.limit);
 
   const basePath = getPathname({ locale, href: "/admin" });
 
@@ -592,11 +607,68 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         )}
       </Stack>
 
+      {/*
+        Search, state and order (§NNN): one row above the list, never folded — a plain GET form
+        with native selects, so the list's state is the address — bookmarked, kept across a
+        Server Action's redirect back (the forms post it as `back`), and working with JavaScript off, like the registrations
+        list's filters and the public listing's (§413). Every control wears its glyph.
+      */}
+      <Box
+        component="form"
+        method="get"
+        action={basePath}
+        role="search"
+        aria-label={t("events.listFormLabel")}
+        id="events-filters"
+        data-testid="events-filters"
+      >
+        {query.perPage !== 100 && <input type="hidden" name="perPage" value={String(query.perPage)} />}
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
+          <EventListFields
+            search={{
+              label: t("events.listSearch"),
+              placeholder: t("events.listSearchHelp"),
+              value: listQuery.q,
+              maxLength: MAX_EVENT_LIST_QUERY_LENGTH,
+            }}
+            state={{
+              label: t("events.listState"),
+              value: listQuery.state ?? "",
+              options: [
+                { value: "", label: t("events.listStateAll") },
+                ...EVENT_LIST_STATES.map((state) => ({ value: state, label: t(`events.listStates.${state}`) })),
+              ],
+            }}
+            sort={{
+              label: t("events.listSort"),
+              value: listQuery.sort,
+              options: EVENT_LIST_SORTS.map((sort) => ({ value: sort, label: t(`events.listSorts.${sort}`) })),
+            }}
+          />
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+            <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
+              {t("events.listApply")}
+            </GlyphButton>
+            {inUse && (
+              <GlyphButton icon="clearFilter" href={basePath} variant="text" sx={TAP_TARGET}>
+                {t("list.clear")}
+              </GlyphButton>
+            )}
+          </Stack>
+        </Stack>
+        {narrowed && (
+          <Typography variant="body2" role="status" data-testid="events-list-count" sx={{ mt: 1, color: "text.secondary" }}>
+            {t("events.listCount", { shown: lines.length, total: allLineCount })}
+          </Typography>
+        )}
+      </Box>
+
       {/* The bulk verbs, above the ticks they act on (§114): all, N ticked, publish, archive, delete. */}
       {lines.length > 0 && canCreateEvent(staffUser.role) && (
         <BulkBar
           formId={BULK_FORM}
           uiLocale={locale}
+          back={back}
           publish={bulkPublishEventsAction}
           archive={bulkArchiveEventsAction}
           remove={canDeleteEvent(staffUser.role) ? bulkDeleteEventsAction : undefined}
@@ -621,10 +693,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       <AdminTable
         caption={t("events.tableCaption")}
         columns={columns}
-        rows={lines}
+        rows={pageLines}
         rowKey={({ key }) => key}
         basePath={basePath}
-        currentParams={{}}
+        // The search and the state ride along on every sort, size and page link.
+        currentParams={{ ...listParams, perPage: query.perPage !== 100 ? String(query.perPage) : undefined }}
         query={query}
         total={lines.length}
         labels={{
@@ -636,7 +709,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           actions: t("list.actions"),
           sortBy: (column) => t("list.sortBy", { column }),
         }}
-        empty={<Typography variant="body1">{t("events.empty")}</Typography>}
+        empty={<Typography variant="body1">{narrowed && events.length > 0 ? t("events.listEmpty") : t("events.empty")}</Typography>}
         rowActions={({ members, next }) => {
           const { event, translations } = next;
           const entries = members.reduce((sum, member) => sum + member.entries, 0);
@@ -711,6 +784,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 >
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="eventId" value={event.id} />
+                  <input type="hidden" name="back" value={back} />
                 </ActionForm>
                 {canDeleteEvent(staffUser.role) && (entries === 0 || entries === testEntries) && !isSeries && (
                   <ActionForm
@@ -721,6 +795,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="eventId" value={event.id} />
+                    <input type="hidden" name="back" value={back} />
                   </ActionForm>
                 )}
                 <RowMenu
