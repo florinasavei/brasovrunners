@@ -4,7 +4,7 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
-import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { lastKnownBudget } from "@/modules/diagnostics/budget-level";
 import { DatabaseRestingError, isColdMiss } from "./breaker";
 import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
 import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
@@ -216,10 +216,11 @@ export async function readWithLastGood<T>(
 
 /**
  * Whether the database is away because Neon suspended the project for the month (§447) — asked
- * only on this failure path, only for an error that says the database is away, and of Neon's API
- * through the governor's shared reading, never of the database. The period's end when it is, so
- * the page can say when the site is whole again; null for every other outage, whose length nobody
- * knows.
+ * only on this failure path, only for an error that says the database is away, and of the level
+ * this instance last read (`budget-level.ts`), never of the database — and since §NNN never of
+ * Neon's API either: this runs inside a static page's render, where a request to Neon is the
+ * render's own. The period's end when it is, so the page can say when the site is whole again;
+ * null for every other outage, whose length nobody knows.
  *
  * While the project is suspended nothing can change the rows behind a copy — no write reaches a
  * database that is not running — so a copy taken before the suspension is still the newest truth
@@ -230,20 +231,16 @@ export async function readWithLastGood<T>(
 async function restingSince(error: unknown, now: Date): Promise<Date | null> {
   if (!isDatabaseAwayError(error)) return null;
   const quotaRefused = isQuotaRefusalError(error);
-  try {
-    const budget = await readNeonBudget(now);
-    /*
-      Neon's own refusal ("exceeded the compute time quota") is resting on its own, whatever the
-      level reads: with a project-scoped key the level comes from the operations log, which counts
-      only the floor and stops growing once the project is suspended, so the platform may still
-      read under 100% while Neon has already cut it off. The meter's period end when there is a
-      meter, the bounded default otherwise.
-    */
-    if (quotaRefused) return budget.meter ? budget.meter.periodEnd : defaultRestingUntil(now);
-    return budget.budget?.spent && budget.meter ? budget.meter.periodEnd : null;
-  } catch {
-    return quotaRefused ? defaultRestingUntil(now) : null;
-  }
+  const known = lastKnownBudget(now);
+  /*
+    Neon's own refusal ("exceeded the compute time quota") is resting on its own, whatever the
+    level reads: with a project-scoped key the level comes from the operations log, which counts
+    only the floor and stops growing once the project is suspended, so the platform may still
+    read under 100% while Neon has already cut it off. The period's end when a reading had one,
+    the bounded default otherwise — a cold instance that has heard no reading included.
+  */
+  if (quotaRefused) return known?.periodEnd ?? defaultRestingUntil(now);
+  return known?.spent && known.periodEnd ? known.periodEnd : null;
 }
 
 /**

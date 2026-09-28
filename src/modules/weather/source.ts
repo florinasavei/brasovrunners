@@ -243,18 +243,44 @@ export function forecastHour(now: number): number {
 }
 
 /**
+ * Seconds from `now` to the end of its hour, at least one: how long the hour's own entry stands
+ * (`refreshedOpenMeteo`, §NNN).
+ */
+export function secondsLeftInHour(now: number): number {
+  const hourMs = WEATHER_CACHE_SECONDS * 1000;
+  return Math.max(1, Math.ceil(((forecastHour(now) + 1) * hourMs - now) / 1000));
+}
+
+/**
+ * The hour's entry's one function — `unstable_cache` keys an entry on its callback's source text as
+ * well as its key parts (`public-cache/cache.ts#fillEntry`), so every call passes this same one. The
+ * hour is only the key's last part: `unstable_cache` folds every argument into the key.
+ */
+function askOpenMeteoThisHour(...[latitude, longitude]: [latitude: number, longitude: number, hour: number]): Promise<HourlyForecast> {
+  return fetchOpenMeteo(fetch, Date.now, WEATHER_TIMEOUT_MS, { latitude, longitude });
+}
+
+/**
  * The fresh request a stale entry asks for (§NNN): the same answer, in its own data-cache entry keyed
  * by the place and the hour. A new hour is a miss, which `unstable_cache` fills before it answers, so
  * the visitor after a quiet spell still reads this hour's forecast; the request stays inside the
  * cache, never the static page's own; and every visitor of that hour shares the one request.
+ *
+ * **Its lifetime ends with its hour** (§NNN, a review finding). The key names the hour, so nothing
+ * reads the entry after it; with the forecast's own hour as its `revalidate`, entries written late in
+ * an hour outlived it, one per place per hour, and only a `weather:forecast` expiry named them. So
+ * the entry's `revalidate` is what is left of its hour (`secondsLeftInHour`): it is stale the moment
+ * its hour ends, is never refreshed in the background (nobody reads it again to start one), and is
+ * the first thing Vercel's data cache evicts — `unstable_cache` has no call that deletes an entry,
+ * and Vercel's cache removes the least recently read. In a static page's render the same number
+ * holds the page to the hour's end, when the forecast it shows turns over anyway.
  */
-const refreshedOpenMeteo = unstable_cache(
-  // The hour is only the key's last part: `unstable_cache` folds every argument into the key.
-  (...[latitude, longitude]: [latitude: number, longitude: number, hour: number]) =>
-    fetchOpenMeteo(fetch, Date.now, WEATHER_TIMEOUT_MS, { latitude, longitude }),
-  [...CACHE_KEY, "hour"],
-  { tags: [WEATHER_CACHE_TAG], revalidate: WEATHER_CACHE_SECONDS },
-);
+function refreshedOpenMeteo(latitude: number, longitude: number, now: number): Promise<HourlyForecast> {
+  return unstable_cache(askOpenMeteoThisHour, [...CACHE_KEY, "hour"], {
+    tags: [WEATHER_CACHE_TAG],
+    revalidate: secondsLeftInHour(now),
+  })(latitude, longitude, forecastHour(now));
+}
 
 let quietUntil = 0;
 let lastFailure: { at: number; reason: WeatherFailure } | null = null;
@@ -341,7 +367,7 @@ export async function readForecast(at: Coordinates, deps: ForecastDeps = {}): Pr
   // the stale path too, never a bare fetch inside a static page's render.
   const fromDataCache = !deps.fetch && dataCacheAvailable();
   const cached = deps.cached ?? (fromDataCache ? () => cachedOpenMeteo(place.latitude, place.longitude) : null);
-  const refresh = deps.refresh ?? (fromDataCache ? () => refreshedOpenMeteo(place.latitude, place.longitude, forecastHour(now)) : ask);
+  const refresh = deps.refresh ?? (fromDataCache ? () => refreshedOpenMeteo(place.latitude, place.longitude, now) : ask);
   try {
     let forecast = cached ? await cached() : await ask();
     if (isForecastStale(forecast, now)) forecast = await refresh();

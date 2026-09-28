@@ -126,9 +126,14 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     */
     const beforePublish = await request.get(`/ro/evenimente/${slug}`);
     expect(beforePublish.status()).toBe(404);
-    const notFoundAgain = await request.get(`/ro/evenimente/${slug}`);
-    expect(notFoundAgain.status()).toBe(404);
-    expect(notFoundAgain.headers()["x-nextjs-cache"]).toBe("HIT");
+    // Polled, not asked once: a spec in another worker that saves an event expires `public:events`
+    // between two asks, and the ask after that expiry is a MISS that files the 404 again.
+    await expect
+      .poll(async () => {
+        const again = await request.get(`/ro/evenimente/${slug}`);
+        return `${again.status()} ${again.headers()["x-nextjs-cache"]}`;
+      })
+      .toBe("404 HIT");
 
     // Both languages go live together, so the route has to survive the whole editorial flow
     // rather than only a save.

@@ -273,16 +273,15 @@ describe("§NNN a static public route never reads the request while it renders",
   const optsOutOfStatic = (file: string) =>
     /\bcache:\s*["']no-store["']|\brevalidate:\s*0\b|\bunstable_noStore\b|\bconnection\s*\(\s*\)/.test(code(file));
 
-  /** Files a static route reaches that write one, each with why no static render runs it. Shrinking this is the point. */
-  const NO_STORE_ALLOWED: Record<string, string> = {
-    /*
-      Neon's API: `no-store` only on a write (the limits card's PATCH) or on a staff page's own
-      reading (`shared: false`, `/devs`, Costuri). A render meets the file only through the budget
-      governor's background refresh (§447: `peekNeonBudgetLevel` → `readNeonBudget`), which asks
-      `shared: true` — a `next: { revalidate }` fetch the test below pins.
-    */
-    "src/modules/diagnostics/neon.ts": "no-store on writes and staff readings only; the render's reading is the shared one",
-  };
+  /**
+   * Files a static route reaches that write one, each with why no static render runs it. Empty since
+   * §NNN, and shrinking it was the point: `diagnostics/neon.ts` stood here while the budget governor's
+   * background refresh ran inside a page's render — a request of the render's own, which shortened
+   * the page to the shared reading's fifteen minutes and would have made it dynamic had it been a
+   * no-store one. A render is now told the last known level (`diagnostics/budget-level.ts`) and
+   * reaches no Neon request at all (the test below).
+   */
+  const NO_STORE_ALLOWED: Record<string, string> = {};
 
   it.each([...STATIC_PAGES, ...STATIC_HANDLERS, "src/app/[locale]/layout.tsx"])("%s reaches no no-store fetch, noStore() or connection()", (route) => {
     const offenders = [...serverClosure(route).entries()]
@@ -291,9 +290,19 @@ describe("§NNN a static public route never reads the request while it renders",
     expect(offenders).toEqual([]);
   });
 
-  it("reads Neon's meter from a render only as the shared, revalidated reading", () => {
-    expect(code("src/modules/diagnostics/neon-budget.ts")).toMatch(/readNeonMeter\(env, \{ \.\.\.deps, shared: true \}, now\)/);
-    expect(code("src/modules/diagnostics/neon.ts")).toMatch(/deps\.shared \? \{ next: \{ revalidate: NEON_SHARED_READ_SECONDS \} \} : \{ cache: "no-store" as const \}/);
+  it.each([...STATIC_PAGES, ...STATIC_HANDLERS, "src/app/[locale]/layout.tsx"])("%s reaches no request to Neon's API: the governor's level is the last known one (§NNN)", (route) => {
+    const closure = serverClosure(route);
+    const neon = ["src/modules/diagnostics/neon.ts", "src/modules/diagnostics/neon-budget.ts"].filter((file) => closure.has(file)).map((file) => (closure.get(file) ?? []).join(" → "));
+    expect(neon).toEqual([]);
+  });
+
+  it("walks far enough to meet the governor's level, and would flag Neon's reader were it reached", () => {
+    // The public cache reads the level on every read; the walk sees the module that answers it…
+    expect(serverClosure("src/app/[locale]/events/page.tsx").has("src/modules/diagnostics/budget-level.ts")).toBe(true);
+    // …which makes no request and knows no cache mode.
+    expect(code("src/modules/diagnostics/budget-level.ts")).not.toMatch(/\bfetch\(|from "\.\/neon"|from "\.\/neon-budget"/);
+    // And the file the governor's reading lives in writes a no-store fetch: reached from a static route, the test above fails on it.
+    expect(optsOutOfStatic("src/modules/diagnostics/neon.ts")).toBe(true);
   });
 
   it("walks far enough to meet the forecast's source, and would see a no-store fetch in it", () => {

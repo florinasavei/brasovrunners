@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * The database handle is a trap: any query it is asked fails the test.
  */
 const budget = vi.hoisted(() => ({ level: "unknown" as "unknown" | "green" | "amber" | "red" }));
-vi.mock("@/modules/diagnostics/neon-budget", () => ({ peekNeonBudgetLevel: () => budget.level }));
+vi.mock("@/modules/diagnostics/budget-level", () => ({ peekNeonBudgetLevel: () => budget.level, lastKnownBudget: () => null }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 vi.mock("next/server", () => ({ after: () => undefined }));
 

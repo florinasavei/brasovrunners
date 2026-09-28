@@ -43,7 +43,7 @@ import {
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
-import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";

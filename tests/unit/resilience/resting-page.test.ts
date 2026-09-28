@@ -12,8 +12,8 @@ import ro from "../../../messages/ro.json";
 const request = vi.hoisted(() => ({ path: null as string | null, asked: 0 }));
 
 vi.mock("@/shared/config/env", () => ({ env: { APP_ENV: "test", STORAGE_MODE: "fake", APP_BASE_URL: "https://example.test" } }));
-vi.mock("@/modules/diagnostics/neon-budget", () => ({
-  readNeonBudget: async () => ({ level: "red", budget: { spent: false }, meter: null }),
+vi.mock("@/modules/diagnostics/budget-level", () => ({
+  lastKnownBudget: () => ({ level: "red", spent: false, periodEnd: null, at: 0 }),
 }));
 vi.mock("next/headers", () => ({
   headers: async () => {

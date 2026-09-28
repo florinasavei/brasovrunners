@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
-import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { ColdMissError, isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
 import { copyOf, keepCopy, noteSavedCopyServed } from "@/modules/resilience/last-good";
