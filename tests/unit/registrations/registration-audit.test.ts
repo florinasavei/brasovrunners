@@ -40,6 +40,7 @@ describe("§420 §104 the public form hands the allocator the participation wind
     registrationOpensAt: null,
     registrationOpensSoon: false,
     dateToBeAnnounced: false,
+    timeToBeAnnounced: false,
     registrationClosesAt: null,
     capacity: 100,
     raceId: null,

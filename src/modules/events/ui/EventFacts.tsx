@@ -26,7 +26,7 @@ import { CLUB_LOCALITY } from "../domain/place";
 import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEventPage } from "../repository";
-import { datedOrNull } from "../domain/dated";
+import { announcedDayInstant, datedOrNull } from "../domain/dated";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import CardRegistration, { cardRegistrationLine } from "./CardRegistration";
 import { readRegistrationDoor } from "./registration-door";
@@ -245,7 +245,14 @@ export default async function EventFacts({
   // The date starts its line, so it takes a capital (§349): "Sâmbătă, 21 nov. 2026".
   const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
   const startsAt = event.startsAt;
-  const dateLong = startsAt === null ? t("dateToBeAnnounced") : formatDay(startsAt, { locale, timeZone: event.timezone, style: "long" });
+  // Only the time held back (§NNN): the day the query computed, formatted where no zone can move it.
+  const heldDay = startsAt === null && event.announcedDay ? announcedDayInstant(event.announcedDay) : null;
+  const dateLong =
+    startsAt !== null
+      ? formatDay(startsAt, { locale, timeZone: event.timezone, style: "long" })
+      : heldDay
+        ? formatDay(heldDay, { locale, timeZone: "UTC", style: "long" })
+        : t("dateToBeAnnounced");
   /**
    * The card's "when" line must fit on one line at 320 and 360 pixels (§366, amended §375 — the
    * owner, 2026-09-24, of the row whose clock and time had wrapped to a second line: "This should
@@ -357,8 +364,19 @@ export default async function EventFacts({
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
     const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
-    // No time to say while the date is to be announced (§NNN): the sentence alone.
-    if (startsAt === null) return [day];
+    // No time to say while the start is to be announced (§NNN): the day with «Ora se anunță», or
+    // the date's sentence alone.
+    if (startsAt === null) {
+      return heldDay
+        ? [
+            day,
+            <>
+              {clock}
+              {t("timeToBeAnnounced")}
+            </>,
+          ]
+        : [day];
+    }
     if (event.raceStartsAt) {
       return [
         day,

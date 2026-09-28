@@ -39,7 +39,7 @@
     }
   },
   "Events": {
-    "undatedTitle": "Date to be announced",
+    "undatedTitle": "Date or time to be announced",
     "title": "Events",
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
@@ -165,6 +165,7 @@
     "address": "Address",
     "locationToBeAnnounced": "Location to be announced soon",
     "dateToBeAnnounced": "Date to be announced soon",
+    "timeToBeAnnounced": "Time to be announced soon",
     "distance": "Distance",
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
@@ -764,6 +765,7 @@
       "featured": "Featured",
       "placeToBeAnnounced": "Location not announced",
       "dateToBeAnnounced": "Date not announced",
+      "timeToBeAnnounced": "Time not announced",
       "preview": "Preview",
       "edit": "Edit",
       "editNamed": "Edit {title}",
@@ -1038,6 +1040,8 @@
       "placeUnpublished": "Not published while the location is to be announced.",
       "dateToBeAnnounced": "Date to be announced later",
       "dateToBeAnnouncedHelp": "Ticked, every page says “Date to be announced soon”; the date above stays unpublished and registration stays “opening soon”.",
+      "timeToBeAnnounced": "Time to be announced later",
+      "timeToBeAnnouncedHelp": "Ticked, the day shows on the site and “Time to be announced soon” stands in for the time; registration stays “opening soon” and the event stays off the calendar.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "special": "A special edition",
@@ -1613,6 +1617,7 @@
           },
           "when": {
             "tba": "Date to be announced later",
+            "timeTba": "Time to be announced later",
             "none": "No date chosen yet",
             "raceStart": "race start {time}",
             "duration": "{duration}"

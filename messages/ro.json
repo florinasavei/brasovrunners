@@ -39,7 +39,7 @@
     }
   },
   "Events": {
-    "undatedTitle": "Data se anunță",
+    "undatedTitle": "Data sau ora se anunță",
     "title": "Evenimente",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
@@ -165,6 +165,7 @@
     "address": "Adresă",
     "locationToBeAnnounced": "Locația se anunță în curând",
     "dateToBeAnnounced": "Data se anunță în curând",
+    "timeToBeAnnounced": "Ora se anunță în curând",
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
@@ -764,6 +765,7 @@
       "featured": "Principal",
       "placeToBeAnnounced": "Locație neanunțată",
       "dateToBeAnnounced": "Dată neanunțată",
+      "timeToBeAnnounced": "Oră neanunțată",
       "preview": "Previzualizare",
       "edit": "Editează",
       "editNamed": "Editează {title}",
@@ -1038,6 +1040,8 @@
       "placeUnpublished": "Nepublicat cât timp locația se anunță mai târziu.",
       "dateToBeAnnounced": "Data se anunță mai târziu",
       "dateToBeAnnouncedHelp": "Bifat, peste tot scrie „Data se anunță în curând”; data de mai sus rămâne nepublicată și înscrierile rămân „se deschid în curând”.",
+      "timeToBeAnnounced": "Ora se anunță mai târziu",
+      "timeToBeAnnouncedHelp": "Bifat, ziua apare pe site, iar în locul orei scrie „Ora se anunță în curând”; înscrierile rămân „se deschid în curând”, evenimentul nu intră în calendar.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "special": "Ediție specială",
@@ -1613,6 +1617,7 @@
           },
           "when": {
             "tba": "Data se anunță mai târziu",
+            "timeTba": "Ora se anunță mai târziu",
             "none": "Data nu e aleasă încă",
             "raceStart": "startul cursei {time}",
             "duration": "{duration}"

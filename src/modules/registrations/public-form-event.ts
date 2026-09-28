@@ -27,6 +27,7 @@ export function publicFormEvent(
     | "registrationOpensAt"
     | "registrationOpensSoon"
     | "dateToBeAnnounced"
+    | "timeToBeAnnounced"
     | "registrationClosesAt"
     | "capacity"
     | "raceId"
@@ -47,6 +48,7 @@ export function publicFormEvent(
     registrationOpensSoon: row.registrationOpensSoon,
     // Every door refuses while the date is to be announced (§NNN), the public form's too.
     dateToBeAnnounced: row.dateToBeAnnounced,
+    timeToBeAnnounced: row.timeToBeAnnounced,
     registrationClosesAt: row.registrationClosesAt,
     capacity: row.capacity,
     raceId: row.raceId,

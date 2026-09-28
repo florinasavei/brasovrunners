@@ -15,6 +15,7 @@ import { placeNameIn } from "@/modules/events/domain/place";
 import { withoutPlaces } from "@/modules/events/domain/schedule";
 import { type PublicEventPage } from "@/modules/events/repository";
 import { datedOrNull } from "@/modules/events/domain/dated";
+import { dayIn } from "@/modules/registrations/domain/age";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventAgeRule from "@/modules/events/ui/EventAgeRule";
 import EventFacts from "@/modules/events/ui/EventFacts";
@@ -97,8 +98,10 @@ export default async function PreviewEventPage({ params }: Props) {
   // The place not announced yet (§328) is withheld here exactly as the public query withholds it,
   // so the preview shows the sentence the page will show — including the programme rows' places.
   const placeLater = event.locationToBeAnnounced;
-  // The date not announced yet (§NNN), withheld the same way: the preview says «Data se anunță».
-  const dateLater = event.dateToBeAnnounced;
+  // The start not announced yet (§NNN) — its date, or only its time — withheld the same way: the
+  // preview says «Data se anunță» or the day with «Ora se anunță», as the page will.
+  const dateLater = event.dateToBeAnnounced || event.timeToBeAnnounced;
+  const dayOnly = event.timeToBeAnnounced && !event.dateToBeAnnounced ? dayIn(event.startsAt, event.timezone) : null;
   const preview: PublicEventPage = {
     id: event.id,
     type: event.type,
@@ -107,7 +110,9 @@ export default async function PreviewEventPage({ params }: Props) {
     startsAt: dateLater ? null : event.startsAt,
     endsAt: dateLater ? null : event.endsAt,
     raceStartsAt: dateLater ? null : event.raceStartsAt,
-    dateToBeAnnounced: dateLater,
+    dateToBeAnnounced: event.dateToBeAnnounced,
+    timeToBeAnnounced: event.timeToBeAnnounced,
+    announcedDay: dayOnly,
     timezone: event.timezone,
     mapUrl: placeLater ? null : event.mapUrl,
     // «Coordonate» (§416): withheld with the place, as the public query withholds them.
@@ -152,7 +157,8 @@ export default async function PreviewEventPage({ params }: Props) {
     routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     discountNote: translation.discountNote,
-    scheduleItems: placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
+    // No programme while the start is held back (§NNN): its rows are instants, as on the page.
+    scheduleItems: dateLater ? null : placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,

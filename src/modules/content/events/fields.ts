@@ -614,6 +614,8 @@ export const eventFieldsSchema = z
      * the organizer holds back, nor hold back one they announced.
      */
     dateToBeAnnounced: z.boolean().optional(),
+    /** «Ora se anunță mai târziu» (§NNN): the day is announced, its time not yet. The same discipline. */
+    timeToBeAnnounced: z.boolean().optional(),
     /**
      * Closed sets since migration `0018`, and optional because "the club has not said" is a
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.

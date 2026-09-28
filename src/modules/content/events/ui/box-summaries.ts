@@ -48,7 +48,7 @@ export type SummaryWords = {
   /** "{language} identic cu {source}": the same words in both languages (§354). */
   identical: string;
   titleSummary: { untitled: string };
-  when: { none: string; tba: string; raceStart: string; duration: string };
+  when: { none: string; tba: string; timeTba: string; raceStart: string; duration: string };
   timezone: { home: string };
   place: { tba: string; map: string; none: string; inLanguage: string };
   programme: { moments: CountWords; range: string; groupRun: string; none: string; checklist: string };
@@ -249,7 +249,7 @@ export function rulesSummary(words: SummaryWords, translations: readonly Summary
   return perLanguageText(words, translations, BLANK.rules, "rules");
 }
 
-type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone"> & Partial<Pick<EditableEvent, "dateToBeAnnounced">>;
+type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone"> & Partial<Pick<EditableEvent, "dateToBeAnnounced" | "timeToBeAnnounced">>;
 
 /** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` — the duration in hours and minutes (§433). */
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
@@ -257,7 +257,7 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
   const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
   return join(words, [
     // Said first while the date is held back (§NNN): the provisional date after it is staff's alone.
-    event.dateToBeAnnounced ? words.when.tba : null,
+    event.dateToBeAnnounced ? words.when.tba : event.timeToBeAnnounced ? words.when.timeTba : null,
     summaryDateTime(event.startsAt, event.timezone, locale),
     event.type === "RACE" && event.raceStartsAt
       ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })

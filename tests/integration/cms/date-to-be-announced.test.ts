@@ -304,6 +304,52 @@ describe("§NNN the date to be announced", () => {
     });
   });
 
+  describe("the time to be announced (§NNN): the day is published, the hour is not", () => {
+    const publishTimeLater = async (extra: Record<string, unknown> = {}) =>
+      createEventAndPublish(db, {
+        actor: admin,
+        fields: { ...fields(), timeToBeAnnounced: true, ...extra, translations: TRANSLATIONS },
+        publish: true,
+        now: NOW,
+      });
+
+    it("hands the page the day alone, on the event's calendar, and no instant", async () => {
+      // 00:30 in Brașov is the day before in UTC: the day must be the event's own, not UTC's.
+      await publishTimeLater({ startsAtWallTime: "2027-03-14T00:30" });
+      const page = (await findPublishedEventBySlug(db, "ro", "semimaratonul"))!;
+      expect(page).toMatchObject({ startsAt: null, endsAt: null, raceStartsAt: null, announcedDay: "2027-03-14", timeToBeAnnounced: true });
+      // The provisional instant, 00:30 in Brașov = 22:30 UTC the day before, is nowhere in the read.
+      expect(JSON.stringify(page)).not.toContain("2027-03-13T22:30");
+      expect(JSON.stringify(page)).not.toContain("22:30");
+      const [section] = await listUndatedPublishedEvents(db, "ro");
+      expect(section).toMatchObject({ slug: "semimaratonul", announcedDay: "2027-03-14", startsAt: null });
+    });
+
+    it("is on no dated list, the calendar's months included", async () => {
+      await publishTimeLater();
+      expect(await listPublishedEvents(db, "ro")).toEqual([]);
+      expect(await listPublishedEventsBetween(db, "ro", new Date("2027-03-01T00:00:00.000Z"), new Date("2027-04-01T00:00:00.000Z"))).toEqual([]);
+    });
+
+    it("keeps registration at «în curând» and every door shut", async () => {
+      const result = await publishTimeLater();
+      const row = await rowOf(result.event.id);
+      expect(row.registrationOpensSoon).toBe(true);
+      expect(registrationState(row, NOW)).toBe("NOT_YET_OPEN");
+      await expect(submitRegistration(db, row, SUBMISSION, NOW, "REAL", { source: "STAFF", atTheDesk: true } as never)).rejects.toMatchObject({
+        message: expect.stringContaining("to be announced"),
+      });
+    });
+
+    it("names its own box when refused, and the date's switch wins when both are on", async () => {
+      await expect(publishTimeLater({ featured: true })).rejects.toMatchObject({ fields: ["featured"] });
+      await expect(publishTimeLater({ registrationOpensAtWallTime: "2026-12-01T10:00" })).rejects.toMatchObject({ fields: ["registrationOpensAt"] });
+      await publishTimeLater({ dateToBeAnnounced: true });
+      const page = (await findPublishedEventBySlug(db, "ro", "semimaratonul"))!;
+      expect(page.announcedDay).toBeNull();
+    });
+  });
+
   describe("the new-event alert", () => {
     it("waits for the date: nothing is marked seen while it is held back, and the alert may go once it is announced", async () => {
       const result = await publishUndated();

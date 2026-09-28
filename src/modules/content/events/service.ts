@@ -5,6 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { costPaidToExternalOrganizer, type EventCostType } from "@/modules/events/domain/cost";
 import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
@@ -286,9 +287,9 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
       ["registrationOpensAt"],
     );
   }
-  // A date still to be announced (§NNN) holds registration at «în curând»: an opening date is an
+  // A start still to be announced (§NNN), date or time, holds registration at «în curând»: an opening date is an
   // answer to a question the event cannot ask yet, refused like §451's rather than dropped.
-  if (fields.dateToBeAnnounced === true && registrationOpensAt) {
+  if (startHeldBack(fields) && registrationOpensAt) {
     throw new DomainError(
       "VALIDATION_ERROR",
       "registrationOpensAt: registration cannot have an opening date while the event's date is to be announced",
@@ -334,17 +335,19 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
 async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>(
   db: Database<T>,
   fields: EventFieldsInput,
-  current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "repeatRule" | "repeatOf"> | null,
+  current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "timeToBeAnnounced" | "repeatRule" | "repeatOf"> | null,
 ): Promise<void> {
-  if (fields.dateToBeAnnounced !== true) return;
+  if (!startHeldBack(fields)) return;
+  // The box the refusal names: the date's when it is ticked, else the time's.
+  const box = fields.dateToBeAnnounced === true ? "dateToBeAnnounced" : "timeToBeAnnounced";
   // The listing leads with a dated event (§470): one with no date cannot be the one it leads with,
   // and marking it would clear the mark from the event that does (`clearFeaturedExcept`).
   if (fields.featured) {
-    throw new DomainError("VALIDATION_ERROR", "featured: an event whose date is to be announced cannot lead the listing", ["featured"]);
+    throw new DomainError("VALIDATION_ERROR", "featured: an event whose start is to be announced cannot lead the listing", ["featured"]);
   }
-  if (current?.dateToBeAnnounced === true) return;
+  if (current && startHeldBack(current)) return;
   if (current && (current.repeatRule !== null || current.repeatOf !== null)) {
-    throw new DomainError("VALIDATION_ERROR", "dateToBeAnnounced: a date of a series cannot be announced later", ["dateToBeAnnounced"]);
+    throw new DomainError("VALIDATION_ERROR", `${box}: a date of a series cannot be announced later`, [box]);
   }
 }
 
@@ -358,15 +361,16 @@ async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>
 async function assertNobodyRegisteredForUndated<T extends Record<string, unknown>>(
   tx: Database<T>,
   fields: EventFieldsInput,
-  current: Pick<EditableEvent, "id" | "dateToBeAnnounced">,
+  current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "timeToBeAnnounced">,
 ): Promise<void> {
-  if (fields.dateToBeAnnounced !== true || current.dateToBeAnnounced) return;
+  if (!startHeldBack(fields) || startHeldBack(current)) return;
+  const box = fields.dateToBeAnnounced === true ? "dateToBeAnnounced" : "timeToBeAnnounced";
   await lockEventForCapacity(tx, current.id);
   if ((await countRegistrationsForEvent(tx, current.id)) > 0) {
     throw new DomainError(
       "VALIDATION_ERROR",
-      "dateToBeAnnounced: people are registered for this date; give the new date and tell them, or cancel the event",
-      ["dateToBeAnnounced"],
+      `${box}: people are registered for this date; give the new start and tell them, or cancel the event`,
+      [box],
     );
   }
 }
@@ -557,7 +561,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // registration is held at «se deschid în curând» (§451) whatever the box said — so announcing the
     // date later opens nothing by itself: the organizer unticks «în curând» when they mean it.
     ...(fields.dateToBeAnnounced === undefined ? {} : { dateToBeAnnounced: fields.dateToBeAnnounced }),
-    ...(fields.dateToBeAnnounced === true && fields.registrationMode === "INTERNAL" ? { registrationOpensSoon: true } : {}),
+    // «Ora se anunță mai târziu» (§NNN): the same, for the time alone.
+    ...(fields.timeToBeAnnounced === undefined ? {} : { timeToBeAnnounced: fields.timeToBeAnnounced }),
+    ...(startHeldBack(fields) && fields.registrationMode === "INTERNAL" ? { registrationOpensSoon: true } : {}),
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
     participantListVisibility: fields.participantListVisibility,
@@ -2666,6 +2672,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // And one whose date is not announced keeps it held back (§NNN): its start is the source's
     // provisional note. `repeatEvent` refuses such a source, so only a duplicate carries this.
     dateToBeAnnounced: source.dateToBeAnnounced,
+    timeToBeAnnounced: source.timeToBeAnnounced,
     difficulty: source.difficulty,
     difficultyLevel: source.difficultyLevel,
     costType: source.costType,
@@ -2783,7 +2790,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
   // An event whose date is to be announced (§NNN) has no date to repeat from: its start is the
   // organizer's provisional note, and a series would publish that note on every date it made.
-  if (source.dateToBeAnnounced) {
+  if (startHeldBack(source)) {
     throw new DomainError("VALIDATION_ERROR", "repeat: an event whose date is to be announced cannot repeat", ["repeat"]);
   }
   if (source.repeatOf) {

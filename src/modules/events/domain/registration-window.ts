@@ -6,6 +6,8 @@
  * tested for the boundary cases that matter, and those boundaries are where this will be wrong.
  */
 
+import { startHeldBack } from "./dated";
+
 export type RegistrationMode = "NONE" | "INTERNAL" | "EXTERNAL";
 
 export type RegistrationWindowInput = {
@@ -19,6 +21,8 @@ export type RegistrationWindowInput = {
    * provisional `startsAt` passes this; a public read passes `startsAt: null`, which says the same.
    */
   dateToBeAnnounced?: boolean;
+  /** Only the time is to be announced (§NNN): the same answer as the date's switch. */
+  timeToBeAnnounced?: boolean;
   registrationOpensAt: Date | null;
   /**
    * «Înscrierile se deschid în curând» (§451): announced with no date. While true an internal
@@ -52,7 +56,7 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
   // organizer's form alike: nobody signs up for a day nobody has named. There is no day to count a
   // minimum age on and no start to close at, and a provisional date that passed must not close the
   // «Anunță-mă» list either.
-  if (event.dateToBeAnnounced || event.startsAt === null) return "NOT_YET_OPEN";
+  if (startHeldBack(event) || event.startsAt === null) return "NOT_YET_OPEN";
   if (event.registrationMode === "EXTERNAL") return "EXTERNAL";
 
   // «Se deschid în curând» (§451): the organizer has announced the event and not the opening.
@@ -110,7 +114,7 @@ export function registrationClosingInstant(event: Pick<RegistrationWindowInput, 
 export function upcomingRegistrationOpening(event: RegistrationWindowInput, now: Date): Date | null {
   if (registrationState(event, now) !== "NOT_YET_OPEN") return null;
   // «În curând» has no date to show, and neither has an event whose date is to be announced (§NNN).
-  if (event.registrationOpensSoon || event.dateToBeAnnounced || event.startsAt === null) return null;
+  if (event.registrationOpensSoon || startHeldBack(event) || event.startsAt === null) return null;
   return event.registrationOpensAt ?? event.publishedAt;
 }
 

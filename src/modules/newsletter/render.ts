@@ -58,7 +58,7 @@ export async function renderNewsletterRow(
   if (row.messageType === "NEW_EVENT_ALERT") {
     const [event] = eventId
       ? await db
-          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt, dateToBeAnnounced: events.dateToBeAnnounced })
+          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt, dateToBeAnnounced: events.dateToBeAnnounced, timeToBeAnnounced: events.timeToBeAnnounced })
           .from(events)
           .where(eq(events.id, eventId))
           .limit(1)
@@ -69,7 +69,7 @@ export async function renderNewsletterRow(
     }
     // Queued while it had a date, and the date was since held back (§NNN): the alert would say a date
     // the club withdrew. Withdrawn; the event is announced again once its date is.
-    if (event.dateToBeAnnounced) throw new OutboxMessageWithdrawn("newsletter: the event's date is to be announced");
+    if (event.dateToBeAnnounced || event.timeToBeAnnounced) throw new OutboxMessageWithdrawn("newsletter: the event's start is to be announced");
   }
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;

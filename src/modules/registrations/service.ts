@@ -8,6 +8,7 @@ import type {
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
@@ -107,6 +108,8 @@ export type EventForRegistration = {
    * Absent on a partial row (a fixture) is the column's default, false.
    */
   dateToBeAnnounced?: boolean;
+  /** Only the time is to be announced (§NNN): refused at every door, like the date's switch. */
+  timeToBeAnnounced?: boolean;
   registrationClosesAt: Date | null;
   capacity: number | null;
   raceId: string | null;
@@ -175,7 +178,7 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
     throw new DomainError("VALIDATION_ERROR", "this event does not accept local registration");
   }
   // Before the desk's exception: a date still to be announced (§NNN) takes nobody anywhere.
-  if (event.dateToBeAnnounced) {
+  if (startHeldBack(event)) {
     throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
   }
   if (atTheDesk) {
@@ -192,6 +195,7 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
       registrationOpensAt: event.registrationOpensAt,
       registrationOpensSoon: event.registrationOpensSoon ?? false,
       dateToBeAnnounced: event.dateToBeAnnounced ?? false,
+      timeToBeAnnounced: event.timeToBeAnnounced ?? false,
       registrationClosesAt: event.registrationClosesAt,
       publishedAt: event.publishedAt,
     },
@@ -1373,7 +1377,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // Asked again under the lock (§NNN): the date held back by a save that committed after the
     // caller read the row. The save counts registrations under this same lock, so a submission and
     // the switch cannot both pass — one waits for the other and finds it.
-    if (locked.dateToBeAnnounced) {
+    if (startHeldBack(locked)) {
       throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
     }
 

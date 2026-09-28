@@ -281,6 +281,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {next.event.dateToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.dateToBeAnnounced")} data-testid="date-to-be-announced-chip" />
               )}
+              {!next.event.dateToBeAnnounced && next.event.timeToBeAnnounced && (
+                <Chip size="small" variant="outlined" color="warning" label={t("events.timeToBeAnnounced")} data-testid="time-to-be-announced-chip" />
+              )}
               {/* Held with a partner (§379, §391): the same handshake marker the listing card
                   wears, never the list of partners themselves — that is the event page's own
                   cards. */}

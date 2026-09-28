@@ -398,6 +398,16 @@ export const events = pgTable(
     dateToBeAnnounced: boolean("date_to_be_announced").notNull().default(false),
 
     /**
+     * The time is not announced yet, the day is (`DECISIONS.md` §NNN; the owner, 2026-09-28: "the
+     * same with the time — the time may still change"). Read with `date_to_be_announced` as one
+     * rule, "the start is not announced": registration stays «în curând», the calendar and the feed
+     * leave the event out, and every public reader is handed no start — only the day, as a date
+     * with no time (`announcedDay` in `events/repository.ts`), which the page, the card and the
+     * share picture say with «Ora se anunță în curând». When both are on, the date wins: no day.
+     */
+    timeToBeAnnounced: boolean("time_to_be_announced").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —

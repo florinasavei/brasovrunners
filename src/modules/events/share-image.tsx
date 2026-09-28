@@ -4,6 +4,7 @@ import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { distanceInKm } from "./domain/event-type";
+import { announcedDayInstant } from "./domain/dated";
 import type { PublicEventPage } from "./repository";
 
 /**
@@ -32,6 +33,7 @@ export type ShareImageEvent = Pick<
   | "type"
   | "startsAt"
   | "raceStartsAt"
+  | "announcedDay"
   | "timezone"
   | "locationName"
   | "locationToBeAnnounced"
@@ -51,6 +53,8 @@ export async function eventShareImage(
     locationToBeAnnounced: string;
     /** "Data se anunță în curând" (§NNN), where the date and the time would be. */
     dateToBeAnnounced: string;
+    /** "Ora se anunță în curând" (§NNN), after the day, when only the time is held back. */
+    timeToBeAnnounced: string;
     distanceKm: (km: string) => string;
     elevationM: (m: string) => string;
   },
@@ -65,7 +69,9 @@ export async function eventShareImage(
   // While the date is to be announced (§NNN) the query withheld it, and the picture says so instead.
   const when =
     event.startsAt === null
-      ? labels.dateToBeAnnounced
+      ? event.announcedDay
+        ? `${formatDay(announcedDayInstant(event.announcedDay), { locale, timeZone: "UTC", style: "long" })} · ${labels.timeToBeAnnounced}`
+        : labels.dateToBeAnnounced
       : `${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" })} · ${formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone })}`;
   const km = distanceInKm(event.distanceMeters);
   const route = [

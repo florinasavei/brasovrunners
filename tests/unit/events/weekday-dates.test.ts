@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { PublicEvent } from "@/modules/events/repository";
+import type { PublicEvent, PublicEventPage } from "@/modules/events/repository";
 
 /**
  * BR-REQ-040-03 criteria 4 and 5 (§349) — the day of the week on the surfaces a runner reads the
@@ -81,6 +81,41 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
+describe("§NNN the start held back: the day alone, or nothing of time", () => {
+  const held = (announcedDay: string | null): PublicEventPage => ({ ...event(), startsAt: null, endsAt: null, raceStartsAt: null, announcedDay });
+  const text = (html: string) => html.replace(/<style[^>]*>[^<]*<\/style>/g, "").replace(/<[^>]+>/g, " ");
+
+  it("says the day with «Ora se anunță în curând» and no hour when only the time is held back", async () => {
+    pageLocale = "ro";
+    const html = text(renderToStaticMarkup(await EventFacts({ event: held("2027-01-16"), now: NOW, stacked: true })));
+    expect(html).toContain("Sâmbătă, 16 ian. 2027");
+    expect(html).toContain("Ora se anunță în curând");
+    expect(html).not.toContain("09:30");
+  });
+
+  it("says «Data se anunță în curând» and no day when the date is held back", async () => {
+    pageLocale = "ro";
+    const html = text(renderToStaticMarkup(await EventFacts({ event: held(null), now: NOW, stacked: true })));
+    expect(html).toContain("Data se anunță în curând");
+    expect(html).not.toContain("2027");
+  });
+
+  it("puts the same day on the share picture, in English too", async () => {
+    const image = (await eventShareImage(held("2027-01-16"), "en", "og", {
+      type: "Race",
+      cancelled: "Cancelled",
+      locationToBeAnnounced: "—",
+      dateToBeAnnounced: "Date to be announced soon",
+      timeToBeAnnounced: "Time to be announced soon",
+      distanceKm: (km: string) => `${km} km`,
+      elevationM: (m: string) => `${m} m`,
+    })) as unknown as { element: ReactElement };
+    const html = text(renderToStaticMarkup(image.element));
+    expect(html).toContain("Saturday, 16 Jan 2027 · Time to be announced soon");
+    expect(html).not.toContain("09:30");
+  });
+});
+
 describe("BR-REQ-040-03 criterion 4 the event's facts carry the day of the week, in the page's language", () => {
   it("writes the long form at the start of the facts on a Romanian page", async () => {
     pageLocale = "ro";
@@ -121,6 +156,7 @@ describe("BR-REQ-040-03 criterion 4 the share picture's date is the picture's la
     cancelled: "Anulat",
     locationToBeAnnounced: "—",
     dateToBeAnnounced: "—",
+    timeToBeAnnounced: "—",
     distanceKm: (km: string) => `${km} km`,
     elevationM: (m: string) => `${m} m`,
   };

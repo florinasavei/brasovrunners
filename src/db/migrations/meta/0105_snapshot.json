@@ -1,5 +1,5 @@
 {
-  "id": "11a9dd79-4f2e-4791-93bb-5f40df06a1f8",
+  "id": "50b75104-52cc-4009-91cc-d231374f9a21",
   "prevId": "2c31c80f-9116-44b6-9ae9-c3fbbb302663",
   "version": "7",
   "dialect": "postgresql",
@@ -1237,6 +1237,13 @@
         },
         "date_to_be_announced": {
           "name": "date_to_be_announced",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "time_to_be_announced": {
+          "name": "time_to_be_announced",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

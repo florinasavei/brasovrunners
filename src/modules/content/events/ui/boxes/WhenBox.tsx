@@ -126,6 +126,12 @@ export default async function WhenBox({
                 {t("editor.dateToBeAnnounced")}
               </CheckboxField>
               <BoxNote>{t("editor.dateToBeAnnouncedHelp")}</BoxNote>
+              {/* «Ora se anunță mai târziu» (§NNN): the day is published, the hour above is not. */}
+              <input type="hidden" name="event.timeToBeAnnounced.present" value="1" />
+              <CheckboxField name="event.timeToBeAnnounced" defaultChecked={event?.timeToBeAnnounced ?? false}>
+                {t("editor.timeToBeAnnounced")}
+              </CheckboxField>
+              <BoxNote>{t("editor.timeToBeAnnouncedHelp")}</BoxNote>
             </Box>
           )}
           {/* Only a race has a gun time apart from the meeting time (§71); hidden, not removed. */}

@@ -536,6 +536,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
         // the organizer's provisional note. Still unseen, it goes once the date is announced — if
         // that falls inside the window a publication has, like any other new event.
         eq(events.dateToBeAnnounced, false),
+        eq(events.timeToBeAnnounced, false),
         sql`${events.publishedAt} >= ${since.toISOString()}::timestamptz`,
       ),
     )
