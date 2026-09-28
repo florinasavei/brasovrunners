@@ -2644,7 +2644,7 @@
           "done": "The notice in force describes the stages: the public list shows beside each name whether the person is confirmed, registered awaiting confirmation, or on the waiting list.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the stages.",
-            "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
+            "Open the draft, read it, fill in what is left, then “Approve and publish”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
             "Approve the terms and the declaration from their templates as well, if not already, so they all say the same."
           ]
         },
@@ -2654,7 +2654,7 @@
           "done": "The notice in force describes Strava and Instagram on the public list: the form offers the tick, and the list shows them beside the names of those who ticked it.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes Strava and Instagram beside a name.",
-            "Read the text, save the draft, then “Approve”.",
+            "Open the draft, read it, fill in what is left, then “Approve and publish”.",
             "From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
@@ -2665,7 +2665,7 @@
           "done": "The notice in force describes the newsletter: the contact page offers the subscription, with the topics chosen and a confirmation by email.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
-            "Read the text, save the draft, then “Approve”. From the moment it takes effect, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
+            "Open the draft, read it, fill in what is left, then “Approve and publish”. Once it is in force, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
             "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
           ]
         },
@@ -2675,7 +2675,7 @@
           "done": "The notice in force describes the team page: what it shows, on what basis, and how a card is taken down.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 4 describes the team page.",
-            "Read the text, save the draft, then “Approve”. The row closes by itself once the notice takes effect.",
+            "Open the draft, read it, fill in what is left, then “Approve and publish”. The row closes by itself once the notice takes effect.",
             "Only then publish the page, from /admin/pages/team → “Publish the page”.",
             "The same new notice also describes, in section 12, the club members' accounts (the members' area): approve it before inviting the first members from Team → “Add several members”."
           ]
@@ -4887,7 +4887,7 @@
               "title": "Approve a new version of a legal text",
               "steps": [
                 "«Legal documents» → «New version».",
-                "Under «Start from the template» pick the document, from «General documents», «Race declarations» or «Group run declarations». Under each button is what is in force; «New template» shows that the template changed since.",
+                "Under «Start from the template» pick the document, from «General documents», «Race declarations» or «Group run declarations». Under each button is what is in force; «New template» shows that the text in force does not have the current template's words.",
                 "The text comes with the club's details filled in. Whatever is left in angle brackets, shaped <…>, you fill in in Romanian and in English.",
                 "Read all of it and press «Save draft».",
                 "On the draft's page: «Download PDF» to read it on paper or give it to a lawyer.",

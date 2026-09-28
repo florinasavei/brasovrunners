@@ -2644,7 +2644,7 @@
           "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie stadiile.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
+            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din șabloanele lor, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
         },
@@ -2654,7 +2654,7 @@
           "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”.",
+            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
@@ -2665,7 +2665,7 @@
           "done": "Nota în vigoare descrie newsletterul: pagina de contact arată abonarea, cu temele alese și confirmarea pe email.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
+            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”. Odată în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
             "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
         },
@@ -2675,7 +2675,7 @@
           "done": "Nota în vigoare descrie pagina Echipa: ce arată, pe ce temei și cum se scoate un card.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 4 descrie pagina Echipa.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Rândul se închide singur când nota intră în vigoare.",
+            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”. Rândul se închide singur când nota intră în vigoare.",
             "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”.",
             "Aceeași notă nouă descrie, în secțiunea 12, și conturile membrilor clubului (zona membrilor): aprob-o înainte să inviți primii membri din Echipa → „Adaugă mai mulți membri”."
           ]
@@ -4887,7 +4887,7 @@
               "title": "Aprobă o versiune nouă a unui text legal",
               "steps": [
                 "«Documente legale» → «Versiune nouă».",
-                "Sub «Pornește de la șablon» alege documentul, din «Documente generale», «Declarații de cursă» sau «Declarații pentru alergările de grup». Sub fiecare buton scrie ce e în vigoare; «Șablon nou» arată că șablonul s-a schimbat de atunci.",
+                "Sub «Pornește de la șablon» alege documentul, din «Documente generale», «Declarații de cursă» sau «Declarații pentru alergările de grup». Sub fiecare buton scrie ce e în vigoare; «Șablon nou» arată că textul în vigoare nu are cuvintele șablonului de acum.",
                 "Textul vine completat cu datele clubului. Ce a rămas între paranteze unghiulare, de forma <…>, completezi în română și în engleză.",
                 "Citește tot și apasă «Salvează ciorna».",
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",

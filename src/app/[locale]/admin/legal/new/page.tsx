@@ -144,7 +144,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         The owner, 2026-09-28, on this card: «de aici aș vrea să pot regenera documentele» (§NNN).
         So it is where the regenerating is: the six templates in three labelled rows, each button
         with its text's state under it — in force, a draft waiting, none — and «Șablon nou» when
-        the template changed after the text in force was made from it. A press keeps its meaning,
+        the text in force differs by its words from the filled template (§532's `unchanged`
+        test). A press keeps its meaning,
         the form below prefilled with that template (regenerating one text); «Regenerează toate»
         makes a draft of every text whose template is due, through §532's own press.
       */}

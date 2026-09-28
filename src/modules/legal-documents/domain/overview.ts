@@ -191,8 +191,8 @@ export function kindFoldOpens(summary: LegalKindSummary, filter: LegalListFilter
 }
 
 /**
- * Whether the platform's template changed after the text in force was made from it — the
- * «Șablon nou» chip on «Versiune nouă» (§NNN, the owner, 2026-09-28).
+ * Whether the text in force differs by its words from the filled template (§532's `unchanged`
+ * test) — the «Șablon nou» chip on «Versiune nouă» (§NNN, the owner, 2026-09-28).
  *
  * - With nothing in force, no: the state line already says «Nicio versiune în vigoare».
  * - Otherwise the text in force is compared by its words with the template's, the club's facts
