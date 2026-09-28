@@ -529,7 +529,7 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
     };
   }
 
-  it("with places free: the same count after every form, the same «loc rezervat până la 13:40», the fourth refused alike", async () => {
+  it("with places free: the same count after every form, the same places and deadline, the fourth refused alike", async () => {
     const { fresh, holds, limit } = await everyCase(50);
     expect(fresh.counts).toEqual([50, 49, 48, 47, 47]);
     expect(fresh.places).toEqual(["reserved", "reserved", "reserved"]);

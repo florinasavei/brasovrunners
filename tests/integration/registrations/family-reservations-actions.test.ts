@@ -194,7 +194,7 @@ const pressYes = (slug: string) => {
 };
 
 /** The sitting's screen exactly as `register/page.tsx` feeds it from the browser's half, the address masked. */
-async function screen(slug: string): Promise<string> {
+async function screen(): Promise<string> {
   const sealed = jar.get(SITTING_COOKIE);
   const sitting = sealed ? openFamilySittingCookie(sealed) : null;
   if (!sitting) return "no sitting";
@@ -304,7 +304,7 @@ describe("BR-REQ-031-01 the server decides whether a form adds a person, through
     jar.clear();
     const steps: { step: string; redirect: string; count: number | null; screen: string; half: unknown }[] = [];
     const record = async (step: string, redirect: string) => {
-      steps.push({ step, redirect, count: await available(event), screen: await screen(slug), half: half() });
+      steps.push({ step, redirect, count: await available(event), screen: await screen(), half: half() });
     };
     steps.push({ step: "before", redirect: "", count: await available(event), screen: "", half: null });
 
@@ -400,11 +400,11 @@ describe("BR-REQ-034-02 a form after the sitting's deadline opens a new sitting,
     }
     const lapsedScreen = await (async () => {
       vi.setSystemTime(minutes(41));
-      return screen(slug);
+      return screen();
     })();
     vi.setSystemTime(minutes(42));
     const redirect = await post(slug, "Dan", address);
-    return { redirect, lapsedScreen, screen: await screen(slug), half: half(), count: await available(event) };
+    return { redirect, lapsedScreen, screen: await screen(), half: half(), count: await available(event) };
   }
 
   it("the earlier people's places lapsed: the new sitting's screen lists Dan alone, reserved until his own deadline", async () => {
