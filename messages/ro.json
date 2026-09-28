@@ -2539,7 +2539,7 @@
           "how": [
             "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Pornește de la șablon”. Citește textul, completează datele clubului, salvează ciorna, apoi „Aprobă”.",
             "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
-            "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp alergătorul vine la alergări.",
+            "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp este activă, iar după retragere cel mult trei ani.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
           ]
         }

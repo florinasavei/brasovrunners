@@ -2539,7 +2539,7 @@
           "how": [
             "/admin/legal → “New version” → “Self-declaration (group run, asphalt)” → “Start from the template”. Read the text, fill in the club's details, save the draft, then “Approve”.",
             "The same for “Self-declaration (group run, trail)”.",
-            "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while the runner keeps coming to the runs.",
+            "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while it is active, and after a withdrawal for at most three years.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
           ]
         }
