@@ -228,7 +228,8 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
               fullWidth
               defaultValue={typed.email}
               error={invalid.has("email")}
-              helperText={invalid.has("email") ? t("errors.email") : t("emailHelp")}
+              // The dialog's intro says the link comes here (§NNN); a helper only for a refusal.
+              helperText={invalid.has("email") ? t("errors.email") : undefined}
             />
 
             <Box

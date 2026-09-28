@@ -243,10 +243,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
-            {t("requiredLegend")}
-          </Typography>
-
+          {/* No asterisk legend (§NNN): all three boxes are required, and the line under the send
+              button says what is still missing. */}
           <form action={submitContactAction}>
             {/* Outside the column (§480, the 360-px density pass): as its first children they made
                 the name box the column's second, and a column gives every item after its first the
@@ -264,8 +262,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
             <input type="hidden" name="renderedAt" value={now.toISOString()} />
             <Stack spacing={2}>
               <TextField {...field("name")} label={t("name")} required autoComplete="name" fullWidth />
+              {/* The intro already says the answer comes by email (§NNN). */}
               <TextField
-                {...field("email", t("emailHelp"))}
+                {...field("email")}
                 type="email"
                 label={t("email")}
                 required
