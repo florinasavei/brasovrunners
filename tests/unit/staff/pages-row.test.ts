@@ -6,7 +6,8 @@ import { PAGES_ROW_ENTRIES, PAGES_ROW_ROUTE, pagesRowEntryOf } from "@/modules/c
 import { activeAdminTabHref } from "@/modules/staff-identity/domain/admin-tab-match";
 import { SETTINGS_TAB_ROUTE } from "@/modules/staff-identity/domain/settings-tabs";
 import { deletePage, movePageInNav } from "@/modules/content/pages/service";
-import { canEditEventFields, canReadContent } from "@/modules/staff-identity/domain/roles";
+import { canEditEventFields, canEditTexts, canReadContent, canTransition, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { pageListVerbs } from "@/modules/content/pages/page-list-verbs";
 
 /**
  * «Pagini»'s row keeps the reader in «Pagini» (the owner, 2026-09-28: «când dau click pe pagina de
@@ -140,5 +141,40 @@ describe("«Pagini»'s row on the club's own pages' editors, and the list's gate
     await expect(deletePage(db, { actor: copywriter, pageId: "x" })).rejects.toMatchObject({ code: "FORBIDDEN" });
     // The arrows are drawn only for a role the move accepts.
     expect(read("src/app/[locale]/admin/pages/(list)/page.tsx")).toContain("const mayMove = canEditEventFields(actor.role);");
+  });
+});
+
+describe("the pages list's ⋮ offers each role only the verbs its services accept (BR-REQ-060-01)", () => {
+  const STATUSES = ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"] as const;
+
+  it("gates «Șterge» on canEditEventFields, the gate deletePage asserts", () => {
+    for (const role of STAFF_ROLES) {
+      for (const status of STATUSES) expect(pageListVerbs(role, status).remove, `${role} ${status}`).toBe(canEditEventFields(role));
+    }
+    expect(pageListVerbs("COPYWRITER", "DRAFT").remove).toBe(false);
+    expect(pageListVerbs("ADMIN", "DRAFT").remove).toBe(true);
+  });
+
+  it("offers «Publică» / «Retrage» only where transitionPage's table lets the role move the page", () => {
+    for (const role of STAFF_ROLES) {
+      for (const status of STATUSES) {
+        const target = status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
+        expect(pageListVerbs(role, status).toggleTo, `${role} ${status}`).toBe(canTransition(role, status, target, false) ? target : null);
+      }
+    }
+    // A Redactor is shown neither; an Administrator unpublishes a live page and publishes a submitted one.
+    for (const status of STATUSES) expect(pageListVerbs("COPYWRITER", status).toggleTo).toBeNull();
+    expect(pageListVerbs("ADMIN", "PUBLISHED").toggleTo).toBe("DRAFT");
+    expect(pageListVerbs("ADMIN", "IN_REVIEW").toggleTo).toBe("PUBLISHED");
+  });
+
+  it("keeps «Editează» for canEditTexts, and the list draws each form only with its item", () => {
+    for (const role of STAFF_ROLES) expect(pageListVerbs(role, "DRAFT").edit, role).toBe(canEditTexts(role));
+    expect(pageListVerbs("COPYWRITER", "DRAFT").edit).toBe(true);
+    const list = read("src/app/[locale]/admin/pages/(list)/page.tsx");
+    expect(list).toContain("const verbs = pageListVerbs(actor.role, row.editorialStatus as EditorialStatus);");
+    expect(list).toContain("{verbs.remove && (");
+    expect(list).toContain("{verbs.toggleTo && (");
+    expect(list).toContain('if (verbs.remove) items.push({ kind: "submit", label: t("pages.delete")');
   });
 });
