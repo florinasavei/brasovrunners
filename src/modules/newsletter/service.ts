@@ -22,7 +22,7 @@ import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { alertDayOf, eventAlertTopics, eventAlertWanted, EVENT_ALERT_WINDOW_DAYS } from "./domain/alerts";
-import { checkNewsletterWords, type NewsletterIssue, readNewsletterWords } from "./domain/message";
+import { checkNewsletterWords, type NewsletterIssue, newsletterFirstLine, readNewsletterWords } from "./domain/message";
 import { isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, SENDABLE_TOPICS, type SendableTopic } from "./domain/topics";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { consumeNewsletterToken, issueNewsletterToken, readNewsletterToken } from "./tokens";
@@ -308,6 +308,48 @@ export async function withdrawNewsletterAddress<T extends Record<string, unknown
   return true;
 }
 
+/**
+ * «Dezabonează» on a row of the «Abonați» list (§NNN, amending §445): an Administrator removes one
+ * subscription — at the person's request, or an address that should not be there — exactly as the
+ * subscriber's own «unsubscribe from everything» does (`deleteSubscriberIn`: the row, every link of
+ * theirs by cascade, every newsletter still waiting for them), in one transaction with the audit row.
+ *
+ * Asserted here (BR-REQ-060-01): `canManageRegistrations`, the threshold of the typed-address
+ * withdrawal above; an Organizer reads the list and is refused. The audit row names who and why —
+ * the actor, the list as the place it was done, whether the address had confirmed — and the
+ * subscriber's id, which is gone with the row; never the address (§67, §88: the trail says that it
+ * happened, never whom it was about). Says whether a subscription went: a second press, or a row
+ * the person removed themselves meanwhile, finds nothing and changes nothing.
+ */
+export async function unsubscribeNewsletterSubscriber<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  subscriberId: string,
+  now: Date,
+): Promise<boolean> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not unsubscribe a newsletter address`);
+  if (!UUID.test(subscriberId)) throw new DomainError("VALIDATION_ERROR", "subscriberId: not a subscriber's id");
+  return db.transaction(async (tx) => {
+    const [subscriber] = await tx
+      .select({ id: newsletterSubscribers.id, confirmedAt: newsletterSubscribers.confirmedAt })
+      .from(newsletterSubscribers)
+      .where(eq(newsletterSubscribers.id, subscriberId))
+      .for("update")
+      .limit(1);
+    if (!subscriber) return false;
+    await deleteSubscriberIn(tx, subscriber.id);
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "newsletter.subscriber_unsubscribed",
+      entityType: "newsletter",
+      entityId: subscriber.id,
+      metadata: { reason: "staff_unsubscribe", source: "subscribers_list", wasConfirmed: subscriber.confirmedAt !== null },
+      now,
+    });
+    return true;
+  });
+}
+
 /** `receives` (`domain/topics.ts`) as SQL: the subscriber asked for everything, or for one of these topics. */
 function receivesSql(topics: readonly NewsletterTopic[]) {
   const wanted = ["ALL", ...topics];
@@ -460,6 +502,8 @@ export type NewsletterSendRow = {
   topics: NewsletterTopic[];
   /** The subject as written, both languages; an alert's is null — its words are the event's. */
   subject: { ro: string; en: string } | null;
+  /** The body's first line of words, both languages (§NNN): what the letter says, at a glance. Null on an alert. */
+  firstLine: { ro: string; en: string } | null;
   eventId: string | null;
   recipients: number;
   senderName: string | null;
@@ -491,6 +535,7 @@ export async function listNewsletterSends<T extends Record<string, unknown>>(db:
       kind: row.kind,
       topics: row.topics,
       subject: words ? { ro: words.subject.ro, en: words.subject.en } : null,
+      firstLine: words ? { ro: newsletterFirstLine(words.body.ro), en: newsletterFirstLine(words.body.en) } : null,
       eventId: row.eventId,
       recipients: row.recipients,
       senderName: row.senderName ?? null,

@@ -36,7 +36,8 @@ export default function NewsletterPreview({ preview, labels }: Props) {
     const box = (name: string) => form?.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`)?.value ?? "";
     const ticket = ++asked.current;
     setShown({ state: "loading", result: null });
-    preview({ language, subjectRo: box("subjectRo"), subjectEn: box("subjectEn"), bodyRo: box("bodyRo"), bodyEn: box("bodyEn") })
+    // The bodies are the rich editors' hidden boxes (§NNN): each language's document as JSON.
+    preview({ language, subjectRo: box("subjectRo"), subjectEn: box("subjectEn"), bodyRo: box("newsletterBodyRo"), bodyEn: box("newsletterBodyEn") })
       .then((result) => {
         if (ticket === asked.current) setShown(result ? { state: "ready", result } : { state: "unavailable", result: null });
       })

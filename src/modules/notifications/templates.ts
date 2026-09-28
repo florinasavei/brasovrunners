@@ -1,6 +1,7 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
-import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
+import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
+import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
 import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
@@ -462,6 +463,7 @@ export function renderBilingual(
     // The newsletter's own words and topics in the second half's language (§445).
     ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
     ...(data.newsletterBodyOther ? { newsletterBody: data.newsletterBodyOther } : {}),
+    ...(data.newsletterBodyDocOther ? { newsletterBodyDoc: data.newsletterBodyDocOther } : {}),
     ...(data.newsletterTopicsOther ? { newsletterTopics: data.newsletterTopicsOther } : {}),
     // The organizer's message reads the same `eventTitleOther`/`eventChecklistOther` fields above
     // (§364) — every message's second half does now (§373, email follow-up), so no separate gate
@@ -865,6 +867,12 @@ export type TemplateData = {
   newsletterSubjectOther?: string;
   newsletterBody?: string;
   newsletterBodyOther?: string;
+  /**
+   * A newsletter written in the editor (§NNN): this half's document and the other half's. Set, it
+   * is what the message carries; `newsletterBody` is the plain text of a send written before.
+   */
+  newsletterBodyDoc?: RichTextDoc;
+  newsletterBodyDocOther?: RichTextDoc;
 };
 
 /**
@@ -2100,7 +2108,10 @@ const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_
  * placeholder is filled — the service refuses any.
  */
 function newsletterParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
-  if (messageType !== "NEWSLETTER" || !data.newsletterBody) return [];
+  if (messageType !== "NEWSLETTER") return [];
+  // Written in the editor (§NNN): its blocks and its pictures, every picture's address absolute.
+  if (data.newsletterBodyDoc) return newsletterBodyParts(data.newsletterBodyDoc, env.APP_BASE_URL);
+  if (!data.newsletterBody) return [];
   const paragraphs = organizerParagraphs(data.newsletterBody);
   return paragraphs.map((lines, index) => ({
     html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${lines.map(escapeHtml).join("<br>")}</p>`,

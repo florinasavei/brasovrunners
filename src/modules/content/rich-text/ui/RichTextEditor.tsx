@@ -219,7 +219,7 @@ function RichTextEditorIsland({
    * offering a button whose result the save would reject. Absent means the whole toolbar, which
    * is what every editorial form wants.
    */
-  features?: { media?: boolean; tables?: boolean };
+  features?: { media?: boolean; tables?: boolean; video?: boolean };
   /**
    * The body is an event's short description, whose pictures every listing card draws in one
    * 16∶9 frame (§454): the picture's panel then shows that frame and offers the card's centre.
@@ -1022,6 +1022,8 @@ function RichTextEditorIsland({
             active={galleryOpen}
             onClick={() => setGalleryOpen((open) => !open)}
           />
+          {/* A newsletter takes pictures and no film (§NNN): an inbox plays nothing (§270). */}
+          {features.video !== false && (
           <ToolbarButton
             label={labels.youtube}
             icon={SmartDisplayIcon}
@@ -1031,6 +1033,7 @@ function RichTextEditorIsland({
               setYoutubeDraft((open) => (open === null ? "" : null));
             }}
           />
+          )}
           </>
           )}
           <ToolbarButton

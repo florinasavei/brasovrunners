@@ -3486,7 +3486,8 @@
       "usedInTeam": "Pe pagina Echipa: {title}",
       "usedInTeamIntro": "Pe pagina Echipa: introducerea",
       "usedInFaq": "Pe pagina «Întrebări frecvente»",
-      "usedInMembersPage": "Pe paginile membrilor"
+      "usedInMembersPage": "Pe paginile membrilor",
+      "usedInNewsletter": "Într-un newsletter trimis"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -4579,11 +4580,20 @@
             {
               "title": "Scrie abonaților newsletterului",
               "steps": [
-                "Apasă «Newsletter» în bara de sus. Vezi câți abonați confirmați sunt, pe fiecare temă, și ce s-a trimis; adresele nu apar, doar numărul.",
+                "Apasă «Newsletter» în bara de sus. «Cifre și trimiteri» arată câți abonați confirmați sunt, pe fiecare temă, și ce s-a trimis; adresele sunt în cardul «Abonați».",
                 "La «Scrie abonaților» alege tema la «Despre ce» și vezi câți îl primesc.",
-                "Scrie «Subiect (română)», «Subiect (engleză)», «Textul (română)» și «Textul (engleză)».",
+                "Pe fila «Română» scrie «Subiect (română)» și textul: titluri, liste, linkuri și poze, ca într-un document.",
+                "Apasă «Tradu cardul: RO → EN», apoi citește și corectează fila «English».",
                 "La «Cum arată» citește emailul în ambele limbi.",
-                "Apasă «Trimite newsletterul» și confirmă. Mesajul rămâne la «Trimise». Anunțurile de evenimente noi pleacă singure."
+                "Apasă «Trimite newsletterul» și confirmă. Mesajul rămâne la «Trimise», cu primul lui rând. Anunțurile de evenimente noi pleacă singure."
+              ]
+            },
+            {
+              "title": "Vezi cine s-a abonat",
+              "steps": [
+                "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
+                "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
+                "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
             {
@@ -4783,6 +4793,16 @@
               "steps": [
                 "Când cineva cere în scris să nu mai primească noutățile: «Newsletter» → «Scoate o adresă la cererea cuiva».",
                 "Scrie adresa la «Adresa de email», apasă «Scoate din newsletter» și confirmă. Adresa se șterge, cu temele ei."
+              ]
+            },
+            {
+              "title": "Vezi, caută și dezabonează abonații",
+              "steps": [
+                "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare; cea mai nouă adresă e prima.",
+                "Scrie adresa, întreagă sau o parte din ea, la «Caută adresa». Alege, dacă vrei, «Tema» și «Starea», apoi apasă «Filtrează». «Șterge filtrele» arată iar toată lista.",
+                "La «În așteptare», rândul spune până când merge linkul de confirmare, sau «Linkul a expirat». O adresă neconfirmată se șterge singură.",
+                "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
+                "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură."
               ]
             },
             {
@@ -5240,8 +5260,8 @@
       }
     },
     "newsletter": {
-      "title": "Abonați",
-      "intro": "Cine s-a abonat de pe pagina de contact și pe ce teme, ce s-a trimis și când. Adresele nu apar aici, doar numărul.",
+      "title": "Cifre și trimiteri",
+      "intro": "Câți s-au abonat de pe pagina de contact și la ce teme, ce s-a trimis și când. Lista cu adrese e în cardul «Abonați».",
       "aside": {
         "one": "{count} abonat",
         "few": "{count} abonați",
@@ -5267,7 +5287,7 @@
       "subjectEn": "Subiect (engleză)",
       "bodyRo": "Textul (română)",
       "bodyEn": "Textul (engleză)",
-      "bodyHelp": "Text simplu, cel mult {max} de caractere: un rând gol începe un paragraf. Fără câmpuri între acolade — newsletterul nu are un nume sau un eveniment de pus în ele.",
+      "bodyHelp": "Scrie ca într-un document: titluri, liste, linkuri și poze. Cel mult {max} de caractere de text; pozele nu se numără. Fără câmpuri între acolade.",
       "send": "Trimite newsletterul",
       "sending": "Se trimite…",
       "confirmTitle": {
@@ -5303,7 +5323,59 @@
       "previewRo": "Previzualizează în română",
       "previewEn": "Previzualizează în engleză",
       "previewLoading": "Se pregătește previzualizarea…",
-      "previewUnavailable": "Previzualizarea nu e disponibilă acum. Mesajul se poate trimite oricum."
+      "previewUnavailable": "Previzualizarea nu e disponibilă acum. Mesajul se poate trimite oricum.",
+      "langRo": "Română",
+      "langEn": "English",
+      "subscribers": {
+        "title": "Abonați",
+        "intro": "Fiecare adresă abonată, cea mai nouă prima. Caută, filtrează, descarcă lista sau scoate pe cineva la cererea lui.",
+        "confirmedCount": {
+          "one": "{count} abonat confirmat",
+          "few": "{count} abonați confirmați",
+          "other": "{count} de abonați confirmați"
+        },
+        "pendingCount": "{count} în așteptare",
+        "counts": "{confirmed}, {pending}",
+        "filterLabel": "Caută și filtrează abonații",
+        "search": "Caută adresa",
+        "searchHelp": "adresa întreagă sau o parte din ea",
+        "topic": "Tema",
+        "topicAll": "Toate temele",
+        "state": "Starea",
+        "stateAll": "Toate",
+        "stateOptions": {
+          "confirmed": "Confirmați",
+          "pending": "În așteptare"
+        },
+        "apply": "Filtrează",
+        "clear": "Șterge filtrele",
+        "csv": "Descarcă CSV",
+        "truncated": "Se văd primele {count} de adrese. CSV-ul le are pe toate.",
+        "empty": "Nu s-a abonat nimeni încă.",
+        "noMatch": "Nicio adresă nu se potrivește cu filtrul.",
+        "columns": {
+          "email": "Adresa",
+          "language": "Limba",
+          "topics": "Teme",
+          "state": "Starea",
+          "since": "Abonat din",
+          "confirmedOn": "Confirmat la",
+          "actions": "Acțiuni"
+        },
+        "states": {
+          "confirmed": "Confirmat",
+          "pending": "În așteptare"
+        },
+        "link": {
+          "live": "Linkul de confirmare merge până {when}.",
+          "sending": "Emailul de confirmare n-a plecat încă.",
+          "expired": "Linkul a expirat"
+        },
+        "unsubscribe": "Dezabonează",
+        "unsubscribing": "Se dezabonează…",
+        "unsubscribeTitle": "Dezabonezi {email}?",
+        "unsubscribeBody": "Adresa iese din newsletter, cu temele ei, ca atunci când se dezabonează singură. Se poate abona din nou de pe pagina de contact."
+      }
     },
     "team": {
       "title": "Pagina «Echipa»",
@@ -6888,7 +6960,9 @@
         "one": "Emailul pleacă acum către {count} participant; ceilalți {later} pleacă la trecerea programată.",
         "few": "Emailul pleacă acum către primii {count} participanți; ceilalți {later} pleacă la trecerea programată.",
         "other": "Emailul pleacă acum către primii {count} de participanți; ceilalți {later} pleacă la trecerea programată."
-      }
+      },
+      "newsletterUnsubscribed": "Adresa a fost dezabonată.",
+      "newsletterUnsubscribedGone": "Adresa nu mai era pe listă; nu s-a schimbat nimic."
     }
   },
   "Network": {

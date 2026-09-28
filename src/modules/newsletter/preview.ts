@@ -1,12 +1,13 @@
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { isRichTextEmpty } from "@/modules/content/rich-text/domain/schema";
 import { emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { readEmailCopyForSending } from "@/modules/notifications/email-copy";
 import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import { canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { NEWSLETTER_BODY_MAX, NEWSLETTER_SUBJECT_MAX } from "./domain/message";
+import { NEWSLETTER_SUBJECT_MAX, readPostedNewsletterBody } from "./domain/message";
 
 export type NewsletterPreview = { subject: string; html: string };
 
@@ -18,6 +19,10 @@ export type NewsletterPreview = { subject: string; html: string };
  * Nothing is queued and no token exists, so nothing in it can be acted on. Asserted on the server
  * like the send (`canSendNewsletter`, BR-REQ-060-01). An empty box previews as the platform's
  * fallback subject and an absent body — which is what the send would refuse.
+ *
+ * The bodies are the editors' documents since §NNN, rendered through the send's own path
+ * (`newsletterBodyParts`): the same card, the same pictures at their absolute addresses. A body
+ * the send would refuse (a film, a picture from elsewhere) previews as absent.
  */
 export async function previewNewsletter<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -29,15 +34,21 @@ export async function previewNewsletter<T extends Record<string, unknown>>(
   const locale = input.locale;
   const other: Locale = locale === "ro" ? "en" : "ro";
   const line = (value: string) => value.replace(/\s*[\r\n]+\s*/g, " ").trim().slice(0, NEWSLETTER_SUBJECT_MAX);
-  const text = (value: string) => value.replace(/\r\n?/g, "\n").trim().slice(0, NEWSLETTER_BODY_MAX);
+  const doc = (value: string) => {
+    const read = readPostedNewsletterBody(value);
+    return read === "invalid" || isRichTextEmpty(read) ? undefined : read;
+  };
   const sample = emailSampleFor("NEWSLETTER", locale);
   const data: TemplateData = {
     ...sample,
     participantName: "",
     newsletterSubject: line(input.subject[locale]) || undefined,
     newsletterSubjectOther: line(input.subject[other]) || undefined,
-    newsletterBody: text(input.body[locale]) || undefined,
-    newsletterBodyOther: text(input.body[other]) || undefined,
+    // The sample's plain body is not the composer's: the boxes' documents replace it, or nothing does.
+    newsletterBody: undefined,
+    newsletterBodyOther: undefined,
+    newsletterBodyDoc: doc(input.body[locale]),
+    newsletterBodyDocOther: doc(input.body[other]),
   };
   const email = renderBilingual("NEWSLETTER", locale, data, undefined, await readEmailCopyForSending(db, now));
   return { subject: email.subject, html: email.html };

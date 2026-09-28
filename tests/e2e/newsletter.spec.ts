@@ -36,10 +36,17 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(compose.locator('input[name="topic"][value="DISCOUNTS"]')).toHaveCount(0);
     await compose.locator('input[name="topic"][value="GEAR_TESTING"]').check();
     const subject = `Testare de încălțăminte ${Date.now().toString(36)}`;
+    // One language per tab, the letter in the rich-text editor (§NNN): bold on the first line.
     await compose.getByLabel("Subiect (română)").fill(subject);
+    await compose.getByTestId("newsletter-body-ro").locator(".tiptap").click();
+    await page.keyboard.press("Control+b");
+    await page.keyboard.type("Sâmbătă, la start.");
+    await compose.getByRole("tab", { name: /English/ }).click();
     await compose.getByLabel("Subiect (engleză)").fill("A shoe test");
-    await compose.getByLabel("Textul (română)").fill("Sâmbătă, la start.");
-    await compose.getByLabel("Textul (engleză)").fill("Saturday, at the start.");
+    await compose.getByTestId("newsletter-body-en").locator(".tiptap").click();
+    await page.keyboard.type("Saturday, at the start.");
+    // The editor posts its document as JSON through its hidden box.
+    await expect(compose.locator('input[type="hidden"][name="newsletterBodyRo"]')).toHaveValue(/"bold"/);
     // The preview: the message as an English subscriber receives it, from the boxes as they stand.
     await compose.getByRole("button", { name: "Previzualizează în engleză" }).click();
     await expect(compose.getByTestId("newsletter-preview-subject")).toContainText(`A shoe test / ${subject}`);
@@ -50,6 +57,55 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(page.getByTestId("newsletter-sent-banner")).toBeVisible();
     expect(await newsletterMessagesTo(email)).toBe(1);
     await expect(page.getByTestId("newsletter-history")).toContainText(subject);
+    // The history says the letter's first line of words (§NNN).
+    await expect(page.getByTestId("newsletter-history")).toContainText("Sâmbătă, la start.");
+  });
+
+  test("an Administrator opens «Abonați», searches an address, downloads the CSV and sees «Dezabonează» on the row", async ({ page }) => {
+    const stamp = Date.now().toString(36);
+    const email = `e2e-news-list-${stamp}@test.invalid`;
+    await seedConfirmedSubscriber(email, ["GEAR_TESTING"]);
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/newsletter");
+    await hydrated(page);
+
+    const card = page.locator("#main").getByTestId("newsletter-subscribers");
+    // A fold, closed by default (§336), its line saying the counts.
+    await expect(card.locator("summary")).toContainText("Abonați");
+    await expect(card.locator("summary")).toContainText(/abona(t|ți) confirma(t|ți)/);
+    await expect(card.getByTestId("newsletter-subscribers-filters")).toBeHidden();
+    await card.locator("summary").first().click();
+    await expect(card.getByTestId("newsletter-subscribers-filters")).toBeVisible();
+
+    // The search is a GET form: the state is the address, and the fold opens by itself.
+    await card.getByLabel("Caută adresa").fill(email.toUpperCase());
+    await card.getByRole("button", { name: "Filtrează" }).click();
+    await expect(page).toHaveURL(/\/ro\/admin\/newsletter\?q=[^#]+#newsletter-subscribers$/);
+    const table = card.getByTestId("newsletter-subscribers-table");
+    await expect(table.getByTestId("newsletter-subscriber-row")).toHaveCount(1);
+    await expect(table.getByTestId("newsletter-subscriber-email")).toHaveText(email);
+    await expect(table.getByTestId("newsletter-subscriber-state")).toContainText("Confirmat");
+    await expect(card.getByTestId("newsletter-subscribers-counts")).toContainText("1 abonat confirmat, 0 în așteptare");
+
+    // The CSV of the same filter, named with the date, with its BOM and the table's columns.
+    const [download] = await Promise.all([page.waitForEvent("download"), card.getByTestId("newsletter-subscribers-csv").click()]);
+    expect(download.suggestedFilename()).toMatch(/^newsletter-abonati-\d{4}-\d{2}-\d{2}\.csv$/);
+    const path = await download.path();
+    const { readFileSync } = await import("node:fs");
+    const csv = readFileSync(path, "utf8");
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(csv).toContain("Adresa,Limba,Teme,Starea,Abonat din,Confirmat la");
+    expect(csv).toContain(email);
+
+    // The Administrator's verb, 44 pixels tall, asking first (§384) with the address in its question.
+    const unsubscribe = table.getByRole("button", { name: "Dezabonează" });
+    await expect(unsubscribe).toBeVisible();
+    expect((await unsubscribe.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await unsubscribe.click();
+    await confirmDialog(page, new RegExp(`Dezabonezi ${email.replace(/[.]/g, "\\.")}`));
+    await expect(page).toHaveURL(/saved=newsletterUnsubscribed/, { timeout: 30_000 });
+    expect(await newsletterSubscription(email)).toBeNull();
+    await expect(card.getByTestId("newsletter-subscribers-empty")).toBeVisible();
   });
 
   for (const who of ["Dev Copywriter", "Dev Technical"] as const) {
@@ -68,6 +124,10 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(page.locator("#main").getByTestId("newsletter-composer")).toBeVisible();
     // The Administrator's withdrawal is not the Organizer's.
     await expect(page.getByTestId("newsletter-withdraw")).toHaveCount(0);
+    // The Organizer reads «Abonați» and its CSV, and is offered no «Dezabonează» (§NNN).
+    await expect(page.locator("#main").getByTestId("newsletter-subscribers")).toBeVisible();
+    await expect(page.getByTestId("newsletter-subscribers-csv")).toHaveCount(1);
+    await expect(page.getByTestId("newsletter-subscriber-unsubscribe")).toHaveCount(0);
   });
 });
 
