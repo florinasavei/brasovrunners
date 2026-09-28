@@ -150,10 +150,12 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
     expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 20 * HOUR));
   });
 
-  it("is the registration close, when the race numbers settle", async () => {
+  it("is not the registration close: nothing is numbered then, each confirmation draws its own (§548)", async () => {
     const event = await createEvent({ registrationClosesAt: new Date(NOW.getTime() + 2 * HOUR) });
     await register(event, { status: "CONFIRMED", confirmedAt: new Date(NOW.getTime() - 3 * DAY) });
-    expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 2 * HOUR));
+    // The reminder before the start is the next work, well after the close.
+    const next = await nextMaintenanceWork(db, NOW);
+    expect(next?.getTime()).toBeGreaterThan(NOW.getTime() + 2 * HOUR);
   });
 
   it("is two days before the start, when the reminders go", async () => {

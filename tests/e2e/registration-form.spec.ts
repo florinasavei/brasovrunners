@@ -780,9 +780,9 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await page.goto(registerPath);
     await hydrated(page);
 
-    // Said before the first field, and again under the birth date.
+    // Said once, before the first field (§546): the birth date's own help that repeated it is gone.
     await expect(page.locator("#main")).toContainText("Vârsta minimă: 14 ani");
-    await expect(page.locator("#main")).toContainText("Vârsta minimă este 14 ani împliniți în ziua cursei");
+    await expect(page.locator("#main")).not.toContainText("împliniți în ziua cursei");
 
     const birthDate = page.locator('[name="birthDate"]');
     const max = await birthDate.getAttribute("max");
@@ -944,13 +944,12 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     const editorUrl = page.url().split("?")[0];
 
     try {
-      // The form: the line before the first field, the birth date's help, and the picker's
-      // bound — the last birth date that is sixteen on 3 May 2027.
+      // The form: the line before the first field — said once (§546) — and the picker's bound,
+      // the last birth date that is sixteen on 3 May 2027.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
         "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
-      await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
 
       // The event's page says the same sentence in «Condiții de participare» (§505), and its structured data "16-".
@@ -976,7 +975,6 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // last birth date that is eighteen on 3 May 2027, and the structured data says "18-".
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText("Vârsta minimă: 18 ani.");
-      await expect(page.locator("#main")).toContainText("Vârsta minimă este 18 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2009-05-03");
       await page.goto(`/ro/evenimente/${slug}`);
       expect(await typicalAgeRange()).toBe("18-");

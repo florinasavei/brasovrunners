@@ -11,13 +11,12 @@
  *
  * **The print reserves them.** The club types how many (one to `SPARE_BIBS_PER_PRINT`) and
  * presses «Tipărește»: the first print reserves that many numbers after the highest number
- * anybody has (settled, provisional or erased), a second print extends the reservation by the
+ * anybody has or had (worn, erased or replaced), a second print extends the reservation by the
  * next free numbers after it. So a reservation never lands on a number somebody holds, and no
  * online runner's number moves — nobody types a range that could overlap one. The event keeps the
  * reservation as a start and a count (`walk_in_bib_start`, `walk_in_bib_count`); a number inside it
- * that an online runner already held when an extension reached past it stays that runner's for
- * good — the close keeps it as their final number rather than moving them out of the band — and is
- * never a spare, not even after it is released: the print records it as skipped.
+ * that a runner already held when an extension reached past it stays that runner's for good, and
+ * is never a spare, not even after it is released: the print records it as skipped.
  *
  * Pure and importing nothing, so the card, the desk, the sheet and the allocator read one rule.
  */
@@ -53,8 +52,8 @@ export function spareNumbersOf(band: SpareBand | null): number[] {
 
 /**
  * The band's numbers nobody is wearing or holding, lowest first — what the reprint prints and what
- * the desk suggests from. `taken` is every settled and provisional number at the event and every
- * erased one (`bibs.ts#erasedBibNumbers`): a spare already given is on somebody's chest.
+ * the desk suggests from. `taken` is every number worn at the event and every
+ * retired one (`bibs.ts#retiredBibNumbers`): a spare already given is on somebody's chest.
  */
 export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<number>): number[] {
   return spareNumbersOf(band).filter((number) => !taken.has(number));
@@ -69,27 +68,16 @@ export function freeSpareNumbers(band: SpareBand | null, taken: ReadonlySet<numb
 export type SpareState = { kind: "none" } | { kind: "free"; next: number } | { kind: "out" };
 
 /**
- * Whether the desk's «Confirmă aici» carries a spare for this row (§444): a real walk-in — a
- * registration the staff entered (`source = STAFF`), or one holding no number at all — with no
- * settled number and no printed bib. Every registration draws a provisional number when it is
- * inserted (§214), a desk entry included, so "no provisional number" alone matched nobody; what
- * makes a walk-in is that the staff typed them in and nothing with their number was ever printed
- * or seen, so the spare in the volunteer's hand replaces a number that exists only in the
- * database. An online runner keeps theirs: the provisional number is at the head of the row, on
- * the screen they landed on, and becomes their final one at the confirmation (§220) — a spare
- * there would swap it for another at the desk. A printed bib is never swapped either: it is in
- * the pile with the runner's name on it. `confirmRegistrationByStaff` refuses a handed number
- * under the same rule, so the box and the server say one thing.
+ * Whether the desk's «Confirmă aici» carries a spare for this row (§444, §548): a real registration
+ * that wears no number yet and has no printed bib. Since §548 nobody has a number before the
+ * confirmation — an online runner included — so the spare in the volunteer's hand is the number the
+ * confirmation gives, whoever typed the registration in. A row that already wears one (a cancelled
+ * confirmed registration that restarted keeps its retired number, §173) keeps it, and a printed bib
+ * is never swapped: it is in the pile with the runner's name on it. `confirmRegistrationByStaff`
+ * refuses a handed number under the same rule, so the box and the server say one thing.
  */
-export function handsSpareAtConfirm(row: {
-  kind: string;
-  source: string;
-  bibNumber: number | null;
-  provisionalBibNumber: number | null;
-  bibPrintedAt: Date | null;
-}): boolean {
-  if (row.kind !== "REAL" || row.bibNumber !== null || row.bibPrintedAt !== null) return false;
-  return row.source === "STAFF" || row.provisionalBibNumber === null;
+export function handsSpareAtConfirm(row: { kind: string; bibNumber: number | null; bibPrintedAt: Date | null }): boolean {
+  return row.kind === "REAL" && row.bibNumber === null && row.bibPrintedAt === null;
 }
 
 export function spareStateOf(band: SpareBand | null, free: readonly number[]): SpareState {

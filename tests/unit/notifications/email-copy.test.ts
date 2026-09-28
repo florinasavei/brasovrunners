@@ -89,7 +89,7 @@ describe("DECISIONS.md §247 the club's own wording", () => {
   });
 
   it("keeps the sentences the platform adds around a body", () => {
-    // §235 ("you were already registered") and §237 ("this number is provisional") are
+    // §235 ("you were already registered") is
     // statements about the registration, not about how the club likes to write.
     const overrides = emailCopySchema.parse({
       [emailCopyKey("REGISTRATION_CONFIRMED", "ro")]: { subject: "Confirmat", paragraphs: ["Ai locul tău."] },
@@ -97,13 +97,13 @@ describe("DECISIONS.md §247 the club's own wording", () => {
     const content = buildTemplateContent(
       "REGISTRATION_CONFIRMED",
       "ro",
-      { ...sample, alreadyRegistered: true, bibProvisional: true },
+      { ...sample, alreadyRegistered: true },
       "https://example.test/x",
       overrides,
     );
     expect(content.paragraphs[0]).not.toBe("Ai locul tău.");
     expect(content.paragraphs).toContain("Ai locul tău.");
-    expect(content.paragraphs).toHaveLength(3);
+    expect(content.paragraphs).toHaveLength(2);
   });
 
   it("leaves every other message and the other language on the platform's text", () => {

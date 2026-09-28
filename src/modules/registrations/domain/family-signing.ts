@@ -1,6 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { compareFamilyOrder } from "./family-sitting";
-import { type RaceNumber, raceNumberOf } from "./race-number";
+import { raceNumberOf } from "./race-number";
 
 /**
  * The declarations of a family on one address, signed as a wizard (§471, over §389 and §446).
@@ -35,9 +35,8 @@ export type FamilySigningRow = {
   checkinCode?: string | null;
   /** Whether a declaration acceptance exists for the registration — signed on a link or on paper (§67). */
   declared?: boolean;
-  /** The race number's two columns (§214), for the number beside the desk code (`raceNumberOf`). */
+  /** The race number (§548), for the number beside the desk code (`raceNumberOf`). */
   bibNumber?: number | null;
-  provisionalBibNumber?: number | null;
   /** The place in the family's order (§519, `compareFamilyOrder`), when the family's one button confirmed it. */
   familyRank?: number | null;
 };
@@ -68,8 +67,12 @@ export type FamilyStep = {
   state: FamilyStepState;
   holdExpiresAt: Date | null;
   checkinCode: string | null;
-  /** The number the person has, settled or provisional (`raceNumberOf`, §420), or null while there is none. */
-  raceNumber: RaceNumber | null;
+  /**
+   * The number the person's own confirmation gave (`raceNumberOf`, §548), or null before it: each
+   * person of a family gets theirs at their own confirmation. The slot beside the QR a later change
+   * fills with the name and the number on every QR.
+   */
+  raceNumber: number | null;
 };
 
 export type FamilyStepsInput = {
@@ -129,7 +132,7 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
       state,
       holdExpiresAt: row.holdExpiresAt ?? null,
       checkinCode: row.checkinCode ?? null,
-      raceNumber: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null }),
+      raceNumber: raceNumberOf({ status: row.status, bibNumber: row.bibNumber ?? null }),
     };
   });
 }
@@ -139,10 +142,28 @@ export function familySigningSteps(rows: readonly FamilySigningRow[], input: Fam
  * five states, and a person signed whose signature found no free place says the waiting list
  * rather than «semnată» alone. Pure, so both languages' words are unit-tested.
  */
-export type FamilyStepWordsKey = FamilyStepState | "waitlisted";
+export type FamilyStepWordsKey = FamilyStepState | "waitlisted" | "cancelled";
 
+/**
+ * A person withdrawn from the wizard with «Renunț la înscrierea pentru …» (§547) is a closed step
+ * whose registration is cancelled: the line says «înscriere anulată», never the vaguer «nu mai
+ * așteaptă semnătura» a lapsed hold gets.
+ */
 export function familyStepWordsKey(step: Pick<FamilyStep, "state" | "status">): FamilyStepWordsKey {
+  if (step.status === "CANCELLED" && step.state !== "signed") return "cancelled";
   return step.state === "signed" && step.status === "WAITLISTED" ? "waitlisted" : step.state;
+}
+
+/**
+ * The signing button's words (§547, amending §471; the owner, 2026-09-28: «altfel nu scrie»):
+ * «Semnează și treci la următoarea persoană» only while another person's declaration follows in
+ * this sitting; on the last one, and on a single declaration, just «Semnează». A key under
+ * `Registrations`, so both languages are tested together.
+ */
+export type SignActionKey = "declare.family.nextAction" | "declare.sign";
+
+export function signActionKey(steps: readonly FamilyStep[] | null): SignActionKey {
+  return steps && hasNextFamilyStep(steps) ? "declare.family.nextAction" : "declare.sign";
 }
 
 /**

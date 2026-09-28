@@ -79,32 +79,6 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
 }
 
 /**
- * The moment the entry list stops growing — and therefore the moment race numbers can settle
- * (`DECISIONS.md` §214).
- *
- * Deliberately *not* `registrationState(...) !== "OPEN"`. That is false for four other reasons
- * — a window that has not opened yet, a cancelled event, an external or absent registration —
- * and none of them means the list is final. The only question here is whether the closing
- * instant has passed, which is the same expression `registrationState` uses for `CLOSED`,
- * named once so the two cannot drift.
- */
-export function registrationHasClosed(
-  event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date },
-  now: Date,
-): boolean {
-  return now >= registrationClosingInstant(event);
-}
-
-/**
- * The instant `registrationHasClosed` turns true: the close, or the start when there is none —
- * which is also when the race numbers settle and "here is your race number" goes (§214), as the
- * forecast on `/admin/emails` says it (§383).
- */
-export function registrationClosingInstant(event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date }): Date {
-  return event.registrationClosesAt ?? event.startsAt;
-}
-
-/**
  * When registration opens, while that is still ahead (§146): the date the hero and the card
  * show, and the one the "tell me" box waits for (the calendar reads the window through
  * `calendarRegistration`, §159). Null once the window has opened, and for every event that

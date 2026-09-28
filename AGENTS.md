@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.23-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.22-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.23-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1873,8 +1873,8 @@ registrations
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
-- bib_number integer null              -- BR-REQ-038-01; the settled number: written when registration closes (§214), unique per event (partial index), never reissued or renumbered; per race across distances is M2
-- provisional_bib_number integer null  -- §214; held with the place from submission, unique per event (partial index), released the moment the place is, never printed and never emailed
+- bib_number integer null              -- BR-REQ-038-01; the race number: drawn when the registration is confirmed, in confirmation order from the event's first number (§548), unique per event (partial index), never reissued; kept, retired, by a cancelled row; per race across distances is M2
+- provisional_bib_number integer null  -- retired by §548 (was §214's held number); nothing writes it, the maintenance job empties it once, a contract release drops it
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
@@ -2675,7 +2675,7 @@ Registration maintenance:
   nothing wants is kept, and its event is not even selected;
 - select scheduled events only: a `COMPLETED` event is over (§82), and a `CANCELLED` one is
   left as it was cancelled (§331) — no hold or offer expired, no waiting list closed, no place
-  offered, no number settled, nothing mailed;
+  offered, nothing mailed;
 - expire waiting-list offers;
 - queue the reminder two days before an event, and with it the declaration once more to
   whoever still owes a signature (`DECISIONS.md` §160);
@@ -2781,9 +2781,8 @@ line, the action button and the token behind it, the QR, the attachments, the li
 button, the sign-off and the layout — they carry tokens, files and addresses rather than words
 (§12.8, §14.5). The words may name a closed set of fields, written `{participantName}`; a
 placeholder outside that set, and any URL, is refused when it is saved rather than reaching a
-participant as literal braces. The two sentences the platform adds *around* a body — "you were
-already registered" (§235) and "this number is provisional" (§237) — are statements about the
-registration and survive a rewrite.
+participant as literal braces. The sentence the platform adds *around* a body — "you were
+already registered" (§235) — is a statement about the registration and survives a rewrite.
 
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary
