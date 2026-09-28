@@ -70,7 +70,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
   // The text's version and the weekday it took effect, over it, as the PDF says it (§499).
   await expect(page.getByTestId("declaration-version")).toHaveText(
-    locale === "ro" ? /^Versiunea \d+, în vigoare din \p{L}+, \d{1,2} .+ \d{4}$/u : /^Version \d+, in force since \p{L}+, \d{1,2} .+ \d{4}$/u,
+    locale === "ro" ? /^Versiunea \d+, în vigoare din \d{1,2} \p{L}+ \d{4}$/u : /^Version \d+, in force since \d{1,2} \p{L}+ \d{4}$/u,
   );
   // No language select: the text signed is the one on the page, in the page's language (§57).
   await expect(page.locator('[name="preferredLocale"]')).toHaveCount(0);

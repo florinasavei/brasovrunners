@@ -46,8 +46,10 @@
  * Import-free beyond `Intl`, so a client island may use it too (§188) — but a client island
  * must not format a date the server already rendered (§324): pass it the server's string.
  *
- * Kept as they are, on purpose: birth dates (a weekday on a birth date means nothing), the
- * date and time inputs (the pickers' 30.09.2026 / 19:00, §303), and every machine format —
+ * Kept as they are, on purpose: birth dates (a weekday on a birth date means nothing), a legal
+ * text's version line — «Versiunea 6, în vigoare din 28 septembrie 2026», the whole date with the
+ * month in words and no weekday (`formatDateInWords`, §NNN) — the date and time inputs (the
+ * pickers' 30.09.2026 / 19:00, §303), and every machine format —
  * CSV and xlsx exports, JSON, the calendar file's DTSTART/DTEND, the sitemap, URLs and the
  * ISO text of a `<time dateTime>` attribute.
  */
@@ -175,9 +177,19 @@ export function formatCalendarDay(date: string | Date, options: Omit<DayOptions,
 export function formatBirthDate(ymd: string, locale: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd);
   if (!match) return "";
-  return formatter(intlLocale(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
-    new Date(`${match[1]}-${match[2]}-${match[3]}T12:00:00Z`),
-  );
+  return formatDateInWords(new Date(`${match[1]}-${match[2]}-${match[3]}T12:00:00Z`), { locale, timeZone: "UTC" });
+}
+
+/**
+ * The whole date in words, with no weekday: "28 septembrie 2026" / "28 September 2026", in the zone
+ * the caller names. A legal text's version line — «Versiunea 6, în vigoare din 28 septembrie 2026»
+ * (§NNN; the counsel's review of 2026-09-28: «fără abrevierea zilei săptămânii, data întreagă, luna
+ * în cuvinte») — on the terms, the privacy notice, both signing pages and every declaration PDF; and
+ * the typed birth date read back (`formatBirthDate`). A version line names the day a text took
+ * effect, a fact of record, where «luni, 28 sept.» reads as an appointment and an abbreviation.
+ */
+export function formatDateInWords(date: Date, options: { locale: string; timeZone: string }): string {
+  return formatter(intlLocale(options.locale), { day: "numeric", month: "long", year: "numeric", timeZone: options.timeZone }).format(date);
 }
 
 /** "09:30", always 24-hour, in the zone the caller names. */

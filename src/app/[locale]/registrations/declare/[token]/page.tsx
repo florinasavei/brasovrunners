@@ -17,7 +17,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
@@ -578,7 +578,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
             {legalCopy("inForce", {
               version: declaration.version,
-              date: formatDay(declaration.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+              // The whole date, the month in words, no weekday (§NNN).
+              date: formatDateInWords(declaration.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
             })}
           </Typography>
           <LegalDocumentBody

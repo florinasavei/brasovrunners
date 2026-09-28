@@ -50,8 +50,9 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
     expect(signed.text).toContain("Clubul păstrează declarația cât timp vii la alergări și o șterge când îi ceri.");
     expect(signed.text).toContain("The club keeps the declaration while you keep coming to the runs and deletes it when you ask.");
     const archive = buildOutgoingEmail({ to: "x@example.test", locale: "ro", idempotencyKey: "t:a", messageType: "GROUP_RUN_DECLARATION_ARCHIVE", data: DATA });
-    expect(archive.text).toContain("cât timp alergătorul vine la alergări; când cere ștergerea ei");
-    expect(archive.text).toContain("while the runner keeps coming to the runs; when they ask for it to be deleted");
+    // Erased at the runner's withdrawal (§NNN, the counsel's second pass, in place of «ștergerea»).
+    expect(archive.text).toContain("cât timp alergătorul vine la alergări; când cere retragerea ei");
+    expect(archive.text).toContain("while the runner keeps coming to the runs; when they ask for its withdrawal");
     const source = readFileSync("src/modules/notifications/templates.ts", "utf8");
     const entries = [...source.matchAll(/groupRunDeclaration(?:Signed|Archive): \{[\s\S]*?\n {4}\},/g)].map((match) => match[0]);
     // Two entries per language.
@@ -63,15 +64,19 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
     const text = (key: keyof typeof LEGAL_TEMPLATES, locale: "ro" | "en") =>
       LEGAL_TEMPLATES[key][locale].body.sections.flatMap((section) => section.paragraphs).join(" ");
     for (const key of ["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"] as const) {
-      expect(text(key, "ro")).toMatch(/Platforma clubului păstrează declarația cât timp particip la alergările clubului și o șterge la cererea mea, trimisă la adresa de contact a clubului/);
-      expect(text(key, "en")).toMatch(/The club's platform keeps the declaration while I take part in the club's runs and deletes it at my request, sent to the club's contact address/);
-      expect(text(key, "ro")).not.toMatch(/șterge declarația la/);
-      expect(text(key, "en")).not.toMatch(/deletes the declaration/);
+      // Kept by its purpose (§NNN, the counsel's second pass, amending §503's words): no job sweeps it,
+      // and the text states no number of days — the withdrawal at the signer's request ends its use.
+      expect(text(key, "ro")).toMatch(/Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică\. Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare/);
+      expect(text(key, "en")).toMatch(/The active declaration is kept as long as it is needed to manage my taking part in the runs it applies to\. If I ask for its withdrawal, at the club's contact address, it is no longer used for any later run/);
+      expect(text(key, "ro")).not.toMatch(/șterge declarația la|trei ani de la semnare/);
+      expect(text(key, "en")).not.toMatch(/deletes the declaration|three years from the signing/);
     }
-    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/În baza de date o păstrăm cât timp participi la alergările clubului, sau până ne ceri s-o ștergem/);
-    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O declarație semnată pe o alergare de grup: cât timp participi la alergările clubului, sau până ne ceri s-o ștergem;/);
-    expect(text("PRIVACY_NOTICE", "en")).toMatch(/We keep it in our database while you take part in the club's runs, or until you ask us to delete it/);
-    expect(text("PRIVACY_NOTICE", "en")).toMatch(/A self-declaration signed on a group run: while you take part in the club's runs, or until you ask us to delete it;/);
+    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O păstrăm cât timp este necesară pentru participarea ta la alergările la care se aplică\. Dacă ne ceri să o retragem \(secțiunea 8\), nu o mai folosim pentru alergările următoare/);
+    expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O declarație semnată pe o alergare de grup: cât timp este necesară pentru alergările la care se aplică; după ce ne ceri să o retragem, o copie doar cât o cere un drept în instanță/);
+    expect(text("PRIVACY_NOTICE", "en")).toMatch(/We keep it as long as it is needed for your taking part in the runs it applies to\. If you ask us to withdraw it \(section 8\), we no longer use it for later runs/);
+    expect(text("PRIVACY_NOTICE", "en")).toMatch(/A self-declaration signed on a group run: as long as it is needed for the runs it applies to; once you ask us to withdraw it, a copy only as long as a legal claim needs it/);
+    expect(text("PRIVACY_NOTICE", "ro")).not.toMatch(/trei ani de la semnare/);
+    expect(text("PRIVACY_NOTICE", "en")).not.toMatch(/three years from the signing/);
     expect(text("PRIVACY_NOTICE", "ro")).not.toMatch(/alergare de grup: șapte zile/);
     expect(text("PRIVACY_NOTICE", "en")).not.toMatch(/group run: seven days/);
   });

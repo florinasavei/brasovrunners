@@ -2382,7 +2382,7 @@
             "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis. Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
             "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
             "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
-            "În Gmail-ul clubului: copiile declarațiilor mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
+            "În Gmail-ul clubului: copiile declarațiilor de concurs mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") -subject:(\"alergare de grup\" OR \"group run\") older_than:3y (copiile de la alergările de grup nu se șterg după vechime: rămân cât timp declarația e activă, cum spune e-mailul fiecăreia), iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
             "Tot acolo, confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
           ]
         },

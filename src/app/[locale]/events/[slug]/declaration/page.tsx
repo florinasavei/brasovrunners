@@ -14,7 +14,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -183,11 +183,12 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         {t("groupRunDeclaration.page.languageNote")}
       </Typography>
 
-      {/* Which approved text this is (§499): its version and the day it took effect, as the terms page says its own (§323). */}
+      {/* Which approved text this is (§499): its version and the day it took effect, as the terms page says its own (§323) —
+          «în vigoare din 28 septembrie 2026», the whole date and no weekday (§NNN). */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
         {legalCopy("inForce", {
           version: document.version,
-          date: formatDay(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+          date: formatDateInWords(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
         })}
       </Typography>
       {/* The approved text, its blanks filled for this run and left dotted for the signer (§95, §225). */}

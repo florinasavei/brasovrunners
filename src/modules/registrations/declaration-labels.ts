@@ -1,4 +1,4 @@
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_NAME } from "@/theme/brand";
 import type { DeclarationLabels } from "./signed-declaration";
@@ -79,11 +79,12 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
     date: words.date,
     idDocument: words.idDocument,
     version: words.version,
-    // The day the version took effect, inside the sentence, on the club's clock as `/admin/legal` and the signing pages show it (§349, §499).
+    // The day the version took effect, on the club's clock as `/admin/legal` and the signing pages show it (§499) —
+    // the whole date, the month in words, no weekday: «Versiunea 6, în vigoare din 28 septembrie 2026» (§NNN).
     versionInForce: (version, effectiveAt) =>
       words.versionInForce
         .replace("{version}", String(version))
-        .replace("{date}", formatDay(effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" })),
+        .replace("{date}", formatDateInWords(effectiveAt, { locale, timeZone: CLUB_TIME_ZONE })),
     signedWhen: (when) => words.signedWhen.replace("{when}", when),
     generatedOn: words.generatedOn.replace("{date}", generated),
     page: (n, total) => words.page.replace("{n}", String(n)).replace("{total}", String(total)),

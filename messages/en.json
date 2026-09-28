@@ -2382,7 +2382,7 @@
             "Delete the CSV and xlsx files downloaded for the event and the all-declarations PDF — from Downloads, from the bin, and from any email or chat you sent them through. If a list must be kept, cut the identity document column first.",
             "On declarations signed on paper, cross out or cover the identity document's series and number. The paper stays three years, then it is destroyed too.",
             "Destroy the emergency sheet and any other list printed for race day (shredder, or torn small).",
-            "In the club's Gmail: declaration copies older than three years are found with subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, and contact-form messages older than 12 months with subject:\"Mesaj de pe site\" older_than:1y — select them all and delete them.",
+            "In the club's Gmail: race declaration copies older than three years are found with subject:(\"Declarație semnată\" OR \"Signed declaration\") -subject:(\"alergare de grup\" OR \"group run\") older_than:3y (group-run copies are not deleted by age: they stay while the declaration is active, as each one's email says), and contact-form messages older than 12 months with subject:\"Mesaj de pe site\" older_than:1y — select them all and delete them.",
             "In the same place, the confirmation notices sent to the club and the club copies of participants' emails, older than three years: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — select them all and delete them. The search carries both languages, so it finds the subject in either."
           ]
         },
