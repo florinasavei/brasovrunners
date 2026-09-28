@@ -384,7 +384,7 @@ export const events = pgTable(
     locationToBeAnnounced: boolean("location_to_be_announced").notNull().default(false),
 
     /**
-     * The date is not announced yet (`DECISIONS.md` §NNN; the owner, 2026-09-28: "events with no
+     * The date is not announced yet (`DECISIONS.md` §533; the owner, 2026-09-28: "events with no
      * date specified, as I can already do without a location").
      *
      * The same shape as the place's switch above (§328): a state of the event, not an empty field.
@@ -398,7 +398,7 @@ export const events = pgTable(
     dateToBeAnnounced: boolean("date_to_be_announced").notNull().default(false),
 
     /**
-     * The time is not announced yet, the day is (`DECISIONS.md` §NNN; the owner, 2026-09-28: "the
+     * The time is not announced yet, the day is (`DECISIONS.md` §533; the owner, 2026-09-28: "the
      * same with the time — the time may still change"). Read with `date_to_be_announced` as one
      * rule, "the start is not announced": registration stays «în curând», the calendar and the feed
      * leave the event out, and every public reader is handed no start — only the day, as a date

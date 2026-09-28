@@ -280,7 +280,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     checkJobHealth(db, "registration-maintenance", now, budget.effects.jobFloorMinutes),
   ]);
   // The listing's own queries, so "published" here means exactly what a visitor sees — the dated
-  // events and those whose date is to be announced (§NNN), which the listing shows in a section.
+  // events and those whose date is to be announced (§533), which the listing shows in a section.
   const published = [...(await listPublishedEvents(db, locale)), ...(await listUndatedPublishedEvents(db, locale))];
   const publishedEventCount = published.length;
   /**

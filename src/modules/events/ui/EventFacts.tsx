@@ -176,7 +176,7 @@ export default async function EventFacts({
   raceWeek = false,
 }: {
   /**
-   * An event page's read, whose date is null while it is to be announced (§NNN) — only the page
+   * An event page's read, whose date is null while it is to be announced (§533) — only the page
    * and its preview meet one: every listing read is of dated events. The «Când» row then says
    * «Data se anunță în curând» and nothing else of time.
    */
@@ -245,7 +245,7 @@ export default async function EventFacts({
   // The date starts its line, so it takes a capital (§349): "Sâmbătă, 21 nov. 2026".
   const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
   const startsAt = event.startsAt;
-  // Only the time held back (§NNN): the day the query computed, formatted where no zone can move it.
+  // Only the time held back (§533): the day the query computed, formatted where no zone can move it.
   const heldDay = startsAt === null && event.announcedDay ? announcedDayInstant(event.announcedDay) : null;
   const dateLong =
     startsAt !== null
@@ -364,7 +364,7 @@ export default async function EventFacts({
     const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
     const day = <strong key="date">{date}</strong>;
     const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
-    // No time to say while the start is to be announced (§NNN): the day with «Ora se anunță», or
+    // No time to say while the start is to be announced (§533): the day with «Ora se anunță», or
     // the date's sentence alone.
     if (startsAt === null) {
       return heldDay
@@ -647,7 +647,7 @@ export default async function EventFacts({
     // The state of registration and, where the page has one, its door (§409): read through the
     // page's own `readRegistrationDoor` — one cached entry for an open race, nothing for any
     // other card — never a formula of this file's own.
-    // A card is always of a dated event (the listing reads no other, §NNN).
+    // A card is always of a dated event (the listing reads no other, §533).
     const dated = datedOrNull(event);
     const registration = mentionsRegistration && dated
       ? cardRegistrationLine(t, locale, dated, now, await readRegistrationDoor(dated, now), raceWeek)

@@ -71,7 +71,7 @@ export default async function EventCard({
   featured,
   seriesDates,
 }: {
-  /** Undated only in the listing's «Data se anunță» section (§NNN): no countdown, «Când» says so. */
+  /** Undated only in the listing's «Data se anunță» section (§533): no countdown, «Când» says so. */
   event: PublicEventPage;
   index: number;
   now: Date;

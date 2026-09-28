@@ -121,7 +121,7 @@ export async function findSignableEvent<T extends Record<string, unknown>>(db: D
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  // A run whose date is to be announced (§NNN) has nothing to sign for yet: its start is only the
+  // A run whose date is to be announced (§533) has nothing to sign for yet: its start is only the
   // organizer's provisional note, and the signed PDF and its email would print it. Not signable, as
   // the page (which answers 404) says — asked here too, for a stale form or a post to the action.
   if (!row || startHeldBack(row)) return undefined;

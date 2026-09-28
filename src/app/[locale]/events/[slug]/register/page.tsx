@@ -149,7 +149,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     skipped then; the ones the public cache answers are tried and may say nothing.
   */
   const eventRead = await registrationEventWithLastGood(locale, slug, now);
-  // No form while the date is to be announced (§NNN): registration is «în curând» until it is,
+  // No form while the date is to be announced (§533): registration is «în curând» until it is,
   // and the state below would say so anyway — this says it before a date is read.
   const event = eventRead.value ? datedOrNull(eventRead.value) : null;
   if (!event) notFound();

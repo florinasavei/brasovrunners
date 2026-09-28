@@ -115,7 +115,7 @@ export default async function WhenBox({
             required={eventInputConstraints("startsAtWallTime").required}
           />
           {inSeries && <BoxNote>{t("editor.boxes.when.series")}</BoxNote>}
-          {/* «Data se anunță mai târziu» (§NNN), the place's switch for the date (§328): the date
+          {/* «Data se anunță mai târziu» (§533), the place's switch for the date (§328): the date
               above stays, as the organizer's provisional note, and is published when this goes off.
               Not on a series (a series is its dates; the service refuses it there). The marker says
               the form carried the box, so an unticked one reads as "off", not "not edited". */}
@@ -126,7 +126,7 @@ export default async function WhenBox({
                 {t("editor.dateToBeAnnounced")}
               </CheckboxField>
               <BoxNote>{t("editor.dateToBeAnnouncedHelp")}</BoxNote>
-              {/* «Ora se anunță mai târziu» (§NNN): the day is published, the hour above is not. */}
+              {/* «Ora se anunță mai târziu» (§533): the day is published, the hour above is not. */}
               <input type="hidden" name="event.timeToBeAnnounced.present" value="1" />
               <CheckboxField name="event.timeToBeAnnounced" defaultChecked={event?.timeToBeAnnounced ?? false}>
                 {t("editor.timeToBeAnnounced")}

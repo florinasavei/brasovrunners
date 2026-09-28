@@ -51,9 +51,9 @@ export async function eventShareImage(
     cancelled: string;
     /** "Locația se anunță în curând" (§328), where the meeting point would be. */
     locationToBeAnnounced: string;
-    /** "Data se anunță în curând" (§NNN), where the date and the time would be. */
+    /** "Data se anunță în curând" (§533), where the date and the time would be. */
     dateToBeAnnounced: string;
-    /** "Ora se anunță în curând" (§NNN), after the day, when only the time is held back. */
+    /** "Ora se anunță în curând" (§533), after the day, when only the time is held back. */
     timeToBeAnnounced: string;
     distanceKm: (km: string) => string;
     elevationM: (m: string) => string;
@@ -66,7 +66,7 @@ export async function eventShareImage(
   const square = shape === "square";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
   // "Duminică, 11 oct. 2026": the long form, starting its line (§349), in the picture's language.
-  // While the date is to be announced (§NNN) the query withheld it, and the picture says so instead.
+  // While the date is to be announced (§533) the query withheld it, and the picture says so instead.
   const when =
     event.startsAt === null
       ? event.announcedDay

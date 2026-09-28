@@ -18,7 +18,7 @@ import { submitRegistration } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — the date to be announced, end to end. The owner, 2026-09-28: "events with
+ * `DECISIONS.md` §533 — the date to be announced, end to end. The owner, 2026-09-28: "events with
  * no date specified, as I can already do without a location"; registration stays «în curând»
  * meanwhile (the owner's choice), and the date is entirely unknown to the public — no month.
  *
@@ -84,7 +84,7 @@ const SUBMISSION = {
   renderedAt: new Date(NOW.getTime() - 10_000).toISOString(),
 };
 
-describe("§NNN the date to be announced", () => {
+describe("§533 the date to be announced", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -262,7 +262,7 @@ describe("§NNN the date to be announced", () => {
     });
   });
 
-  describe("what the review found (§NNN)", () => {
+  describe("what the review found (§533)", () => {
     it("withholds the programme's timed rows, which name the day as surely as the start", async () => {
       await publishUndated({
         scheduleRows: [{ date: "2027-03-13", time: "16:00", endTime: "", ro: "Ridicarea kitului", en: "Kit pickup", place: "" }],
@@ -304,7 +304,7 @@ describe("§NNN the date to be announced", () => {
     });
   });
 
-  describe("the time to be announced (§NNN): the day is published, the hour is not", () => {
+  describe("the time to be announced (§533): the day is published, the hour is not", () => {
     const publishTimeLater = async (extra: Record<string, unknown> = {}) =>
       createEventAndPublish(db, {
         actor: admin,

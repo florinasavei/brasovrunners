@@ -187,7 +187,7 @@ describe("§470 the listing draws the lead as the first card of its one grid", (
     expect(page).not.toContain("othersCount");
   });
 
-  it("gives the upcoming grid, the «Data se anunță» section (§NNN) and the past fold one grid (`CARD_GRID_SX`): one to three equal columns", () => {
+  it("gives the upcoming grid, the «Data se anunță» section (§533) and the past fold one grid (`CARD_GRID_SX`): one to three equal columns", () => {
     expect(page.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(3);
     expect(page).toContain('gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" }');
   });

@@ -13,15 +13,15 @@ export type RegistrationMode = "NONE" | "INTERNAL" | "EXTERNAL";
 export type RegistrationWindowInput = {
   registrationMode: RegistrationMode;
   eventStatus: "SCHEDULED" | "CANCELLED" | "COMPLETED";
-  /** Null while the date is to be announced (§NNN): a public read withholds it in SQL. */
+  /** Null while the date is to be announced (§533): a public read withholds it in SQL. */
   startsAt: Date | null;
   /**
-   * The date is to be announced (§NNN). While true an internal registration is `NOT_YET_OPEN`
+   * The date is to be announced (§533). While true an internal registration is `NOT_YET_OPEN`
    * whatever the provisional date, the window and the clock say — a server read that holds the
    * provisional `startsAt` passes this; a public read passes `startsAt: null`, which says the same.
    */
   dateToBeAnnounced?: boolean;
-  /** Only the time is to be announced (§NNN): the same answer as the date's switch. */
+  /** Only the time is to be announced (§533): the same answer as the date's switch. */
   timeToBeAnnounced?: boolean;
   registrationOpensAt: Date | null;
   /**
@@ -52,7 +52,7 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
   if (event.eventStatus !== "SCHEDULED") return "EVENT_CANCELLED";
 
   if (event.registrationMode === "NONE") return "NOT_APPLICABLE";
-  // A date still to be announced (§NNN) holds every registration at "soon", the club's own and the
+  // A date still to be announced (§533) holds every registration at "soon", the club's own and the
   // organizer's form alike: nobody signs up for a day nobody has named. There is no day to count a
   // minimum age on and no start to close at, and a provisional date that passed must not close the
   // «Anunță-mă» list either.
@@ -113,7 +113,7 @@ export function registrationClosingInstant(event: Pick<RegistrationWindowInput, 
  */
 export function upcomingRegistrationOpening(event: RegistrationWindowInput, now: Date): Date | null {
   if (registrationState(event, now) !== "NOT_YET_OPEN") return null;
-  // «În curând» has no date to show, and neither has an event whose date is to be announced (§NNN).
+  // «În curând» has no date to show, and neither has an event whose date is to be announced (§533).
   if (event.registrationOpensSoon || startHeldBack(event) || event.startsAt === null) return null;
   return event.registrationOpensAt ?? event.publishedAt;
 }

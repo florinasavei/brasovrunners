@@ -18,7 +18,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const { locale, slug } = await params;
   const known = routing.locales.find((candidate) => candidate === locale);
   const found = known ? await eventBySlugWithLastGood(known, slug) : undefined;
-  // No file while the date is to be announced (§NNN): a calendar entry is a date, and the page offers none.
+  // No file while the date is to be announced (§533): a calendar entry is a date, and the page offers none.
   const event = found ? datedOrNull(found) : null;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const t = await getTranslations({ locale: known, namespace: "Event" });

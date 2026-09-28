@@ -140,7 +140,7 @@ export async function cachedUpcomingEvents(locale: Locale, now: Date) {
 }
 
 /**
- * `listUndatedPublishedEvents`: the listing's «Data se anunță» section (§NNN). No clock: an event
+ * `listUndatedPublishedEvents`: the listing's «Data se anunță» section (§533). No clock: an event
  * with no date is on it whatever the time, until the organizer announces the date.
  */
 export async function cachedUndatedEvents(locale: Locale) {
@@ -193,7 +193,7 @@ export async function cachedPublishedTranslations(eventId: string) {
 export async function cachedSitemapEvents(locale: Locale) {
   return publicRead(["events.sitemap", locale], ["events"], async () => {
     const db = getDb();
-    // The dated ones and those whose date is to be announced (§NNN): each has its page.
+    // The dated ones and those whose date is to be announced (§533): each has its page.
     const rows = await listPublishedEventAddresses(db, locale);
     const translations = groupById(
       await findPublishedTranslationsForEvents(db, rows.map((event) => event.id)),

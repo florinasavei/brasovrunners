@@ -139,7 +139,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   const jobsHealthy = jobs.every((job) => job.status === "ok");
   // The listing's own query, so "published" here means exactly what a visitor sees; a fee
   // announced on one reopens a money question (§50).
-  // The dated events and those whose date is to be announced (§NNN): both are on the site.
+  // The dated events and those whose date is to be announced (§533): both are on the site.
   const published = [...(await listPublishedEvents(db, locale)), ...(await listUndatedPublishedEvents(db, locale))];
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
   const volume = await readEmailVolumeToday(db, now);

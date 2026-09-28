@@ -68,7 +68,7 @@ export type RouteFactsSource = Pick<
   // The level on the club's scale of fifteen (§526), the difficulty's one column; optional like
   // `StoredDifficulty`'s, for a cached row from before it.
   Pick<StoredDifficulty, "difficultyLevel"> & {
-    /** Null on an event page while the date is to be announced (§NNN): no date, so no night pill. */
+    /** Null on an event page while the date is to be announced (§533): no date, so no night pill. */
     startsAt: Date | null;
   };
 

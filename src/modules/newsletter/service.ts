@@ -532,7 +532,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
         isNull(newsletterSends.id),
         eq(events.editorialStatus, "PUBLISHED"),
         eq(events.eventStatus, "SCHEDULED"),
-        // Not while the date is to be announced (§NNN): the alert says when, and the start is only
+        // Not while the date is to be announced (§533): the alert says when, and the start is only
         // the organizer's provisional note. Still unseen, it goes once the date is announced — if
         // that falls inside the window a publication has, like any other new event.
         eq(events.dateToBeAnnounced, false),

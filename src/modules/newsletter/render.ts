@@ -67,7 +67,7 @@ export async function renderNewsletterRow(
     if (event.editorialStatus !== "PUBLISHED" || event.eventStatus !== "SCHEDULED" || event.startsAt.getTime() <= now.getTime()) {
       throw new OutboxMessageWithdrawn("newsletter: the event is no longer news");
     }
-    // Queued while it had a date, and the date was since held back (§NNN): the alert would say a date
+    // Queued while it had a date, and the date was since held back (§533): the alert would say a date
     // the club withdrew. Withdrawn; the event is announced again once its date is.
     if (event.dateToBeAnnounced || event.timeToBeAnnounced) throw new OutboxMessageWithdrawn("newsletter: the event's start is to be announced");
   }

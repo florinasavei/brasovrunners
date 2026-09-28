@@ -84,7 +84,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // (BR-REQ-011-01 criterion 4). One of the two is non-null here — `NOT_YET_OPEN` is only
       // returned when `now` is before it — so the date shown is always a real one. «În curând»
       // (§451) has no date at all, and says so with null rather than a date it does not have.
-      // «În curând» (§451), or a date still to be announced (§NNN): no opening date to name.
+      // «În curând» (§451), or a date still to be announced (§533): no opening date to name.
       if (event.registrationOpensSoon || startHeldBack(event) || event.startsAt === null) return { kind: "NOT_YET_OPEN", opensAt: null };
       return { kind: "NOT_YET_OPEN", opensAt: (event.registrationOpensAt ?? event.publishedAt) as Date };
 

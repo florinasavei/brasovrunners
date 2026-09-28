@@ -256,7 +256,7 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
   if (!event) return words.when.none;
   const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
   return join(words, [
-    // Said first while the date is held back (§NNN): the provisional date after it is staff's alone.
+    // Said first while the date is held back (§533): the provisional date after it is staff's alone.
     event.dateToBeAnnounced ? words.when.tba : event.timeToBeAnnounced ? words.when.timeTba : null,
     summaryDateTime(event.startsAt, event.timezone, locale),
     event.type === "RACE" && event.raceStartsAt

@@ -62,7 +62,7 @@ type Props = {
  * Whether a row is a night event (§394), for the filter's "Eveniment de noapte" box: the same answer
  * the row's own pill gives, at the club's place, per date.
  */
-// No night without a date (§NNN): an event whose date is to be announced has no sunset to compare.
+// No night without a date (§533): an event whose date is to be announced has no sunset to compare.
 const isNight = (event: PublicEventPage) => event.startsAt !== null && clubNightEvent({ ...event, startsAt: event.startsAt }).night;
 
 /**
@@ -154,7 +154,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
   ]);
   const listing = read.value;
   // Between seasons (§167) the page leads with the club's last event so it is not blank — unless
-  // an event whose date is to be announced (§NNN) is ahead: then the page is not between seasons,
+  // an event whose date is to be announced (§533) is ahead: then the page is not between seasons,
   // and that section, under the cards, is what it has to show.
   const { events, hasUpcoming }: Listing = !listing.hasUpcoming && undatedRows.length > 0 ? { events: [], hasUpcoming: false } : listing;
   // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
@@ -197,7 +197,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} />
 
-      {/* The events whose date is to be announced (§NNN): under the dated ones, never in a month. */}
+      {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
       <UndatedEvents rows={undatedShown} now={now} />
 
       {/* What the club has already held, at the foot and folded (§267). */}
@@ -234,7 +234,7 @@ async function ListingLead({
   layout,
   locale,
 }: Listing & {
-  /** The events whose date is to be announced (§NNN): the panel offers their values too. */
+  /** The events whose date is to be announced (§533): the panel offers their values too. */
   undated: readonly PublicEventPage[];
   /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
@@ -311,7 +311,7 @@ const CARD_GRID_SX = {
 const PAST_EVENTS_SHOWN = 12;
 
 /**
- * The events whose date is to be announced (§NNN), or none when they cannot be read: like the past
+ * The events whose date is to be announced (§533), or none when they cannot be read: like the past
  * section, a section of what the page already has, never a reason for the listing to fail.
  */
 async function readUndatedEvents(locale: EventLocale): Promise<PublicEventPage[]> {
@@ -325,7 +325,7 @@ async function readUndatedEvents(locale: EventLocale): Promise<PublicEventPage[]
 }
 
 /**
- * «Data se anunță» (§NNN): the published events whose date is not announced yet, under the dated
+ * «Data se anunță» (§533): the published events whose date is not announced yet, under the dated
  * list — a card each, its «Când» saying so, never a countdown, a month or a forecast. The page hands
  * it the rows its filters let through (no such event is a night one or has a door open: registration
  * is «în curând» until the date is known). Nothing at all when there is none.
@@ -471,7 +471,7 @@ async function ListingBody({
   filter: ListingFilter;
   facts: FilterFacts<PublicEventPage>;
   now: Date;
-  /** The «Data se anunță» section (§NNN) shows something under this grid: no "nothing" sentence then. */
+  /** The «Data se anunță» section (§533) shows something under this grid: no "nothing" sentence then. */
   undatedBelow?: boolean;
 }) {
   const t = await getTranslations("Events");

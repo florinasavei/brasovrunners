@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.18-2026-09-27
+
+- **An event can be published before its date or its time is known**: «Data se anunță mai târziu» and «Ora se anunță mai târziu» in «Când și unde». The site then says «Data se anunță în curând», or the day with «Ora se anunță în curând», on the page, the card and the share picture, and lists the event in its own «Data sau ora se anunță» section: never in a month, the calendar or the feed. Registration stays at «se deschid în curând» until the start is announced and the organizer opens it; the typed date and hour stay the organizer's unpublished note. Not on a series, on an event people already registered for, or on the lead event. Migration `0105`. §533.
 ## BR-V2.17-2026-09-27
 
 - **The backoffice events list takes a search, a state and an order**: find an event by title, page address or place in either language (accents ignored), narrow it to Ciornă / În verificare / Publicat / Arhivat / Anulat / Viitoare / Trecute, and sort it by date, title or registrations from the form or the column headings. All of it lives in the address and works without JavaScript, and the list's page links now really page. §527.

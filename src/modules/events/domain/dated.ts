@@ -1,5 +1,5 @@
 /**
- * An event read with its date, as every dated surface needs it (`DECISIONS.md` §NNN).
+ * An event read with its date, as every dated surface needs it (`DECISIONS.md` §533).
  *
  * Pure: an event page's read has `startsAt: null` while its date is to be announced
  * (`events/repository.ts`, `UNDATED_PUBLIC_COLUMNS`); a surface that places the event in time —
@@ -13,7 +13,7 @@ export function datedOrNull<E extends { startsAt: Date | null }>(event: E): Date
 }
 
 /**
- * "The start is not announced" (§NNN): its date, or only its time. One rule for both — registration
+ * "The start is not announced" (§533): its date, or only its time. One rule for both — registration
  * stays «în curând», no door takes anybody, the calendar leaves it out — asked of a row that carries
  * the two switches; absent on a partial row (a fixture) is the columns' default, false.
  */
@@ -22,7 +22,7 @@ export function startHeldBack(event: { dateToBeAnnounced?: boolean | null; timeT
 }
 
 /**
- * The announced day as an instant a date formatter can read (§NNN): noon UTC on `YYYY-MM-DD`,
+ * The announced day as an instant a date formatter can read (§533): noon UTC on `YYYY-MM-DD`,
  * formatted in UTC, so the day printed is the day the query computed on the event's own calendar —
  * never shifted by a zone, and carrying no hour of the event's.
  */

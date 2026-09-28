@@ -292,7 +292,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {next.event.locationToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.placeToBeAnnounced")} />
               )}
-              {/* The date is not announced yet (§NNN): the list's date is the provisional one, staff's alone. */}
+              {/* The date is not announced yet (§533): the list's date is the provisional one, staff's alone. */}
               {next.event.dateToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.dateToBeAnnounced")} data-testid="date-to-be-announced-chip" />
               )}

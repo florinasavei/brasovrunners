@@ -963,7 +963,7 @@ async function renderRow(
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
     eventDetails?.slug
   ) {
-    // Dated only: an event whose date is to be announced (§NNN) has no calendar entry to attach.
+    // Dated only: an event whose date is to be announced (§533) has no calendar entry to attach.
     const found = await findPublishedEventBySlug(db, locale, eventDetails.slug);
     const published = found ? datedOrNull(found) : null;
     if (published) {

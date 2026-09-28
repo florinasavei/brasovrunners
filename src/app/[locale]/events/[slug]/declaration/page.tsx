@@ -78,7 +78,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const now = new Date();
   // The cached row, or the database's own at a red month's miss (§493): this page reads it anyway.
   const found = await formEventBySlug(locale, slug);
-  // A group run whose date is to be announced (§NNN) takes no signature yet: nothing to sign for.
+  // A group run whose date is to be announced (§533) takes no signature yet: nothing to sign for.
   const event = found ? datedOrNull(found) : null;
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key) notFound();

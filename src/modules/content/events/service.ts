@@ -287,7 +287,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
       ["registrationOpensAt"],
     );
   }
-  // A start still to be announced (§NNN), date or time, holds registration at «în curând»: an opening date is an
+  // A start still to be announced (§533), date or time, holds registration at «în curând»: an opening date is an
   // answer to a question the event cannot ask yet, refused like §451's rather than dropped.
   if (startHeldBack(fields) && registrationOpensAt) {
     throw new DomainError(
@@ -320,7 +320,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * "approved" lives in another table.
  */
 /**
- * «Data se anunță mai târziu» (§NNN), what it may not be switched on for:
+ * «Data se anunță mai târziu» (§533), what it may not be switched on for:
  *
  * - **a series** — a rule that makes dates, or a date it made: a series is its dates;
  * - **an event anybody registered for** — hiding its date would be a postponement nobody was told
@@ -557,11 +557,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // switch writes nothing, so no script opens a registration the organizer holds shut by not
     // mentioning it. The editor and the create form always post it.
     ...(fields.registrationOpensSoon === undefined ? {} : { registrationOpensSoon: fields.registrationOpensSoon }),
-    // «Data se anunță mai târziu» (§NNN), by the same discipline. While it is on, an internal
+    // «Data se anunță mai târziu» (§533), by the same discipline. While it is on, an internal
     // registration is held at «se deschid în curând» (§451) whatever the box said — so announcing the
     // date later opens nothing by itself: the organizer unticks «în curând» when they mean it.
     ...(fields.dateToBeAnnounced === undefined ? {} : { dateToBeAnnounced: fields.dateToBeAnnounced }),
-    // «Ora se anunță mai târziu» (§NNN): the same, for the time alone.
+    // «Ora se anunță mai târziu» (§533): the same, for the time alone.
     ...(fields.timeToBeAnnounced === undefined ? {} : { timeToBeAnnounced: fields.timeToBeAnnounced }),
     ...(startHeldBack(fields) && fields.registrationMode === "INTERNAL" ? { registrationOpensSoon: true } : {}),
     registrationClosesAt: times.registrationClosesAt,
@@ -2669,7 +2669,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // A copy of an event whose place is not announced is not announced either (§328): the
     // hidden place travels with it and stays hidden until somebody switches it on.
     locationToBeAnnounced: source.locationToBeAnnounced,
-    // And one whose date is not announced keeps it held back (§NNN): its start is the source's
+    // And one whose date is not announced keeps it held back (§533): its start is the source's
     // provisional note. `repeatEvent` refuses such a source, so only a duplicate carries this.
     dateToBeAnnounced: source.dateToBeAnnounced,
     timeToBeAnnounced: source.timeToBeAnnounced,
@@ -2788,7 +2788,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
 
   const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
-  // An event whose date is to be announced (§NNN) has no date to repeat from: its start is the
+  // An event whose date is to be announced (§533) has no date to repeat from: its start is the
   // organizer's provisional note, and a series would publish that note on every date it made.
   if (startHeldBack(source)) {
     throw new DomainError("VALIDATION_ERROR", "repeat: an event whose date is to be announced cannot repeat", ["repeat"]);

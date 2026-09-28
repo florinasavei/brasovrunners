@@ -98,7 +98,7 @@ export default async function PreviewEventPage({ params }: Props) {
   // The place not announced yet (§328) is withheld here exactly as the public query withholds it,
   // so the preview shows the sentence the page will show — including the programme rows' places.
   const placeLater = event.locationToBeAnnounced;
-  // The start not announced yet (§NNN) — its date, or only its time — withheld the same way: the
+  // The start not announced yet (§533) — its date, or only its time — withheld the same way: the
   // preview says «Data se anunță» or the day with «Ora se anunță», as the page will.
   const dateLater = event.dateToBeAnnounced || event.timeToBeAnnounced;
   const dayOnly = event.timeToBeAnnounced && !event.dateToBeAnnounced ? dayIn(event.startsAt, event.timezone) : null;
@@ -157,7 +157,7 @@ export default async function PreviewEventPage({ params }: Props) {
     routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     discountNote: translation.discountNote,
-    // No programme while the start is held back (§NNN): its rows are instants, as on the page.
+    // No programme while the start is held back (§533): its rows are instants, as on the page.
     scheduleItems: dateLater ? null : placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
     coHostName: event.coHostName,
@@ -171,7 +171,7 @@ export default async function PreviewEventPage({ params }: Props) {
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   // The forecast the public page will show (§402): a draft within seven days of its start reads it too.
-  // None while the date is to be announced (§NNN), as on the page.
+  // None while the date is to be announced (§533), as on the page.
   const datedPreview = datedOrNull(preview);
   const weather = datedPreview ? await forecastForEvent(datedPreview, now) : null;
 

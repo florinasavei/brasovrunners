@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.17-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.18-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.17-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.18-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -20570,3 +20570,49 @@ Signed group-run declarations are erased in batch as well as one at a time (the 
 The guide's task over the batch presses is titled «Textele legale ale clubului» / "The club's legal texts": a count of texts in a title goes stale the day a text is added.
 
 Baseline `BR-V2.17-2026-09-27`.
+
+## 533. The start can be "to be announced" — the date, or only the time — the place's switch, for the start
+
+**The owner:** "for 2.18 I also want to set events with no date specified (as I can already do without a location)" (2026-09-28). Asked, the owner chose that registration stays «în curând» while the date is unknown, and that the date is entirely unknown to the public, with no month shown.
+
+**Then the time** (the owner, the same day: "the same with the time — the time may still change"; asked, again registration «în curând» and nothing in the calendar). A second switch, «Ora se anunță mai târziu»: the day is published, the hour is not.
+
+**What it is.** `events.date_to_be_announced` and `events.time_to_be_announced`, booleans, not null, default `false` (migration `0105`, expand only: every earlier row reads as announced, which it was). Every rule below reads the two as one, "the start is not announced" (`startHeldBack`, one SQL expression and one TypeScript helper, so they cannot drift). The difference between them is one column the public read adds: `announcedDay`, `YYYY-MM-DD` on the event's own calendar (`to_char(starts_at AT TIME ZONE timezone)`), set only while the time alone is held back. When both are on, the date wins and there is no day. It is the shape of the place's switch (§328): a state of the event, not an empty field. `starts_at` stays NOT NULL and keeps whatever the organizer typed, as a provisional note for staff and for the backoffice's order, published the moment the switch goes off. A nullable `starts_at` was refused: it is read by a few hundred lines of jobs, emails and the allocator, each of which would then have to decide what an event without a start means.
+
+**Withheld in SQL, and kept off every list that places an event in time.**
+- `publishedIn`, the condition every public list query shares (the listing, upcoming, past, the calendar's months, the feed, the endings the listing's cache is keyed on), now requires `date_to_be_announced = false`. A new list built on it cannot meet an undated event, so it cannot sort one by, file one under or put one in a calendar app at its provisional date.
+- An undated event is read only through `UNDATED_PUBLIC_COLUMNS`: `findPublishedEventBySlug` (the event page, the preview, the share pictures, the `.ics` route, the registration and self-declaration pages, the email's calendar attachment) and `listUndatedPublishedEvents` (the listing's section). Their `startsAt`, `endsAt` and `raceStartsAt` are `CASE WHEN date_to_be_announced THEN NULL`, typed `Date | null`. The compiler therefore named every surface that reads a date off them, and each now either says the sentence or asks `datedOrNull` first: the structured data (a `SportsEvent` requires `startDate`), the forecast, the calendar entry, the countdown, the confirmation window, the self-declaration offer and the start list exist only for a dated event.
+- The sitemap lists the page (`listPublishedEventAddresses`, one query, as before), so a search engine can find it without a date.
+
+**The programme's timed rows are withheld too** (`scheduleItems` is null in the same columns): «Sâmbătă, 13 mar., 16:00» names the day as surely as the start does.
+
+**Said on every surface.** «Data se anunță în curând» / "Date to be announced soon" (`Event.dateToBeAnnounced`) appears in «Când» on the event page, the preview and the card, and on the Open Graph and Instagram pictures. When only the time is held back, the announced day is shown instead — «Duminică, 21 nov. 2026 · Ora se anunță în curând» (`Event.timeToBeAnnounced`). It is formatted from noon UTC of that day in UTC (`announcedDayInstant`), so no zone can move it and no hour of the event's is in it. The listing draws these events in their own section, «Data sau ora se anunță», under the dated cards, ordered by the announced day and then by publication, never in a month, and the filters narrow it too (none is a night event or has a door open). No `.ics` (the route answers 404) and no Google Calendar link. No night pill, because there is no date to compute a sunset for.
+
+**Registration stays «în curând».** `registrationState` answers `NOT_YET_OPEN` for any registration, internal or at the organizer's form, while the date is to be announced (the flag, or a null `startsAt` from a public read), whatever the provisional date and the clock say: a hidden date that passed must not close the «Anunță-mă» list. The save also holds `registration_opens_soon` on, so announcing the date later opens nothing by itself; the organizer unticks «în curând» when they mean it. An opening date typed beside it is refused, naming the box (§451's rule). `assertRegistrationOpen` refuses every door, the race-day desk's included, before the desk's exception: there is no day to count the minimum age on. `submitRegistration` asks the flag again under the event row's lock, and the save counts registrations under the same lock, so a runner pressing «Trimite» as the organizer ticks the box is either counted there or refused here. The group run's optional self-declaration is not signable either (`findSignableEvent`), because the signed PDF would print the provisional date.
+
+**What it may not be switched on for** (`assertDateToBeAnnouncedAllowed`):
+- **a series**, meaning a rule that makes dates or a date it made. The editor offers no box there, and `repeatEvent` refuses an undated source, because a series would publish the provisional note on every date it made.
+- **an event anybody registered for**, test rows included. Hiding its date would be a postponement nobody was told of, with reminders and deadlines still counted from the date they were given. Postponing is the organizer's own act: a new date and «Anunță participanții», or a cancellation.
+
+- **an event marked «Evenimentul principal»**: the listing leads with a dated event, and the mark would be cleared from the one that does.
+
+A duplicate keeps the switch, the provisional date with it (as a duplicate keeps §328's hidden place).
+
+**The new-event alert** (§445) waits: `queueNewEventAlerts` skips an undated event and marks nothing seen, so the alert goes once the date is announced, if that falls inside the window a publication has. An alert queued while the event had a date is withdrawn at send time if the date was held back since.
+
+**The listing.** The undated section lists only events going ahead: a dated event leaves the listing when it has passed, and an undated one never passes, so a cancelled one leaves the section when it is cancelled (its page stays). The filters offer the undated events' values and narrow the section too. When nothing dated is ahead but something undated is, the page is not "between seasons": it neither leads with the last past event nor says that nothing is published. `/admin/tasks` and «Costuri» count undated events among the published, since a visitor sees them.
+
+**Staff** see two checkboxes under the start in «Când și unde», «Data se anunță mai târziu» and «Ora se anunță mai târziu», each with one sentence of help (§511). The closed card's line starts with whichever is on, and the backoffice list marks the event «Dată neanunțată» or «Oră neanunțată». A refusal names the box that was ticked.
+
+**Reviewed** adversarially before landing. The review found the programme's rows, the external form's button, the group-run signing action, the public form's missing flag, the save/submission race, a queued alert, a cancelled undated card, the featured mark, the tasks' counts and the between-seasons listing. Each is fixed and pinned in `tests/integration/cms/date-to-be-announced.test.ts` (16 cases). The lock test was checked to fail without the lock's check.
+
+**The time, measured** the same way: ticking «Ora se anunță mai târziu» on the seeded race was first refused, naming «Evenimentul principal al site-ului», because the race led the listing. Unticked, it saved. The card and the page read «Duminică, 25 oct. 2026 · Ora se anunță în curând» and neither of the provisional times. There was no JSON-LD and no `.ics` (404), and the event was on neither the calendar nor the feed, at 360 px and 1280 px, with no sideways scroll. The day is proven on the event's calendar by a start at 00:30 in Brașov, 22:30 UTC the day before.
+
+**Measured** on `next dev` with the seed, ticking the box on a published group run through the editor and saving:
+- the listing's section and the event page at 320 px and 1280 px, with no sideways scroll;
+- no `SportsEvent` JSON-LD and no calendar links on the page;
+- the calendar page and the feed without the event, the sitemap with it;
+- the `.ics` route 404 for the undated event and 200 for a dated one;
+- the share picture reading «Data se anunță în curând».
+
+Baseline `BR-V2.18-2026-09-27`.

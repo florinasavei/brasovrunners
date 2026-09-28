@@ -32,7 +32,7 @@ export default async function RegistrationCta({
   event,
   now,
 }: {
-  /** An event page's read: undated while its date is to be announced, and then «în curând» (§NNN). */
+  /** An event page's read: undated while its date is to be announced, and then «în curând» (§533). */
   event: PublicEventPage;
   now: Date;
 }) {

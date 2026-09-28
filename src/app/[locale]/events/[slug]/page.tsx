@@ -176,7 +176,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   // The forecast for the start (§402): read on the server, from Open-Meteo through the data cache,
   // only within seven days of it; null — and no row — otherwise or when the service did not answer.
-  // An event whose date is to be announced (§NNN) has no forecast, no structured data (a
+  // An event whose date is to be announced (§533) has no forecast, no structured data (a
   // `SportsEvent` requires its `startDate`), no calendar entry and no countdown: `dated` is null.
   const dated = datedOrNull(event);
   const weather = dated ? await forecastForEvent(dated, now) : null;
@@ -410,14 +410,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
               organizer offered it and the club has approved the text of its surface. */}
           {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
-          {/* Nothing to sign for while the date is to be announced (§NNN). */}
+          {/* Nothing to sign for while the date is to be announced (§533). */}
           {dated && <DeclarationOffer event={dated} locale={locale} slug={slug} now={now} viewToken={declaratie} />}
         </Box>
         <OpenFoldFromHash />
       </Box>
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
-      {/* Nobody registers before the date is announced (§NNN), so an undated event has no list. */}
+      {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
       {dated && <StartList event={dated} page={lista} />}
     </Container>
   );

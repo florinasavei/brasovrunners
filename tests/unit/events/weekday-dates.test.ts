@@ -81,7 +81,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-describe("§NNN the start held back: the day alone, or nothing of time", () => {
+describe("§533 the start held back: the day alone, or nothing of time", () => {
   const held = (announcedDay: string | null): PublicEventPage => ({ ...event(), startsAt: null, endsAt: null, raceStartsAt: null, announcedDay });
   const text = (html: string) => html.replace(/<style[^>]*>[^<]*<\/style>/g, "").replace(/<[^>]+>/g, " ");
 
