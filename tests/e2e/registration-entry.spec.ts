@@ -139,12 +139,14 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     */
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${address} pleacă acum.`);
-    await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
-    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă apeși „Da”, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
+    // §NNN: no bold question and no primary button — one quiet line after the email's, «Înscriu încă o persoană cu această adresă».
+    await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Da, încă o persoană" })).toHaveCount(0);
+    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă înscrii încă o persoană, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Ce urmează" })).toHaveCount(0);
-    // BR-REQ-041-01 criterion 6: the one button is a real target on a phone.
-    const yesBox = await page.getByRole("button", { name: "Da, încă o persoană" }).boundingBox();
+    // BR-REQ-041-01 criterion 6: the quiet line is still a real target on a phone.
+    const yesBox = await page.getByRole("button", { name: "Înscriu încă o persoană cu această adresă" }).boundingBox();
     expect(yesBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
     /*

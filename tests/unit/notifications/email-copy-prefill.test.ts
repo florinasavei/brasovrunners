@@ -60,7 +60,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   // The offer's moment and its length (§419).
   WAITLIST_SPOT_OFFER: ["eventTitle", "holdExpiresAtFormatted", "offerHours"],
   REGISTRATION_CONFIRMED: ["eventTitle", "bibNumber", "checkinCode", "eventChecklist"],
-  REGISTRATION_CANCELLED: ["eventTitle"],
+  // Whose registration, at which event and when (§NNN): one message per cancelled person.
+  REGISTRATION_CANCELLED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
   WAITLIST_OFFER_EXPIRED: ["eventTitle"],
   REGISTRATION_MANAGE_LINK: [],
   PROFILE_MANAGE_LINK: [],

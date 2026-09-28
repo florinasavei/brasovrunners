@@ -410,6 +410,17 @@ async function renderRow(
     const others = await awaitingSignatureOnAddress(db, registration.eventId, registration.participantId, registration.id);
     if (others.length > 0) data.familyToSign = others;
   }
+  /*
+    One cancellation email per person (§NNN): whether the person held a place or waited in line —
+    the state the registration left, written in the row's payload by `unregister` — and who the
+    address still holds at the event, with their states, read at send time. Only this address's own
+    rows (the participant is the address, §389), so nothing about another inbox is said (§39).
+  */
+  if (row.messageType === "REGISTRATION_CANCELLED" && registration) {
+    data.cancelledFromWaitlist = (row.payloadJson as { previousStatus?: unknown } | null)?.previousStatus === "WAITLISTED";
+    const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
+    if (others.length > 0) data.cancelledOthers = others;
+  }
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   /*
     The hold's deadline on the declaration email (§104), and whether it is the window's — a

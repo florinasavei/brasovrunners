@@ -184,7 +184,7 @@ test.describe("§389 §446 a family on one address", () => {
     const idDocument = page.locator('[name="idDocument"]');
     if (await idDocument.count()) await idDocument.fill("BV 123456");
     await page.locator('[name="typedName"]').fill(second.registeredName);
-    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
     await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
     expect(await registrationStatus(second.id)).toBe("CONFIRMED");
 
@@ -239,8 +239,10 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${email} pleacă acum.`);
-    await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
-    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă apeși „Da”, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
+    // §NNN: no bold question and no primary button — one quiet line after the email's, «Înscriu încă o persoană cu această adresă».
+    await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Da, încă o persoană" })).toHaveCount(0);
+    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă înscrii încă o persoană, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
     await expect(page.getByRole("heading", { name: "Ce urmează" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
     // The first person's email left without any press.
@@ -251,8 +253,8 @@ test.describe("§389 §446 a family on one address", () => {
     const add = page.getByTestId("family-sitting-add");
     expect((await add.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    // «Da, încă o persoană»: the press that opens the sitting, then the same form, the address said back and not asked.
-    await add.getByRole("button", { name: "Da, încă o persoană" }).click();
+    // «Înscriu încă o persoană cu această adresă» (§NNN): the press that opens the sitting, then the same form, the address said back and not asked.
+    await add.getByRole("button", { name: "Înscriu încă o persoană cu această adresă" }).click();
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-address")).toContainText(email);
@@ -319,6 +321,37 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page).toHaveURL(/\/inregistrari\/declaratie\//, { timeout: 30_000 });
     await expect(page.getByText(`Declarația 1 din 3 — Ana ${lastName}`)).toBeVisible();
     expect((await registrationsByEmail(email)).map((row) => row.status).sort()).toEqual(["PENDING_DECLARATION", "PENDING_DECLARATION", "PENDING_DECLARATION"]);
+
+    /*
+      §NNN: the button says «… și treci la următoarea persoană» while another person follows, and
+      «Renunț la înscrierea pentru <nume>» withdraws one person, asking first; the last one just signs.
+    */
+    await hydrated(page);
+    const signStep = async (name: string) => {
+      await page.locator('[name="accepted"]').check();
+      const idDocument = page.locator('[name="idDocument"]');
+      if (await idDocument.count()) await idDocument.fill("BV 123456");
+      await page.locator('[name="typedName"]').fill(name);
+    };
+    await expect(page.getByTestId("declaration-sign")).toHaveText("Semnează și treci la următoarea persoană");
+    await signStep(`Ana ${lastName}`);
+    await page.getByTestId("declaration-sign").click();
+    await expect(page.getByText(`Declarația 2 din 3 — Maria ${lastName}`)).toBeVisible({ timeout: 30_000 });
+    await hydrated(page);
+    const withdraw = page.getByTestId("family-signing-withdraw").getByRole("button", { name: `Renunț la înscrierea pentru Maria ${lastName}` });
+    expect((await withdraw.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await withdraw.click();
+    await confirmDialog(page, `Renunți la înscrierea pentru Maria ${lastName}?`);
+    await expect(page.getByText(`Declarația 3 din 3 — Ion ${lastName}`)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea e anulată, iar adresa primește un email de confirmare.");
+    await expect(page.getByTestId("family-signing-steps")).toContainText(`Maria ${lastName} · înscriere anulată`);
+    // The last person: just «Semnează».
+    await expect(page.getByTestId("declaration-sign")).toHaveText("Semnează");
+    expect((await registrationsByEmail(email)).map((row) => row.status).sort()).toEqual(["CANCELLED", "CONFIRMED", "PENDING_DECLARATION"]);
+    // One email for Maria, naming her, the place released and who the address still holds.
+    const cancelled = await capturedEmail(page, email, `Înscrierea pentru Maria ${lastName} la`);
+    expect(cancelled.text).toContain("Locul a fost eliberat.");
+    expect(cancelled.text).toContain("Pe această adresă rămân înscriși:");
   });
 
   test("a link from an older email that opened the form for another person says it is no longer used", async ({ page }) => {

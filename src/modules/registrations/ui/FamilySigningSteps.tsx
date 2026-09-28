@@ -35,6 +35,8 @@ export default async function FamilySigningSteps({ steps, detailed = false }: { 
   const whatNext = (step: FamilyStep) => {
     if (step.status === "CONFIRMED" && step.checkinCode) return t("declare.family.what.confirmed", { code: step.checkinCode });
     if (step.status === "WAITLISTED") return t("declare.family.what.waitlisted");
+    // Withdrawn from the wizard (§NNN): the registration is cancelled and the place free again.
+    if (step.status === "CANCELLED") return t("declare.family.what.cancelled");
     if (step.state === "later") return t("declare.family.what.later");
     if (step.state === "closed") return t("declare.family.what.closed");
     return null;

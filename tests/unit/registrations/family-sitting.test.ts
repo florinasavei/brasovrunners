@@ -504,12 +504,12 @@ describe("§536 no sitting without a press", () => {
     expect(en.Registration.done.formIn).toBe("The form for {name} is in.");
     expect(ro.Registration.done.leavesNow).toBe("Emailul către {email} pleacă acum.");
     expect(en.Registration.done.leavesNow).toBe("The email to {email} leaves now.");
-    expect(ro.Registration.sitting.addHint).toBe("Dacă apeși „Da” până la {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.");
-    expect(ro.Registration.sitting.addHintOn).toBe("Dacă apeși „Da” până {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.");
+    expect(ro.Registration.sitting.addHint).toBe("Dacă înscrii încă o persoană până la {at}, emailul îi așteaptă formularul, cel mult {window}, și primiți unul singur pentru toți.");
+    expect(ro.Registration.sitting.addHintOn).toBe("Dacă înscrii încă o persoană până {at}, emailul îi așteaptă formularul, cel mult {window}, și primiți unul singur pentru toți.");
     expect(ro.Registration.done.leftAlready).toBe("Emailul către {email} a plecat.");
     expect(en.Registration.done.leftAlready).toBe("The email to {email} has left.");
     expect(en.Registration.done.leavesOn).toBe("The email to {email} leaves on {at}.");
-    expect(ro.Registration.sitting.addHintLeft).toBe("Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.");
+    expect(ro.Registration.sitting.addHintLeft).toBe("Dacă înscrii încă o persoană, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.");
     expect(ro.Registration.sitting.addHintAtOnce).toBe("Fiecare persoană primește emailul ei.");
     for (const key of ["addHint", "addHintOn", "addHintLeft", "addHintAtOnce"]) {
       expect(en.Registration.sitting[key]).toBeTruthy();
@@ -581,14 +581,14 @@ describe("§536 the short screen's sentences, formatted", () => {
       for (const sentence of [scheduled, immediate, atOnce]) expect(sentence.length).toBeLessThanOrEqual(200);
     }
     const ro = await words("ro", "Registration.sitting");
-    expect(ro("addHint", { window: "10 minute", at: "13:15" })).toBe("Dacă apeși „Da” până la 13:15, emailul așteaptă formularul următor, cel mult 10 minute, și primiți unul singur pentru toți.");
+    expect(ro("addHint", { window: "10 minute", at: "13:15" })).toBe("Dacă înscrii încă o persoană până la 13:15, emailul îi așteaptă formularul, cel mult 10 minute, și primiți unul singur pentru toți.");
     expect(ro("addHintOn", { window: "10 minute", at: "luni, 28 septembrie, la 13:00" })).toBe(
-      "Dacă apeși „Da” până luni, 28 septembrie, la 13:00, emailul așteaptă formularul următor, cel mult 10 minute, și primiți unul singur pentru toți.",
+      "Dacă înscrii încă o persoană până luni, 28 septembrie, la 13:00, emailul îi așteaptă formularul, cel mult 10 minute, și primiți unul singur pentru toți.",
     );
-    expect(ro("addHintLeft", { window: "10 minute" })).toBe("Dacă apeși „Da”, următorul email așteaptă cel mult 10 minute după ultimul formular și îi cuprinde pe toți.");
+    expect(ro("addHintLeft", { window: "10 minute" })).toBe("Dacă înscrii încă o persoană, următorul email așteaptă cel mult 10 minute după ultimul formular și îi cuprinde pe toți.");
     const en = await words("en", "Registration.sitting");
-    expect(en("addHint", { window: "10 minutes", at: "13:15" })).toBe("If you press “Yes” by 13:15, the email waits for the next form, at most 10 minutes, and you get one email for everybody.");
-    expect(en("addHintLeft", { window: "10 minutes" })).toBe("If you press “Yes”, the next email waits at most 10 minutes after the last form and covers everybody.");
+    expect(en("addHint", { window: "10 minutes", at: "13:15" })).toBe("If you register one more person by 13:15, the email waits for their form, at most 10 minutes, and you get one email for everybody.");
+    expect(en("addHintLeft", { window: "10 minutes" })).toBe("If you register one more person, the next email waits at most 10 minutes after the last form and covers everybody.");
     expect(en("addHintAtOnce")).toBe("Each person gets their own email.");
   });
 });

@@ -5,24 +5,26 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 
 type Props = {
   /**
-   * The words, read by `CheckYourEmail` from the «Registration» catalogue: the question, the button
-   * and its pending label, and the one sentence under it (`offerHint` picks which).
+   * The words, read by `CheckYourEmail` from the «Registration» catalogue: the link's label and its
+   * pending label, and the one sentence under it (`offerHint` picks which).
    */
-  words: { question: string; add: string; addPending: string; hint: string };
+  words: { add: string; addPending: string; hint: string };
   locale: string;
   slug: string;
-  /** «Da, încă o persoană»: opens the sitting, holds what has not left yet, and opens the form with the address fixed. */
+  /** «Înscriu încă o persoană cu această adresă»: opens the sitting, holds what has not left yet, and opens the form with the address fixed. */
   continueAction: (form: FormData) => Promise<void>;
 };
 
 /**
- * «Mai înscrii pe cineva cu aceeași adresă?» — the third line of the short screen after the first
- * form (§536, amending §519; the owner, 2026-09-28: «partea asta e cam ciudata, adica sa inteleg ca
- * nu primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?», and later: the screen must be
- * clearer), with its one button and one sentence under it — a true one, chosen by what the line
- * above says about the email (`offerHint`; the review's nit F0): while it waits for the scheduled
- * pass, «Da» holds it and the address gets one email for everybody; when it leaves now, the next
- * person's email is the one that names everybody; at a window of 0, each person gets their own.
+ * «Înscriu încă o persoană cu această adresă» — one quiet line after the short screen's main content
+ * (§NNN, amending §536; the owner, 2026-09-28, of the bold question and the full-width primary
+ * button that stood here: «pare că încurajăm asta… când e doar o excepție»). The screen's point is
+ * the email's line above; registering somebody else on the same address is the exception, so it is
+ * a text-styled press with its glyph and its one sentence under it, never a question in bold and
+ * never the page's primary button. The sentence is a true one, chosen by what the line above says
+ * about the email (`offerHint`): while it waits for the scheduled pass, the next form joins the one
+ * email; when it leaves now, the next person's email is the one that names everybody; at a window
+ * of 0, each person gets their own.
  *
  * There is no «Gata» here and nothing to answer «Nu» with: leaving the page is the no. From the press
  * on, the screen after each form is the sitting's own (`FamilySittingNext`).
@@ -33,21 +35,17 @@ type Props = {
  */
 export default function FamilySittingOffer({ words, locale, slug, continueAction }: Props) {
   return (
-    <Box component="section" aria-labelledby="family-sitting-question" data-testid="family-sitting-offer">
-      <Typography id="family-sitting-question" component="h3" variant="body1" sx={{ fontWeight: 700, mb: 1.5 }}>
-        {words.question}
-      </Typography>
+    <Box component="section" aria-label={words.add} data-testid="family-sitting-offer">
       {/* A press, not a link (§519): it writes the sitting on the server and this browser's half together. */}
-      <Box sx={{ maxWidth: 480 }}>
-        <form action={continueAction} data-testid="family-sitting-add">
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="slug" value={slug} />
-          <SubmitButton label={words.add} pendingLabel={words.addPending} variant="contained" size="large" fullWidth>
-            <PersonAddIcon />
-          </SubmitButton>
-        </form>
-      </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="family-sitting-offer-hint">
+      <form action={continueAction} data-testid="family-sitting-add">
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="slug" value={slug} />
+        {/* Text-styled, left-aligned, its 44-pixel height kept by the button (BR-REQ-041-01 criterion 6). */}
+        <SubmitButton label={words.add} pendingLabel={words.addPending} variant="text">
+          <PersonAddIcon />
+        </SubmitButton>
+      </form>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="family-sitting-offer-hint">
         {words.hint}
       </Typography>
     </Box>
