@@ -1,3 +1,5 @@
+import en from "../../../../messages/en.json";
+import ro from "../../../../messages/ro.json";
 import type { ClubTodoItem } from "./club-todo";
 
 /**
@@ -87,6 +89,40 @@ const ORGANIZER: ReadonlyArray<readonly [text: string, due?: string]> = [
   ],
 ];
 
+/**
+ * The lines added to the starting list after it was first written (§NNN, amending §438) — the
+ * owner, 2026-09-28: «actualizează lista de TODOs pentru Administrator să facă pagina de Echipa și
+ * Întrebări frecvente». Unlike the nineteen above, each one reaches a club whose list is already
+ * stored: `mergeClubTodoDefaults` adds it once, by its id, and the row remembers that it did
+ * (`seenDefaults`), so a line the club ticked stays ticked and a line it deleted stays deleted.
+ *
+ * The words are the catalogue's (`Admin.clubTodo.defaults.*`, both languages, held by the plain-words
+ * test), and the stored `text` is the Romanian — the list's own language (§438). While the line
+ * still says those words, the panel shows the reader's language and a link to the editor; once
+ * somebody edits it, it is the club's line like any other.
+ */
+export type ClubTodoDefaultKey = "teamPage" | "faqPage";
+
+type AddedDefault = {
+  id: string;
+  key: ClubTodoDefaultKey;
+  owner: string;
+  /** The editor the line sends the reader to — a backoffice path, never a host (AGENTS.md §8). */
+  href: "/admin/pages/team" | "/admin/pages/faq";
+  /** When the line was written: its `createdAt`. */
+  since: string;
+};
+
+const ADDED_DEFAULTS: readonly AddedDefault[] = [
+  { id: "start-admin-team-page", key: "teamPage", owner: "Administrator", href: "/admin/pages/team", since: "2026-09-28T12:00:00.000Z" },
+  { id: "start-admin-faq-page", key: "faqPage", owner: "Administrator", href: "/admin/pages/faq", since: "2026-09-28T12:00:00.000Z" },
+];
+
+const DEFAULT_WORDS: Record<"ro" | "en", Record<ClubTodoDefaultKey, { text: string; link: string }>> = {
+  ro: ro.Admin.clubTodo.defaults,
+  en: en.Admin.clubTodo.defaults,
+};
+
 function lines(owner: string, prefix: string, source: typeof ADMINISTRATOR, firstOrder: number): ClubTodoItem[] {
   return source.map(([text, due], index) => ({
     id: `start-${prefix}-${String(index + 1).padStart(2, "0")}`,
@@ -101,7 +137,80 @@ function lines(owner: string, prefix: string, source: typeof ADMINISTRATOR, firs
   }));
 }
 
-/** The nineteen starting lines: the Administrator's twelve, then the Organizer's seven. */
+function addedLine(entry: AddedDefault, order: number): ClubTodoItem {
+  return {
+    id: entry.id,
+    text: DEFAULT_WORDS.ro[entry.key].text,
+    owner: entry.owner,
+    done: false,
+    doneAt: null,
+    by: null,
+    createdAt: entry.since,
+    due: null,
+    order,
+  };
+}
+
+/**
+ * The twenty-one starting lines: the Administrator's twelve and the two pages (§NNN), then the
+ * Organizer's seven — whose ids and words are unchanged.
+ */
 export function startingClubTodo(): ClubTodoItem[] {
-  return [...lines("Administrator", "admin", ADMINISTRATOR, 1), ...lines("Organizator", "organizer", ORGANIZER, ADMINISTRATOR.length + 1)];
+  const administrator = lines("Administrator", "admin", ADMINISTRATOR, 1);
+  const added = ADDED_DEFAULTS.map((entry, index) => addedLine(entry, administrator.length + 1 + index));
+  return [...administrator, ...added, ...lines("Organizator", "organizer", ORGANIZER, administrator.length + added.length + 1)];
+}
+
+/** Every starting line's id: what a stored row has seen once `mergeClubTodoDefaults` has run on it. */
+export const CLUB_TODO_DEFAULT_IDS: readonly string[] = startingClubTodo().map((item) => item.id);
+
+/**
+ * What a list stored before §NNN had seen: the nineteen lines of §438's pre-fill. One of them
+ * missing from such a row was deleted by the club, and stays deleted; only the lines added
+ * since are new to it.
+ */
+const FIRST_DEFAULT_IDS: readonly string[] = [
+  ...ADMINISTRATOR.map((_, index) => `start-admin-${String(index + 1).padStart(2, "0")}`),
+  ...ORGANIZER.map((_, index) => `start-organizer-${String(index + 1).padStart(2, "0")}`),
+];
+
+export type ClubTodoMerge = {
+  items: ClubTodoItem[];
+  /** Every default id the row has now seen — what the next write stores beside the items. */
+  seenDefaults: string[];
+  /** The lines this merge added: none on a list that already has them, or had and lost them. */
+  added: ClubTodoItem[];
+};
+
+/**
+ * A stored list with the defaults it has never seen added at its end, once each (§NNN). `seen` is
+ * the row's `seenDefaults`, or null for a row written before it existed (read as §438's nineteen).
+ * Idempotent: a line already on the list, or seen and since deleted, is never added again.
+ */
+export function mergeClubTodoDefaults(items: readonly ClubTodoItem[], seen: readonly string[] | null): ClubTodoMerge {
+  const known = new Set(seen ?? FIRST_DEFAULT_IDS);
+  const present = new Set(items.map((item) => item.id));
+  let highest = items.reduce((max, item) => Math.max(max, item.order), 0);
+  const added: ClubTodoItem[] = [];
+  for (const entry of ADDED_DEFAULTS) {
+    if (known.has(entry.id) || present.has(entry.id)) continue;
+    highest += 1;
+    added.push(addedLine(entry, highest));
+  }
+  const seenDefaults = [...new Set([...known, ...CLUB_TODO_DEFAULT_IDS])];
+  return { items: [...items, ...added], seenDefaults, added };
+}
+
+/**
+ * A default line as the reader sees it: its words in their language and the editor it opens —
+ * or null for any other line, and for a default the club has edited (it is then the club's words).
+ */
+export function clubTodoDefaultView(
+  item: Pick<ClubTodoItem, "id" | "text">,
+  locale: string,
+): { text: string; link: string; href: AddedDefault["href"] } | null {
+  const entry = ADDED_DEFAULTS.find((candidate) => candidate.id === item.id);
+  if (!entry || item.text !== DEFAULT_WORDS.ro[entry.key].text) return null;
+  const words = DEFAULT_WORDS[locale === "en" ? "en" : "ro"][entry.key];
+  return { text: words.text, link: words.link, href: entry.href };
 }

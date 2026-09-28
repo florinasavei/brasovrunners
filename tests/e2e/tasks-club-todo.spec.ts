@@ -104,6 +104,31 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
   });
+
+  test("§NNN gives the Administrator the «Echipa» and «Întrebări frecvente» pages, each with a link to its editor, in the reader's language", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/tasks?panel=todo&for=Administrator");
+    const main = page.locator("#main");
+    // Read only: nothing here ticks or deletes, so a database another spec shares is left as it was.
+    const team = main.locator('[data-item-id="start-admin-team-page"]');
+    const faq = main.locator('[data-item-id="start-admin-faq-page"]');
+    await expect(team).toContainText(/Scrie pagina Echipa: Pagini → Echipa → /);
+    await expect(faq).toContainText(/Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → /);
+    const teamLink = team.getByRole("link", { name: "Deschide pagina Echipa" });
+    await expect(teamLink).toHaveAttribute("href", "/ro/admin/pages/team");
+    await expect(teamLink.locator("svg")).toHaveCount(1);
+    expect((await teamLink.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(faq.getByRole("link", { name: "Deschide pagina Întrebări frecvente" })).toHaveAttribute("href", "/ro/admin/pages/faq");
+
+    await page.goto("/en/admin/tasks?panel=todo&for=Administrator");
+    await expect(main.locator('[data-item-id="start-admin-team-page"]')).toContainText(/Write the team page: Pages → The team → /);
+    await expect(main.locator('[data-item-id="start-admin-faq-page"]').getByRole("link", { name: "Open the FAQ page" })).toHaveAttribute(
+      "href",
+      "/en/admin/pages/faq",
+    );
+    await main.locator('[data-item-id="start-admin-faq-page"]').getByRole("link", { name: "Open the FAQ page" }).click();
+    await expect(page).toHaveURL(/\/en\/admin\/pages\/faq$/);
+  });
 });
 
 test.describe("BR-REQ-060-01 who writes the club's checklist", () => {

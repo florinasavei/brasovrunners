@@ -3082,7 +3082,17 @@
       "delete": "Șterge",
       "deleting": "Se șterge…",
       "deleteTitle": "Ștergi rândul?",
-      "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi."
+      "deleteBody": "„{text}” dispare de pe listă pentru toată echipa și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi.",
+      "defaults": {
+        "teamPage": {
+          "text": "Scrie pagina Echipa: Pagini → Echipa → introducerea și câte un card pentru fiecare persoană, cu «Adaugă o persoană» și «Pune pe site» → «Publică pagina».",
+          "link": "Deschide pagina Echipa"
+        },
+        "faqPage": {
+          "text": "Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → întrebările și răspunsurile, în română și engleză → «Salvează pagina» → «Pune pe site» la fiecare întrebare → «Publică pagina».",
+          "link": "Deschide pagina Întrebări frecvente"
+        }
+      }
     },
     "richText": {
       "bold": "Îngroșat",

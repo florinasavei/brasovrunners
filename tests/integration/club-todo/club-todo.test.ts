@@ -5,6 +5,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
 import { changeClubTodo, readClubTodo } from "@/modules/club-todo/club-todo";
 import { CLUB_TODO_ENTITY_ID, CLUB_TODO_SETTING_KEY } from "@/modules/club-todo/domain/club-todo";
+import { startingClubTodo } from "@/modules/club-todo/domain/starting-list";
 import { isDomainError } from "@/shared/errors/domain-error";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -61,7 +62,9 @@ describe("§438 the club's checklist, stored", () => {
   it("reads the starting list while nothing is stored, and stores nothing by reading", async () => {
     const state = await readClubTodo(db);
     expect(state.stored).toBe(false);
-    expect(state.items).toHaveLength(19);
+    expect(state.items).toHaveLength(21);
+    // §NNN: a fresh club gets the two pages in the pre-fill.
+    expect(state.items.map((item) => item.id)).toEqual(expect.arrayContaining(["start-admin-team-page", "start-admin-faq-page"]));
     expect(await storedRow()).toBeUndefined();
   });
 
@@ -71,7 +74,7 @@ describe("§438 the club's checklist, stored", () => {
 
     const state = await readClubTodo(db);
     expect(state.stored).toBe(true);
-    expect(state.items).toHaveLength(19);
+    expect(state.items).toHaveLength(21);
     expect(state.items.find((item) => item.id === "start-organizer-01")).toMatchObject({
       done: true,
       doneAt: NOW.toISOString(),
@@ -90,7 +93,7 @@ describe("§438 the club's checklist, stored", () => {
   it("adds, edits, moves, unticks and deletes — one audit row each, in order", async () => {
     const admin = await staff("ADMIN");
     const added = await changeClubTodo(db, admin, { kind: "add", text: "  Comandă tricourile  ", owner: "Ana", due: "2026-10-15" }, at(1));
-    expect(added.item).toMatchObject({ text: "Comandă tricourile", owner: "Ana", due: "2026-10-15", order: 20 });
+    expect(added.item).toMatchObject({ text: "Comandă tricourile", owner: "Ana", due: "2026-10-15", order: 22 });
 
     await changeClubTodo(db, admin, { kind: "edit", id: added.item.id, text: "Comandă tricourile (M, L)", owner: "", due: "" }, at(2));
     await changeClubTodo(db, admin, { kind: "move", id: added.item.id, direction: "up" }, at(3));
@@ -99,7 +102,7 @@ describe("§438 the club's checklist, stored", () => {
     await changeClubTodo(db, admin, { kind: "delete", id: "start-admin-08" }, at(6));
 
     const { items } = await readClubTodo(db);
-    expect(items).toHaveLength(19);
+    expect(items).toHaveLength(21);
     expect(items.some((item) => item.id === "start-admin-08")).toBe(false);
     const mine = items.find((item) => item.id === added.item.id);
     expect(mine).toMatchObject({ text: "Comandă tricourile (M, L)", owner: null, due: null, done: false });
@@ -129,7 +132,60 @@ describe("§438 the club's checklist, stored", () => {
     await changeClubTodo(db, admin, { kind: "setDone", id: "start-admin-02", done: true }, NOW);
     const { items } = await readClubTodo(db);
     expect(items.map((item) => item.id)).not.toContain("start-admin-01");
-    expect(items).toHaveLength(18);
+    expect(items).toHaveLength(20);
+  });
+
+  describe("§NNN a list stored before the two pages were written", () => {
+    const PAGES = ["start-admin-team-page", "start-admin-faq-page"];
+
+    /** Production's row: §438's nineteen lines as the club left them, one ticked and one deleted, no marker. */
+    async function storeOldList() {
+      const old = startingClubTodo()
+        .filter((item) => !PAGES.includes(item.id) && item.id !== "start-admin-08")
+        .map((item, index) => ({ ...item, order: index + 1, ...(item.id === "start-admin-01" ? { done: true, doneAt: NOW.toISOString(), by: "Dev ADMIN" } : {}) }));
+      await db.insert(platformSettings).values({ key: CLUB_TODO_SETTING_KEY, value: { items: old }, updatedAt: NOW });
+      return old;
+    }
+
+    it("gains exactly the two pages on the next read, and a second read adds nothing", async () => {
+      const old = await storeOldList();
+      const first = await readClubTodo(db);
+      expect(first.items).toHaveLength(old.length + 2);
+      expect(first.items.slice(-2).map((item) => item.id)).toEqual(PAGES);
+      expect(first.items.slice(-2).every((item) => item.owner === "Administrator" && !item.done)).toBe(true);
+      // Nothing the club did is undone: the tick stays, the deleted line stays gone.
+      expect(first.items.find((item) => item.id === "start-admin-01")?.done).toBe(true);
+      expect(first.items.map((item) => item.id)).not.toContain("start-admin-08");
+
+      const second = await readClubTodo(db);
+      expect(second.items).toEqual(first.items);
+    });
+
+    it("stores them with the next write, audited only for the press, and never re-adds one the club ticked or deleted", async () => {
+      await storeOldList();
+      const admin = await staff("ADMIN");
+      await changeClubTodo(db, admin, { kind: "setDone", id: "start-admin-team-page", done: true }, at(1));
+      await changeClubTodo(db, admin, { kind: "delete", id: "start-admin-faq-page" }, at(2));
+
+      const stored = (await storedRow())?.value as { items: { id: string }[]; seenDefaults: string[] };
+      expect(stored.seenDefaults).toEqual(expect.arrayContaining(PAGES));
+      expect(stored.items.map((item) => item.id)).toContain("start-admin-team-page");
+      expect(stored.items.map((item) => item.id)).not.toContain("start-admin-faq-page");
+
+      const { items } = await readClubTodo(db);
+      expect(items.filter((item) => PAGES.includes(item.id)).map((item) => [item.id, item.done])).toEqual([["start-admin-team-page", true]]);
+      expect((await trail()).map((row) => row.action)).toEqual(["club_todo.done", "club_todo.deleted"]);
+    });
+
+    it("stores them even when the press itself changes nothing, without an audit row", async () => {
+      await storeOldList();
+      const admin = await staff("ADMIN");
+      await changeClubTodo(db, admin, { kind: "setDone", id: "start-admin-02", done: false }, at(1));
+      const stored = (await storedRow())?.value as { items: { id: string }[]; seenDefaults: string[] };
+      expect(stored.items.map((item) => item.id)).toEqual(expect.arrayContaining(PAGES));
+      expect(stored.seenDefaults).toEqual(expect.arrayContaining(PAGES));
+      expect(await trail()).toEqual([]);
+    });
   });
 
   it("records nothing in the audit trail when nothing changes", async () => {

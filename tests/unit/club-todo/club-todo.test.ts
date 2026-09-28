@@ -13,10 +13,19 @@ import {
   isCalendarDay,
   isClubTodoOverdue,
   openClubTodoCount,
+  readClubTodoSeenDefaults,
   readClubTodoValue,
   resolveClubTodoOwner,
 } from "@/modules/club-todo/domain/club-todo";
-import { CLUB_TODO_OWNER_SUGGESTIONS, startingClubTodo } from "@/modules/club-todo/domain/starting-list";
+import {
+  CLUB_TODO_DEFAULT_IDS,
+  CLUB_TODO_OWNER_SUGGESTIONS,
+  clubTodoDefaultView,
+  mergeClubTodoDefaults,
+  startingClubTodo,
+} from "@/modules/club-todo/domain/starting-list";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
@@ -51,20 +60,22 @@ const input = (text: string, owner = "", due = "") => clubTodoInputSchema.parse(
 describe("§438 the starting list — the owner's two messages of 2026-09-26", () => {
   const items = startingClubTodo();
 
-  it("is nineteen lines: the Administrator's twelve, then the Organizer's seven, in their order", () => {
-    expect(items).toHaveLength(19);
-    expect(items.slice(0, 12).every((item) => item.owner === "Administrator")).toBe(true);
-    expect(items.slice(12).every((item) => item.owner === "Organizator")).toBe(true);
-    expect(items.map((item) => item.order)).toEqual(Array.from({ length: 19 }, (_, index) => index + 1));
+  it("is twenty-one lines: the Administrator's twelve and the two pages (§NNN), then the Organizer's seven, in their order", () => {
+    expect(items).toHaveLength(21);
+    expect(items.slice(0, 14).every((item) => item.owner === "Administrator")).toBe(true);
+    expect(items.slice(14).every((item) => item.owner === "Organizator")).toBe(true);
+    expect(items.map((item) => item.order)).toEqual(Array.from({ length: 21 }, (_, index) => index + 1));
     expect(items[0].text).toMatch(/^Intră în backoffice/);
-    expect(items[12].text).toMatch(/^Intră în backoffice .*«Înscrieri»/);
+    expect(items.slice(12, 14).map((item) => item.id)).toEqual(["start-admin-team-page", "start-admin-faq-page"]);
+    expect(items[14].text).toMatch(/^Intră în backoffice .*«Înscrieri»/);
   });
 
   it("has fixed, unique ids, so a tick pressed before anything is stored finds its line", () => {
     const ids = items.map((item) => item.id);
-    expect(new Set(ids).size).toBe(19);
+    expect(new Set(ids).size).toBe(21);
+    expect(CLUB_TODO_DEFAULT_IDS).toEqual(ids);
     expect(ids[0]).toBe("start-admin-01");
-    expect(ids[18]).toBe("start-organizer-07");
+    expect(ids[20]).toBe("start-organizer-07");
     expect(startingClubTodo().map((item) => item.id)).toEqual(ids);
   });
 
@@ -91,12 +102,82 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
   });
 
   it("starts with every line open, and every line valid by the stored schema", () => {
-    expect(openClubTodoCount(items)).toBe(19);
+    expect(openClubTodoCount(items)).toBe(21);
     expect(readClubTodoValue({ items })).toEqual(items);
   });
 
   it("offers the roles as «pentru cine», never a colleague's first name (§483)", () => {
     expect(CLUB_TODO_OWNER_SUGGESTIONS).toEqual(["Administrator", "Organizator"]);
+  });
+});
+
+describe("§NNN the Administrator's two pages — «Echipa» and «Întrebări frecvente»", () => {
+  const items = startingClubTodo();
+  const words = { ro: ro.Admin.clubTodo.defaults, en: en.Admin.clubTodo.defaults };
+
+  it("says both in both languages, in plain words with the screens' own button words", () => {
+    for (const locale of ["ro", "en"] as const) {
+      for (const key of ["teamPage", "faqPage"] as const) {
+        const { text, link } = words[locale][key];
+        expect(text.length, `${locale}.${key}`).toBeLessThanOrEqual(200);
+        expect(text, `${locale}.${key}`).not.toMatch(/platform|de obicei|usually/i);
+        expect(link.length).toBeGreaterThan(0);
+      }
+    }
+    expect(words.ro.teamPage.text).toMatch(/^Scrie pagina Echipa: Pagini → Echipa → .*«Adaugă o persoană».*«Publică pagina»\.$/);
+    expect(words.ro.faqPage.text).toMatch(/^Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → .*«Salvează pagina».*«Publică pagina»\.$/);
+    expect(words.en.teamPage.text).toMatch(/^Write the team page: Pages → The team → .*“Add a person”.*“Publish the page”\.$/);
+    expect(words.en.faqPage.text).toMatch(/^Write the FAQ page: Pages → FAQ → .*“Save the page”.*“Publish the page”\.$/);
+    // The words the screens use, so the line and the button agree.
+    expect(words.ro.teamPage.text).toContain(`«${ro.Admin.team.add}»`);
+    expect(words.ro.teamPage.text).toContain(`«${ro.Admin.team.publish}»`);
+    expect(words.ro.faqPage.text).toContain(`«${ro.Admin.faq.save}»`);
+    expect(words.en.teamPage.text).toContain(`“${en.Admin.team.show}”`);
+    expect(words.en.faqPage.text).toContain(`“${en.Admin.faq.publish}”`);
+  });
+
+  it("stores the Romanian words under fixed ids, for the Administrator, undated", () => {
+    const team = items.find((item) => item.id === "start-admin-team-page");
+    const faq = items.find((item) => item.id === "start-admin-faq-page");
+    expect(team).toMatchObject({ owner: "Administrator", due: null, done: false, text: words.ro.teamPage.text });
+    expect(faq).toMatchObject({ owner: "Administrator", due: null, done: false, text: words.ro.faqPage.text });
+  });
+
+  it("shows the reader's language and the editor's link while the words are the starting ones — and not once edited", () => {
+    const team = items.find((item) => item.id === "start-admin-team-page")!;
+    expect(clubTodoDefaultView(team, "en")).toEqual({ text: words.en.teamPage.text, link: words.en.teamPage.link, href: "/admin/pages/team" });
+    expect(clubTodoDefaultView(team, "ro")?.href).toBe("/admin/pages/team");
+    const faq = items.find((item) => item.id === "start-admin-faq-page")!;
+    expect(clubTodoDefaultView(faq, "ro")).toEqual({ text: words.ro.faqPage.text, link: words.ro.faqPage.link, href: "/admin/pages/faq" });
+    expect(clubTodoDefaultView({ ...team, text: "Cardurile, până vineri" }, "en")).toBeNull();
+    expect(clubTodoDefaultView(items[0], "en")).toBeNull();
+  });
+
+  it("is added once to a list stored before it, at the end, and never to a list that has seen it", () => {
+    // What production stored from §438: the nineteen lines, numbered 1 to 19.
+    const before = startingClubTodo()
+      .filter((item) => !item.id.endsWith("-page"))
+      .map((item, index) => ({ ...item, order: index + 1 }));
+    expect(before).toHaveLength(19);
+    const first = mergeClubTodoDefaults(before, null);
+    expect(first.added.map((item) => item.id)).toEqual(["start-admin-team-page", "start-admin-faq-page"]);
+    expect(first.added.map((item) => item.order)).toEqual([20, 21]);
+    expect(first.seenDefaults.sort()).toEqual([...CLUB_TODO_DEFAULT_IDS].sort());
+
+    // A second merge of the merged list adds nothing.
+    expect(mergeClubTodoDefaults(first.items, first.seenDefaults).added).toEqual([]);
+    // Deleted after it was seen: stays deleted.
+    const deleted = first.items.filter((item) => item.id !== "start-admin-faq-page");
+    expect(mergeClubTodoDefaults(deleted, first.seenDefaults).items.map((item) => item.id)).not.toContain("start-admin-faq-page");
+    // A §438 line the club deleted before the marker existed is not revived either.
+    const noFirst = before.filter((item) => item.id !== "start-admin-01");
+    expect(mergeClubTodoDefaults(noFirst, null).items.map((item) => item.id)).not.toContain("start-admin-01");
+  });
+
+  it("reads the row's marker, and a row without one as null", () => {
+    expect(readClubTodoSeenDefaults({ items: [] })).toBeNull();
+    expect(readClubTodoSeenDefaults(null)).toBeNull();
+    expect(readClubTodoSeenDefaults({ items: [], seenDefaults: ["start-admin-01", 3, ""] })).toEqual(["start-admin-01"]);
   });
 });
 
