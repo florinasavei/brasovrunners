@@ -1531,3 +1531,49 @@ nothing on production, and the reverse.
    it reads `*/15 7-22 * * *` like the outbox.
 2. On QA, «Setări» → «Costuri» (`/admin/settings/costs#job-cadence`, §516) → „Cât de des verifică site-ul" → **2 ore** (the card is
    live since BR-V1.70); production stays on „La nevoie".
+
+## 41. Release from the phone — the token, the variable and the label (once, before a holiday)
+
+**Why.** A release used to need the PC that ran the dispatcher: the landing text sat in its
+scratchpad and `yarn ship` ran from its checkout. `.github/workflows/release.yml` does the same
+on GitHub (`DECISIONS.md` §NNN), started by the label `ship` on a pull request into `qa`. It
+needs three things GitHub cannot ship in a file, because the repository is public. Ten minutes,
+from a computer (the phone's browser works, in desktop mode).
+
+**1. The token — secret `SHIP_TOKEN`.** GitHub's own token cannot do it: a push or a merge made
+with it starts no workflow, so `qa`'s run, the release PR's run and `migrate.yml` would never
+start. Signed in as the owner (the account that may merge into `main` and is a required reviewer
+of the `production` environment):
+
+1. github.com → your picture → **Settings** → **Developer settings** → **Personal access tokens**
+   → **Fine-grained tokens** → **Generate new token**.
+2. **Token name** `brasovrunners ship`; **Expiration** a date after you are back (at most a year);
+   **Resource owner** you; **Repository access** → **Only select repositories** → this repository.
+3. **Repository permissions** — each **Read and write**: **Contents**, **Pull requests**,
+   **Issues** (the comment and the label on the pull request), **Actions**, **Deployments**
+   (approving the gated `production` migration run), **Workflows** (a landing that merges `qa`
+   in carries `qa`'s workflow changes, and GitHub refuses that push without it). **Metadata** is
+   read-only and set by itself. Nothing else.
+4. **Generate token**, copy it once.
+5. The repository → **Settings** → **Secrets and variables** → **Actions** → **Secrets** →
+   **New repository secret** → Name `SHIP_TOKEN`, Secret the token → **Add secret**.
+
+**2. The variable `SHIP_PRODUCTION_URL`.** Same page → **Variables** → **New repository
+variable** → Name `SHIP_PRODUCTION_URL`, Value production's origin — `https://` and the
+production host in §26's table, no trailing slash — → **Add variable**. The same value the PC
+keeps in `.env.local`.
+
+**3. The label `ship`.** The repository → **Issues** → **Labels** → **New label** → Label name
+`ship` (lower case, exactly), any colour → **Create label**.
+
+**4. Rehearse once, before you leave.** **Actions** → **release** → **Run workflow** → Branch
+`qa`, **pr** the number of an open pull request into `qa` that carries a `.release/` entry, tick
+**dry_run** → **Run workflow**. It merges `qa` in and lands the entry on the runner only, and its
+summary page shows the landing commit and the diff it would push; nothing is pushed or shipped.
+Green there means the token, the variable and the scripts work; the first real press is then the
+label. `docs/RUNBOOKS.md` § Release from the phone has the everyday steps. A pull request that
+shows «This branch has conflicts» gets no run from the label at all — run **release** by hand
+with its number, as here with **dry_run** off.
+
+**When the token expires** the run stops at its first step and says so; generate a new one the
+same way and replace the secret's value (**Secrets** → `SHIP_TOKEN` → **Update**).

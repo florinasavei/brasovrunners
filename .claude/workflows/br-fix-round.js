@@ -20,6 +20,8 @@ const TAG = A.tag || 'round'
 const M = A.models || {}
 const E = Object.assign({ review: 'high' }, A.effort || {})
 const opts = (stage) => Object.assign({}, M[stage] ? { model: M[stage] } : {}, E[stage] ? { effort: E[stage] } : {})
+// The branch's release-facts file: the same slug as scripts/land-tree.mjs's slugOf.
+const ENTRY = `.release/${String(A.branch).trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[-.]+|-+$/g, '')}.json`
 
 const FIX_SCHEMA = {
   type: 'object',
@@ -65,9 +67,11 @@ ${findingsText}
 
 THE MACHINE IS SHARED: ONE \`next build\`/\`next dev\` and ONE Playwright process at a time; your own database (\`brasov_runners_<worktree>\` via the worktree's git-ignored \`.env.local\`); never seed or reset the shared one.
 
-RULES (as for the whole branch): the repository is PUBLIC — no secret, key, token, database URL, personal email, account id or user-named local path in any tracked file; no DECISIONS/CHANGELOG/SPECS/PROJECT_BASELINE-marker edits (return text instead); both message files with the same keys; one-word namespaces; no helper named t-something; no ICU plurals; bilingual both-or-neither; no hardcoded values in legal texts or emails; no component or element passed from a Server Component to a client component; icons one file per glyph; server-asserted authorization; no hostname literal; CRLF — Write/Edit tools, verify with \`git diff\`; cite the decision as \`§NNN\`.
+RULES (as for the whole branch): the repository is PUBLIC — no secret, key, token, database URL, personal email, account id or user-named local path in any tracked file; no DECISIONS/CHANGELOG/SPECS/PROJECT_BASELINE-marker edits, nor CLAUDE.md's baseline and batch lines (return text instead) — but the README index row, SETUP or docs/*.md text and CLAUDE.md command line the change needs are written on the branch, so the entry's docsNotes (text a person must still write at landing) stays empty — say what you wrote in summary; both message files with the same keys; one-word namespaces; no helper named t-something; no ICU plurals; bilingual both-or-neither; no hardcoded values in legal texts or emails; no component or element passed from a Server Component to a client component; icons one file per glyph; server-asserted authorization; no hostname literal; CRLF — Write/Edit tools, verify with \`git diff\`; cite the decision as \`§NNN\`.
 
 VERIFY: \`yarn typecheck\`, \`yarn lint\`, \`yarn docs:check\`, the touched vitest files and \`tests/unit/i18n\`; the branch's e2e specs on both projects against a production build. Report honestly.
+
+RELEASE FACTS: the branch carries its landing text in \`${ENTRY}\` (\`.release/README.md\`). Rewrite it in the same commit so it holds the whole final text — this round's addendum folded into \`decisionsSection\`, \`specsCriteria\` the full final list; create it (with \`branch\` "${A.branch}") if the branch has none.
 
 COMMIT on the branch: \`git add -A && git commit --no-verify -F <a message file of your own>\`, Conventional Commits, body naming each finding answered, the last line the Co-Authored-By line your session's instructions give.
 

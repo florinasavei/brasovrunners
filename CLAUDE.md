@@ -47,6 +47,11 @@ yarn db:migrate:env  apply migrations to local|qa|production — the only suppor
                   migrate a deployed database (AGENTS.md §7.6, DECISIONS.md §31)
 yarn smoke        ask a deployment's /api/health whether it works; ends every deploy
 yarn release      versioned archive and share copies under dist/
+yarn batch:merge  merge branches into the one checked out; the journal, catalogues and tests by rule
+yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree` for the branch's
+                  own `.release/*.json` entries (`.release/README.md`)
+yarn ship         merge a landed PR into qa, release it and wait for production; from a phone,
+                  the label `ship` on the PR runs all of it on GitHub (`docs/RUNBOOKS.md`)
 ```
 
 Full list with explanations: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md). Do not write a

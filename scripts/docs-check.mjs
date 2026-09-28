@@ -14,6 +14,7 @@ import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
+import { ENTRY_DIR, duplicateBranches, validateEntry } from "./land-tree.mjs";
 
 const ROOT = process.cwd();
 
@@ -469,6 +470,36 @@ async function checkReadmeCoverage() {
   }
 }
 
+/**
+ * 9. Every release entry a branch carries (`.release/*.json`, `.release/README.md`) can land:
+ * the required fields, full requirement ids that SPECS.md defines, the file named for its branch,
+ * one entry per branch. Checked on the pull request, so a bad entry fails there and not at release
+ * time on GitHub Actions. An entry's `docsNotes` is a warning: a PC landing prints it for a person,
+ * and the release from GitHub refuses it.
+ */
+async function checkReleaseEntries(specs) {
+  const dir = path.join(ROOT, ENTRY_DIR);
+  if (!existsSync(dir)) return;
+  const requirements = new Set(matchAll(specs ?? "", /^#### (BR-REQ-\d+-\d+)/gm).map((m) => m[1]));
+  const found = [];
+  for (const name of (await readdir(dir)).filter((n) => n.endsWith(".json")).sort()) {
+    const file = `${ENTRY_DIR}/${name}`;
+    let entry;
+    try {
+      entry = JSON.parse(await readFile(path.join(dir, name), "utf8"));
+    } catch (error) {
+      fail(`${file} is not JSON: ${error.message}`);
+      continue;
+    }
+    for (const problem of validateEntry(entry, file, { requirements })) fail(problem);
+    if (typeof entry?.docsNotes === "string" && entry.docsNotes.trim()) {
+      warn(`${file} leaves docsNotes for a person; the release from GitHub refuses it — write the text on the branch (${ENTRY_DIR}/README.md)`);
+    }
+    found.push({ file, entry });
+  }
+  for (const problem of duplicateBranches(found)) fail(`${ENTRY_DIR}/: ${problem}`);
+}
+
 async function main() {
   await checkRequiredFiles();
 
@@ -492,6 +523,7 @@ async function main() {
   await checkHostnameLiterals();
   await checkOwnDomainLiterals();
   await checkReadmeCoverage();
+  await checkReleaseEntries(specs);
 
   for (const message of warnings) {
     console.warn(`warning: ${message}`);
