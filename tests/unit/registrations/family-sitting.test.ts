@@ -7,6 +7,8 @@ vi.mock("next/headers", () => ({
 }));
 
 const {
+  afterFormScreen,
+  emailLeavesSentence,
   compareFamilyOrder,
   doneFamilySentence,
   familyHeldDeclaration,
@@ -31,6 +33,7 @@ const { openFormDraft } = await import("@/modules/registrations/form-draft");
 const { declarationStateKey } = await import("@/modules/registrations/domain/family-signing");
 const { buildOutgoingEmail, joinNames } = await import("@/modules/notifications/templates");
 const { DEADLINE_RULES, familySittingHeldUntil, familySittingHolds } = await import("@/modules/deadlines/domain/deadlines");
+const { emailLeavesAt } = await import("@/modules/notifications/domain/email-wait");
 
 /**
  * §519 — a family registered in one sitting, with one email: the pure half. What the browser keeps,
@@ -43,6 +46,7 @@ const EVENT_ID = "00000000-0000-4000-8000-000000000001";
 describe("§519 the browser's half of a sitting", () => {
   const cookie = {
     sittingId: "00000000-0000-4000-8000-0000000000aa",
+    seed: null,
     eventId: EVENT_ID,
     email: "familia.pop@example.ro",
     people: [
@@ -301,7 +305,7 @@ describe("§519 the family's one confirmation", () => {
 });
 
 describe("§519 the fix round of the second review", () => {
-  it("says the newest email names the family while there is a window, and each person's own at a window of 0 — in both catalogues", async () => {
+  it("says one email for the family while the window holds, and each person's own at a window of 0 — in both catalogues", async () => {
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"] })).toBe("family");
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: false })).toBe("family");
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: true })).toBe("familyEach");
@@ -311,14 +315,9 @@ describe("§519 the fix round of the second review", () => {
     const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
     expect(ro.Registration.done.familyEach).toBe("Fiecare persoană primește emailul ei.");
     expect(en.Registration.done.familyEach).toBe("Each person gets their own email.");
-    // One question, one answer (§NNN): no «Gata» to press, no promise of an email held for one.
-    expect(ro.Registration.sitting.question).toBe("Mai înscrii pe cineva cu aceeași adresă?");
-    expect(ro.Registration.sitting.addHint).toContain("{window}");
-    expect(en.Registration.sitting.addHint).toContain("{window}");
-    expect(ro.Registration.sitting).not.toHaveProperty("done");
-    expect(en.Registration.sitting).not.toHaveProperty("done");
-    expect(ro.Registration.done.family).toContain("Cel mai nou email");
-    expect(en.Registration.done.family).toContain("The newest email");
+    expect(ro.Registration.sitting.leadNamed).toBe("Formularul lui {name} pentru {event} a ajuns.");
+    expect(ro.Registration.sitting.when).toContain("de la ultima apăsare");
+    expect(en.Registration.sitting.when).toContain("after your last press");
   });
 
   it("keeps the browser's half two minutes past the window, and the window the action read", () => {
@@ -327,6 +326,7 @@ describe("§519 the fix round of the second review", () => {
     expect(sittingCookieMaxAgeSeconds(new Date(NOW.getTime() - 60_000), NOW)).toBe(60);
     const cookie = {
       sittingId: null,
+      seed: null,
       eventId: EVENT_ID,
       email: "familia.pop@example.ro",
       people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
@@ -339,5 +339,68 @@ describe("§519 the fix round of the second review", () => {
     expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, windowMinutes: undefined })!)?.windowMinutes).toBeUndefined();
     // The screen reads the window's end, never the grace: the sitting is over when its email leaves.
     expect(sittingCookieLive(cookie, EVENT_ID, new Date(NOW.getTime() + 600_000))).toBe(false);
+  });
+});
+
+/**
+ * §NNN (amending §519; the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu,
+ * gata, trimite mailul”?») — the first form is an ordinary form: its email leaves on the club's
+ * timing, the screen says when, and «Da, încă o persoană» is the press that opens the sitting.
+ */
+describe("§NNN no sitting without a press", () => {
+  const cookie = {
+    sittingId: "00000000-0000-4000-8000-0000000000aa",
+    seed: null,
+    eventId: EVENT_ID,
+    email: "familia.pop@example.ro",
+    people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
+    heldUntil: new Date(NOW.getTime() + 600_000),
+    sameBirthDate: null,
+  };
+  const registrationSeed = { kind: "registration" as const, id: "00000000-0000-4000-8000-0000000000b1", outboxId: "00000000-0000-4000-8000-0000000000c1" };
+
+  it("shows the one question after the first form, and the sitting's screen only after «Da»", () => {
+    expect(afterFormScreen({ ...cookie })).toBe("offer");
+    expect(afterFormScreen({ ...cookie, joined: false })).toBe("offer");
+    expect(afterFormScreen({ ...cookie, joined: true })).toBe("sitting");
+    expect(afterFormScreen(null)).toBeNull();
+  });
+
+  it("says when the email leaves: now under «imediat», at the next scheduled pass otherwise — before «Da» and after it alike", () => {
+    expect(emailLeavesSentence(null)).toBe("leavesNow");
+    expect(emailLeavesSentence(new Date(NOW.getTime() + 15 * 60_000))).toBe("leavesAt");
+    expect(emailLeavesAt({ timing: "immediate", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })).toBeNull();
+    const next = emailLeavesAt({ timing: "scheduled", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })!;
+    expect(next.getTime()).toBeGreaterThan(NOW.getTime());
+    expect(next.getTime()).toBeLessThanOrEqual(NOW.getTime() + 15 * 60_000);
+    expect(next.getUTCMinutes() % 15).toBe(0);
+    // A minimum interval counted from now: the latest the pass can be, never one that comes first.
+    const slow = emailLeavesAt({ timing: "scheduled", now: NOW, pingerMinutes: 15, intervalMinutes: 60, governorFloorMinutes: 0 })!;
+    expect(slow.getTime()).toBeGreaterThanOrEqual(NOW.getTime() + 60 * 60_000);
+  });
+
+  it("keeps the first form's seed in the browser's half, sealed to one length whatever it names (§39)", () => {
+    const withSeed = { ...cookie, seed: registrationSeed };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(withSeed)!)).toEqual(withSeed);
+    const noMessage = { ...cookie, seed: { kind: "entry" as const, id: registrationSeed.id, outboxId: null } };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(noMessage)!)?.seed).toEqual(noMessage.seed);
+    expect(openFamilySittingCookie(sealFamilySittingCookie(cookie)!)?.seed).toBeNull();
+    const joined = { ...cookie, joined: true };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(joined)!)?.joined).toBe(true);
+    const lengths = new Set([cookie, withSeed, noMessage].map((value) => sealFamilySittingCookie(value)!.length));
+    expect(lengths.size).toBe(1);
+  });
+
+  it("words the screen in both catalogues: when it leaves, the one question, the owner's sentence under «Da»", async () => {
+    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+    expect(ro.Registration.done.leavesNow).toBe("Emailul pleacă acum.");
+    expect(ro.Registration.done.leavesAt).toBe("Emailul pleacă la {at} (următoarea trecere programată).");
+    expect(en.Registration.done.leavesNow).toBe("The email leaves now.");
+    expect(en.Registration.done.leavesAt).toContain("{at}");
+    expect(ro.Registration.sitting.addHint).toBe("Dacă da, ținem emailul și îl trimitem o singură dată, pentru toți.");
+    expect(en.Registration.sitting.addHint).toBe("If yes, we hold the email and send it once, for everybody.");
+    // «Gata» stays, on the sitting's screen after «Da» (§519).
+    expect(ro.Registration.sitting.done).toBe("Nu, gata — trimite-mi emailul");
   });
 });

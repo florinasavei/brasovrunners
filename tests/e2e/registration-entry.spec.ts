@@ -134,9 +134,12 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // And the same capture notice here, where somebody would otherwise stand with an inbox open.
     await expect(page.getByText(captureNotice)).toBeVisible();
     /*
-      The email left without a press (§NNN, amending §519): the screen asks one question about another
-      person on the address, with one answer, and there is no «Gata» to press.
+      The first form's email leaves without a press (§NNN, amending §519): the screen says when — the
+      e2e server sends on the request, so «acum» — then asks one question about another person on the
+      address, with one answer, and there is no «Gata» to press. The heading stays the inbox's own.
     */
+    await expect(page.getByTestId("check-email-leaves")).toHaveText("Emailul pleacă acum.");
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Da, încă o persoană" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);

@@ -45,7 +45,7 @@ import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
-import { emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
+import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
 import { describesListSocials, describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -565,21 +565,41 @@ export async function cachedDeadlines(): Promise<Deadlines> {
  * environment's default timing and no interval: the page still renders, and says the pinger's wait.
  */
 export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> {
-  let settings: { timing: DeliveryTiming; intervalMinutes: number };
-  try {
-    settings = await publicRead(["settings.email-wait"], ["settings"], async () => {
-      const [{ timing }, { minutes }] = await Promise.all([readDeliveryTiming(getDb()), readJobCadence(getDb())]);
-      return { timing, intervalMinutes: minutes };
-    });
-  } catch {
-    settings = { timing: defaultDeliveryTiming(env.APP_ENV).timing, intervalMinutes: 0 };
-  }
+  const settings = await cachedEmailTiming();
   return emailWaitMinutes({
     timing: settings.timing,
     pingerMinutes: pingerCadenceMinutes(now),
     intervalMinutes: settings.intervalMinutes,
     governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
   });
+}
+
+/**
+ * When a message queued now leaves (§NNN): null when the request sends it (`immediate`), else the
+ * next scheduled pass — the instant the screen after the registration form names above its question
+ * («Emailul pleacă la 10:15»), from the same two settings as `cachedEmailWaitMinutes`.
+ */
+export async function cachedEmailLeavesAt(now: Date): Promise<Date | null> {
+  const settings = await cachedEmailTiming();
+  return emailLeavesAt({
+    timing: settings.timing,
+    now,
+    pingerMinutes: pingerCadenceMinutes(now),
+    intervalMinutes: settings.intervalMinutes,
+    governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
+  });
+}
+
+/** The delivery timing and the minimum interval, from the data cache; the environment's default when the database cannot answer. */
+async function cachedEmailTiming(): Promise<{ timing: DeliveryTiming; intervalMinutes: number }> {
+  try {
+    return await publicRead(["settings.email-wait"], ["settings"], async () => {
+      const [{ timing }, { minutes }] = await Promise.all([readDeliveryTiming(getDb()), readJobCadence(getDb())]);
+      return { timing, intervalMinutes: minutes };
+    });
+  } catch {
+    return { timing: defaultDeliveryTiming(env.APP_ENV).timing, intervalMinutes: 0 };
+  }
 }
 
 /**

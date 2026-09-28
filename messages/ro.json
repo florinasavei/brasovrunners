@@ -3840,7 +3840,7 @@
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
           "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
           "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)",
-          "familySittingMinutes": "Emailul de familie așteaptă formularul următor cel mult (minute)"
+          "familySittingMinutes": "Emailul unei înscrieri de familie așteaptă „Gata” cel mult (minute)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră și numărul provizoriu se eliberează.",
@@ -3851,7 +3851,7 @@
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
           "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablon spune acest număr.",
-          "familySittingMinutes": "Doar după „Da, încă o persoană”: emailul care n-a plecat încă așteaptă formularul următor, ca familia să primească unul singur. 0 = fiecare persoană primește emailul ei."
+          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -5236,6 +5236,8 @@
       "heading": "Aproape gata!",
       "headingNamed": "Aproape gata, {name}!",
       "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
+      "leavesNow": "Emailul pleacă acum.",
+      "leavesAt": "Emailul pleacă la {at} (următoarea trecere programată).",
       "nextTitle": "Ce urmează",
       "next": {
         "open": {
@@ -5256,7 +5258,7 @@
       "delayScheduled": "Emailurile pleacă la trecerea programată a platformei, așa că ajunge în cel mult {wait}.",
       "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {confirmation}, așa că ai timp.",
       "backToEvent": "Înapoi la eveniment",
-      "family": "Cel mai nou email îi cuprinde pe toți — {names} — cu un singur buton pentru toate înscrierile.",
+      "family": "Un singur email, pentru toți: {names}.",
       "familyEach": "Fiecare persoană primește emailul ei."
     },
     "deliveryNotice": {
@@ -5506,20 +5508,30 @@
     "botCheckExpired": "Verificarea a expirat — se reface; trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
     "botCheckValve": "Trimitem fără verificare automată…",
     "sitting": {
+      "lead": "Formularul a ajuns, pentru {event}.",
+      "leadNamed": "Formularul lui {name} pentru {event} a ajuns.",
+      "when": "Emailul pleacă când apeși „Gata” sau singur după {window} de la ultima apăsare — mai sunt {left}.",
+      "alreadySent": "Emailul pentru această persoană a plecat deja: îl găsești în căsuța de email.",
+      "soFar": "Trimise până acum, cu adresa",
       "question": "Mai înscrii pe cineva cu aceeași adresă?",
       "add": "Da, încă o persoană",
       "addPending": "Se deschide formularul…",
-      "addHint": "Dacă apeși „Da”, emailul care n-a plecat încă așteaptă formularul următor, cel mult {window}, ca să primiți unul singur pentru toți.",
+      "addHint": "Dacă da, ținem emailul și îl trimitem o singură dată, pentru toți.",
       "addHintAtOnce": "Fiecare persoană primește emailul ei, imediat ce îi trimiți formularul.",
+      "done": "Nu, gata — trimite-mi emailul",
+      "doneAtOnce": "Nu, am terminat",
+      "donePending": "Se trimite…",
+      "oneEmail": "Primești un singur email pentru toți cei de mai sus, cu un singur buton: confirmi adresa și toate înscrierile deodată.",
+      "wizard": "Semnezi declarațiile pe loc, una după alta, pe aceeași pagină; fiecare persoană primește apoi propriul cod QR.",
+      "pageClosed": "Cu pagina închisă, emailul pleacă la prima verificare de după termen: de obicei într-un sfert de oră, noaptea în cel mult o oră.",
       "addressLabel": "Adresa de email (aceeași ca la persoana dinainte)",
       "addressHelp": "Toate mesajele pentru această persoană vin tot aici.",
       "formTitle": "Încă o persoană cu aceeași adresă",
       "formSoFar": "Până acum: {names}. Completează datele persoanei noi — adresa rămâne aceeași.",
-      "formLeft": "Dacă emailul pentru cei de mai sus n-a plecat încă, așteaptă acest formular, ca să primiți unul singur pentru toți. Dacă nu-l trimiți, pleacă singur peste {minutes}.",
+      "formLeft": "Emailul pentru cei de mai sus pleacă singur peste {minutes}, dacă nu trimiți acest formular până atunci.",
       "formAtOnce": "Emailul pentru această persoană pleacă imediat ce trimiți formularul.",
-      "formStop": "Nu mai înscriu pe nimeni — trimite emailul",
-      "formStopPending": "Se trimite…",
-      "sameBirthDate": "Formularul pentru {name} nu a fost păstrat: are aceeași dată de naștere ca {kept}, trimis(ă) deja. Ai vrut să corectezi numele? Răspunde la email și îl corectăm noi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email sau scrie-ne și facem noi înscrierea."
+      "formBack": "Nu mai înscriu pe nimeni — înapoi la „Gata”",
+      "sameBirthDate": "Formularul pentru {name} nu a fost păstrat: are aceeași dată de naștere ca {kept}, trimis(ă) deja. Lista de mai jos este cea din email. Ai vrut să corectezi numele? Răspunde la email și îl corectăm noi. Pentru un frate geamăn sau o soră geamănă, trimite formularul de pe altă adresă de email sau scrie-ne și facem noi înscrierea."
     }
   },
   "Registrations": {

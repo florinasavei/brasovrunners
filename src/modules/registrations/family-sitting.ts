@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, like, lt, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, like, lt, lte, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { type FamilySitting, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
 import { type Registration, registrations } from "@/db/schema/registrations";
@@ -7,25 +7,29 @@ import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
-import { isFamilySitting, sittingLinkExpiresAt } from "./domain/family-sitting";
+import { isFamilySitting, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
 
 /**
  * The database's half of a family sitting (§519): the rows `submitRegistration` writes and reads
  * inside its own transaction, under the event's lock, and the presses of «Da, încă o persoană» and
- * «Nu mai înscriu pe nimeni». What a sitting is, and why, is `domain/family-sitting.ts`; the table
- * is `db/schema/family-entries.ts`.
+ * «Gata». What a sitting is, and why, is `domain/family-sitting.ts`; the table is
+ * `db/schema/family-entries.ts`.
  *
- * The one rule this module keeps (§NNN, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
- * primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?»): **a form's email is never held; only
- * «Da, încă o persoană» holds, and only until the next form**. Every message a form of the sitting
- * queues is due at once, on the club's ordinary timing (§513). «Da» moves what the sitting still has
- * waiting — pending and never tried — to the window's end (`next_attempt_at`, the claim's own
- * condition, so the outbox needs no notion of a sitting); the next form sends it again, merged. From
- * the second person on, those messages become one: the individual ones are deleted while still
- * pending and never tried, and the family message takes their place. A message that has already left
- * is not taken back: the next family message names everybody still waiting, and supersedes it.
+ * **No sitting without a press** (§NNN, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
+ * primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?»). The first form is an ordinary form:
+ * its email is due at once, on the club's ordinary timing, and no row is written. «Da, încă o
+ * persoană» opens the sitting (`continueFamilySitting`): it takes in the first form's registration or
+ * kept form, and holds its message when it has not left yet.
+ *
+ * From that press on, §519's rule is kept whole: **nothing the sitting holds leaves before «Gata» or
+ * the window**. Each message a form of the sitting queues is written with `next_attempt_at` at the
+ * sitting's `held_until`, which is the claim's own condition (`claimOutboxBatch`), so the outbox needs
+ * no notion of a sitting. From the second person on, those messages become one: the individual ones
+ * are deleted while still pending and never tried, and the family message takes their place, held
+ * the same way. The drain that `enqueueEmail` schedules finds nothing due and tells the outbox job
+ * when it will (`drain.ts`), so the window is kept even when nobody presses «Gata».
  */
 
 /** The sitting a form names, locked, when it still takes forms: this event and address, not sent, not confirmed. */
@@ -63,7 +67,7 @@ export async function openSitting<T extends Record<string, unknown>>(
   return row;
 }
 
-/** One more thing the sitting keeps: a registration it created, a message it may merge or a «Da» may hold, or both. */
+/** One more thing the sitting holds: a registration it created, a message it holds back, or both. */
 export async function holdInSitting<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   sitting: FamilySitting,
@@ -96,31 +100,18 @@ export async function sittingPendingRegistrations<T extends Record<string, unkno
 }
 
 /**
- * The idempotency key of a sitting's family message. The first is `family-sitting:<id>`; once that one
- * has left while the sitting still takes forms (§NNN: a form's email is never held), the next form's
- * family message is a new one, keyed by its instant as well — the sitting's lock makes it one per form.
+ * The idempotency key of a sitting's one family message: one per sitting, whatever happens. A sitting
+ * holds its family message until «Gata» or its window, and takes no form after either, so a second
+ * family message of one sitting is never needed — and a family email's button is never superseded.
  */
-export function familySittingMessageKey(sittingId: string, at?: Date): string {
-  return at ? `family-sitting:${sittingId}:${at.toISOString()}` : `family-sitting:${sittingId}`;
-}
-
-/**
- * The sitting's messages that have not left yet — pending and never tried — locked, so the outbox
- * job's claim (which skips a locked row) cannot take one between this read and the merge.
- */
-async function waitingSittingMessages<T extends Record<string, unknown>>(tx: Transaction<T>, sitting: Pick<FamilySitting, "heldOutboxIds">) {
-  if (sitting.heldOutboxIds.length === 0) return [];
-  return tx
-    .select({ id: emailOutbox.id, messageType: emailOutbox.messageType, payloadJson: emailOutbox.payloadJson })
-    .from(emailOutbox)
-    .where(and(inArray(emailOutbox.id, [...sitting.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)))
-    .for("update");
+export function familySittingMessageKey(sittingId: string): string {
+  return `family-sitting:${sittingId}`;
 }
 
 /**
  * Whether a message of the sitting is still to leave or leaving (§519, §NNN): the same person sent
- * again in the sitting is then told by it, and nothing more is queued. Once they have all left, the
- * form is an ordinary re-send.
+ * again in the sitting is then told by it, and nothing more is queued. When nothing of the sitting is
+ * waiting — «Da» came after the first form's email had left — the form is an ordinary re-send.
  */
 export async function sittingHasMessageToLeave<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -136,13 +127,9 @@ export async function sittingHasMessageToLeave<T extends Record<string, unknown>
 }
 
 /**
- * After each form of the sitting (§519, §NNN), under the event's lock. The form's own message is
- * already queued, due at once: a form's email is never held. From the second person on, what the
- * sitting still has waiting becomes the one family message — the one still waiting, or a new one
- * when the last has left — and the individual messages it replaces are deleted while still pending
- * and never tried. Whatever a «Da» held is due again now: the form it waited for has come. The
- * sitting takes forms, and a «Da» holds, until `heldUntil`, the club's window from this form; the
- * row learns when its link's last lapse is.
+ * After each form of the sitting (§519), under the event's lock: the window moves to `heldUntil`,
+ * and from the second person on the held messages become the one family message. Every message the
+ * sitting still holds waits until `heldUntil`; the row learns when its link's last lapse is.
  */
 export async function settleSitting<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -152,33 +139,26 @@ export async function settleSitting<T extends Record<string, unknown>>(
   const { heldUntil, now } = params;
   const entries = await liveSittingEntries(tx, sitting.id, now);
   const pending = await sittingPendingRegistrations(tx, sitting);
-  const waiting = await waitingSittingMessages(tx, sitting);
-  let held = waiting.map((row) => row.id);
-  let replaced: string[] = [];
+  let held = [...sitting.heldOutboxIds];
 
   if (isFamilySitting(pending.length + entries.length)) {
-    const stillWaiting = waiting.find(
-      (row) => row.messageType === "REGISTER_ANOTHER_PERSON" && (row.payloadJson as { familySittingId?: unknown } | null)?.familySittingId === sitting.id,
-    );
-    let familyId = stillWaiting?.id;
-    if (!familyId) {
-      const family = (idempotencyKey: string) =>
-        enqueueEmail(tx, {
-          participantId: sitting.participantId,
-          // The registration the sitting's link is scoped to; the payload names the sitting, never a person (§12.12).
-          registrationId: sitting.registrationId,
-          messageType: "REGISTER_ANOTHER_PERSON",
-          locale: sitting.locale,
-          recipientEmail: params.recipientEmail,
-          payload: { familySittingId: sitting.id },
-          idempotencyKey,
-          now,
-        });
-      // The first family message, or — the first one having left — a new one that names everybody still waiting.
-      familyId = (await family(familySittingMessageKey(sitting.id)))?.id ?? (await family(familySittingMessageKey(sitting.id, now)))?.id;
-    }
-    replaced = held.filter((id) => id !== familyId);
-    // Only rows still waiting and never tried (locked above): a message that has left is not taken back.
+    const key = familySittingMessageKey(sitting.id);
+    const queued = await enqueueEmail(tx, {
+      participantId: sitting.participantId,
+      // The registration the sitting's link is scoped to; the payload names the sitting, never a person (§12.12).
+      registrationId: sitting.registrationId,
+      messageType: "REGISTER_ANOTHER_PERSON",
+      locale: sitting.locale,
+      recipientEmail: params.recipientEmail,
+      payload: { familySittingId: sitting.id },
+      idempotencyKey: key,
+      now,
+      notBefore: heldUntil,
+    });
+    const familyId =
+      queued?.id ?? (await tx.select({ id: emailOutbox.id }).from(emailOutbox).where(eq(emailOutbox.idempotencyKey, key)).limit(1))[0]?.id;
+    const replaced = held.filter((id) => id !== familyId);
+    // Only rows still waiting and never tried: a message that has left is not taken back.
     if (replaced.length > 0) {
       await tx
         .delete(emailOutbox)
@@ -187,29 +167,23 @@ export async function settleSitting<T extends Record<string, unknown>>(
     held = familyId ? [familyId] : [];
   }
 
-  // What a «Da» held leaves now, with this form (§NNN); a message due already is left as it is.
   if (held.length > 0) {
-    const released = await tx
+    await tx
       .update(emailOutbox)
-      .set({ nextAttemptAt: now })
-      .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), gt(emailOutbox.nextAttemptAt, now)))
-      .returning({ id: emailOutbox.id });
-    // Sent after this response, as a message queued now would be (§68) — a form that queued nothing of its own included.
-    if (released.length > 0) drainOutboxAfterResponse();
+      .set({ nextAttemptAt: heldUntil })
+      .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
   }
-  // The sitting keeps its messages' ids, less the ones the family message replaced: a «Da» holds what is still waiting.
-  const kept = [...new Set([...sitting.heldOutboxIds.filter((id) => !replaced.includes(id)), ...held])];
   const expiresAt =
     sittingLinkExpiresAt([...pending.map((row) => row.emailLinkExpiresAt), ...entries.map((entry) => entry.expiresAt), sitting.expiresAt, heldUntil], now) ?? heldUntil;
-  await tx.update(familySittings).set({ heldOutboxIds: kept, heldUntil, expiresAt }).where(eq(familySittings.id, sitting.id));
+  await tx.update(familySittings).set({ heldOutboxIds: held, heldUntil, expiresAt }).where(eq(familySittings.id, sitting.id));
 }
 
 /**
- * «Nu mai înscriu pe nimeni» on the next form (§519, §NNN — once «Gata» on the screen after the form):
- * what a «Da» held leaves now, and the sitting takes no more forms. Pressed twice, or after the
- * window, it does nothing. The id comes from the browser's sealed half; a sitting that held nothing
- * — its messages had left already — has nothing to release, and the screen after it says the same
- * either way (§39).
+ * «Gata» (§519): what the sitting holds leaves now, and the sitting takes no more forms. Pressed
+ * twice, or after the window, it does nothing. The id comes from the browser's sealed half; a
+ * sitting that held nothing — a re-send about a registration outside it went at once, or «Da» came
+ * after the first form's email had left — has nothing to release, and the screen after it says the
+ * same either way (§39).
  */
 export async function releaseFamilySitting<T extends Record<string, unknown>>(db: Database<T>, sittingId: string, now: Date): Promise<void> {
   if (!isUuid(sittingId)) return;
@@ -233,34 +207,119 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
 }
 
 /**
- * «Da, încă o persoană» (§519, §NNN): the one press that holds. What the sitting still has waiting —
- * pending and never tried — waits for the next form, until the club's window from this press; the
- * next form sends it again, merged into one family message, and a next form never sent lets it go at
- * the window's end. A message that has left already is not taken back. A sitting already ended,
- * confirmed or past its window is left as it is, and the next form opens a sitting of its own. The id
- * comes from the browser's sealed half; nothing is said back (§39).
+ * «Da, încă o persoană» (§519; §NNN: the press that opens the sitting). A press, never a link.
+ *
+ * - The browser's half names a sitting still taking forms (a «Da» after the second form, or pressed
+ *   twice): its window starts again from this press, as it does from every form sent — the row's
+ *   `held_until` and every message it still holds, together (the review of 2026-09-27: the window
+ *   lapsed under the parent's hands while the next form was open).
+ * - Otherwise, the first form's seed (`SittingSeed`): the sitting is opened now, with the first
+ *   form's registration or kept form in it, and that form's message held until the window's end
+ *   when it has not left yet. When it has left, nothing is taken back: the family message the next
+ *   form queues names that person too, and its one button confirms everybody (§519).
+ *
+ * A sitting already sent, confirmed or past its window, and a seed that no longer names a waiting
+ * registration or a live kept form of this event, are left as they are: the next form is the
+ * ordinary one, and opens a sitting of its own. Returns the sitting that takes the next form, or
+ * null. The ids come from the browser's sealed half; nothing is said back (§39).
  */
 export async function continueFamilySitting<T extends Record<string, unknown>>(
   db: Database<T>,
-  sittingId: string,
+  press: { sittingId: string | null; seed: SittingSeed | null; eventId: string; locale: Locale },
   heldUntil: Date,
   now: Date,
-): Promise<void> {
-  if (!isUuid(sittingId)) return;
-  await db.transaction(async (tx) => {
-    const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, sittingId)).limit(1).for("update");
-    if (!row || row.releasedAt !== null || row.confirmedAt !== null || row.heldUntil.getTime() <= now.getTime()) return;
-    if (row.heldOutboxIds.length > 0) {
-      await tx
-        .update(emailOutbox)
-        .set({ nextAttemptAt: heldUntil })
-        .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+): Promise<string | null> {
+  return db.transaction(async (tx) => {
+    if (press.sittingId && isUuid(press.sittingId)) {
+      const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, press.sittingId)).limit(1).for("update");
+      if (row && row.eventId === press.eventId && row.releasedAt === null && row.confirmedAt === null && row.heldUntil.getTime() > now.getTime()) {
+        if (row.heldOutboxIds.length > 0) {
+          await tx
+            .update(emailOutbox)
+            .set({ nextAttemptAt: heldUntil })
+            .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+        }
+        await tx
+          .update(familySittings)
+          .set({ heldUntil, expiresAt: row.expiresAt.getTime() < heldUntil.getTime() ? heldUntil : row.expiresAt })
+          .where(eq(familySittings.id, row.id));
+        return row.id;
+      }
     }
-    await tx
-      .update(familySittings)
-      .set({ heldUntil, expiresAt: row.expiresAt.getTime() < heldUntil.getTime() ? heldUntil : row.expiresAt })
-      .where(eq(familySittings.id, row.id));
+    return press.seed ? openSittingFromSeed(tx, press.seed, { eventId: press.eventId, locale: press.locale, heldUntil, now }) : null;
   });
+}
+
+/** A live sitting of this event, not sent and not confirmed, still taking forms. */
+function liveSittingWhere(eventId: string, now: Date) {
+  return and(eq(familySittings.eventId, eventId), isNull(familySittings.releasedAt), isNull(familySittings.confirmedAt), gt(familySittings.heldUntil, now));
+}
+
+/**
+ * The first form's message, held until the window's end (§NNN) — only while it is still waiting and
+ * never tried, and only the one the seed named for this registration. Null when it has left.
+ */
+async function holdSeedMessage<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  outboxId: string | null,
+  registrationId: string,
+  heldUntil: Date,
+): Promise<string | null> {
+  if (!outboxId || !isUuid(outboxId)) return null;
+  const [row] = await tx
+    .update(emailOutbox)
+    .set({ nextAttemptAt: heldUntil })
+    .where(
+      and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)),
+    )
+    .returning({ id: emailOutbox.id });
+  return row?.id ?? null;
+}
+
+/** The sitting «Da» opens from the first form (§NNN): its registration or kept form, and its message while still waiting. */
+async function openSittingFromSeed<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  seed: SittingSeed,
+  at: { eventId: string; locale: Locale; heldUntil: Date; now: Date },
+): Promise<string | null> {
+  const { eventId, locale, heldUntil, now } = at;
+  if (!isUuid(seed.id)) return null;
+  if (seed.kind === "registration") {
+    const [registration] = await tx
+      .select({ id: registrations.id, eventId: registrations.eventId, participantId: registrations.participantId, status: registrations.status, emailLinkExpiresAt: registrations.emailLinkExpiresAt })
+      .from(registrations)
+      .where(eq(registrations.id, seed.id))
+      .limit(1)
+      .for("update");
+    if (!registration || registration.eventId !== eventId || registration.status !== "PENDING_EMAIL_CONFIRMATION") return null;
+    // Pressed twice on one seed (two tabs): the sitting the first press opened.
+    const [already] = await tx
+      .select({ id: familySittings.id })
+      .from(familySittings)
+      .where(and(liveSittingWhere(eventId, now), sql`${familySittings.registrationIds} @> ${JSON.stringify([registration.id])}::jsonb`))
+      .limit(1);
+    if (already) return already.id;
+    const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, now });
+    const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil);
+    await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId });
+    const expiresAt = sittingLinkExpiresAt([registration.emailLinkExpiresAt, heldUntil], now) ?? heldUntil;
+    await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
+    return sitting.id;
+  }
+  const [entry] = await tx.select().from(pendingFamilyEntries).where(eq(pendingFamilyEntries.id, seed.id)).limit(1).for("update");
+  if (!entry || entry.eventId !== eventId || entry.expiresAt.getTime() <= now.getTime()) return null;
+  if (entry.sittingId !== null) {
+    const [already] = await tx.select({ id: familySittings.id }).from(familySittings).where(and(eq(familySittings.id, entry.sittingId), liveSittingWhere(eventId, now))).limit(1);
+    return already?.id ?? null;
+  }
+  // Scoped, as a kept form's own sitting always was, to the registration the address already holds here.
+  const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, now });
+  await tx.update(pendingFamilyEntries).set({ sittingId: sitting.id }).where(eq(pendingFamilyEntries.id, entry.id));
+  const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil);
+  await holdInSitting(tx, sitting, { outboxId });
+  const expiresAt = sittingLinkExpiresAt([entry.expiresAt, heldUntil], now) ?? heldUntil;
+  await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
+  return sitting.id;
 }
 
 /**

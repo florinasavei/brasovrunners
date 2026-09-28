@@ -6,14 +6,19 @@ import { sameRunner } from "./name-key";
  * instant: unul singur, după ce apeși «Gata» sau după fereastra din Termene"; «asta cu wizzardul de
  * confirmare si claritate e top prio!»).
  *
- * The screen after the public form says to open the inbox, and asks one question: «Mai înscrii pe
- * cineva cu aceeași adresă?», with one answer, «Da, încă o persoană», which opens the form again with
- * the address fixed (§NNN, amending §519; the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca
- * nu apas pe „Nu, gata, trimite mailul”?»). A form's email is never held: it leaves on the club's
- * ordinary timing. Only «Da» holds what has not left yet (`email_outbox.next_attempt_at`), until the
- * next form or the club's window («Termene») from the press; the next form merges it, from the second
- * person on, into one message — «Înscriere de familie: 3 persoane la …» — with one button that
- * confirms the address and everybody at once and opens the declarations as the wizard of §471.
+ * The first form is an ordinary form (§NNN, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
+ * primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?»): its email leaves on the club's
+ * ordinary timing, and the screen that says to open the inbox says when it leaves, then asks one
+ * question — «Mai înscrii pe cineva cu aceeași adresă?» — with one answer, «Da, încă o persoană».
+ * Leaving the page is the no. That press opens the sitting: it holds the first form's email when it
+ * has not left yet, and opens the form again with the address fixed.
+ *
+ * From «Da» on, §519 as it was: every message the sitting's forms queue waits
+ * (`email_outbox.next_attempt_at`) until «Gata» or the club's window («Termene», from the last form
+ * or press), and from the second person on, those messages are one — «Înscriere de familie: 3
+ * persoane la …» — with one button that confirms the address and everybody at once and opens the
+ * declarations as the wizard of §471. The screen after each of those forms is the sitting's own: the
+ * people so far, «Gata — trimite-mi emailul» and the minutes left.
  *
  * Pure: what the browser's half of the sitting holds, and the decisions about it. The database's
  * half is `registrations/family-sitting.ts`; the rows are `family_sittings`.
@@ -23,29 +28,61 @@ import { sameRunner } from "./name-key";
 export const FAMILY_SITTING_FIELD = "familySitting";
 /** The address of the next form of a sitting: `?family=1`. A marker, never a value (§14.5). */
 export const FAMILY_SITTING_PARAM = "family";
-/** The screen after «Nu mai înscriu pe nimeni» on the next form (§NNN): `?submitted=1&sent=1`, no question. */
+/**
+ * The field the open screen's own press at the window's end posts as "1" (`PressWhenWindowEnds`): a
+ * press by hand posts it empty. With the browser's half gone, the automatic press does nothing.
+ */
+export const AUTO_PRESS_FIELD = "autoPress";
+/** The screen after «Gata»: `?submitted=1&sent=1`. */
 export const SITTING_SENT_PARAM = "sent";
 
 /**
- * The payload mark of a sitting's verification email (§519), which a «Da» may hold (§NNN): rendered,
- * its link's life is counted from that send (`extendHeldVerificationLink`), as the message states it.
- * A marker, never a value.
+ * The payload mark of a verification email a sitting may hold (§519; since §NNN also the first
+ * form's, which «Da» may hold): rendered, its link's life is counted from that send
+ * (`extendHeldVerificationLink`), as the message states it. A marker, never a value.
  */
 export const SITTING_HELD = "sittingHeld";
+
+/**
+ * What the first form left for «Da» to open a sitting with (§NNN): the registration it created or
+ * restarted, or the kept form of §446, and the message it queued for it. Written by the action into
+ * the browser's sealed half, never read from the registrations table by the screen (§39).
+ */
+export type SittingSeed = { kind: "registration" | "entry"; id: string; outboxId: string | null };
+
+/**
+ * Which screen follows a form (§NNN): before any «Da», the inbox's screen with the one question
+ * (`offer`); after a «Da» — from the second form on, or pressed and come back — §519's sitting screen
+ * (`sitting`), with the people so far, «Gata» and the minutes left. No live half: the inbox's screen
+ * alone.
+ */
+export function afterFormScreen(cookie: FamilySittingCookie | null): "offer" | "sitting" | null {
+  if (!cookie) return null;
+  return cookie.joined ? "sitting" : "offer";
+}
+
+/**
+ * The fact line above the question (§NNN): «Emailul pleacă acum» when the request itself sends it
+ * (`immediate`, no instant), else «Emailul pleacă la HH:MM (următoarea trecere programată)».
+ */
+export function emailLeavesSentence(leavesAt: Date | null): "leavesNow" | "leavesAt" {
+  return leavesAt === null ? "leavesNow" : "leavesAt";
+}
 
 /** At most this many names are kept in the browser's half: the club's limit per address is at most ten. */
 export const SITTING_NAMES_MAX = 10;
 
 /**
  * How long this browser keeps the address for the next form when the club's window is 0 (§519):
- * there is no sitting then, so the cookie's life is only the screen's offer of another person.
+ * nothing is held then, so the cookie's life is only the screen's offer of another person.
  */
 export const SITTING_AT_ONCE_MINUTES = 30;
 
 /**
- * How long the browser keeps its half past the window's end (§519, the review of 2026-09-27): a next
- * form sent in the window's last second, on a slow phone, still carries the address. The screen and
- * the form read the window's end (`heldUntil`), never this; the server's `held_until` stays the truth.
+ * How long the browser keeps its half past the window's end (§519, the review of 2026-09-27): the open
+ * screen presses «Gata» at that instant, and a slow phone must still send the cookie with the press.
+ * The screen and the form read the window's end (`heldUntil`), never this; the server's `held_until`
+ * stays the truth of when the email leaves.
  */
 export const SITTING_COOKIE_GRACE_MINUTES = 2;
 
@@ -63,18 +100,18 @@ export function sittingCookieUntil(now: Date, windowMinutes: number): Date {
 }
 
 /**
- * The whole minutes left of the sitting's window (§519, the review's nit: the next form says the time
- * left, not the club's whole window), rounded up so "1" is said until the last second; 0 once over.
+ * The whole minutes left until the email leaves by itself (§519, the review's nit: the screen says the
+ * time left, not the club's whole window), rounded up so "1" is said until the last second; 0 once due.
  */
 export function sittingMinutesLeft(releaseInMs: number): number {
   return releaseInMs <= 0 ? 0 : Math.ceil(releaseInMs / 60_000);
 }
 
 /**
- * The screen after a form of a sitting says one sentence about its emails (§519, the review of
- * 2026-09-27), from the browser's own half: with a window, that the newest email names everybody
- * sent so far, with one button (`family`, §NNN); at a window of 0, where there is no sitting,
- * «Fiecare persoană primește emailul ei.» (`familyEach`). One person, or no half: nothing.
+ * The screen after the last form of a sitting says one sentence about its emails (§519, the review of
+ * 2026-09-27), from the browser's own half: with the window held, «Un singur email, pentru toți: …»
+ * (`family`); at a window of 0, where each person's email already left on its own, «Fiecare persoană
+ * primește emailul ei.» (`familyEach`). One person, or no half: nothing.
  */
 export function doneFamilySentence(facts: { names?: readonly string[]; atOnce?: boolean } | null): "family" | "familyEach" | null {
   if ((facts?.names?.length ?? 0) < 2) return null;
@@ -132,21 +169,31 @@ export function familyHeldDeclaration(params: {
  * forms, so showing it back tells nobody anything about an address (§39, AGENTS.md §19.4).
  */
 export type FamilySittingCookie = {
-  /** The server's row, or null while the sitting has held nothing (a re-send about a registration outside it). */
+  /** The server's row, or null while there is none — before «Da» (§NNN), or a sitting that held nothing. */
   sittingId: string | null;
+  /**
+   * What the first form left for «Da» to open the sitting with (§NNN); null once «Da» was pressed,
+   * and for a form that left nothing to hold (a re-send, the address at the club's limit).
+   */
+  seed: SittingSeed | null;
+  /**
+   * «Da, încă o persoană» was pressed on this browser (§NNN): the forms after it are the sitting's,
+   * and the screen after each of them is §519's sitting screen (`afterFormScreen`).
+   */
+  joined?: boolean;
   eventId: string;
   email: string;
   /** Everybody the sitting's forms were sent for, as typed, the latest last (`withSittingPerson`). */
   people: SittingPerson[];
   /**
-   * Until when the next form is taken with this address, and what a «Da» held leaves by itself: the
-   * club's window from the last form or the last «Da, încă o persoană» (§NNN). With `atOnce`, only
+   * When the email leaves by itself: the club's window from the last form or the last «Da, încă o
+   * persoană». Before «Da», how long the next form is offered with this address. With `atOnce`, only
    * how long this browser keeps the address for the next form.
    */
   heldUntil: Date;
   /**
-   * The club's window is 0 (§519, «Termene»): no sitting, every form's email is its own. The screen
-   * still offers the next person, and says each person gets their own email.
+   * The club's window is 0 (§519, «Termene»): nothing is held, every form's email left at once. The
+   * screen still offers the next person, and says the email has already left.
    */
   atOnce?: boolean;
   /**
@@ -211,7 +258,7 @@ export function sittingSharedValues(
   return shared;
 }
 
-/** Whether the cookie still stands for a sitting of this event: its window is not over yet. */
+/** Whether the cookie still stands for a sitting of this event: the email has not left by itself yet. */
 export function sittingCookieLive(cookie: FamilySittingCookie | null, eventId: string, now: Date): cookie is FamilySittingCookie {
   return cookie !== null && cookie.eventId === eventId && cookie.heldUntil.getTime() > now.getTime() && cookie.email !== "";
 }

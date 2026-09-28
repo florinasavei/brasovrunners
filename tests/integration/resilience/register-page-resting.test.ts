@@ -24,6 +24,8 @@ const state = vi.hoisted(() => ({
   draft: null as Record<string, string> | null,
   sitting: null as null | {
     sittingId: string | null;
+    seed?: null;
+    joined?: boolean;
     eventId: string;
     email: string;
     people: { name: string; birthDate: string }[];
@@ -117,12 +119,17 @@ vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({
 // The family sitting's browser half (§519) and its async screen, stood in for like the parts above.
 vi.mock("@/modules/registrations/family-sitting-cookie", () => ({ readFamilySittingCookie: async () => state.sitting }));
 vi.mock("@/modules/registrations/ui/FamilySittingNext", () => ({
-  default: ({ atOnce, sameBirthDate }: { atOnce: boolean; sameBirthDate: { typed: string } | null }) =>
+  default: ({ names, atOnce, sameBirthDate, releaseInMs }: { names: string[]; atOnce: boolean; sameBirthDate: { typed: string } | null; releaseInMs: number }) =>
     createElement("div", {
       "data-testid": "family-sitting",
+      "data-names": names.join("|"),
       "data-at-once": atOnce ? "yes" : "no",
       "data-same": sameBirthDate?.typed ?? "",
+      "data-release": releaseInMs > 0 ? "later" : "now",
     }),
+}));
+vi.mock("@/modules/registrations/ui/FamilySittingOffer", () => ({
+  default: ({ atOnce }: { atOnce: boolean }) => createElement("div", { "data-testid": "family-sitting-offer", "data-at-once": atOnce ? "yes" : "no" }),
 }));
 vi.mock("@/modules/resilience/ui/LastGoodNotice", () => ({
   default: ({ read }: { read: { freshness: string } }) => (read.freshness === "live" ? null : createElement("div", { "data-testid": "resting-notice" })),
@@ -172,9 +179,31 @@ describe("§447 the registration page while the database is away", () => {
     expect(resting).not.toContain(ro.Registration.errors.databaseAwayTitle);
   });
 
-  it("§519 after the form, says to open the inbox and asks «Mai înscrii pe cineva?» while the sitting takes a next form; after «Nu mai înscriu pe nimeni», asks nothing", async () => {
+  it("§NNN after the first form, says to open the inbox with one question in it — no «Gata», nothing waits for a press", async () => {
     state.sitting = {
       sittingId: "00000000-0000-4000-8000-0000000000aa",
+      seed: null,
+      eventId: EVENT.id,
+      email: "familia.pop@example.ro",
+      people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
+      heldUntil: new Date(Date.now() + 600_000),
+      sameBirthDate: null,
+    };
+    const first = await render({ submitted: "1" });
+    expect(first).toContain('data-testid="check-your-email"');
+    expect(first).toContain('data-testid="family-sitting-offer"');
+    expect(first).not.toContain('data-testid="family-sitting"');
+    // Before «Da» there is no family form: `?family=1` is the ordinary form, the address asked twice.
+    const plain = await render({ family: "1" });
+    expect(plain).not.toContain('data-testid="family-sitting-address"');
+    expect(plain).toContain('name="emailConfirm"');
+  });
+
+  it("§519 after «Da», every form's screen is the sitting's — the people so far, «Gata», the minutes left; after «Gata», says to open the inbox", async () => {
+    state.sitting = {
+      sittingId: "00000000-0000-4000-8000-0000000000aa",
+      seed: null,
+      joined: true,
       eventId: EVENT.id,
       email: "familia.pop@example.ro",
       people: [
@@ -185,12 +214,14 @@ describe("§447 the registration page while the database is away", () => {
       sameBirthDate: { typed: "Ioana Pop", kept: "Maria Pop" },
     };
     const asking = await render({ submitted: "1" });
-    // One screen (§NNN): the inbox's, with the one question inside it — the email is never held for a press.
-    expect(asking).toContain('data-testid="check-your-email"');
     expect(asking).toContain('data-testid="family-sitting"');
-    // The form not kept (§493) is said on the screen.
+    expect(asking).toContain('data-names="Ana Pop|Maria Pop"');
+    // The form not kept (§493) is said on the screen, and the open screen presses «Gata» when the window ends.
     expect(asking).toContain('data-same="Ioana Pop"');
+    expect(asking).toContain('data-release="later"');
     expect(asking).toContain('data-at-once="no"');
+    expect(asking).not.toContain('data-testid="check-your-email"');
+    expect(asking).not.toContain('data-testid="family-sitting-offer"');
 
     const sent = await render({ submitted: "1", sent: "1" });
     expect(sent).toContain('data-testid="check-your-email"');
@@ -204,6 +235,8 @@ describe("§447 the registration page while the database is away", () => {
   it("§519 the next form of a sitting fixes the address — said back, not asked — and lists who was sent so far", async () => {
     state.sitting = {
       sittingId: "00000000-0000-4000-8000-0000000000aa",
+      seed: null,
+      joined: true,
       eventId: EVENT.id,
       email: "familia.pop@example.ro",
       people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
@@ -219,9 +252,8 @@ describe("§447 the registration page while the database is away", () => {
     expect(next).toContain("Până acum: Ana Pop.");
     // How long is left, on the server's clock at this render (§519): ten minutes from now.
     expect(next).toContain("pleacă singur peste 10 minute");
-    // The way out is a press (§NNN): it sends what «Da» held, so it is never a link.
-    expect(next).toContain('data-testid="family-sitting-stop"');
-    expect(next).toContain(ro.Registration.sitting.formStop);
+    // The way back to «Gata» without filling this one in (§519).
+    expect(next).toContain(ro.Registration.sitting.formBack);
     // The boxes a family shares start filled (§519); the person's own start empty.
     expect(next).toMatch(/name="city"[^>]*value="Brașov"|value="Brașov"[^>]*name="city"/);
     expect(next).toMatch(/name="guardianName"[^>]*value="Ana Pop"|value="Ana Pop"[^>]*name="guardianName"/);

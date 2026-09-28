@@ -23,6 +23,7 @@ import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import {
+  AUTO_PRESS_FIELD,
   FAMILY_SITTING_FIELD,
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
@@ -35,6 +36,7 @@ import {
 } from "@/modules/registrations/domain/family-sitting";
 import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { continueFamilySitting, releaseFamilySitting } from "@/modules/registrations/family-sitting";
+import type { SittingSeed } from "@/modules/registrations/domain/family-sitting";
 import { familySittingHeldUntil } from "@/modules/deadlines/domain/deadlines";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -119,9 +121,14 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const familyMode = text(form, FAMILY_SITTING_FIELD) === "1" && liveSitting !== null;
   const typed = readRegistrationForm(form, locale);
   const input = familyMode && liveSitting ? { ...typed, email: liveSitting.email, emailConfirm: undefined } : typed;
-  // The same address as the sitting on this browser continues it; another address starts its own.
-  const continuing = liveSitting !== null && sameMailbox(liveSitting.email, input.email);
+  /*
+    The same address as the sitting on this browser continues it, and only on the form «Da, încă o
+    persoană» opened (§NNN: no sitting without a press). A second plain form from the same browser
+    is a first form again: its email is its own, nothing of the earlier one is held or merged.
+  */
+  const continuing = familyMode && liveSitting !== null && liveSitting.joined === true && sameMailbox(liveSitting.email, input.email);
   let sittingId: string | null = null;
+  let seed: SittingSeed | null = null;
 
   try {
     /*
@@ -157,11 +164,15 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
-        // Every public form is a sitting's (§519): its email leaves at once (§NNN), and a next form merges with it.
-        sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null },
+        /*
+          Every public form may begin a sitting (§519). Before «Da» it is an ordinary form that only
+          hands back what «Da» would take in (§NNN); after it, its messages wait for «Gata» or the window.
+        */
+        sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null, joined: continuing },
       },
     );
     sittingId = result.sittingId ?? (continuing ? (liveSitting?.sittingId ?? null) : null);
+    seed = continuing ? null : (result.sittingSeed ?? null);
   } catch (error) {
     if (isDomainError(error)) {
       // Field names, never values: nothing a participant typed goes into a URL, which is
@@ -214,18 +225,22 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
   const minutes = (await currentDeadlines(db)).familySittingMinutes;
-  // At a window of 0 there is no sitting (§519): the cookie only keeps the address for the next person.
+  // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
   const atOnce = minutes <= 0;
   /*
-    Always an id of one shape (§39): a sitting that held nothing — a re-send about somebody already
-    registered, the address at its limit — gets a random one that names no row. A sealed cookie
-    one uuid shorter would otherwise tell whoever typed a stranger's address which case it was.
-    The server finds nothing under it, so «Da» holds nothing and the next form opens its own.
+    Always an id of one shape (§39): before «Da» (§NNN), and a sitting that held nothing — a re-send
+    about somebody already registered, the address at its limit — get a random one that names no
+    row, and the seed seals to one length whatever it names (`family-sitting-cookie.ts`). A sealed
+    cookie one uuid shorter would otherwise tell whoever typed a stranger's address which case it
+    was. The server finds nothing under a random id: «Gata» releases nothing, and «Da» opens the
+    sitting from the seed or, with none, lets the next form open its own.
   */
   const heldUntil = sittingCookieUntil(now, minutes);
   await writeFamilySittingCookie(
     {
       sittingId: sittingId ?? randomUUID(),
+      seed,
+      joined: continuing,
       eventId: publicEvent.id,
       email: input.email.trim(),
       people: typedPerson.people,
@@ -242,7 +257,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   // greets the person by first name while it does. Its own short-lived sealed cookie, never
   // the URL: nothing typed goes into one (§14.5).
   // At a window of 0 (§519) each person's email left on its own: the last screen must not promise one.
-  // It lives as long as the sitting's cookie (§519), so the screen keeps its facts while it offers the next person.
+  // It lives as long as the sitting's cookie (§519), so the screen keeps its facts when «Gata» fires by itself.
   await stashSubmittedFacts(
     { email: input.email.trim(), firstName: input.firstName, names, atOnce },
     path,
@@ -252,28 +267,37 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
 }
 
 /**
- * «Nu mai înscriu pe nimeni» on the next form of a sitting (§NNN; once «Gata» on the screen after the
- * form, §519): what «Da» held leaves now, and this browser's sitting ends. The screen after it says to
- * open the inbox, and asks nothing more. Pressed with no sitting — the window had passed, or the
- * sitting held nothing — it is the same screen: the email left, or is leaving, by itself (§39: the
- * answer never depends on what the address holds).
+ * «Gata — trimite emailul» (§519): the sitting's one email leaves now, and this browser's sitting
+ * ends. The screen after it is the one that says to open the inbox. Pressed with no sitting — the
+ * window had passed, or the sitting held nothing — it is the same screen: the email left, or is
+ * leaving, by itself (§39: the answer never depends on what the address holds). Since §NNN it is on
+ * the sitting's screen only, after «Da»: the first form's screen has nothing to release.
  */
 export async function releaseFamilySittingAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));
   const slug = text(form, "slug");
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
   const sitting = await readFamilySittingCookie();
+  /*
+    The open screen's own press at the window's end (`PressWhenWindowEnds`, §519): with the browser's
+    half already gone — a phone slower than the cookie's grace — it does nothing and stays where it
+    is. The server releases the sitting at its `held_until` anyway; nothing depends on this press.
+  */
+  if (!sitting && form.get(AUTO_PRESS_FIELD) === "1") return;
   if (sitting?.sittingId) await releaseFamilySitting(getDb(), sitting.sittingId, new Date());
   await clearFamilySittingCookie(path);
   redirect(`${path}?submitted=1&${SITTING_SENT_PARAM}=1`);
 }
 
 /**
- * «Da, încă o persoană» (§519, §NNN): the one press that holds. A press, never a link — the email that
- * has not left yet waits for the next form, until the club's window from now, on the server's row and
- * every message it still has waiting (`continueFamilySitting`) and on this browser's half; then the
- * same form opens with the address fixed. The form's page says how long is left. A sitting past its
- * window opens the ordinary form, as a lapsed one always did (§39: the same screens).
+ * «Da, încă o persoană» (§519; §NNN: the press that opens the sitting). A press, never a link. The
+ * first time, it opens the sitting from the first form's seed and holds that form's email when it has
+ * not left yet; after that, it starts the club's window again from now (the review of 2026-09-27: the
+ * window lapsed under the parent's hands while the next form was open) — on the server's row and
+ * every message it holds (`continueFamilySitting`) and on this browser's half, which from now on
+ * marks the forms as the sitting's (`joined`). Then the same form opens with the address fixed; its
+ * page says how long is left. A sitting whose email has already left opens the ordinary form, as a
+ * lapsed one always did (§39: the same screens).
  */
 export async function continueFamilySittingAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));
@@ -285,11 +309,23 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
   const event = await findPublishedEventBySlug(db, locale, slug);
   if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
     const deadlines = await currentDeadlines(db);
-    if (!sitting.atOnce && sitting.sittingId) await continueFamilySitting(db, sitting.sittingId, familySittingHeldUntil(now, deadlines), now);
+    const opened =
+      !sitting.atOnce && deadlines.familySittingMinutes > 0
+        ? await continueFamilySitting(
+            db,
+            { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
+            familySittingHeldUntil(now, deadlines),
+            now,
+          )
+        : null;
     const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
     await writeFamilySittingCookie(
       {
         ...sitting,
+        // One shape whatever happened (§39): the sitting, or a random id; the seed spent either way.
+        sittingId: opened ?? sitting.sittingId ?? randomUUID(),
+        seed: null,
+        joined: true,
         heldUntil,
         // Read afresh with the window (§519): a «Termene» change mid-sitting leaves no stale flag.
         atOnce: deadlines.familySittingMinutes <= 0,

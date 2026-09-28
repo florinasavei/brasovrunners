@@ -3840,7 +3840,7 @@
           "raceWeekDays": "The homepage countdown starts (days before)",
           "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
           "publicListDays": "The public participant list stays up after the event (days)",
-          "familySittingMinutes": "A family's email waits for the next form at most (minutes)"
+          "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
@@ -3851,7 +3851,7 @@
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
-          "familySittingMinutes": "Only after “Yes, one more person”: the email that has not left yet waits for the next form, so the family gets one. 0 = each person gets their own email."
+          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5236,6 +5236,8 @@
       "heading": "Almost there!",
       "headingNamed": "Almost there, {name}!",
       "lead": "We have emailed you a link to confirm your place at {event}, {date}.",
+      "leavesNow": "The email leaves now.",
+      "leavesAt": "The email leaves at {at} (the next scheduled round).",
       "nextTitle": "What happens next",
       "next": {
         "open": {
@@ -5256,7 +5258,7 @@
       "delayScheduled": "Emails leave on the platform's scheduled round, so it arrives within {wait} at the most.",
       "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
       "backToEvent": "Back to the event",
-      "family": "The newest email covers everybody — {names} — with one button for every registration.",
+      "family": "One email, for everybody: {names}.",
       "familyEach": "Each person gets their own email."
     },
     "deliveryNotice": {
@@ -5506,20 +5508,30 @@
     "botCheckExpired": "The check expired — it is being redone; we send the form ourselves as soon as it answers; no need to press again.",
     "botCheckValve": "Sending without the automatic check…",
     "sitting": {
+      "lead": "The form is in, for {event}.",
+      "leadNamed": "{name}'s form for {event} is in.",
+      "when": "The email leaves when you press “Done”, or by itself {window} after your last press — {left} left.",
+      "alreadySent": "This person's email has already left: you will find it in your inbox.",
+      "soFar": "Sent so far, with the address",
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
       "addPending": "Opening the form…",
-      "addHint": "If you press “Yes”, the email that has not left yet waits for the next form, {window} at most, so you get one email for everybody.",
+      "addHint": "If yes, we hold the email and send it once, for everybody.",
       "addHintAtOnce": "Each person gets their own email, as soon as you send their form.",
+      "done": "No, done — send me the email",
+      "doneAtOnce": "No, I am done",
+      "donePending": "Sending…",
+      "oneEmail": "You get one email for everybody above, with one button: you confirm the address and every registration at once.",
+      "wizard": "You sign the declarations right away, one after the other, on the same page; each person then gets their own QR code.",
+      "pageClosed": "With the page closed, the email leaves at the first check after the deadline: usually within a quarter of an hour, at night within an hour.",
       "addressLabel": "Email address (the same as for the person before)",
       "addressHelp": "Every message for this person comes here too.",
       "formTitle": "One more person with the same address",
       "formSoFar": "So far: {names}. Fill in the new person's details — the address stays the same.",
-      "formLeft": "If the email for the people above has not left yet, it waits for this form, so you get one email for everybody. If you do not send it, it leaves by itself in {minutes}.",
+      "formLeft": "The email for the people above leaves by itself in {minutes}, unless you send this form before then.",
       "formAtOnce": "This person's email leaves as soon as you send the form.",
-      "formStop": "I am not registering anyone else — send the email",
-      "formStopPending": "Sending…",
-      "sameBirthDate": "The form for {name} was not kept: it has the same date of birth as {kept}, sent already. Did you mean to correct the name? Reply to the email and we will correct it. For a twin, send the form from another email address, or write to us and we will register them."
+      "formBack": "I am not registering anyone else — back to “Done”",
+      "sameBirthDate": "The form for {name} was not kept: it has the same date of birth as {kept}, sent already. The list below is the one in the email. Did you mean to correct the name? Reply to the email and we will correct it. For a twin, send the form from another email address, or write to us and we will register them."
     }
   },
   "Registrations": {

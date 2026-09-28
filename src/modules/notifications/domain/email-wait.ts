@@ -48,3 +48,22 @@ export function nextOutboxTick(input: {
   const floor = minimumIntervalEnd(lastRunAt, intervalMinutes);
   return floor.getTime() > tick.getTime() ? onGrid(floor) : tick;
 }
+
+/**
+ * When a message queued now leaves, as the screen after the registration form says it (§NNN; the
+ * owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas…?»): null under `immediate` — the
+ * request sends it — else the pinger call the outbox job is next expected at (`nextOutboxTick`). A
+ * public page never reads the job's history, so with a minimum interval in force (§334, §447) the
+ * interval is counted from now: the latest the call can be, never a time that comes and goes first.
+ */
+export function emailLeavesAt(input: {
+  timing: DeliveryTiming;
+  now: Date;
+  pingerMinutes: number;
+  intervalMinutes: number;
+  governorFloorMinutes: number;
+}): Date | null {
+  if (input.timing === "immediate") return null;
+  const interval = Math.max(input.intervalMinutes, input.governorFloorMinutes);
+  return nextOutboxTick({ now: input.now, pingerMinutes: input.pingerMinutes, intervalMinutes: interval, lastRunAt: interval > 0 ? input.now : null });
+}
