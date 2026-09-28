@@ -12,8 +12,6 @@ import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { publicFormEvent } from "@/modules/registrations/public-form-event";
 import { continueFamilySittingAndReserve, type FamilyPlace, submitRegistration } from "@/modules/registrations/service";
-import { computeFamilyReservationExpiry } from "@/modules/registrations/domain/hold-deadlines";
-import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { botCheckIsOn, honeypotIsOn } from "@/modules/registrations/bot-check";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { BOT_CHECK_SIGNAL_FIELD, botCheckSignalsFrom, TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
@@ -35,6 +33,7 @@ import {
   sittingCookieUntil,
   sittingNames,
   sittingSharedValues,
+  isNewSittingPerson,
   withLatestPlace,
   withPlace,
   withSittingPerson,
@@ -136,6 +135,15 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   let sittingId: string | null = null;
   let seed: SittingSeed | null = null;
   let sittingPlace: FamilyPlace | null = null;
+  let reservedUntil: Date | null = null;
+  /*
+    Whether this form names a new person of the sitting (§NNN), by this browser's own list: only such a
+    form takes a place — its registration's, or a held one where it wrote none — and a correction of a
+    name typed before keeps the place it had (`withSittingPerson`).
+  */
+  const priorPeople = continuing && liveSitting ? liveSitting.people : [];
+  const typedPerson = withSittingPerson(priorPeople, { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
+  const newPerson = continuing && isNewSittingPerson(priorPeople, typedPerson);
 
   try {
     /*
@@ -175,12 +183,19 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
           Every public form may begin a sitting (§519). Before «Da» it is an ordinary form that only
           hands back what «Da» would take in (§536); after it, its messages wait for «Gata» or the window.
         */
-        sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null, joined: continuing },
+        sitting: {
+          id: continuing ? (liveSitting?.sittingId ?? null) : null,
+          joined: continuing,
+          newPerson,
+          people: priorPeople.length,
+          reservedUntil: continuing ? (liveSitting?.reservedUntil ?? null) : null,
+        },
       },
     );
     sittingId = result.sittingId ?? (continuing ? (liveSitting?.sittingId ?? null) : null);
     seed = continuing ? null : (result.sittingSeed ?? null);
     sittingPlace = continuing ? (result.sittingPlace ?? null) : null;
+    reservedUntil = continuing ? (result.reservedUntil ?? null) : null;
   } catch (error) {
     if (isDomainError(error)) {
       // Field names, never values: nothing a participant typed goes into a URL, which is
@@ -229,13 +244,11 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     server moved to the same instant. Everything from this browser's own forms (§39).
   */
   const prior = continuing && liveSitting ? liveSitting : null;
-  const typedPerson = withSittingPerson(prior?.people ?? [], { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
-  // The place this form got (§NNN): reserved, the waiting list once the address is confirmed, or none where it wrote no registration.
-  if (continuing && !typedPerson.sameBirthDate) typedPerson.people = withLatestPlace(typedPerson.people, sittingPlace);
+  // The place a new person's form got (§NNN): reserved, or the waiting list once the address is confirmed — the same whatever the address holds (§39).
+  if (newPerson) typedPerson.people = withLatestPlace(typedPerson.people, sittingPlace ?? undefined);
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
-  const deadlines = await currentDeadlines(db);
-  const minutes = deadlines.familySittingMinutes;
+  const minutes = (await currentDeadlines(db)).familySittingMinutes;
   // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
   const atOnce = minutes <= 0;
   /*
@@ -267,8 +280,12 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       emailLeavesAt,
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
-      // Until when the sitting's places are reserved (§NNN): from the club's settings and the event, the same for every address (§39).
-      reservedUntil: continuing && !atOnce ? familyReservedUntil(publicEvent, heldUntil, deadlines) : null,
+      /*
+        Until when the sitting's places are reserved (§NNN): the sitting's fixed deadline, as the server
+        wrote it at the opening «Da» or at the form that opened a new sitting after it — the first form's
+        instant, the club's window and hold, the event's close and start: the same for every address (§39).
+      */
+      reservedUntil: continuing && !atOnce ? (reservedUntil ?? prior?.reservedUntil ?? null) : null,
     },
     path,
     now,
@@ -331,30 +348,32 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     const deadlines = await currentDeadlines(db);
     const holding = !sitting.atOnce && deadlines.familySittingMinutes > 0;
     /*
-      The press that opens the sitting also reserves the first form's place (§NNN), taken into the
-      sitting now, until the club's hold after the window's end. A later press reserves and lengthens
-      nothing (`continueFamilySittingAndReserve`): only a form, which passes the bot check, does.
+      The press that opens the sitting — the first on this browser — fixes the sitting's deadline (§NNN):
+      the end of the first form's window, which this half carries (`heldUntil`, written by that form),
+      plus the club's hold; and gives the first form its place. A later press reserves and lengthens
+      nothing (`continueFamilySittingAndReserve`).
     */
+    const opening = sitting.joined !== true;
     const continued = holding
         ? await continueFamilySittingAndReserve(
             db,
             { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
             familySittingHeldUntil(now, deadlines),
             now,
+            opening ? { firstWindowEnd: sitting.heldUntil } : null,
           )
         : null;
     const opened = continued?.sittingId ?? null;
     // The names this browser lists name only the people the sitting's email covers (`peopleAfterYes`).
     const { people: listed, seedSpent } = peopleAfterYes({ holding, seed: sitting.seed, opened, people: sitting.people });
     /*
-      Each person's place as this press leaves it (§NNN; the review of 2026-09-28, round two). Only the
-      press that opens the sitting changes one: the first form's, reserved, the waiting list when none
-      was free, or none at all when that form wrote no registration (a kept form, §446) — the public
-      count took none, so the screen names none. A later press changes no place and no deadline, so the
-      people and the deadline this browser already holds stay true as they are.
+      Each person's place as this press leaves it (§NNN). Only the press that opens the sitting changes
+      one: the first form's, reserved — its registration's, or a held place where it wrote none (a kept
+      form, §446; a person the address already holds) — or the waiting list when none was free: the same
+      words for every address (§39). A later press changes no place and no deadline.
     */
-    const opening = continued?.opened === true && sitting.seed !== null;
-    const people = opening && listed.length > 0 ? [withPlace(listed[0], continued?.places[0] ?? null), ...listed.slice(1)] : listed;
+    const firstPlace = opening ? continued?.place : null;
+    const people = firstPlace && listed.length > 0 ? [withPlace(listed[0], firstPlace), ...listed.slice(1)] : listed;
     const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
     await writeFamilySittingCookie(
       {
@@ -369,8 +388,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
         atOnce: deadlines.familySittingMinutes <= 0,
         windowMinutes: deadlines.familySittingMinutes,
         sameBirthDate: null,
-        // The opening press's deadline, the club's hold after this window, capped by the event; a later press keeps the last form's.
-        reservedUntil: !holding ? null : opening ? familyReservedUntil(event, heldUntil, deadlines) : (sitting.reservedUntil ?? null),
+        // The sitting's fixed deadline (§NNN): written by the opening press; a later press keeps it as it is.
+        reservedUntil: !holding ? null : opening ? (continued?.reservedUntil ?? null) : (sitting.reservedUntil ?? null),
       },
       path,
       now,
@@ -391,17 +410,6 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     }
   }
   redirect(`${path}?${FAMILY_SITTING_PARAM}=1`);
-}
-
-/**
- * Until when a family sitting's places are reserved (§NNN): the club's hold after the window's end,
- * capped by the event's close and start — the instant the server wrote on the rows, worked out here
- * from the same public facts so the browser's half reads the same for every address (§39).
- */
-function familyReservedUntil(event: { registrationClosesAt: Date | null; startsAt: Date | null }, heldUntil: Date, deadlines: Deadlines): Date {
-  // A start to be announced takes no registration at all (§533); the hold alone then, uncapped.
-  const eventStartsAt = event.startsAt ?? new Date(heldUntil.getTime() + 24 * 60 * 60_000);
-  return computeFamilyReservationExpiry({ from: heldUntil, registrationClosesAt: event.registrationClosesAt, eventStartsAt, deadlines });
 }
 
 /** The same mailbox, as the address's identity compares them (§10.4); a typo is simply another address. */

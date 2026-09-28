@@ -1955,8 +1955,14 @@
         "few": "{count} places reserved by families",
         "other": "{count} places reserved by families"
       },
-      "familyQueued": "reserved; the deadline runs from when the family's email leaves",
-      "familyUntil": "reserved until {until}"
+      "familyQueued": "reserved until {until}, a deadline fixed by the family's first form; the family's email has not left yet and does not move it",
+      "familyQueuedNoDeadline": "reserved; the family's email has not left yet",
+      "familyUntil": "reserved until {until}",
+      "familyHeld": {
+        "one": "{count} place held by a family for a form with no registration, until the family's deadline",
+        "few": "{count} places held by families for forms with no registration, until their deadlines",
+        "other": "{count} places held by families for forms with no registration, until their deadlines"
+      }
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -5787,7 +5793,8 @@
       "untilOn": "until {at}",
       "placeReserved": "place reserved",
       "placeWaitlist": "on the waiting list, once confirmed",
-      "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all."
+      "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all.",
+      "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then."
     }
   },
   "Registrations": {

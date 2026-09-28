@@ -56,7 +56,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const rows = await listQueueForEvent(db, event.id, now);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
   // A family's reserved places count as held (§NNN): the same count the public page and the allocator read.
-  const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + counts.familyReservations;
+  const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + counts.familyReservations + counts.familyPlaceHolds;
   const reserved = await listFamilyReservationsForEvent(db, event.id, now);
   const family = await familyOf(db, reserved);
   /*
@@ -108,7 +108,8 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
       {/*
         The places families reserved at their forms (§NNN; the owner, 2026-09-28: «să rezerv 3 locuri și
         așa să se calculeze pe site»): each person, the family marker, and until when the place is held —
-        or that it holds until the family's one email has left.
+        and whether the family's one email is still queued, which moves nothing: the deadline is the
+        sitting's, fixed by its first form.
       */}
       {reserved.length > 0 && (
         <Box sx={{ mb: 2 }} data-testid="queue-family-reservations">
@@ -132,12 +133,22 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                 <Chip
                   size="small"
                   color="warning"
-                  label={row.emailQueued || !row.holdExpiresAt ? t("queue.familyQueued") : t("queue.familyUntil", { until: when(row.holdExpiresAt) })}
+                  label={row.holdExpiresAt === null ? t("queue.familyQueuedNoDeadline") : t(row.emailQueued ? "queue.familyQueued" : "queue.familyUntil", { until: when(row.holdExpiresAt) })}
                 />
               </Box>
             ))}
           </Box>
         </Box>
+      )}
+      {/*
+        The places family sittings hold for forms that wrote no registration (§NNN; §39): counted like a
+        reservation, naming nobody, until the sitting's deadline or its email's confirmation.
+      */}
+      {counts.familyPlaceHolds > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 0.75 }} data-testid="queue-family-place-holds">
+          <FamilyRestroomIcon fontSize="small" aria-hidden="true" />
+          {t(`queue.familyHeld.${countForm(counts.familyPlaceHolds, locale)}`, { count: counts.familyPlaceHolds })}
+        </Typography>
       )}
 
       <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>

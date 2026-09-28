@@ -1,5 +1,7 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { and, eq } from "drizzle-orm";
 import { type Participant, participants } from "@/db/schema/participants";
+import { familyPlaceHolds, familySittings } from "@/db/schema/family-entries";
 import type {
   Registration,
   RegistrationKind,
@@ -41,7 +43,8 @@ import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeWa
 import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistRoom } from "./domain/waitlist";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
-import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
+import { allowedFromStatuses, holdsAPlace, isActiveStatus } from "./domain/state-machine";
+import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
@@ -59,7 +62,7 @@ import {
   sittingHasMessageToLeave,
   sittingPendingRegistrations,
 } from "./family-sitting";
-import { familyHeldDeclaration, SITTING_AT_CAP, SITTING_HELD, type SittingSeed, sittingEntryFor } from "./domain/family-sitting";
+import { familyHeldDeclaration, PRESS_SLOT, SITTING_AT_CAP, SITTING_HELD, type SittingSeed, sittingEntryFor } from "./domain/family-sitting";
 import { publicFormEvent } from "./public-form-event";
 import { sameRunner } from "./domain/name-key";
 import { addressHasRoom } from "./domain/address-cap";
@@ -389,10 +392,11 @@ export type FamilyPlace = "reserved" | "waitlist";
  * the row, is counted by `countOccupied`, so the public count and «12 înscriși din 50 de locuri» drop
  * at once. Only through the allocator's own opening (`placeForNewcomer`), under the event's lock:
  * with no place free the form reserves nothing and the person joins the waiting list when the
- * address is confirmed, which the screen and the email say. A reservation this registration already
- * holds is left as it is: only a form lengthens the sitting's reservations (`finishSitting`), never a
- * press. A single registration never comes here: it takes its place when its address is confirmed,
- * as before.
+ * address is confirmed, which the screen and the email say. The deadline is the sitting's own
+ * (`family_sittings.reserved_until`): the first form's instant, the club's window and hold — written
+ * once, and moved by nothing afterwards (the review of 2026-09-28, round three). A reservation this
+ * registration already holds is left as it is. A single registration never comes here: it takes its
+ * place when its address is confirmed, as before.
  */
 async function reserveFamilyPlace<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -409,68 +413,114 @@ async function reserveFamilyPlace<T extends Record<string, unknown>>(
 }
 
 /**
- * The registrations of a sitting «Da» has just opened given their reservation (§NNN), under the
- * event's lock: reserved while a place is free, in the order their forms were sent — in practice the
- * first form's, which was an ordinary form until this press (§536). Returns each person's place, in
- * the sitting's order.
+ * A place held for a family sitting's form that wrote no registration (§NNN, the review of 2026-09-28,
+ * round three; §39, AGENTS.md §19.4): a kept form, a person the address already holds, an address at
+ * the club's limit with registrations made elsewhere, or the opening «Da» of a sitting whose first form
+ * wrote none. Through the allocator's own opening (`placeForNewcomer`), under the event's lock, as a
+ * fresh address's form reserves its registration's place, and until the same deadline — so the public
+ * count drops by one for such a form exactly as for a fresh address, and «N înscriși din M» says
+ * nothing about what the address holds. With no place free it holds nothing and reads «pe lista de
+ * așteptare», as a fresh address's form would. A hold already there under the same slot is kept.
  */
-async function reserveSittingPlaces<T extends Record<string, unknown>>(
+async function holdFamilyPlace<T extends Record<string, unknown>>(
   db: Transaction<T>,
   event: LockedEventForRegistration,
-  registrationIds: readonly string[],
+  hold: { sittingKey: string; slot: string },
   now: Date,
   settings: Deadlines,
   until: Date,
-): Promise<Map<string, FamilyPlace>> {
-  const places = new Map<string, FamilyPlace>();
-  if (registrationIds.length === 0) return places;
-  const waiting = await db
-    .select({ id: registrations.id })
-    .from(registrations)
-    .where(and(inArray(registrations.id, [...registrationIds]), eq(registrations.status, "PENDING_EMAIL_CONFIRMATION")));
-  const pending = new Set(waiting.map((row) => row.id));
-  for (const id of registrationIds) {
-    if (pending.has(id)) places.set(id, await reserveFamilyPlace(db, event, id, now, settings, until));
+): Promise<FamilyPlace> {
+  const already = await db
+    .select({ id: familyPlaceHolds.id })
+    .from(familyPlaceHolds)
+    .where(and(eq(familyPlaceHolds.sittingKey, hold.sittingKey), eq(familyPlaceHolds.slot, hold.slot)))
+    .limit(1);
+  if (already.length > 0) return (await repo.liveFamilyPlaceHolds(db, hold.sittingKey, now)).count > 0 ? "reserved" : "waitlist";
+  const { free } = await placeForNewcomer(db, event, now, settings);
+  if (!free) return "waitlist";
+  return (await repo.writeFamilyPlaceHold(db, { eventId: event.id, sittingKey: hold.sittingKey, slot: hold.slot, until }, now)) ? "reserved" : "waitlist";
+}
+
+/**
+ * The first form's place at the press that opens the sitting (§NNN): its registration's reservation
+ * while it waits for the address; the place it already holds, or the waiting list it is on, when the
+ * address is verified; and otherwise — a kept form, a person the address already holds, a first form
+ * that wrote nothing — a held place (`holdFamilyPlace`, the press's own slot). Every address reads
+ * the same (§39).
+ */
+async function placeOfFirstForm<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  event: LockedEventForRegistration,
+  first: { registrationId: string | null; sittingKey: string | null },
+  now: Date,
+  settings: Deadlines,
+  until: Date,
+): Promise<FamilyPlace | null> {
+  if (first.registrationId) {
+    const [row] = await tx.select({ status: registrations.status }).from(registrations).where(eq(registrations.id, first.registrationId)).limit(1);
+    if (row?.status === "PENDING_EMAIL_CONFIRMATION") return reserveFamilyPlace(tx, event, first.registrationId, now, settings, until);
+    if (row?.status === "WAITLISTED") return "waitlist";
+    if (row && holdsAPlace(row.status)) return "reserved";
   }
-  return places;
+  if (!first.sittingKey) return null;
+  return holdFamilyPlace(tx, event, { sittingKey: first.sittingKey, slot: PRESS_SLOT }, now, settings, until);
 }
 
 /**
  * «Da, încă o persoană» (§536) with the family's reservations (§NNN): the sitting opened or its window
- * started again (`continueFamilySitting`). The press that opens the sitting then reserves, under the
- * event's lock, the first form's place — an ordinary form until this press — until the club's hold
- * after the window's end.
+ * started again (`continueFamilySitting`).
  *
- * Any later press reserves nothing and lengthens nothing (the review of 2026-09-28, round two). A
- * press passes no bot check, and it starts the window again; were it to move the reservations too, one
- * form and a press every few minutes would hold a place with no inbox proof for as long as the presses
- * went on — the very thing a single registration is refused (it reserves nothing before its address is
- * confirmed). So a reservation's deadline is written only by a form, which passes the bot check, and
- * once by the opening press, which comes within the first form's own window: the club's window and
- * hold after the last of them. The email a later press holds back does not keep the places past that
- * deadline either (`repository.ts#familyReservationAwaitingItsEmail`), nor does its send
- * (`lengthenReservationsFromSend`). Returns the sitting, whether this press opened it, the deadline
- * the opening press wrote and each person's place; a later press returns no place and no deadline.
+ * **The press that opens the sitting** (`opening`, the first press on this browser) fixes the
+ * sitting's deadline: the first form's instant plus the club's window — the end of the first form's
+ * window, which the browser's half carries (`firstWindowEnd`), never later than this press's own —
+ * plus the club's declaration hold, capped by the close and the start. Written once on the sitting,
+ * and on every place the sitting reserves; nothing moves it afterwards, not a form, not a press, not
+ * the email's send (the review of 2026-09-28, round three). Then, under the event's lock, it gives the
+ * first form its place (`placeOfFirstForm`) — a held one when that form wrote no registration, under
+ * the sitting's id or, with no sitting row, the random id the browser carries.
+ *
+ * **A later press** reserves nothing and lengthens nothing: a press passes no bot check. Past the
+ * deadline it no longer holds the sitting's email back either, and the next form opens a new sitting.
+ *
+ * Returns the sitting, whether this press opened it, the deadline and the first form's place; a later
+ * press returns no place and no deadline.
  */
 export async function continueFamilySittingAndReserve<T extends Record<string, unknown>>(
   db: Database<T>,
   press: Parameters<typeof continueFamilySitting>[1],
   heldUntil: Date,
   now: Date,
-): Promise<{ sittingId: string | null; opened: boolean; reservedUntil: Date | null; places: FamilyPlace[] }> {
-  const continued = await continueFamilySitting(db, press, heldUntil, now);
-  if (!continued) return { sittingId: null, opened: false, reservedUntil: null, places: [] };
-  const { sittingId, opened } = continued;
-  if (!opened) return { sittingId, opened, reservedUntil: null, places: [] };
+  opening: { firstWindowEnd: Date } | null = null,
+): Promise<{ sittingId: string | null; opened: boolean; reservedUntil: Date | null; place: FamilyPlace | null }> {
+  if (!opening) {
+    const continued = await continueFamilySitting(db, press, heldUntil, now, heldUntil);
+    return { sittingId: continued?.sittingId ?? null, opened: continued?.opened ?? false, reservedUntil: null, place: null };
+  }
   const settings = await currentDeadlines(db);
+  const [event] = await db
+    .select({ registrationClosesAt: events.registrationClosesAt, startsAt: events.startsAt })
+    .from(events)
+    .where(eq(events.id, press.eventId))
+    .limit(1);
+  const from = new Date(Math.min(opening.firstWindowEnd.getTime(), heldUntil.getTime()));
+  const until = computeFamilyReservationExpiry({
+    from,
+    registrationClosesAt: event?.registrationClosesAt ?? null,
+    // A start to be announced takes no registration (§533); the hold alone then.
+    eventStartsAt: event?.startsAt ?? new Date(from.getTime() + 24 * 60 * 60_000),
+    deadlines: settings,
+  });
+  const continued = await continueFamilySitting(db, press, heldUntil, now, until);
   return db.transaction(async (tx) => {
     const locked = await repo.lockEventForCapacity(tx, press.eventId);
-    const sitting = await findSittingById(tx, sittingId);
-    if (!locked || !sitting) return { sittingId, opened, reservedUntil: null, places: [] };
+    const sitting = continued ? await findSittingById(tx, continued.sittingId) : undefined;
+    const sittingKey = sitting?.id ?? (press.sittingId && isUuid(press.sittingId) ? press.sittingId : null);
+    const reservedUntil = sitting?.reservedUntil ?? until;
+    if (!locked) return { sittingId: continued?.sittingId ?? null, opened: continued?.opened ?? false, reservedUntil: null, place: null };
     const lockedEvent = withLockedRow(publicFormEvent(locked, locked.publishedAt), locked);
-    const until = computeFamilyReservationExpiry({ from: heldUntil, registrationClosesAt: lockedEvent.registrationClosesAt, eventStartsAt: lockedEvent.startsAt, deadlines: settings });
-    const places = await reserveSittingPlaces(tx, lockedEvent, sitting.registrationIds, now, settings, until);
-    return { sittingId, opened, reservedUntil: until, places: [...places.values()] };
+    const seedRegistration = press.seed?.kind === "registration" && sitting?.registrationIds.includes(press.seed.id) ? press.seed.id : null;
+    const place = await placeOfFirstForm(tx, lockedEvent, { registrationId: seedRegistration, sittingKey }, now, settings, reservedUntil);
+    return { sittingId: continued?.sittingId ?? null, opened: continued?.opened ?? false, reservedUntil, place };
   });
 }
 
@@ -1007,11 +1057,10 @@ export type SubmitRegistrationResult = {
    */
   sittingSeed?: SittingSeed | null;
   /**
-   * A family sitting's form (§NNN): the place the registration it wrote got — `reserved`, or
-   * `waitlist` once the address is confirmed — or null where it wrote none (outside a sitting too), and
-   * until when the sitting's places are reserved (the club's settings and the event). Only for the
-   * action's sealed cookie. Null names no place on the screen, as the public count took none (the §39
-   * trade-off, in the decision).
+   * A family sitting's form (§NNN): the place this form got — `reserved` (its registration's
+   * reservation, or a held place when it wrote no registration), or `waitlist` once the address is
+   * confirmed — and the sitting's fixed deadline. Only for the action's sealed cookie. Null outside a
+   * sitting, and for a correction of a person typed before, whose place is the one they had.
    */
   sittingPlace?: FamilyPlace | null;
   reservedUntil?: Date | null;
@@ -1082,7 +1131,19 @@ export type RegistrationOrigin = {
    * Everything else — a re-send about a registration outside the sitting, the address at the
    * limit, a verified runner's restart — is sent at once, as without a sitting.
    */
-  sitting?: { id: string | null; joined: boolean };
+  sitting?: {
+    id: string | null;
+    joined: boolean;
+    /**
+     * The form names a person this browser has not typed in the sitting yet (§NNN,
+     * `isNewSittingPerson`): only such a form takes a place, a correction keeps the one it had.
+     */
+    newPerson?: boolean;
+    /** How many people this browser sent in the sitting before this form (§NNN): the club's limit counts them. */
+    people?: number;
+    /** The sitting's deadline as the browser's sealed half carries it (§NNN), for a sitting no row carries yet. */
+    reservedUntil?: Date | null;
+  };
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
@@ -1629,32 +1690,63 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const heldUntil = familySittingHeldUntil(now, settings);
     const lockedEvent = withLockedRow(event, locked);
     /*
-      A family's reservations (§NNN) last the club's hold after the sitting's window ends — while the
-      one email is held they hold anyway (`familyReservationAwaitingItsEmail`), and its send moves them
-      to the hold from that instant (`extendSittingLinks`).
+      The id the browser's half carries (§519): the sitting's, or a random one before any sitting row
+      exists — under which the opening «Da» of a first form that wrote nothing held its place (§NNN,
+      `family_place_holds`). A form that opens a sitting while such holds are live opens it under that
+      id, adopting them and their deadline.
     */
-    const reservationUntil = computeFamilyReservationExpiry({
-      from: heldUntil,
-      registrationClosesAt: lockedEvent.registrationClosesAt,
-      eventStartsAt: lockedEvent.startsAt,
-      deadlines: settings,
-    });
+    const cookieKey = inSitting && origin.sitting?.id && isUuid(origin.sitting.id) ? origin.sitting.id : null;
+    // The browser's random id, when no sitting row has it yet: a sitting this form opens takes it, and the holds under it.
+    const unusedKey = inSitting && !sitting && cookieKey && !(await findSittingById(tx, cookieKey)) ? cookieKey : null;
+    // The deadline the opening press wrote into the browser's half (sealed, §39), while no sitting row carries it.
+    const pressDeadline = unusedKey && origin.sitting?.reservedUntil && origin.sitting.reservedUntil.getTime() > now.getTime() ? origin.sitting.reservedUntil : null;
+    /*
+      The sitting's reservation deadline (§NNN, the review of 2026-09-28, round three): fixed when the
+      sitting opens — the first form's instant, the club's window and hold, capped by the close and the
+      start — and moved by nothing afterwards: every later form's place expires at that same instant. A
+      sitting the opening press could not open (its first form wrote nothing) carries it in the browser's
+      half until a form opens one. A form that opens a new sitting past it fixes its own from now.
+    */
+    const reservationUntil =
+      sitting?.reservedUntil ??
+      pressDeadline ??
+      computeFamilyReservationExpiry({
+        from: heldUntil,
+        registrationClosesAt: lockedEvent.registrationClosesAt,
+        eventStartsAt: lockedEvent.startsAt,
+        deadlines: settings,
+      });
+    /** A sitting this form opens (§519), with the deadline above and, while no row has it, the browser's id. */
+    const newSitting = (registrationId: string) =>
+      openSitting(tx, {
+        ...(unusedKey ? { id: unusedKey } : {}),
+        eventId: event.id,
+        participantId: participant.id,
+        registrationId,
+        locale: input.locale,
+        heldUntil,
+        reservedUntil: reservationUntil,
+        now,
+      });
     /** Every public path below ends here: the sitting's window moves on, and the browser keeps its id. */
     const finishSitting = async () => {
       if (!inSitting) return;
-      /*
-        What the screen may say of this form (§NNN): the reservation's own outcome where this form
-        wrote a registration — a reserved place, or the waiting list — and nothing where it wrote none
-        (a kept form at the address's limit, a person the address already holds, a corrected form whose
-        person holds no place). The allocator's formula read as it stands said «loc rezervat» for a
-        place the public count never took (the review of 2026-09-28, round two); the count says what was
-        written anyway, so the screen says the same (the §39 trade-off, in the decision).
-      */
       reservedUntilResult = reservationUntil;
+      /*
+        A new person whose form wrote no registration (§NNN, the review of 2026-09-28, round three; §39,
+        AGENTS.md §19.4): a kept form at the address's limit, a person the address already holds, a
+        re-send. Such a form still takes one counted place — a held one, until the same deadline — so
+        the public count and the screen read exactly as for a fresh address, whose form would have
+        reserved its registration's place. A correction of a person typed before takes nothing more.
+      */
+      if (origin.sitting?.newPerson === true && placeResult === null) {
+        const sittingKey = sitting?.id ?? cookieKey;
+        if (sittingKey) placeResult = await holdFamilyPlace(tx, lockedEvent, { sittingKey, slot: randomUUID() }, now, settings, reservationUntil);
+      }
       if (!sitting) return;
       await settleSitting(tx, sitting, { heldUntil, recipientEmail: participant.deliveryEmail, now });
-      // The window moved on: every place the sitting reserved lasts the club's hold after its new end.
-      await repo.lengthenFamilyReservations(tx, sitting.registrationIds, reservationUntil, now);
+      // A sitting opened before the deadline was kept (§NNN): this form fixes it, once.
+      if (sitting.reservedUntil === null) await tx.update(familySittings).set({ reservedUntil: reservationUntil }).where(eq(familySittings.id, sitting.id));
       sittingResult = sitting.id;
     };
     const keptInSitting = sitting ? await liveSittingEntries(tx, sitting.id, now) : [];
@@ -1711,8 +1803,20 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       browser, so the refusal says nothing about the address (§39). A limit reached with registrations
       from elsewhere is still told to the address alone, by its email (§389).
     */
-    if (inSitting && sitting && decision.kind === "offerAnother" && atCap) {
-      const own = (await sittingPendingRegistrations(tx, sitting)).length + keptInSitting.length;
+    if (inSitting && decision.kind === "offerAnother" && atCap) {
+      /*
+        The sitting's own people: its registrations waiting for the address, and its held places — one
+        for each form that wrote no registration (a kept form among them), so an address that already
+        holds people is refused at the same form as a fresh one (§39).
+      */
+      const holdsKey = sitting?.id ?? cookieKey;
+      const written = (sitting ? (await sittingPendingRegistrations(tx, sitting)).length : 0) + (holdsKey ? (await repo.liveFamilyPlaceHolds(tx, holdsKey, now)).count : 0);
+      /*
+        …and never fewer than the people this browser sent in the sitting (its sealed half): on a full
+        event a form holds no place, so the rows alone would count a fresh address's waiting people and
+        not an address that already holds some. The larger of the two, so a replayed half bounds nothing less.
+      */
+      const own = Math.max(written, origin.sitting?.people ?? 0);
       if (!addressHasRoom(own, cap)) {
         throw new DomainError("VALIDATION_ERROR", "this sitting's people already fill the club's limit per address", [SITTING_AT_CAP]);
       }
@@ -1755,16 +1859,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         participant and this one person, and nothing a stranger typed can reach another inbox.
       */
       // In a sitting (§519), the kept form joins it, and its message waits with the sitting's others.
-      if (inSitting && !atCap && !sitting) {
-        sitting = await openSitting(tx, {
-          eventId: event.id,
-          participantId: participant.id,
-          registrationId: decision.about.id,
-          locale: input.locale,
-          heldUntil,
-          now,
-        });
-      }
+      if (inSitting && !atCap && !sitting) sitting = await newSitting(decision.about.id);
       const holding = inSitting && !atCap && sitting !== null;
       const entry = atCap
         ? null
@@ -1854,7 +1949,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           })
           .where(eq(registrations.id, existing.id));
       }
-      placeResult = (await repo.holdsFamilyReservation(tx, existing.id, now)) ? "reserved" : null;
+      // A correction keeps the person's place (§NNN): reserved while it holds, the waiting list otherwise.
+      placeResult = (await repo.holdsFamilyReservation(tx, existing.id, now)) ? "reserved" : "waitlist";
       await recordAuditEvent(tx, {
         actorStaffUserId: null,
         participantId: participant.id,
@@ -1997,14 +2093,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         if (offering) seedResult = { kind: "registration", id: registration.id, outboxId: queued?.id ?? null };
         return;
       }
-      sitting ??= await openSitting(tx, {
-        eventId: event.id,
-        participantId: participant.id,
-        registrationId: registration.id,
-        locale: input.locale,
-        heldUntil,
-        now,
-      });
+      sitting ??= await newSitting(registration.id);
       const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline({ [SITTING_HELD]: true }), heldUntil);
       sitting = await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId: queued?.id ?? null });
       // Its place, reserved now (§NNN): the family's count drops by one with every form, not at the press.
@@ -2082,6 +2171,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // no lock — the one door into the allocator that skipped the serialization point
       // (`DECISIONS.md` §151). Held since the transaction's first statement (§389).
       const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings);
+      // In a sitting (§NNN): the place the allocator gave, or the line — never a held place besides.
+      if (inSitting) placeResult = allocated.status === "WAITLISTED" ? "waitlist" : "reserved";
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
       // A hold, a place on the waiting list, or an offer made on the way to somebody else when
       // the allocator released a lapsed hold (§160) — the same deadlines `confirmEmail` wakes for.
@@ -2152,7 +2243,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   // A family's reservation lapses too (§NNN): the place goes back to whoever waits.
   if (createdDeadlines !== undefined || reservedUntilResult !== null) {
-    // Every form of a sitting moves the sitting's reservations to this instant, its own or not.
+    // A sitting's places lapse at its fixed deadline (§NNN): the job is told when.
     wakeMaintenance(event, now, settings, ...(createdDeadlines ?? []), reservedUntilResult);
   }
 

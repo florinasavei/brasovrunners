@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, like, lt, lte, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { type FamilySitting, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
+import { type FamilySitting, familyPlaceHolds, familySittings, type PendingFamilyEntry, pendingFamilyEntries } from "@/db/schema/family-entries";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -10,9 +10,6 @@ import { isUuid } from "@/shared/ids";
 import { FAMILY_HELD, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
-import { events } from "@/db/schema/events";
-import { computeFamilyReservationExpiry } from "./domain/hold-deadlines";
-import { lengthenFamilyReservationsByLateness } from "./repository";
 
 /**
  * The database's half of a family sitting (§519): the rows `submitRegistration` writes and reads
@@ -35,7 +32,11 @@ import { lengthenFamilyReservationsByLateness } from "./repository";
  * when it will (`drain.ts`), so the window is kept even when nobody presses «Gata».
  */
 
-/** The sitting a form names, locked, when it still takes forms: this event and address, not sent, not confirmed. */
+/**
+ * The sitting a form names, locked, when it still takes forms: this event and address, not sent, not
+ * confirmed, within its window — and before its fixed reservation deadline (§NNN, the review of
+ * 2026-09-28, round three): a form after it opens a new sitting, with a deadline of its own.
+ */
 export async function lockLiveSitting<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   sittingId: string,
@@ -47,17 +48,30 @@ export async function lockLiveSitting<T extends Record<string, unknown>>(
   if (!row) return null;
   if (row.eventId !== scope.eventId || row.participantId !== scope.participantId) return null;
   if (row.releasedAt !== null || row.confirmedAt !== null || row.heldUntil.getTime() <= now.getTime()) return null;
+  if (!reservationStillAhead(row, now)) return null;
   return row;
 }
 
-/** A new sitting, scoped to the address's registration its one link will name. */
+/** Whether a sitting's fixed reservation deadline (§NNN) is still ahead; a sitting written before the column has none yet. */
+function reservationStillAhead(row: Pick<FamilySitting, "reservedUntil">, now: Date): boolean {
+  return row.reservedUntil === null || row.reservedUntil.getTime() > now.getTime();
+}
+
+/**
+ * A new sitting, scoped to the address's registration its one link will name, with its reservation
+ * deadline written once (§NNN): `reservedUntil`, which nothing moves afterwards. `id`, when given, is
+ * the random id the browser's half already carries (a first form that wrote nothing, whose «Da» took a
+ * hold under it, `family_place_holds`): the sitting then adopts that hold by its key.
+ */
 export async function openSitting<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  values: { eventId: string; participantId: string; registrationId: string; locale: Locale; heldUntil: Date; now: Date },
+  values: { id?: string; eventId: string; participantId: string; registrationId: string; locale: Locale; heldUntil: Date; reservedUntil: Date; now: Date },
 ): Promise<FamilySitting> {
   const [row] = await tx
     .insert(familySittings)
     .values({
+      ...(values.id ? { id: values.id } : {}),
+      reservedUntil: values.reservedUntil,
       eventId: values.eventId,
       participantId: values.participantId,
       registrationId: values.registrationId,
@@ -236,11 +250,21 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
   press: { sittingId: string | null; seed: SittingSeed | null; eventId: string; locale: Locale },
   heldUntil: Date,
   now: Date,
+  /** The deadline a sitting this press opens is given (§NNN): the first form's window and the club's hold. Written once. */
+  reservedUntil: Date,
 ): Promise<{ sittingId: string; opened: boolean } | null> {
   return db.transaction(async (tx) => {
     if (press.sittingId && isUuid(press.sittingId)) {
       const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, press.sittingId)).limit(1).for("update");
-      if (row && row.eventId === press.eventId && row.releasedAt === null && row.confirmedAt === null && row.heldUntil.getTime() > now.getTime()) {
+      if (
+        row &&
+        row.eventId === press.eventId &&
+        row.releasedAt === null &&
+        row.confirmedAt === null &&
+        row.heldUntil.getTime() > now.getTime() &&
+        // Past its fixed deadline a sitting takes no more forms (§NNN): the press does not hold its email back either.
+        reservationStillAhead(row, now)
+      ) {
         if (row.heldOutboxIds.length > 0) {
           await tx
             .update(emailOutbox)
@@ -254,13 +278,19 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
         return { sittingId: row.id, opened: false };
       }
     }
-    return press.seed ? openSittingFromSeed(tx, press.seed, { eventId: press.eventId, locale: press.locale, heldUntil, now }) : null;
+    return press.seed ? openSittingFromSeed(tx, press.seed, { eventId: press.eventId, locale: press.locale, heldUntil, reservedUntil, now }) : null;
   });
 }
 
-/** A live sitting of this event, not sent and not confirmed, still taking forms. */
+/** A live sitting of this event, not sent and not confirmed, still taking forms — before its fixed deadline (§NNN). */
 function liveSittingWhere(eventId: string, now: Date) {
-  return and(eq(familySittings.eventId, eventId), isNull(familySittings.releasedAt), isNull(familySittings.confirmedAt), gt(familySittings.heldUntil, now));
+  return and(
+    eq(familySittings.eventId, eventId),
+    isNull(familySittings.releasedAt),
+    isNull(familySittings.confirmedAt),
+    gt(familySittings.heldUntil, now),
+    or(isNull(familySittings.reservedUntil), gt(familySittings.reservedUntil, now)),
+  );
 }
 
 /**
@@ -302,9 +332,9 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
 async function openSittingFromSeed<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   seed: SittingSeed,
-  at: { eventId: string; locale: Locale; heldUntil: Date; now: Date },
+  at: { eventId: string; locale: Locale; heldUntil: Date; reservedUntil: Date; now: Date },
 ): Promise<{ sittingId: string; opened: boolean } | null> {
-  const { eventId, locale, heldUntil, now } = at;
+  const { eventId, locale, heldUntil, reservedUntil, now } = at;
   if (!isUuid(seed.id)) return null;
   if (seed.kind === "registration") {
     const [registration] = await tx
@@ -321,7 +351,7 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
       .where(and(liveSittingWhere(eventId, now), sql`${familySittings.registrationIds} @> ${JSON.stringify([registration.id])}::jsonb`))
       .limit(1);
     if (already) return { sittingId: already.id, opened: false };
-    const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, now });
+    const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, reservedUntil, now });
     const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil, SITTING_HELD);
     await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId });
     const expiresAt = sittingLinkExpiresAt([registration.emailLinkExpiresAt, heldUntil], now) ?? heldUntil;
@@ -335,7 +365,7 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
     return already ? { sittingId: already.id, opened: false } : null;
   }
   // Scoped, as a kept form's own sitting always was, to the registration the address already holds here.
-  const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, now });
+  const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, reservedUntil, now });
   await tx.update(pendingFamilyEntries).set({ sittingId: sitting.id }).where(eq(pendingFamilyEntries.id, entry.id));
   const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil, FAMILY_HELD);
   await holdInSitting(tx, sitting, { outboxId });
@@ -468,20 +498,17 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
  * valabil 48 de ore»), not from the form that was sent a window and a pinger's wait earlier. Only
  * what is still live is lengthened, and never shortened: a registration whose link already lapsed and
  * a kept form past its time stay lapsed. Returns the sitting with its new lapse, for the token.
+ *
+ * The links only (§NNN, the review of 2026-09-28, round three): the family's reserved places keep the
+ * sitting's fixed deadline, which this send does not move, late or on time.
  */
 export async function extendSittingLinks<T extends Record<string, unknown>>(
   db: Database<T>,
   sitting: FamilySitting,
   until: Date,
   now: Date,
-  /**
-   * The club's declaration hold (§377) and when the message was due (§NNN): the family's reservations
-   * move on by the job's lateness, never past the hold from this send (`lengthenReservationsFromSend`).
-   */
-  reservations?: { holdMinutes: number; dueAt: Date | null },
 ): Promise<FamilySitting> {
   return db.transaction(async (tx) => {
-    if (reservations) await lengthenReservationsFromSend(tx, sitting.eventId, sitting.registrationIds, reservations.holdMinutes, reservations.dueAt, now);
     if (sitting.registrationIds.length > 0) {
       await tx
         .update(registrations)
@@ -503,36 +530,6 @@ export async function extendSittingLinks<T extends Record<string, unknown>>(
     const [row] = await tx.update(familySittings).set({ expiresAt: until }).where(eq(familySittings.id, sitting.id)).returning();
     return row ?? { ...sitting, expiresAt: until };
   });
-}
-
-/**
- * The family's one email is leaving (§NNN): each place it reserved keeps the deadline the last form
- * wrote — the club's hold after that form's window — moved on only by how late the outbox job sent
- * the email after it was due (`dueAt`), and never past the club's hold from this send. Only a
- * reservation that still holds, never shortened (`lengthenFamilyReservationsByLateness`).
- *
- * Never from the send alone (the review of 2026-09-28, round two): a «Da» press moves the email's due
- * time, so a send counted from its own instant would let presses lengthen a reservation — up to a
- * whole hold each time the presses stopped — with no inbox proof. The lateness is the job's, not the
- * family's: an email sent when it was due lengthens nothing, and one sent an hour late (QA's pinger at
- * night) gives back the hour it cost.
- */
-export async function lengthenReservationsFromSend<T extends Record<string, unknown>>(
-  db: Database<T>,
-  eventId: string,
-  registrationIds: readonly string[],
-  holdMinutes: number,
-  dueAt: Date | null,
-  now: Date,
-): Promise<Date | null> {
-  if (registrationIds.length === 0) return null;
-  const lateMs = dueAt ? now.getTime() - dueAt.getTime() : 0;
-  if (!(lateMs > 0)) return null;
-  const [event] = await db.select({ startsAt: events.startsAt, registrationClosesAt: events.registrationClosesAt }).from(events).where(eq(events.id, eventId)).limit(1);
-  if (!event) return null;
-  const until = computeFamilyReservationExpiry({ from: now, registrationClosesAt: event.registrationClosesAt, eventStartsAt: event.startsAt, deadlines: { holdMinutes } });
-  await lengthenFamilyReservationsByLateness(db, registrationIds, until, lateMs, now);
-  return until;
 }
 
 export async function findSittingById<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<FamilySitting | undefined> {
@@ -609,5 +606,11 @@ export async function sittingEarlierEmailSent<T extends Record<string, unknown>>
  */
 export async function purgeLapsedFamilySittings<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   const gone = await db.delete(familySittings).where(lte(familySittings.expiresAt, now)).returning({ id: familySittings.id });
+  /*
+    …and the sittings' place holds (§NNN) a day past their deadline: counted by nobody since it, and
+    left that long so the per-event sweep (`expireStaleHolds`) still finds a fresh lapse and offers the
+    place to whoever waits, as it does for a lapsed reservation.
+  */
+  await db.delete(familyPlaceHolds).where(lte(familyPlaceHolds.expiresAt, new Date(now.getTime() - 24 * 60 * 60_000)));
   return gone.length;
 }

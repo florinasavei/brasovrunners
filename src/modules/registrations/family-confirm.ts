@@ -11,11 +11,13 @@ import { findParticipantById } from "@/modules/participants/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { readAddressCap } from "./address-cap";
 import { ANOTHER_LINK_INVALID } from "./domain/family";
+import { PRESS_SLOT } from "./domain/family-sitting";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { birthDateText, deleteFamilyEntry, findFamilyEntryByToken, personOfEntry, registeredOnAddress } from "./family-entries";
 import { familyRegistrationOpen } from "./family-gate";
 import { publicFormEvent } from "./public-form-event";
 import { confirmEmail, submitRegistration } from "./service";
+import { releaseFamilyPlaceHold } from "./repository";
 
 /**
  * Another person on a registered address, confirmed from the inbox (§446, amending §389; the
@@ -124,6 +126,12 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
     if (!participant) throw new DomainError("VALIDATION_ERROR", "no such participant", [ANOTHER_LINK_INVALID]);
     // The whole row the allocator needs, the participation window included (§104, §420), as the form passes it.
     const event = publicFormEvent(row, row.publishedAt);
+    /*
+      A kept form that opened a family sitting (§536) holds its place under the sitting's key until the
+      sitting's deadline (§NNN): confirmed from its own email, the hold goes before the person is
+      allocated, so their own held place is never counted against them.
+    */
+    if (entry.sittingId) await releaseFamilyPlaceHold(tx, entry.sittingId, PRESS_SLOT);
 
     const created = await submitRegistration(
       tx,

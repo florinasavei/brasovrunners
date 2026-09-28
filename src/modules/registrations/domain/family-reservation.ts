@@ -24,13 +24,11 @@ export function reservedUntilPhrase(until: Date, now: Date, locale: "ro" | "en")
 }
 
 /**
- * Whether a family's stored reservation still holds as the family's email leaves (§NNN): its deadline
- * is ahead, or the email was due at or before it — the outbox job was late, and the send moves the
- * deadline on by that lateness (`family-sitting.ts#lengthenReservationsFromSend`). An email a «Da»
- * press moved past the deadline does not keep it (the review of 2026-09-28, round two): the same rule
- * as the count's (`repository.ts#familyReservationAwaitingItsEmail`), for the email's own words.
+ * Whether a family's stored reservation still holds (§NNN): its deadline — the sitting's, fixed by its
+ * first form — is ahead. The same rule as the count's (`repository.ts#familyReservationHolds`), for the
+ * email's own words: nothing keeps a place past it, the email's send included (the review of
+ * 2026-09-28, round three).
  */
-export function reservationHoldsAtSend(holdExpiresAt: Date | null, dueAt: Date | null, now: Date): boolean {
-  if (!holdExpiresAt) return false;
-  return holdExpiresAt.getTime() > now.getTime() || dueAt === null || dueAt.getTime() <= holdExpiresAt.getTime();
+export function familyReservationHoldsAt(holdExpiresAt: Date | null, now: Date): boolean {
+  return holdExpiresAt !== null && holdExpiresAt.getTime() > now.getTime();
 }

@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { emailActionTokens } from "./email-action-tokens";
 import { events } from "./events";
 import { locale } from "./locale";
@@ -52,6 +52,14 @@ export const familySittings = pgTable(
     releasedAt: timestamp("released_at", { withTimezone: true }),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    /*
+      Until when the sitting's places are reserved (§NNN, the review of 2026-09-28, round three): the
+      first form's instant, the club's window and the club's declaration hold, capped by the close and
+      the start — written once, when the sitting opens, and never moved by a form, a press or a send.
+      Past it the sitting takes no more forms: the next one opens a new sitting. Null on a sitting
+      opened before the column; the next form writes it.
+    */
+    reservedUntil: timestamp("reserved_until", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -63,6 +71,44 @@ export const familySittings = pgTable(
 );
 
 export type FamilySitting = typeof familySittings.$inferSelect;
+
+/**
+ * A place a family sitting holds for a form that wrote no registration (§NNN, the review of
+ * 2026-09-28, round three; §39, AGENTS.md §19.4): a kept form, a person the address already holds, an
+ * address at the club's limit with registrations made elsewhere — and the opening «Da» of a sitting
+ * whose first form wrote none. Counted by `countOccupied` exactly as a reserved registration is, so
+ * the public count drops by one for such a form as it does for a fresh address, and nobody can learn
+ * from «N înscriși din M» whether an address already holds a person.
+ *
+ * What the row is not: a registration. It names no person and no address — an event, the browser's
+ * sitting id and an instant — and nobody is ever allocated from it.
+ *
+ * - `sitting_key` is the id the browser's sealed half carries (§519): a sitting's id, or the random
+ *   one it carries before any sitting row exists (a first form that wrote nothing). A form that opens
+ *   a sitting under that random id adopts the holds by it.
+ * - `slot` makes the opening press's hold one per sitting (`press`), however often its half is replayed;
+ *   a form's is its own.
+ * - `expires_at` is the sitting's `reserved_until`: the hold lapses with the family's reservations, or
+ *   goes when the family's email is confirmed.
+ */
+export const familyPlaceHolds = pgTable(
+  "family_place_holds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    sittingKey: uuid("sitting_key").notNull(),
+    slot: text("slot").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("family_place_holds_key_slot_unique").on(t.sittingKey, t.slot),
+    // `countOccupied`'s read and the job's sweep.
+    index("family_place_holds_event_expires_idx").on(t.eventId, t.expiresAt),
+  ],
+);
 
 /**
  * Another person's registration, typed into the public form on an address that is registered at

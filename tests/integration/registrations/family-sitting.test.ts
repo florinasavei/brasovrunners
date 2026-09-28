@@ -38,7 +38,7 @@ let close: () => Promise<void>;
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 
-const { continueFamilySittingAndReserve, submitRegistration } = await import("@/modules/registrations/service");
+const { confirmEmail, continueFamilySittingAndReserve, submitRegistration } = await import("@/modules/registrations/service");
 const { releaseFamilySitting } = await import("@/modules/registrations/family-sitting");
 const { familySigningSteps } = await import("@/modules/registrations/domain/family-signing");
 const { listFamilySigningRows } = await import("@/modules/registrations/family-signing");
@@ -128,14 +128,17 @@ async function first(event: EventInput, firstName: string, minute: number, overr
 
 /**
  * «Da, încă o persoană» (§536): opens the sitting from the first form's seed, or starts an open one's window
- * again — as the action presses it, which since §NNN also reserves every place the sitting holds.
+ * again — as the action presses it. The first press on the browser (a seed in hand) is the opening one,
+ * which since §NNN fixes the sitting's deadline and gives the first form its place.
  */
 async function yes(event: EventInput, press: { sittingId?: string | null; seed?: Awaited<ReturnType<typeof first>>["seed"] }, minute: number) {
+  const heldUntil = new Date(at(minute).getTime() + WINDOW_MS);
   const pressed = await continueFamilySittingAndReserve(
     db,
     { sittingId: press.sittingId ?? null, seed: press.seed ?? null, eventId: event.id, locale: "ro" },
-    new Date(at(minute).getTime() + WINDOW_MS),
+    heldUntil,
     at(minute),
+    press.seed !== undefined ? { firstWindowEnd: heldUntil } : null,
   );
   return pressed.sittingId;
 }
@@ -148,7 +151,9 @@ async function start(event: EventInput, firstName: string, minute: number, overr
 
 /** One form of a sitting, after «Da», as the public action sends it; the sitting's id comes back for the next. */
 async function send(event: EventInput, firstName: string, minute: number, sittingId: string | null, overrides: Record<string, unknown> = {}) {
-  const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: sittingId, joined: true } });
+  // A new person of the sitting unless the test says otherwise, as the action reads it from the browser's list (§NNN).
+  const { newPerson = true, ...fields } = overrides as Record<string, unknown> & { newPerson?: boolean };
+  const result = await submitRegistration(db, event, submission(firstName, at(minute), fields), at(minute), "REAL", { ...PUBLIC, sitting: { id: sittingId, joined: true, newPerson } });
   return result.sittingId ?? null;
 }
 
@@ -509,20 +514,24 @@ describe("§519 a family in one sitting", () => {
   });
 
   it("a person refused at the press is theirs alone: the others join", async () => {
-    const event = await createEvent(1);
-    // The waiting list closed: one place, no line.
+    const event = await createEvent(2);
+    // The waiting list closed: two places, no line.
     await db.update(events).set({ waitlistCapacity: 0 }).where(eq(events.id, event.id));
     // Ana registered outside any sitting (no place before her address is confirmed); Maria's first form was kept (§446).
     await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
+    // «Da» holds a place for Maria's kept form (§NNN), and Dan's form reserves the other.
     const sittingId = await start(event, "Maria", 1);
-    // Dan's form, after «Da», reserves the one place (§NNN).
     await send(event, "Dan", 2, sittingId);
-    const { secret } = await familyLink(at(20));
-    const page = await readFamilySittingLink(db, secret!, "ro", at(21));
+    // Past the sitting's deadline (minute 41) nothing is held any more: Radu, on another address, takes one place.
+    await submitRegistration(db, event, submission("Radu", at(50), { email: "radu@example.ro" }), at(50), "REAL", PUBLIC);
+    const [radu] = (await db.select().from(registrations)).filter((row) => row.registeredName === "Radu Pop");
+    expect((await confirmEmail(db, event, radu.id, at(51))).status).toBe("PENDING_DECLARATION");
+    const { secret } = await familyLink(at(52));
+    const page = await readFamilySittingLink(db, secret!, "ro", at(53));
     if (!page.ok) throw new Error("the page could not read its link");
-    const result = await confirmFamilySitting(db, secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(22));
+    const result = await confirmFamilySitting(db, secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(54));
     if (!result.ok) throw new Error("the press did nothing");
-    // Maria's kept form finds no place and no line: refused alone; Dan takes his reserved place.
+    // One place left: Dan, registered first, takes it; Maria's kept form finds none and no line — refused alone.
     expect(result.refused).toEqual(["waitlist"]);
     expect(result.registrations.map((row) => [row.registeredName, row.status])).toEqual([["Dan Pop", "PENDING_DECLARATION"]]);
     expect(await db.select().from(pendingFamilyEntries)).toHaveLength(0);

@@ -1,10 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
+import { type ComponentProps, createElement, type ReactElement } from "react";
+import { renderToReadableStream } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
-import { familySittings, pendingFamilyEntries } from "@/db/schema/family-entries";
+import { familyPlaceHolds, familySittings, pendingFamilyEntries } from "@/db/schema/family-entries";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
@@ -13,25 +17,46 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-034-01, BR-REQ-034-02, BR-REQ-036-02 — a family sitting reserves every place at once, and its
- * one email lists every registration (§NNN, amending §389, §446, §519 and §536; the owner, 2026-09-28,
- * after testing on QA: «ar trebui în ultimul mail primit pentru verificare să am toate înscrierile mele!
- * să rezerv 3 locuri și așa să se calculeze pe site»; and «pare că nu se salvează corect»).
+ * BR-REQ-034-01, BR-REQ-034-02, BR-REQ-036-02, BR-REQ-031-01 — a family sitting reserves every place at
+ * once, and its one email lists every registration (§NNN, amending §389, §446, §519 and §536; the owner,
+ * 2026-09-28, after testing on QA: «ar trebui în ultimul mail primit pentru verificare să am toate
+ * înscrierile mele! să rezerv 3 locuri și așa să se calculeze pe site»; and «pare că nu se salvează
+ * corect»).
  *
  * What was stored before this change, in the owner's scenario (three forms on one address, «Da» after
  * the first, then «Nu mai înscriu pe nimeni»): after each of the three forms one registration row (the
  * first person, PENDING_EMAIL_CONFIRMATION, no hold) and the others as kept forms (0, 1, 2), the public
  * count at 50 of 50 throughout, one held outbox row. The one email already named the three; the site
  * counted none of them, and a refresh, a second device or the backoffice saw one person.
+ *
+ * Round three of the review (2026-09-28): the deadline is the first form's instant, the club's window
+ * and hold, and nothing moves it; a form that writes no registration holds a counted place, so the
+ * count and the screen are the same whatever the address holds (§39, AGENTS.md §19.4).
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
 const EMAIL = "familia.pop@example.ro";
 const WINDOW_MS = 10 * 60_000;
+const HOLD_MS = 30 * 60_000;
+const locale: "ro" | "en" = "ro";
 
 let db: TestDatabase;
 let close: () => Promise<void>;
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
+// The sitting's screen, rendered with the real catalogues (finding 3: its words are the same for every address).
+vi.mock("next-intl/server", async (importOriginal) => {
+  const { createTranslator } = await import("next-intl");
+  const catalogues = {
+    ro: (await import("../../../messages/ro.json")).default,
+    en: (await import("../../../messages/en.json")).default,
+  };
+  return {
+    ...(await importOriginal<Record<string, unknown>>()),
+    getTranslations: async (namespace: string) =>
+      createTranslator({ locale, messages: catalogues[locale] as typeof catalogues.ro, namespace: namespace as "Registration" }),
+    getLocale: async () => locale,
+  };
+});
 
 const { continueFamilySittingAndReserve, readPublicAvailability, submitRegistration, confirmEmail } = await import("@/modules/registrations/service");
 const { releaseFamilySitting } = await import("@/modules/registrations/family-sitting");
@@ -42,6 +67,12 @@ const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { listFamilyReservationsForEvent } = await import("@/modules/registrations/admin-repository");
 const { familyOf } = await import("@/modules/registrations/family-marker");
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
+const { default: FamilySittingNext } = await import("@/modules/registrations/ui/FamilySittingNext");
+const { NextIntlClientProvider } = await import("next-intl");
+const catalogues = {
+  ro: (await import("../../../messages/ro.json")).default,
+  en: (await import("../../../messages/en.json")).default,
+};
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -52,6 +83,7 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
+  await db.delete(familyPlaceHolds);
   forgetCachedDeadlines();
   const privacy: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -76,13 +108,21 @@ async function createEvent(capacity: number | null = 50): Promise<EventInput> {
     .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
     .returning();
   await db.insert(eventTranslations).values([
-    { eventId: event.id, locale: "ro", title: "Crosul familiei", slug: "crosul-familiei" },
-    { eventId: event.id, locale: "en", title: "The family cross", slug: "family-cross" },
+    { eventId: event.id, locale: "ro", title: "Crosul familiei", slug: `crosul-familiei-${event.id.slice(0, 8)}` },
+    { eventId: event.id, locale: "en", title: "The family cross", slug: `family-cross-${event.id.slice(0, 8)}` },
   ]);
   return { id: event.id, raceId: null, capacity: event.capacity, registrationMode: "INTERNAL", registrationOpensAt: null, registrationClosesAt: null, startsAt: event.startsAt, eventStatus: event.eventStatus, publishedAt: NOW };
 }
 
-const BIRTH_DATES: Record<string, string> = { Ana: "1985-03-02", Mihai: "1987-02-14", Ioana: "2010-07-11", Dan: "2011-05-20", Radu: "1990-04-04" };
+const BIRTH_DATES: Record<string, string> = {
+  Ana: "1985-03-02",
+  Mihai: "1987-02-14",
+  Ioana: "2010-07-11",
+  Dan: "2011-05-20",
+  Radu: "1990-04-04",
+  Elena: "1992-08-08",
+  Luca: "2009-03-03",
+};
 
 const submission = (firstName: string, at: Date, overrides: Record<string, unknown> = {}) => ({
   firstName,
@@ -95,7 +135,7 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
   phone: "+40711111111",
   emergencyContactName: "Ion Vecinul",
   emergencyContactPhone: "+40722222222",
-  ...(firstName === "Ioana" || firstName === "Dan" ? { guardianName: "Ana Pop" } : {}),
+  ...(["Ioana", "Dan", "Luca"].includes(firstName) ? { guardianName: "Ana Pop" } : {}),
   email: EMAIL,
   locale: "ro",
   privacyAcknowledged: true,
@@ -112,21 +152,45 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
-/** The first form, before «Da» (§536), then «Da» as the action presses it — which reserves the sitting's places (§NNN). */
-async function start(event: EventInput, firstName: string, minute: number) {
-  const result = await submitRegistration(db, event, submission(firstName, at(minute)), at(minute), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });
+/**
+ * The first form, before «Da» (§536), then «Da» as the action presses it: the browser's half carries the
+ * first form's window end and an id — the sitting's, or a random one (§39) — and the first press on the
+ * browser fixes the sitting's deadline and gives the first form its place (§NNN).
+ */
+async function start(event: EventInput, firstName: string, minute: number, overrides: Record<string, unknown> = {}) {
+  const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });
+  const cookieId = result.sittingId ?? randomUUID();
+  const firstWindowEnd = new Date(at(minute).getTime() + WINDOW_MS);
   const pressed = await continueFamilySittingAndReserve(
     db,
-    { sittingId: null, seed: result.sittingSeed ?? null, eventId: event.id, locale: "ro" },
-    new Date(at(minute).getTime() + WINDOW_MS),
+    { sittingId: cookieId, seed: result.sittingSeed ?? null, eventId: event.id, locale: "ro" },
+    firstWindowEnd,
     at(minute),
+    { firstWindowEnd },
   );
-  return pressed;
+  // The id the browser keeps for the next form (`continueFamilySittingAction`): the sitting's, or its own.
+  return { ...pressed, sittingId: pressed.sittingId ?? cookieId };
 }
 
-/** One form of the sitting after «Da», as the public action sends it. */
-async function send(event: EventInput, firstName: string, minute: number, sittingId: string | null, overrides: Record<string, unknown> = {}) {
-  return submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: sittingId, joined: true } });
+/**
+ * One form of the sitting after «Da», as the public action sends it: a new person unless said otherwise,
+ * with what the browser's sealed half carries — how many people it sent before, and the deadline.
+ */
+async function send(
+  event: EventInput,
+  firstName: string,
+  minute: number,
+  sittingId: string | null,
+  overrides: Record<string, unknown> = {},
+  half: { people?: number; reservedUntil?: Date | null } = {},
+) {
+  const { newPerson = true, ...fields } = overrides as Record<string, unknown> & { newPerson?: boolean };
+  return submitRegistration(db, event, submission(firstName, at(minute), fields), at(minute), "REAL", { ...PUBLIC, sitting: { id: sittingId, joined: true, newPerson, ...half } });
+}
+
+/** «Da» pressed again, as the action presses it: the window starts again from this press. */
+async function pressAgain(event: EventInput, sittingId: string | null, minute: number) {
+  return continueFamilySittingAndReserve(db, { sittingId, seed: null, eventId: event.id, locale: "ro" }, new Date(at(minute).getTime() + WINDOW_MS), at(minute));
 }
 
 async function rows() {
@@ -154,14 +218,40 @@ async function refusal(promise: Promise<unknown>) {
   throw new Error("expected a refusal");
 }
 
+/** The sitting's screen as the browser's half feeds it (`register/page.tsx`), with one address for every case. */
+async function screen(people: { name: string; birthDate: string; waitlist?: boolean }[], until: Date | null, now: Date): Promise<string> {
+  const page = (await FamilySittingNext({
+    email: "adresa@example.ro",
+    names: people.map((person) => person.name),
+    reservation: { people, until },
+    sameBirthDate: null,
+    releaseInMs: WINDOW_MS,
+    firstName: people.at(-1)?.name.split(" ")[0] ?? null,
+    eventTitle: "Crosul familiei",
+    atOnce: false,
+    windowMinutes: 10,
+    locale,
+    slug: "crosul-familiei",
+    continueAction: async () => undefined,
+    releaseAction: async () => undefined,
+    now,
+  })) as ReactElement;
+  const stream = await renderToReadableStream(
+    createElement(NextIntlClientProvider, { locale, messages: catalogues[locale] } as unknown as ComponentProps<typeof NextIntlClientProvider>, page),
+  );
+  await stream.allReady;
+  return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "").replace(/ id="[^"]*"/g, "");
+}
+
 describe("BR-REQ-034-01 a family sitting reserves every place the moment its form is sent (§NNN)", () => {
   it("the owner's scenario: three forms, the count drops by three, the queue panel lists three, the one email names three with their places", async () => {
     const event = await createEvent(50);
     const pressed = await start(event, "Ana", 0);
     const sittingId = pressed.sittingId;
-    expect(sittingId).not.toBeNull();
-    // «Da» took the first form's registration in and reserved its place.
-    expect(pressed.places).toEqual(["reserved"]);
+    // «Da» took the first form's registration in and reserved its place, until the first form's window and the club's hold.
+    const deadline = new Date(at(0).getTime() + WINDOW_MS + HOLD_MS);
+    expect(pressed).toMatchObject({ opened: true, place: "reserved" });
+    expect(pressed.reservedUntil?.toISOString()).toBe(deadline.toISOString());
     expect(await available(event, at(0))).toBe(49);
 
     const second = await send(event, "Mihai", 2, sittingId);
@@ -169,8 +259,8 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
     expect(await available(event, at(2))).toBe(48);
     const third = await send(event, "Ioana", 4, sittingId);
     expect(third).toMatchObject({ sittingId, sittingPlace: "reserved" });
-    // The club's hold after the window's end (30 minutes by default, §377), the same on the screen's half.
-    expect(third.reservedUntil?.toISOString()).toBe(new Date(at(4).getTime() + WINDOW_MS + 30 * 60_000).toISOString());
+    // Every later form's place expires at the same deadline, the one the first form fixed (finding 1).
+    expect(third.reservedUntil?.toISOString()).toBe(deadline.toISOString());
 
     // Stored as a single registration is: three rows, each waiting for the address, each holding its place.
     const stored = await rows();
@@ -179,7 +269,7 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
       ["Mihai Pop", "PENDING_EMAIL_CONFIRMATION"],
       ["Ioana Pop", "PENDING_EMAIL_CONFIRMATION"],
     ]);
-    for (const row of stored) expect(row.holdExpiresAt?.toISOString()).toBe(third.reservedUntil?.toISOString());
+    for (const row of stored) expect(row.holdExpiresAt?.toISOString()).toBe(deadline.toISOString());
     expect(await db.select().from(pendingFamilyEntries)).toHaveLength(0);
     expect(await available(event, at(4))).toBe(47);
 
@@ -190,18 +280,18 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
     const family = await familyOf(db, reserved);
     expect(family.get(reserved[0].id)?.map((member) => member.name)).toEqual(["Mihai Pop", "Ioana Pop"]);
 
-    // «Nu mai înscriu pe nimeni»: the one email leaves, and names the three with their places.
+    // «Nu mai înscriu pe nimeni»: the one email leaves, and names the three with their places, until 13:40.
     await releaseFamilySitting(db, sittingId!, at(5));
-    const sentAt = at(6);
-    const { message, secret } = await familyMessage(sentAt);
+    const { message, secret } = await familyMessage(at(6));
     expect(message.subject).toContain("Înscriere de familie: 3 persoane la Crosul familiei");
-    // Sent at 10:06Z: each place lasts the club's hold from the send, never less than the screen said.
-    expect(message.text).toContain("Înscriere de familie: Ana, Mihai și Ioana — 3 locuri rezervate până la 13:44.");
-    for (const name of ["Ana Pop", "Mihai Pop", "Ioana Pop"]) expect(message.text).toMatch(new RegExp(`${name}, data nașterii [^\\n]+ — loc rezervat până la 13:44`));
-    expect(message.text).toContain("Family registration: Ana, Mihai and Ioana — 3 places reserved until 13:44.");
+    expect(message.text).toContain("Înscriere de familie: Ana, Mihai și Ioana — 3 locuri rezervate până la 13:40.");
+    for (const name of ["Ana Pop", "Mihai Pop", "Ioana Pop"]) expect(message.text).toMatch(new RegExp(`${name}, data nașterii [^\\n]+ — loc rezervat până la 13:40`));
+    expect(message.text).toContain("Family registration: Ana, Mihai and Ioana — 3 places reserved until 13:40.");
     expect(message.text).toContain("Confirm și semnez declarațiile (3)");
-    // Still held while the email is queued, whatever its stored deadline: the count stays at 47.
-    expect(await available(event, at(60))).toBe(47);
+    // The send moved nothing, and the ceiling is hard: 47 until 13:40, 50 from it, whatever the email is doing.
+    for (const row of await rows()) expect(row.holdExpiresAt?.toISOString()).toBe(deadline.toISOString());
+    expect(await available(event, at(39))).toBe(47);
+    expect(await available(event, at(40))).toBe(50);
 
     // The single link confirms all three, and the wizard signs three.
     const page = await readFamilySittingLink(db, secret!, "ro", at(7));
@@ -244,7 +334,7 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
 
     await releaseFamilySitting(db, sittingId!, at(3));
     const { message, secret } = await familyMessage(at(4));
-    expect(message.text).toContain("Înscriere de familie: Ana, Mihai și Ioana — 2 locuri rezervate până la 13:42, o persoană pe lista de așteptare.");
+    expect(message.text).toContain("Înscriere de familie: Ana, Mihai și Ioana — 2 locuri rezervate până la 13:40, o persoană pe lista de așteptare.");
     expect(message.text).toMatch(/Ioana Pop, data nașterii [^\n]+ — pe lista de așteptare, după confirmare/);
     expect(message.text).toMatch(/Ioana Pop, date of birth [^\n]+ — on the waiting list, once confirmed/);
     const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: [], fitnessAcknowledged: true }, at(5));
@@ -258,7 +348,7 @@ describe("BR-REQ-034-01 a family sitting reserves every place the moment its for
 });
 
 describe("BR-REQ-034-02 a family's unconfirmed places go back through the allocator (§NNN)", () => {
-  it("once the email has left and the hold is past, the three places are free again and the waiting list is served", async () => {
+  it("once the deadline is past, the three places are free again and the waiting list is served", async () => {
     const event = await createEvent(3);
     const { sittingId } = await start(event, "Ana", 0);
     await send(event, "Mihai", 1, sittingId);
@@ -276,13 +366,12 @@ describe("BR-REQ-034-02 a family's unconfirmed places go back through the alloca
     const { row } = await familyMessage(at(5));
     await db.update(emailOutbox).set({ status: "SENT", sentAt: at(5), attemptCount: 1 }).where(eq(emailOutbox.id, row.id));
     const [held] = await rows();
-    expect(held.holdExpiresAt!.getTime()).toBeGreaterThan(at(5).getTime());
+    expect(held.holdExpiresAt?.toISOString()).toBe(at(40).toISOString());
 
-    // Past the hold: the maintenance job clears the three reservations and offers Radu the place.
-    const after = new Date(held.holdExpiresAt!.getTime() + 60_000);
-    await runRegistrationMaintenance(db, after);
-    const family = (await rows()).filter((row) => row.participantId === held.participantId);
-    expect(family.map((row) => [row.registeredName, row.status, row.holdExpiresAt])).toEqual([
+    // Past the deadline: the maintenance job clears the three reservations and offers Radu the place.
+    await runRegistrationMaintenance(db, at(41));
+    const family = (await rows()).filter((candidate) => candidate.participantId === held.participantId);
+    expect(family.map((candidate) => [candidate.registeredName, candidate.status, candidate.holdExpiresAt])).toEqual([
       ["Ana Pop", "PENDING_EMAIL_CONFIRMATION", null],
       ["Mihai Pop", "PENDING_EMAIL_CONFIRMATION", null],
       ["Ioana Pop", "PENDING_EMAIL_CONFIRMATION", null],
@@ -292,84 +381,222 @@ describe("BR-REQ-034-02 a family's unconfirmed places go back through the alloca
   });
 });
 
-describe("BR-REQ-034-02 a family's reservation has a ceiling no «Da» press moves (§NNN, the review of 2026-09-28, round two)", () => {
-  /** «Da» pressed again, as the action presses it: the window starts again from this press. */
-  async function pressAgain(event: EventInput, sittingId: string | null, minute: number) {
-    return continueFamilySittingAndReserve(db, { sittingId, seed: null, eventId: event.id, locale: "ro" }, new Date(at(minute).getTime() + WINDOW_MS), at(minute));
-  }
-
-  it("one form, then «Da» every five minutes for two hours: the place is back in the count at the ceiling", async () => {
+describe("BR-REQ-034-02 the deadline is the first form's, and nothing moves it (§NNN, the review of 2026-09-28, round three)", () => {
+  it("one form, then «Da» every five minutes for two hours: the place is back in the count at the first form's deadline", async () => {
     const event = await createEvent(2);
     const opened = await start(event, "Ana", 0);
-    expect(opened).toMatchObject({ opened: true, places: ["reserved"] });
-    // The opening press's window and the club's hold: 10 + 30 minutes.
-    const ceiling = new Date(at(0).getTime() + WINDOW_MS + 30 * 60_000);
+    const ceiling = new Date(at(0).getTime() + WINDOW_MS + HOLD_MS);
+    expect(opened).toMatchObject({ opened: true, place: "reserved" });
     expect(opened.reservedUntil?.toISOString()).toBe(ceiling.toISOString());
     expect(await available(event, at(1))).toBe(1);
 
     for (let minute = 5; minute <= 120; minute += 5) {
       const pressed = await pressAgain(event, opened.sittingId, minute);
-      // The sitting takes the next form still, but a later press reserves and lengthens nothing.
-      expect(pressed).toMatchObject({ sittingId: opened.sittingId, opened: false, reservedUntil: null, places: [] });
+      // Before the deadline the sitting takes the next form, but a later press reserves and lengthens nothing;
+      // from it the sitting takes no more forms, and the press holds nothing back.
+      if (minute < 40) expect(pressed).toMatchObject({ sittingId: opened.sittingId, opened: false, reservedUntil: null, place: null });
+      else expect(pressed).toMatchObject({ sittingId: null, reservedUntil: null, place: null });
       const [ana] = await rows();
       expect(ana.holdExpiresAt?.toISOString()).toBe(ceiling.toISOString());
-      // Before the ceiling the place is Ana's; from the press that moved her email past it, it is free.
       expect(await available(event, at(minute))).toBe(minute < 40 ? 1 : 2);
     }
-    // Her email is still held — the presses kept moving it — and holds no place any more.
+    // The last press before the deadline set her email's window; none after it moved it again.
     const [held] = await db.select().from(emailOutbox);
     expect(held.status).toBe("PENDING");
-    expect(held.nextAttemptAt?.toISOString()).toBe(new Date(at(120).getTime() + WINDOW_MS).toISOString());
-    expect(await available(event, at(121))).toBe(2);
-    // Released at last, the email leaves and gives nothing back: a lapsed reservation is never lengthened.
-    await releaseFamilySitting(db, opened.sittingId!, at(122));
-    const [verification] = await db.select().from(emailOutbox);
-    await renderOutboxMessage({ ...verification, status: "PROCESSING", attemptCount: 1, lockedAt: at(123) }, db, at(123));
+    expect(held.nextAttemptAt?.toISOString()).toBe(new Date(at(35).getTime() + WINDOW_MS).toISOString());
+    // The email leaves and gives nothing back: a lapsed reservation is never lengthened.
+    await renderOutboxMessage({ ...held, status: "PROCESSING", attemptCount: 1, lockedAt: at(123) }, db, at(123));
     const [ana] = await rows();
     expect([ana.status, ana.holdExpiresAt?.toISOString()]).toEqual(["PENDING_EMAIL_CONFIRMATION", ceiling.toISOString()]);
     expect(await available(event, at(123))).toBe(2);
   });
 
-  it("presses after the last form keep its deadline: an email sent when due lengthens nothing", async () => {
+  it("every later form's place expires at the first form's deadline; a form after it opens a new sitting with its own", async () => {
     const event = await createEvent(50);
     const { sittingId } = await start(event, "Ana", 0);
-    await send(event, "Mihai", 1, sittingId);
-    const deadline = new Date(at(1).getTime() + WINDOW_MS + 30 * 60_000);
-    for (const minute of [8, 16, 24, 30]) await pressAgain(event, sittingId, minute);
+    const deadline = new Date(at(0).getTime() + WINDOW_MS + HOLD_MS);
+    // Each form and press inside the window the one before it started, the window moving on each time.
+    expect((await send(event, "Mihai", 8, sittingId)).reservedUntil?.toISOString()).toBe(deadline.toISOString());
+    await pressAgain(event, sittingId, 15);
+    expect((await send(event, "Ioana", 24, sittingId)).reservedUntil?.toISOString()).toBe(deadline.toISOString());
+    await pressAgain(event, sittingId, 33);
     for (const row of await rows()) expect(row.holdExpiresAt?.toISOString()).toBe(deadline.toISOString());
-    // Due at minute 40 (the last press's window), before the deadline: held until it leaves, on time.
-    const { row } = await familyMessage(at(40));
-    expect(row.nextAttemptAt?.toISOString()).toBe(at(40).toISOString());
-    for (const stored of await rows()) expect(stored.holdExpiresAt?.toISOString()).toBe(deadline.toISOString());
+    expect(await available(event, at(39))).toBe(47);
+    expect(await available(event, at(40))).toBe(50);
+
+    // Minute 42: still inside the window the last press started (until 43), past the deadline — a new sitting.
+    const late = await send(event, "Dan", 42, sittingId);
+    expect(late.sittingId).not.toBeNull();
+    expect(late.sittingId).not.toBe(sittingId);
+    expect(late.sittingPlace).toBe("reserved");
+    expect(late.reservedUntil?.toISOString()).toBe(new Date(at(42).getTime() + WINDOW_MS + HOLD_MS).toISOString());
+    expect(await available(event, at(42))).toBe(49);
+    const sittings = await db.select().from(familySittings).orderBy(familySittings.createdAt);
+    expect(sittings.map((row) => row.reservedUntil?.toISOString())).toEqual([deadline.toISOString(), late.reservedUntil?.toISOString()]);
   });
 
-  it("an email the job sent an hour late gives the family back the hour, up to the club's hold from the send", async () => {
+  it("an email the outbox job sends an hour late gives nothing back: the places lapse at the deadline", async () => {
     const event = await createEvent(50);
     const { sittingId } = await start(event, "Ana", 0);
     await send(event, "Mihai", 1, sittingId);
     await releaseFamilySitting(db, sittingId!, at(5));
-    // Past the stored deadline (minute 41) and the email still queued, due at minute 5: still the family's.
-    expect(await available(event, at(65))).toBe(48);
-    await familyMessage(at(65));
-    // Lateness 60 minutes on a deadline at minute 41 would be 101; the hold from the send, 95, is the cap.
-    for (const stored of await rows()) expect(stored.holdExpiresAt?.toISOString()).toBe(at(95).toISOString());
+    // Past the deadline (minute 40), the email still queued: the places are free all the same.
+    expect(await available(event, at(41))).toBe(50);
+    const { message } = await familyMessage(at(65));
+    for (const stored of await rows()) expect(stored.holdExpiresAt?.toISOString()).toBe(at(40).toISOString());
+    // …and the email names no reserved place it no longer holds.
+    expect(message.text).not.toContain("locuri rezervate");
+    expect(message.text).not.toContain("loc rezervat");
   });
+});
 
-  it("a form that wrote no registration — the address at its limit with registrations made elsewhere — names no place", async () => {
-    const event = await createEvent(50);
+describe("BR-REQ-031-01 a form that writes no registration holds a place: the count and the screen are the same whatever the address holds (§NNN; §39, AGENTS.md §19.4)", () => {
+  type Case = "fresh" | "holdsTheFirstPerson" | "atItsLimit";
+
+  /**
+   * One family of three — Ana, Mihai, Ioana — then a fourth, Luca, over the club's limit of three, on
+   * an address that is fresh, that already holds Ana (registered from another device, her address not
+   * confirmed yet), or that already carries the limit with three other people. `full`: the event's one
+   * place taken by somebody on another address first. Returns the public count after each step, the
+   * places the browser's half would carry, the deadline, and the screen after the third form.
+   */
+  async function family(kind: Case, capacity: number, address: string, full = false) {
+    const event = await createEvent(capacity);
+    const mail = { email: address };
+    if (full) {
+      await submitRegistration(db, event, submission("Radu", at(0), { email: `alt.${address}` }), at(0), "REAL", PUBLIC);
+      await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.eventId, event.id));
+    }
+    if (kind === "holdsTheFirstPerson") await submitRegistration(db, event, submission("Ana", at(0), mail), at(0), "REAL", PUBLIC);
+    if (kind === "atItsLimit") {
+      // Three registrations on the address, the second and third confirmed from its inbox (§446) — three people, the limit.
+      await submitRegistration(db, event, submission("Radu", at(0), mail), at(0), "REAL", PUBLIC);
+      const [participant] = await db.select().from(participants).where(eq(participants.deliveryEmail, address));
+      for (const name of ["Dan", "Elena"]) {
+        await submitRegistration(db, event, submission(name, at(0), { ...mail, fitnessAcknowledged: true }), at(0), "REAL", { ...PUBLIC, anotherPerson: { participantId: participant.id } });
+      }
+      expect((await db.select().from(registrations).where(eq(registrations.participantId, participant.id))).map((row) => row.status)).toEqual([
+        "PENDING_EMAIL_CONFIRMATION",
+        "PENDING_EMAIL_CONFIRMATION",
+        "PENDING_EMAIL_CONFIRMATION",
+      ]);
+    }
+    // Those came long before, from other devices: the throttle's hour is not this sitting's.
+    await db.delete(rateLimitBuckets);
+    const counts: (number | null)[] = [await available(event, at(0))];
+    const opened = await start(event, "Ana", 0, mail);
+    counts.push(await available(event, at(0)));
+    const places = [opened.place];
+    let sittingId = opened.sittingId;
+    for (const [name, minute] of [
+      ["Mihai", 2],
+      ["Ioana", 4],
+    ] as const) {
+      const result = await send(event, name, minute, sittingId, mail, { people: places.length, reservedUntil: opened.reservedUntil });
+      sittingId = result.sittingId ?? sittingId;
+      places.push(result.sittingPlace ?? null);
+      counts.push(await available(event, at(minute)));
+      expect(result.reservedUntil?.toISOString()).toBe(opened.reservedUntil?.toISOString());
+    }
+    const fourth = await refusal(send(event, "Luca", 6, sittingId, mail, { people: places.length, reservedUntil: opened.reservedUntil }));
+    counts.push(await available(event, at(6)));
+    const people = ["Ana Pop", "Mihai Pop", "Ioana Pop"].map((name, index) => ({
+      name,
+      birthDate: BIRTH_DATES[name.split(" ")[0]],
+      ...(places[index] === "waitlist" ? { waitlist: true } : {}),
+    }));
+    const html = await screen(people, opened.reservedUntil, at(5));
+    return { counts, places, fourth, reservedUntil: opened.reservedUntil?.toISOString(), html };
+  }
+
+  async function everyCase(capacity: number, full = false) {
     const { updateAddressCap } = await import("@/modules/registrations/address-cap");
     const [admin] = await db.insert(staffUsers).values({ email: "admin@example.ro", displayName: "Admin", role: "ADMIN" }).returning();
-    await updateAddressCap(db, admin, { registrationsPerAddress: 2 }, NOW);
-    // Radu registered on this address long before, from another device.
+    await updateAddressCap(db, admin, { registrationsPerAddress: 3 }, NOW);
+    return {
+      fresh: await family("fresh", capacity, "noua@example.ro", full),
+      holds: await family("holdsTheFirstPerson", capacity, "ana@example.ro", full),
+      limit: await family("atItsLimit", capacity, "plina@example.ro", full),
+    };
+  }
+
+  it("with places free: the same count after every form, the same «loc rezervat până la 13:40», the fourth refused alike", async () => {
+    const { fresh, holds, limit } = await everyCase(50);
+    expect(fresh.counts).toEqual([50, 49, 48, 47, 47]);
+    expect(fresh.places).toEqual(["reserved", "reserved", "reserved"]);
+    expect(fresh.fourth).toEqual({ code: "VALIDATION_ERROR", fields: ["sittingAtCap"] });
+    expect(fresh.html).toContain("Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la 13:40.");
+    expect(fresh.html.match(/ — loc rezervat</g)).toHaveLength(3);
+    for (const other of [holds, limit]) {
+      expect(other.counts).toEqual(fresh.counts);
+      expect(other.places).toEqual(fresh.places);
+      expect(other.fourth).toEqual(fresh.fourth);
+      expect(other.reservedUntil).toBe(fresh.reservedUntil);
+      expect(other.html).toBe(fresh.html);
+    }
+    // What the held places are: rows naming no person, counted until the deadline.
+    const holdsRows = await db.select().from(familyPlaceHolds);
+    expect(holdsRows.map((row) => row.expiresAt.toISOString())).toEqual(holdsRows.map(() => fresh.reservedUntil));
+    // The holding address's «Da» for Ana, and the three forms of the address at its limit.
+    expect(holdsRows).toHaveLength(1 + 3);
+  });
+
+  it("on a full event every case reads «pe lista de așteptare», the count stays at 0, the fourth refused alike", async () => {
+    // Each event's one place taken by somebody on another address before the family starts.
+    const { fresh, holds, limit } = await everyCase(1, true);
+    expect(fresh.counts).toEqual([0, 0, 0, 0, 0]);
+    expect(fresh.places).toEqual(["waitlist", "waitlist", "waitlist"]);
+    expect(fresh.fourth).toEqual({ code: "VALIDATION_ERROR", fields: ["sittingAtCap"] });
+    expect(fresh.html).toContain("Înscriere de familie: Ana, Mihai, Ioana — 3 persoane pe lista de așteptare.");
+    expect(fresh.html.match(/ — pe lista de așteptare, după confirmare</g)).toHaveLength(3);
+    expect(fresh.html).not.toContain("loc rezervat");
+    for (const other of [holds, limit]) {
+      expect(other.fourth).toEqual(fresh.fourth);
+      expect(other.reservedUntil).toBe(fresh.reservedUntil);
+      expect(other.counts).toEqual(fresh.counts);
+      expect(other.places).toEqual(fresh.places);
+      expect(other.html).toBe(fresh.html);
+    }
+  });
+
+  it("the family's confirmation releases the held places before it allocates anybody", async () => {
+    const event = await createEvent(2);
+    // Radu registered on this address long before; Ana's first form is kept (§446) and «Da» holds her place.
     await submitRegistration(db, event, submission("Radu", at(0)), at(0), "REAL", PUBLIC);
-    // Ana's first form is kept (§446); «Da» opens the sitting and reserves nothing: no registration was written.
-    const opened = await start(event, "Ana", 1);
-    expect(opened).toMatchObject({ opened: true, places: [] });
-    // Mihai's form: Radu and Ana's kept form fill the limit of two, so it is a kept form at the limit.
-    const second = await send(event, "Mihai", 2, opened.sittingId);
-    expect(second.sittingPlace).toBeNull();
-    expect((await rows()).map((row) => row.registeredName)).toEqual(["Radu Pop"]);
-    expect(await available(event, at(2))).toBe(50);
+    const { sittingId, place } = await start(event, "Ana", 0);
+    expect(place).toBe("reserved");
+    const mihai = await send(event, "Mihai", 1, sittingId);
+    expect(mihai.sittingPlace).toBe("reserved");
+    expect(await available(event, at(1))).toBe(0);
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const { secret } = await familyMessage(at(3));
+    const page = await readFamilySittingLink(db, secret!, "ro", at(4));
+    if (!page.ok) throw new Error("the page could not read its link");
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(5));
+    if (!press.ok) throw new Error("the press did nothing");
+    // Ana's own held place is hers, never counted against her: both take the two places.
+    expect(press.joined).toBe(2);
+    expect(await db.select().from(familyPlaceHolds)).toHaveLength(0);
+    const statuses = (await rows()).filter((row) => row.registeredName !== "Radu Pop").map((row) => [row.registeredName, row.status]);
+    expect(statuses).toEqual(expect.arrayContaining([["Ana Pop", "PENDING_DECLARATION"], ["Mihai Pop", "PENDING_DECLARATION"]]));
+    expect(await available(event, at(5))).toBe(0);
+  });
+
+  it("a replayed opening press holds nothing more", async () => {
+    const event = await createEvent(50);
+    await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
+    await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.eventId, event.id));
+    // Ana again: a re-send, which writes nothing; the browser keeps a random id and no seed.
+    const result = await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });
+    const cookieId = randomUUID();
+    const firstWindowEnd = new Date(at(0).getTime() + WINDOW_MS);
+    for (let replay = 0; replay < 5; replay += 1) {
+      const pressed = await continueFamilySittingAndReserve(db, { sittingId: cookieId, seed: result.sittingSeed ?? null, eventId: event.id, locale: "ro" }, firstWindowEnd, at(replay), { firstWindowEnd });
+      expect(pressed.place).toBe("reserved");
+    }
+    // One held place, as a fresh address's press reserves one; Ana's confirmed place is counted too.
+    expect(await available(event, at(5))).toBe(48);
+    expect(await db.select().from(familyPlaceHolds)).toHaveLength(1);
   });
 });
 

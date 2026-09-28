@@ -48,6 +48,8 @@ type Props = {
   continueAction: (form: FormData) => Promise<void>;
   /** «Gata»: the sitting's one email leaves now (`releaseFamilySittingAction`). */
   releaseAction: (form: FormData) => Promise<void>;
+  /** The instant the screen is read at (§NNN): the deadline is compared with it. The request's clock; a test passes its own. */
+  now?: Date;
 };
 
 /**
@@ -84,6 +86,7 @@ export default async function FamilySittingNext({
   slug,
   continueAction,
   releaseAction,
+  now = new Date(),
 }: Props) {
   const t = await getTranslations("Registration");
   const windowWords = minutesPhrase(locale, windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
@@ -96,11 +99,19 @@ export default async function FamilySittingNext({
     rezervăm»): «Înscriere de familie: Ana, Mihai, Ioana — 3 locuri rezervate până la 12:40», and beside
     each name the place its form got. Only once a place was reserved at all (`until`).
   */
-  const until = reservation?.until ?? null;
+  const deadline = reservation?.until ?? null;
+  /*
+    Past the sitting's deadline (§NNN, the review of 2026-09-28, round three): nothing is reserved any
+    more — the deadline was fixed by the first form and nothing moved it — so the screen names no
+    place and says so, in one sentence, whatever «Da» was pressed since. The deadline is a fact about
+    this browser's forms and the club's settings, never the address's (§39).
+  */
+  const lapsed = deadline !== null && deadline.getTime() <= now.getTime();
+  const until = lapsed ? null : deadline;
   const facts = reservation ? sittingReservationFacts(reservation.people) : null;
   const places: string[] = [];
   if (facts && until) {
-    const words = reservedUntilWords(until, new Date(), locale);
+    const words = reservedUntilWords(until, now, locale);
     const untilWords = t(words.key === "reservedToday" ? "sitting.untilToday" : "sitting.untilOn", { at: words.at });
     if (facts.reserved > 0) places.push(`${t(`sitting.reserved.${countForm(facts.reserved, locale)}`, { count: facts.reserved })} ${untilWords}`);
     if (facts.waiting > 0) places.push(t(`sitting.waiting.${countForm(facts.waiting, locale)}`, { count: facts.waiting }));
@@ -113,8 +124,7 @@ export default async function FamilySittingNext({
       : null;
   const placeOf = (index: number): string | null => {
     const person = until ? reservation?.people[index] : undefined;
-    // A form that wrote no registration names no place (§NNN): the public count took none.
-    if (!person || person.noPlace) return null;
+    if (!person) return null;
     return person.waitlist ? t("sitting.placeWaitlist") : t("sitting.placeReserved");
   };
 
@@ -193,6 +203,11 @@ export default async function FamilySittingNext({
         {places.length > 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {t("sitting.reservedHelp")}
+          </Typography>
+        )}
+        {lapsed && (
+          <Typography variant="body2" sx={{ mt: 1, fontWeight: 700 }} data-testid="family-sitting-lapsed">
+            {t("sitting.reservationLapsed")}
           </Typography>
         )}
       </Box>

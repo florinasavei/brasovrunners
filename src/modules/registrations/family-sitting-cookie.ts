@@ -28,10 +28,10 @@ const PURPOSE = "family-sitting";
 
 /**
  * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, and `w` when
- * no place was free for them (§NNN), `n` when their form wrote no registration and so no place.
+ * no place was free for them (§NNN).
  */
 function peopleLines(people: readonly SittingPerson[]): string {
-  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : person.noPlace ? "n" : ""}`).join("\n");
+  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : ""}`).join("\n");
 }
 
 function peopleOf(lines: string | undefined): SittingPerson[] {
@@ -40,7 +40,7 @@ function peopleOf(lines: string | undefined): SittingPerson[] {
     .filter((line) => line.trim() !== "")
     .map((line) => {
       const [name = "", birthDate = "", place = ""] = line.split("\t");
-      return place === "w" ? { name, birthDate, waitlist: true } : place === "n" ? { name, birthDate, noPlace: true } : { name, birthDate };
+      return place === "w" ? { name, birthDate, waitlist: true } : { name, birthDate };
     });
 }
 
@@ -100,7 +100,7 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
     // When the first form's email leaves (§536), computed once at submit; always 25 characters (§39).
     l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt) : "",
-    // Until when the sitting's places are reserved (§NNN): the club's hold after the window, never the address's.
+    // Until when the sitting's places are reserved (§NNN): the sitting's fixed deadline, never the address's.
     u: value.reservedUntil ? String(value.reservedUntil.getTime()) : "",
   };
   /*

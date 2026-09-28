@@ -148,11 +148,12 @@ export function computeWaitlistOfferExpiry(params: {
 }
 
 /**
- * Until when a family's place is reserved (§NNN): the club's declaration hold («Termene»,
- * `holdMinutes`) counted from the instant the family's one email leaves — `from` is the sitting's
- * window end while the email is held, and the send itself once it leaves — capped by the close and
- * the start like every hold. While the email is still queued the reservation holds whatever this
- * says (`repository.ts#familyReservationAwaitingItsEmail`).
+ * Until when a family's places are reserved (§NNN): the club's declaration hold («Termene»,
+ * `holdMinutes`) counted from `from` — the end of the first form's window, when the sitting opens
+ * (or a form's own window, when it opens a new sitting after the last one's deadline) — capped by the
+ * close and the start like every hold. Worked out once per sitting and stored on it
+ * (`family_sittings.reserved_until`); no form, press or send moves it afterwards (the review of
+ * 2026-09-28, round three).
  */
 export function computeFamilyReservationExpiry(params: {
   from: Date;

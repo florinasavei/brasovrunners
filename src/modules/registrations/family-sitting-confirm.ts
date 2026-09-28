@@ -21,6 +21,7 @@ import { familyRegistrationOpen } from "./family-gate";
 import { findSittingByToken, sittingPeople, sittingStillOpen } from "./family-sitting";
 import { publicFormEvent } from "./public-form-event";
 import { confirmEmail, submitRegistration } from "./service";
+import { releaseFamilyPlaceHolds } from "./repository";
 
 /**
  * A family's one button (§519): the page the family message opens, and its press.
@@ -186,6 +187,12 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
       (`familyHeldDeclaration`, in `confirmEmail`): a request never arrives after its own hold.
     */
     const declarationNotBefore = new Date(now.getTime() + FAMILY_PASS_MINUTES * 60_000);
+    /*
+      The sitting's holds for forms that wrote no registration (§NNN) go first: every person the press
+      registers is allocated below like any other, and must not find their own held place counted
+      against them.
+    */
+    await releaseFamilyPlaceHolds(tx, sitting.id);
 
     const registrations: Registration[] = [];
     const refused: FamilySittingRefusal[] = [];

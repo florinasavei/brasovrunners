@@ -26,11 +26,18 @@ export type OccupiedCounts = {
    * reservation (a hand-built count in a test) reads as none.
    */
   familyReservations?: number;
+  /**
+   * A family sitting's holds for forms that wrote no registration (§NNN; §39, AGENTS.md §19.4): a
+   * kept form, a person the address already holds, an address at the club's limit — each counted as
+   * one reserved place until the sitting's deadline, so the public count drops by one for such a form
+   * as it does for a fresh address. Optional, like `familyReservations`.
+   */
+  familyPlaceHolds?: number;
 };
 
 export function computeOccupied(counts: OccupiedCounts): number {
   return (
-    counts.confirmed + counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + (counts.familyReservations ?? 0)
+    counts.confirmed + counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0)
   );
 }
 

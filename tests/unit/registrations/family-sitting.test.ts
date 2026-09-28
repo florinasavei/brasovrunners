@@ -78,33 +78,35 @@ describe("§519 the browser's half of a sitting", () => {
     expect(opened?.shared).toBeUndefined();
   });
 
-  it("carries each person's place — reserved, the waiting list, or none where the form wrote no registration (§NNN)", async () => {
-    const { sittingReservationFacts, withLatestPlace, withPlace } = await import("@/modules/registrations/domain/family-sitting");
+  it("carries each person's place — reserved or the waiting list, never «none» (§NNN, the review of 2026-09-28, round three)", async () => {
+    const { isNewSittingPerson, sittingReservationFacts, withLatestPlace, withPlace, withSittingPerson } = await import("@/modules/registrations/domain/family-sitting");
     const people = [
       { name: "Ana Pop", birthDate: "1985-03-02" },
       { name: "Maria Pop", birthDate: "2010-07-11", waitlist: true },
-      { name: "Dan Pop", birthDate: "2011-05-20", noPlace: true },
+      { name: "Dan Pop", birthDate: "2011-05-20" },
     ];
     expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, people })!)?.people).toEqual(people);
-    // None is neither reserved nor waiting: the marker counts one reserved place and one waiting.
-    expect(sittingReservationFacts(people)).toEqual({ firstNames: ["Ana", "Maria", "Dan"], reserved: 1, waiting: 1 });
-    // A form that wrote nothing names no place; `undefined` (outside a sitting) changes nobody.
-    expect(withLatestPlace(cookie.people, null).at(-1)).toEqual({ name: "Maria Pop", birthDate: "2010-07-11", noPlace: true });
+    // Every person holds a place or waits for one: the marker counts two reserved and one waiting.
+    expect(sittingReservationFacts(people)).toEqual({ firstNames: ["Ana", "Maria", "Dan"], reserved: 2, waiting: 1 });
+    expect(withLatestPlace(cookie.people, "waitlist").at(-1)).toEqual({ name: "Maria Pop", birthDate: "2010-07-11", waitlist: true });
     expect(withLatestPlace(cookie.people, undefined)).toEqual(cookie.people);
-    expect(withPlace({ name: "Dan Pop", birthDate: "", noPlace: true }, "reserved")).toEqual({ name: "Dan Pop", birthDate: "" });
-    expect(withPlace({ name: "Dan Pop", birthDate: "", waitlist: true }, null)).toEqual({ name: "Dan Pop", birthDate: "", noPlace: true });
+    expect(withPlace({ name: "Dan Pop", birthDate: "", waitlist: true }, "reserved")).toEqual({ name: "Dan Pop", birthDate: "" });
+    // A correction keeps the place the person had, and is not a new person; another name is.
+    const corrected = withSittingPerson(people, { name: "Maria  Pop", birthDate: "2010-07-12" });
+    expect(corrected.people.at(-1)).toEqual({ name: "Maria Pop", birthDate: "2010-07-12", waitlist: true });
+    expect(isNewSittingPerson(people, corrected)).toBe(false);
+    expect(isNewSittingPerson(people, withSittingPerson(people, { name: "Ioana Pop", birthDate: "2012-01-01" }))).toBe(true);
+    // Another name on a typed birth date is set aside, not a new person (§493).
+    expect(isNewSittingPerson(people, withSittingPerson(people, { name: "Ioana Pop", birthDate: "2011-05-20" }))).toBe(false);
   });
 
-  it("a stored reservation holds at the send only while its deadline is ahead or the email was due by it (§NNN)", async () => {
-    const { reservationHoldsAtSend } = await import("@/modules/registrations/domain/family-reservation");
+  it("a stored reservation holds only while its fixed deadline is ahead, whatever the email is doing (§NNN)", async () => {
+    const { familyReservationHoldsAt } = await import("@/modules/registrations/domain/family-reservation");
     const deadline = new Date(NOW.getTime() + 40 * 60_000);
-    const later = new Date(NOW.getTime() + 60 * 60_000);
-    expect(reservationHoldsAtSend(null, null, NOW)).toBe(false);
-    expect(reservationHoldsAtSend(deadline, later, NOW)).toBe(true);
-    // The job was late: the email was due before the deadline, so the place is still the family's.
-    expect(reservationHoldsAtSend(deadline, NOW, later)).toBe(true);
-    // A «Da» press moved the email past the deadline: the place lapsed at it.
-    expect(reservationHoldsAtSend(deadline, new Date(deadline.getTime() + 60_000), later)).toBe(false);
+    expect(familyReservationHoldsAt(null, NOW)).toBe(false);
+    expect(familyReservationHoldsAt(deadline, NOW)).toBe(true);
+    expect(familyReservationHoldsAt(deadline, deadline)).toBe(false);
+    expect(familyReservationHoldsAt(deadline, new Date(deadline.getTime() + 60 * 60_000))).toBe(false);
   });
 
   it("stands for a sitting of this event until its email leaves by itself", () => {

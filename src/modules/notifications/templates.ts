@@ -766,7 +766,8 @@ export type TemplateData = {
   familySittingPeople?: ReadonlyArray<FamilySittingPerson>;
   /**
    * Until when the family's places are reserved (§NNN), in the reader's language and the other's —
-   * the latest reservation of the people listed, from this send. Absent when nobody holds one.
+   * the sitting's fixed deadline, as the reservations of the people listed carry it; this send moves
+   * nothing. Absent when nobody holds one.
    */
   familyReservedUntilFormatted?: string;
   familyReservedUntilFormattedOther?: string;

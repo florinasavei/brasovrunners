@@ -14,7 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { alias } from "drizzle-orm/pg-core";
-import { familyReservationAwaitingItsEmail, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
+import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -1166,8 +1166,9 @@ export function termsLineKindFor(registration: {
  */
 /**
  * The places families reserved at their forms (§NNN), for the queue panel: each registration still
- * waiting for its address whose reservation holds (`familyReservationHolds`), its deadline, and
- * whether the family's one email is still queued — its deadline then moves when the email leaves.
+ * waiting for its address whose reservation holds (`familyReservationHolds`), its deadline — the
+ * sitting's, fixed by its first form — and whether the family's one email is still queued, which moves
+ * nothing.
  * In the order the forms were sent.
  */
 export async function listFamilyReservationsForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date) {
@@ -1179,7 +1180,7 @@ export async function listFamilyReservationsForEvent<T extends Record<string, un
       kind: registrations.kind,
       registeredName: registrations.registeredName,
       holdExpiresAt: registrations.holdExpiresAt,
-      emailQueued: sql<boolean>`${familyReservationAwaitingItsEmail()}`,
+      emailQueued: sql<boolean>`${familyEmailQueued()}`,
     })
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), familyReservationHolds(now)))

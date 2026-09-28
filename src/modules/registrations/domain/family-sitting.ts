@@ -44,6 +44,12 @@ export const SITTING_SENT_PARAM = "sent";
 export const SITTING_AT_CAP = "sittingAtCap";
 
 /**
+ * The slot of the hold the opening «Da» takes when the first form wrote no registration (§NNN,
+ * `family_place_holds`): one per sitting, however often the browser's half is replayed.
+ */
+export const PRESS_SLOT = "press";
+
+/**
  * The payload mark of a verification email a sitting held (§519): rendered, its link's life is
  * counted from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a
  * value. Written only when the message is held — by a form after «Da», or by «Da» itself taking the
@@ -296,9 +302,11 @@ export type FamilySittingCookie = {
   /** The last form named another person on the birth date of one typed before it (`withSittingPerson`). */
   sameBirthDate?: { typed: string; kept: string } | null;
   /**
-   * Until when the sitting's places are reserved (§NNN): the club's hold after the window's end, as
-   * the server wrote it with the last form or «Da». A club setting and the event's, never the
-   * address's (§39). Absent before «Da» and on a half written before it was kept.
+   * Until when the sitting's places are reserved (§NNN): the sitting's fixed deadline — the first
+   * form's instant, the club's window and hold, capped by the event — as the server wrote it at the
+   * opening «Da», or at the form that opened a new sitting after it. Facts about this browser's forms,
+   * the club's settings and the event, never the address's (§39). Absent before «Da» and on a half
+   * written before it was kept. The screen reads it against the clock: past it, no place is reserved.
    */
   reservedUntil?: Date | null;
 };
@@ -311,37 +319,45 @@ export type FamilySittingCookie = {
 export function sittingReservationFacts(people: readonly SittingPerson[]): { firstNames: string[]; reserved: number; waiting: number } {
   return {
     firstNames: people.map((person) => person.name.trim().split(/\s+/)[0] || person.name),
-    reserved: people.filter((person) => !person.waitlist && !person.noPlace).length,
+    reserved: people.filter((person) => !person.waitlist).length,
     waiting: people.filter((person) => person.waitlist === true).length,
   };
 }
 
 /**
- * The person with the place their form got (§NNN): `reserved`, `waitlist`, or null — the form wrote
- * no registration, so it neither reserved a place nor put anybody on the waiting list, and the screen
- * names no place for them (the review of 2026-09-28, round two).
+ * The person with the place their form got (§NNN): `reserved` or `waitlist`. Every form of a sitting
+ * for a new person gets one of the two, whatever the address holds (the review of 2026-09-28, round
+ * three; §39): a form that wrote no registration takes a counted hold (`family_place_holds`) as a
+ * fresh address's form takes a reserved registration, and reads the same.
  */
-export function withPlace(person: SittingPerson, place: "reserved" | "waitlist" | null): SittingPerson {
+export function withPlace(person: SittingPerson, place: "reserved" | "waitlist"): SittingPerson {
   const rest = { name: person.name, birthDate: person.birthDate };
-  if (place === "waitlist") return { ...rest, waitlist: true };
-  if (place === null) return { ...rest, noPlace: true };
-  return rest;
+  return place === "waitlist" ? { ...rest, waitlist: true } : rest;
 }
 
 /** The last person of the list with the place their form got (§NNN), the others as they were; `undefined` changes nobody. */
-export function withLatestPlace(people: readonly SittingPerson[], place: "reserved" | "waitlist" | null | undefined): SittingPerson[] {
+export function withLatestPlace(people: readonly SittingPerson[], place: "reserved" | "waitlist" | undefined): SittingPerson[] {
   if (place === undefined || people.length === 0) return [...people];
   return [...people.slice(0, -1), withPlace(people.at(-1)!, place)];
+}
+
+/**
+ * Whether the form just typed is a new person of the sitting (§NNN): its name joins the list, rather
+ * than correcting a name typed before or being set aside as another name on a typed birth date
+ * (`withSittingPerson`). Only a new person takes a place; a correction keeps the one it had.
+ */
+export function isNewSittingPerson(before: readonly SittingPerson[], after: { people: readonly SittingPerson[]; sameBirthDate: unknown }): boolean {
+  if (after.sameBirthDate) return false;
+  const last = after.people.at(-1);
+  return last !== undefined && !before.some((person) => sameRunner(person.name, last.name));
 }
 
 /**
  * One person of the sitting, as this browser typed them: the name, and the birth date ("YYYY-MM-DD",
  * or ""). `waitlist` (§NNN): no place was free when their form was sent, so they join the waiting
  * list when the address is confirmed — a fact about the event, never about the address (§39).
- * `noPlace`: their form wrote no registration (a kept form, a person the address already holds), so
- * the screen names no place for them — neither reserved nor the waiting list.
  */
-export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean; noPlace?: boolean };
+export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean };
 
 /** The names, in the order the screen lists them. */
 export function sittingNames(people: readonly SittingPerson[]): string[] {
@@ -416,7 +432,9 @@ export function withSittingPerson(
   if (name === "") return { people: [...people], sameBirthDate: null };
   const sameName = people.find((person) => sameRunner(person.name, name));
   if (sameName) {
-    return { people: [...people.filter((person) => person !== sameName), { name, birthDate }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
+    // A correction keeps the place the person had (§NNN): only a new person takes one.
+    const place = sameName.waitlist ? { waitlist: true } : {};
+    return { people: [...people.filter((person) => person !== sameName), { name, birthDate, ...place }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
   }
   const sameDay = birthDate !== "" ? people.find((person) => person.birthDate === birthDate) : undefined;
   if (sameDay) return { people: [...people], sameBirthDate: { typed: name, kept: sameDay.name } };

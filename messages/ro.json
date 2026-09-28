@@ -1955,8 +1955,14 @@
         "few": "{count} locuri rezervate de familii",
         "other": "{count} de locuri rezervate de familii"
       },
-      "familyQueued": "rezervat; termenul curge de când pleacă emailul familiei",
-      "familyUntil": "rezervat până {until}"
+      "familyQueued": "rezervat până {until}, termen fixat de primul formular al familiei; emailul familiei n-a plecat încă și nu mută termenul",
+      "familyQueuedNoDeadline": "rezervat; emailul familiei n-a plecat încă",
+      "familyUntil": "rezervat până {until}",
+      "familyHeld": {
+        "one": "{count} loc ținut de o familie pentru un formular fără înscriere, până la termenul familiei",
+        "few": "{count} locuri ținute de familii pentru formulare fără înscriere, până la termenele lor",
+        "other": "{count} de locuri ținute de familii pentru formulare fără înscriere, până la termenele lor"
+      }
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -5787,7 +5793,8 @@
       "untilOn": "până {at}",
       "placeReserved": "loc rezervat",
       "placeWaitlist": "pe lista de așteptare, după confirmare",
-      "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate."
+      "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
+      "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci."
     }
   },
   "Registrations": {
