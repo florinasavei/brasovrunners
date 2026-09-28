@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -8,6 +7,7 @@ import { EVENT_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { eventInputConstraints } from "../../constraints";
+import DifficultyRow from "../DifficultyRow";
 import DifficultyStepField from "../DifficultyStepField";
 import GlyphSelect from "../GlyphSelect";
 import TypeNote from "../TypeNote";
@@ -126,34 +126,38 @@ export default async function KindBox({
               warning
             />
           )}
-          {/* How hard (§526): the band and its step, side by side from `sm` — the level on the
-              club's scale of fifteen, which «Ghid» explains. */}
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-            {/* The whole scale behind a «?» beside the band too (§528): the band is the first choice. */}
-            <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-              <GlyphSelect
-                name="event.difficulty"
-                label={t("editor.fields.difficulty")}
-                defaultValue={band ?? ""}
-                options={[
-                  { value: "", label: t("editor.notStated") },
-                  ...DIFFICULTY_BANDS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
-                ]}
-                sx={{ flex: 1 }}
+          {/* How hard (§526): the band and its step, the level on the club's scale of fifteen, which
+              «Ghid» explains — on one centred axis since §537 (`DifficultyRow`), stacked below `sm`. */}
+          <DifficultyRow
+            band={
+              // The whole scale behind a «?» beside the band too (§528): the band is the first choice.
+              <>
+                <GlyphSelect
+                  name="event.difficulty"
+                  label={t("editor.fields.difficulty")}
+                  defaultValue={band ?? ""}
+                  options={[
+                    { value: "", label: t("editor.notStated") },
+                    ...DIFFICULTY_BANDS.map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
+                  ]}
+                  sx={{ flex: 1 }}
+                />
+                <QuietHelp text={difficultyScale} testId="difficulty-band-help" />
+              </>
+            }
+            step={
+              <DifficultyStepField
+                name="event.difficultyStep"
+                defaultStep={step}
+                words={{
+                  label: t("editor.fields.difficultyStep"),
+                  help: t("editor.difficultyStepHelp"),
+                  scale: difficultyScale,
+                  choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
+                }}
               />
-              <QuietHelp text={difficultyScale} testId="difficulty-band-help" />
-            </Box>
-            <DifficultyStepField
-              name="event.difficultyStep"
-              defaultStep={step}
-              words={{
-                label: t("editor.fields.difficultyStep"),
-                help: t("editor.difficultyStepHelp"),
-                scale: difficultyScale,
-                choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
-              }}
-            />
-          </Stack>
+            }
+          />
           {/* A compact help fold, not a card (§398; the owner: "«Ce înseamnă fiecare tip?» ar
               trebui să fie un card mai mic"): a clickable line, closed by default (§336). */}
           <Panel collapsible variant="help" title={t("editor.typeHelpSummary")}>

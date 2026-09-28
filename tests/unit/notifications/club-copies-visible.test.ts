@@ -79,7 +79,7 @@ describe("§457 the club's copies are shown back and can be saved", () => {
 
   it("the action maps the refusal to the boxes and says which entry, for both address forms", () => {
     // The club's copies on «Setări» → «Emailuri», the contact recipients on «Setări» → «Contact» (§516).
-    const actions = read("src/app/[locale]/admin/settings/emails/actions.ts") + read("src/app/[locale]/admin/settings/contact/actions.ts");
+    const actions = read("src/app/[locale]/admin/settings/emails/actions.ts") + read("src/app/[locale]/admin/pages/contact/actions.ts");
     expect(actions).toContain("fieldNames: (domain) => clubNoticeBoxesOf(domain.fields)");
     expect(actions).toContain("addressListRefusal(lists, CLUB_NOTICE_RECIPIENTS_MAX)");
     expect(actions).toContain('addressListRefusal([list("to"), list("cc"), list("bcc")], CONTACT_RECIPIENTS_MAX)');

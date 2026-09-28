@@ -9,6 +9,9 @@ import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent, scrubParticipantFromAudit, scrubRegistrationFromAudit } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
+import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domain/send-at-once";
+import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -77,6 +80,11 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   now: Date,
   /** `EVENT_REMINDER` asks for the reminder instead of the state's own message (§81). */
   wanted?: "EVENT_REMINDER",
+  /**
+   * «now» sends it after this response, past the scheduled pass (§540); «queue», the default, leaves
+   * it to «Când pleacă emailurile», as every resend did before.
+   */
+  delivery: DeliveryChoice = "queue",
 ): Promise<void> {
   assertAdministrator(actor);
 
@@ -95,37 +103,6 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
         "the reminder can be sent only for a confirmed registration to an event that has not started",
       );
     }
-  }
-
-  /**
-   * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
-   * recorded."
-   *
-   * Keyed on the registration rather than the administrator, because what is being protected is
-   * one participant's inbox — two organizers both clicking resend is exactly the case to catch,
-   * and it is invisible if each of them has their own allowance.
-   *
-   * Checked before the message type is derived so a throttled resend does nothing at all, and
-   * refused with a real error rather than a generic success: this caller is an authenticated
-   * Administrator looking at the screen, so there is nothing to leak and everything to gain
-   * from saying what happened.
-   */
-  const verdict = await consumeRateLimit(db, "admin-resend", registrationId, now);
-  if (!verdict.allowed) {
-    await recordAuditEvent(db, {
-      actorStaffUserId: actor.id,
-      participantId: registration.participantId,
-      action: "registration.resend_rate_limited",
-      entityType: "registration",
-      entityId: registrationId,
-      metadata: { count: verdict.count, limit: verdict.limit },
-      now,
-    });
-
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `this registration has had ${verdict.count} resends in the last hour; wait ${verdict.retryAfter} seconds`,
-    );
   }
 
   const messageType = wanted ?? deriveAllowedResendMessageType(registration.status);
@@ -154,20 +131,81 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
     .limit(1);
   if (!participant) throw new DomainError("NOT_FOUND", "no such participant");
 
-  await db.transaction((tx) =>
-    enqueueEmail(tx, {
+  /*
+    «Trimite acum, fără să aștepte trecerea programată» (§540): inside the day's allowance, asked
+    before anything is queued, so a refusal leaves nothing behind (§80: refused, never deferred in
+    silence). The club's copies ride with it, each on the club group's road, and count too.
+  */
+  if (delivery === "now") {
+    const copies = await clubCopyTypesFor(db, { messageType, recipientEmail: participant.deliveryEmail, real: registration.kind === "REAL" });
+    await assertRoomToSendNow(db, [messageType], now, copies);
+  }
+
+  /**
+   * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
+   * recorded."
+   *
+   * Keyed on the registration rather than the administrator, because what is being protected is
+   * one participant's inbox — two organizers both clicking resend is exactly the case to catch,
+   * and it is invisible if each of them has their own allowance.
+   *
+   * Checked after everything that only reads — the message type, the event, the day's allowance
+   * for a «now» (§540) — so a press refused for any of those spends none of the hour's resends and
+   * the «Pune la coadă» the allowance's refusal suggests is still allowed; a throttled resend
+   * queues nothing at all. Refused with a real error rather than a generic success: this caller
+   * is an authenticated Administrator looking at the screen, so there is nothing to leak and
+   * everything to gain from saying what happened.
+   */
+  const verdict = await consumeRateLimit(db, "admin-resend", registrationId, now);
+  if (!verdict.allowed) {
+    await recordAuditEvent(db, {
+      actorStaffUserId: actor.id,
+      participantId: registration.participantId,
+      action: "registration.resend_rate_limited",
+      entityType: "registration",
+      entityId: registrationId,
+      metadata: { count: verdict.count, limit: verdict.limit },
+      now,
+    });
+
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `this registration has had ${verdict.count} resends in the last hour; wait ${verdict.retryAfter} seconds`,
+    );
+  }
+
+  const idempotencyKey = `registration:${registration.id}:manual-resend:${now.toISOString()}`;
+  await db.transaction(async (tx) => {
+    const queued = await enqueueEmail(tx, {
       participantId: registration.participantId,
       registrationId: registration.id,
       messageType,
       locale: registration.locale,
       recipientEmail: participant.deliveryEmail,
-      payload: {},
-      idempotencyKey: `registration:${registration.id}:manual-resend:${now.toISOString()}`,
+      // Marked for the queue panel's «Pleacă acum» (§540); the club's copies carry the mark with it.
+      payload: markedForNow({}, delivery),
+      idempotencyKey,
       requestedByStaffUserId: actor.id,
       isManualResend: true,
       now,
-    }),
-  );
+      // Sent now by its own drain below, not by the timing's (§540); queued, the timing's as before.
+      drainAfter: delivery !== "now",
+    });
+    // The press, on the registration's trail (§540): who, which message, and that it passed the round.
+    if (delivery === "now" && queued) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: registration.participantId,
+        action: "registration.sent_now",
+        entityType: "registration",
+        entityId: registration.id,
+        metadata: { outboxId: queued.id, messageType, bypassedSchedule: true },
+        now,
+      });
+    }
+  });
+  // The message and its club copies, after this response, whatever «Când pleacă emailurile» says.
+  if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, idempotencyKey));
 }
 
 // --- The rest of the registration CRUD (BR-REQ-037-03, BR-REQ-037-05) -------------------------

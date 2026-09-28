@@ -20,6 +20,7 @@ import {
   normalizeTeamLinkUrl,
   type TeamLink,
 } from "./links";
+import { readTeamPhotoCrop } from "./photo-crop";
 
 /**
  * What the club types for one card of «Echipa» (§459, grown by §474).
@@ -29,7 +30,8 @@ import {
  * link in the text, a picture), the same pair rule, read as "written" by `hasRichTextContent` — a
  * picture with no words is something written. Up to twelve links (§491), each a kind, an https address and
  * a label in both languages or neither (§332's shape). A photograph, by the id of the picture the
- * upload stored (`/api/admin/media`), or none.
+ * upload stored (`/api/admin/media`), or none — and since §541 the part of it the card shows, the
+ * crop box's four fractions, kept only with a photograph.
  *
  * One side written and the other empty is refused on the empty box, every other box kept (§315).
  */
@@ -256,6 +258,11 @@ export const teamMemberFieldsSchema = z
       .trim()
       .refine((value) => value === "" || isUuid(value), "not a picture id")
       .transform((value) => (value === "" ? null : value.toLowerCase())),
+    /**
+     * The part of the photograph the card shows (§541): the crop box's four fractions as the field
+     * posts them (JSON), or an object from a fixture or the seed. Absent or empty is no crop.
+     */
+    photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
   })
   .transform((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.roleRo, en: fields.roleEn }, { ro: ["roleRo"], en: ["roleEn"] }, "the role");
@@ -265,6 +272,9 @@ export const teamMemberFieldsSchema = z
       { ro: { plain: "bioRo", body: "bioRoBody" }, en: { plain: "bioEn", body: "bioEnBody" } },
       { max: TEAM_BIO_MAX, tables: false, what: "the description" },
     );
+    const crop = readTeamPhotoCrop(fields.photoCrop);
+    // A crop the box could not have drawn is a hand-made post: refused on the photo, the rest kept.
+    if (crop === "invalid") ctx.addIssue({ code: "custom", path: ["photoAssetId"], message: "not a crop of the photo" });
     const links =
       fields.links ?? (fields.link === "" ? [] : [{ kind: guessTeamLinkKind(fields.link), url: normalizeTeamLinkUrl(fields.link), labelRo: null, labelEn: null }]);
     return {
@@ -279,6 +289,8 @@ export const teamMemberFieldsSchema = z
       /** The first link, written to §459's column for the code still serving during a rollout. */
       link: links[0]?.url ?? null,
       photoAssetId: fields.photoAssetId,
+      /** Only with a photograph: a crop means nothing on a card without one. */
+      photoCrop: fields.photoAssetId && crop !== "invalid" ? crop : null,
     };
   });
 

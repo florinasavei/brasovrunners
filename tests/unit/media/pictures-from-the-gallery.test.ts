@@ -216,7 +216,7 @@ describe("§485 the picker's query: order, rule, search and source", () => {
     { id: "5", name: "Hartă traseu Tâmpa.png", uses: ["event"] },
     { id: "4", name: "yt-dQw4w9WgXcQ", uses: ["event"], poster: true },
     { id: "3", name: "afis-CROSUL.jpg", uses: ["album", "page"] },
-    { id: "2", name: "Amalia.jpg", uses: ["team"] },
+    { id: "2", name: "Ioana.jpg", uses: ["team"] },
     { id: "1", name: "harta-veche.jpg", uses: [] },
   ];
   const ids = (pictures: readonly P[]) => pictures.map((picture) => picture.id);

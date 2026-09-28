@@ -47,6 +47,8 @@ import { countAccountLines, createMemberAccounts, type MemberAccountLine } from 
 import { invalidAddresses } from "@/modules/contact/domain/recipients";
 import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, isBackofficeRole, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
+import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
+import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
   inviteZitadelUser,
@@ -1171,16 +1173,23 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
+  // The toast's sentence: «pleacă acum» when the press sent it past the scheduled pass (§540).
+  let toast: Record<string, string | undefined> | undefined;
   try {
     const actor = await requireStaffCapability(canManageStaff);
     // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
-    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"));
+    // «Trimite acum» or «Pune la coadă» (§540): the dialog's answer, the queue when none was offered.
+    const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
     const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+    // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288).
+    if (delivery === "now") toast = { ...outcome, saved: "reinvitedNow" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // A «now» the day's allowance cannot hold says so in its own sentence (§80, §540).
+    outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
   }
-  return backTo(path, outcome);
+  return backTo(path, outcome, toast);
 }
 
 /**

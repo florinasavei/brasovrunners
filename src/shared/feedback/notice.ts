@@ -304,7 +304,32 @@ export type ConfirmSpec = {
    * press goes to the server, which refuses it.
    */
   bodyCount?: BodyCount;
+  /**
+   * Two ways forward (§540): a resend in the backoffice leaves now, or waits for the scheduled pass.
+   * `field` is a hidden input of the form; the confirm button posts it as `confirmValue` (the primary,
+   * with the send glyph) and the quiet button beside it as `alternativeValue`. Without JavaScript
+   * the hidden input posts what the page wrote in it — the primary's value.
+   */
+  choice?: ConfirmChoice;
 };
+
+/** `ConfirmSpec.choice`: the hidden field both answers set, and the quiet answer's words. */
+export type ConfirmChoice = {
+  field: string;
+  confirmValue: string;
+  alternativeValue: string;
+  alternativeLabel: string;
+};
+
+/**
+ * What an answer to a two-way question posts (§540): the confirm button its `confirmValue`, the quiet
+ * one its `alternativeValue`; `null` for a dialog with no choice, which posts the form as it stands.
+ * Pure, so both answers are tested in Node.
+ */
+export function choiceAnswer(spec: ConfirmSpec, answer: "confirm" | "alternative"): { field: string; value: string } | null {
+  if (!spec.choice) return null;
+  return { field: spec.choice.field, value: answer === "confirm" ? spec.choice.confirmValue : spec.choice.alternativeValue };
+}
 
 /** `ConfirmSpec.bodyCount`: the field whose distinct posted values are counted, and the body's three forms, each with `{count}`. */
 export type BodyCount = {

@@ -91,6 +91,8 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         link: fields.link,
         links: fields.links.length > 0 ? fields.links : null,
         photoMediaAssetId: fields.photoAssetId,
+        // The part the card shows (§541); null is the whole photograph, as before.
+        photoCrop: fields.photoCrop,
         position: (last?.position ?? 0) + 1,
         visible: false,
         createdByStaffUserId: input.actor.id,
@@ -144,6 +146,8 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
         link: fields.link,
         links: fields.links.length > 0 ? fields.links : null,
         photoMediaAssetId: fields.photoAssetId,
+        // The part the card shows (§541); null is the whole photograph, as before.
+        photoCrop: fields.photoCrop,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,

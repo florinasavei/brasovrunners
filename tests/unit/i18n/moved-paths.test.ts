@@ -32,6 +32,11 @@ describe("§516 the moved backoffice addresses", () => {
         search: "?saved=neonPlan",
       });
       expect(resolveMovedBackofficePath(`/${locale}/admin/tasks`, "?panel=botCheck")).toEqual({ pathname: `/${locale}/admin/settings/platform`, search: "" });
+      // «Contact» is «Pagini»'s (the owner, 2026-09-28: «ar trebui să rămân în același loc»).
+      expect(resolveMovedBackofficePath(`/${locale}/admin/settings/contact`, "?saved=contactRecipients")).toEqual({
+        pathname: `/${locale}/admin/pages/contact`,
+        search: "?saved=contactRecipients",
+      });
     }
     // Unprefixed stays unprefixed: next-intl negotiates the locale on the next hop, as for `/login`.
     expect(resolveMovedBackofficePath("/admin/emails", "")).toEqual({ pathname: "/admin/settings/emails", search: "" });
@@ -47,6 +52,7 @@ describe("§516 the moved backoffice addresses", () => {
       ["/ro/admin/tasks", "?panel=app"],
       ["/ro/admin/pages", ""],
       ["/ro/admin/pages/team", ""],
+      ["/ro/admin/pages/contact", ""],
       ["/ro/admin/settings/emails", ""],
       ["/ro/admin/emails/extra", ""],
       ["/ro/evenimente", ""],
@@ -87,6 +93,10 @@ describe("§516 the moved backoffice addresses", () => {
     const bot = proxy(new NextRequest("http://localhost:4000/ro/admin/tasks?panel=botCheck"));
     expect(bot.status).toBe(308);
     expect(bot.headers.get("location")).toBe("http://localhost:4000/ro/admin/settings/platform");
+
+    const contact = proxy(new NextRequest("http://localhost:4000/en/admin/settings/contact"));
+    expect(contact.status).toBe(308);
+    expect(contact.headers.get("location")).toBe("http://localhost:4000/en/admin/pages/contact");
   });
 
   it("does not redirect «Sarcini» itself", () => {
@@ -98,8 +108,8 @@ describe("§516 the moved backoffice addresses", () => {
 describe("§520 a card that left the email page for its own tab, named by an old fragment", () => {
   it("sends the fragment on to the card's tab, locale and fragment kept", () => {
     for (const locale of routing.locales) {
-      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#contact-recipients")).toBe(`/${locale}/admin/settings/contact#contact-recipients`);
-      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#shown-contact-address")).toBe(`/${locale}/admin/settings/contact#shown-contact-address`);
+      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#contact-recipients")).toBe(`/${locale}/admin/pages/contact#contact-recipients`);
+      expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#shown-contact-address")).toBe(`/${locale}/admin/pages/contact#shown-contact-address`);
       expect(resolveMovedFragment(`/${locale}/admin/settings/emails`, "#deadlines")).toBe(`/${locale}/admin/settings/deadlines#deadlines`);
     }
     expect(resolveMovedFragment("/admin/settings/emails/", "#deadlines")).toBe("/admin/settings/deadlines#deadlines");
@@ -109,7 +119,7 @@ describe("§520 a card that left the email page for its own tab, named by an old
     expect(resolveMovedFragment("/ro/admin/settings/emails", "#email-plan")).toBeNull();
     expect(resolveMovedFragment("/ro/admin/settings/emails", "")).toBeNull();
     expect(resolveMovedFragment("/ro/admin/settings/emails", "#")).toBeNull();
-    expect(resolveMovedFragment("/ro/admin/settings/contact", "#contact-recipients")).toBeNull();
+    expect(resolveMovedFragment("/ro/admin/pages/contact", "#contact-recipients")).toBeNull();
   });
 
   it("names cards that really live on the tab it sends them to, and the page mounts the hop", () => {
@@ -120,9 +130,8 @@ describe("§520 a card that left the email page for its own tab, named by an old
     };
     for (const entry of MOVED_FRAGMENTS) {
       expect(readFileSync(path.join(ROOT, panelOf[entry.hash]), "utf8")).toContain(`id="${entry.hash}"`);
-      const tab = entry.to.split("/").pop();
       const component = path.basename(panelOf[entry.hash], ".tsx");
-      expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/settings", tab!, "page.tsx"), "utf8")).toContain(`<${component}`);
+      expect(readFileSync(path.join(ROOT, "src/app/[locale]", entry.to, "page.tsx"), "utf8")).toContain(`<${component}`);
     }
     expect(readFileSync(path.join(ROOT, "src/app/[locale]/admin/settings/emails/page.tsx"), "utf8")).toContain("<MovedFragmentHop />");
   });

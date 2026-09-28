@@ -102,12 +102,13 @@ export function emailHasLeft(leavesAt: Date | null, now: Date): boolean {
 
 /**
  * The first form's leaving instant as the browser's half keeps it (§536): one letter and an ISO
- * instant, always 25 characters — `s` and the scheduled pass, or `i` and the epoch when the request
- * itself sent it (`immediate`). A club setting, never the address's: the sealed length says nothing
- * about what the address holds (§39).
+ * instant, always 25 characters — `s` and the scheduled pass, or `i` and the submit instant when the
+ * request itself sent it (`immediate`; §540, the family re-review of 2026-09-28: the epoch it sealed
+ * before let a reload an hour later still say «pleacă acum»). A club setting, never the address's:
+ * the sealed length says nothing about what the address holds (§39).
  */
-export function sealEmailLeavesAt(leavesAt: Date | null): string {
-  return leavesAt === null ? `i${new Date(0).toISOString()}` : `s${leavesAt.toISOString()}`;
+export function sealEmailLeavesAt(leavesAt: Date | null, submittedAt?: Date): string {
+  return leavesAt === null ? `i${(submittedAt ?? new Date(0)).toISOString()}` : `s${leavesAt.toISOString()}`;
 }
 
 /** The instant back (`sealEmailLeavesAt`): null for `immediate`, undefined when absent or malformed (an older half). */
@@ -117,6 +118,33 @@ export function openEmailLeavesAt(text: string | undefined): Date | null | undef
   if (text[0] !== "s") return undefined;
   const at = new Date(text.slice(1));
   return Number.isFinite(at.getTime()) ? at : undefined;
+}
+
+/**
+ * Under `immediate`, the instant the form was sent (`sealEmailLeavesAt`'s `i`): undefined for a
+ * scheduled pass, and for a half sealed before it was kept (the epoch), which keeps the old «pleacă acum».
+ */
+export function openEmailSubmittedAt(text: string | undefined): Date | undefined {
+  if (!text || text.length !== 25 || text[0] !== "i") return undefined;
+  const at = new Date(text.slice(1));
+  return Number.isFinite(at.getTime()) && at.getTime() > 0 ? at : undefined;
+}
+
+/**
+ * How long after the submit an email the request itself sends is taken to have left: the drain after
+ * the response sends it within seconds (§68), so the redirect from the submit says «pleacă acum» and a
+ * reload a minute later says it left.
+ */
+export const IMMEDIATE_EMAIL_LEFT_AFTER_MS = 60_000;
+
+/**
+ * Whether the first form's email has left by now, on the short screen (§540): a scheduled pass once it
+ * has come (`emailHasLeft`); under `immediate`, a minute after the submit — never on the redirect from
+ * it, and always on a reload an hour later. Without the submit instant (an older half), not yet.
+ */
+export function shortScreenEmailLeft(input: { leavesAt: Date | null; submittedAt?: Date; now: Date }): boolean {
+  if (input.leavesAt !== null) return emailHasLeft(input.leavesAt, input.now);
+  return input.submittedAt !== undefined && input.now.getTime() - input.submittedAt.getTime() >= IMMEDIATE_EMAIL_LEFT_AFTER_MS;
 }
 
 /**
@@ -280,6 +308,11 @@ export type FamilySittingCookie = {
    * has left instead of naming the next one. Absent on a half written before it was kept.
    */
   emailLeavesAt?: Date | null;
+  /**
+   * Under `immediate` (`emailLeavesAt` null), when the form was sent (§540): the short screen then says
+   * the email left on a reload, not «pleacă acum» forever. Sealed in the same 25 characters.
+   */
+  emailSubmittedAt?: Date;
   /**
    * The facts the next form of the sitting starts with (`sittingSharedValues`): the city, the
    * country, the citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a

@@ -209,7 +209,6 @@ export const routing = defineRouting({
     /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91), and the email settings. */
     "/admin/settings/emails": "/admin/settings/emails",
     "/admin/settings/deadlines": "/admin/settings/deadlines",
-    "/admin/settings/contact": "/admin/settings/contact",
     "/admin/settings/appearance": "/admin/settings/appearance",
     "/admin/settings/costs": "/admin/settings/costs",
     "/admin/settings/platform": "/admin/settings/platform",
@@ -238,6 +237,12 @@ export const routing = defineRouting({
     "/admin/legal/delete": "/admin/legal/delete",
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
+    /**
+     * «Contact» (§442, §461): who reads «Scrie-ne» and the address the site shows — a standard page
+     * of «Pagini», so its entry in the row keeps the reader in «Pagini». It was «Setări» → «Contact»
+     * (§516) and `/admin/settings/contact` answers 308 here (`src/i18n/moved-paths.ts`).
+     */
+    "/admin/pages/contact": "/admin/pages/contact",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */
     "/admin/pages/team": "/admin/pages/team",
     /** The questions of «Întrebări frecvente» (§525): a standard page, beside «Echipa». */

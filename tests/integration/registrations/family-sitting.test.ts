@@ -280,6 +280,24 @@ describe("§519 one person in a sitting", () => {
   });
 });
 
+describe("§540 a kept form held inside a live sitting says it is the family's hold", () => {
+  it("the REGISTER_ANOTHER_PERSON queued in the sitting carries `familyHeld`, and the queue counts it as the family's", async () => {
+    const event = await createEvent();
+    // Ana registered before, outside any sitting; Ion's form is sent after «Da» (joined), the seed spent:
+    // the form opens its own sitting, and its kept form's message is held in it.
+    await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
+    const sittingId = await send(event, "Ion", 1, null);
+    expect(sittingId).not.toBeNull();
+    const [held] = (await outbox()).filter((row) => row.messageType === "REGISTER_ANOTHER_PERSON");
+    expect(held.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
+    expect(held.payloadJson).toMatchObject({ familyHeld: true, startsDeadline: true });
+    expect(held.payloadJson).not.toHaveProperty("sittingHeld");
+    const queue = await readOutboxQueue(db, 50, at(2));
+    expect(queue.held).toMatchObject({ family: 1, retry: 0, reserve: 0 });
+    expect(queue.rows.find((row) => row.id === held.id)?.familyHeld).toBe(true);
+  });
+});
+
 describe("§519 a family in one sitting", () => {
   it("becomes one held message from the second person on, and a corrected form replaces the kept one", async () => {
     const event = await createEvent();
@@ -292,8 +310,10 @@ describe("§519 a family in one sitting", () => {
     const rows = await outbox();
     expect(rows).toHaveLength(1);
     expect(rows[0].messageType).toBe("REGISTER_ANOTHER_PERSON");
-    expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId });
+    // Flagged as the family's hold (§540): the queue panel (§529) counts it there, never as a retry.
+    expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
     expect(rows[0].nextAttemptAt?.toISOString()).toBe(new Date(at(6).getTime() + WINDOW_MS).toISOString());
+    expect((await readOutboxQueue(db, 50, at(7))).held).toMatchObject({ total: 1, family: 1, retry: 0, reserve: 0 });
 
     expect((await db.select().from(registrations)).map((row) => row.registeredName)).toEqual(["Ana Pop"]);
     const kept = await db.select().from(pendingFamilyEntries).orderBy(pendingFamilyEntries.createdAt);
@@ -624,7 +644,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     await send(event, "Ion", 3, sittingId);
     const family = (await outbox()).filter((row) => row.id !== anaEmail.id);
     expect(family).toHaveLength(1);
-    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId });
+    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
     expect(family[0].nextAttemptAt?.toISOString()).toBe(new Date(at(3).getTime() + WINDOW_MS).toISOString());
 
     const { message, secret } = await familyLink(at(20));
