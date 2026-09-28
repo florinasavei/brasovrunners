@@ -311,24 +311,37 @@ export type FamilySittingCookie = {
 export function sittingReservationFacts(people: readonly SittingPerson[]): { firstNames: string[]; reserved: number; waiting: number } {
   return {
     firstNames: people.map((person) => person.name.trim().split(/\s+/)[0] || person.name),
-    reserved: people.filter((person) => !person.waitlist).length,
+    reserved: people.filter((person) => !person.waitlist && !person.noPlace).length,
     waiting: people.filter((person) => person.waitlist === true).length,
   };
 }
 
-/** The last person of the list with the place their form got (§NNN), the others as they were. */
+/**
+ * The person with the place their form got (§NNN): `reserved`, `waitlist`, or null — the form wrote
+ * no registration, so it neither reserved a place nor put anybody on the waiting list, and the screen
+ * names no place for them (the review of 2026-09-28, round two).
+ */
+export function withPlace(person: SittingPerson, place: "reserved" | "waitlist" | null): SittingPerson {
+  const rest = { name: person.name, birthDate: person.birthDate };
+  if (place === "waitlist") return { ...rest, waitlist: true };
+  if (place === null) return { ...rest, noPlace: true };
+  return rest;
+}
+
+/** The last person of the list with the place their form got (§NNN), the others as they were; `undefined` changes nobody. */
 export function withLatestPlace(people: readonly SittingPerson[], place: "reserved" | "waitlist" | null | undefined): SittingPerson[] {
-  if (!place || people.length === 0) return [...people];
-  const last = people.at(-1)!;
-  return [...people.slice(0, -1), { ...last, waitlist: place === "waitlist" ? true : undefined }];
+  if (place === undefined || people.length === 0) return [...people];
+  return [...people.slice(0, -1), withPlace(people.at(-1)!, place)];
 }
 
 /**
  * One person of the sitting, as this browser typed them: the name, and the birth date ("YYYY-MM-DD",
  * or ""). `waitlist` (§NNN): no place was free when their form was sent, so they join the waiting
  * list when the address is confirmed — a fact about the event, never about the address (§39).
+ * `noPlace`: their form wrote no registration (a kept form, a person the address already holds), so
+ * the screen names no place for them — neither reserved nor the waiting list.
  */
-export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean };
+export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean; noPlace?: boolean };
 
 /** The names, in the order the screen lists them. */
 export function sittingNames(people: readonly SittingPerson[]): string[] {

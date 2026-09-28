@@ -36,6 +36,7 @@ import {
   sittingNames,
   sittingSharedValues,
   withLatestPlace,
+  withPlace,
   withSittingPerson,
 } from "@/modules/registrations/domain/family-sitting";
 import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
@@ -229,7 +230,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   */
   const prior = continuing && liveSitting ? liveSitting : null;
   const typedPerson = withSittingPerson(prior?.people ?? [], { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
-  // The place this form got (§NNN): a reserved one, or the waiting list once the address is confirmed.
+  // The place this form got (§NNN): reserved, the waiting list once the address is confirmed, or none where it wrote no registration.
   if (continuing && !typedPerson.sameBirthDate) typedPerson.people = withLatestPlace(typedPerson.people, sittingPlace);
   const shared = sittingSharedValues(prior?.shared, (name) => text(form, name));
   const names = sittingNames(typedPerson.people);
@@ -330,8 +331,9 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     const deadlines = await currentDeadlines(db);
     const holding = !sitting.atOnce && deadlines.familySittingMinutes > 0;
     /*
-      The press also reserves the places (§NNN): the first form's registration, taken into the sitting
-      now, and every one after it, until the club's hold after the window's new end.
+      The press that opens the sitting also reserves the first form's place (§NNN), taken into the
+      sitting now, until the club's hold after the window's end. A later press reserves and lengthens
+      nothing (`continueFamilySittingAndReserve`): only a form, which passes the bot check, does.
     */
     const continued = holding
         ? await continueFamilySittingAndReserve(
@@ -344,9 +346,15 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     const opened = continued?.sittingId ?? null;
     // The names this browser lists name only the people the sitting's email covers (`peopleAfterYes`).
     const { people: listed, seedSpent } = peopleAfterYes({ holding, seed: sitting.seed, opened, people: sitting.people });
-    // The first form's place (§NNN), reserved by this first «Da» — or the waiting list when none was free.
-    const firstPlace = sitting.seed && continued && continued.places.length > 0 ? continued.places[0] : null;
-    const people = firstPlace && listed.length > 0 ? [{ ...listed[0], waitlist: firstPlace === "waitlist" ? true : undefined }, ...listed.slice(1)] : listed;
+    /*
+      Each person's place as this press leaves it (§NNN; the review of 2026-09-28, round two). Only the
+      press that opens the sitting changes one: the first form's, reserved, the waiting list when none
+      was free, or none at all when that form wrote no registration (a kept form, §446) — the public
+      count took none, so the screen names none. A later press changes no place and no deadline, so the
+      people and the deadline this browser already holds stay true as they are.
+    */
+    const opening = continued?.opened === true && sitting.seed !== null;
+    const people = opening && listed.length > 0 ? [withPlace(listed[0], continued?.places[0] ?? null), ...listed.slice(1)] : listed;
     const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
     await writeFamilySittingCookie(
       {
@@ -361,8 +369,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
         atOnce: deadlines.familySittingMinutes <= 0,
         windowMinutes: deadlines.familySittingMinutes,
         sameBirthDate: null,
-        // The same for every address (§39): the club's hold after the window's new end, capped by the event.
-        reservedUntil: holding ? familyReservedUntil(event, heldUntil, deadlines) : null,
+        // The opening press's deadline, the club's hold after this window, capped by the event; a later press keeps the last form's.
+        reservedUntil: !holding ? null : opening ? familyReservedUntil(event, heldUntil, deadlines) : (sitting.reservedUntil ?? null),
       },
       path,
       now,

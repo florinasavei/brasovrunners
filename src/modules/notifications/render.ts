@@ -50,7 +50,7 @@ import {
   registeredOnAddress,
   registeredOnAddressWithStates,
 } from "@/modules/registrations/family-entries";
-import { reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
+import { reservationHoldsAtSend, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { events } from "@/db/schema/events";
 import { countEligibleWaitlisted, countOccupied } from "@/modules/registrations/repository";
 import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
@@ -741,18 +741,20 @@ async function renderRow(
       is full and its waiting list takes them (§NNN). With the line closed nothing is promised: the press
       names them among the refused, as §519 names any refusal.
     */
-    const full = people && people.registrations.some((person) => person.holdExpiresAt === null) ? await waitlistTakesNewcomer(db, found!.eventId, now) : false;
+    // Whether each stored reservation still holds as this message leaves (§NNN): see `reservationHoldsAtSend`.
+    const holds = (person: { holdExpiresAt: Date | null }) => reservationHoldsAtSend(person.holdExpiresAt, row.nextAttemptAt, now);
+    const full = people && people.registrations.some((person) => !holds(person)) ? await waitlistTakesNewcomer(db, found!.eventId, now) : false;
     const listed = people
       ? [
           /*
             Each registration's place (§NNN): reserved by its form while the reservation holds — its email
-            is this one, still leaving, so a stored reservation holds now — or the waiting list once the
-            address is confirmed. A kept form holds no place and says neither.
+            is this one, still leaving, so a reservation due to outlast it holds now — or the waiting list
+            once the address is confirmed. A kept form holds no place and says neither.
           */
           ...people.registrations.map((person) => ({
             name: person.registeredName,
             birthDate: person.birthDate ?? "",
-            place: person.holdExpiresAt !== null ? ("reserved" as const) : full ? ("waitlist" as const) : undefined,
+            place: holds(person) ? ("reserved" as const) : full ? ("waitlist" as const) : undefined,
           })),
           ...people.entries.map((entry) => {
             const person = personOfEntry(entry);
@@ -815,7 +817,8 @@ async function renderRow(
         from now — the form was sent a window and a pinger's wait ago.
       */
       // …and every place it reserved lasts the club's hold from this send, as the message says (§NNN).
-      familySitting = await extendSittingLinks(db, familySitting, emailLinkExpiresAt(now, settings), now, settings.holdMinutes);
+      // By the job's lateness only, never by a press (`lengthenReservationsFromSend`): hence the message's due time.
+      familySitting = await extendSittingLinks(db, familySitting, emailLinkExpiresAt(now, settings), now, { holdMinutes: settings.holdMinutes, dueAt: row.nextAttemptAt });
       /*
         The family's one link (§519): single use, hashed at rest, minted here at send time (§12.8,
         §14.5), scoped to the registration the sitting names and tied to the sitting by the token's
@@ -846,7 +849,7 @@ async function renderRow(
       data.familyMineUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/registrations/mine/[token]", params: { token: mine.secret } } })}`;
     }
     // Until when the places are reserved (§NNN), read after the send lengthened them.
-    await describeFamilyReservations(db, familySitting, data, locale, now);
+    await describeFamilyReservations(db, familySitting, data, locale, now, row.nextAttemptAt);
   } else if (purpose === "REGISTER_ANOTHER_PERSON") {
     if (familyEntry && row.participantId && row.registrationId && !clubCopy) {
       /*
@@ -932,7 +935,7 @@ async function renderRow(
         ? await extendHeldVerificationLink(db, registration.id, emailLinkExpiresAt(now, settings), now)
         : null;
     // A one-person sitting's reserved place (§NNN) lasts the club's hold from this send, as a family's does.
-    if (heldLink && registration) await lengthenReservationsFromSend(db, registration.eventId, [registration.id], settings.holdMinutes, now);
+    if (heldLink && registration) await lengthenReservationsFromSend(db, registration.eventId, [registration.id], settings.holdMinutes, row.nextAttemptAt, now);
     const placeUntil =
       purpose === "COMPLETE_DECLARATION"
         ? (eventStartsAt ?? holdExpiresAt)
@@ -1236,7 +1239,8 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
 /**
  * Until when a family's places are reserved (§NNN), for the family's one message in both its
  * languages: the latest reservation among the people it names, read as it stands — after the send
- * lengthened it to the club's hold from now. Nothing when nobody listed holds one.
+ * moved it on by the job's lateness. Nothing when nobody listed holds one; a reservation that lapsed
+ * before this send (`reservationHoldsAtSend`) is not named.
  */
 async function describeFamilyReservations(
   db: RendererDb,
@@ -1244,8 +1248,11 @@ async function describeFamilyReservations(
   data: TemplateData,
   locale: Locale,
   now: Date,
+  dueAt: Date | null,
 ): Promise<void> {
-  const held = (await sittingPendingRegistrations(db, sitting)).flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt.getTime()] : []));
+  const held = (await sittingPendingRegistrations(db, sitting)).flatMap((row) =>
+    row.holdExpiresAt && reservationHoldsAtSend(row.holdExpiresAt, dueAt, now) ? [row.holdExpiresAt.getTime()] : [],
+  );
   if (held.length === 0) return;
   const until = new Date(Math.max(...held));
   data.familyReservedUntilFormatted = reservedUntilPhrase(until, now, locale);

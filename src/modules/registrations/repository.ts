@@ -626,9 +626,15 @@ export type OccupiedCountsRow = {
  * — QA's hourly tick against a forty-minute reservation — would have given the place away before the
  * family was even told it held it. Once the email has left, or the family's button was pressed, the
  * stored deadline is the truth.
+ *
+ * Only an email due at or before the stored deadline (the review of 2026-09-28, round two): what this
+ * covers is the outbox job's lateness, never a «Da» press. A press starts the window again and moves
+ * the email's due time with it (`continueFamilySitting`); were a queued email enough, a press every few
+ * minutes would keep a place with no inbox proof for as long as the presses went on. An email a press
+ * (or a spent allowance, §40) moved past the deadline lets the reservation lapse at it.
  */
 export function familyReservationAwaitingItsEmail(): SQL {
-  return sql`exists (select 1 from family_sittings fs join ${emailOutbox} eo on fs.held_outbox_ids @> jsonb_build_array(eo.id::text) where fs.registration_ids @> jsonb_build_array(${registrations.id}::text) and fs.confirmed_at is null and eo.status in ('PENDING', 'PROCESSING'))`;
+  return sql`exists (select 1 from family_sittings fs join ${emailOutbox} eo on fs.held_outbox_ids @> jsonb_build_array(eo.id::text) where fs.registration_ids @> jsonb_build_array(${registrations.id}::text) and fs.confirmed_at is null and eo.status in ('PENDING', 'PROCESSING') and (eo.next_attempt_at is null or eo.next_attempt_at <= ${registrations.holdExpiresAt}))`;
 }
 
 /** A family's reservation that still holds its place (§NNN): its deadline ahead, or its email still queued. */
@@ -687,6 +693,31 @@ export async function lengthenFamilyReservations<T extends Record<string, unknow
   const rows = await db
     .update(registrations)
     .set({ holdExpiresAt: until })
+    .where(and(inArray(registrations.id, [...registrationIds]), familyReservationHolds(now), lt(registrations.holdExpiresAt, until)))
+    .returning({ id: registrations.id });
+  if (rows.length > 0) revalidatePublicContent("places");
+  return rows.length;
+}
+
+/**
+ * A family's reservations lengthened by the outbox job's lateness (§NNN, the review of 2026-09-28,
+ * round two): each one that still holds moves on by `lateMs` — how long after its due time the email
+ * actually left — never past `until` (the club's hold from the send) and never shortened. An email
+ * sent on time lengthens nothing: the form that wrote the deadline already counted the hold from the
+ * window's end. A «Da» press moves the due time and not the send's lateness, so it lengthens nothing.
+ */
+export async function lengthenFamilyReservationsByLateness<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+  until: Date,
+  lateMs: number,
+  now: Date,
+): Promise<number> {
+  if (registrationIds.length === 0 || !(lateMs > 0)) return 0;
+  const moved = sql`least(${until.toISOString()}::timestamptz, ${registrations.holdExpiresAt} + (${Math.round(lateMs)} * interval '1 millisecond'))`;
+  const rows = await db
+    .update(registrations)
+    .set({ holdExpiresAt: sql`${moved}` })
     .where(and(inArray(registrations.id, [...registrationIds]), familyReservationHolds(now), lt(registrations.holdExpiresAt, until)))
     .returning({ id: registrations.id });
   if (rows.length > 0) revalidatePublicContent("places");

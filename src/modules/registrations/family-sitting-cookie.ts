@@ -28,10 +28,10 @@ const PURPOSE = "family-sitting";
 
 /**
  * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, and `w` when
- * no place was free for them (§NNN) — a fact about the event, the same whatever the address holds.
+ * no place was free for them (§NNN), `n` when their form wrote no registration and so no place.
  */
 function peopleLines(people: readonly SittingPerson[]): string {
-  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : ""}`).join("\n");
+  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : person.noPlace ? "n" : ""}`).join("\n");
 }
 
 function peopleOf(lines: string | undefined): SittingPerson[] {
@@ -40,7 +40,7 @@ function peopleOf(lines: string | undefined): SittingPerson[] {
     .filter((line) => line.trim() !== "")
     .map((line) => {
       const [name = "", birthDate = "", place = ""] = line.split("\t");
-      return place === "w" ? { name, birthDate, waitlist: true } : { name, birthDate };
+      return place === "w" ? { name, birthDate, waitlist: true } : place === "n" ? { name, birthDate, noPlace: true } : { name, birthDate };
     });
 }
 

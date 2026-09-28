@@ -113,7 +113,8 @@ export default async function FamilySittingNext({
       : null;
   const placeOf = (index: number): string | null => {
     const person = until ? reservation?.people[index] : undefined;
-    if (!person) return null;
+    // A form that wrote no registration names no place (§NNN): the public count took none.
+    if (!person || person.noPlace) return null;
     return person.waitlist ? t("sitting.placeWaitlist") : t("sitting.placeReserved");
   };
 

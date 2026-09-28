@@ -390,8 +390,9 @@ export type FamilyPlace = "reserved" | "waitlist";
  * at once. Only through the allocator's own opening (`placeForNewcomer`), under the event's lock:
  * with no place free the form reserves nothing and the person joins the waiting list when the
  * address is confirmed, which the screen and the email say. A reservation this registration already
- * holds is lengthened, never shortened. A single registration never comes here: it takes its place
- * when its address is confirmed, as before.
+ * holds is left as it is: only a form lengthens the sitting's reservations (`finishSitting`), never a
+ * press. A single registration never comes here: it takes its place when its address is confirmed,
+ * as before.
  */
 async function reserveFamilyPlace<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -401,20 +402,17 @@ async function reserveFamilyPlace<T extends Record<string, unknown>>(
   settings: Deadlines,
   until: Date,
 ): Promise<FamilyPlace> {
-  if (await repo.holdsFamilyReservation(db, registrationId, now)) {
-    await repo.lengthenFamilyReservations(db, [registrationId], until, now);
-    return "reserved";
-  }
+  if (await repo.holdsFamilyReservation(db, registrationId, now)) return "reserved";
   const { free } = await placeForNewcomer(db, event, now, settings);
   if (!free) return "waitlist";
   return (await repo.writeFamilyReservation(db, registrationId, until, now)) ? "reserved" : "waitlist";
 }
 
 /**
- * Every registration of a family sitting given its reservation (§NNN), under the event's lock: the
- * ones that hold one lengthened to `until`, the others reserved while a place is free, in the order
- * their forms were sent. For «Da, încă o persoană», which takes the first form into the sitting
- * (§536), and for each form after it. Returns each person's place, in the sitting's order.
+ * The registrations of a sitting «Da» has just opened given their reservation (§NNN), under the
+ * event's lock: reserved while a place is free, in the order their forms were sent — in practice the
+ * first form's, which was an ordinary form until this press (§536). Returns each person's place, in
+ * the sitting's order.
  */
 async function reserveSittingPlaces<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -439,27 +437,40 @@ async function reserveSittingPlaces<T extends Record<string, unknown>>(
 
 /**
  * «Da, încă o persoană» (§536) with the family's reservations (§NNN): the sitting opened or its window
- * started again (`continueFamilySitting`), then, under the event's lock, every registration it holds
- * reserved — the first form's included, which was an ordinary form until this press — until the club's
- * hold after the window's new end. Returns the sitting and when its places are reserved until.
+ * started again (`continueFamilySitting`). The press that opens the sitting then reserves, under the
+ * event's lock, the first form's place — an ordinary form until this press — until the club's hold
+ * after the window's end.
+ *
+ * Any later press reserves nothing and lengthens nothing (the review of 2026-09-28, round two). A
+ * press passes no bot check, and it starts the window again; were it to move the reservations too, one
+ * form and a press every few minutes would hold a place with no inbox proof for as long as the presses
+ * went on — the very thing a single registration is refused (it reserves nothing before its address is
+ * confirmed). So a reservation's deadline is written only by a form, which passes the bot check, and
+ * once by the opening press, which comes within the first form's own window: the club's window and
+ * hold after the last of them. The email a later press holds back does not keep the places past that
+ * deadline either (`repository.ts#familyReservationAwaitingItsEmail`), nor does its send
+ * (`lengthenReservationsFromSend`). Returns the sitting, whether this press opened it, the deadline
+ * the opening press wrote and each person's place; a later press returns no place and no deadline.
  */
 export async function continueFamilySittingAndReserve<T extends Record<string, unknown>>(
   db: Database<T>,
   press: Parameters<typeof continueFamilySitting>[1],
   heldUntil: Date,
   now: Date,
-): Promise<{ sittingId: string | null; reservedUntil: Date | null; places: FamilyPlace[] }> {
-  const sittingId = await continueFamilySitting(db, press, heldUntil, now);
-  if (!sittingId) return { sittingId, reservedUntil: null, places: [] };
+): Promise<{ sittingId: string | null; opened: boolean; reservedUntil: Date | null; places: FamilyPlace[] }> {
+  const continued = await continueFamilySitting(db, press, heldUntil, now);
+  if (!continued) return { sittingId: null, opened: false, reservedUntil: null, places: [] };
+  const { sittingId, opened } = continued;
+  if (!opened) return { sittingId, opened, reservedUntil: null, places: [] };
   const settings = await currentDeadlines(db);
   return db.transaction(async (tx) => {
     const locked = await repo.lockEventForCapacity(tx, press.eventId);
     const sitting = await findSittingById(tx, sittingId);
-    if (!locked || !sitting) return { sittingId, reservedUntil: null, places: [] };
+    if (!locked || !sitting) return { sittingId, opened, reservedUntil: null, places: [] };
     const lockedEvent = withLockedRow(publicFormEvent(locked, locked.publishedAt), locked);
     const until = computeFamilyReservationExpiry({ from: heldUntil, registrationClosesAt: lockedEvent.registrationClosesAt, eventStartsAt: lockedEvent.startsAt, deadlines: settings });
     const places = await reserveSittingPlaces(tx, lockedEvent, sitting.registrationIds, now, settings, until);
-    return { sittingId, reservedUntil: until, places: [...places.values()] };
+    return { sittingId, opened, reservedUntil: until, places: [...places.values()] };
   });
 }
 
@@ -996,11 +1007,11 @@ export type SubmitRegistrationResult = {
    */
   sittingSeed?: SittingSeed | null;
   /**
-   * A family sitting's form (§NNN): whether a place was free for a newcomer when it was sent —
-   * `reserved`, or `waitlist` once the address is confirmed — and until when the sitting's places are
-   * reserved. Both are facts about the event and the club's settings, never about what the address
-   * holds: the same answer whether this form registered somebody or re-sent a registration (§39).
-   * Only for the action's sealed cookie; null outside a sitting.
+   * A family sitting's form (§NNN): the place the registration it wrote got — `reserved`, or
+   * `waitlist` once the address is confirmed — or null where it wrote none (outside a sitting too), and
+   * until when the sitting's places are reserved (the club's settings and the event). Only for the
+   * action's sealed cookie. Null names no place on the screen, as the public count took none (the §39
+   * trade-off, in the decision).
    */
   sittingPlace?: FamilyPlace | null;
   reservedUntil?: Date | null;
@@ -1632,15 +1643,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const finishSitting = async () => {
       if (!inSitting) return;
       /*
-        What the screen may say of this form (§NNN), the same whatever the address holds (§39): a
-        place free for a newcomer or not — the reservation's own outcome where this form wrote one,
-        otherwise the allocator's formula read as it stands — and the reservation's end.
+        What the screen may say of this form (§NNN): the reservation's own outcome where this form
+        wrote a registration — a reserved place, or the waiting list — and nothing where it wrote none
+        (a kept form at the address's limit, a person the address already holds, a corrected form whose
+        person holds no place). The allocator's formula read as it stands said «loc rezervat» for a
+        place the public count never took (the review of 2026-09-28, round two); the count says what was
+        written anyway, so the screen says the same (the §39 trade-off, in the decision).
       */
-      if (placeResult === null) {
-        const counts = await repo.countOccupied(tx, event.id, now);
-        const eligibleWaitlisted = await repo.countEligibleWaitlisted(tx, event.id);
-        placeResult = hasDirectAvailability({ capacity: lockedEvent.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }) ? "reserved" : "waitlist";
-      }
       reservedUntilResult = reservationUntil;
       if (!sitting) return;
       await settleSitting(tx, sitting, { heldUntil, recipientEmail: participant.deliveryEmail, now });
@@ -2143,7 +2152,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   // A family's reservation lapses too (§NNN): the place goes back to whoever waits.
   if (createdDeadlines !== undefined || reservedUntilResult !== null) {
-    wakeMaintenance(event, now, settings, ...(createdDeadlines ?? []), placeResult === "reserved" ? reservedUntilResult : null);
+    // Every form of a sitting moves the sitting's reservations to this instant, its own or not.
+    wakeMaintenance(event, now, settings, ...(createdDeadlines ?? []), reservedUntilResult);
   }
 
   // To a staff caller (§420), and to the confirmation from the email (§446), which confirms that row

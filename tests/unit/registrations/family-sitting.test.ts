@@ -78,6 +78,35 @@ describe("§519 the browser's half of a sitting", () => {
     expect(opened?.shared).toBeUndefined();
   });
 
+  it("carries each person's place — reserved, the waiting list, or none where the form wrote no registration (§NNN)", async () => {
+    const { sittingReservationFacts, withLatestPlace, withPlace } = await import("@/modules/registrations/domain/family-sitting");
+    const people = [
+      { name: "Ana Pop", birthDate: "1985-03-02" },
+      { name: "Maria Pop", birthDate: "2010-07-11", waitlist: true },
+      { name: "Dan Pop", birthDate: "2011-05-20", noPlace: true },
+    ];
+    expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, people })!)?.people).toEqual(people);
+    // None is neither reserved nor waiting: the marker counts one reserved place and one waiting.
+    expect(sittingReservationFacts(people)).toEqual({ firstNames: ["Ana", "Maria", "Dan"], reserved: 1, waiting: 1 });
+    // A form that wrote nothing names no place; `undefined` (outside a sitting) changes nobody.
+    expect(withLatestPlace(cookie.people, null).at(-1)).toEqual({ name: "Maria Pop", birthDate: "2010-07-11", noPlace: true });
+    expect(withLatestPlace(cookie.people, undefined)).toEqual(cookie.people);
+    expect(withPlace({ name: "Dan Pop", birthDate: "", noPlace: true }, "reserved")).toEqual({ name: "Dan Pop", birthDate: "" });
+    expect(withPlace({ name: "Dan Pop", birthDate: "", waitlist: true }, null)).toEqual({ name: "Dan Pop", birthDate: "", noPlace: true });
+  });
+
+  it("a stored reservation holds at the send only while its deadline is ahead or the email was due by it (§NNN)", async () => {
+    const { reservationHoldsAtSend } = await import("@/modules/registrations/domain/family-reservation");
+    const deadline = new Date(NOW.getTime() + 40 * 60_000);
+    const later = new Date(NOW.getTime() + 60 * 60_000);
+    expect(reservationHoldsAtSend(null, null, NOW)).toBe(false);
+    expect(reservationHoldsAtSend(deadline, later, NOW)).toBe(true);
+    // The job was late: the email was due before the deadline, so the place is still the family's.
+    expect(reservationHoldsAtSend(deadline, NOW, later)).toBe(true);
+    // A «Da» press moved the email past the deadline: the place lapsed at it.
+    expect(reservationHoldsAtSend(deadline, new Date(deadline.getTime() + 60_000), later)).toBe(false);
+  });
+
   it("stands for a sitting of this event until its email leaves by itself", () => {
     expect(sittingCookieLive(cookie, EVENT_ID, NOW)).toBe(true);
     expect(sittingCookieLive(cookie, "00000000-0000-4000-8000-000000000002", NOW)).toBe(false);
