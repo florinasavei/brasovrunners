@@ -35,15 +35,10 @@ export type SectionMapWords = {
 };
 
 /**
- * The event page as a row of chips, top to bottom (§406; the owner: "ca să văd exact ce flow am în
- * pagină"): each section's number, glyph and name, and a dot — filled while the page draws it,
- * empty while it does not. Each chip is a 44-pixel link to its card's `#box-…` that opens it
- * (§336: `OpenFoldFromHash` answers the address, and the press opens the fold at once for the
- * second press on the same address, which moves no hash). An automatic section — the share links
- * — is named as automatic, with no number and nothing to open. A card missing a box publication
- * needs wears the warning glyph, the same reading its closed line shows (`PublishCheck`).
- *
- * The same chips on the create page and on the editor; the chips wrap on a phone.
+ * The event page as a row of chips, top to bottom (§406): number, glyph, name and a dot (filled
+ * while the page draws it). Each chip is a 44-px link to its card's `#box-…` and opens the fold
+ * at once, since a second press on the same hash fires nothing (§336). Automatic sections have no
+ * number and nothing to open; a card with a publication gap wears the warning glyph.
  */
 export default function SectionMap({ entries, words, label }: { entries: readonly SectionMapEntry[]; words: SectionMapWords; label: string }) {
   return (

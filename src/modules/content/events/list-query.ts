@@ -2,42 +2,21 @@ import { groupSeries } from "@/modules/events/domain/series";
 import { foldForSearch } from "@/modules/registrations/country-search";
 
 /**
- * The backoffice events list's own state (§527): a search, a state and an order, read from the
- * address and written back to it, and nowhere else — the model is the public listing's filters
- * (§413, `events/domain/listing-filter.ts`): a GET form with no script writes these parameters,
- * every link the server builds carries them, and a hand-edited value falls back rather than
- * refusing (`admin-list-query.ts`'s rule) — `?state=Încheiate`, the label typed for the key, is
- * the whole list, never an error. Pure — the clock is the caller's `now`.
+ * The backoffice events list's state (§527): a search, a state and an order, read from and written
+ * to the address only, like the public listing's filters (§413). A hand-edited value falls back
+ * rather than refusing (`admin-list-query.ts`'s rule). Pure — the clock is the caller's `now`.
  *
- * - `q` — words, each of which must appear (accents and case ignored, the pickers' own
- *   `foldForSearch`, §463) in a title, a page address or a place name, in either language:
- *   «tampa» finds «Tâmpa».
- * - `state` — what an organizer asks of the list, in the owner's words:
- *   - `UPCOMING` «Viitoare» — a date still to come that is neither called off nor marked done;
- *   - `PAST` «Încheiate» — a date that is over: its start has passed, or the club marked it
- *     `COMPLETED`, either one; a called-off date is «Anulate», never «Încheiate», even once
- *     its day has gone;
- *   - `DRAFT` «Ciorne», `IN_REVIEW` «În verificare», `PUBLISHED` «Publicate», `ARCHIVED`
- *     «Arhivate» — the editorial state. «În verificare» is kept on purpose: it is a state the
- *     editor sets, and a date in it would otherwise be findable only by scrolling;
- *   - `CANCELLED` «Anulate» — the event's own state since §331, which a published race keeps
- *     when it is called off.
- * - `sort` — one select, one parameter: `date-near` «Data (cele mai apropiate)», the default —
- *   the dates still to come soonest first, then the past, the most recent first, so the next
- *   race is at the top and last week's run right under the future; `date-old` «Data (cele mai
- *   vechi)» — the oldest first, the whole list ascending; `title-asc` / `title-desc` «Nume A–Z» /
- *   «Nume Z–A» in the reader's language (`ș` after `s`); `state` «Stare» — the editorial state
- *   in the editor's order (Ciornă, În verificare, Publicat, Arhivat), then the called-off, then
- *   the completed. Every order breaks a tie on `date-near`, then on the fetch's order.
+ * - `q`: every word must appear, accents and case ignored (`foldForSearch`, §463), in a title,
+ *   page address or place name in either language.
+ * - `state`: `UPCOMING` (to come, neither cancelled nor completed); `PAST` (started or marked
+ *   `COMPLETED`; a cancelled date is never «Încheiate»); the editorial states, `IN_REVIEW`
+ *   included so such a date is findable; `CANCELLED` (§331).
+ * - `sort`: `date-near` (default: upcoming soonest first, then past most recent first),
+ *   `date-old`, `title-asc`/`title-desc` in the reader's collation, `state` (editorial order, then
+ *   cancelled, then completed). Ties break on `date-near`, then fetch order.
  *
- * The club's former default — featured first, then soonest — is no longer the list's order: the
- * brief's default is the nearest date, and a featured race is at most a few weeks out, so it sits
- * at or near the top anyway; the star still marks it on its line.
- *
- * The filter narrows the *dates* before they are grouped into a series (§113), so a series
- * filtered to «Ciorne» is the line of its draft dates, and «Viitoare» folds only the dates still
- * to come — the tick then selects exactly the dates the line shows. A series line sorts by its
- * `next` date: the first still to come, else its last.
+ * The filter narrows dates before they are grouped into a series (§113), so a series line shows
+ * (and its tick selects) only the matching dates; a line sorts by its `next` date.
  */
 
 export const EVENT_LIST_STATES = ["UPCOMING", "PAST", "DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED", "CANCELLED"] as const;
@@ -86,7 +65,7 @@ export function eventListQueryInUse(query: EventListQuery): boolean {
 
 /**
  * The state as query parameters, only what differs from the default, so the plain list is the
- * plain address and a bookmarked one says what it filters. `AdminTable`'s links build on it.
+ * plain address. `AdminTable`'s links build on it.
  */
 export function eventListParams(query: EventListQuery): Record<string, string | undefined> {
   return {
@@ -100,11 +79,9 @@ export function eventListParams(query: EventListQuery): Record<string, string | 
 const BACK_PER_PAGE = ["25", "50"];
 
 /**
- * The list's address as a Server Action carries it back (§527): the forms on the list post it as
- * a hidden `back`, and the action redirects there, so an archive from «Ciorne», page 2, lands on
- * «Ciorne», page 2. What comes in is a form field, so it is read through the same parser as the
- * address and only the list's own keys survive — `q`, `state`, `sort`, `dir`, `page`,
- * `perPage`, each validated — never an outcome flag, never another path. Empty for the plain list.
+ * The list's address carried back through a Server Action's hidden `back` (§527), so the redirect
+ * returns to the same filter and page. Parsed like the address: only the list's own validated keys
+ * survive, never an outcome flag or another path. Empty for the plain list.
  */
 export function eventListBack(raw: string | Record<string, Raw>): string {
   const params: Record<string, Raw> = {};
@@ -189,10 +166,7 @@ function compareNear(a: SortableLine, b: SortableLine, now: number): number {
   return aAhead ? byStart : -byStart;
 }
 
-/**
- * The lines in the asked order. Every order breaks a tie on the nearest date and then on the
- * order the lines came in, so equal lines never swap places between two loads.
- */
+/** The lines in the asked order; ties break on the nearest date, then input order, so equal lines never swap between loads. */
 export function sortEventLines<T>(
   lines: readonly T[],
   sortable: (line: T) => SortableLine,
@@ -253,10 +227,7 @@ export type ArrangedLine<T> = {
   next: T;
 };
 
-/**
- * The whole list's arithmetic, in the order the page draws it: narrow the dates, group them into
- * lines (§113), pick each line's `next`, order the lines. The page decorates the result.
- */
+/** The whole list's arithmetic in page order: narrow the dates, group into lines (§113), pick each `next`, sort. */
 export function arrangeEventList<T extends ListedRow>(rows: readonly T[], query: EventListQuery, now: Date, locale: string): ArrangedLine<T>[] {
   const lines = groupRows(rows.filter((row) => matchesEventList(row.event, row.translations, query, now))).map((series) => {
     const members = series.members.map((member) => member.row);

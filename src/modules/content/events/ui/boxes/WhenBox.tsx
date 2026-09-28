@@ -16,14 +16,12 @@ import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, requiredLine, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import PlaceFields, { placeNameInBox } from "./PlaceBox";
 
-/** The club's own zone. Offered as the default rather than the browser's, which on a phone in
- * an airport is not where the race is. */
+/** The club's own zone as the default, not the browser's (a phone abroad is not where the race is). */
 export const DEFAULT_TIMEZONE = CLUB_TIME_ZONE;
 
 /**
- * The zones an organizer may pick (§153): every IANA zone this runtime knows, the club's first,
- * then Europe, then the rest — a native select, searchable by typing. A stored zone the runtime
- * no longer lists is kept as an option so an old event still saves.
+ * The zones an organizer may pick (§153): every IANA zone the runtime knows, the club's first,
+ * then Europe. A stored zone the runtime no longer lists stays an option so an old event saves.
  */
 function timezoneOptions(current: string): readonly string[] {
   const known = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [DEFAULT_TIMEZONE];
@@ -43,24 +41,11 @@ function PartHeading({ id, children }: { id: string; children: string }) {
 }
 
 /**
- * «Când și unde» (§481; the owner, 2026-09-27: "The back-office event creator/editor needs to be
- * more grouped: date and location can be on the same card"). §350's box 4 «Data și ora» and box 5
- * «Locul» are one card now, as the page draws them — «Când», then «Unde», one under the other in
- * the facts — in this order:
- *
- * 1. **Data și ora** — when it starts, the gun time on a race (§71), how long it lasts (§433);
- * 2. **Locul** (`#box-place`, `PlaceFields`) — «to be announced» (§328), the meeting point once per
- *    language (§362), the map link, the coordinates (§416);
- * 3. **Fus orar** — folded away as the one level-3 card inside, because it is changed only for an
- *    event somewhere else.
- *
- * The page address (`AddressBox`) is not here: it is the page's own address, not the event's
- * place, and stays with the cards that are not on the page (§406).
- *
- * The closed line starts with what publication still needs from it — the meeting point, per
- * language (§406) — then the date, then the place. Open on the create page, where the date is
- * required; folded on the editor. With people registered, the card is amber and says what a new
- * date and a new place do to them. Field names, ids and refusals are the two boxes' own, unchanged.
+ * «Când și unde» (§481), as the page draws «Când» then «Unde»: Data și ora (the start, a race's
+ * gun time §71, the duration §433); Locul (`#box-place`, `PlaceFields`); and Fus orar, folded,
+ * changed only for an event elsewhere. The page address is not here (§406). The closed line
+ * starts with what publication needs (the meeting point per language), then date and place. Open
+ * on create, folded on the editor, amber with people registered.
  */
 export default async function WhenBox({
   event,
@@ -72,7 +57,7 @@ export default async function WhenBox({
 }: BoxProps & { languages: readonly LanguageEntry[]; inSeries?: boolean }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
-  // The reader's language for the dates (`src/i18n/dates.ts`), on the event's own clock.
+  // The reader's language for the dates (`src/i18n/dates.ts`), on the event's clock.
   const locale = await getLocale();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
@@ -80,7 +65,7 @@ export default async function WhenBox({
   const translations = languages.map((entry) => entry.translation);
   // The place a change moves people away from, as the Romanian page names it (§362).
   const place = placeNameInBox(event, languages, "ro");
-  // What publication still needs from this card, in each language (§406): the meeting point.
+  // What publication still needs from this card (§406): the meeting point, per language.
   const required = await requiredLine("place", event, languages);
 
   return (
@@ -98,7 +83,7 @@ export default async function WhenBox({
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
     >
-      {/* Never the provisional start of a date left blank (§545) — though nobody can be registered then (§533). */}
+      {/* Never the provisional start of a blank date (§545). */}
       {risk && event && typedStartOrNull(event) && (
         <RiskLine>{t("editor.risk.when", { date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
       )}
@@ -107,8 +92,7 @@ export default async function WhenBox({
         <Stack spacing={2}>
           <PartHeading id="box-when-date">{t("editor.boxes.when.title")}</PartHeading>
           {inSeries ? (
-            /* A date on MUI's picker and a native 24-hour time, whatever clock the browser speaks
-               (§70, §345). A series is its dates: no switch, the start always required (§533). */
+            /* A series is its dates: no switch, the start always required (§533). */
             <>
               <WallTimeField
                 name="event.startsAt"
@@ -122,10 +106,8 @@ export default async function WhenBox({
               <BoxNote>{t("editor.boxes.when.series")}</BoxNote>
             </>
           ) : (
-            /* The same two boxes, then «Data se anunță mai târziu» and «Ora se anunță mai târziu»
-               (§533), the place's switch for the start (§328). While a switch is on, the box it
-               excuses is not required and may stay empty (§545): the boxes show "" for a part left
-               blank (`startBoxValues`), never the provisional value the platform stored for it. */
+            /* The same two boxes with the «… se anunță mai târziu» switches (§533, §545): an excused box
+               may stay empty, and shows "" rather than the stored provisional value (`startBoxValues`). */
             <StartToBeAnnounced
               labels={{
                 date: t("editor.startsAt"),
@@ -153,7 +135,7 @@ export default async function WhenBox({
               required={eventInputConstraints("raceStartsAtWallTime").required}
             />
           </OnlyForType>
-          {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§433). */}
+          {/* How long, not when it ends: the end is derived (§71); hours and minutes (§433). */}
           <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
             <Typography component="legend" variant="body2" sx={{ mb: 1, p: 0 }}>
               {t("editor.duration")}
@@ -178,7 +160,7 @@ export default async function WhenBox({
               {t("editor.durationHelp")}
             </Typography>
           </Stack>
-          {/* «Unde» (§481): the place's own part, where "Publică" scrolls for a missing meeting point. */}
+          {/* «Unde» (§481), where "Publică" scrolls for a missing meeting point. */}
           <Stack component="section" id="box-place" aria-labelledby="box-place-heading" spacing={2} sx={{ scrollMarginTop: 16 }}>
             <PartHeading id="box-place-heading">{t("editor.boxes.place.title")}</PartHeading>
             <PlaceFields event={event} mayEditSettings languages={languages} />

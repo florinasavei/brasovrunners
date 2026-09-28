@@ -38,24 +38,12 @@ type Props = {
 };
 
 /**
- * The start of «Când și unde» and its two switches (`DECISIONS.md` §545, amending §533; the owner,
- * 2026-09-28: «în V2.23 trebuie să pot să nu pun data și ora evenimentului! momentan am validare pe
- * asta»): the date and hour boxes, then «Data se anunță mai târziu» and «Ora se anunță mai târziu».
- *
- * The boxes' `required` follows the switches, by the service's own rule (`startBoxesRequired`):
- * the date's switch excuses both boxes, the time's alone the hour. So a ticked switch takes the
- * asterisk away and the browser lets the save through with the box empty; unticked, the box is
- * required again and an empty one is refused by the browser. Only once the island runs, though: in
- * the server's HTML (and with JavaScript off) the boxes carry no `required` at all, because either
- * switch could still be ticked before the press and a static attribute could not be lifted by it.
- * There the server's rule is the only one (`resolveStart`), and it refuses an empty box the
- * switches do not excuse, naming it through §47's summary. Nothing typed is cleared by a switch:
- * a provisional date stays in its box, unpublished, as §533 keeps it.
- *
- * A client island for the same reason as the place's (`PlaceToBeAnnounced`, §328): `required` is
- * what changes, and MUI draws the asterisk from it. The boxes are the `WallTimeField` pair, posting
- * `event.startsAtDate` and `event.startsAtTime` as before. After a refusal the switches come back
- * as they were posted (§315): an unticked box posts nothing, so "not posted" is "off".
+ * The start of «Când și unde» with «Data se anunță mai târziu» and «Ora se anunță mai târziu»
+ * (§533, §545). Once the island runs, the boxes' `required` follows `startBoxesRequired`; in the
+ * server's HTML (and without JavaScript) they carry none, since a switch ticked before the press
+ * could not lift a static attribute — there the server's `resolveStart` is the only rule. A switch
+ * clears nothing typed. The boxes are the `WallTimeField` pair; switches recall after a refusal
+ * (§315), and an unticked one posts nothing ("off").
  */
 export default function StartToBeAnnounced(props: Props) {
   const recall = useRecall();
@@ -71,14 +59,14 @@ function Island({ labels, values, required, initial }: Props & { initial: Props[
   const [switches, setSwitches] = useState(initial);
   const own = useRef<HTMLDivElement>(null);
   const mounted = useRef(false);
-  // False in the server's HTML and while hydrating: no `required` a switch could not lift (see above).
+  // False in the server's HTML and while hydrating (see above).
   const running = useIslandRunning();
   const needs = startBoxesRequired(switches);
   const dateRequired = running && required && needs.date;
   const timeRequired = running && required && needs.time;
 
-  // The form's own watchers measure on `change`, which the box fires before React has re-rendered
-  // the boxes' `required`: told again once it has (the place's switch does the same, §328).
+  // The form's watchers measure on `change`, which fires before React re-renders `required`: tell
+  // them again once it has (as the place's switch does, §328).
   useEffect(() => {
     if (!mounted.current) {
       mounted.current = true;
@@ -123,7 +111,7 @@ function Island({ labels, values, required, initial }: Props & { initial: Props[
           {labels.help}
         </Typography>
       </Stack>
-      {/* The marker says the form carried the boxes, so an unticked one reads as "off", not "not edited" (§451). */}
+      {/* The marker says the form carried the boxes, so unticked reads as "off", not "not edited" (§451). */}
       <Box data-testid="date-to-be-announced">
         <input type="hidden" name={`${DATE_SWITCH}.present`} value="1" />
         {toggle(DATE_SWITCH, "dateToBeAnnounced", labels.dateSwitch, labels.dateSwitchHelp, "date-to-be-announced-help")}

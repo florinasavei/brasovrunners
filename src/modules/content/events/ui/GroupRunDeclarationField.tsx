@@ -15,26 +15,12 @@ type DeclarationSurface = "ASPHALT" | "TRAIL";
 const SURFACES: readonly string[] = ["ASPHALT", "TRAIL"];
 
 /**
- * "Declarație opțională pe propria răspundere" (§393): whether this group run's page offers the
- * self-declaration of its surface. Since §448 it sits under «Regulamentul», in the named card
- * «Declarația pe propria răspundere» (`DeclarationCard`) — one place for declarations, under the
- * rules (the owner, 2026-09-26: "momentan nu văd unde selectez declarația") — and says the surface
- * it reads from «Traseul» and which approved text is in force for it.
- *
- * A client island because the answer follows two selects of the same form — the type (§111: only a
- * group run) and the surface (asphalt or trail: which text) — read with the observer `OnlyForType`
- * uses. Shown only for a group run; nothing is posted otherwise, which the service reads as "not
- * offered", as it would anyway (`groupRunDeclarationKeyFor`).
- *
- * **On by default for a trail group run** (the owner, 2026-09-25: the mountain rescue asks for a
- * signed declaration on the Tâmpa run) and off for asphalt. "Default" means: until somebody ticks or
- * unticks it, the box follows the surface — choosing Trail ticks it, choosing Asfalt unticks it. On
- * the editor the stored answer stands until the surface changes, so opening a saved run never
- * changes what it offers.
- *
- * **Disabled without an approved text** of the chosen kind, with a line naming the text to approve
- * in "Documente legale": a checked box with nothing to sign would promise the runner a button the
- * page cannot draw. A disabled box posts nothing — "not offered".
+ * "Declarație opțională pe propria răspundere" (§393, §448): whether this group run's page offers
+ * the self-declaration of its surface. Client, to follow the type and surface selects (the
+ * `OnlyForType` observer); shown only for a group run. Until ticked by hand it follows the surface
+ * — on for trail, off for asphalt — while a saved run keeps its stored answer until the surface
+ * changes. Disabled (posts nothing) without an approved text of that kind, since the page could
+ * not draw the button.
  */
 export default function GroupRunDeclarationField({
   initialType,

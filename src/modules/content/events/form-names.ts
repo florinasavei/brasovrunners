@@ -1,39 +1,22 @@
 /**
- * The marker the create form's second button posts: this press asks for publication too
- * (`DECISIONS.md` §315). Here, in a plain module, and not beside the button: a constant
- * exported from a `"use client"` file is a client reference on the server, so the action would
- * compare the posted string with a proxy object and never publish.
+ * The marker the create form's second button posts to ask for publication too (§315). Kept out
+ * of the `"use client"` button file: exported from there it is a client reference on the server,
+ * and the action would compare the posted string with a proxy and never publish.
  */
 export const THEN_FIELD = "then";
 export const THEN_PUBLISH = "publish";
 
 /**
- * The marker the Locul box posts once JavaScript runs in it (§362, found by re-review): the
- * English place name is what the organizer left in the box, after the box itself made it follow
- * the Romanian one on the screen — so the server keeps it as posted rather than making it follow
- * again (`service.ts`, `placeNamesAsTyped`). Here for the same reason as the two above.
+ * Posted once JavaScript runs in the Locul box: the English place name is kept as typed rather
+ * than made to follow the Romanian again (`service.ts`, `placeNamesAsTyped`; §362).
  */
 export const PLACE_NAMES_AS_TYPED_FIELD = "event.placeNamesAsTyped";
 
 /**
- * From the field path a refusal names to the `name` the form posts (`DECISIONS.md` §315).
- *
- * The service speaks in the paths of `fields.ts` — `capacity`, `translations.ro.title`,
- * `scheduleRows.2.time`, `startsAtWallTime` — and the form posts `event.capacity`,
- * `translations.ro.title`, `event.schedule[2].time` and a date box plus a time box for every
- * wall-clock instant (`WallTimeField`). The refusal summary links to boxes, so the paths are
- * translated here, once, and `admin/actions.ts#eventFormFieldNames` applies it to every field
- * a `DomainError` carries.
- *
- * Two families pass through as they are, because the form already posts them under those
- * names: a language's boxes (`translations.<locale>.<field>` — the save prefixes the language
- * onto a translation's own paths, `service.ts#namedUnder`) and the create form's repeat rule
- * (`repeat.cadence`, which the action names itself, and `repeat.until`, which
- * `createEventAndPublish` prefixes onto `repeatEvent`'s own `until`). Two exceptions: the plain
- * summary — the schema's `excerpt` is derived from the rich one the editor posts as
- * `excerptBody`, so a refusal of either points at that box — and the weekday ticks, which
- * `RepeatFields` posts as a bare `weekday` on both forms. A path nobody recognises is prefixed
- * like any event column; the summary then shows it by name rather than not at all.
+ * From the field path a refusal names (`fields.ts` paths) to the `name` the form posts, so the
+ * refusal summary can link to the box (§315). A language's boxes and the create form's repeat
+ * rule already post under their paths; the summary maps to `excerptBody`, the weekday ticks to a
+ * bare `weekday`. An unknown path is prefixed like any event column.
  */
 export function eventFormFieldName(path: string): string {
   const summary = /^(translations\.\w+)\.excerpt$/.exec(path);
@@ -45,9 +28,7 @@ export function eventFormFieldName(path: string): string {
   const row = /^scheduleRows\.(\d+)\.(\w+)$/.exec(path);
   if (row) return `event.schedule[${row[1]}].${row[2]}`;
   if (path === "scheduleRows") return "event.schedule[0].date";
-  // The partners (§344): a card's own box by its index, or one of its links' by both indices —
-  // "Partenerul 2, linkul 3" is `coHosts.1.links.2.<box>`, checked first since it is the more
-  // specific shape.
+  // A partner's box, or one of its links' by both indices (§344); the more specific shape first.
   const partnerLink = /^coHosts\.(\d+)\.links\.(\d+)\.(\w+)$/.exec(path);
   if (partnerLink) return `event.coHosts[${partnerLink[1]}].links[${partnerLink[2]}].${partnerLink[3]}`;
   const partnerLinkList = /^coHosts\.(\d+)\.links$/.exec(path);
@@ -55,8 +36,7 @@ export function eventFormFieldName(path: string): string {
   const partner = /^coHosts\.(\d+)\.(\w+)$/.exec(path);
   if (partner) return `event.coHosts[${partner[1]}].${partner[2]}`;
   if (path === "coHosts") return "event.coHosts";
-  // The links (§332): a row's box by the index the editor gave it, and the whole list — "more
-  // than twelve" — as the list itself, which `LinkRowsEditor` carries the id of.
+  // The links (§332): a row's box by index; the whole list ("more than twelve") as the list's id.
   const link = /^links\.(\d+)\.(\w+)$/.exec(path);
   if (link) return `event.links[${link[1]}].${link[2]}`;
   if (path === "links") return "event.links";

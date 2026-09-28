@@ -13,23 +13,12 @@ import { useSelectedValue } from "./OnlyForType";
 const NAME = "event.declarationDocumentId";
 
 /**
- * «Declarația pe care o semnează participantul» (§39, §515): the race's declaration, a choice among
- * the approved versions of both kinds, trail and road or park.
- *
- * A client island because its start follows the surface select of «Traseul», read with the observer
- * `OnlyForType` uses: a race with **no declaration chosen** — a new one, or a saved one that never had
- * one — starts on the newest version in force of the kind its course reads (`preselectedRaceDeclaration`,
- * computed per surface on the server and handed in as `preselect`), and follows the surface until
- * somebody picks by hand. A saved choice is never replaced: an existing asphalt race that names a
- * trail version keeps it, and the line under the select (`declarationKindMismatch`) says the course
- * calls for the other kind, so the organizer changes it on purpose.
- *
- * The start applies only while the form says the event registers on the site (a type that takes
- * registrations, mode «Înscrieri pe site»): the select is hidden, never removed, for any other mode,
- * and it still posts — a version id posted for a run with no registration here is a refusal (§39),
- * so there it starts on «Niciuna», as it always did.
- *
- * After a refused save the posted value comes back (§315), as `RecallField` does.
+ * «Declarația pe care o semnează participantul» (§39, §515): a choice among the approved trail and
+ * road versions. With no saved choice it starts on the newest in force for the course's surface
+ * (`preselect`, computed on the server) and follows the surface until picked by hand; a saved
+ * choice is never replaced — `declarationKindMismatch` warns instead. Outside «Înscrieri pe site»
+ * it starts on «Niciuna», since a posted version there is refused (§39). Recalls after a refused
+ * save (§315).
  */
 export default function RaceDeclarationSelect({
   initialType,
@@ -64,8 +53,7 @@ export default function RaceDeclarationSelect({
   // Picked by hand: from then on the select keeps what the person chose.
   const [manual, setManual] = useState<string | null>(null);
   const recalled = recall.has ? (recall.value(NAME) ?? "") : null;
-  // A saved id the list no longer holds (a withdrawn version) is still posted as it was, as the
-  // plain select did before: the save, not this box, says what is wrong with it.
+  // A saved id the list no longer holds (a withdrawn version) is still posted; the save says what is wrong.
   const value = manual ?? recalled ?? savedId ?? (registersHere ? (preselect[surface] ?? preselect[""] ?? "") : "");
   const chosenKey = options.find((option) => option.id === value)?.key ?? null;
   const wanted = declarationKindMismatch(chosenKey, surface || null, options);

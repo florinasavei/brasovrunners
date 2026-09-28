@@ -10,19 +10,11 @@ import CoHostRowsEditor from "../CoHostRowsEditor";
 import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 12, "Parteneri — „Împreună cu”" (§168, §344, §350 the editor re-layout): who holds the
- * event with the club, **one card per partner** inside this box — its name and its own typed
- * links (its site, its event, registering with it, its socials) — shown as "Împreună cu …" on the
- * page and, when the bib's footer asks for them, on the race number.
- *
- * The cards are `CoHostRowsEditor`'s own (§344): this box is their frame and nothing else, so the
- * names they post (`event.coHosts[p].name`, `event.coHosts[p].links[l].<box>`), the refusal that
- * names a partner and a link by number, and the recall after a refused save are exactly the ones
- * the partner cards were built with. The rows are read through the one function that decides which
- * shape a stored row means — its list of links, its one legacy link, or the two columns before the
- * list — so an event saved by any earlier release opens with the partner it has, and the first
- * save writes it as a card. The description (§352) opens as stored, both languages or one: a half
- * written somewhere else is shown so it can be completed, and the save refuses it until it is.
+ * "Parteneri — „Împreună cu”" (§168, §344, §350): one card per partner, the cards being
+ * `CoHostRowsEditor`'s, this box only their frame. Rows are read through the one function that
+ * knows every stored shape, so an event from any earlier release opens with its partner and the
+ * next save writes it as a card. A half-written description (§352) opens as stored so it can be
+ * completed; the save refuses it until it is.
  */
 export default async function CoHostsBox({ event, mayEditSettings, locale, heading }: BoxProps & { locale: string }) {
   const t = await getTranslations("Admin");
@@ -58,7 +50,7 @@ export default async function CoHostsBox({ event, mayEditSettings, locale, headi
               partnerNew: t("editor.coHostRows.partnerNew"),
               name: t("editor.coHostRows.name"),
               about: t("editor.coHostRows.about"),
-              // Each language in its own words, as every Română | English tab on this page names it.
+              // Each language in its own words, as every Română | English tab names it.
               descriptionRo: tSite("languageName.ro"),
               descriptionEn: tSite("languageName.en"),
               descriptionHelp: t("editor.coHostRows.descriptionHelp"),
@@ -72,7 +64,7 @@ export default async function CoHostsBox({ event, mayEditSettings, locale, headi
               moveLinkUp: t("editor.coHostRows.moveLinkUp"),
               moveLinkDown: t("editor.coHostRows.moveLinkDown"),
               link: t("editor.coHostRows.link"),
-              // The card's number is the island's to fill in, so the placeholder travels as itself.
+              // The island fills in the card's number, so the placeholder travels as itself.
               ofPartner: t("editor.coHostRows.ofPartner", { p: "{p}" }),
             }}
           />

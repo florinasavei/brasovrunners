@@ -15,17 +15,10 @@ import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * "Programul zilei și ce să aduci" (§350), the first of the three cards of «Program, regulament și
- * declarație» since §481 (`ProgrammeRulesBox`; `#box-schedule`, after the page's own `#schedule`):
- * the timed rows first (§117) — one list for both
- * languages, one calendar entry each, repeated in the reminder, with "Ce (română)" and "Ce
- * (engleză)" side by side in the row, never in tabs — then, in Română | English tabs, the notes
- * under them and what to bring. The rows and their notes used to live in two panels far apart
- * and needed a hint each saying where the other was (the owner: "programul evenimentului e
- * duplicat!"); in one box they need none.
- *
- * A group run has no programme (§111): the sentence replaces the rows and the notes, hidden and
- * never removed, and only "Ce să aduci" remains — every type has something to bring.
+ * "Programul zilei și ce să aduci" (§350, §481; `#box-schedule`): the timed rows (§117) — one list
+ * for both languages, the two "Ce" boxes side by side — then per-language tabs for the notes and
+ * what to bring. A group run has no programme (§111): a sentence replaces rows and notes (hidden,
+ * never removed) and only "Ce să aduci" remains.
  */
 export default async function ProgrammeBox({ event, mayEditSettings, risk, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
@@ -39,9 +32,8 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
     const end = item.endsAt ? toWallTimeInput(new Date(item.endsAt), zone) : "";
     return { date: start.slice(0, 10), time: start.slice(11, 16), endTime: end.slice(11, 16), ro: item.label.ro, en: item.label.en, place: item.place ?? "" };
   });
-  // The day a new row opens on (§405): the event's own start date, as its start box shows it —
-  // "" on the create page, where the rows take it once it is typed — and "" for a date left blank
-  // (§545), so no new row opens on the provisional day the platform stored in its place.
+  // The day a new row opens on (§405): the start date as its box shows it; "" on create and for a
+  // blank date (§545), so no row opens on the stored provisional day.
   const startDate = startBoxValues(event?.startsAt ?? null, zone).date;
   const programmeTypes = EVENT_TYPES.filter(hasProgramme);
   const turnUpTypes = EVENT_TYPES.filter((type) => !hasProgramme(type));
@@ -62,12 +54,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
         <OnlyForType type={programmeTypes} selectName="event.type" initialType={initialType}>
           {mayEditSettings ? (
             <Stack spacing={1}>
-              {/* How the rows work, as the compact «i» fold (§398, reused; §405), closed by default
-                  (§336) — the paragraph that used to stand above the rows. With people registered,
-                  the box stays amber and wears the count like the other four boxes a change reaches
-                  (§350), and the sentence that went with it joins this fold: it said what the help
-                  says — the reminder repeats the rows, each is a calendar entry — plus which save
-                  tells them. */}
+              {/* How the rows work, as the compact «i» fold (§398, §405), closed by default (§336). */}
               <Panel collapsible variant="help" legendIcon="info" title={t("editor.programmeHelpSummary")} data-testid="programme-help">
                 <Stack spacing={1}>
                   <Typography variant="body2" color="text.secondary">
@@ -80,8 +67,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
                   )}
                 </Stack>
               </Panel>
-              {/* The rows follow the start date: `WallTimeField` posts `event.startsAtDate`, and the
-                  rows island listens to the date box by that name. A new row opens on it (§405). */}
+              {/* The rows island listens to the `event.startsAtDate` box; a new row opens on it (§405). */}
               <ScheduleRowsEditor
                 initial={scheduleRows}
                 startDateName="event.startsAtDate"

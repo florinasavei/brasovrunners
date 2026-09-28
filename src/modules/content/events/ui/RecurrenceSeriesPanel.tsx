@@ -19,7 +19,7 @@ type Props = {
   locale: string;
   /** The date whose editor is open. */
   eventId: string;
-  /** The series' first event, which holds the rule — this one, or the one it was copied from. */
+  /** The series' first event, which holds the rule — this one or its source. */
   sourceId: string;
   seriesTitle: string;
   /** 1-based, among the dates that exist. */
@@ -47,20 +47,11 @@ type Props = {
 };
 
 /**
- * The Recurență box for a date of a series (§350, "state B") — the source or **any** copied date:
- * a copied date showed nothing of its series but a 2-pixel box with the way back, and whoever
- * opened next Monday's run could not see the rule, stop it or switch its publication without first
- * finding the first date. Every question about the series is answered here, from any of its dates:
- *
- * - where this date sits ("Seria „…” · data 3 din 8"), the dates on either side, the first one;
- * - the rule in words, read from the source; the next five dates as links; how the series renews
- *   itself (the job keeps the club's horizon created, eight weeks unless changed — §122, §377), or
- *   that it is stopped;
- * - "Publică datele noi automat" with its own "Salvează setarea" (`setRepeatPublish`, on the
- *   source's rule, from any date) — its own form, because it changes the rule at the press;
- * - "Oprește recurența", aimed at the source from any date (`stopRepeat` resolves it).
- *
- * Each control is rendered only for the role the service allows; everyone else reads.
+ * The Recurență box for any date of a series (§350), source or copy: where this date sits and its
+ * neighbours, the rule in words, the next dates, how the series renews (§122, §377) or that it is
+ * stopped, "Publică datele noi automat" with its own save (`setRepeatPublish`, on the source's
+ * rule) and "Oprește recurența" (`stopRepeat` resolves the source). Controls render only for the
+ * roles the service allows.
  */
 export default async function RecurrenceSeriesPanel(props: Props) {
   const t = await getTranslations("Admin");
@@ -69,11 +60,9 @@ export default async function RecurrenceSeriesPanel(props: Props) {
     props;
   const running = ruleSentence !== null && !ended;
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
-  // The robot (§398; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu că se
-  // reînnoiește automat"), leading this card's own two mentions of the switch — the same glyph
-  // as the events list's renewal sentence (`ACTION_ICONS.renew`), decorative and aria-hidden.
+  // The robot glyph for automatic renewal (§398), as on the events list (`ACTION_ICONS.renew`).
   const RenewIcon = ACTION_ICONS.renew;
-  // How far ahead the job keeps the dates created — the club's number (§377), in words.
+  // How far ahead the job keeps dates created — the club's number (§377).
   const horizon = daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays);
 
   return (
@@ -143,8 +132,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
           </Typography>
         )}
 
-        {/* Whether the dates made from now on go live by themselves (the hints branch's switch, §350),
-            as a tick and its own "Salvează setarea" — on the source's rule, from any date. */}
+        {/* Whether new dates go live by themselves (§350), with its own save, on the source's rule. */}
         {running && (
           <Box data-testid="repeat-publish">
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "flex-start", mb: 1 }}>
@@ -155,9 +143,8 @@ export default async function RecurrenceSeriesPanel(props: Props) {
             </Stack>
             {mayChange && (
               /*
-                Turning it on puts every date the series creates from now on on the site by itself:
-                it asks, as the list's "Publică automat de acum" does (§384). Turning it off, or
-                saving it as it was, asks nothing.
+                Turning it on asks first, as the list's "Publică automat de acum" does (§384);
+                turning it off or saving it unchanged asks nothing.
               */
               <ActionForm
                 action={actions.setRepeatPublish}

@@ -75,37 +75,24 @@ import {
 } from "./repository";
 
 /**
- * Creating, editing, publishing and removing events (BR-REQ-050-01, BR-REQ-051-01).
+ * Creating, editing, publishing and removing events (BR-REQ-050-01, BR-REQ-051-01). Priority-1
+ * code (`docs/PRACTICES.md`). Three rules throughout:
  *
- * Priority-1 code — `docs/PRACTICES.md`. Read every line.
- *
- * Three rules run through all of it:
- *
- *   1. Authorization is asserted here, on the server, for every write (BR-REQ-060-01). The
- *      acting staff user is an argument, never a session this module reads for itself, so a
- *      page cannot pass "the user I already checked" and a test needs no browser.
- *   2. A save carries the version it was loaded with. A stale one is a CONFLICT and nothing is
- *      written (BR-REQ-051-01 criterion 5). Two organizers editing one event on a Sunday
- *      morning is the ordinary case, and last-write-wins would silently discard one of them.
- *   3. Publication is one state for the whole event, and reaching it requires a complete
- *      translation in every locale (`DECISIONS.md` §28). Both languages go live together;
- *      there is no half-published event for BR-REQ-040-02 to have to describe any more.
+ *   1. Authorization is asserted here for every write (BR-REQ-060-01); the acting staff user is
+ *      an argument, never a session read here.
+ *   2. A save carries the version it was loaded with; a stale one is a CONFLICT and nothing is
+ *      written (BR-REQ-051-01 criterion 5) — never last-write-wins.
+ *   3. Publication is one state for the whole event and requires a complete translation in every
+ *      locale (§28, BR-REQ-040-02).
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
 /**
- * The conflict check, in one statement — once per table that carries a version.
- *
- * `WHERE id = ? AND version = ?` with the version incremented in the same UPDATE is what makes
- * this safe, and it is worth being explicit about why. Two organizers load version 4. Both
- * submit. PostgreSQL runs the first UPDATE; the second one blocks on the row lock, and when
- * the first commits it re-evaluates its WHERE clause against the *committed* row — now version
- * 5 — which no longer matches. It updates nothing, `RETURNING` yields no row, and the second
- * organizer is told their copy is stale.
- *
- * Reading the version and then updating in two statements would pass every single-threaded
- * test and lose an edit the first time two people saved within the same second.
+ * The conflict check in one statement: `WHERE id = ? AND version = ?` with the version bumped in the
+ * same UPDATE. Of two concurrent saves of version 4, the second blocks on the row lock, re-evaluates
+ * its WHERE against the committed version 5, updates nothing and returns no row — so it is told its
+ * copy is stale. A read-then-update in two statements would lose an edit under real concurrency.
  */
 async function updateTranslationWithVersionGuard<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -128,9 +115,7 @@ async function updateTranslationWithVersionGuard<T extends Record<string, unknow
 
   if (updated) return updated;
 
-  // Nothing was written. Either the row is gone, or somebody else saved first — and the two
-  // deserve different answers, so the caller can say "reload and reapply your changes" for
-  // one and "this event no longer exists" for the other.
+  // Nothing was written: the row is gone, or somebody saved first — different answers for the caller.
   const current = await findTranslationById(db, translationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such event translation");
 
@@ -165,13 +150,9 @@ async function updateEventWithVersionGuard<T extends Record<string, unknown>>(
 }
 
 /**
- * Featuring an event un-features the previous one, in the caller's transaction.
- *
- * The database is the guarantee — a partial unique index refuses a second featured row — and
- * this clear is the mechanism that keeps the guarantee from simply rejecting every save. Both
- * statements are in one transaction so there is never an instant with none, and never a clear
- * that survives a failed set. Creating and duplicating go through it for the same reason a save
- * does: "remembering" to clear the flag is a race between two organizers, not a rule.
+ * Featuring an event un-features the previous one, in the caller's transaction. A partial unique
+ * index is the guarantee; this clear keeps it from rejecting every save, and sharing the
+ * transaction means never none featured and never a clear that survives a failed set.
  */
 async function clearFeaturedExcept<T extends Record<string, unknown>>(
   tx: Database<T>,
@@ -185,12 +166,8 @@ async function clearFeaturedExcept<T extends Record<string, unknown>>(
 }
 
 /**
- * Every instant the form carries, resolved in the event's own timezone and checked against each
- * other before the database sees them.
- *
- * The CHECK constraints are what actually hold — a seed and a hand-written `UPDATE` reach the
- * same columns — but an organizer deserves a sentence rather than a constraint violation, and
- * the two are independently tested for exactly that reason.
+ * Every instant the form carries, resolved in the event's zone and checked against each other. The
+ * CHECK constraints are what hold; this gives the organizer a sentence instead of a violation.
  */
 type ResolvedTimes = {
   startsAt: Date;
@@ -202,10 +179,7 @@ type ResolvedTimes = {
   scheduleItems: ScheduleItem[];
 };
 
-/**
- * The two switches as the save leaves them (§533): posted, else the row's — the discipline both
- * follow (`fields.ts`: absent is "this caller is not editing it"). A new event starts announced.
- */
+/** The two switches as the save leaves them (§533): posted, else the row's; a new event starts announced. */
 function switchesAfterSave(
   fields: Pick<EventFieldsInput, "dateToBeAnnounced" | "timeToBeAnnounced">,
   current: Pick<EditableEvent, "dateToBeAnnounced" | "timeToBeAnnounced"> | null,
@@ -219,7 +193,7 @@ function switchesAfterSave(
 function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): ResolvedTimes {
   const zone = fields.timezone;
 
-  // Every refusal here names its field (§47, §315): the form links the sentence to the box.
+  // Every refusal here names its field (§47, §315).
   const required = (value: string, name: string): Date => {
     const parsed = fromWallTimeInput(value, zone);
     if (!parsed) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`, [name]);
@@ -234,23 +208,19 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
     return parsed;
   };
 
-  // The start's date and hour may be left empty while they are to be announced (§545, amending
-  // §533): `resolveStart` stores the provisional parts in their place, and refuses an empty box the
-  // switches do not excuse, naming it (§47).
+  // Date and hour may be empty while to be announced (§533, §545): `resolveStart` stores provisional
+  // parts and refuses an empty box the switches do not excuse (§47).
   const { startsAt, blank } = resolveStart(fields.startsAtWallTime, switches, zone);
-  // A duration wins over an end time when both arrive: it is what the form asks for now. A length
-  // needs no hour, so it is kept whatever was left blank — it is the end that has no public reader
-  // while the start is held back (§533). An end typed on the clock is compared with the start, so it
-  // needs the start's date and hour, like the race's start below.
+  // A duration wins over an end time. A duration needs no hour, so it is kept whatever is blank; an
+  // end on the clock is compared with the start, so it needs the start's date and hour.
   const endsAt =
     fields.durationMinutes != null
       ? new Date(startsAt.getTime() + fields.durationMinutes * 60_000)
       : optional(fields.endsAtWallTime, "endsAt");
-  // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
+  // A gun time is a race's (§71); on other types its hidden value is ignored.
   const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
-  // «Startul cursei» is checked against the event's start, so it waits for the start's own date and
-  // hour (§545): typed beside a blank one, it is refused naming its box rather than compared with the
-  // provisional value.
+  // «Startul cursei» is compared with the start, so beside a blank date or hour it is refused on its
+  // own box rather than compared with the provisional value (§545).
   if ((blank.date || blank.time) && raceStartsAt) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -265,19 +235,16 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
   const registrationClosesAt = optional(fields.registrationClosesAtWallTime, "registrationClosesAt");
 
   /**
-   * The programme's rows (§117). A row left blank in every box is the editor's spare line and
-   * is dropped — and so is one whose only box is its date, because the editor writes that date
-   * itself: every row opens on the event's start date (§405), so a date alone is the default the
-   * organizer never touched, not something typed. Anything else must say when, and what in both
-   * languages — the page shows the rows in either language, so a label in one is a row missing
-   * from the other. The end, when given, is a time on the same day, at or after the start.
+   * The programme's rows (§117). A fully blank row is dropped, and so is one with only its date,
+   * since the editor fills that in itself (§405). Otherwise a row needs a time and a label in both
+   * languages; an end, when given, is on the same day at or after the start.
    */
   const scheduleItems = fields.scheduleRows
     .map((row, index) => {
       const blank = !row.time && !row.endTime && !row.ro && !row.en && !row.place;
       if (blank) return null;
       const name = `schedule[${index + 1}]`;
-      // The field paths name the row as the form posts it, zero-based (`scheduleRows.<i>.<box>`).
+      // Paths name the row as the form posts it, zero-based (`scheduleRows.<i>.<box>`).
       const box = (which: string) => `scheduleRows.${index}.${which}`;
       if (!row.date || !row.time) {
         throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`, [box(row.date ? "time" : "date")]);
@@ -312,8 +279,7 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
       ["raceStartsAt"],
     );
   }
-  // «Se deschid în curând» says there is no date yet (§451): a date beside it is two answers to one
-  // question, and the organizer is asked which one they mean rather than one being dropped.
+  // «Se deschid în curând» (§451) and an opening date are two answers to one question: ask which.
   if (fields.registrationOpensSoon === true && registrationOpensAt) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -321,8 +287,7 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
       ["registrationOpensAt"],
     );
   }
-  // A start still to be announced (§533), date or time, holds registration at «în curând»: an opening date is an
-  // answer to a question the event cannot ask yet, refused like §451's rather than dropped.
+  // A start to be announced (§533) keeps registration at «în curând»: an opening date is refused.
   if (startHeldBack(fields) && registrationOpensAt) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -346,24 +311,14 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
 }
 
 /**
- * The combinations AGENTS.md §10.1 and §12.3 forbid, refused with a sentence.
- *
- * Each of these is also a CHECK on the table, and neither is redundant: the constraint is the
- * guarantee, this is the message. The one rule that exists only here is the declaration —
- * §12.3 requires an approved declaration on an internal event, and it cannot be a CHECK because
- * "approved" lives in another table.
+ * The combinations AGENTS.md §10.1 and §12.3 forbid, refused with a sentence. Each is also a CHECK
+ * (the guarantee; this is the message), except the approved declaration on an internal event,
+ * which lives in another table.
  */
 /**
- * «Data se anunță mai târziu» (§533), what it may not be switched on for:
- *
- * - **a series** — a rule that makes dates, or a date it made: a series is its dates;
- * - **an event anybody registered for** — hiding its date would be a postponement nobody was told
- *   of, with reminders and deadlines still counted from the date they were given. Postponing is
- *   the organizer's own act: a new date and «Anunță participanții», or a cancellation.
- *
- * Checked only when the switch goes on: an event already undated has nobody registered (no door
- * takes anybody while it is), and switching it off is always allowed. The series is asked here,
- * before the save's transaction; the registrations inside it, under the lock
+ * What «Data se anunță mai târziu» (§533) may not be switched on for: a series (a series is its
+ * dates), or an event anybody registered for (hiding the date would be an untold postponement).
+ * Checked only when the switch goes on; the series here, the registrations under the lock
  * (`assertNobodyRegisteredForUndated`).
  */
 async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>(
@@ -372,10 +327,9 @@ async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>
   current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "timeToBeAnnounced" | "repeatRule" | "repeatOf"> | null,
 ): Promise<void> {
   if (!startHeldBack(fields)) return;
-  // The box the refusal names: the date's when it is ticked, else the time's.
+  // The refusal names the date's box when it is ticked, else the time's.
   const box = fields.dateToBeAnnounced === true ? "dateToBeAnnounced" : "timeToBeAnnounced";
-  // The listing leads with a dated event (§470): one with no date cannot be the one it leads with,
-  // and marking it would clear the mark from the event that does (`clearFeaturedExcept`).
+  // The listing leads with a dated event (§470); featuring an undated one would unfeature that one.
   if (fields.featured) {
     throw new DomainError("VALIDATION_ERROR", "featured: an event whose start is to be announced cannot lead the listing", ["featured"]);
   }
@@ -386,11 +340,9 @@ async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>
 }
 
 /**
- * The second half of `assertDateToBeAnnouncedAllowed`, inside the save's transaction: nobody may be
- * registered when the switch goes on. Counted behind the event row's lock — the one every
- * submission takes before it inserts (`submitRegistration`, which asks the flag again under it) —
- * so a runner pressing «Trimite» as the organizer presses «Salvează» is either counted here or
- * refused there, never registered against a date that has just been withdrawn.
+ * Nobody may be registered when the switch goes on (§533), counted behind the event row's lock that
+ * every submission takes (and under which `submitRegistration` re-reads the flag), so a concurrent
+ * «Trimite» is either counted here or refused there.
  */
 async function assertNobodyRegisteredForUndated<T extends Record<string, unknown>>(
   tx: Database<T>,
@@ -414,10 +366,9 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
   fields: EventFieldsInput,
   now: Date,
 ): Promise<void> {
-  // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
+  // Every refusal names its boxes (§47, §315).
   if (fields.registrationMode !== "INTERNAL") {
-    // The waiting list's length is the places' kin (§348): nothing queues on an event that takes
-    // no registrations here, so a number left in its box is refused with the capacity's sentence.
+    // The waiting-list cap (§348) belongs with the places: refused with the capacity's sentence.
     const waitlistCapacitySet = fields.waitlistCapacity !== undefined && fields.waitlistCapacity !== null;
     if (fields.capacity !== null || waitlistCapacitySet || fields.declarationDocumentId !== null) {
       throw new DomainError(
@@ -441,8 +392,7 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
 
   if (fields.participantListVisibility === "NAMES") {
     if (fields.registrationMode !== "INTERNAL") {
-      // For NONE there are no participants to list, and for EXTERNAL the people who entered are
-      // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
+      // NONE has nobody to list; EXTERNAL's entrants are the other organizer's (BR-REQ-039-01).
       throw new DomainError(
         "VALIDATION_ERROR",
         "a start list can only be published for an event that takes registrations here",
@@ -451,15 +401,9 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
     }
 
     /**
-     * `AGENTS.md` §10.10, `DECISIONS.md` §32, §346: the disclosure MUST NOT be switched on
-     * before the approved privacy notice describes it. §32 recorded the rule and left it
-     * unenforced because no environment had an approved notice at all yet, so nothing could be
-     * blocked — that stopped being true on 2026-09-22, when production approved one. The check
-     * asks the same question `legal-documents/service.ts` asks for "in force" — approved,
-     * effective by now, never withdrawn — and by key alone, the same way `declarationNone`
-     * reads the environment rather than one locale: an event is publishable only with both
-     * languages complete (§28), so a notice missing from one language is not a state a public
-     * disclosure should be allowed to launch from either.
+     * The public list must not be switched on before an approved privacy notice describes it
+     * (AGENTS.md §10.10, §32, §346). "In force" as `legal-documents/service.ts` means it — approved,
+     * effective, not withdrawn — by key alone, since publication needs both languages anyway (§28).
      */
     if (!(await findCurrentApprovedVersionId(db, "PRIVACY_NOTICE", now))) {
       throw new DomainError(
@@ -487,11 +431,7 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
   }
 }
 
-/**
- * The cost type a create stores when it was given none (the field absent): the owner's "by default
- * toate evenimentele sunt gratuite". `eventColumnsFrom` writes it and `createEvent` gates the discount
- * note on it — one value, so the insert and the gate cannot disagree.
- */
+/** The cost type a create stores when given none (§398); `createEvent` gates the discount note on the same value. */
 const COST_TYPE_ON_CREATE: EventCostType = "FREE";
 
 /** The columns of `events` a form writes, in one place, so create and save cannot drift. */
@@ -499,8 +439,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
   return {
     type: fields.type,
     surface: fields.surface,
-    // The level on the club's scale of fifteen (§526): the band select and «Treapta» make one level;
-    // the retired `difficulty` column gets a best-effort word, for the release before this one.
+    // The level of fifteen (§526) from band and step; the retired `difficulty` column gets a
+    // best-effort word for the previous release.
     ...storedDifficulty(fields.difficulty ? difficultyLevel(fields.difficulty, fields.difficultyStep) : null),
     eventStatus: fields.eventStatus,
     timezone: fields.timezone,
@@ -514,86 +454,57 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
-    // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
-    // and leaves the database in BR-V2.11 (§491).
+    // No `video_url` (§481, §491): films live in the description.
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
-    // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
-    // more and not read anywhere: they hold whatever they held until a later contraction
-    // drops them, and `readCoHosts` prefers the list whenever the row has one — which is why
-    // an editor that removed every partner must write `[]` rather than null.
-    //
-    // A caller that said nothing about the partners writes no column at all (§169): `[]`
-    // would be indistinguishable from "remove them", and on a row saved before the list
-    // existed that would erase the partner its two old columns still hold.
+    // The partners as a list (§168); the old `co_host_name`/`co_host_url` are neither written nor
+    // read, and `readCoHosts` prefers the list when present — so removing every partner writes `[]`.
+    // A caller silent about partners writes nothing (§169), or it would erase an old row's partner.
     ...(fields.coHosts === undefined ? {} : { coHosts: fields.coHosts }),
-    // "Linkuri și fișiere" (§332), by the same discipline: a caller that said nothing writes
-    // nothing. An empty list is written as null, not `[]` — unlike the partners there is no
-    // older column for `[]` to shadow, and one value for "none" means a series edit never
-    // reports a change between a row that never had links and one whose links were removed.
+    // "Linkuri și fișiere" (§332), same discipline. None is stored as null, not `[]`, so a series edit
+    // never sees a change between "never had links" and "links removed".
     ...(fields.links === undefined ? {} : { links: fields.links.length > 0 ? fields.links : null }),
-    // Whatever was typed is written even while the place is to be announced (§328): it is kept
-    // for staff and shown the moment the switch goes off, and no public reader is handed it.
+    // Written even while the place is to be announced (§328): kept for staff, never handed to a public reader.
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     locationToBeAnnounced: fields.locationToBeAnnounced,
-    // §398 — the owner: "by default toate evenimentele sunt gratuite". A create that posts no
-    // cost type at all (the field absent — `costType` is optional, like `costAmount`/`costUrl`
-    // above) stores `FREE`, the same default the form's own select preselects
-    // (`initialCostTypeOf`); an edit that posts none leaves the stored value alone, exactly the
-    // discipline `costAmount`/`costUrl` already follow. This is the only place either can
-    // default it, since `eventColumnsFrom` is what create and save both write through — and a
-    // caller that posts an explicit value, including `null` for "not stated", always writes it.
+    // §398: a create with no cost type stores `FREE`, the select's own default (`initialCostTypeOf`);
+    // an edit with none leaves the stored value. A posted value, `null` included, is always written.
     ...(fields.costType === undefined ? (options?.isCreate ? { costType: COST_TYPE_ON_CREATE } : {}) : { costType: fields.costType }),
-    // Absent means this caller is not editing the cost fields (§343), the discipline `links`
-    // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
-    // is in the boxes even while the chosen kind does not need one of them.
+    // Absent means "not editing the cost" (§343); the editor always posts both.
     ...(fields.costAmount === undefined ? {} : { costAmount: fields.costAmount }),
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     nightOverride: fields.nightOverride,
-    // Only a group run on asphalt or trail has a self-declaration to offer (§393): anything else
-    // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
-    // turn-up type's registration block.
+    // Only a group run on asphalt or trail offers a self-declaration (§393); anything else stores
+    // false whatever a hidden box posted, as §111 normalizes.
     offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
-    // The waiting list's length (§348), by the partners' discipline: a caller that said nothing
-    // about it — a fixture, a caller from before it existed — writes nothing, so no save lifts a
-    // limit the organizer set just by not mentioning it. The editor and the create form post it.
+    // Waiting-list cap (§348): a caller silent about it writes nothing, so no save lifts the limit.
     ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: fields.waitlistCapacity }),
-    // The race's band (§173): where its numbers start and what colour they print. Both were
-    // parsed and validated by `fields.ts` from the day they were added and then dropped here,
-    // so the editor's two controls posted into nothing — caught by review (§177).
+    // The race's band (§173): where numbers start and their colour (§177).
     bibStartNumber: fields.bibStartNumber,
     bibColour: fields.bibColour,
     /*
-      The rest of the bib's design (§249), and the same discipline the partners' list above
-      follows: a caller that said nothing writes no column at all.
-
-      A checkbox that is off posts nothing, so a form without the design panel — the create
-      form, an older caller, a test fixture — would otherwise read as "every switch off" and
-      silently redesign a bib nobody had touched.
+      The rest of the bib design (§249), same discipline: a form without the panel would otherwise
+      read as "every switch off" and silently redesign the bib.
     */
     ...(fields.bibDesign === undefined ? {} : { bibDesign: fields.bibDesign }),
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
-    // Who may enter, counted on the event's day at every door (§329).
+    // The minimum age, counted on the event's day at every door (§329).
     minAge: fields.minAge,
-    // The event's own reminder lead (§377), by the partners' discipline: a caller that did not post
-    // the select writes nothing, so a save that never mentioned it keeps what the organizer chose.
+    // The reminder lead (§377): a caller silent about it keeps the organizer's choice.
     ...(fields.reminderHoursBefore === undefined ? {} : { reminderHoursBefore: fields.reminderHoursBefore }),
     registrationOpensAt: times.registrationOpensAt,
-    // «Se deschid în curând» (§451), by the partners' discipline: a caller that did not post the
-    // switch writes nothing, so no script opens a registration the organizer holds shut by not
-    // mentioning it. The editor and the create form always post it.
+    // «Se deschid în curând» (§451): a caller silent about it opens nothing held shut.
     ...(fields.registrationOpensSoon === undefined ? {} : { registrationOpensSoon: fields.registrationOpensSoon }),
-    // «Data se anunță mai târziu» (§533), by the same discipline. While it is on, an internal
-    // registration is held at «se deschid în curând» (§451) whatever the box said — so announcing the
-    // date later opens nothing by itself: the organizer unticks «în curând» when they mean it.
+    // «Data se anunță mai târziu» (§533), same discipline. While on, internal registration stays at
+    // «în curând» (§451), so announcing the date later opens nothing by itself.
     ...(fields.dateToBeAnnounced === undefined ? {} : { dateToBeAnnounced: fields.dateToBeAnnounced }),
     // «Ora se anunță mai târziu» (§533): the same, for the time alone.
     ...(fields.timeToBeAnnounced === undefined ? {} : { timeToBeAnnounced: fields.timeToBeAnnounced }),
@@ -607,11 +518,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
 }
 
 /**
- * A group run takes no registrations (`DECISIONS.md` §111): whatever the form posted for the
- * block it does not show — the fields stay in the document, hidden, so a run that was once a
- * race still posts INTERNAL — the row is written as an event one simply turns up to. The same
- * shape as the gun time on anything but a race (§71): ignored, not refused, because the
- * organizer cannot see the field a refusal would name.
+ * A group run takes no registrations (§111): whatever the hidden block posted, the row is written
+ * as a turn-up event. Ignored, not refused, since the organizer cannot see the field (as the gun
+ * time, §71).
  */
 function normalizeForType<T extends EventFieldsInput>(fields: T): T {
   if (takesRegistrations(fields.type)) return fields;
@@ -619,9 +528,8 @@ function normalizeForType<T extends EventFieldsInput>(fields: T): T {
 }
 
 /**
- * The waiting list's length is written only by a caller that sent it (§350, the waiting-list
- * cap): a hidden block stores null in its place when the form posted the box, and nothing at all
- * when it did not — so a save that never mentioned the limit never lifts it.
+ * The waiting-list cap is written only by a caller that sent it (§350): null when a hidden block
+ * posted it, nothing when it was not posted — so a save that never mentioned it never lifts it.
  */
 function keepUnsentWaitlist<T extends EventFieldsInput>(fields: T, normalized: T): T {
   return fields.waitlistCapacity === undefined ? { ...normalized, waitlistCapacity: undefined } : normalized;
@@ -629,11 +537,11 @@ function keepUnsentWaitlist<T extends EventFieldsInput>(fields: T, normalized: T
 
 /** What a turn-up type is written with, whatever the hidden block posted (§111). */
 const TURN_UP_FIELDS = {
-  // No programme rows on a turn-up type either (§111, §117).
+  // No programme rows on a turn-up type (§111, §117).
   scheduleRows: [],
   registrationMode: "NONE",
   capacity: null,
-  // A turn-up event queues nobody (§350, the waiting-list cap).
+  // A turn-up event queues nobody (§350).
   waitlistCapacity: null,
   declarationDocumentId: null,
   registrationOpensAtWallTime: "",
@@ -645,29 +553,23 @@ const TURN_UP_FIELDS = {
 } as const;
 
 /**
- * What the chosen registration mode hides is ignored, not refused (§350, extending §111's shape
- * to the mode): the editor's "Participare și înscrieri" box shows only the fields of the chosen
- * mode (`OnlyForMode`) and keeps the others in the document, hidden, so switching back finds what
- * was typed. A capacity left behind a switch to "Fără înscrieri" is a box the organizer can no
- * longer see — refusing the save over it would name a field that is not on the screen.
- *
- * So: not here → no capacity, no waiting-list length, no declaration, no public list; not
- * elsewhere → no organizer's name or link. The window, the confirmation days, the minimum age and
- * the bib band are kept whatever the mode, so a switch back restores them.
- * `assertCoherentRegistrationBlock` stays as the guarantee for anything that reaches the service
- * another way.
+ * What the chosen registration mode hides is ignored, not refused (§350, extending §111): a value
+ * left behind a mode switch sits in a box the organizer can no longer see. Not here → no capacity,
+ * waiting-list cap, declaration or public list; not elsewhere → no organizer name or link. The
+ * window, confirmation days, minimum age and bib band are kept in every mode.
+ * `assertCoherentRegistrationBlock` still guards other paths.
  */
 export function normalizeForMode<T extends EventFieldsInput>(fields: T): T {
   return keepUnsentWaitlist(fields, { ...fields, ...hiddenByMode(fields.registrationMode) });
 }
 
-/** What "Pe site" alone shows, and what "La organizator" alone shows — as the values stored in their place. */
+/** What "Pe site" alone and "La organizator" alone show, as the values stored in their place. */
 const INTERNAL_ONLY_FIELDS = {
   capacity: null,
   waitlistCapacity: null,
   declarationDocumentId: null,
   participantListVisibility: "HIDDEN",
-  // «Se deschid în curând» (§451) holds the site's own door shut; there is no such door elsewhere.
+  // «Se deschid în curând» (§451) is the site's own door; there is none elsewhere.
   registrationOpensSoon: false,
 } as const;
 const EXTERNAL_ONLY_FIELDS = { externalProvider: null, externalRegistrationUrl: null } as const;
@@ -677,17 +579,11 @@ function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
 }
 
 /**
- * The same two rules on the form **as posted**, before the schema reads it (§350, found by
- * review). Applied only after parsing, "ignored, not refused" held for what was left blank and not
- * for what was left wrong: a link typed as `www.club.ro` under "La organizator" and then hidden by
- * a switch to "Pe site" still reached `httpsUrl`, and the refusal named a box that was not on the
- * screen — the exact case the rules exist for. So a box the chosen type or mode hides is replaced
- * by the value it would be stored as before anything checks it; what it held is never read.
- *
- * Only keys the caller sent are replaced, so a strict schema is never handed one it did not ask
- * for, and an unknown type or mode is left alone for the schema to name. What both modes keep —
- * the window's two days, the minimum age, the bib band — is checked as typed, because it is
- * stored as typed; a refusal over one of those is brought on screen by the form (`OnlyForMode`).
+ * The same two rules on the form as posted, before the schema reads it (§350): otherwise a hidden
+ * box left wrong (e.g. `www.club.ro`) still reached `httpsUrl` and the refusal named an invisible
+ * box. A hidden box is replaced by the value it would be stored as. Only keys the caller sent are
+ * replaced (the schema is strict), and an unknown type or mode is left for the schema to name.
+ * What every mode keeps is checked as typed; `OnlyForMode` brings its refusal on screen.
  */
 export function ignoreHiddenFields(raw: unknown): unknown {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return raw;
@@ -702,16 +598,14 @@ export function ignoreHiddenFields(raw: unknown): unknown {
   const replaced = { ...posted };
   for (const [key, value] of Object.entries(hidden)) if (key in replaced) replaced[key] = value;
   /*
-    The place behind "Locația se anunță mai târziu" (§328; §350, the editor's boxes, found by
-    re-review): hidden with the switch on, and kept — a venue and a map link typed before the
-    switch went on are saved as typed, never published. But a map link that is not one cannot be
-    stored, and refusing the save over it names a box the switch hides: it is written as no link,
-    exactly as a blank box would be. Switched off, the box is on screen and checked as typed.
+    Behind "Locația se anunță mai târziu" (§328, §350) typed values are kept, but a map link that is
+    not one cannot be stored and its box is hidden, so it is written as no link. Switched off, it is
+    checked as typed.
   */
   if (posted.locationToBeAnnounced === true && "mapUrl" in replaced && !eventFieldsSchema.shape.mapUrl.safeParse(replaced.mapUrl).success) {
     replaced.mapUrl = "";
   }
-  // «Coordonate» (§416) hide with the map link, and are written as none by the same rule.
+  // «Coordonate» (§416) hide with the map link, and are written as none likewise.
   if (
     posted.locationToBeAnnounced === true &&
     "coordinates" in replaced &&
@@ -737,14 +631,10 @@ function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
 }
 
 /**
- * A part's refusal, naming its boxes the way the one form that carries it posts them (§315).
- *
- * `translationFieldsSchema` speaks for one language, so its paths are bare (`title`); the editor
- * carries both languages in one form, as `translations.<locale>.title`. Without the language the
- * summary could not say which tab to open, and `form-names.ts` would read a bare `title` as an
- * event column. The same for the repeat rule on the create form: `repeatEvent` names `until`, and
- * the form posts `repeat.until`. Only the field names change — the code and the message are the
- * refusal's own.
+ * A part's refusal with its field paths prefixed as the one form posts them (§315): a language's
+ * bare `title` becomes `translations.<locale>.title` (so the summary opens the right tab and
+ * `form-names.ts` does not read it as an event column), the repeat rule's `until` becomes
+ * `repeat.until`. The code and message are unchanged.
  */
 async function namedUnder<R>(prefix: string, save: () => Promise<R>): Promise<R> {
   try {
@@ -759,14 +649,12 @@ async function namedUnder<R>(prefix: string, save: () => Promise<R>): Promise<R>
 
 // --- The place's name in each language (§362) -----------------------------------------------
 
-/** Each language's name for the place as one save of the event's fields leaves it; a language absent here is not being edited. */
+/** Each language's place name as one event save leaves it; an absent language is not being edited. */
 type PlaceNames = Partial<Record<Locale, string | null>>;
 
 /**
- * The Locul box's names, by language (§362; the owner: "There is some redundance on this meeting
- * spot location"). The place is asked once per language, and the Romanian box is also the event's
- * own meeting point, so it is always part of the event's fields; the English one only when the
- * caller posted it — absent, the English row keeps what it holds (an older caller, a fixture).
+ * The Locul box's names by language (§362). The Romanian is also the event's meeting point, so it is
+ * always present; the English only when posted — absent, the English row keeps what it holds.
  */
 function placeNamesFrom(fields: Pick<EventFieldsInput, PlaceNameField>): PlaceNames {
   const names: PlaceNames = {};
@@ -778,14 +666,10 @@ function placeNamesFrom(fields: Pick<EventFieldsInput, PlaceNameField>): PlaceNa
 }
 
 /**
- * The names written to each language's row, inside the event save's transaction (§362).
- *
- * Not a translation save, and deliberately so: the place is the event's — the Organizer's, who
- * sets the place and may not write the words (§207) — so this runs under the event row's version
- * guard, which the save has just checked and bumped, and the rows' own versions do not move. A
- * text save cannot write the column any more (`translationFieldsSchema` has no `locationName`),
- * so there is no second writer to race with, and a Redactor's save in the same minute, carrying
- * the row versions it was rendered with, is not refused over a place it never touched.
+ * The names written to each language's row inside the event save's transaction (§362). The place is
+ * the event's (the Organizer's, §207), so this runs under the event row's version guard and the
+ * translation rows' versions do not move: a Redactor saving the words in the same minute is not
+ * refused over a place they never touched. Text saves cannot write the column.
  */
 async function writePlaceNames<T extends Record<string, unknown>>(tx: Transaction<T>, eventId: string, names: PlaceNames): Promise<void> {
   for (const locale of routing.locales) {
@@ -799,15 +683,10 @@ async function writePlaceNames<T extends Record<string, unknown>>(tx: Transactio
 }
 
 /**
- * Clears `discountNote` on both languages' rows when the event's saved fields no longer allow
- * one (`DECISIONS.md` §394) — inside the event save's transaction, like `writePlaceNames` above,
- * because the settings save an Organizer without text rights makes never touches a translation
- * row through `applyTranslationSave`. Without this, switching the mode away from `EXTERNAL` +
- * `PAID` on the settings panel alone would leave a stale note nobody with text rights posted
- * again and nobody can read on the page any more.
- *
- * Handed the event row as the save left it, never the parsed fields: a save that omits `costType`
- * is not editing the cost, and the stored value `eventColumnsFrom` left untouched is what decides.
+ * Clears `discountNote` in both languages when the saved event no longer allows one (§394), inside
+ * the event save's transaction: a settings-only save never goes through `applyTranslationSave`, so
+ * otherwise a stale, invisible note would remain. Decided from the row as saved, not the parsed
+ * fields (an omitted `costType` means "not editing").
  */
 async function clearDiscountNoteIfNotAllowed<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -827,7 +706,7 @@ function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames)
   });
 }
 
-/** The place each language's page shows (§362), the street address folded in: what a series edit compares. */
+/** The place each language's page shows (§362), address folded in: what a series edit compares. */
 function placesShown(event: EditableEvent, rows: readonly EditableTranslation[]): Record<Locale, string> {
   return Object.fromEntries(
     routing.locales.map((locale) => [locale, placeShown(event, rows.find((row) => row.locale === locale)?.locationName)]),
@@ -835,11 +714,9 @@ function placesShown(event: EditableEvent, rows: readonly EditableTranslation[])
 }
 
 /**
- * The names one save writes, an older event's English following its Romanian (§362, found by
- * review; `place.ts#englishNameAfterSave`). Without it, an older event whose organizer moved only
- * the Romanian box stored the old place as its English name — and a series save carried the new
- * Romanian to every other date, whose English pages follow it, while this date's English page
- * kept the old meeting point. `rows` are this date's languages as loaded, before the save.
+ * The names one save writes, an older event's English following its Romanian (§362,
+ * `place.ts#englishNameAfterSave`), so moving only the Romanian box does not leave this date's
+ * English page on the old place while a series save moves the others. `rows` are as loaded.
  */
 function namesAfterSave(before: EditableEvent, rows: readonly EditableTranslation[], names: PlaceNames): PlaceNames {
   if (names.ro === undefined || names.en === undefined) return names;
@@ -870,9 +747,8 @@ export type SaveTranslationInput = {
   expectedVersion: number;
   fields: unknown;
   /**
-   * BR-REQ-051-01 criterion 4. The form warns before a save that changes what the public can
-   * read right now, and the server refuses the save unless the warning was answered — a
-   * warning nothing checks is decoration.
+   * BR-REQ-051-01 criterion 4: a save that changes what the public reads now must have answered
+   * the form's warning; the server refuses it otherwise.
    */
   acknowledgeLiveEdit?: boolean;
   now?: Date;
@@ -881,12 +757,9 @@ export type SaveTranslationInput = {
 };
 
 /**
- * One translation's checks and its guarded write, against whatever database handle the caller
- * holds — a transaction, when the whole-event save is running.
- *
- * Extracted so the single-translation entry point and the one-form save cannot drift: the slug
- * rule, the live-edit acknowledgement and the authorship rule are written once and both paths
- * run them.
+ * One translation's checks and guarded write on the caller's handle (a transaction during the
+ * whole-event save), shared by both entry points so the slug, live-edit and authorship rules are
+ * written once.
  */
 async function applyTranslationSave<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -897,12 +770,9 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     expectedVersion: number;
     fields: unknown;
     acknowledgeLiveEdit?: boolean;
-    /** The type the event has after this save — the form's, when the settings are saved too. */
+    /** The event's type after this save. */
     eventType: EditableEvent["type"];
-    /**
-     * Whether `discountNote` may be written after this save (`DECISIONS.md` §394) — the mode and
-     * cost type the event has after it, the same discipline `eventType` follows above.
-     */
+    /** Whether `discountNote` may be written after this save (§394): the mode and cost type after it. */
     registrationMode: EditableEvent["registrationMode"];
     costType: EditableEvent["costType"];
     now: Date;
@@ -917,20 +787,14 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
-  // No poster fetch here, ever (`DECISIONS.md` §403): this runs inside the whole-event save's
-  // transaction, behind `lockEventForCapacity`. Every caller attaches the posters to what it
-  // posts first, with `attachPostersToPostedTexts`, before any transaction opens; a film whose
-  // fetch failed there stays without a poster until the next save.
+  // Never a poster fetch here (§403): this runs inside the save's transaction behind
+  // `lockEventForCapacity`. Callers attach posters first (`attachPostersToPostedTexts`).
   const fields = parseOrThrow(translationFieldsSchema, input.fields);
 
   /**
-   * AGENTS.md §11.5: a slug is editable before first publication and stable afterwards.
-   *
-   * Keyed on the event's `published_at`, which is set once and never cleared, rather than on
-   * the current status — unpublishing must not hand back an editable slug for a URL people have
-   * already followed and search engines have already indexed. §11.5 allows an Administrator an
-   * exceptional change with a redirect plan; there are no redirects yet, so there is no
-   * exception yet either.
+   * AGENTS.md §11.5: a slug is editable before first publication, stable afterwards — keyed on
+   * `published_at`, set once and never cleared, so unpublishing never frees an indexed URL. No
+   * redirects exist yet, so no Administrator exception either.
    */
   if (input.event.publishedAt !== null && fields.slug !== input.current.slug) {
     throw new DomainError(
@@ -945,9 +809,8 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     input.expectedVersion,
     {
       ...translationColumnsFrom(fields, input.eventType, costPaidToExternalOrganizer(input)),
-      // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
-      // "their own drafts" needs one for the rule to mean anything. An existing author is
-      // never overwritten: an Editor fixing a typo does not take the piece.
+      // An unclaimed row becomes the saver's (seeded rows have no author); an existing author is
+      // never overwritten.
       authorStaffUserId: input.current.authorStaffUserId ?? input.actor.id,
     },
     input.now,
@@ -955,17 +818,10 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
 }
 
 /**
- * The columns of `event_translations` one language's fields write, in one place, so the create
- * and the save cannot drift — `eventColumnsFrom`'s sibling for the words. The create form
- * renders the editor's own language panel now, so what it posts is what a save posts, and
- * "the excerpt is the summary's words" has to be true from the first insert rather than from
- * the first save.
- *
- * The rich excerpt, when the editor posted one, and its words as the plain `excerpt` — the
- * listing card, the meta description and the publish check all read the plain column
- * (`DECISIONS.md` §73). An editor that posted nothing leaves the plain text as typed. A field
- * the caller did not post at all is `undefined` here, which a save leaves as it is and an
- * insert leaves at the column's default.
+ * The `event_translations` columns one language writes — `eventColumnsFrom`'s sibling, shared by
+ * create and save. The plain `excerpt` is derived from the rich one when posted, since the card,
+ * meta description and publish check read the plain column (§73). An unposted field is
+ * `undefined`: a save leaves it, an insert takes the column default.
  */
 function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"], discountAllowed: boolean) {
   const { body, rules, schedule, routeDescription, excerptBody, ...columns } = fields;
@@ -976,33 +832,26 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     excerptJson,
     bodyJson: body,
     rulesJson: hasRichTextContent(rules) ? rules : null,
-    // A group run has no programme (§111): the editor hides the field, and this is what
-    // holds when the type changed in the same save or the hidden field still posted text.
+    // A group run has no programme (§111), even if the type changed in this save or a hidden box posted text.
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
-    // The route / training description (§387): on every type — a group run has a route too.
+    // The route description (§387), on every type.
     routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
-    // The club's discount on an external event's own fee (`DECISIONS.md` §394): kept only while
-    // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
+    // The discount note (§394), kept only while `EXTERNAL` + `PAID` needs it.
     ...(discountAllowed ? {} : { discountNote: null }),
   };
 }
 
-/** The five rich-text boxes of one language — every one of them may carry a film. */
+/** The five rich-text boxes of one language; any may carry a film. */
 const RICH_TEXT_BOXES = ["body", "rules", "schedule", "routeDescription", "excerptBody"] as const;
 
 type PosterOptions = { now?: Date; fetchImpl?: typeof fetch };
 
 /**
- * Every film in one language's posted boxes gets the club's own poster (`DECISIONS.md` §403),
- * before any transaction opens: `attachYoutubePosters` may make up to three sequential requests
- * to `i.ytimg.com` per film, a `sharp` encode and an R2 put, and none of that belongs behind
- * `lockEventForCapacity`, the lock every registration waits on.
- *
- * Works on the posted shape — each box a JSON string, as the editor sends it and
- * `translationFieldsSchema` reads it — so the one real validation still runs, unchanged, in
- * `applyTranslationSave`. A box that is not a valid document is left exactly as posted, for that
- * validation to refuse; a box with no film to attach is left byte for byte. Best effort: a film
- * whose fetch fails keeps `poster: null` and the page shows the text facade — never a refusal.
+ * Gives every film in one language's posted boxes the club's own poster (§403) before any
+ * transaction opens: the fetches, `sharp` encode and R2 put must not sit behind
+ * `lockEventForCapacity`, which every registration waits on. Works on the posted JSON strings so
+ * validation still runs unchanged in `applyTranslationSave`; an invalid box is left as posted.
+ * Best effort: a failed fetch leaves `poster: null`, never a refusal.
  */
 async function attachPostersToPostedTexts<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1027,7 +876,7 @@ async function attachPostersToPostedTexts<T extends Record<string, unknown>>(
   return withPosters;
 }
 
-/** The same for a language already parsed — the create form's, where `newEventSchema` ran first. */
+/** The same for an already-parsed language (the create form, after `newEventSchema`). */
 async function attachPostersToParsedTexts<T extends Record<string, unknown>>(
   db: Database<T>,
   fields: TranslationFields,
@@ -1040,7 +889,7 @@ async function attachPostersToParsedTexts<T extends Record<string, unknown>>(
   return withPosters;
 }
 
-/** The optional texts of one language, as the row will hold them — the columns, not the posted boxes. */
+/** One language's optional texts as the row will hold them. */
 type OptionalTextColumns = {
   bodyJson?: unknown;
   rulesJson?: unknown;
@@ -1053,9 +902,8 @@ type OptionalTextColumns = {
 };
 
 /**
- * Whether each optional text of one language says something, keyed by the name its box posts.
- * A rich text is read by the rule the editor's "· incomplet" marks use (`isBlankValue`, §350), so
- * a tab the page marks unfinished and a text the save refuses are always the same text.
+ * Whether each optional text says something, keyed by its box's name; rich text by the editor's
+ * "· incomplet" rule (`isBlankValue`, §350), so the page mark and the refusal agree.
  */
 function writtenOptionalTexts(row: OptionalTextColumns) {
   const writtenDoc = (doc: unknown) => doc !== null && doc !== undefined && !isBlankValue(JSON.stringify(doc));
@@ -1067,28 +915,16 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     checklist: isWrittenText(row.checklist),
     seoTitle: isWrittenText(row.seoTitle),
     seoDescription: isWrittenText(row.seoDescription),
-    // Nulled by `translationColumnsFrom` outside `EXTERNAL` + `PAID`, so this can never fire
-    // there — the same "a hidden box never blocks the save" rule the others follow.
+    // Nulled outside `EXTERNAL` + `PAID`, so it never fires there.
     discountNote: isWrittenText(row.discountNote),
   };
 }
 
 /**
- * Both languages or neither, for the event's optional texts (§352; the owner: "I want
- * multi-lingual, always"): the description, the rules, the programme's notes, what to bring, and
- * the two search-engine overrides. Each is optional; none may be written in one language and left
- * empty in the other. Refused on the empty side's box (`translations.<locale>.<field>`), so the
- * summary links to the language still owed and brings its tab forward.
- *
- * Read on the columns as they will be stored, after `translationColumnsFrom`: a programme note on
- * a group run is not stored (§111) and so cannot be refused, which is "a hidden box never blocks
- * the save" (§350) for this rule too.
- *
- * Three texts are deliberately not here. The title and the page address are required in both
- * languages at every save already (`translationFieldsSchema`). The summary is required in both
- * before publication (§28) and may be half-written in a draft, the way a title may not. And the
- * place's name is required in both languages by the event's own schema since §362 (`placeRule`),
- * where the switch that excuses it (§328) is known.
+ * Both languages or neither for the optional texts (§352): description, rules, programme notes,
+ * what to bring and the two SEO overrides, refused on the empty side's box. Read on the columns as
+ * stored, so a text not stored (a group run's notes, §111) never blocks the save. Title and address
+ * are always required, the summary at publication (§28), the place name by `placeRule` (§362).
  */
 function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>): void {
   const ro = writtenOptionalTexts(rows.ro);
@@ -1110,7 +946,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
 
   const record = await findTranslationWithEventById(db, input.translationId);
   if (!record) throw new DomainError("NOT_FOUND", "no such event translation");
-  // Who may write this text is asked before a single poster is fetched on their behalf.
+  // Authorization before any poster is fetched on their behalf.
   assertMayEdit(input.actor, record.event, record.translation);
   const fields = await attachPostersToPostedTexts(db, input.fields, { now, fetchImpl: input.fetchImpl });
 
@@ -1126,7 +962,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     costType: record.event.costType,
     now,
   });
-  // The public pages read events from a cache (§333); every write below says so the same way.
+  // The public pages read events from a cache (§333); every write revalidates it.
   revalidatePublicContent("events");
   return saved;
 }
@@ -1134,31 +970,15 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
 // --- Publication ----------------------------------------------------------------------------
 
 /**
- * What PUBLISHED requires, and why it cannot be a database constraint.
- *
- * Every locale the site serves must have a translation row, and each of those rows must carry
- * every field a public page renders in that language (`fields.ts`
- * `REQUIRED_PUBLIC_TRANSLATION_FIELDS`). A CHECK sees one row; this sees the set, which is
- * exactly the thing being asserted — so it is asserted here, and the CHECKs assert the halves
- * they can see honestly: a published event has a publication date, and a translation's required
- * fields are not blank strings.
+ * What PUBLISHED requires, and why it is not a constraint: a CHECK sees one row, and this asserts
+ * the set — every served locale has a row carrying `REQUIRED_PUBLIC_TRANSLATION_FIELDS`. The
+ * CHECKs assert the halves they can see.
  */
 /**
- * What the *event* itself is missing before it can be published (`DECISIONS.md` §36, §362): a
- * meeting point in every language, named by the Locul box that asks for it (`locationName` for
- * Romanian, `locationNameEn` for English) — a missing English place is refused like any other
- * missing translation.
- *
- * A language's place is what its page would show (`placeNameIn`): its own name, else the event's.
- * Every save through the editor writes both; the fallback speaks for an event nobody has saved
- * since §362, whose English page has always shown the event's name — so such an event is not
- * refused for an English name it never needed, and a row with no meeting point at all (written
- * before the column existed) is refused in both languages. Without the rows, the event's own
- * column answers for every language.
- *
- * An event whose place is to be announced (§328) is complete without one: every public surface
- * says "Locația se anunță în curând" instead, which is a whole answer to "where", and publishing
- * the race before the venue is settled is exactly what the switch is for.
+ * What the event itself lacks before publication (§36, §362): a meeting point in every language,
+ * named by its Locul box (`locationName`, `locationNameEn`). A language's place is what its page
+ * shows (`placeNameIn`: its own name, else the event's), so an event unsaved since §362 is not
+ * refused for an English name it never needed. A place to be announced (§328) is complete without one.
  */
 export function missingPublicEventFields(
   event: Pick<EditableEvent, "locationName" | "locationToBeAnnounced">,
@@ -1191,15 +1011,9 @@ export type TransitionEventInput = {
 };
 
 /**
- * Move one event through the editorial workflow (AGENTS.md §11.2, as amended by
- * `DECISIONS.md` §28).
- *
- * Publication is per event, not per locale: this acts on the `events` row, so Romanian and
- * English go live in the same moment and neither language can be serving a stub while the other
- * is public — the state BR-REQ-040-02's old wording had to describe.
- *
- * A transition carries a version too. Publishing what you think is a reviewed draft, when a
- * colleague has rewritten it since you opened the page, is the same failure as overwriting it.
+ * Moves one event through the editorial workflow (AGENTS.md §11.2, §28). Per event, not per
+ * locale, so both languages go live together. A transition carries a version too: publishing a
+ * draft a colleague rewrote since you opened it is the same failure as overwriting it.
  */
 export async function transitionEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1211,8 +1025,8 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
   const translations = await listTranslationsForEvent(db, input.eventId);
-  // An Author may submit their own draft. The event carries no author of its own, so "own" is
-  // read the only way it can be: every translation that has an author names this one.
+  // An Author may submit their own draft. The event has no author, so "own" means every authored
+  // translation names this one.
   const authored = translations.filter((row) => row.authorStaffUserId !== null);
   const isOwnDraft =
     authored.length > 0 && authored.every((row) => row.authorStaffUserId === input.actor.id);
@@ -1248,17 +1062,15 @@ export async function transitionEvent<T extends Record<string, unknown>>(
       );
     }
 
-    // First publication stamps the date. Later ones do not touch it: it is what slug stability
-    // and the sitemap's `lastModified` both read, and re-stamping would claim the page is new
-    // every time a typo is fixed.
+    // First publication stamps the date, never again: slug stability and the sitemap's
+    // `lastModified` read it.
     if (current.publishedAt === null) changes.publishedAt = now;
   }
 
   const moved = await updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
-  // Published, unpublished, archived: the listing, the page, the calendar and the feeds change.
+  // The listing, the page, the calendar and the feeds change.
   revalidatePublicContent("events");
-  // And the announcements of §146 wait on publication, so the maintenance job looks again at its
-  // next ping (§334).
+  // The announcements of §146 wait on publication; the maintenance job looks again (§334).
   wakeJobs("registration-maintenance");
   return moved;
 }
@@ -1266,20 +1078,10 @@ export async function transitionEvent<T extends Record<string, unknown>>(
 export type PublishEventInput = Omit<TransitionEventInput, "to">;
 
 /**
- * «Publică» on the editor, from a draft as from a submission (§423) — the one press
- * «Creează și publică» (§315), the list's «Publică» on a series' drafts (§351) and the bulk
- * publish already give a draft, now on the draft's own page too. The owner: "I am missing the
- * create and publish for some new events… this should be consistent!" (§406): an event created
- * as a draft, a copy, or a date a series made could only be sent for review from its editor,
- * and published a second press later.
- *
- * It walks the table's own two moves, DRAFT → IN_REVIEW → PUBLISHED, through `transitionEvent`,
- * so every guard is publication's own: the version the page was loaded with (a colleague's save
- * in between is a CONFLICT), both languages complete, the meeting point. The two moves are one
- * transaction — a refused publication leaves the draft a draft, never a submission nobody asked
- * for. A role that may not publish is refused before anything moves; a Redactor still has
- * "Trimite spre verificare", which is a different verb. From any other state it is the plain
- * transition.
+ * «Publică» on the editor from a draft, in one press (§423, §406), as «Creează și publică» and the
+ * list's bulk publish already do. It walks DRAFT → IN_REVIEW → PUBLISHED through `transitionEvent`
+ * in one transaction, so every publication guard applies and a refusal leaves a draft a draft. A
+ * role that may not publish is refused first; from any other state it is the plain transition.
  */
 export async function publishEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1304,10 +1106,7 @@ export async function publishEvent<T extends Record<string, unknown>>(
 
 // --- Telling the participants (§331) --------------------------------------------------------
 
-/**
- * One of the organizer's texts as the form posts it: a box per language (§354, bilingual
- * everywhere), either of which may be missing from a caller that did not draw it.
- */
+/** One organizer text as posted: a box per language (§354), either absent from a caller that did not draw it. */
 export type EventNoticeTextInput = { ro?: string | null; en?: string | null };
 
 /** "Anunță participanții despre schimbare", as the editor's save posts it: the box, and the optional note in both languages. */
@@ -1317,18 +1116,13 @@ export type EventNoticeRequest = { notify: boolean; note?: EventNoticeTextInput 
 export type EventCancellationRequest = { reason: EventNoticeTextInput; notify: boolean };
 
 /**
- * What the save told the participants, for the banner that follows it. Absent when the save was
- * asked for nothing: the box unticked, and the event not cancelled by it.
- *
- * - `update` — "details updated" queued for this many real registrations (test ones are told but
- *   never counted, `AGENTS.md` §12.6), across every date the save reached.
- * - `nothingToTell` — the box was ticked, but nothing a runner plans by changed and no note was
- *   written, so nothing was sent; the banner says so rather than letting the tick look ignored.
- * - `cancelled` — the save cancelled the event (or dates of its series); `queued` messages when
- *   the organizer left "tell them" ticked, none when they did not.
- * - `cancelledNobodyToTell` — the save cancelled an event that takes no registrations here (a
- *   group run, or the organizer's own page), so the editor drew no "tell them" box and nobody was
- *   written to. Said apart so the banner does not blame a box that was never on the page.
+ * What the save told the participants, for the banner; absent when nothing was asked.
+ * - `update`: "details updated" queued for this many real registrations (test rows are told but
+ *   not counted, `AGENTS.md` §12.6), across every date reached.
+ * - `nothingToTell`: ticked, but nothing a runner plans by changed and no note was written.
+ * - `cancelled`: the save cancelled the event or series dates; `queued` messages if "tell them"
+ *   was ticked.
+ * - `cancelledNobodyToTell`: cancelled an event without registration here, which had no box.
  */
 export type EventNoticeOutcome =
   | { kind: "update"; queued: number; changes: EventChangeKind[] }
@@ -1346,9 +1140,8 @@ type NoticeRequest = {
 const noticeBox = (prefix: "notice.note" | "cancel.reason", language: TextLanguage) => `${prefix}${language === "ro" ? "Ro" : "En"}`;
 
 /**
- * One of the organizer's texts, each language read by the notice rule on its own (plain text, at
- * most five hundred characters). A language over the ceiling is refused on its own box; the two
- * are returned as read, `""` for a box left empty.
+ * One organizer text, each language read by the notice rule (plain, at most 500 characters). A
+ * language over the ceiling is refused on its box; the two come back as read, "" when empty.
  */
 function readNoticeTexts(prefix: "notice.note" | "cancel.reason", posted: EventNoticeTextInput | null | undefined): Record<TextLanguage, string> {
   const read = {} as Record<TextLanguage, string>;
@@ -1363,22 +1156,11 @@ function readNoticeTexts(prefix: "notice.note" | "cancel.reason", posted: EventN
 }
 
 /**
- * The notice and the cancellation, checked before any row is locked (§331).
- *
- * **Both languages** (§354, bilingual everywhere; the owner: "I want multi-lingual, always").
- * Every registrant is written to in their own language, so the note and the reason are typed
- * twice, Română and English side by side. The note is optional in both at once: written in both,
- * or in neither — one side only is refused on the empty box, the rest of the form kept (§315). The
- * reason was required, so it is required in both: each empty box is named.
- *
- * **Cancelling asks why.** A save that moves the event to `CANCELLED` must carry a reason: it
- * goes to the participants when they are told, and into the audit trail whether or not they are
- * — the owner reads "who cancelled the race, and why" there months later. Refused with the box
- * named, so the form comes back with everything else still typed (§315).
- *
- * **Only whoever may save the event row may tell its participants** (BR-REQ-060-01): the same
- * gate as the settings (`canEditEventFields`). A Redactor, who writes the words and not the
- * facts, sees no box; one who posts it anyway is refused here, whatever the page drew.
+ * The notice and cancellation, checked before any row is locked (§331). Both languages (§354): the
+ * note is both or neither, the reason required in both. A cancellation must say why — it goes to
+ * the participants and into the audit trail either way — refused on the box so the form keeps the
+ * rest (§315). Only whoever may save the event row may tell its participants (`canEditEventFields`,
+ * BR-REQ-060-01).
  */
 function readNoticeRequest(
   actor: Actor,
@@ -1393,7 +1175,7 @@ function readNoticeRequest(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not tell an event's participants about it`);
   }
 
-  // Only a note somebody asked to send is read: unticked, the boxes are ignored, as before.
+  // A note is read only when sending was asked for.
   let note: BilingualText | null = null;
   if (notify && notice?.note) {
     const texts = readNoticeTexts("notice.note", notice.note);
@@ -1426,23 +1208,12 @@ type SavedDate = {
 };
 
 /**
- * Tell one date's participants what the save did to it, inside the save's transaction (§331).
- *
- * A date the save cancelled gets `EVENT_CANCELLED` — when the organizer left the box ticked —
- * and an audit row naming who and why either way. A date that is still on and whose place, start
- * or programme moved, or that is on again, gets `EVENT_UPDATE_NOTICE` when the box was ticked;
- * with nothing of that kind changed it still goes when the organizer wrote a note, because a
- * note is a thing they chose to say. A date that is cancelled or over is not told about an edit:
- * it is not happening.
- *
- * Registrations are not touched. A cancelled event's registrations keep their status as the
- * record of who had entered; nothing is cancelled on the runner's behalf, and a reinstated event
- * finds its queue where it left it.
- *
- * `alreadyStarted` is a date of the series other than the one being edited that had begun before
- * the save (`announceSave`): nobody is written to about it, but a cancellation of it is still
- * recorded — who, why, marked as told to nobody — because the audit trail is one row per date
- * the save cancelled, whatever the date.
+ * Tells one date's participants what the save did, inside its transaction (§331). A cancelled date
+ * gets `EVENT_CANCELLED` if the box was ticked, and an audit row either way. A date still on whose
+ * place, start or programme moved (or that is on again) gets `EVENT_UPDATE_NOTICE` when ticked, or
+ * when the organizer wrote a note. Registrations are never touched: they stay as the record, and a
+ * reinstated event finds its queue intact. `alreadyStarted` dates are told nothing, but a
+ * cancellation of one is still audited.
  */
 async function announceSavedDate<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -1461,7 +1232,7 @@ async function announceSavedDate<T extends Record<string, unknown>>(
       action: "event.cancelled",
       entityType: "event",
       entityId: after.id,
-      // Who, why, and whether the participants were told — the count, never who they are (§12.12).
+      // Who, why, and whether the participants were told — a count, never who they are (§12.12).
       metadata: {
         reason: request.cancellation.reason,
         notified: tell,
@@ -1472,10 +1243,8 @@ async function announceSavedDate<T extends Record<string, unknown>>(
       now,
     });
     /*
-      An event that takes no registrations here had no "tell them" box on the page (the editor
-      draws it for `INTERNAL` only), so "not told because the box was unticked" would name a box
-      nobody saw. Judged on the mode the page was drawn from, and only when nothing was queued:
-      a row left from an earlier mode that was written to is reported as told.
+      An event without registration here had no "tell them" box, so "not told because unticked" would
+      name a box nobody saw. Judged on the mode the page was drawn from, and only when nothing queued.
     */
     if (before.registrationMode !== "INTERNAL" && queued === 0) return { kind: "cancelledNobodyToTell" };
     return { kind: "cancelled", queued, notified: tell };
@@ -1505,10 +1274,7 @@ async function announceSavedDate<T extends Record<string, unknown>>(
   return { kind: "update", queued, changes };
 }
 
-/**
- * Every date's answer as the one the banner gives: a cancellation first (one with a box before
- * one without), then messages sent, then "nothing to tell".
- */
+/** Every date's answer as one banner: a cancellation first (with a box before without), then messages, then "nothing to tell". */
 function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[]): EventNoticeOutcome | undefined {
   const cancelled = outcomes.filter((outcome): outcome is Extract<EventNoticeOutcome, { kind: "cancelled" }> => outcome?.kind === "cancelled");
   if (cancelled.length > 0) {
@@ -1527,15 +1293,10 @@ function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[])
 }
 
 /**
- * Tell every date the save reached (§331): this one, then each date of the series it carried
- * the change to — each date's own registrants once, about their own date. The save is named by
- * the event that was saved and the version it now has, so a retried press queues nothing twice.
- *
- * Another date of the series that has already begun is not told anything: "every date" reaches
- * last month's too (§130), and a runner who ran it is owed no "details updated" and no "it is
- * cancelled" about a morning that is over. Its cancellation is still audited, and it is left out
- * of the banner's count, which is of messages. The date being edited is always told when asked —
- * the organizer is looking at it, and a race called off at the start line is still news.
+ * Tells every date the save reached (§331), each date's registrants once about their own date,
+ * keyed by the saved event and its new version so a retried press queues nothing twice. Other
+ * series dates that already began are told nothing (their cancellation is still audited and they
+ * are left out of the count); the edited date is always told when asked.
  */
 async function announceSave<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -1567,13 +1328,9 @@ export type SaveEventFieldsInput = {
 };
 
 /**
- * Every column an organizer owns: the type and the surface, the status, the times and the
- * timezone, the map link and the route link, the distance and the climb, the featured flag, and
- * the whole registration block.
- *
- * Editorial control of what the club advertises, so an Author is refused (§10.2). The times
- * arrive as wall-clock strings and are interpreted in the event's own timezone — never the
- * server's, which is UTC on Vercel and something else on the organizer's laptop.
+ * Every column an organizer owns: type, surface, status, times and zone, map and route links,
+ * distance, climb, featured, and the registration block. An Author is refused (§10.2). Wall-clock
+ * times are read in the event's zone, never the server's.
  */
 export async function saveEventFields<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1592,14 +1349,13 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, fields, now);
   await assertDateToBeAnnouncedAllowed(db, fields, current);
   const times = resolveTimes(fields, switchesAfterSave(fields, current));
-  // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
+  // As the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
 
   /**
-   * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
-   * BR-REQ-034-02 criterion 3). Counted here rather than trusted from a cached figure, behind
-   * the event row's lock — the serialization point every allocation takes — so a confirmation
-   * landing between the count and the write waits rather than slipping past it.
+   * Capacity below the places taken is refused (AGENTS.md §10.6, BR-REQ-034-02 criterion 3),
+   * counted behind the event row's lock — the point every allocation serializes on — so a
+   * concurrent confirmation waits rather than slipping past.
    */
   const saved = await db.transaction(async (tx) => {
     await assertNobodyRegisteredForUndated(tx, fields, current);
@@ -1623,16 +1379,15 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
       now,
     );
-    // The place's name in each language is the event's (§362): written with the row, under its version.
-    // An older event's English name follows its Romanian one when only the Romanian moved, which
-    // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
+    // The place names are the event's (§362), written with the row under its version; an older
+    // event's English follows its Romanian via `namesAfterSave`, which needs the rows as they were.
     const announcing = request.notify || request.cancellation !== null;
     const translationsBefore = await listTranslationsForEvent(tx, input.eventId);
     const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
     await writePlaceNames(tx, input.eventId, names);
     await clearDiscountNoteIfNotAllowed(tx, input.eventId, saved);
     if (announcing) {
-      // No words are saved here; only the place's names moved, and the notice compares those.
+      // No words are saved here; only the place names moved, and the notice compares those.
       await announceSave(tx, {
         actor: input.actor,
         request,
@@ -1643,10 +1398,10 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     }
     return saved;
   });
-  // Every column here is on a public page, the capacity included (the free places are expired
-  // with the events: `public-cache/reads.ts` files them under both).
+  // Every column here is public, capacity included (`public-cache/reads.ts` files the free places
+  // under events too).
   revalidatePublicContent("events");
-  // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§334).
+  // The event's instants are the maintenance job's (§334).
   wakeJobs("registration-maintenance");
   return saved;
 }
@@ -1655,11 +1410,8 @@ export type SaveEventAndTranslationsInput = {
   actor: Actor;
   eventId: string;
   /**
-   * The event row's fields, or `undefined` when the actor may not edit them.
-   *
-   * An Author may write the text of their own draft and may not touch the event row (§10.2), so
-   * the editor renders no settings fields for them and this save writes none. `undefined` means
-   * "not part of this save" and never "clear these columns".
+   * The event row's fields, or `undefined` when the actor may not edit them (an Author, §10.2).
+   * `undefined` means "not part of this save", never "clear these columns".
    */
   fields?: unknown;
   /** Only needed when `fields` is present: the version the settings panel was rendered from. */
@@ -1669,17 +1421,14 @@ export type SaveEventAndTranslationsInput = {
   acknowledgeLiveEdit?: boolean;
   /** Which dates of the series this save reaches (§130); "this" — the default — is the one event. */
   scope?: SeriesEditScope;
-  /** "Anunță participanții despre schimbare" (§331); absent or unticked sends nothing, as before. */
+  /** "Anunță participanții despre schimbare" (§331); absent or unticked sends nothing. */
   notice?: EventNoticeRequest;
   /** Required when the save moves the event to CANCELLED (§331): the reason, and whether to tell. */
   cancellation?: EventCancellationRequest;
   /**
-   * The Locul box's names were typed in the editor with JavaScript running (§362, found by
-   * re-review): its English box already followed the Romanian one on the screen while the two
-   * agreed, and what it holds now is what the organizer left there — "Tractorul Park" put back
-   * after the Romanian became "Parcul Tractorul" included, under the line that says so. Both
-   * names are then kept as posted. Absent — no JavaScript, a script, a test — an older event's
-   * English follows its Romanian on the server instead (`place.ts#englishNameAfterSave`).
+   * The Locul names were typed with JavaScript running (§362): the English box already followed
+   * the Romanian on screen, so both are kept as posted. Absent (no JavaScript, a script, a test),
+   * the server applies `place.ts#englishNameAfterSave`.
    */
   placeNamesAsTyped?: boolean;
   now?: Date;
@@ -1690,12 +1439,12 @@ export type SaveEventAndTranslationsInput = {
 /** As Google Calendar asks: this date, this and the following ones, or every date of the series. */
 export const SERIES_EDIT_SCOPES = ["this", "following", "all"] as const;
 /**
- * Which other dates a save reaches (§130): one of the three words, or the dates ticked by
- * hand in the editor's header (§134) — ids outside the series are ignored, none is "this".
+ * Which other dates a save reaches (§130): one of the three words, or hand-ticked ids (§134) —
+ * ids outside the series are ignored, none means "this".
  */
 export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number] | { ids: readonly string[] };
 
-/** The row's columns a series edit carries to its other dates — every one an organizer sets, minus the ones below. */
+/** The row's columns a series edit carries to other dates. */
 const SERIES_COLUMNS = [
   "type",
   "surface",
@@ -1706,14 +1455,11 @@ const SERIES_COLUMNS = [
   "latitude",
   "longitude",
   "routeUrl",
-  // The links are the route's kin (§332): the GPX and the rules do not change from one
-  // Wednesday to the next, so a series edit carries them like the route.
+  // The links are the route's kin (§332): carried like the route.
   "links",
   "coHosts",
-  // Not `locationName` and `locationAddress`: the place travels by what each language's page
-  // shows (`placesShown`, §362), in `applyToSeries` below, with the names on each language's row.
-  // Whether the place is announced travels with the place (§328): a series moved to a venue
-  // not yet settled is moved on every date it reaches, and announced on them all at once.
+  // Not `locationName`/`locationAddress`: the place travels by what each page shows (`placesShown`,
+  // §362) in `applyToSeries`. Whether it is announced travels with it (§328).
   "locationToBeAnnounced",
   // The level (§526), and the retired column's best-effort word written beside it.
   "difficulty",
@@ -1723,37 +1469,32 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
-  // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
-  // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
+  // The night override (§394): "Automat" on every date lets each follow its own sunset.
   "nightOverride",
-  // The self-declaration offered on the run's page (§394), like the night override: "from this
-  // date" carries it to every later Tâmpa run of the series.
+  // The run's self-declaration offer (§393), like the night override.
   "offersGroupRunDeclaration",
   "registrationMode",
-  // «Se deschid în curând» (§451) travels with the opening date it stands in for, which the
-  // series carries as a time column below.
+  // «Se deschid în curând» (§451) travels with the opening date it stands in for.
   "registrationOpensSoon",
   "capacity",
-  // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
-  // raising it offers nobody anything, and lowering it removes nobody already waiting.
+  // The waiting-list cap (§348). No lock or allocation: raising it offers nothing, lowering it
+  // removes nobody already waiting.
   "waitlistCapacity",
-  // One race, one band: a series is the same event on several dates (§173, §177).
+  // One race, one band (§173, §177).
   "bibStartNumber",
   "bibColour",
   "bibDesign",
   "confirmationOpensDaysBefore",
   "confirmationDeadlineDaysBefore",
-  // One race, one age rule: every date of a series takes the same people (§329).
+  // One race, one age rule (§329).
   "minAge",
-  // One reminder rule, like the confirmation window beside it (§377): "as usual", a lead, or none.
+  // One reminder rule (§377).
   "reminderHoursBefore",
   "declarationDocumentId",
   "participantListVisibility",
   "externalProvider",
   "externalRegistrationUrl",
-  // A recurring Strava club event and a Facebook event with several dates each keep one address
-  // for every occurrence, so the series' links are the series' (§300): change them on one date
-  // and "the following" or "all" carry them, like the place.
+  // Strava and Facebook give a recurring event one address for every date, so these travel (§300).
   "stravaEventUrl",
   "facebookEventUrl",
 ] as const;
@@ -1767,44 +1508,35 @@ const SERIES_TRANSLATION_COLUMNS = [
   "bodyJson",
   "rulesJson",
   "scheduleJson",
-  // The route / training description (§387): the same course on every date of a weekly run.
+  // The route description (§387): the same course on every date.
   "routeDescriptionJson",
   "checklist",
   "coverAltText",
-  // Not `locationName`: the place's name in each language is the event's since §362 and travels
-  // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
+  // Not `locationName`: the place name is the event's (§362) and travels with the place.
   "seoTitle",
   "seoDescription",
-  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §394): a series
-  // edit's discount note carries the way its cost does.
+  // The discount belongs to the race, like `costType` (§394).
   "discountNote",
 ] as const;
 
 /** Equal as stored: dates by their instant, JSON by its text, null by null. */
 const sameValue = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
-/** The calendar day of an instant on the wall clock of `zone`, as a UTC midnight, for counting days between two. */
+/** An instant's calendar day on `zone`'s wall clock, as UTC midnight, for counting days between two. */
 function wallDay(date: Date, zone: string): number {
   const wall = toWallTimeInput(date, zone);
   return Date.UTC(Number(wall.slice(0, 4)), Number(wall.slice(5, 7)) - 1, Number(wall.slice(8, 10)));
 }
 
 /**
- * The series edit (`DECISIONS.md` §130): what this save *changed* on one date, applied to the
- * other dates of its series — the following ones or all of them — the way Google Calendar's
- * "this and following events" does. Only the difference travels: a date moved to another place
- * on its own keeps that place unless the place is what was edited; a cancelled date stays
- * cancelled unless the status is what was edited. An instant lands at the same wall-clock time
- * on each date's own day (the run moved to 18:50 is at 18:50 every Wednesday), the programme's
- * rows shifted by the same days as when the date was made; a partner is the series' and
- * travels with it (§168); the featured flag, **the special mark** — the owner: "some dates can
- * be special events where we overlap with, say, Brașov Marathon on the same Wednesday" — the
- * rule and the publication state are one date's own and never travel (a film is a figure in the
- * description since §481, so it travels exactly when the description's words do); the Strava and
- * Facebook event links do travel since §300, because both platforms give a recurring event one
- * address for all its dates; a slug is a public address and never changes. Capacity is checked against each date's own places
- * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
- * a new version, in the caller's transaction.
+ * The series edit (§130): what this save changed on one date, applied to the following dates or
+ * all of them, like Google Calendar's "this and following". Only the difference travels, so a
+ * date's own exceptions (another place, a cancellation) survive unless that field was edited.
+ * Instants land at the same wall-clock time on each date's own day; programme rows shift with
+ * them. Partners (§168) and the Strava/Facebook links (§300) travel; featured, the special mark,
+ * the rule, the publication state and the slug are each date's own. Capacity is checked per date,
+ * and one full date refuses the whole save, naming its day. Every touched row takes a new version,
+ * in the caller's transaction.
  */
 async function applyToSeries<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -1815,18 +1547,15 @@ async function applyToSeries<T extends Record<string, unknown>>(
     after: EditableEvent;
     translationsBefore: readonly EditableTranslation[];
     translationsAfter: readonly EditableTranslation[];
-    /** Hand back each touched date as it was and as it was written, for its participants' notice (§331). */
+    /** Return each touched date as it was and as written, for its participants' notice (§331). */
     collect?: boolean;
     now: Date;
     /** The club's deadlines, read before the transaction, for the offers a raised capacity makes (§377). */
     deadlines: Deadlines;
     /**
-     * `clearDiscountNoteIfNotAllowed`'s result on the saved date (`DECISIONS.md` §394): the
-     * mode or cost moved off `EXTERNAL` + `PAID`, so no date in scope may keep a note — reached
-     * here regardless of what `translationChanges` below found, because a saved date whose own
-     * note was already `null` shows no *change* to carry, yet a sibling's stale note still has
-     * to go. One `UPDATE` for every member in scope, silent like the rest of this clearing (the
-     * box is not on screen, so nothing is refused and nobody is told).
+     * The saved date's note was cleared (§394): siblings in scope must lose theirs too, even though
+     * `translationChanges` sees no change when the saved date's note was already null. One silent
+     * `UPDATE` for every member in scope.
      */
     discountNoteCleared?: boolean;
   },
@@ -1841,12 +1570,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
 
   const rowChanges: Partial<Record<(typeof SERIES_COLUMNS)[number], unknown>> = {};
   for (const column of SERIES_COLUMNS) {
-    // The partners are compared by what the row *means*, not by what the column holds
-    // (§169). A row nobody has saved since the list existed holds `null` where a saved one
-    // holds `[]`, and both mean "no partners" — comparing the raw columns would make the
-    // first series save of every legacy event report and apply a change nobody made, on a
-    // save that changed nothing. `readCoHosts` is the one place that decides what a row
-    // means, so it is the one place this may ask.
+    // Partners compared by meaning (`readCoHosts`, §169), not raw column: `null` and `[]` both mean
+    // none, and a raw compare would propagate a phantom change from every legacy row.
     const differs =
       column === "coHosts"
         ? !sameValue(readCoHosts(before), readCoHosts(after))
@@ -1865,12 +1590,9 @@ async function applyToSeries<T extends Record<string, unknown>>(
     return Object.keys(changes).length > 0 ? [{ locale: saved.locale, changes }] : [];
   });
   /*
-    The place (§362), compared by what each language's page shows — its own name, else the event's,
-    the address folded in — and not column by column. The first save of an older event writes the
-    event's name onto both rows and folds its address into the name: the columns change, the place
-    does not, and nothing travels, so a date moved to another place on its own keeps it. A language
-    whose place did move sends its name to every date the save reaches; the Romanian one takes the
-    event's own meeting point with it (`events.location_name`, the address now folded in).
+    The place (§362), compared by what each page shows, not column by column: an older event's
+    first save rewrites the columns without moving the place, so nothing travels. A language whose
+    place did move sends its name to every date reached; the Romanian takes `events.location_name`.
   */
   const shownBefore = placesShown(before, input.translationsBefore);
   const shownAfter = placesShown(after, input.translationsAfter);
@@ -1889,9 +1611,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     return { applied: 0, offered: 0, dates };
   }
 
-  // The series is the source and every date made from it; "following" is by the day this
-  // date had before the save, so moving it does not change which dates follow; ticked dates
-  // are those and no other, whatever else the list carried.
+  // "following" is by this date's day before the save, so moving it does not change which dates
+  // follow; ticked dates are exactly those.
   const chosen = typeof input.scope === "object" ? input.scope.ids.filter((id) => id !== before.id) : null;
   if (chosen && chosen.length === 0) return { applied: 0, offered: 0, dates };
   const members = await tx
@@ -1907,11 +1628,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     );
 
   /*
-    Only members whose own post-propagation state is not `EXTERNAL` + `PAID` lose the note
-    (`DECISIONS.md` §395) — `input.discountNoteCleared` says the *saved* date moved off that
-    combination, not every sibling: a sibling that is `EXTERNAL` + `PAID` on its own and whose
-    mode/cost this save never touches keeps its note. Ahead of the per-member loop below, so a
-    date whose only change is this one still reads correctly if that loop later touches it too.
+    Only members that are not `EXTERNAL` + `PAID` after propagation lose the note (§395): a sibling
+    that is so on its own keeps it. Done before the per-member loop so a later touch reads correctly.
   */
   if (input.discountNoteCleared && members.length > 0) {
     const toClear = members.filter(
@@ -1961,20 +1679,19 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
-    // Read before anything is written to this date, only when a notice needs to compare (§331).
+    // Read before this date is written, only when a notice needs to compare (§331).
     const memberTranslationsBefore = input.collect ? await listTranslationsForEvent(tx, member.id) : [];
     let touched = false;
-    // A place moved in one language only still takes the date's version: the names are the
-    // event's, guarded by the event row's version (`writePlaceNames`).
+    // A place moved in one language still bumps the date's version: the names are guarded by the
+    // event row (`writePlaceNames`).
     if (Object.keys(changes).length > 0 || placeMoved.length > 0) {
       await tx
         .update(events)
         .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
         .where(eq(events.id, member.id));
       touched = true;
-      // Each date has its own queue, checked against its own places (§147): the new capacity
-      // is the source's, the raise is measured against what this date had, and the status is
-      // this date's as it now stands — a cancelled date offers nothing.
+      // Each date has its own queue and places (§147): the raise is measured against this date's
+      // capacity, and a cancelled date offers nothing.
       if (
         "capacity" in changes &&
         capacityRaised(member, {
@@ -2021,9 +1738,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether a save gave the event more places than it had: a higher number, or the cap lifted —
- * on an event that will run. A race cancelled and widened in the same press offers nothing:
- * the offer's link would only answer that the event is cancelled (§147).
+ * Whether a save gave more places (a higher number or the cap lifted) on an event that will run;
+ * cancelled and widened in one press offers nothing (§147).
  */
 function capacityRaised(
   before: { capacity: number | null },
@@ -2035,13 +1751,11 @@ function capacityRaised(
 }
 
 /**
- * The places a raised capacity adds, offered to the waiting list at once (§147, BR-REQ-034-02
- * criterion 5) — inside the save's own transaction, so the new number and the offers it makes
- * commit together or not at all, and after the event row is locked, the serialization point
- * every capacity-changing decision takes (AGENTS.md §10.6). `fillAvailableSpots` is the one
- * thing that offers; this only asks it, with the row as it now stands. Returns the offers made.
- * `deadlines` is the club's setting, read by the caller before its transaction (§377), so nothing
- * here reads `platform_settings` while the event row is locked.
+ * Offers the places a raised capacity adds to the waiting list at once (§147, BR-REQ-034-02
+ * criterion 5), inside the save's transaction after the row is locked (AGENTS.md §10.6), so the
+ * number and the offers commit together. `fillAvailableSpots` is the one thing that offers.
+ * `deadlines` is read by the caller beforehand (§377), so nothing reads `platform_settings` under
+ * the lock.
  */
 async function offerRaisedCapacity<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -2073,20 +1787,10 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(
 }
 
 /**
- * The editor's single save: the event row and every language, in one transaction
- * (BR-REQ-051-01).
- *
- * Six forms and two save buttons were what this replaced, and the reason for the change is not
- * tidiness — it is that "save the settings, then save Romanian, then save English" is three
- * chances to lose an edit, three version guards a person has to reason about separately, and
- * two of them silently stale the moment the first one succeeds. One transaction has one answer:
- * everything is written, or a CONFLICT is raised and nothing is.
- *
- * The version guards do not change. Each row still carries the version its panel was rendered
- * from, `updateEventWithVersionGuard` and `updateTranslationWithVersionGuard` are the same two
- * statements as before, and a stale version on *any* of them throws inside the transaction —
- * which rolls back the rest. That is stricter than the old behaviour and deliberately so: half a
- * save is exactly the state criterion 5 exists to prevent.
+ * The editor's single save: the event row and every language in one transaction (BR-REQ-051-01),
+ * so there is one answer — everything is written, or a CONFLICT and nothing is. Each row keeps its
+ * own version guard; a stale version on any of them throws inside the transaction and rolls back
+ * the rest, since half a save is what criterion 5 exists to prevent.
  */
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2099,8 +1803,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
 
   const existingTranslations = await listTranslationsForEvent(db, input.eventId);
 
-  // Parsed and checked before the transaction opens, so a malformed form never holds a row lock
-  // while the organizer's browser is told what is wrong with it.
+  // Parsed before the transaction, so a malformed form never holds a row lock.
   const parsedEventFields =
     input.fields === undefined ? undefined : normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   if (parsedEventFields) {
@@ -2111,13 +1814,11 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     await assertDateToBeAnnouncedAllowed(db, parsedEventFields, current);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields, switchesAfterSave(parsedEventFields, current)) : undefined;
-  // The notice and the cancellation's reason, refused here like any other box (§331, §315).
+  // The notice and the cancellation's reason, refused like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
   /*
-    Every translation's YouTube posters, fetched before the transaction opens (`DECISIONS.md`
-    §403): `applyTranslationSave` runs inside the transaction below, behind `lockEventForCapacity`
-    — the serialization point every registration takes — and fetches nothing itself. Who may
-    write each text is asked first, so nobody's save fetches a poster for a text it may not change.
+    YouTube posters are fetched before the transaction (§403): `applyTranslationSave` runs behind
+    `lockEventForCapacity` and fetches nothing. Write permission is asked first.
   */
   for (const submitted of input.translations) {
     const existing = existingTranslations.find((row) => row.id === submitted.translationId);
@@ -2130,32 +1831,27 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     })),
   );
   /*
-    The club's deadlines the offers of a raised capacity are made with (§377), read here, before the
-    transaction: inside it the event row is locked, and a stale memo would otherwise read
-    `platform_settings` while that lock is held.
+    The club's deadlines for a raised capacity's offers (§377), read before the transaction so
+    `platform_settings` is never read under the event row's lock.
   */
   const deadlines = await currentDeadlines(db);
 
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
-    // The place's name in each language, when the event's fields are part of this save (§362) —
-    // an older event's English following its Romanian when only the Romanian moved, unless the
-    // editor's box did that on the screen already and the organizer saw what it holds.
+    // The place names, when the event's fields are part of this save (§362), with an older event's
+    // English following its Romanian unless the editor already did so on screen.
     const posted: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
     const names: PlaceNames = input.placeNamesAsTyped ? posted : namesAfterSave(current, existingTranslations, posted);
-    // Set true when `clearDiscountNoteIfNotAllowed` below actually nulled the note in the
-    // database — read by `translationsAfter` further down, since the in-memory rows loaded
-    // before this transaction do not see that write on their own.
+    // Set when `clearDiscountNoteIfNotAllowed` nulled the note: the rows loaded before the
+    // transaction do not see that write, and `translationsAfter` needs to.
     let discountNoteCleared = false;
     if (parsedEventFields && times) {
       await assertNobodyRegisteredForUndated(tx, parsedEventFields, current);
       /**
-       * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
-       * BR-REQ-034-02 criterion 3). The event row is locked first — the serialization point
-       * every allocation takes — so a confirmation landing between the count and the write
-       * waits behind this save instead of slipping past it; the version guard alone would
-       * only catch another *save*.
+       * Capacity below the places taken is refused (AGENTS.md §10.6, BR-REQ-034-02 criterion 3).
+       * The row is locked first — every allocation serializes on it — so a concurrent confirmation
+       * waits; the version guard alone would only catch another save.
        */
       if (parsedEventFields.capacity !== null) {
         await lockEventForCapacity(tx, input.eventId);
@@ -2177,17 +1873,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         { ...eventColumnsFrom(parsedEventFields, times), updatedByStaffUserId: input.actor.id },
         now,
       );
-      // Before the words, so each row a text save writes back already carries its new name.
+      // Before the words, so each row a text save writes back carries its new name.
       await writePlaceNames(tx, input.eventId, names);
-      // Before the translations loop: a settings-only save (an Organizer without text rights)
-      // never runs `applyTranslationSave`, so nothing else in this path clears a note the new
-      // mode no longer allows. A no-op when the mode still allows one, or when a submitted
-      // translation is about to write its own value through `translationColumnsFrom` below.
-      // The boolean is read below, past the transaction's write, because `existingTranslations`
-      // was loaded before this update ran and still carries the stale note in memory — without
-      // it, `translationsAfter` would compare that stale value against itself, see no change,
-      // and a series save (scope `following`/`all`) would leave every other date's note in
-      // place (`DECISIONS.md` §394).
+      // Before the translations loop: a settings-only save never runs `applyTranslationSave`, so this
+      // is the only path that clears a note the new mode forbids. The flag is kept because
+      // `existingTranslations` still holds the stale note in memory; without it a series save would
+      // see no change and leave other dates' notes in place (§394).
       discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, savedEvent);
     }
 
@@ -2205,9 +1896,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
             fields: submitted.fields,
             acknowledgeLiveEdit: input.acknowledgeLiveEdit,
             eventType: parsedEventFields?.type ?? current.type,
-            // As saved (`savedEvent` is `current` when the fields are not part of this save), the
-            // same answer the gate above read: an omitted cost is the stored one, and "not stated"
-            // is null rather than the value it replaced.
+            // As saved (`savedEvent` is `current` when the fields are not part of this save): the
+            // same answer the gate read.
             registrationMode: savedEvent.registrationMode,
             costType: savedEvent.costType,
             now,
@@ -2217,32 +1907,27 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     }
 
     /*
-      Both languages or neither (§352), on the two languages exactly as this save leaves them —
-      inside the transaction, so a refusal writes nothing. Only when this save carries both: the
-      editor posts both for anybody who may write both, and a save that carries one language (a
-      reader who may write only that one, a script) is not refused over the other language's text,
-      which it could not change.
+      Both languages or neither (§352), on the rows as this save leaves them, inside the transaction.
+      Only when this save carries both: a save carrying one language cannot fix the other.
     */
     const savedRo = savedTranslations.find((row) => row.locale === "ro");
     const savedEn = savedTranslations.find((row) => row.locale === "en");
     if (savedRo && savedEn) assertOptionalTextsInBothLanguages({ ro: savedRo, en: savedEn });
 
-    // More places than before: the difference goes to the waiting list at once (§147), here,
-    // where the row is already locked by the guarded update and the number is not yet committed.
+    // More places: the difference goes to the waiting list now (§147), under the lock, uncommitted.
     let offered = capacityRaised(current, savedEvent) ? await offerRaisedCapacity(tx, savedEvent.id, now, deadlines) : 0;
 
     /*
-      This date's languages as they now stand: the rows a text save wrote back (which already carry
-      the place's names), and the others as loaded with the names written above — an Organizer's
-      save writes no words, yet moves the place in both languages.
+      This date's languages as they now stand: rows a text save wrote back, others as loaded with the
+      names written above (an Organizer's save moves the place without writing words).
     */
     const translationsAfter = withPlaceNames(existingTranslations, names).map((row) => {
       const saved = savedTranslations.find((s) => s.id === row.id) ?? row;
       return discountNoteCleared ? { ...saved, discountNote: null } : saved;
     });
 
-    // The other dates of the series, when asked (§130) — after this one, so what travels is
-    // exactly what was written, and inside the transaction, so a refused date undoes it all.
+    // The series' other dates, when asked (§130): after this one, so exactly what was written
+    // travels, and inside the transaction, so a refused date undoes it all.
     const scope = input.scope ?? "this";
     const announcing = request.notify || request.cancellation !== null;
     let appliedTo = 0;
@@ -2265,16 +1950,14 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       otherDates.push(...series.dates);
     }
     /*
-      This save announced the place (§328): the switch was on and is off now, so the place is on
-      every public surface from this commit. Nobody is written to about it: a message sent as a
-      side effect of a save would reach every entrant for a typo fixed the minute after, so telling
-      the participants is the organizer's own, separate act, and the editor's banner says so.
+      This save announced the place (§328): it is public from this commit. Nobody is written to as a
+      side effect of a save; telling the participants is the organizer's separate act.
     */
     const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
 
     /*
-      Telling the participants (§331), last, when every date is written and nothing is left to
-      refuse: a refused save queues nothing, because the messages are rows in this transaction.
+      Telling the participants (§331), last, when nothing is left to refuse: the messages are rows in
+      this transaction, so a refused save queues nothing.
     */
     const notice = announcing
       ? await announceSave(tx, {
@@ -2295,13 +1978,11 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       : undefined;
     return notice ? { appliedTo, offered, placeAnnounced, notice } : { appliedTo, offered, placeAnnounced };
   });
-  // The one save of the whole event (§36), cancelling included: a cancelled event must never read
-  // as scheduled, so the cached rows go the moment it commits (§28, §333).
+  // A cancelled event must never read as scheduled: the cached rows go at commit (§28, §333).
   revalidatePublicContent("events");
   /*
-    The date, the close, the participation window, the status, the capacity: any of them moves
-    what the maintenance job has to do and when (§334). Only when the event row itself was saved
-    — a translation's words move nothing the job acts on.
+    Any event-row change may move what the maintenance job has to do (§334); a translation's words
+    move nothing it acts on.
   */
   if (parsedEventFields) wakeJobs("registration-maintenance");
   return outcome;
@@ -2314,9 +1995,8 @@ export type CreateEventInput = {
   /** Only for tests: a `fetch` stand-in for the YouTube poster fetches, never a live default. */
   fetchImpl?: typeof fetch;
   /**
-   * Why an event created already cancelled is cancelled (§448): required, in both languages,
-   * when the status posted is `CANCELLED`, and ignored otherwise. Its "tell them" is ignored — a
-   * new event has nobody registered to tell.
+   * Why an event created cancelled is cancelled (§448): required in both languages for
+   * `CANCELLED`, ignored otherwise. Its "tell them" is ignored — nobody is registered yet.
    */
   cancellation?: EventCancellationRequest;
 };
@@ -2331,15 +2011,9 @@ type PreparedEventCreate = {
 };
 
 /**
- * The status a new event is created with (§448; the owner, 2026-09-26: "ar trebui să pot crea un
- * eveniment deja anulat din start" — one copied from Facebook for the record, say).
- *
- * - `SCHEDULED` — as every new event was.
- * - `CANCELLED` — asks why, in both languages, exactly as cancelling in the editor does (§331,
- *   §354), and refused on the empty box otherwise. Only a role that may save the event row may
- *   cancel one (BR-REQ-060-01). Nobody is told: a new event has no registrations.
- * - `COMPLETED` — only for an event whose start has passed: an event cannot be over before it
- *   begins. Refused on the status select otherwise.
+ * The status a new event is created with (§448): `SCHEDULED`; `CANCELLED` asking why in both
+ * languages as the editor does (§331, §354), only for a role that may save the event row
+ * (BR-REQ-060-01) and telling nobody; or `COMPLETED` only once the start has passed.
  */
 function readCreateStatus(actor: Actor, status: EditableEvent["eventStatus"], startsAt: Date, cancellation: EventCancellationRequest | undefined, now: Date): BilingualText | null {
   if (status === "COMPLETED" && startsAt.getTime() > now.getTime()) {
@@ -2358,28 +2032,18 @@ function readCreateStatus(actor: Actor, status: EditableEvent["eventStatus"], st
 }
 
 /**
- * The status a new date of a series is made with — the create-status rule of §448 applied per
- * date, not copied from the source (§483; the review of §448: a weekly run created «Anulat» made
- * every future Monday «Anulat» too, and one created «Încheiat» made future dates «over»).
- *
- * - `CANCELLED` is one date's news, asked with its own reason in both languages: never inherited.
- * - `COMPLETED` only for a date whose start has passed — an event cannot be over before it begins.
- * - Anything else is `SCHEDULED`, as every new event is.
+ * The status of a new series date — §448's create rule applied per date, never copied from the
+ * source (§483): `CANCELLED` is never inherited, `COMPLETED` only for a past start, else `SCHEDULED`.
  */
 export function seriesDateStatus(sourceStatus: EditableEvent["eventStatus"], startsAt: Date, now: Date): EditableEvent["eventStatus"] {
   return sourceStatus === "COMPLETED" && startsAt.getTime() <= now.getTime() ? "COMPLETED" : "SCHEDULED";
 }
 
 /**
- * Everything a create needs from outside the database — parsing, the two rules-based checks, and
- * every YouTube poster fetch (any film in a body — the only home of a film since §481) — run once,
- * before any transaction opens.
- *
- * Split out of `createEvent` (found by re-review, `DECISIONS.md` §403): `createEventAndPublish`
- * used to call `createEvent(tx, …)` from *inside* its own transaction, so this exact same fetch
- * work ran while that outer transaction — and, once publication runs, the event row's own lock —
- * was open. This function takes a plain, non-transactional `db` handle so a caller can never make
- * that mistake again; only `insertPreparedEvent` touches a transaction.
+ * Everything a create needs from outside the database — parsing, the rule checks and every YouTube
+ * poster fetch — run once before any transaction (§403). Takes a plain, non-transactional `db` so
+ * no caller can run the fetches inside a transaction or under the event row's lock; only
+ * `insertPreparedEvent` touches one.
  */
 async function prepareEventCreate<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2395,16 +2059,14 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   // A new event has nobody registered and repeats only after it exists (`repeatEvent` asks then).
   await assertDateToBeAnnouncedAllowed(db, parsed, null);
   const times = resolveTimes(parsed, switchesAfterSave(parsed, null));
-  // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
+  // Created cancelled or completed (§448): judged before any fetch.
   const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);
-  // A film pasted straight into any of a new event's five rich texts, in either language, gets
-  // the club's own poster too (`DECISIONS.md` §403), before any transaction opens.
+  // A film in any of a new event's rich texts gets the club's poster too (§403), before any transaction.
   const posterOptions = { now, fetchImpl: input.fetchImpl };
   parsed.translations.ro = await attachPostersToParsedTexts(db, parsed.translations.ro, posterOptions);
   parsed.translations.en = await attachPostersToParsedTexts(db, parsed.translations.en, posterOptions);
-  // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
-  // then inserted exactly as checked. The discount note is gated on the cost the insert stores: an
-  // absent cost type is `COST_TYPE_ON_CREATE`, exactly as `eventColumnsFrom` writes it.
+  // Each language's columns, checked both-or-neither (§352) then inserted as checked. The discount
+  // note is gated on the cost the insert stores (`COST_TYPE_ON_CREATE` when absent).
   const discountAllowed = costPaidToExternalOrganizer({
     registrationMode: parsed.registrationMode,
     costType: parsed.costType === undefined ? COST_TYPE_ON_CREATE : parsed.costType,
@@ -2414,8 +2076,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
     en: translationColumnsFrom(parsed.translations.en, parsed.type, discountAllowed),
   };
   assertOptionalTextsInBothLanguages(translationColumns);
-  // Each language's name for the place, from the Locul box (§362); a caller that posts no English
-  // name leaves the English row to the event's, as every event before it did.
+  // The place name per language (§362); with no English name posted, the English row uses the event's.
   const names = placeNamesFrom(parsed);
 
   return { parsed, times, translationColumns, names, cancelledBecause };
@@ -2443,8 +2104,7 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
     })
     .returning();
 
-  // Through the same function a save writes with: the rich summary's words become the
-  // plain `excerpt`, the empty documents become null, a group run gets no programme.
+  // Through the same function a save writes with (`translationColumnsFrom`).
   await tx.insert(eventTranslations).values(
     routing.locales.map((locale) => ({
       eventId: event.id,
@@ -2458,9 +2118,8 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
   );
 
   /*
-    Created already cancelled (§448): the audit row a cancellation in the editor writes (§331) —
-    who and why — marked as told to nobody, since nobody can have registered for an event that did
-    not exist a moment ago. No `EVENT_CANCELLED` email is queued, ever, from a create.
+    Created cancelled (§448): the editor's cancellation audit row (§331), marked as told to nobody.
+    A create never queues `EVENT_CANCELLED`.
   */
   if (cancelledBecause) {
     await recordAuditEvent(tx, {
@@ -2477,11 +2136,8 @@ async function insertPreparedEvent<T extends Record<string, unknown>>(
 }
 
 /**
- * A new event, with a translation in every locale, as a DRAFT.
- *
- * Never created published: publication is a transition an Editor makes after reading the page,
- * and an event that appeared live the instant it was saved would put an unreviewed draft on the
- * landing page. `src/db/seeds/pilot.ts` is no longer how an event is configured — this is.
+ * A new event with a translation in every locale, as a DRAFT — never created published:
+ * publication is a transition an Editor makes after reading the page.
  */
 export async function createEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2490,8 +2146,7 @@ export async function createEvent<T extends Record<string, unknown>>(
   const now = input.now ?? new Date();
   const prepared = await prepareEventCreate(db, input, now);
   const created = await db.transaction((tx) => insertPreparedEvent(tx, input.actor, prepared, now));
-  // A draft shows nowhere — but a featured one has just taken the flag from the event the
-  // listing leads with, and that one is public.
+  // A draft shows nowhere, but a featured one just took the flag from the public lead event.
   if (prepared.parsed.featured) revalidatePublicContent("events");
   return created;
 }
@@ -2507,47 +2162,26 @@ export type CreateAndPublishResult = {
 };
 
 /**
- * The repeat rule the create form asks for (§64, §170). No `publish` of its own: the series goes
- * live exactly when its source does (§122), which is only known once the publication has run.
+ * The create form's repeat rule (§64, §170). No `publish` of its own: the series goes live when its
+ * source does (§122), known only after publication has run.
  */
 export type NewEventRepeatRule = Omit<RepeatEventInput["rule"], "publish"> & { publish?: boolean };
 
 /**
- * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §315; the
- * owner: "ar trebui sa pot crea si publica dintr-un foc!").
- *
- * A new event is a draft (`createEvent`), and taking it live used to be two more presses in
- * the editor: DRAFT → IN_REVIEW → PUBLISHED (§201). This walks those same two transitions,
- * through `transitionEvent`, so every publication guard applies unchanged — the role that may
- * publish, both languages complete (`REQUIRED_PUBLIC_TRANSLATION_FIELDS`), the meeting point —
- * and nothing here knows a second way to go live.
- *
- * **The draft is never thrown away.** The create and the publication share one transaction,
- * but the publication runs in a savepoint of its own: when the guard refuses — a summary left
- * empty, a role below Administrator — the savepoint rolls back, the draft commits, and the
- * refusal comes back beside it so the editor can say "created, not published, and here is what
- * is missing" (§170's words). What the organizer typed is in the database, not lost to an
- * alert. A role that may not publish is answered before either transition is tried, so the
- * event is a draft and not a submission nobody asked for.
- *
- * **The series is made in the same transaction, and a refused rule refuses the whole create.**
- * `repeatEvent` is the only judge of a rule — the weekdays, an end on or before the event's
- * start, the date format — and it can only judge the end once the start exists. It used to run
- * after this function had committed, so an end before the start left an event behind, the
- * action had nothing left to return but a redirect, and the repeat settings the organizer had
- * chosen were gone (the review of §315). Here, a refusal rolls back the create and the
- * publication with it, and comes back naming `repeat.until` or `repeat.weekday` — the boxes the
- * create form posts — so the action returns the form with every box as it was typed.
+ * A new event, published in the same transaction when asked (§315). Publication walks the same two
+ * transitions through `transitionEvent`, so every guard applies unchanged. It runs in its own
+ * savepoint: a refusal rolls it back, the draft commits, and the refusal is returned beside it so
+ * the editor can say what is missing. A role that may not publish is answered before either
+ * transition. The series is made in the same transaction and `repeatEvent` judges its rule once the
+ * start exists; a refused rule rolls back the whole create, naming `repeat.until` or
+ * `repeat.weekday`, so the form comes back as typed.
  */
 export async function createEventAndPublish<T extends Record<string, unknown>>(
   db: Database<T>,
   input: CreateEventInput & { publish: boolean; repeat?: NewEventRepeatRule | null },
 ): Promise<CreateAndPublishResult> {
   const now = input.now ?? new Date();
-  // Every YouTube poster fetch, before any transaction opens (`DECISIONS.md` §403, found by
-  // re-review): this used to run inside `createEvent(tx, …)`, itself called from inside this
-  // function's own transaction, so the fetches ran with the transaction — and, once
-  // `publishNewEvent` moves the row through its transitions, that row's own lock — already open.
+  // Every poster fetch before any transaction opens (§403).
   const prepared = await prepareEventCreate(db, { actor: input.actor, fields: input.fields, now, fetchImpl: input.fetchImpl, cancellation: input.cancellation }, now);
 
   const result = await db.transaction(async (tx) => {
@@ -2555,17 +2189,14 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
     const { event, published, refusal } = await publishNewEvent(tx, input.actor, created, input.publish, now);
     if (!input.repeat) return { event, published, refusal, repeated: 0 };
 
-    // The series, as drafts — or live, when the source has just gone live and the rule asks for it
-    // (§350): the create page's "Publică datele noi automat", ticked by default. A caller that
-    // does not say keeps the old answer — live exactly when the source went live.
+    // Series dates as drafts, or live when the source just went live and the rule asks (§350); a
+    // caller that does not say gets "live exactly when the source is".
     const rule = { ...input.repeat, publish: input.repeat.publish ?? published };
     const series = await namedUnder("repeat", () => repeatEvent(tx, { actor: input.actor, eventId: event.id, rule, now }));
     return { event, published, refusal, repeated: series.created };
   });
-  // Only once the whole create — including a repeat rule that could still have refused it — has
-  // actually committed: a featured flag on an event a rolled-back savepoint undid must never
-  // clear the public cache for a draft nobody is going to see. (A publish already revalidates
-  // through `transitionEvent`.)
+  // Only after the whole create committed: a featured flag undone by a rolled-back savepoint must
+  // not expire the cache. (A publish already revalidates through `transitionEvent`.)
   if (prepared.parsed.featured) revalidatePublicContent("events");
   return result;
 }
@@ -2608,13 +2239,9 @@ export type DuplicateEventInput = {
 };
 
 /**
- * The same event again, as a fresh draft.
- *
- * What a duplicate deliberately does not copy: publication, the first-publication date, the
- * featured flag, and the slugs. A copy that led the site the moment it was made, or that
- * claimed a URL the original already owns, is not a starting point — it is an incident. The
- * slug gets the first free `-2`, `-3`, … suffix in each locale, asked of the database rather
- * than assumed, because `UNIQUE(locale, slug)` would otherwise reject the whole copy.
+ * The same event again, as a fresh draft. Not copied: publication, its date, the featured flag and
+ * the slugs — each locale's slug gets the first free `-2`, `-3`… suffix, asked of the database,
+ * since `UNIQUE(locale, slug)` would reject the copy.
  */
 export async function duplicateEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2656,11 +2283,9 @@ type EventRow = typeof events.$inferSelect;
 type TranslationRow = typeof eventTranslations.$inferSelect;
 
 /**
- * Every column a copy inherits from its source, in one place for duplicating and repeating.
- *
- * What a copy deliberately does not inherit: publication and the first-publication date, the
- * featured flag, the special mark (§168), and the start list switch — publishing names is a decision about the people
- * who entered *that* event, and a copy has none. It starts HIDDEN like every other new event.
+ * Every column a copy inherits, shared by duplicating and repeating. Not inherited: publication and
+ * its date, featured, the special mark (§168), and the start list, which starts HIDDEN — publishing
+ * names is a decision about that event's entrants.
  */
 function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
   return {
@@ -2678,21 +2303,15 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     latitude: source.latitude,
     longitude: source.longitude,
     routeUrl: source.routeUrl,
-    // The links travel with the route (§332), to a duplicate and to every date of a repeat:
-    // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
+    // The links travel with the route (§332), to a duplicate and to every series date.
     links: source.links,
-    // Not carried by a *duplicate*: next year's race has its own Strava and Facebook event pages.
-    // A *repeat* is different — a recurring Strava club event and a Facebook event with several
-    // dates keep one address for every occurrence — so `repeatEvent` and the job put the source's
-    // two links back on top of this (§300). The co-host is carried by both: a series held with a
-    // partner is held with them every time. (A film is a figure in the description since §481 and
-    // travels with the words; the schema has declared no film column on the event since BR-V2.10.)
+    // Not carried by a duplicate: next year's race has its own Strava and Facebook pages. A repeat
+    // puts the source's links back (§300), since both platforms keep one address per recurring
+    // event. Partners are carried by both.
     stravaEventUrl: null,
     facebookEventUrl: null,
     coHosts: source.coHosts,
-    // The two columns the list replaced (§168) travel with a copy as well, so that copying a
-    // row nobody has saved since the list existed does not lose the partner it still holds
-    // there. Nothing reads them while `co_hosts` is a list.
+    // The two columns the list replaced (§168) travel too, so a legacy row's partner is not lost.
     coHostName: source.coHostName,
     coHostUrl: source.coHostUrl,
     // Never the rule: a copy is one date, and only the source repeats (§122).
@@ -2700,11 +2319,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     repeatOf: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
-    // A copy of an event whose place is not announced is not announced either (§328): the
-    // hidden place travels with it and stays hidden until somebody switches it on.
+    // A hidden place stays hidden on the copy (§328).
     locationToBeAnnounced: source.locationToBeAnnounced,
-    // And one whose date is not announced keeps it held back (§533): its start is the source's
-    // provisional note. `repeatEvent` refuses such a source, so only a duplicate carries this.
+    // A held-back date stays held back (§533); `repeatEvent` refuses such a source, so only a
+    // duplicate carries it.
     dateToBeAnnounced: source.dateToBeAnnounced,
     timeToBeAnnounced: source.timeToBeAnnounced,
     difficulty: source.difficulty,
@@ -2714,29 +2332,22 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
-    // The night override travels with the route (§382, §394): a copy, and every date a series
-    // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
-    // night event by its own sunset.
+    // The night override travels with the route (§394); "Automat" lets each date follow its sunset.
     nightOverride: source.nightOverride,
-    // The self-declaration travels with the route too (§393): a copy of the trail run, and every
-    // date a series makes from it, offers the same declaration.
+    // The self-declaration offer travels with the route too (§393).
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
     featured: false,
-    // Nor the special mark (§168): it says something about one edition — the anniversary, the
-    // Wednesday another club's race passes through — and the copy is a different one.
+    // Nor the special mark (§168): it belongs to one edition.
     isSpecial: false,
     capacity: source.capacity,
-    // The waiting list's length goes with the places it queues for (§348): a copy, and every
-    // date of a series, queue as many as the source does.
+    // The waiting-list cap goes with the places (§348).
     waitlistCapacity: source.waitlistCapacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
-    // Who may enter is a property of the race, not of one edition (§329): a copy and every date
-    // of a series keep the source's minimum age, like its capacity — as it binds (§515): a source
-    // saved under §329 with 0 or 12 gives a copy fourteen, the number the editor would have asked
-    // for, never a row under the floor that no save could have written.
+    // The minimum age belongs to the race (§329), as it binds (§515): an older source below
+    // fourteen gives the copy fourteen.
     minAge: effectiveMinimumAge(source.minAge),
-    // And its reminder rule (§377), like the confirmation window it sits beside.
+    // And its reminder rule (§377).
     reminderHoursBefore: source.reminderHoursBefore,
     registrationMode: source.registrationMode,
     registrationOpensAt: source.registrationOpensAt,
@@ -2779,8 +2390,7 @@ function copiedTranslationValues(
     locationName: translation.locationName,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
-    // The discount travels with the mode and cost type it belongs to (`copiedEventValues`, both
-    // carried unchanged): a series held at a discount is held at it every date.
+    // The discount travels with the mode and cost it belongs to (both carried unchanged).
     discountNote: translation.discountNote,
     authorStaffUserId: actor.id,
     createdAt: now,
@@ -2791,24 +2401,17 @@ function copiedTranslationValues(
 export type RepeatEventInput = {
   actor: Actor;
   eventId: string;
-  /** How it recurs, until when (null: for ever), and whether the occurrences go live as they are made. */
+  /** How it recurs, until when (null: for ever), and whether occurrences go live as they are made. */
   rule: { cadence: RepeatCadence; weekdays?: readonly Weekday[]; until: string | null; publish: boolean };
   now?: Date;
 };
 
 /**
- * The same event again, every week, fortnight or month — a standing series (`DECISIONS.md`
- * §64, §122): "every Monday and Wednesday, until 20 December, or for ever".
- *
- * The rule is written on the source, and the occurrences inside the club's series horizon (§377)
- * are created at once; from then on the maintenance job creates each week as it comes into the horizon
- * (`materializeStandingRepeats`). Each occurrence is the source shifted on the wall clock in
- * its own zone (`addWallClockInterval`), everything with a time moving with it, the slug
- * carrying the date (`alergare-de-duminica-2026-10-04`), and names the source in `repeat_of`.
- *
- * Occurrences are drafts unless `publish` is asked for **and** the source is published: a
- * published source has both languages complete (`transitionEvent` asserted that), so its copies
- * can go live without re-checking. Asking to publish needs the role that publishes.
+ * The same event every week, fortnight or month — a standing series (§64, §122). The rule is
+ * written on the source; dates inside the club's horizon (§377) are created now and the maintenance
+ * job adds the rest (`materializeStandingRepeats`). Each date is the source shifted on the wall
+ * clock in its own zone, its slug carrying the date, `repeat_of` naming the source. Dates are
+ * drafts unless `publish` is asked (by a role that publishes) and the source is published.
  */
 export async function repeatEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2822,8 +2425,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
 
   const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
-  // An event whose date is to be announced (§533) has no date to repeat from: its start is the
-  // organizer's provisional note, and a series would publish that note on every date it made.
+  // A date to be announced (§533) is a provisional note; a series would publish it on every date.
   if (startHeldBack(source)) {
     throw new DomainError("VALIDATION_ERROR", "repeat: an event whose date is to be announced cannot repeat", ["repeat"]);
   }
@@ -2834,19 +2436,16 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   if ((input.rule.weekdays ?? []).some((day) => !WEEKDAYS.includes(day))) {
     throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)", ["weekday"]);
   }
-  // The event's own day is always in the series (§128): a Sunday run with "Wednesday" ticked
-  // runs on Sundays and Wednesdays — the source is the first date, not a one-off before them.
+  // The event's own day is always in the series (§128): the source is the first date.
   const ownWeekday = wallClockWeekday(source.startsAt, source.timezone) as Weekday;
   const weekdays =
     input.rule.cadence === "MONTHLY" || (input.rule.weekdays ?? []).length === 0
       ? []
       : [...new Set([...(input.rule.weekdays ?? []), ownWeekday])].sort((a, b) => a - b);
   /*
-    The rule stores what was **asked** — "publish the new dates by themselves" — and each date made
-    goes live only while the source is live too (`materializeSeries`). It used to store the
-    effective answer, so a series started from a draft with the box ticked came out "off" for good
-    and made a draft every week after the source was published (§350; the create page's
-    `repeat.publish` is ticked by default now, and a new event is a draft).
+    The rule stores what was asked; each date goes live only while the source is live
+    (`materializeSeries`). Storing the effective answer made a series started from a draft stay
+    "off" for good (§350).
   */
   const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
   if (input.rule.publish && !canTransitionEvent(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
@@ -2860,25 +2459,20 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   }
 
   await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
-  // As far ahead as the club keeps its series (§377), read as the job reads it.
+  // As far ahead as the club keeps its series (§377).
   const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now, await currentDeadlines(db));
-  // Even with every date a draft, the source's rule is public: a date of a series is not history,
-  // so it leaves the listing's past events (§275).
+  // Even with every date a draft, the source's rule is public: it leaves the past events (§275).
   revalidatePublicContent("events");
-  // A new standing rule is the maintenance job's to keep extending (§122); it looks at its next
-  // ping rather than at the end of the quiet it last promised (§334).
+  // A new rule for the maintenance job to extend (§122); it looks at its next ping (§334).
   wakeJobs("registration-maintenance");
   return { created, published: publish };
 }
 
 /**
- * The occurrences a source's rule still owes inside the club's horizon (§377) — from the latest
- * one that exists (or the source itself) up to `horizonEnd` — created in one transaction. A horizon
- * shortened later deletes nothing: the dates already created stay, and the next ones wait until
- * they come inside it. Idempotent:
- * every occurrence is a whole number of periods from the source, and a date whose address
- * already exists is skipped, never duplicated. Two indexed reads and usually no write, which
- * is what lets the job run it every quarter hour.
+ * The dates a source's rule still owes inside the club's horizon (§377), in one transaction. A
+ * shortened horizon deletes nothing. Idempotent: each date is a whole number of periods from the
+ * source, and an existing address is skipped. Usually two indexed reads and no write, so the job
+ * can run it every quarter hour.
  */
 async function materializeSeries<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2900,8 +2494,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
   const sourceTranslations = await listTranslationsForEvent(db, source.id);
   const publish = rule.publish && source.editorialStatus === "PUBLISHED";
 
-  // The slugs, all of them, checked before anything is written; a taken address means that
-  // date exists — made by hand, or by a series stopped and started again — and is skipped.
+  // All slugs checked before writing; a taken one means the date exists and is skipped.
   const occurrences = dates.map((startsAt) => ({
     startsAt,
     step: { days: Math.round((startsAt.getTime() - source.startsAt.getTime()) / 86_400_000) },
@@ -2922,9 +2515,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
   );
   if (fresh.length === 0) return 0;
 
-  // The shift is on the wall clock: the same interval the start moved by, applied to every
-  // other time the source carries (§64), so an occurrence four weeks on keeps its 08:00 across
-  // the clock change even though the instants differ by 27 days and 23 hours.
+  // Shifted on the wall clock (§64): a date four weeks on keeps its 08:00 across a clock change.
   const shift = (date: Date | null, occurrence: (typeof fresh)[number]) => {
     if (date === null) return null;
     const wallDays = occurrence.step.days;
@@ -2938,9 +2529,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
         .insert(events)
         .values({
           ...copiedEventValues(source, { id: by ?? source.updatedByStaffUserId ?? "", role: "MODERATOR" }, now),
-          // A series inherits the source's event pages (§300): a recurring Strava club event and
-          // a Facebook event with several dates keep one address for every occurrence, so the
-          // address on the source is the address of this date. A duplicate does not get them.
+          // A series keeps the source's event pages (§300); a duplicate does not.
           stravaEventUrl: source.stravaEventUrl,
           facebookEventUrl: source.facebookEventUrl,
           createdByStaffUserId: by,
@@ -2969,17 +2558,14 @@ async function materializeSeries<T extends Record<string, unknown>>(
     }
   });
 
-  // New dates on the listing and the calendar — the maintenance job's one public write (§122).
-  // Drafts show nowhere, so a run that made only drafts expires nothing.
+  // New dates on the listing and the calendar (§122); drafts show nowhere.
   if (publish) revalidatePublicContent("events");
   return fresh.length;
 }
 
 /**
- * Every standing series, brought up to the horizon (§122). Run by the maintenance job: one
- * indexed read for the sources with a rule, then `materializeSeries` per source — which on
- * most runs reads twice and writes nothing. A source whose rule is past its end keeps the rule
- * (the editor shows it as ended) and creates nothing.
+ * Every standing series brought up to the horizon (§122), run by the maintenance job. A source
+ * past its rule's end keeps the rule (shown as ended) and creates nothing.
  */
 export async function materializeStandingRepeats<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2998,9 +2584,8 @@ export async function materializeStandingRepeats<T extends Record<string, unknow
 }
 
 /**
- * The series' first event — the one that holds the rule — from any of its dates: the date itself
- * when it is not a copy, the event it was copied from otherwise (`repeat_of`, one level deep: a
- * copy is never copied, `repeatEvent` refuses a date that is part of a series).
+ * The series' source from any of its dates: itself, or its `repeat_of` (one level deep — a copy is
+ * never repeated).
  */
 async function seriesSourceOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
   const [row] = await db
@@ -3019,7 +2604,7 @@ async function seriesSourceOf<T extends Record<string, unknown>>(db: Database<T>
   return source;
 }
 
-/** Stop a series: no further occurrences are made; the ones that exist stay (the bulk verbs remove them). */
+/** Stops a series: no further dates are made; existing ones stay. */
 export async function stopRepeat<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; eventId: string; now?: Date },
@@ -3027,33 +2612,21 @@ export async function stopRepeat<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
   }
-  // From any date of the series (§350): the rule lives on the source, and the Recurență box offers
-  // "Oprește recurența" on every date, so a copied date's id is resolved to its source.
+  // From any series date (§350): a copy's id resolves to its source.
   const source = await seriesSourceOf(db, input.eventId);
   await db
     .update(events)
     .set({ repeatRule: null, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
     .where(eq(events.id, source.id));
-  // Without its rule the source is a one-off again, and a past one-off is history (§275).
+  // Without its rule a past source is history again (§275).
   revalidatePublicContent("events");
 }
 
 /**
- * Switch a running series' automatic publication on or off (`DECISIONS.md` §341): whether the
- * dates the job makes from now on go live as they are made, or wait as drafts.
- *
- * The rule's `publish` flag was chosen once, with the tick under "Repetă evenimentul", and never
- * again: a series started from a draft — or without the tick — made every future date a draft
- * for good, and the only way out was to stop the series and start it again. The owner met the
- * result as "Ciornă · 1 date" on the list and could not tell the site was missing a Monday.
- *
- * Only the flag changes; the cadence, the days and the end stay as they are, and the dates that
- * already exist keep their state — publishing those is the list's bulk verb or each date's own
- * editor, which pass the checks publication has. Switching it on asks for the role that
- * publishes, as the first creation did (`repeatEvent`). It does not ask for a published source:
- * on a draft source the switch is stored and waits, because the copies of an unpublished event
- * are drafts anyway (`materializeSeries`) — the dates go live as they are made once the source is
- * live, and until then the Recurență box says the series is waiting for exactly that.
+ * Switches a series' automatic publication on or off (§341): whether dates made from now on go
+ * live as made. Only the flag changes; existing dates keep their state. Turning it on needs the
+ * role that publishes. A draft source is fine: the flag is stored and waits, since copies of an
+ * unpublished event are drafts anyway (`materializeSeries`).
  */
 export async function setRepeatPublish<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -3062,23 +2635,19 @@ export async function setRepeatPublish<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
   }
-  // From any date of the series (§350): the Recurență box offers the switch on every date.
+  // From any series date (§350).
   const source = await seriesSourceOf(db, input.eventId);
   const rule = readRepeatRule(source.repeatRule);
   if (!rule) throw new DomainError("VALIDATION_ERROR", "this series does not repeat any more; start it again from its first event");
   /*
-    Switching it on while the source is a draft is stored and waits (§350, amending the hints
-    branch's refusal): the rule says what was asked, and the dates go live only while the source
-    is live too (`materializeSeries`) — the editor says "waiting" for exactly that state, and the
-    create page's own tick stores the same thing for a new draft.
+    On while the source is a draft is stored and waits (§350): dates go live only while the source
+    is live (`materializeSeries`).
   */
   if (input.publish && !canTransitionEvent(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
-  // Guarded on `repeatRule` still being set, not merely on the id: a `stopRepeat` landing
-  // between the read above and this write would otherwise have this `{ ...rule, publish }` — the
-  // rule as it was before the stop — write the series back into existence. With the guard, that
-  // race makes this update match nothing, and the stopped series stays stopped.
+  // Guarded on `repeatRule` still being set: a concurrent `stopRepeat` would otherwise be undone by
+  // writing the pre-stop rule back. With the guard, that race updates nothing.
   const now = input.now ?? new Date();
   await db.transaction(async (tx) => {
     const written = await tx
@@ -3122,14 +2691,9 @@ export type DeleteEventInput = {
 };
 
 /**
- * Remove an event outright — Administrator only, and never one anybody has registered for.
- *
- * Archiving is the answer for an event that happened; deletion is for a row that should not
- * exist at all. A participant's registration is not tidy-up: it carries the version of the
- * privacy notice they acknowledged and, once signed, the declaration they accepted, and
- * cascading those away to remove a duplicate would destroy the evidence AGENTS.md §10.8 exists
- * to keep. Test registrations count — "Remove test registrations" is what clears those, and it
- * is what makes a demonstration repeatable.
+ * Removes an event outright — Administrator only, never one anybody registered for: a registration
+ * carries the privacy notice acknowledged and the declaration accepted, evidence AGENTS.md §10.8
+ * keeps. Archiving is the answer for an event that happened.
  */
 export async function deleteEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -3145,20 +2709,10 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   const registered = await countRegistrationsForEvent(db, input.eventId);
   if (registered > 0) {
     /**
-     * An event whose only registrations are **test** rows takes them with it (§176; the owner:
-     * "încerc să șterg un eveniment și nu merge! e destul de grav! asta o să îmi umple baza de
-     * date").
-     *
-     * The refusal was right and its advice was a dead end: it said "archive it instead" to
-     * somebody looking at an event that was **already archived**, and the rows in the way were
-     * data he had created himself to rehearse with. Nothing new is permitted here — clearing
-     * test rows is already a verb on the event page (`removeTestRegistrations`), already an
-     * Administrator's, and already refused in production; this is those two presses in one,
-     * which is what stops a QA database filling with events nobody can remove.
-     *
-     * A single **real** registration still blocks the delete, and that is the rule that matters:
-     * it carries the privacy notice the person acknowledged and, once signed, their declaration
-     * (`AGENTS.md` §10.8). Archive is the answer there, and the message says so with the count.
+     * An event whose only registrations are test rows takes them with it (§176): the same as
+     * `removeTestRegistrations` (Administrator-only, refused in production) plus delete. A single
+     * real registration still blocks it (`AGENTS.md` §10.8); the message says to archive, with the
+     * count.
      */
     const test = await countTestRegistrationsForEvent(db, input.eventId);
     const real = registered - test;
@@ -3171,9 +2725,8 @@ export async function deleteEvent<T extends Record<string, unknown>>(
     await removeTestRegistrations(db, input.actor, input.eventId);
   }
 
-  // `event_translations` cascades from the event, and so do a group run's self-declarations
-  // (§393) — whose outbox rows go first, in the same transaction, since nothing could render them.
-  // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
+  // `event_translations` and a group run's self-declarations cascade (§393); their outbox rows go
+  // first in the same transaction. A declaration also covering the run's other dates moves there (§523).
   await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
@@ -3187,50 +2740,27 @@ export type HardDeleteEventInput = {
   eventId: string;
   /** The event's title, as the person typed it. Anything else refuses. */
   typedTitle: string;
-  /** Why — kept in the audit row, which is all that survives. */
+  /** Why — kept in the audit row, all that survives. */
   reason: string;
   now?: Date;
 };
 
 /**
- * Erase an event **and everyone registered for it** — the hard delete.
+ * Erases an event and everyone registered for it — the hard delete, for erasure requests and the
+ * controller's own records (as `deleteRegistrationByStaff`, BR-REQ-037-06). Allowed in production
+ * deliberately: §30 forbids test rows there, not erasure, and real erasures live there. The guards
+ * are the role, a hand-typed title, a reason, and audit rows, with no bulk control reaching it.
  *
- * `deleteEvent` above refuses an event that has registrations, and refusing was right for as
- * long as the only thing behind the refusal was "archive it instead". It is not the only thing:
- * the club's own data controller had an archived event carrying two registrations he had
- * entered himself, and no way at all to remove either. "We cannot delete this" is not an answer
- * a controller can be given about his own records, and the same argument that produced
- * `deleteRegistrationByStaff` (BR-REQ-037-06 — somebody exercising their right to erasure)
- * produces this: the safe verb stays the default, and the destructive one exists, named
- * differently, behind a confirmation nobody presses by accident.
- *
- * **It is allowed in production**, and that is a decision rather than an oversight. `DECISIONS.md`
- * §30 forbids *test registrations* in production because a synthetic row would corrupt the
- * club's own counts; it says nothing about erasure, and erasure is the opposite case — the
- * environment where the club's real mistakes and its real erasure requests live is production,
- * so a verb that worked only on QA would be a verb that never worked. The environment is not
- * the guard here. The guard is: a role that may already erase each of these rows one at a time,
- * a title typed by hand, a reason, an audit row per person, an audit row for the event, and no
- * bulk control anywhere that can reach it.
- *
- * **One transaction.** The audit row for the event is written first, then every registration is
- * erased through `eraseAllRegistrationsOfEvent` — the same path a single erasure takes, so each
- * one releases its place through the allocator, takes its declaration acceptance with it, and
- * leaves its own audit row — and the event row goes last. If anything fails, nothing happened:
- * `registrations.event_id` has no `ON DELETE` clause, so a half-done version of this could not
- * commit even if it wanted to.
- *
- * **What the audit rows say, and what they do not.** The event's row carries the title, the
- * date and the counts; each registration's row carries the status it was in and the reason.
- * Not one of them carries a name, an address or an identity document — §12.12, and the whole
- * reason the verb is called erasure.
+ * One transaction: the event's audit row first, then each registration through
+ * `eraseAllRegistrationsOfEvent` (releasing its place through the allocator, taking its declaration
+ * acceptance, auditing each), the event row last. `registrations.event_id` has no `ON DELETE`, so a
+ * half-done erasure cannot commit. No audit row carries a name, address or identity document (§12.12).
  */
 export async function hardDeleteEvent<T extends Record<string, unknown>>(
   db: Database<T>,
   input: HardDeleteEventInput,
 ): Promise<{ registrationsErased: number }> {
-  // The role first, before the screen's own inputs are even looked at: an organizer who may not
-  // do this is told that, rather than being told their reason was too short (BR-REQ-060-01).
+  // The role first, so an unauthorized organizer is told that, not that the reason was short (BR-REQ-060-01).
   if (!canHardDeleteEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not erase an event and its registrations`);
   }
@@ -3240,17 +2770,14 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
   const reason = input.reason.trim();
   if (reason.length < 3) {
-    // Named, so the erase form's summary points at the box that was wrong (§315) — the form
-    // posts these two names, and nothing else here is typed.
+    // Named, so the erase form's summary points at the box (§315).
     throw new DomainError("VALIDATION_ERROR", "an erasure needs a reason; it is the only thing that survives it", ["reason"]);
   }
 
   /**
-   * The typed confirmation. Either language's title is accepted — the organizer types the one
-   * on the screen in front of them — and an event with no title at all (a draft nobody has
-   * named) is confirmed by its id, which is what the screen then shows. Compared trimmed and
-   * exactly: a case-insensitive match would accept a title somebody half-remembered, and the
-   * whole purpose of this field is to be impossible to satisfy by accident.
+   * The typed confirmation: either language's title (or the id for an untitled draft), trimmed and
+   * exact — a case-insensitive match would accept a half-remembered title, and the point is to be
+   * impossible to satisfy by accident.
    */
   const accepted = plan.titles.length > 0 ? plan.titles.map((entry) => entry.title) : [plan.eventId];
   if (!accepted.some((title) => title.trim() === input.typedTitle.trim())) {
@@ -3260,9 +2787,8 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
   const now = input.now ?? new Date();
 
   const erased = await db.transaction(async (tx) => {
-    // First, inside the transaction: the row that says this happened. It outlives the event —
-    // `audit_logs.entity_id` carries no foreign key — and it is written before anything is
-    // destroyed so that there is no ordering in which the destruction has no record.
+    // First: the record of this happening, which outlives the event (`audit_logs.entity_id` has no
+    // foreign key), written before anything is destroyed.
     await recordAuditEvent(tx, {
       actorStaffUserId: input.actor.id,
       action: "event.hard_deleted",
@@ -3282,20 +2808,16 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
     const registrationsErased = await eraseAllRegistrationsOfEvent(tx, input.actor, plan.eventId, reason, now);
 
-    // `event_translations` and `registration_interests` cascade; a gallery album's `event_id`
-    // and a later edition's `repeat_of` are set to null. The registrations are gone above,
-    // which is the only reference that would have refused this. A group run's self-declarations
-    // cascade too (§393); their outbox rows carry the signer's address and could never render
-    // without them, so they go first — unless the run has another date, which they cover too and
-    // move to (§523): erasing one date's registrations is not erasing a runner's declaration.
+    // Translations and interests cascade; an album's `event_id` and a later edition's `repeat_of`
+    // go null. A group run's self-declarations cascade (§393), their outbox rows first — unless the
+    // run has another date, which they cover and move to (§523).
     await rehomeGroupRunDeclarationsOfEvent(tx, plan.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));
 
     return { registrationsErased };
   });
-  // The event, and an album that pointed at it, leave the public pages (`reads.ts` files the album
-  // under both kinds, so this one call reaches it).
+  // The event, and an album pointing at it, leave the public pages (`reads.ts` files albums under both).
   revalidatePublicContent("events");
   return erased;
 }

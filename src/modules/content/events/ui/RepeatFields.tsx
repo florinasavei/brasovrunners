@@ -10,23 +10,11 @@ import RecallField from "@/shared/forms/recall";
 import RepeatRuleFields, { RepeatPublishField, type RuleSentenceWords } from "./RepeatRuleFields";
 
 /**
- * How an event repeats (BR-REQ-050-02 criterion 7, §122): the cadence, the days of the week,
- * until when — a date, or nothing for a series without an end, which the maintenance job keeps
- * to the club's series horizon (§377) — and whether the dates it makes go live by themselves (§350). The same
- * fields on the create page and on an event's Recurență box, so the two cannot drift.
- *
- * `prefix` namespaces the fields (`repeat.cadence` on the creation form, bare on the event page,
- * which posts its own form). The weekday boxes post `weekday=1..7`, ISO numbered; none ticked
- * means the event's own day. The event's own day is always in the series (§128): ticked and
- * locked — on the event page from the stored date, on the create page following the start date
- * as it is typed (`RepeatRuleFields`). Under them, the rule in one live sentence.
- *
- * "Publică datele noi automat" is always shown now, ticked by default (§350) — it was offered only
- * on a live event, so a series started from a draft could never say it wanted its dates to go
- * live; its help says what off means, and that the dates of a draft stay drafts until it is
- * published (`materializeSeries`: rule.publish **and** a published source).
- *
- * After a refused submit every one of them comes back as it was chosen (§315).
+ * How an event repeats (BR-REQ-050-02 criterion 7, §122): cadence, weekdays, an end date or none
+ * (kept to the club's series horizon, §377), and whether new dates go live by themselves (§350).
+ * Shared by the create page and the Recurență box. `prefix` namespaces the fields; weekdays post
+ * ISO `weekday=1..7`, and the event's own day is always ticked and locked (§128). A draft's dates
+ * stay drafts until it is published (`materializeSeries`). Recalls after a refused submit (§315).
  */
 export default async function RepeatFields({
   prefix = "",
@@ -53,7 +41,7 @@ export default async function RepeatFields({
     atTime: tEvent.raw("series.atTime") as string,
     forever: t.raw("editor.repeatRuleLiveForever") as string,
     until: t.raw("editor.repeatRuleLiveUntil") as string,
-    // How far ahead the dates are created at once — the club's number (§377), in words.
+    // How far ahead dates are created — the club's number (§377).
     horizon: t("editor.repeatRuleLiveHorizon", { horizon: daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays) }),
     weekdayNames: weekdayNames(locale),
     untilDay: calendarDayWords(locale),

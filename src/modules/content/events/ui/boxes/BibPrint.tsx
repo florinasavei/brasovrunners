@@ -9,7 +9,7 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 
-/** The two small forms the card's controls belong to, by id (`form="…"`). */
+/** The small forms the card's controls belong to, by id (`form="…"`). */
 export const BIB_ASSIGN_FORM = "bib-assign";
 export const BIB_DOWNLOAD_FORM = "bib-download";
 /** The print of the desk's spares (§444): a POST that reserves them, then the sheet. */
@@ -20,22 +20,19 @@ type Props = {
   /** How many numbers exist, and how many are not printed yet. */
   total: number;
   unprinted: number;
-  /** "Alocă numerele" is a write: `assignBibNumbers` refuses anybody below Administrator (§289). */
+  /** "Alocă numerele" is a write, Administrator only (`assignBibNumbers`, §289). */
   mayAssign: boolean;
   /** A queue made only of test rows gets no numbers and never will (`AGENTS.md` §12.6). */
   onlyTest: boolean;
   /** Open by itself: numbers waiting for the printer in race week (§311). */
   attention: boolean;
-  /**
-   * The desk's spares (§444): what is reserved already and how much of it is free, and the first
-   * number the next print would reserve — the number the confirmation names.
-   */
+  /** The desk's spares (§444): the reservation so far and the first number the next print would reserve. */
   spares?: SpareCard | null;
 };
 
 /** What the spares' section shows (§444), read by the page from `bibs.ts#spareCardState`. */
 export type SpareCard = {
-  /** The reservation so far, both ends included, and how many of it nobody holds; null before the first print. */
+  /** The reservation so far, both ends included, and how much of it is free; null before the first print. */
   band: { from: number; to: number } | null;
   free: number;
   /** Where the next print starts; null when no number is left under the ceiling. */
@@ -45,11 +42,10 @@ export type SpareCard = {
 };
 
 /**
- * «Numere de rezervă pentru înscrierile de la fața locului» (§444, amending §338): the club types
- * how many and presses «Tipărește». The press is a POST (`BIB_SPARES_FORM`, asked first, §384)
- * that reserves the numbers under the event's lock and comes back with the sheet's link for exactly
- * that range; the reprint of the free ones already reserved is the sheet's own GET. The Organizer
- * reads the section and downloads the sheet; only an Administrator reserves (§289).
+ * «Numere de rezervă pentru înscrierile de la fața locului» (§444): the press is a POST
+ * (`BIB_SPARES_FORM`, confirmed, §384) that reserves the numbers under the event's lock and
+ * returns the sheet's link for that range; reprinting free reserved numbers is the sheet's GET.
+ * Only an Administrator reserves (§289).
  */
 async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; mayReserve: boolean }) {
   const t = await getTranslations("Admin");
@@ -107,16 +103,10 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
 }
 
 /**
- * Sub-sub-card 8.4.2, "Alocare și tipărire" (§350), edit only: the race numbers given out and the
- * sheet to print — the one card for race numbers now holds what they look like and whether they
- * exist, where it used to be a section below the page.
- *
- * **Immediate actions inside the save form.** The card sits in "Participare și înscrieri", inside
- * the one `<form>` that saves the event, and HTML forms cannot nest. So every control here names
- * the form it belongs to — `form="bib-assign"` for the POST that gives the numbers, `form=
- * "bib-download"` for the GET that prints them — and those two forms are rendered after the save
- * form, as its siblings (`BibPrintForms`). "Salvează" never posts them, and they never post the
- * event. The line at the top says so.
+ * "Alocare și tipărire" (§350), edit only: giving out the race numbers and printing the sheet.
+ * The card sits inside the event's save `<form>` and forms cannot nest, so each control names its
+ * form (`form="bib-assign"` POST, `form="bib-download"` GET), rendered as siblings after the save
+ * form (`BibPrintForms`). "Salvează" never posts them.
  */
 export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null }: Props) {
   const t = await getTranslations("Admin");
@@ -142,7 +132,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
           {mayAssign && (
             <Box>
-              {/* The question is the assign form's own (`BibPrintForms`, §384); this button only submits it. */}
+              {/* The question is the assign form's (`BibPrintForms`, §384); this button only submits it. */}
               <GlyphButton icon="number" type="submit" form={BIB_ASSIGN_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
                 {t("bibs.assign")}
               </GlyphButton>
@@ -197,9 +187,8 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
 }
 
 /**
- * The two forms `BibPrintCard`'s controls post, rendered after the save form (never inside it):
- * the POST that gives the numbers, with its confirmation on the button, and the GET that reads the
- * sheet and writes nothing.
+ * The forms `BibPrintCard`'s controls post, rendered after (never inside) the save form: the
+ * confirmed POST that gives the numbers and the GET that reads the sheet.
  */
 export async function BibPrintForms({
   eventId,
@@ -224,7 +213,7 @@ export async function BibPrintForms({
   return (
     <>
       {mayAssign && (
-        // The form asks (§384): the card's button submits it, and the question opens from here.
+        // The form asks (§384); the card's button submits it.
         <ActionForm
           id={BIB_ASSIGN_FORM}
           action={assignAction}
@@ -250,7 +239,7 @@ export async function BibPrintForms({
         >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={eventId} />
-          {/* The start the question named: the service refuses when a registration moved it since. */}
+          {/* The start the question named: the service refuses if a registration moved it since. */}
           <input type="hidden" name="expectFrom" value={sparesFrom} />
         </ActionForm>
       )}

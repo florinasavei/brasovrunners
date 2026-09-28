@@ -9,14 +9,9 @@ import { useRecall } from "@/shared/forms/recall";
 export type GlyphOption = { value: string; label: string; glyph?: GlyphName };
 
 /**
- * A select whose options wear their glyphs (§121; the owner: "these drop-downs should also
- * have icons") — the type, the surface, the difficulty, the cost, the same glyphs the public
- * pages show (§112). A client component for the same reason as `GlyphChip`: the icon is made
- * here from a name, never handed across the boundary as an element MUI would inspect. The
- * hidden input keeps `name`, so `OnlyForType`'s observer and the Server Action read it as before.
- *
- * After a refused submit it shows the choice that was posted (§315), keyed on the answer so
- * the select — which holds its choice in state of its own — re-mounts from it.
+ * A select whose options wear the public pages' glyphs (§112, §121). Client so the icon is made
+ * here from a name, never passed as an element. The hidden input keeps `name` for `OnlyForType`'s
+ * observer and the action. Re-mounts from the posted choice after a refused submit (§315).
  */
 export default function GlyphSelect({
   name,

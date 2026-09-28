@@ -11,9 +11,8 @@ import { type CardGapWords, missingForPublish, type PublishGapBox, storedPublish
 import type { TranslationDraft } from "../TranslationFields";
 
 /**
- * What every box of the event editor is handed (§350). One set of props for the create page and
- * the editor, so the two are the same page: `event` is null on create, and a box that needs a
- * saved event says so by rendering nothing of that part.
+ * What every editor box is handed (§350), the same on the create page and the editor: `event` is
+ * null on create, and a part that needs a saved event renders nothing.
  */
 export type BoxProps = {
   /** The event being edited, or null on the create form. */
@@ -23,26 +22,19 @@ export type BoxProps = {
   /** The people a change here reaches, when the box is one that reaches them (§350). */
   risk?: RiskMark | null;
   /**
-   * The approved group-run declaration in force for each surface, or null (§393): the rules card's
-   * "Declarație opțională" is disabled for a surface without one, and names the version of one that
-   * has it (§448). Absent: none.
+   * The approved group-run declaration in force per surface, or null (§393, §448): the rules card
+   * disables the option without one and names the version otherwise.
    */
   groupRunDeclarations?: Record<"ASPHALT" | "TRAIL", { version: number } | null>;
-  /**
-   * The card's heading as the page's section it writes (§406): "4 · Data și ora — apare pe
-   * pagină", from `pageFlow`. Absent: the card's own name alone.
-   */
+  /** The card's heading as its page section (§406), from `pageFlow`; absent, the card's own name. */
   heading?: string;
 };
 
 /**
- * A card's required line (§406): «lipsesc: Titlu (RO, EN) · Rezumat (RO)» or «complet», for a
- * card that holds a box publication needs — first from what the card was drawn with (the saved
- * event, or the blank create form), then as the form is typed (`PublishCheckProvider`). The one
- * check the Publicare list and "Publică" run (`missingForPublish`), filtered to this card.
- *
- * A function the box awaits rather than a component it nests, so the element it hands the heading
- * is ready when the box is (a string renderer cannot wait for an async component inside a tree).
+ * A card's required line (§406): «lipsesc: Titlu (RO, EN) · …» or «complet», from what the card
+ * was drawn with and then as the form is typed (`PublishCheckProvider`) — the same
+ * `missingForPublish` check as Publicare, filtered to this card. A function the box awaits, not a
+ * nested component, so the element is ready when the box is.
  */
 export async function requiredLine(
   box: PublishGapBox,
@@ -73,13 +65,9 @@ export async function cardGapWords(): Promise<CardGapWords> {
 }
 
 /**
- * A box whose change reaches people who registered: its amber outline and its own sentence about
- * what a change does to them — only on the editor, only with at least one real registration (a
- * test row is counted nowhere the club looks, `AGENTS.md` §12.6).
- *
- * The number itself is said once, on the line under the page map (`RegisteredLine`, §408; the
- * owner: "informația «3 înscriși» se repetă de prea multe ori pe fiecare card"), never on a box:
- * the outline is the mark, the line is the count.
+ * A box whose change reaches the registered: its amber outline and sentence, on the editor only,
+ * with at least one real registration (`AGENTS.md` §12.6). The count itself is said once by
+ * `RegisteredLine` (§408).
  */
 export type RiskMark = { count: number };
 
@@ -87,9 +75,8 @@ export type RiskMark = { count: number };
 export type LanguageEntry = { translation: TranslationDraft; mayEdit: boolean; label: string };
 
 /**
- * The catalogue's summary templates, for `box-summaries.ts`. The dates in them are written by
- * `src/i18n/dates.ts` in the reader's language (§350 weekday on every date), so no weekday words
- * travel with them.
+ * The catalogue's summary templates for `box-summaries.ts`. Dates are written by
+ * `src/i18n/dates.ts` in the reader's language, so no weekday words travel with them.
  */
 export async function summaryWords(): Promise<{ words: SummaryWords }> {
   const t = await getTranslations("Admin");
@@ -120,10 +107,7 @@ export async function SettingsReadOnly() {
   );
 }
 
-/**
- * A plain sentence under a field or in place of a group of fields — one sentence, and what it
- * would add beyond that as `more`, the discreet «?» (§511).
- */
+/** A plain one-sentence note under a field; anything more goes behind the «?» as `more` (§511). */
 export function BoxNote({ children, testId, more }: { children: string; testId?: string; more?: string }) {
   return (
     <Typography variant="body2" color="text.secondary" data-testid={testId}>

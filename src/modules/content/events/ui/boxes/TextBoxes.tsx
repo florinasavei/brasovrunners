@@ -30,27 +30,19 @@ import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } fro
 import { BoxNote, type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
 
 /**
- * The four boxes of the event editor that are only words (§350): the title and summary, the
- * description, the rules, the page address. Each has its own Română | English tabs — five strips on
- * one page with the programme's, so each carries its box's `idPrefix` — and each tab says what it
- * lacks by its own rule: a count of the boxes publication needs still empty here (the title and
- * the summary, the address — «Română · 2 obligatorii lipsă», «English · complet», §406), or
- * "· incomplet" for an optional text written in the other language and not in this one (the
- * description, the rules).
+ * The editor boxes that are only words (§350): title and summary, description, rules, page
+ * address. Each has its own RO | EN tabs (each with its box's `idPrefix`), and each tab says what
+ * it lacks: a count of required boxes still empty (§406), or "· incomplet" for an optional text
+ * written only in the other language.
  */
 
 const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translation;
 
 /**
- * One strip of tabs, its marks computed from what is stored and then from what is typed.
- *
- * `identical` names the long texts of the strip to compare across languages (§354, bilingual
- * everywhere): the same words in both is an amber line over the panels and a mark on the English
- * tab — computed here from what is stored for the first paint, re-read in the browser as typed.
- *
- * `required` names the card's publication gaps (§406): each tab then counts the boxes publication
- * needs that its language still lacks, first from `missingForPublish` over what the strip was drawn
- * with — the check the card's closed line and Publicare read — then as it is typed.
+ * One strip of tabs, marked from what is stored and then as typed. `identical` lists the texts to
+ * compare across languages (§354): identical words get an amber line and a mark on the English
+ * tab. `required` names the card's publication gaps (§406), counted per language with
+ * `missingForPublish`, the check the closed line and Publicare read.
  */
 export async function LanguageTabs({
   idPrefix,
@@ -94,11 +86,10 @@ export async function LanguageTabs({
   return (
     <LocaleTabPanels
       idPrefix={idPrefix}
-      // Only the languages the reader may write are re-read as they type; a read-only one has no box.
+      // Only languages the reader may write are re-read as typed.
       watch={mayType ? watch : undefined}
       live={mayType}
-      // «Tradu cardul: RO → EN» at the end of the card's tab row (§514). Every card here has words:
-      // the address card's are the two search-engine texts beside the `slug`, which is not one.
+      // «Tradu cardul: RO → EN» at the end of the tab row (§514); the address card's words are its two SEO texts.
       translateCard
       requiredCount={requiredCount}
       identical={
@@ -137,10 +128,8 @@ function lineOf(required: ReactNode, summary: string | undefined): ReactNode {
 }
 
 /**
- * "Titlu și rezumat" (§350): open on create, where it is the first thing a new event is asked —
- * the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a language
- * lacks either (`attention`: something inside asks for action). Its closed line starts with what
- * publication still needs from it (§406).
+ * "Titlu și rezumat" (§350): open on create (`primary`, the page's own verb) and on the editor
+ * while a language lacks either (`attention`). The closed line starts with what publication needs (§406).
  */
 export async function TitleSummaryBox({ languages, creating, heading }: { languages: readonly LanguageEntry[]; creating: boolean; heading?: string }) {
   const t = await getTranslations("Admin");
@@ -188,18 +177,10 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
 }
 
 /**
- * "Regulamentul" (`#box-rules`), the second of the three cards of «Program, regulament și
- * declarație» since §481 (`ProgrammeRulesBox`): the rules in each language, on their own tabs. The
- * declaration (§448) is the card after it, no longer inside it — the three are siblings, in the
- * order the page reads them.
- *
- * **The minimum age is here, one box for every type** (§505). It was two boxes — the race's in
- * «Participare și înscrieri» › «Condiții de participare» (§329), a group run's own in «Traseul»
- * (§440) — and neither was shown for a type that registers elsewhere or not at all. Now one
- * `event.minAge`, after the rules' tabs, on every event: who may take part is read with the rules.
- * A group run keeps §440's note under it — its self-declaration is for adults, so only a number
- * above eighteen changes what it asks. A role without settings rights reads the number instead of
- * the box; the server refuses its change regardless (`canEditEventFields`, BR-REQ-060-01).
+ * "Regulamentul" (`#box-rules`, §481): the rules per language, then the one `event.minAge` for
+ * every type (§505). A group run keeps its note that only an age above eighteen changes its
+ * adults-only self-declaration (§440). A settings reader sees the number; the server refuses a
+ * change anyway (`canEditEventFields`, BR-REQ-060-01).
  */
 export async function RulesBox({
   languages,
@@ -213,7 +194,7 @@ export async function RulesBox({
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const locale = await getLocale();
-  // Never under fourteen (§515): an event saved with less under §329 opens at fourteen, which the box accepts.
+  // Never under fourteen (§515): an older, lower value opens at fourteen.
   const minAge = effectiveMinimumAge(event?.minAge);
   const aside = [rulesSummary(words, languages.map(summaryOf)), minAgeSummary(words, minAge, locale)].join(words.separator);
   return (
@@ -249,9 +230,8 @@ export async function RulesBox({
 }
 
 /**
- * "Adresa paginii și motoarele de căutare": open while any address is blank — so open on create,
- * where the address also fills itself from the title until it is typed (`SlugFromTitle`). Not a
- * section of the page — it is the page's address — so it sits with the cards that are not (§406).
+ * "Adresa paginii și motoarele de căutare": open while any address is blank (so on create, where
+ * `SlugFromTitle` fills it). Not a page section, so it sits with those cards (§406).
  */
 export async function AddressBox({
   languages,
@@ -266,7 +246,7 @@ export async function AddressBox({
   const { words } = await summaryWords();
   const translations = languages.map(summaryOf);
   const blank = incompleteLocales(translations, "required", BLANK.address);
-  // "/ro/evenimente", "/en/events": each language's own path to an event, without the address.
+  // Each language's path to an event, without the address.
   const paths = Object.fromEntries(
     languages.map((entry) => {
       const locale = entry.translation.locale as Locale;

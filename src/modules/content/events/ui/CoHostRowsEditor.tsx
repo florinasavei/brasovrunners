@@ -34,10 +34,8 @@ const EMPTY_LINK: CoHostLinkRowValue = { kind: DEFAULT_CO_HOST_LINK_KIND, url: "
 const EMPTY: CoHostRowValue = { name: "", descriptionRo: "", descriptionEn: "", links: [] };
 
 /**
- * The cards as a refused submit posted them, gathered by both indices from
- * `event.coHosts[p].name`, `event.coHosts[p].descriptionRo` / `.descriptionEn` (§352) and
- * `event.coHosts[p].links[l].<box>` (§315) — the same reading `recalledRows` gives the plain
- * links, one level deeper for the partner a link belongs to.
+ * The cards as a refused submit posted them (§315), gathered by both indices from
+ * `event.coHosts[p].name`, `.descriptionRo`/`.descriptionEn` (§352) and `.links[l].<box>`.
  */
 function recalledRows(names: string[], value: (name: string) => string | undefined): CoHostRowValue[] {
   const rows: CoHostRowValue[] = [];
@@ -65,10 +63,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
     .map((row) => ({ ...row, links: row.links.filter((link): link is CoHostLinkRowValue => link !== undefined) }));
 }
 
-/**
- * The partners' cards, coming back as they were typed after a refused submit (§315): keyed on
- * the answer and handed the recalled cards, exactly as `LinkRowsEditor` and `ScheduleRowsEditor`.
- */
+/** Recalls the typed cards after a refused submit (§315), as `LinkRowsEditor` and `ScheduleRowsEditor`. */
 export default function CoHostRowsEditor(props: ComponentProps<typeof CoHostRowsEditorIsland>) {
   const recall = useRecall();
   const initial = recall.has ? recalledRows(recall.names(), recall.value) : props.initial;
@@ -100,25 +95,13 @@ function makePartnerRow(value: CoHostRowValue, key: number): PartnerRow {
 }
 
 /**
- * The organizations the event is held with, in the editor (`DECISIONS.md` §168; the owner,
- * §344: "this can have multiple links, so it should be a card, it's like: partner link, partner
- * event, etc"): one boxed card per partner, titled with its name — "Partener nou" while it has
- * none — holding the name box, "Despre parteneriat" in Română and English side by side (§352, both
- * or neither), and the partner's own links, each a row with its kind, address and a label in each
- * language, the same four boxes `LinkRowsEditor` carries for "Linkuri și fișiere" (§332).
- *
- * A client island for what a form cannot do by itself — add or remove a card, move one, and the
- * same three for a card's own links — and nothing else: every box is an ordinary uncontrolled
- * input named `event.coHosts[p].name` or `event.coHosts[p].links[l].<box>`, which
- * `admin/actions.ts#eventFieldsFrom` gathers by both indices. A card and a link left blank are
- * the spare lines and are dropped on save; a link with no name beside its card, or a link with
- * no address, is refused with both numbers (`fields.ts#coHostsField`).
- *
- * Cards and links each keep a key of their own across removals and moves, so moving the third
- * partner up carries its own links with it rather than handing them to the partner that took its
- * place — the same discipline `LinkRowsEditor` follows for one list, doubled for two nested ones.
- * The title is read from the name box's own `onChange` (`BibFooterTextField`'s pattern): the box
- * stays an ordinary uncontrolled input, and only the small heading above it is live.
+ * The partners in the editor (§168, §344): one card per partner, titled by its name, with "Despre
+ * parteneriat" in both languages side by side (§352) and its own link rows (the four boxes of
+ * `LinkRowsEditor`, §332). Client only to add, remove and move cards and links; every box is an
+ * uncontrolled input `event.coHosts[p].name` / `event.coHosts[p].links[l].<box>`, gathered by both
+ * indices (`admin/actions.ts#eventFieldsFrom`). Blank cards and links are dropped; a link without
+ * a name or an address is refused with both numbers (`fields.ts#coHostsField`). Cards and links
+ * keep their own keys, so a move carries its links. Only the heading follows the name box live.
  */
 function CoHostRowsEditorIsland({
   initial,
@@ -141,10 +124,7 @@ function CoHostRowsEditorIsland({
     descriptionEn: string;
     /** One line under both: optional, in both languages, a sentence or two, shown under the name. */
     descriptionHelp: string;
-    /**
-     * The amber line under the two boxes when they say the same words (§354, bilingual
-     * everywhere): "Textul în engleză e identic cu cel în română — e tradus?". Never a refusal.
-     */
+    /** The amber line under two identical description boxes (§354). Never a refusal. */
     identical: string;
     kind: string;
     url: string;
@@ -156,22 +136,17 @@ function CoHostRowsEditorIsland({
     moveLinkDown: string;
     link: string;
     /**
-     * "al partenerului {p}" — said after every link row's name and its buttons, with `{p}`
-     * replaced by the card's number (§347, batch integration). "Linkuri și fișiere" (§332) sits
-     * on the same form with its own "Linkul 1" and "Șterge linkul 1"; without the partner in the
-     * name, a screen reader heard two identical groups and two identical buttons.
+     * "al partenerului {p}", after every link row's name and buttons (§347): without it a screen
+     * reader heard the same groups and buttons as "Linkuri și fișiere" (§332).
      */
     ofPartner: string;
   };
-  /** Each link kind's word, already translated — the same word the page shows when a label is empty. */
+  /** Each link kind's word, translated — what the page shows when a label is empty. */
   kindLabels: Record<CoHostLinkKind, string>;
-  /**
-   * The boxes' HTML constraints, read off `fields.ts#coHostLinkRowSchema` (the link's address and
-   * label) and `fields.ts#coHostRowSchema` (the description's ceiling) by the Server Component (§315).
-   */
+  /** The boxes' HTML constraints, from `fields.ts#coHostLinkRowSchema` and `#coHostRowSchema` (§315). */
   constraints: { url: HtmlConstraints; label: HtmlConstraints; description: HtmlConstraints };
 }) {
-  // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
+  // Which boxes a refusal named; the summary links here by `fieldId`.
   const recall = useRecall();
   const [rows, setRows] = useState<PartnerRow[]>(() => (initial.length > 0 ? initial : [EMPTY]).map((value, index) => makePartnerRow(value, index)));
   const [nextKey, setNextKey] = useState(rows.length);
@@ -190,8 +165,7 @@ function CoHostRowsEditorIsland({
       return next;
     });
   const renamePartner = (key: number, title: string) => setRows((current) => current.map((row) => (row.key === key ? { ...row, title } : row)));
-  // What the two description boxes hold now, read from their own `onChange` like the title: the
-  // boxes stay uncontrolled, and only the "identical in both languages" line below follows them.
+  // The description boxes as their `onChange` last read them; only the "identical" line follows them.
   const describePartner = (key: number, language: "Ro" | "En", text: string) =>
     setRows((current) => current.map((row) => (row.key === key ? { ...row, [`description${language}`]: text } : row)));
 
@@ -269,10 +243,8 @@ function CoHostRowsEditorIsland({
               />
 
               {/*
-                What the partnership is (§352), right under the name — the order the page reads it
-                in. Two boxes, one per language, side by side from `sm`: both or neither, so they
-                are always seen together, never behind a tab. Ordinary uncontrolled inputs like the
-                name, so moving a card carries what was typed in them.
+                What the partnership is (§352), under the name as the page reads it: one box per
+                language, side by side, never behind a tab. Uncontrolled, so a moved card keeps them.
               */}
               <Stack spacing={1} role="group" aria-labelledby={aboutId} aria-describedby={aboutHelpId}>
                 <Typography id={aboutId} variant="body2" sx={{ fontWeight: 600 }}>
@@ -304,12 +276,12 @@ function CoHostRowsEditorIsland({
                     );
                   })}
                 </Stack>
-                {/* «Tradu din română» (§464): the English description from the Romanian one. */}
+                {/* «Tradu din română» (§464). */}
                 <TranslateFieldButton en={descriptionField("En")} />
                 <Typography id={aboutHelpId} variant="caption" color="text.secondary">
                   {labels.descriptionHelp}
                 </Typography>
-                {/* The Romanian pasted into the English box (§354): said here, never refused. */}
+                {/* Romanian pasted into the English box (§354): said, never refused. */}
                 {identicalInBothLanguages(descriptionRo, descriptionEn) && (
                   <Alert severity="warning" data-testid={`co-host-${index}-identical`}>
                     {labels.identical}

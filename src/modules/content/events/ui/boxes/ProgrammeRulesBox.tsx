@@ -12,25 +12,12 @@ import StartListBox from "./StartListBox";
 import { RulesBox } from "./TextBoxes";
 
 /**
- * «Program, regulament și declarație» (§481; the owner, 2026-09-27: "Programul, regulamentul și
- * declarația la fel pe același card"): one card for what a runner reads the night before and signs
- * — the page's `#schedule` and `#rules`, one under the other — holding four named cards, in the
- * page's order:
- *
- * 1. «Programul zilei și ce să aduci» (`#box-schedule`, §350, §405): the timed rows, the notes and
- *    what to bring, with its «i» help fold and its Română | English tabs;
- * 2. «Regulamentul» (`#box-rules`): the rules, on their own tabs, and the minimum age — one box
- *    for every type since §505;
- * 3. «Declarația pe propria răspundere» (`#box-declaration`, §448): what the participant signs;
- * 4. «Lista publică a participanților» (`#box-start-list`, §32, §512): whether the page draws the
- *    list, which it does last, under the rules — so it is the last card here, not a card of its own.
- *
- * Each keeps its fields, names, ids, closed line and refusals; this card only holds them. Its own
- * closed line says the four in a row. It opens itself while a saved event that registers on the
- * site has no declaration chosen, or while a group run offering its self-declaration has no
- * approved, not-withdrawn text for its surface (§483) — the declaration card inside opens too —
- * and with people
- * registered it is amber — the programme is one of the boxes a change reaches (§350).
+ * «Program, regulament și declarație» (§481, §512): one card holding, in page order, the
+ * programme (`#box-schedule`), the rules with the minimum age (`#box-rules`, §505), the
+ * declaration (`#box-declaration`, §448) and the public list (`#box-start-list`). Each inner
+ * card keeps its own fields, ids and refusals. Opens itself while a site-registering event has
+ * no declaration or a group run's self-declaration has no approved text (§483); amber when
+ * people are registered (§350).
  */
 export default async function ProgrammeRulesBox({
   event,
@@ -61,12 +48,12 @@ export default async function ProgrammeRulesBox({
       title={heading ?? t("editor.boxes.programmeRules.title")}
       aside={[
         programmeSummary(words, event, hasProgramme(initialType), translations, locale),
-        // «regulamentul: RO: completat · EN: gol» — the rules' own line, named, among the other two.
+        // The rules' own line, named, among the others.
         t("editor.boxes.programmeRules.rulesLine", { state: rulesSummary(words, translations) }),
-        // «vârsta minimă 14 ani» — the age is a box of «Regulamentul» since §505.
+        // The minimum age is a box of «Regulamentul» (§505).
         minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
         line.text,
-        // «lista publică: Ascunsă» — the public list's own line, named, last (§512).
+        // The public list's own line, last (§512).
         t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility) }),
       ]
         .filter(Boolean)

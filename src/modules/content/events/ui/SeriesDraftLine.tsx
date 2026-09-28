@@ -14,34 +14,12 @@ type Action = (form: FormData) => Promise<void>;
 type Confirmed = { label: string; confirmTitle: string; confirmBody: string; confirmLabel: string };
 
 /**
- * "1 dată nouă, creată automat, nu e pe site: lun., 16 nov. [Publică] [Publică automat de acum]"
- * — the series row's line for the dates the site is missing (`DECISIONS.md` §341, §351).
- *
- * The owner, of the line it replaced and its "?": "tot nu e clar ce e cu data asta în ciornă… ai
- * pus grămadă de text degeaba în tooltip… practic asta e data din aia de viitor generată
- * automat?". It was: the newest date the standing job made (§122), a draft because the series'
- * rule does not publish. So the words now say what the date *is* — created by the series itself,
- * not on the site — and the line carries the fix instead of a paragraph describing where the fix
- * is (`draftRemedies`):
- *
- * - **Publică** — publishes exactly the drafts this line counts, every one of them and not only
- *   the linked ones, through the list's own bulk verb (`bulkPublishEventsAction`), so the role,
- *   the version guard and the both-languages rule (BR-REQ-040-02) are the ones publication
- *   always has. It asks first: publishing puts the dates on the site and opens their
- *   registration.
- * - **Publică automat de acum** — switches the series' rule on (`setRepeatPublishAction`, aimed at
- *   the source, `returnTo=list`) and comes back to this list. Its confirmation says it acts on the
- *   dates the series creates from now on, and that the ones listed still need "Publică".
- * - **Deschide seria** — for a series whose source is not published: the source's editor, where it
- *   is published. The switch is not offered there, because it cannot take effect until then.
- *
- * Each remedy is null when the viewer's role may not use it — the page asks the same questions
- * the server asks again (BR-REQ-060-01). A Server Component: the words, the dates' labels and the
- * addresses arrive as strings (§324, no client island formats a date), and the islands — the "?",
- * the confirming buttons — are handed strings and a glyph's name (§318).
- *
- * The mark is a warning-coloured rule down the left, not warning-coloured text: MUI's orange on
- * white is about 3:1, under what small body text needs, and the words are the part to read.
+ * The series row's line for dates the site is missing (§341, §351): "1 dată nouă, creată automat,
+ * nu e pe site: …" with its remedies — «Publică» (every counted draft, through the bulk verb, so
+ * the usual publication guards apply, BR-REQ-040-02), «Publică automat de acum» (switches the
+ * series' rule on) or «Deschide seria» (when the source is unpublished). A remedy is null when the
+ * role may not use it; the server asks again (BR-REQ-060-01). Strings only cross to the islands
+ * (§318, §324). The warning is a left rule, not orange text, which is ~3:1 on white.
  */
 export type SeriesDraftLineProps = {
   uiLocale: string;
@@ -64,8 +42,7 @@ export type SeriesDraftLineProps = {
 export default function SeriesDraftLine({ uiLocale, text, dates, more, hint, publish, autoPublish, openSource, cancelLabel }: SeriesDraftLineProps) {
   const anyRemedy = publish !== null || autoPublish !== null || openSource !== null;
   return (
-    // Left-aligned even in the phone layout, whose value column aligns right: a sentence that
-    // wraps reads from the rule down its left edge, not from a ragged left margin.
+    // Left-aligned even in the phone layout: a wrapped sentence reads from the rule's edge.
     <Box data-testid="series-drafts" sx={{ borderLeft: 3, borderColor: "warning.main", pl: 1, textAlign: "left" }}>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
         <Typography component="span" variant="body2" sx={{ fontWeight: 600 }}>
@@ -74,8 +51,7 @@ export default function SeriesDraftLine({ uiLocale, text, dates, more, hint, pub
         {dates.map((date) => (
           <Typography key={date.id} component="span" variant="body2">
             <Link href={date.href}>
-              {/* The span sizes the link: 44 px tall on a phone, where a thumb presses it, and a
-                  line's height on a desktop, where the row should stay a row. */}
+              {/* 44 px tall on a phone for the thumb; a line's height on a desktop. */}
               <Box component="span" sx={{ display: "inline-flex", alignItems: "center", minHeight: { xs: 44, md: 0 } }}>
                 {date.label}
               </Box>
@@ -89,10 +65,8 @@ export default function SeriesDraftLine({ uiLocale, text, dates, more, hint, pub
         )}
         {hint && <Hint text={hint} />}
       </Box>
-      {/* The fixes, on a row of their own under the words so each wraps whole at 320 px. Each
-          button is its own small form: the line is drawn twice (the wide table and the phone
-          list), and a form it contains needs no id to be told apart. Sentence case, as the
-          list's own buttons ("shouting is not a size"). */}
+      {/* The fixes on their own row so each wraps whole at 320 px. Each button is its own small
+          form: the line is drawn twice (table and phone list), so a contained form needs no id. */}
       {anyRemedy && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 0.5, "& .MuiButton-root": { textTransform: "none" } }}>
           {publish && (

@@ -20,35 +20,18 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * Which dates of a series a save reaches (`DECISIONS.md` §134, §350).
- *
- * **Three words, in the Salvare box** (§350; the design the owner asked to have implemented):
- * "Doar această dată / Această dată și următoarele / Toate datele seriei", one radio group,
- * beside the button — with the individual dates folded underneath for the exceptions, and a
- * sentence saying how many dates the save will change. The wall of date chips in the header, and
- * the header's own copy of the choice, are gone (§134's chips): two controls for one choice was
- * one too many, and on a phone the chips were a screen of their own.
- *
- * **"This and the following" is the default** — reversing §240's "all". A weekly run is one event
- * repeated, which is why §240 widened the default at all; but the dates that already happened are
- * history, and a save that rewrites last Monday's description, place or programme rewrites what
- * the people who ran it were told. From here on is what an organizer means by "the series" nine
- * times in ten, and "Toate datele seriei" is one press away for the tenth.
- *
- * One piece of state, held here, so the radios, the sentence and the ticks never disagree; the
- * ticked ids reach the form as hidden `dates` inputs inside it (`SeriesScopeBox`), and the service
- * applies the save to exactly those (`SeriesEditScope`) — that contract is unchanged. The date the
- * page is about is always in and has no box. A hand-picked set shows as a fourth, read-only radio,
- * "Alese de mână (N)".
+ * Which dates of a series a save reaches (§134, §350): "Doar această dată / Această dată și
+ * următoarele / Toate datele seriei" beside the save button, the individual dates folded underneath,
+ * and a sentence with the count. "This and the following" is the default (reversing §240): past
+ * dates are history, and rewriting them rewrites what their runners were told. One piece of state
+ * keeps radios, sentence and ticks in agreement; the ticked ids post as hidden `dates` inputs and
+ * the service applies the save to exactly those (`SeriesEditScope`). The open date is always in. A
+ * hand-picked set shows as a fourth, read-only radio.
  */
 
 type Preset = "this" | "following" | "all";
 
-/**
- * A date of the series, with its day as the sentence reads it ("mie., 30 sept. 2026") — written
- * on the server by `src/i18n/dates.ts` (§350 weekday on every date) and handed here as a string,
- * so this island formats no date itself (§324).
- */
+/** A series date with its day in words, written on the server (`src/i18n/dates.ts`, §324). */
 export type ScopeDate = SeriesDate & { day: string };
 
 type ScopeState = {
@@ -87,15 +70,9 @@ export function presetIds(preset: Preset, dates: readonly { id: string }[], curr
 }
 
 /**
- * The radio to show: the preset the organiser pressed, while the ticks are still exactly that
- * preset's; otherwise whatever the ticks amount to.
- *
- * Deriving it from the ticks alone made "Toate datele seriei" look dead on the series' first date
- * (the owner, 2026-09-24: "acest selector nu funcționează"): there "all the others" and "the ones
- * after this" are the same dates, `presetOf` answers "following" first, and the pressed radio
- * jumped straight back to "Această dată și următoarele" — the save was right, the control lied.
- * The same happened to "Această dată și următoarele" on the last date, where it ticks nothing and
- * reads as "Doar această dată". Ticking a date by hand clears the pressed preset (`chosen` null).
+ * The radio to show: the pressed preset while the ticks still match it, else what the ticks amount
+ * to. From the ticks alone, "Toate" on the first date (or "următoarele" on the last) would snap
+ * to another preset with the same dates and the control would lie. A hand tick clears `chosen`.
  */
 export function shownPreset(
   chosen: Preset | null,
@@ -111,9 +88,9 @@ export function shownPreset(
 }
 
 export function SeriesScopeProvider({ dates, currentId, children }: { dates: readonly ScopeDate[]; currentId: string; children: ReactNode }) {
-  // "This and the following" when the editor opens (§350, reversing §240's "all").
+  // "This and the following" when the editor opens (§350, reversing §240).
   const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set(followingIds(dates, currentId)));
-  // The radio the organiser pressed last, or null once a date was ticked by hand (`shownPreset`).
+  // The last pressed radio, or null once a date was ticked by hand (`shownPreset`).
   const [chosen, setChosen] = useState<Preset | null>("following");
   const value = useMemo<ScopeState>(
     () => ({
@@ -147,9 +124,9 @@ function useScope(): ScopeState {
 }
 
 /**
- * "Salvează pentru", in the Salvare box: the radios, the sentence, why only what changed travels
- * (folded), and 15.1 "Alege datele una câte una" (folded unless the ticks are hand-picked). Inside
- * the save form, so the hidden inputs travel with it.
+ * "Salvează pentru" in the Salvare box: the radios, the sentence, why only changes travel
+ * (folded), and "Alege datele una câte una" (folded unless hand-picked). Inside the save form so
+ * the hidden inputs post with it.
  */
 export function SeriesScopeBox({ locale }: { locale: string }) {
   const t = useTranslations("Admin");
@@ -213,7 +190,7 @@ export function SeriesScopeBox({ locale }: { locale: string }) {
           {t("editor.scope.help")}
         </Typography>
       </Box>
-      {/* 15.1 — the exceptions, one date at a time; open while the ticks are hand-picked. */}
+      {/* The exceptions, one date at a time; open while the ticks are hand-picked. */}
       <Box component="details" open={preset === null || undefined} sx={BOXED_DISCLOSURE_SX} data-testid="series-pick-dates">
         <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
           <DateRangeIcon aria-hidden sx={FOLD_GLYPH_SX} />

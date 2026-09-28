@@ -11,7 +11,7 @@ type Option = { value: string; label: string };
 
 const GLYPH_SX = { fontSize: 20, color: "text.secondary" } as const;
 
-/** The glyph before a field's words (the owner, 2026-09-27: a glyph on every control). */
+/** The glyph before a field's words (§521). */
 function startGlyph(Glyph: ComponentType<{ "aria-hidden"?: "true"; sx?: object }>) {
   return (
     <InputAdornment position="start">
@@ -21,11 +21,9 @@ function startGlyph(Glyph: ComponentType<{ "aria-hidden"?: "true"; sx?: object }
 }
 
 /**
- * The backoffice events list's three controls (§527) — the search, the state and the order — as
- * one row inside the page's GET form. A client component only because each field wears its glyph
- * as an adornment, and an icon element may not be handed across the server/client boundary
- * (§370); every prop here is a string. What posts is plain: a search box and two **native**
- * selects, drawn on the server, so the form works before hydration and with JavaScript off.
+ * The backoffice events list's search, state and order (§527), one row in the page's GET form.
+ * Client only so each field can wear a glyph adornment (no element across the boundary, §370);
+ * what posts is a search box and two native selects, working without JavaScript.
  */
 export default function EventListFields({
   search,

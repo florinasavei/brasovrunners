@@ -11,15 +11,9 @@ function writeValue(input: HTMLInputElement, value: string) {
 }
 
 /**
- * The create page's page address, filled from the title until the person writes one (§350; the
- * weekly group run is type, title, summary, date, place, the repeat tick, then "Creează și
- * publică" — nobody should have to invent `alergare-de-luni` by hand as well).
- *
- * For each language: while its address box has never been typed into, every keystroke in the
- * title rewrites the address (`slugFromTitle`). The first keystroke of the person's own in the
- * address box — a trusted `input` event, which the writes below are not — hands the box over for
- * good. A box that arrives filled (a refused create coming back, §315) is the person's already.
- * Renders nothing; the server validates the address as it always has.
+ * Fills each language's page address from its title until the person types in the address box
+ * (§350). Only a trusted `input` event hands the box over (our own writes are not trusted); a box
+ * that arrives filled (a refused create, §315) is already the person's. Renders nothing.
  */
 export default function SlugFromTitle({ locales }: { locales: readonly string[] }) {
   const anchor = useRef<HTMLSpanElement>(null);

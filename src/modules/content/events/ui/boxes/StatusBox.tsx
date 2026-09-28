@@ -16,34 +16,18 @@ const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;
 export type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength: number };
 
 /**
- * The create page hands no event and no notice; the editor hands both, always — the type says so,
- * so a saved event (possibly cancelled) can never fall into the create page's card, which starts
- * at "Programat" and has nobody to tell.
+ * The create page passes no event and no notice; the editor passes both. The type keeps a saved
+ * (possibly cancelled) event out of the create page's card.
  */
 export type StatusCardProps = { risk?: RiskMark | null } & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
 /**
- * "Starea evenimentului" (§350, §358, §448) — a named card inside the first box, «Ce fel de
- * eveniment» (`KindBox`), where the owner looks for it (2026-09-26: "starea evenimentului ar trebui
- * să apară pe primul card"). §358 put it there first; §406 made it a box of its own among the
- * cards that are not a section of the page; §448 brings it back, whole — its fields, its names, its
- * id — and the first box's closed line says it beside the type: «Alergare de grup · Programat».
- *
- * **On the create page it is the editor's same select** (§448, reversing the read-only
- * "Programat" of §350/§358; the owner, 2026-09-26: "ar trebui să pot crea un eveniment deja anulat
- * din start"), starting at "Programat". "Anulat" asks why, in Română and in English, the same two
- * boxes as the editor's (§331, §354) — and nothing else: there is no "tell them" box, because
- * nobody can be registered for an event that does not exist yet, and the create sends no email.
- * "Încheiat" is offered too, for an event that already took place; the service refuses it while
- * the start is still ahead.
- *
- * **On the editor**, inside the save form, so a refusal keeps it (§315); while "Anulat" is chosen on
- * an event that was not cancelled, the cancellation's reason and its "tell them" appear under the
- * select (§331) — they read the select by name. With people registered the card is amber and says
- * what a cancellation does to them (the count is said once, under the page map, §408).
- *
- * Drawn only for a role that may change the settings: for any other, the first box says the
- * settings are not theirs, and its closed line still names the status.
+ * "Starea evenimentului" (§448): a named card inside «Ce fel de eveniment». On the create page the
+ * same select starting at "Programat": "Anulat" asks why in both languages (§331, §354) with no
+ * "tell them" box (nobody is registered and create sends no email); "Încheiat" is refused while
+ * the start is ahead. On the editor it is inside the save form (§315); choosing "Anulat" shows the
+ * reason and "tell them" (§331); amber with people registered (§408). Drawn only for a role that
+ * may change the settings.
  */
 export default async function StatusCard({ event, risk, notice }: StatusCardProps) {
   const t = await getTranslations("Admin");
@@ -75,7 +59,7 @@ export default async function StatusCard({ event, risk, notice }: StatusCardProp
 
   if (event === null) {
     const tSite = await getTranslations("Site");
-    // Only the cancellation's own words: with nobody to tell, the notice's are never drawn.
+    // Only the cancellation's words: with nobody to tell, the notice's are never drawn.
     const labels: EventNoticeLabels = {
       notify: "",
       notifyHelp: "",

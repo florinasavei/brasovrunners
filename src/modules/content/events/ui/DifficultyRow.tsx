@@ -2,19 +2,12 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 
 /**
- * The difficulty row of «Ce fel de eveniment» (§526, centred §537): the band select with its «?»
- * and «Treapta» with its «?», on one axis — the owner, 2026-09-28: «partea asta nu e centrată!».
- *
- * One grid: from `sm` the band and the step share the first row and the step's help line has a row
- * of its own under the step (the `help` area) — it never lifts the toggle. The cells align to the
- * row's top, not its centre: both visible outlines are 56 px from the cell's top edge (the select's
- * own, the toggle's through `STEP_FRAME`), so their centres meet, and the select's helper text after
- * a refused save grows the band cell downwards without moving the toggle off the select's axis. The
- * step column is as wide as the toggle (`max-content`); the help line takes that width and wraps
- * inside it (`width: 0; min-width: 100%`), so the band select keeps the rest. Below `sm` the three
- * stack, full width, in the same order. `DifficultyStepField` places its own parts in the `step` and
- * `help` areas (its root is `display: contents`). No directive: the create page and the editor
- * render it from the same `KindBox` (§406, one layout), a Server Component.
+ * The difficulty row of «Ce fel de eveniment» (§526, §537): the band select and «Treapta» on one
+ * axis. The cells align to the top, not the centre: both outlines sit 56 px below the cell's top
+ * (the toggle's through `STEP_FRAME`), so a helper text under the select after a refusal grows
+ * downwards without moving the toggle. The help line wraps within the step column
+ * (`width: 0; min-width: 100%`). Below `sm` the three stack. `DifficultyStepField` places its
+ * parts in the `step` and `help` areas (`display: contents`).
  */
 export const DIFFICULTY_ROW_SX = {
   display: "grid",

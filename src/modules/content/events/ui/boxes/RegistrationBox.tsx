@@ -41,9 +41,8 @@ import { DEFAULT_TIMEZONE } from "./WhenBox";
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
 
 /**
- * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
- * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
- * what `events.bib_colour` checks for and what the sheet paints.
+ * The colours a race's numbers may print in (§173, §177): six distinct on paper and from the
+ * club's blue, which is the empty choice. Hex triplets, as `events.bib_colour` checks.
  */
 const BIB_COLOURS = [
   { key: "green", hex: "#1b8a3a" },
@@ -54,7 +53,7 @@ const BIB_COLOURS = [
   { key: "black", hex: "#212121" },
 ] as const;
 
-/** An approved race-declaration version the editor offers; `effectiveAt` tells a version in force from one approved for later (§515). */
+/** An approved race-declaration version the editor offers; `effectiveAt` tells in-force from approved-for-later (§515). */
 export type DeclarationOption = { id: string; key: RaceDeclarationKey; version: number; title: string; effectiveAt?: Date };
 
 /** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
@@ -63,25 +62,13 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * "Participare și înscrieri" (§350): how people register — here, with another organizer, or not at
- * all — and under which rules; on the page, who may enter and the button, under the cost row (§406:
- * the cost is its own card, `CostBox`, just above this one, where the page draws its row). Registration's rules are
- * in this one box, as named cards: the period (the minimum age and the declaration are under «Regulamentul», §505, §448), the confirmation
- * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
- * printing). The public list was the fifth card here (owner requirement 1 of §350); since §406 it is
- * its own card, last, because the page draws it last (`StartListBox`), and since §512 the last card
- * inside «Program, regulament și declarație».
- *
- * **Only what the chosen mode needs is shown** (`OnlyForMode`): "Pe site" shows the capacity and
- * the cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
- * takes no registration at all (§111): its sentence replaces everything here. Every
- * hidden field stays in the document — hidden, not removed — so switching back finds what was
- * typed, and the service ignores what the mode hides (`ignoreHiddenFields`, before its schema). No
- * mode-dependent box carries a browser `required`: the server decides; and while hidden, the boxes
- * are read-only, so a `min` or a `pattern` left unmet out of sight never stops the save (`ShownWhen`).
- *
- * The waiting list's length sits beside the capacity (§350, the waiting-list cap), and "not here"
- * stores no length either.
+ * "Participare și înscrieri" (§350): how people register (here, elsewhere, or not at all) and, as
+ * named cards, the registration period, the confirmation window, the reminder and the race
+ * numbers. The minimum age and the declaration live under «Regulamentul» (§448, §505), the public
+ * list in `StartListBox` (§512), the cost in `CostBox`. Only what the chosen mode needs is shown
+ * (`OnlyForMode`); a group run takes no registration (§111). Hidden fields stay in the document,
+ * the service ignores them (`ignoreHiddenFields`), no mode-dependent box is browser-`required`,
+ * and hidden boxes are read-only (`ShownWhen`).
  */
 export default async function RegistrationBox({
   event,
@@ -99,15 +86,15 @@ export default async function RegistrationBox({
   /** The page's clock, for "race week" (the bib card opens by itself then). */
   now?: Date;
   /**
-   * The club's deadlines (§377), read by the page: the reminder an event left "as usual" gets, the
-   * hold the confirmation card names, and the race week that opens the bib card by itself (§311).
+   * The club's deadlines (§377): the reminder "as usual", the hold the confirmation card names,
+   * and the race week that opens the bib card (§311).
    */
   clubDeadlines: Pick<Deadlines, "reminderHours" | "holdMinutes" | "offerHours" | "raceWeekDays">;
   declarations: readonly DeclarationOption[];
   /** How many wait for a place (§147); the create form has nobody. */
   waiting?: number;
   bibCounts?: { total: number; unprinted: number } | null;
-  /** Sub-sub-card 8.4.2, edit only, drawn by the page (it posts forms of its own). */
+  /** "Alocare și tipărire", edit only, drawn by the page (it posts forms of its own). */
   bibPrint?: ReactNode;
   locale: string;
 }) {
@@ -127,9 +114,7 @@ export default async function RegistrationBox({
     .filter((field) => design[field])
     .map((field) => t(`editor.bibDesign.footer.${field}`));
 
-  // The reminder card (§377): the club's lead in words, the owner's choices plus a number a script
-  // stored, and the closed line — "Setarea clubului (cu 2 zile înainte de start)", "Cu 3 zile înainte
-  // de start", "Fără reminder".
+  // The reminder card (§377): the club's lead in words, the choices plus any scripted number, and the closed line.
   const before = (hours: number) => t("editor.reminder.before", { lead: leadPhrase(locale, hours) });
   const clubReminder = clubDeadlines.reminderHours > 0 ? before(clubDeadlines.reminderHours) : t("editor.reminder.clubNone");
   const storedReminder = event?.reminderHoursBefore ?? null;
@@ -145,13 +130,12 @@ export default async function RegistrationBox({
         : capitalizeFirst(before(storedReminder), locale);
 
   /*
-    The confirmation card's saved numbers as dates (§104), in the one form that is true (§407): no
-    window at all — the allocator's own `confirmationWindow` test — a deadline that is the start
-    itself ("termen la start", `confirmationDueAtStart`), or two dates.
+    The confirmation card's saved numbers as dates (§104, §407): no window (`confirmationWindow`),
+    a deadline at the start itself (`confirmationDueAtStart`), or two dates.
   */
   const hold = minutesPhrase(locale, clubDeadlines.holdMinutes);
   const confirmationDates = (() => {
-    // No dates to count back from while the date is left blank (§545): never the provisional day's.
+    // No dates to count back from a blank date (§545), never the provisional day.
     if (!event || !typedStartOrNull(event)) return null;
     if (!confirmationWindow(event)) return t("editor.boxes.confirmation.datesOff", { hold });
     const values = {
@@ -166,7 +150,7 @@ export default async function RegistrationBox({
 
   const summary = registrationSummary(words, event, {
     takesRegistrations: takesRegistrations(initialType),
-    // The cost is its own card since §406 (`CostBox`), and its closed line says it.
+    // The cost is `CostBox`'s (§406), with its own closed line.
     declarationVersion: declaration?.version ?? null,
     locale,
     creating: event === null,
@@ -182,9 +166,8 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        // A reader keeps what is not a setting of the event (§542): the race numbers' allocation and
-        // printing — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only
-        // for a role that reads the registrations (§289: the Organizer, not the Redactor).
+        // A reader keeps what is not an event setting (§542): the numbers' allocation and printing,
+        // drawn by the page only for a role that reads registrations (§289).
         <Stack spacing={2}>
           <SettingsReadOnly />
           {bibPrint}
@@ -195,8 +178,7 @@ export default async function RegistrationBox({
             <BoxNote testId="group-run-no-registration">{t("editor.groupRunNoRegistration")}</BoxNote>
           </OnlyForType>
 
-          {/* The whole registration block follows the type select (§111); the service writes NONE
-              for a group run whatever the hidden fields still post. */}
+          {/* The block follows the type select (§111); the service writes NONE for a group run whatever posts. */}
           <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={initialType}>
             <Stack spacing={2}>
               <RecallField
@@ -236,10 +218,8 @@ export default async function RegistrationBox({
 
               <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
                 <Stack spacing={2}>
-                  {/* The places and the waiting list's length side by side (§350, the waiting-list
-                      cap): the second only means anything once the first is set, and a row says
-                      they are one question. Stacked on a phone. Empty is no limit for both; 0 on
-                      the second is no waiting list at all. */}
+                  {/* Places and the waiting-list cap side by side (§350), stacked on a phone. Empty is
+                      no limit for both; 0 for the second is no waiting list. */}
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2} data-testid="capacity-row">
                     <RecallField
                       name="event.capacity"
@@ -263,11 +243,11 @@ export default async function RegistrationBox({
                     />
                   </Stack>
 
-                  {/* 8.1 — from when until when. */}
+                  {/* The registration period. */}
                   <Panel glyph="window" collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
-                      {/* «Se deschid în curând» (§451): announced, with no date. The marker says the
-                          form carried the box, so an unticked one reads as "off", not "not edited". */}
+                      {/* «Se deschid în curând» (§451). The marker says the form carried the box, so
+                          unticked reads as "off", not "not edited". */}
                       <input type="hidden" name="event.registrationOpensSoon.present" value="1" />
                       <CheckboxField name="event.registrationOpensSoon" defaultChecked={event?.registrationOpensSoon ?? false}>
                         {t("editor.registrationOpensSoon")}
@@ -282,13 +262,10 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
 
-                  {/* 8.2 — who may enter was a card here («Condiții de participare», §329). Since
-                      §505 the minimum age is one box of «Regulamentul» for every type, and what a
-                      runner signs is chosen beside it since §448 (`DeclarationCard`): one line
-                      says where both went. */}
+                  {/* The minimum age and the declaration moved to «Regulamentul» (§448, §505); one line says so. */}
                   <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>
 
-                  {/* 8.3 — the participation window (§104). */}
+                  {/* The participation window (§104). */}
                   <Panel glyph="confirmation"
                     collapsible
                     level={3}
@@ -323,10 +300,8 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/*
-                    8.3b — the reminder before the start (§81, §377): the club's lead unless this
-                    event says otherwise. A native select of the owner's four choices — "as usual",
-                    24, 48, 72 hours, none — and the stored number too when a script set another,
-                    so a save never quietly changes it.
+                    The reminder before the start (§81, §377): the club's lead unless overridden. The
+                    stored number is offered too when a script set another, so a save never changes it.
                   */}
                   <Panel glyph="reminder" collapsible level={3} id="box-reminder" title={t("editor.boxes.reminder.title")} aside={reminderSummary}>
                     <Stack spacing={1}>
@@ -350,8 +325,7 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
 
-                  {/* 8.4 — the one card for race numbers: the band (§173), what one bib looks like
-                      (§249, now on create too) and, on the editor, whether they exist and print. */}
+                  {/* Race numbers: the band (§173), the bib design (§249) and, on the editor, allocation and printing. */}
                   <Panel glyph="bibs"
                     collapsible
                     level={3}
@@ -406,8 +380,7 @@ export default async function RegistrationBox({
                       {bibPrint}
                     </Stack>
                   </Panel>
-                  {/* The public list was 8.5 here; it is the last card of «Program, regulament și
-                      declarație» now, where the page draws it (§406, §512, `StartListBox`). */}
+                  {/* The public list is `StartListBox` (§406, §512). */}
                 </Stack>
               </OnlyForMode>
             </Stack>

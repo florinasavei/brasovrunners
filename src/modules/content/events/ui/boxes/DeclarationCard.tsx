@@ -16,11 +16,9 @@ import type { DeclarationOption } from "./RegistrationBox";
 const SURFACES_WITH_TEXT = ["ASPHALT", "TRAIL"] as const;
 
 /**
- * The card's closed line — «declarație pentru Trail», «fără declarație», «declarația v3» — and
- * whether a saved event that registers on the site lacks its declaration (the card and «Program,
- * regulament și declarație» around it open themselves then), or a group run offering its
- * self-declaration has no approved, not-withdrawn text for its surface (§483). Null text: the event asks for no
- * declaration at all.
+ * The card's closed line («declarație pentru Trail», «fără declarație», «declarația v3»; null
+ * text: no declaration asked) and whether it is missing — a site-registering event with none
+ * chosen, or a group run offering one with no approved, not-withdrawn text for its surface (§483).
  */
 export async function declarationLine(
   event: BoxProps["event"],
@@ -33,8 +31,8 @@ export async function declarationLine(
   const chosen = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const surface = event?.surface ? tEvent(`surface.${event.surface}`) : null;
   const registers = takesRegistrations(type);
-  // A group run ticked for a surface whose text was withdrawn, or never approved (§483): the
-  // `groupRunDeclarations` given are the versions in force — approved and not withdrawn (§393).
+  // A group run ticked for a surface whose text was withdrawn or never approved (§483);
+  // `groupRunDeclarations` holds only versions in force (§393).
   const offered = !registers && event?.offersGroupRunDeclaration === true && event.surface !== null;
   const textInForce =
     !offered || groupRunDeclarations === undefined
@@ -53,25 +51,12 @@ export async function declarationLine(
 }
 
 /**
- * «Declarația pe propria răspundere» (§448) — since §481 the third card of «Program, regulament și
- * declarație», right after «Regulamentul» (it was inside it: the owner, 2026-09-27, "Programul,
- * regulamentul și declarația la fel pe același card"), the one place in
- * the editor where an organizer chooses what a runner signs (the owner, 2026-09-26: "declarația la
- * alergările de grup ar trebui să apară sub secțiunea «Regulament»; momentan nu văd unde selectez
- * declarația"). Both declarations were elsewhere: a group run's optional self-declaration was a
- * checkbox in «Traseul» (§393), a race's was a select in «Participare și înscrieri» → «Condiții de
- * participare» (§39, §350). They moved whole — the same names, so the service reads them as before.
- *
- * **A group run** (§393): the surface it reads from «Traseul», the checkbox, and which approved
- * text is in force for that surface — or that none is, and then the public button will not show.
- * **A type that takes registrations**, registering on the site: the approved version the
- * participant signs, the newest one named; registering elsewhere or not at all, one sentence — no
- * declaration is asked. Both follow the type and mode selects live (`OnlyForType`, `OnlyForMode`):
- * hidden, never removed, as every mode-dependent field is.
- *
- * Opens itself while a saved event that registers on the site has no declaration chosen: a
- * registration is refused without one (`AGENTS.md` §10.8). For a role that may only read the
- * settings, the card is its heading and its line.
+ * «Declarația pe propria răspundere» (§448, §481): the one place an organizer chooses what a runner
+ * signs. For a group run, the optional self-declaration of its surface (§393) and which text is in
+ * force; for a site-registering event, the approved version the participant signs (§39); otherwise
+ * one sentence. Follows the type and mode selects live — hidden, never removed. Opens itself while
+ * a site-registering saved event has none chosen, since registration is refused without one
+ * (`AGENTS.md` §10.8). Settings readers see heading and line only.
  */
 export default async function DeclarationCard({
   event,
@@ -99,23 +84,20 @@ export default async function DeclarationCard({
   const needsDeclaration = line.missing;
   if (!mayEditSettings) return <Panel {...card} />;
 
-  // The newest approved version of each kind (§515): what a race of that kind signs today.
+  // The newest approved version of each kind (§515).
   const newest = RACE_DECLARATION_KEYS.map((key) => ({ key, option: declarations.find((option) => option.key === key) ?? null }));
   const kind = (key: RaceDeclarationKey) => t(`editor.declarationKinds.${key}`);
   /*
-    Where the select starts for a race with no declaration chosen (§515): the newest version in
-    force of the kind each surface reads — asphalt the road text once approved, else the trail
-    one — so the choice the organizer sees is the one the course calls for, and the save's rule
-    (an INTERNAL race names a declaration, §39) is met by default. One entry per value of the
-    surface select, blank included; the island follows the select live.
+    The select's start for a race with no declaration chosen (§515): the newest version in force of
+    the kind each surface reads (road once approved, else trail), so the §39 rule is met by
+    default. One entry per surface value, blank included; the island follows the select.
   */
   const now = new Date();
   const surfaceValues = ["", ...EVENT_SURFACES] as const;
   const preselect = Object.fromEntries(
     surfaceValues.map((surface) => [surface, preselectedRaceDeclaration(declarations, surface || null, now)?.id ?? ""]),
   );
-  // The note under the select when the kind chosen is not the one the course calls for; an
-  // unstated course has none (`declarationKindMismatch`).
+  // The note when the chosen kind is not the course's (`declarationKindMismatch`).
   const mismatch = Object.fromEntries(
     EVENT_SURFACES.map((surface) => {
       const wanted = raceDeclarationKeysFor({ surface })[0];
@@ -129,8 +111,7 @@ export default async function DeclarationCard({
   return (
     <Panel collapsible {...card} openWhen={{ attention: needsDeclaration }}>
       <Stack spacing={2}>
-        {/* A group run's optional self-declaration (§393): an island, it follows the type and the
-            surface chosen in «Traseul». On by default for trail — the mountain rescue asks for it. */}
+        {/* The group run's optional self-declaration (§393): follows type and surface; on by default for trail. */}
         <GroupRunDeclarationField
           initialType={initialType}
           initialSurface={event?.surface ?? ""}
@@ -159,8 +140,8 @@ export default async function DeclarationCard({
           }}
         />
 
-        {/* What a participant signs at confirmation (§39): a choice among approved versions, never
-            an editor (`AGENTS.md` §11.1) — only while the event registers on the site. */}
+        {/* What a participant signs (§39): a choice among approved versions, never an editor
+            (`AGENTS.md` §11.1), only while registering on the site. */}
         <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={initialType}>
           <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
             <Stack spacing={1.5}>
@@ -182,8 +163,8 @@ export default async function DeclarationCard({
                   mismatch,
                 }}
               />
-              {/* Which text each kind of race signs today (§515), and — while the club approved no
-                  road text — that a road race signs the trail one (`raceDeclarationKeysFor`). */}
+              {/* Which text each kind of race signs today (§515); with no road text approved, road
+                  races sign the trail one (`raceDeclarationKeysFor`). */}
               {declarations.length > 0 &&
                 newest.map(({ key, option }) =>
                   option ? (

@@ -5,15 +5,8 @@ import TextField from "@mui/material/TextField";
 import { useState } from "react";
 
 /**
- * The club's own line in the bib's footer, with a count of what is left (§317).
- *
- * A text box the form posts like any other — `name` is the panel's, the save reads it with the
- * rest of the design — and the one thing a Server Component cannot do for it: say "87/120" as
- * the club types. The browser's `maxLength` is the limit; the schema trims and cuts again on the
- * server, so the count is a courtesy and never the rule. The helper sentence under it is the
- * club's reminder that a bib is worn in public, and it stays visible while the count changes.
- *
- * Strings only across the boundary: the Server Component translates, this counts.
+ * The club's own line in the bib's footer, with a live "87/120" count (§317). `maxLength` is the
+ * limit in the browser; the schema trims and cuts again on the server, so the count is a courtesy.
  */
 export default function BibFooterTextField({
   name,

@@ -4,25 +4,15 @@ import type { PublishGapBox } from "./publish-check";
 import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
 
 /**
- * The event editor as the page it makes (§406; the owner, 2026-09-25: "am nevoie de mai multe
- * căsuțe la editor ca să văd exact ce flow am în pagină"): every card that writes a section of the
- * public page is headed by the section's number and whether the page shows it — "4 · Când și unde
- * — apare pe pagină", "9 · Program, regulament și declarație — gol, nu apare pe pagină" — and the
- * map under Publicare and Recurență lists the same cards as chips. Both read `cardStates`, the
- * page's order, as a list (`events/domain/page-sections.ts`) — the page is drawn by hand and
- * `tests/unit/events/page-sections.test.ts` holds the two equal — so a number on a card, a chip
- * and the page's order are one thing.
- *
- * A card that holds more than one of the page's sections (§481: the date and the place, the
- * programme and the rules; §512: the public list with them; §466: the type and the cost) is one chip and one number, drawn when
- * any section it holds is drawn.
- *
- * The card's own words stay its name — the name a refusal, a gap in Publicare and every e2e spec
- * already use (`editorBox` finds a card by it, after the number). The chips use the page's own
- * short words, because they are the page in miniature.
+ * The event editor as the page it makes (§406): each card that writes a page section is headed by
+ * the section's number and whether the page shows it, and the map lists the same cards as chips.
+ * Both read `cardStates` (`events/domain/page-sections.ts`), held equal to the hand-drawn page by
+ * `tests/unit/events/page-sections.test.ts`. A card holding several sections (§466, §481, §512)
+ * is one chip, drawn when any of them is. Cards keep their own names (refusals and e2e specs find
+ * them by it); chips use the page's short words.
  */
 
-/** The sections with a numbered card of their own: not the automatic share links, not a section asked inside another card. */
+/** Sections with a numbered card of their own: not the automatic share links, not one asked inside another card. */
 type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "rules" | "startList">;
 
 /** The box title each section's card wears (`Admin.editor.boxes.<key>.title`). */
@@ -36,12 +26,11 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   registration: "registration",
   coHosts: "coHosts",
   links: "links",
-  // «Program, regulament și declarație» (§481): the programme, the rules, the declaration and,
-  // since §512, the public list — four cards in one.
+  // «Program, regulament și declarație» (§481, §512): four cards in one.
   programme: "programmeRules",
 };
 
-/** The card whose closed line names a publication gap, by the section it writes (the address is not on the page). */
+/** The card whose closed line names a publication gap, by section (the address is not on the page). */
 const GAP_BOX: Partial<Record<PageSectionId, PublishGapBox>> = { title: "titleSummary", when: "place" };
 
 export type PageFlow = {
@@ -58,7 +47,7 @@ export type PageFlow = {
 
 export async function pageFlow(data: PageSectionData): Promise<PageFlow> {
   const t = await getTranslations("Admin");
-  // The cards, each drawn when anything it holds is (a nested section has no card of its own).
+  // Each card drawn when anything it holds is.
   const cards = cardStates(data);
   const headings = {} as Record<HeadedSectionId, string>;
   for (const section of cards) {
@@ -69,7 +58,7 @@ export async function pageFlow(data: PageSectionData): Promise<PageFlow> {
   }
   return {
     headings,
-    // A section asked inside another card (the cost §466, the place and the rules §481) has no chip: the map lists the cards.
+    // A section asked inside another card (§466, §481) has no chip of its own.
     entries: cards.map((section) => ({
       id: section.id,
       number: section.number,

@@ -34,23 +34,10 @@ import {
 } from "@/modules/events/domain/links";
 
 /**
- * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1).
- *
- * The CMS boundary is an allowlist, not a convention. Both schemas are `.strict()`, so a form
- * that posts a field nobody meant to expose — `editorial_status`, `version`, an `id` — is
- * rejected rather than silently applied. That matters more than it looks: a Server Action
- * receives whatever the browser sends, and "the form does not render that input" is not a rule
- * the server can rely on.
- *
- * One thing is deliberately absent:
- *
- *   - legal text. §11.1 puts the privacy notice, the terms and the declaration outside the
- *     CMS entirely. There is no screen for them here in any form. `declarationDocumentId`
- *     below *selects* an approved version; it cannot write a word of one.
- *
- * Capacity used to be absent too, because the database refused any value for the whole pilot
- * and a form field that always fails is worse than no field. That guard is gone
- * (`DECISIONS.md` §26), and the whole registration block is editable here now.
+ * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1). Both schemas are
+ * `.strict()`: a Server Action receives whatever the browser sends, so a field nobody meant to
+ * expose (`editorial_status`, `version`, `id`) is refused, not applied. Legal text is absent by
+ * design (§11.1): `declarationDocumentId` selects an approved version and cannot write a word.
  */
 
 /** Lowercase words joined by single hyphens: what a URL segment may be. */
@@ -66,12 +53,9 @@ const optionalText = (max: number) =>
     .nullable();
 
 /**
- * A closed set the club may also decline to answer.
- *
- * Same shape as `optionalText`: an empty string and null both mean "not stated", and anything
- * else must be one of the listed values. Deliberately not `.catch(null)` — a value outside the
- * set did not come from the dropdown that posts this field, and turning it silently into "not
- * stated" would hide that rather than refuse it.
+ * A closed set the club may decline to answer: "" and null mean "not stated", anything else must be
+ * listed. Not `.catch(null)`: a value outside the set did not come from the dropdown, and turning it
+ * into "not stated" would hide that.
  */
 const optionalEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
   z
@@ -79,10 +63,7 @@ const optionalEnum = <const T extends readonly [string, ...string[]]>(values: T)
     .nullable()
     .transform((value) => (value === "" ? null : value));
 
-/**
- * A JSON string from `RichTextEditor`, parsed against the allowlist so a bad body is a field
- * error; empty allowed. Optional in the input for callers from before it existed.
- */
+/** A `RichTextEditor` JSON string, parsed against the allowlist so a bad body is a field error; empty allowed. */
 const richTextField = z
   .string()
   .max(200_000)
@@ -104,54 +85,32 @@ export const translationFieldsSchema = z
     }),
     title: z.string().trim().min(1).max(200),
     /**
-     * The plain short description. Optional in the input like `checklist` below — the create
-     * form posts the rich summary and nothing else for it, and an absent key means "leave it as
-     * it is" on a save and "the column's default" on an insert; the form always posts it.
+     * The plain summary. The form posts only the rich `excerptBody`; absent means "leave it" on a
+     * save and the column default on an insert.
      */
     excerpt: optionalText(500).optional(),
-    /**
-     * The short description as the editor posts it (`DECISIONS.md` §73): a small rich body,
-     * pictures allowed. When present, the plain `excerpt` is derived from it on save.
-     */
+    /** The summary as the editor posts it (§73), pictures allowed; when present, `excerpt` is derived from it. */
     excerptBody: richTextField,
     /*
-      No `locationName` here any more (§362). The place's name in each language is stored on this
-      row (`event_translations.location_name`, migration `0059`) but asked in the Locul box with
-      the rest of the place — once per language, both required — and written by the event's own
-      save (`eventFieldsSchema.locationName` / `locationNameEn`), which is the Organizer's. A text
-      save posting it is refused by `.strict()`: the words' role never moves the meeting point.
+      No `locationName` here (§362): the per-language place name is asked in the Locul box and written
+      by the event's save, the Organizer's; `.strict()` refuses it from a text save.
     */
-    /**
-     * "What to bring", one line for the confirmation and the reminder (§81). Optional in the
-     * input for callers from before it existed; absent means "leave it as it is".
-     */
+    /** "What to bring", one line in the confirmation and the reminder (§81); absent means "leave it". */
     checklist: optionalText(300).optional(),
-    /**
-     * The description proper, written in the rich-text editor (AGENTS.md §11.3; `DECISIONS.md`
-     * §71: "all descriptions should be WYSIWYG"). The same contract as a standing page's body:
-     * a JSON string from `RichTextEditor`, parsed against the allowlist here so a bad body is
-     * a field error, empty allowed. Optional in the input for callers from before it existed.
-     */
+    /** The description, rich text like a standing page's body (AGENTS.md §11.3, §71); empty allowed. */
     body: richTextField,
     /** The rules, the same contract as the body (§96); empty allowed. */
     rules: richTextField,
     /** The programme — kit pickup, briefing, start, cut-offs (§96); empty allowed. */
     schedule: richTextField,
-    /**
-     * The route / training description (§387): the pit stops, the climbs, what to expect, and a
-     * map as a picture in the text. The same contract as the body; empty allowed; written in the
-     * "Traseul" card and shown under `#route` with the route's own links.
-     */
+    /** The route description (§387), shown under `#route`; the body's contract, empty allowed. */
     routeDescription: richTextField,
     // Optional in the input like `excerpt`: the form posts them, an older caller may not.
     seoTitle: optionalText(200).optional(),
     seoDescription: optionalText(320).optional(),
     /**
-     * The club's discount on an external event's own fee (`DECISIONS.md` §394): shown, and
-     * postable, only on an `EXTERNAL`-registration, `PAID` event — the box is hidden otherwise
-     * (`RegistrationBox`), and the service clears the column when the mode or cost type stops
-     * needing it, whatever this caller posted. Optional in the input like `checklist`; both
-     * languages or neither (§352, `assertOptionalTextsInBothLanguages`).
+     * The club's discount on an external event's fee (§394), meaningful only for `EXTERNAL` +
+     * `PAID`; the service clears it otherwise. Both languages or neither (§352).
      */
     discountNote: optionalText(MAX_DISCOUNT_NOTE).optional(),
   })
@@ -160,13 +119,9 @@ export const translationFieldsSchema = z
 export type TranslationFields = z.infer<typeof translationFieldsSchema>;
 
 /**
- * A whole number as typed, empty meaning "not stated".
- *
- * Not `z.number()`, because the field arrives as a string and an empty one must mean "not
- * stated" rather than 0: a distance field left blank means the club has not stated one, and
- * coercing "" to 0 would publish a race of zero kilometres. `min` is 1 rather than 0
- * for capacity — the database refuses a non-positive capacity, and "nobody may enter" is what
- * `registration_mode = NONE` says honestly.
+ * A whole number as typed, "" meaning "not stated" rather than 0 (a blank distance must not
+ * publish zero kilometres). Capacity uses `min: 1`: the database refuses non-positive capacity, and
+ * "nobody may enter" is `registration_mode = NONE`.
  */
 const optionalWholeNumber = (options: { min: number; max: number }) =>
   z
@@ -181,9 +136,8 @@ const optionalWholeNumber = (options: { min: number; max: number }) =>
       { message: `must be a whole number between ${options.min} and ${options.max}` },
     )
     .transform((value) => (value === null ? null : Number(value)))
-    // The bounds live in the refine above, where `shared/forms/constraints.ts` cannot read
-    // them; said once more here, on the schema itself, so the box carries `min`, `max` and
-    // `step` and the browser refuses "0 places" before the server does (§315).
+    // The bounds again as metadata, which `shared/forms/constraints.ts` can read, so the box
+    // carries `min`, `max` and `step` (§315).
     .meta({ html: { type: "number", min: options.min, max: options.max, step: 1 } });
 
 /** As `optionalWholeNumber`, with a default for an absent or empty value rather than null. */
@@ -205,10 +159,9 @@ const optionalUuid = z
   );
 
 /**
- * What the box for an https link carries, so the browser refuses `http://` and `www.` first (§315).
- * Case-insensitive by hand, like the server's refine (`/^https:\/\/\S+$/i`): an HTML `pattern` is
- * case-sensitive, and "HTTPS://…" must not be refused in the browser and accepted by the server —
- * the browser never refuses what the server accepts. Found by the third review.
+ * The https box's browser rule (§315). The pattern is case-insensitive by hand, like the server's
+ * `/^https:\/\/\S+$/i`, since HTML `pattern` is case-sensitive and the browser must never refuse
+ * what the server accepts.
  */
 const HTTPS_BOX = { html: { type: "url", pattern: "[Hh][Tt][Tt][Pp][Ss]://.*" } } as const;
 
@@ -223,12 +176,8 @@ const httpsUrl = (message: string) =>
     .meta(HTTPS_BOX);
 
 /**
- * An IANA zone name, checked by asking the platform rather than by carrying a list.
- *
- * `Intl.DateTimeFormat` throws `RangeError` for a name it does not know, and it is the same
- * implementation `zoned-time.ts` uses to convert the wall-clock inputs below — so a name that
- * passes here is a name the conversion can honour. A free-text timezone that Node accepts and
- * the browser does not would silently shift every time on the page.
+ * An IANA zone name, checked by `Intl.DateTimeFormat` — the implementation `zoned-time.ts` uses to
+ * convert the wall-clock inputs — so any name that passes can be honoured.
  */
 const timezone = z
   .string()
@@ -248,10 +197,8 @@ const timezone = z
   );
 
 /**
- * One programme row as the editor posts it (`DECISIONS.md` §117): a date and a 24-hour time,
- * an optional end time on the same day, the label in both languages, a place. Everything a
- * string, empty allowed here — a row left blank is dropped by the service, and a half-filled
- * one is refused there with the row's number, once the timezone is known to place it.
+ * One programme row as posted (§117): date, 24-hour time, optional end, both labels, a place. All
+ * strings, empty allowed; the service drops a blank row and refuses a half-filled one by number.
  */
 const scheduleRowSchema = z
   .object({
@@ -267,16 +214,9 @@ const scheduleRowSchema = z
 export type ScheduleRowInput = z.infer<typeof scheduleRowSchema>;
 
 /**
- * A meeting point in every language, unless the place is to be announced (§328, §362).
- *
- * On the object because it reads the switch too, and named on the empty language's box so the
- * refusal summary links to it (§47) — "Punct de întâlnire (English)". With the switch off, a blank
- * Romanian name is refused exactly as the single field used to be (`min(1)`, §36), and so is a
- * blank English one; with it on, both may be blank and whatever was typed is kept.
- *
- * `locationNameEn` absent (`undefined`) is a caller that does not edit the English name — a
- * script, a fixture from before the box — and is never a reason to refuse: only a caller that
- * *posts* the box and leaves it blank is refused, the discipline `costAmount` follows.
+ * A meeting point in every language unless the place is to be announced (§328, §362), refused on
+ * the empty language's box so the summary links to it (§47). `locationNameEn` absent means the
+ * caller does not edit the English name and is never refused.
  */
 function placeRule(
   fields: { locationName: string | null; locationNameEn?: string | null; locationToBeAnnounced: boolean },
@@ -300,12 +240,8 @@ function placeRule(
 }
 
 /**
- * What each cost kind needs, and only that (`DECISIONS.md` §343): a paid event has to say how
- * much, a donation has to say where. Named on the box the kind actually requires, so the
- * refusal summary links the right one (§315) — the same shape as `placeRule` above. Absent
- * (`undefined`) means this caller is not editing the cost fields at all, the discipline `links`
- * and `bibDesign` follow, and is never a reason to refuse: only a caller that *is* editing them
- * and left the required one blank is refused.
+ * What each cost kind needs (§343): an amount for `PAID`, a link for `DONATION`, refused on that
+ * box (§315). Absent fields mean the caller is not editing the cost and are never refused.
  */
 function costRule(
   fields: { costType?: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
@@ -320,15 +256,9 @@ function costRule(
 }
 
 /**
- * One partner's link row as the editor posts it (§344): a kind from the select, the address,
- * and a label in each language — the same four boxes `eventLinkRowSchema` carries for
- * "Linkuri și fișiere" (§332), one card of them per partner rather than one list for the event.
- * Exported so the editor reads the boxes' ceilings and the address's https pattern off it
- * (§315) rather than typing them a second time.
- *
- * The two labels are both or neither (§352): a label of the club's own in one language only is
- * refused in `coHostsField`, naming the empty one — the kind's own word stands in for the pair,
- * never for half of it.
+ * One partner's link row (§344): kind, address, and both labels — `eventLinkRowSchema`'s four
+ * boxes (§332). Exported so the editor reads its ceilings and pattern (§315). Labels are both or
+ * neither (§352), refused in `coHostsField` on the empty one.
  */
 export const coHostLinkRowSchema = z
   .object({
@@ -345,20 +275,15 @@ type CoHostLinkRowInput = z.infer<typeof coHostLinkRowSchema>;
 const isBlankCoHostLinkRow = (row: CoHostLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
 
 /**
- * One language of what the partnership is (§352): one short paragraph — every line break and run
- * of spaces collapsed to one space **before** the ceiling is counted, so a box the browser let
- * through at `maxLength` (which counts a line break as one character) is never refused by the
- * server for the two characters the same line break posts as. Empty allowed: the pair is
- * optional, and `coHostsField` refuses it only when one side is written and the other is not.
+ * One language of the partnership's description (§352): whitespace runs collapse to one space
+ * before the ceiling is counted, so a box the browser allowed at `maxLength` (a line break counts
+ * one) is never refused for the two characters it posts as. Empty allowed.
  */
 const coHostDescriptionBox = z.string().overwrite(normalizeCoHostDescription).max(MAX_CO_HOST_DESCRIPTION).optional().default("");
 
 /**
- * One partner's card as the editor posts it (§344): a name, what the partnership is in each
- * language (§352), and its links. A row with nothing typed in any of them — the editor's spare
- * card — is dropped, like a spare link row is; a name with no links and no description is kept,
- * since a partner's page is optional (§168) and always has been. Exported so the editor reads the
- * description boxes' ceiling off it (§315).
+ * One partner card (§344): a name, the description per language (§352), its links. A blank card is
+ * dropped; a name with no links or description is kept (§168). Exported for the editor's ceilings (§315).
  */
 export const coHostRowSchema = z
   .object({
@@ -375,22 +300,12 @@ const isBlankCoHostRow = (row: CoHostRowInput) =>
   row.name === "" && row.descriptionRo === "" && row.descriptionEn === "" && row.links.every(isBlankCoHostLinkRow);
 
 /**
- * The partners, as the editor posts them (§168, extended by §344 into a card of links each).
- *
- * Every refusal says which partner **and** which link, both as the editor numbered them — the
- * posted index, before the spare lines are dropped — so "Partenerul 2, linkul 3" is the second
- * card and its third link row on the screen, and the summary's link lands on that exact box
- * (`form-names.ts`). A card with a link and no name is refused rather than dropped: somebody
- * meant a partner there. A link with a label and no address is refused the same way a plain
- * event link is (§332); a kind outside the set did not come from the select and is refused,
- * never quietly turned into "other". The card's description and each link's label are both or
- * neither (§352, `refuseOneLanguage`): one language written and the other empty is refused on the
- * empty box, so "Partenerul 1 — despre parteneriat (English)" is the line that says what is owed.
- *
- * Absent means "this caller is not editing the partners" and **not** "no partners" (§169): a
- * caller from before the list existed (a script, a fixture, a test's form) posts nothing, and a
- * column nobody mentioned is a column nobody may erase. The editor always posts the cards, so
- * an empty list from it is the club having removed every partner and is written as `[]`.
+ * The partners (§168, §344). Refusals name the partner and link by the posted index, before spare
+ * lines are dropped, so the summary lands on the right box (`form-names.ts`). A card with links but
+ * no name, a link with a label but no address, or an unknown kind is refused, never dropped or
+ * coerced. Descriptions and labels are both languages or neither (§352, `refuseOneLanguage`).
+ * Absent means "not editing the partners" (§169), so an older caller never erases the column; the
+ * editor always posts, so its empty list is `[]`.
  */
 const coHostsField = z
   .array(coHostRowSchema)
@@ -462,10 +377,8 @@ const coHostsField = z
   .optional();
 
 /**
- * One link row as the editor posts it (`DECISIONS.md` §332): a kind from the select, the
- * address, and a label in each language. Every box a string, empty allowed here; the list
- * below decides what a row means. Exported so the editor reads the boxes' ceilings and the
- * address's https pattern off it (§315) rather than typing them a second time.
+ * One link row as posted (§332): kind, address, and both labels; strings, empty allowed — the
+ * list decides what a row means. Exported for the editor's ceilings and pattern (§315).
  */
 export const eventLinkRowSchema = z
   .object({
@@ -482,19 +395,9 @@ type EventLinkRowInput = z.infer<typeof eventLinkRowSchema>;
 const isBlankLinkRow = (row: EventLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
 
 /**
- * The links, as the editor posts them — "Linkuri și fișiere" (§332).
- *
- * Every refusal names the row **as the editor numbered it** — the posted index, before the
- * spare lines are dropped — so "link 2" is the second row on the screen and the summary's link
- * lands on its box (`form-names.ts`). A row with a label and no address is refused rather than
- * dropped: somebody meant a link there. A kind outside the set did not come from the select and
- * is refused, never quietly turned into "other". The two labels are both or neither (§352,
- * `refuseOneLanguage`): the kind's own word covers a row with no label of the club's, and a label
- * in one language only is refused on the empty box rather than shown on one page and not the other.
- *
- * Absent means "this caller is not editing the links" — the discipline of `coHosts` (§169) — so
- * a fixture or an older caller leaves the column as it was. The editor always posts the list;
- * an empty one is "no links".
+ * "Linkuri și fișiere" (§332). Refusals name the row by its posted index (`form-names.ts`). A row
+ * with a label but no address, or an unknown kind, is refused. Labels are both languages or neither
+ * (§352); with none, the kind's own word is shown. Absent means "not editing the links" (§169).
  */
 const eventLinksField = z
   .array(eventLinkRowSchema)
@@ -532,40 +435,27 @@ const eventLinksField = z
   .optional();
 
 /**
- * The event-level fields, as the form sends them — every column an organizer owns.
- *
- * The times arrive as wall-clock strings from `<input type="datetime-local">` — "10:00" means
- * ten o'clock in the event's own timezone, and the timezone is itself one of these fields, so
- * the conversion happens in the service where both are known rather than here.
- *
- * `mapUrl` is the meeting point on a map, pasted by the organizer, and must be https at this
- * layer and again at the database. Neither check is redundant: this one gives the organizer a
- * message, and the constraint is what holds when a value arrives from a seed or a hand-written
- * `UPDATE`.
+ * The event-level fields as the form sends them — every column an organizer owns. Times arrive as
+ * wall-clock strings in the event's zone, which is itself a field, so the service converts them.
+ * `mapUrl` is checked https here (for the message) and at the database (for seeds and hand-written
+ * `UPDATE`s).
  */
 export const eventFieldsSchema = z
   .object({
     type: z.enum(EVENT_TYPES),
-    // Optional: a meetup is run on nothing, and "" from the unselected dropdown means exactly
-    // that (`DECISIONS.md` §61).
+    // Optional: "" from the unselected dropdown means not stated (§61).
     surface: optionalEnum(EVENT_SURFACES),
     eventStatus: z.enum(["SCHEDULED", "CANCELLED", "COMPLETED"]),
     timezone,
     /**
-     * The start, as `YYYY-MM-DDTHH:mm` — or, from the editor, the date alone, `THH:mm` for an hour
-     * alone, or "" (`admin/actions.ts`). Required, and the box says so (the `html` metadata, as the
-     * meeting point's does), unless it is to be announced (§545, amending §533): with «Data se anunță
-     * mai târziu» both halves may be empty, with «Ora se anunță mai târziu» the hour. The refusal is
-     * the service's (`start.ts#resolveStart`), the one place the switches are known after the save —
-     * a caller that does not post a switch keeps the row's — and the editor drops the `required` while
-     * a switch excuses the box (`StartToBeAnnounced`).
+     * The start as `YYYY-MM-DDTHH:mm`, or from the editor the date alone, `THH:mm` alone, or ""
+     * (`admin/actions.ts`). Required unless a «… se anunță mai târziu» switch excuses it (§533,
+     * §545); the refusal is `start.ts#resolveStart`'s, where the switches are known.
      */
     startsAtWallTime: z.string().trim().meta({ html: { required: true } }),
     /**
-     * Either an end on the wall clock (the old field, still accepted) or a duration in minutes
-     * (`DECISIONS.md` §71: "instead of an end date I should just have a duration"). A week is
-     * the ceiling; a typo's extra digit is refused, a multi-day camp is not. The editor asks it as
-     * hours and minutes and the action joins them into this one number (`duration.ts`, §433).
+     * An end on the wall clock (still accepted) or a duration in minutes (§71), at most a week. The
+     * editor asks hours and minutes and joins them (`duration.ts`, §433).
      */
     endsAtWallTime: z.string().trim().optional().default(""),
     durationMinutes: z
@@ -579,98 +469,58 @@ export const eventFieldsSchema = z
       .transform((value) => (value === null ? null : Number(value)))
       .meta({ html: { type: "number", min: 1, max: 7 * 24 * 60, step: 1 } }),
     raceStartsAtWallTime: z.string().trim(),
-    /** The programme's rows (§117), at most fifty; absent for a caller from before they existed. */
+    /** The programme's rows (§117), at most fifty. */
     scheduleRows: z.array(scheduleRowSchema).max(50).optional().default([]),
 
     /**
-     * The four facts that are the same event in either language (`DECISIONS.md` §36).
-     *
-     * The meeting point is required, even though the column accepts null: the column has to
-     * tolerate rows written before it existed, and a public event page without a meeting point
-     * is missing the one fact a runner actually needs — **unless the place is to be announced**
-     * (`locationToBeAnnounced` below, §328), when blank is the honest answer and whatever was
-     * typed is kept without being shown.
-     *
-     * So the refusal is the object's (`placeRule`, at the foot of this schema), which is the one
-     * place both fields are known; the box still declares itself required, through the `html`
-     * metadata a rule the walker cannot see uses (`shared/forms/constraints.ts`), and the editor
-     * drops that `required` while the switch is on (`PlaceToBeAnnounced`). One rule, read in both
-     * places: the browser refuses a blank place exactly when the server would.
-     *
-     * **One name per language (§362).** This is the Romanian box of "Punct de întâlnire", and it is
-     * also the event's own meeting point: the save writes it to `events.location_name` — which
-     * the desk, the backoffice and every reader without a language at hand read — and to the
-     * Romanian translation's `location_name`.
+     * The Romanian "Punct de întâlnire" (§36, §362), also written to `events.location_name` for
+     * readers without a language. Required unless the place is to be announced (§328): the refusal
+     * is `placeRule`'s, and the `html` metadata lets the box declare `required`, which
+     * `PlaceToBeAnnounced` lifts while the switch is on.
      */
     locationName: optionalText(200).meta({ html: { required: true } }),
     /**
-     * The English box of "Punct de întâlnire" (§362): written to the English translation's
-     * `location_name`, always — even when it says what the Romanian says — so the English pages
-     * never borrow the Romanian words. Required like the Romanian one (`placeRule`). Optional in
-     * the input: absent means "this caller is not editing the English name", and the stored one
-     * is left as it is; the editor always posts it.
+     * The English "Punct de întâlnire" (§362), always written to the English translation so English
+     * pages never borrow Romanian words. Required like the Romanian one; absent means "not editing".
      */
     locationNameEn: optionalText(200).optional().meta({ html: { required: true } }),
     locationAddress: optionalText(300),
-    /**
-     * "Locația se anunță mai târziu" (§328): the place is not announced yet. A switch, so absent
-     * — an older caller, a fixture — is "announced", like `isSpecial`: every row before it was.
-     */
+    /** "Locația se anunță mai târziu" (§328); absent (an older caller) means announced. */
     locationToBeAnnounced: z.boolean().optional().default(false),
     /**
-     * «Data se anunță mai târziu» (§533): the date is not announced yet. Absent means "this caller
-     * is not editing it" (the §451 discipline): a form without the box must never announce a date
-     * the organizer holds back, nor hold back one they announced.
+     * «Data se anunță mai târziu» (§533). Absent means "not editing it" (§451), so a form without
+     * the box never announces a held-back date or holds back an announced one.
      */
     dateToBeAnnounced: z.boolean().optional(),
-    /** «Ora se anunță mai târziu» (§533): the day is announced, its time not yet. The same discipline. */
+    /** «Ora se anunță mai târziu» (§533): the day is announced, the time not yet. Same discipline. */
     timeToBeAnnounced: z.boolean().optional(),
-    /**
-     * Closed sets since migration `0018`, and optional because "the club has not said" is a
-     * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
-     */
+    /** Closed sets (migration `0018`); "" from an unselected dropdown is "not stated", not an error. */
     difficulty: optionalEnum(DIFFICULTY_BANDS),
     /**
-     * The step inside the band (§526) — the editor's second control, «Treapta» (1 · 2 · 3): 1 the
-     * easiest of the band, 3 the hardest. With the band it is the event's level on the club's scale
-     * of fifteen (`difficultyLevel`), which the save writes. `""`, null or absent — a caller from
-     * before the steps, a fixture — is the band's middle; a step with no band is read by nobody. A
-     * value outside 1 … 3 did not come from the three choices and is refused, like a band outside
-     * the five.
+     * «Treapta» within the band (§526), 1 easiest to 3 hardest; with the band, the level of fifteen
+     * the save writes (`difficultyLevel`). "", null or absent is the band's middle; outside 1…3 is
+     * refused.
      */
     difficultyStep: z
       .union([z.literal(""), z.coerce.number().int().min(1).max(DIFFICULTY_STEPS.length)])
       .nullable()
       .optional()
       .transform((value): DifficultyStep => (value === "" || value === null || value === undefined ? DEFAULT_DIFFICULTY_STEP : (value as DifficultyStep))),
-    // §398 — optional, like `costAmount`/`costUrl` below: absent means this caller is not
-    // editing the cost fields at all, not "clear it". The service defaults an *absent* value to
-    // `FREE` only on create (`eventColumnsFrom`, the owner: "by default toate evenimentele sunt
-    // gratuite"); a save that omits it leaves the stored value untouched, the same discipline
-    // `links` and `bibDesign` follow. A caller that posts `""` (the closed box's own default,
-    // or a dropdown reset to "not stated") still writes `null`, on create and on edit alike.
+    // §398: absent means "not editing the cost", not "clear it". The service defaults an absent
+    // value to `FREE` only on create (`eventColumnsFrom`); a posted "" writes `null`.
     costType: optionalEnum(EVENT_COST_TYPES).optional(),
     /**
-     * What a paid event costs, or what a donation suggests (§343): free text, at most 60
-     * characters, required by `costRule` below when `costType` is `PAID`. Optional in the input
-     * — absent means this caller is not editing the cost fields, the discipline `links` and
-     * `bibDesign` follow — but the editor always posts it, so a blank box while `PAID` is chosen
-     * is refused there, not silently accepted.
+     * A paid event's price or a donation's suggested sum (§343), required by `costRule` for `PAID`.
+     * Absent means "not editing"; the editor always posts it.
      */
     costAmount: optionalText(MAX_EVENT_COST_AMOUNT).optional(),
-    /**
-     * Where a paid event is settled, or where a donation is made (§343): https, like every other
-     * pasted link. Required by `costRule` below when `costType` is `DONATION`; optional on
-     * `PAID`. Same absent-means-not-editing discipline as `costAmount`.
-     */
+    /** Where a paid event is settled or a donation made (§343), https; required by `costRule` for `DONATION`. */
     costUrl: httpsUrl("a cost link must start with https://").optional(),
     mapUrl: httpsUrl("a map link must start with https://"),
     /**
-     * «Coordonate» (§416, amending §402): the meeting point as "latitude, longitude", read for the
-     * weather only when the map link carries no pin of its own (`weather/domain/place.ts`). Absent
-     * means this caller is not editing it — a fixture, a script, an older form — and leaves the
-     * stored pair alone, the discipline `costAmount` and `links` follow; `""` clears it; anything
-     * else must be two numbers in range, or the save is refused naming the box.
+     * «Coordonate» (§416): "latitude, longitude", read for the weather only when the map link has no
+     * pin (`weather/domain/place.ts`). Absent keeps the stored pair; "" clears it; otherwise two
+     * in-range numbers or a refusal.
      */
     coordinates: z
       .string()
@@ -686,11 +536,9 @@ export const eventFieldsSchema = z
         }
         return pair;
       }),
-    // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
-    // and never a file: media storage is deferred (`AGENTS.md` §17).
+    // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link, never
+    // a file (`AGENTS.md` §17).
     routeUrl: httpsUrl("a route link must start with https://"),
-    // A film of the event (criterion 9): a YouTube link, or nothing. Checked for a video id
-    // here so the page never meets a link it cannot embed.
     // The club's Strava group event for this occurrence (criterion 10): a Strava page, or nothing.
     stravaEventUrl: z
       .string()
@@ -713,59 +561,40 @@ export const eventFieldsSchema = z
         message: "a Facebook event link must be an https page on facebook.com",
       })
       .meta(HTTPS_BOX),
-    // The organizations the event is held with, each a card of its own links (§168, §344) —
-    // what `coHostsField` above decides, name and all.
+    // The partners, each a card of links (§168, §344).
     coHosts: coHostsField,
     /**
-     * "Linkuri și fișiere" (§332): the GPX on Google Drive, a PDF, the album, the results — at
-     * most twelve, each https, each row's labels optional — both languages or neither (§352). Not
-     * part of what publication requires (§28): no label is the kind's own word in the reader's
-     * language.
+     * "Linkuri și fișiere" (§332): at most twelve https links, labels both languages or neither
+     * (§352). Not required to publish (§28).
      */
     links: eventLinksField,
-    /*
-      No `videoUrl` (§481): a film is a figure in the description (§266), where migration `0092`
-      moved every stored link; the column leaves the database in BR-V2.11's contract migration
-      (§491, AGENTS.md §7.6); no form posts one, and `.strict()` refuses a caller that does.
-    */
+    /* No `videoUrl` (§481, §491): films live in the description; `.strict()` refuses one. */
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
-    /**
-     * "Eveniment de noapte" (§394, replacing §382's checkbox): the organizer's override — true
-     * "Da", false "Nu", null "Automat" (after sunset, `events/domain/night.ts`). Optional for a
-     * caller from before it existed, which means automatic.
-     */
+    /** "Eveniment de noapte" (§394): true "Da", false "Nu", null "Automat" (`events/domain/night.ts`). */
     nightOverride: z.boolean().nullable().optional().default(null),
     /**
-     * "Declarație opțională pe propria răspundere" (§393): the group run's self-declaration, a
-     * checkbox in "Traseul". Optional for a caller from before it existed, which means none offered;
-     * the service keeps it only on a group run on asphalt or trail (`groupRunDeclarationKeyFor`).
+     * The group run's optional self-declaration (§393); absent means none. The service keeps it only
+     * on a group run on asphalt or trail (`groupRunDeclarationKeyFor`).
      */
     offersGroupRunDeclaration: z.boolean().optional().default(false),
     featured: z.boolean(),
-    /**
-     * A special edition (§168): any number of events may carry it, so there is nothing to
-     * clear and no index to collide with. Optional for a caller from before it existed, which
-     * means an ordinary event.
-     */
+    /** A special edition (§168): any number may carry it. Absent means an ordinary event. */
     isSpecial: z.boolean().optional().default(false),
 
-    // The registration block. The database refuses the combinations this does not: capacity and
-    // a declaration only on an INTERNAL event, the external fields only on an EXTERNAL one.
+    // The database also refuses what this does not: capacity and a declaration only on INTERNAL,
+    // the external fields only on EXTERNAL.
     registrationMode: z.enum(["NONE", "INTERNAL", "EXTERNAL"]),
     capacity: optionalWholeNumber({ min: 1, max: 100_000 }),
     /**
-     * How long the waiting list may grow (§348): empty is no limit, zero is no waiting list at
-     * all, and the bounds are the database's CHECK said again so the box carries `min` (§315).
-     * Optional, and absent means "this caller is not editing it" — the service writes nothing
-     * then, so a save from anything that does not post the box keeps the limit the organizer set.
+     * The waiting list's cap (§348): empty is no limit, 0 is no waiting list; the bounds repeat the
+     * database's CHECK (§315). Absent means "not editing", so the service keeps the stored limit.
      */
     waitlistCapacity: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
     /**
-     * The race's own band (§173): where its numbers start, and the colour the sheet prints
-     * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
-     * blue, and a volunteer sorting envelopes can tell them apart across a table.
+     * The race's band (§173): where its numbers start and the colour behind them, so envelopes for
+     * different distances are told apart at a glance.
      */
     bibStartNumber: wholeNumberWithDefault(1, { min: 1, max: 99_000 }),
     bibColour: z
@@ -775,57 +604,36 @@ export const eventFieldsSchema = z
       .optional()
       .transform((value) => (value ? value.toLowerCase() : null)),
     /**
-     * The rest of the bib's design (§249): what is printed, the number's size, where the name
-     * sits, the two pictures, the cut marks.
-     *
-     * **Optional, and absent means "this caller is not editing the design"** — the same
-     * discipline the partners' rows follow. The create form does not render the panel, and a
-     * missing key there must leave an event on the platform's design rather than writing every
-     * switch off.
+     * The rest of the bib design (§249). Absent means "not editing the design", so a form without the
+     * panel (the create form) never writes every switch off.
      */
     bibDesign: bibDesignSchema.optional(),
     /**
-     * The participation window (§104), in days before the start: when the confirmation is
-     * asked and when it is owed. Absent (an older form, a test fixture) means the defaults; an
-     * empty box means the default too. Zero "opens" switches the window off.
+     * The participation window (§104), in days before the start: when confirmation is asked and when
+     * it is due. Absent or empty means the default; opens = 0 switches the window off.
      */
     confirmationOpensDaysBefore: wholeNumberWithDefault(7, { min: 0, max: 60 }),
     confirmationDeadlineDaysBefore: wholeNumberWithDefault(2, { min: 0, max: 60 }),
     /**
-     * The youngest a participant may be on the day of the event, in years (§329, amending §321:
-     * "actually this min age must be set at event level!"). Absent or empty means the club's
-     * fourteen, which is also the column's default. Never under fourteen (§515: "aplicația nu
-     * permite un concurs cu minimumAge sub 14") — the "zero means no minimum" of §329 is refused
-     * at the box; the database's CHECK still reads 0 to 99, since tightening it is a contract step,
-     * and an older row under fourteen is read as fourteen (`effectiveMinimumAge`). The box carries
-     * the bounds (§315).
+     * The minimum age on the event day, in years (§329); absent or empty is fourteen. Never under
+     * fourteen (§515); the database CHECK still allows 0–99 (tightening it is a contract step), and
+     * an older lower row reads as fourteen (`effectiveMinimumAge`).
      */
     minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: MIN_PARTICIPANT_AGE, max: 99 }),
     /**
-     * How many hours before the start this event's reminder goes (§81, §377): empty is "as usual"
-     * — the club's number from "Termene", stored as null — zero is no reminder, anything else this
-     * event's own, within the column's CHECK. The editor offers four choices (24, 48, 72, none)
-     * beside "as usual"; any whole number in the bounds is accepted, so a value a script stored is
-     * kept by a save rather than refused. Optional, and absent means "this caller is not editing
-     * it": the service then writes nothing, the discipline `waitlistCapacity` follows.
+     * Hours before the start the reminder goes (§81, §377): empty is "as usual" (the club's
+     * «Termene», stored null), 0 is none. Any in-bounds number is accepted, so a scripted value
+     * survives a save. Absent means "not editing".
      */
     reminderHoursBefore: optionalWholeNumber({ min: 0, max: EVENT_REMINDER_MAX_HOURS }).optional(),
     registrationOpensAtWallTime: z.string().trim(),
-    /**
-     * «Înscrierile se deschid în curând» (§451): the event is announced, the opening is not dated.
-     * Optional, and absent means "this caller is not editing it" — the service then writes nothing,
-     * the discipline `waitlistCapacity` follows, so no older caller opens a door held shut.
-     */
+    /** «Înscrierile se deschid în curând» (§451). Absent means "not editing", so no older caller opens a door held shut. */
     registrationOpensSoon: z.boolean().optional(),
     registrationClosesAtWallTime: z.string().trim(),
     declarationDocumentId: optionalUuid,
     /**
-     * Whether the event page publishes who is coming (BR-REQ-039-01).
-     *
-     * In the allowlist deliberately: it is an organizer's decision about the club's own event,
-     * and the alternative — a developer setting a column — is exactly what `DECISIONS.md` §28
-     * removed. The service refuses `NAMES` on anything but an INTERNAL event, and so does the
-     * database.
+     * Whether the page publishes who is coming (BR-REQ-039-01) — an organizer's decision (§28). The
+     * service and the database refuse `NAMES` on anything but an INTERNAL event.
      */
     participantListVisibility: z.enum(["HIDDEN", "NAMES"]),
     externalProvider: optionalText(120),
@@ -838,18 +646,9 @@ export const eventFieldsSchema = z
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 
 /**
- * What a new event needs before it exists: its own fields, and both languages.
- *
- * Both locales from the start, rather than "Romanian now, English later". Publication requires
- * a complete translation in every locale (`service.ts#assertReadyToPublish`), and an event that
- * cannot be created without one row per locale is an event whose second language is a fill-in
- * rather than an afterthought that never happens.
- *
- * Each language is the **whole** `translationFieldsSchema`, not a title-slug-excerpt pick: the
- * create form renders the editor's own language panel (the rich summary, the description, the
- * rules, the folds), so what it posts is what a save posts, and the service writes it through
- * the same function. A caller that still sends only the three (a script, an older test) parses
- * all the same — every other field is optional in the input.
+ * A new event: its fields and both languages from the start, since publication needs every locale
+ * (`service.ts#assertReadyToPublish`). Each language is the whole `translationFieldsSchema`, as the
+ * create form posts what a save posts; older callers sending only title, slug and excerpt still parse.
  */
 export const newEventSchema = eventFieldsSchema.extend({
   translations: z.object({ ro: translationFieldsSchema, en: translationFieldsSchema }),
@@ -858,17 +657,9 @@ export const newEventSchema = eventFieldsSchema.extend({
 export type NewEventInput = z.infer<typeof newEventSchema>;
 
 /**
- * The fields a public page shows in every language, and therefore what "complete" means.
- *
- * Deliberately short. A missing address, difficulty, cost or SEO override is a fact the club has
- * not stated, and requiring one would push an organizer into inventing it — AGENTS.md §1.2. A
- * missing title, slug or description is a page that reads as half-translated in one of the two
- * languages, which is precisely what publishing both together is for.
- *
- * The meeting point left this list when it left the table (`DECISIONS.md` §36). It has a name
- * per language again since §362, but it is asked in the Locul box with the event's own fields and
- * excused by the event's own switch (§328), so `service.ts#missingPublicEventFields` is where
- * "is there a place in every language" is asked.
+ * What "complete" means per language. Deliberately short: requiring unstated facts would push an
+ * organizer into inventing them (AGENTS.md §1.2). The per-language meeting point is checked by
+ * `service.ts#missingPublicEventFields`, where its switch is known (§36, §328, §362).
  */
 export const REQUIRED_PUBLIC_TRANSLATION_FIELDS = ["title", "slug", "excerpt"] as const;
 

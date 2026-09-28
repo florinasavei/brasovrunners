@@ -10,26 +10,11 @@ import {
 } from "@/modules/staff-identity/domain/roles";
 
 /**
- * Which verbs the backoffice's events list offers a role (BR-REQ-060-01, §542) — the pattern of
- * `pageListVerbs`: each verb asks the gate its service asserts, so the list offers only what the
- * server would accept, and the server still asserts it on every press.
- *
- * - `create`: «Eveniment nou» (`canCreateEvent`, asserted by `createEvent`).
- * - `edit`: the row's pencil «Editează» for a role that writes something of the event — its
- *   settings (`canEditEventFields`) or its words (`canEditTexts`); every other reader gets
- *   «Deschide», the eye, to the same editor in its read-only view (§542).
- * - `select`: the row's tick and the bulk bar — publish, archive, delete ticked events.
- * - `duplicate`: «Duplică» in the ⋮ (`duplicateEvent` asserts `canCreateEvent`).
- * - `remove` / `hardDelete`: «Șterge» and the erase screen, as `deleteEvent` and
- *   `hardDeleteEvent` assert them.
- * - `publish`: «Publică» on a series' draft line (`publishEvent`, `canTransitionEvent`).
- * - `switchSeries`: «Publică automat de acum» (`setRepeatPublish`: `canCreateEvent`, and publishing
- *   when switching it on).
- * - `readRegistrations`: the ⋮'s «Înscrieri» and «Fișă de urgență» links — reads, the Organizer's
- *   since §289.
- *
- * The Organizer, since §542: `readRegistrations` and nothing else — the list, the preview, the
- * registrations and the emergency sheet, and no verb that changes an event.
+ * Which verbs the backoffice events list offers a role (BR-REQ-060-01, §542). Each verb asks the
+ * gate its service asserts, so the list offers only what the server would accept; the server
+ * still asserts it on every press. `edit` is the pencil for a role that writes the settings or
+ * the words; everyone else gets «Deschide», the read-only editor. The Organizer gets
+ * `readRegistrations` only (§289, §542).
  */
 export type EventListVerbs = {
   create: boolean;

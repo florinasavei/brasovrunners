@@ -4,16 +4,11 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
 /**
- * The one page the create form and the editor share (§350): a main column of boxes — the page's
- * sections in the page's order, then the ones that are not on the page (§406) — and a narrow side
- * column — Publicare, Recurență and the page's map — that comes **first on a phone** (it is what you came to check, and forty fields above it are a scroll nobody makes) and
- * stays pinned on the right from `md` up.
- *
- * The two columns are siblings, never nested, on the editor: the save is one `<form>` and every
- * publication and recurrence verb is a form of its own, and a form inside a form is not a thing
- * HTML has. On the create page the whole grid sits inside the create form, because nothing else
- * posts there. `below` holds what is operations, not settings — the registrations received and
- * the copy and delete verbs — under the grid, full width.
+ * The page the create form and the editor share (§350, §406): a main column of cards in the
+ * public page's order, and a side column (Publicare, Recurență, the map) first on a phone and
+ * pinned right from `md`. On the editor the columns are siblings, never nested: the save and
+ * every verb are separate forms, and HTML has no nested forms. `below` holds operations, full
+ * width.
  */
 export default function EventEditorLayout({ side, main, below }: { side: ReactNode; main: ReactNode; below?: ReactNode }) {
   return (
@@ -38,11 +33,8 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
 }
 
 /**
- * A group's plain overline — "Pagina evenimentului, de sus în jos" over the cards in the page's
- * order, "Nu sunt secțiuni ale paginii" over the rest (§406; it was three groups by subject,
- * §350, §358) — two of the three under it (the special-edition chip, a cancelled or finished
- * notice) still draw on the page, just never as a numbered section of it —
- * not a box: it says what the boxes under it are about.
+ * A group's plain overline (§406) — "Pagina evenimentului, de sus în jos" or "Nu sunt secțiuni
+ * ale paginii" — not a box: it says what the cards under it are.
  */
 export function EditorGroup({ label }: { label: string }) {
   return (
@@ -53,9 +45,8 @@ export function EditorGroup({ label }: { label: string }) {
 }
 
 /**
- * Where the page draws a section nobody writes (§406): the share links, after the partners — named
- * in its place among the cards, a dashed line and not a card, so the column reads as the page does
- * from top to bottom and nobody looks for a box that cannot exist.
+ * A page section nobody writes (the share links, §406), named in its place as a dashed line so
+ * the column reads like the page and nobody looks for a missing card.
  */
 export function AutomaticSection({ children, testId }: { children: string; testId?: string }) {
   return (

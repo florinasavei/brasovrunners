@@ -5,26 +5,13 @@ import { countForm } from "@/i18n/count-form";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Hint from "@/shared/ui/Hint";
 
-/**
- * The boxes a change in which reaches the people registered — the ones that wear the amber outline
- * (`Panel`'s `risk` tone, §350), in the order the editor draws them. Their own titles, so the
- * tooltip names them the way their headings do.
- */
+/** The boxes whose changes reach the registered — the amber-outlined ones (§350), in editor order. */
 export const MARKED_BOXES = ["when", "place", "registration", "programme", "status"] as const;
 
 /**
- * "3 înscriși · o schimbare în cardurile cu margine portocalie ajunge la ei" — the registrants'
- * count, said once on the editor (§408; the owner, 2026-09-25: "informația «3 înscriși» se repetă
- * de prea multe ori pe fiecare card"). It stood as a chip on each of the five boxes a change
- * reaches (§350, §358); those boxes keep their amber outline — the mark — and this line, under the
- * page map, is the number. Its "?" names the marked cards; its button opens the registrations list
- * for this event, for a role that may read it (the list asserts that on the server too).
- *
- * The count is the one the chips used: the real registrations, every state — a test row is counted
- * nowhere the club looks (`AGENTS.md` §12.6, §30). None registered, no line, as no outline.
- *
- * A Server Component: the tooltip and the button are the backoffice's islands, handed strings and a
- * glyph's name only.
+ * "3 înscriși · …" — the registrants' count, said once under the page map (§408) rather than on
+ * each amber-outlined card. Real registrations only, every state; test rows are counted nowhere
+ * the club looks (`AGENTS.md` §12.6, §30). None registered, no line.
  */
 export default async function RegisteredLine({ count, locale, registrationsHref }: { count: number; locale: string; registrationsHref: string | null }) {
   if (count <= 0) return null;

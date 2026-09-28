@@ -7,9 +7,8 @@ import { promotionSummary } from "../box-summaries";
 import { BoxNote, type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 13, "Evidențiere pe site" (§350): the two marks that make an event stand out — the site's
- * lead event, one at a time, and a special edition (§168), any number of them, on one date of a
- * series too.
+ * "Evidențiere pe site" (§350): the site's lead event (one at a time) and a special edition
+ * (§168, any number, a series' single date too).
  */
 export default async function PromotionBox({ event, mayEditSettings }: BoxProps) {
   const t = await getTranslations("Admin");

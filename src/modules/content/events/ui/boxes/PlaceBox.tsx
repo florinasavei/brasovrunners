@@ -11,44 +11,27 @@ import PlaceToBeAnnounced from "../PlaceToBeAnnounced";
 import { type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 
 /**
- * The place's part of «Când și unde» (§481, which folded §350's box 5 «Locul» into the date's
- * card; the owner, 2026-09-27: "date and location can be on the same card"): whether the place is
- * announced at all (§328), then the meeting point once per language — "Punct de întâlnire", Română
- * and English side by side (§362; the owner, of the shared field and the per-language name that
- * used to be asked one under the other: "There is some redundance on this meeting spot location")
- * — then the map link, one box, because a link has no language, and the coordinates (§416).
- *
- * Each box opens with what that language's page shows today (`placeInBox`): the language's own
- * name, else the event's meeting point, the street address of an older event folded in. So an event
- * saved before §362 opens with the same words on both sides, and one save stores them on both
- * rows — while the two agree, the English box follows what is typed in the Romanian one, so moving
- * the place moves it in both (found by review; `PlaceToBeAnnounced`). The Romanian box is also the
- * event's own meeting point (`events.location_name`).
- *
- * While the place is to be announced, **everything below the switch hides** (the owner,
- * 2026-09-24: "if the location is announced later, we should hide these fields"): hidden, never
- * removed, so a venue typed before the switch went on is still posted, still saved, never
- * published, and back the moment the switch goes off.
- *
- * The whole part is the Organizer's and up — the place is a setting of the event, in both languages
- * (§207: "Organizatorul organizează"); a reader who may not change it reads it as text, and the
- * card says once that the settings are not theirs.
+ * The place part of «Când și unde» (§481): whether the place is announced (§328), the meeting
+ * point per language side by side (§362), the map link (one box, a link has no language) and the
+ * coordinates (§416). Each language's box opens with what its page shows (`placeInBox`); while
+ * the two agree the English follows the Romanian (`PlaceToBeAnnounced`). The Romanian box is
+ * `events.location_name`. While the place is to be announced everything below the switch is
+ * hidden, never removed, so it is still saved but never published. A settings reader sees text.
  */
 export default async function PlaceFields({ event, mayEditSettings, languages }: Pick<BoxProps, "event" | "mayEditSettings"> & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
   const { words } = await summaryWords();
   const translations = languages.map((entry) => entry.translation);
-  // «Coordonate» (§416): the stored pair as the box shows it, and — for a saved event — which place
-  // the weather reads now, by the one rule the page reads it by (`forecastPlace`): the map link's
-  // pin, else this pair, else the club's place. Said as it was saved; a change shows after a save.
+  // «Coordonate» (§416): the stored pair, and for a saved event which place the weather reads now
+  // (`forecastPlace`: the map pin, else this pair, else the club's), as saved.
   const typed = event ? typedCoordinates(event) : null;
   const weatherPlace = event ? forecastPlace({ ...event, locationToBeAnnounced: false }, env.CLUB_COORDINATES) : null;
 
   if (!mayEditSettings) return <Typography variant="body2">{placeSummary(words, event, translations)}</Typography>;
   return (
-    /* The switch and the two names are the island; their constraints are read here, off the
-       schema, and handed to it as data — it only takes `required` away while the switch is on. */
+    /* The switch and the two names are the island; constraints come from the schema as data, and
+       the island only lifts `required` while the switch is on. */
     <PlaceToBeAnnounced
       defaultChecked={event?.locationToBeAnnounced ?? false}
       labels={{
@@ -76,8 +59,7 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
         defaultValue={event?.mapUrl ?? ""}
         {...textFieldConstraints(eventInputConstraints("mapUrl"), { inputMode: "url" })}
       />
-      {/* Where the weather is read when the link carries no pin (§416, amending §402): a short
-          share link or a venue's page names no place a server can read without asking the map. */}
+      {/* Where the weather is read when the link carries no readable pin (§416). */}
       <RecallField
         name="event.coordinates"
         label={t("editor.coordinates")}

@@ -26,36 +26,30 @@ const NO_GAPS: readonly PublishGap[] = [];
 /** How `usePublishGaps` starts and where it reads (§406). */
 export type PublishGapsOptions = {
   /**
-   * The server's answer for the first paint: the saved event on the editor, the blank form on the
-   * create page — the same function over the same values, so nothing moves when the script
-   * arrives. Nothing, for a list that may start empty.
+   * The server's answer for the first paint, from the same function over the same values, so
+   * nothing moves when the script arrives.
    */
   initial?: readonly PublishGap[];
   /** The form to read, by id, for an island that sits outside it (the editor's map, §406). */
   formId?: string;
   /**
-   * The saved value of each box the check reads, for a box the form does not draw: a language the
-   * reader may not write, the place for a role that may not change the settings. Absent from the
-   * form is not blank — it is what is stored (`storedPublishReader`).
+   * Stored values for boxes the form does not draw (a language the reader may not write, the place
+   * for a settings reader): absent from the form is not blank (`storedPublishReader`).
    */
   stored?: Readonly<Record<string, string>>;
 };
 
-/** A box's value as the check reads it: what the form posts, or what is stored when the form has no such box. */
+/** A box's value: what the form posts, else what is stored when the form lacks the box. */
 function readBox(form: HTMLFormElement, data: FormData, name: string, stored: Readonly<Record<string, string>> | undefined): string {
   if (stored && form.elements.namedItem(name) === null) return stored[name] ?? "";
   return String(data.get(name) ?? "");
 }
 
 /**
- * The publication gaps of the form an element sits in, re-read as the form is typed into (§350).
- *
- * The rich-text fields announce their hidden value with a bubbling `input`, and the "to be
- * announced" switch re-sends `change` once its box has lost `required`, so listening on the form
- * is enough; the measure waits because the editor writes after the keystroke it answers — and it
- * waits for the frame, once for a burst of keystrokes (§371), because it reads the whole form
- * and a keystroke is owed its letter first. The list is replaced only when it changed, so a
- * keystroke that closes no gap re-renders nothing.
+ * The publication gaps of the form an element sits in, re-read as it is typed (§350). Rich texts
+ * announce their value with a bubbling `input` and the "to be announced" switch re-sends `change`,
+ * so one listener on the form suffices. Measured after the frame, once per burst (§371); the list
+ * is replaced only when it changed.
  */
 export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: readonly string[], options: PublishGapsOptions = {}): PublishGap[] {
   const { initial = NO_GAPS, formId, stored } = options;
@@ -88,9 +82,8 @@ function sameNames(a: readonly { name: string }[], b: readonly { name: string }[
 }
 
 /**
- * The long texts of the form an element sits in whose English says the Romanian word for word
- * (§354, bilingual everywhere), re-read as the form is typed into — `usePublishGaps`'s twin for
- * the one check that warns rather than refuses.
+ * Long texts whose English repeats the Romanian word for word (§354), re-read as typed —
+ * `usePublishGaps`'s twin for the one check that warns rather than refuses.
  */
 function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: readonly string[], on: boolean): IdenticalText[] {
   const [found, setFound] = useState<IdenticalText[]>([]);
@@ -102,7 +95,7 @@ function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: reado
       const next = identicalTexts((name) => String(data.get(name) ?? ""), locales);
       setFound((current) => (sameNames(current, next) ? current : next));
     };
-    // After the frame, once for a burst, and a new list only when it changed — as the gaps (§371).
+    // As the gaps (§371).
     const scheduler = paintedScheduler(measure);
     measure();
     form.addEventListener("input", scheduler.schedule);
@@ -117,10 +110,8 @@ function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: reado
 }
 
 /**
- * The texts that say the same words in both languages, under the Publicare box's gaps (§354):
- * amber, each a link to the English box like a gap's line, and said not to block publication —
- * a short text may honestly be the same. The editor renders the same list from what is stored;
- * the create page's is this one, live.
+ * Texts identical in both languages under the Publicare gaps (§354): amber links to the English
+ * box, not blocking publication (a short text may honestly match).
  */
 export function IdenticalTextsList({ items, labels, title }: { items: readonly IdenticalText[]; labels: IdenticalLabels; title: string }) {
   if (items.length === 0) return null;
@@ -141,11 +132,9 @@ export function IdenticalTextsList({ items, labels, title }: { items: readonly I
 }
 
 /**
- * "Ce lipsește pentru publicare", on the create page's Publicare box (§350): one line per gap,
- * named by the box and the tab that hold it ("Titlu și rezumat › English › Rezumat"), each a link
- * that opens every fold around the box and brings its tab forward before the browser scrolls to
- * it. The same check "Creează și publică" runs (`missingForPublish`), so the list and the button
- * never disagree. Nothing when nothing is missing.
+ * "Ce lipsește pentru publicare" on the create page's Publicare box (§350): one line per gap,
+ * each a link that opens the folds and tab around its box. The same `missingForPublish` as
+ * "Creează și publică". Nothing when nothing is missing.
  */
 export function MissingForPublishList({
   locales,
@@ -197,10 +186,7 @@ export function MissingForPublishList({
   );
 }
 
-/**
- * One line of the editor's server-computed "Ce lipsește pentru publicare" (§350): a link to the
- * box it names that opens every fold around it and brings its tab forward first.
- */
+/** One line of the editor's server-computed gap list (§350): a link that opens the folds and tab around the box. */
 export function RevealLink({ name, children }: { name: string; children: string }) {
   return (
     <Link

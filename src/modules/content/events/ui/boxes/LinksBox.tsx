@@ -12,16 +12,10 @@ import LinkRowsEditor from "../LinkRowsEditor";
 import { type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * "Linkuri și fișiere" (§332, §350, §358, §406): its own card, at the place the page draws its
- * section, `#links` — after the share links, before the programme (§406; it was card 1.3 inside
- * "Ce fel de eveniment", and moved whole). The GPX on Google Drive, the map on a platform, a PDF,
- * the album, the results, and the Strava and Facebook events, which the page draws in the route's
- * row; with a route description, the GPX and the map go to `#route` (§387).
- * Links, never an upload (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
- * side in the row, never in tabs: a label belongs to its one row.
- *
- * For a role that may only read the settings, the card is its heading and its line and nothing to
- * open: the type's box says that the settings are not theirs (§358).
+ * "Linkuri și fișiere" (§332, §406): its own card where the page draws `#links`. Links, never an
+ * upload (`AGENTS.md` §17); with a route description the GPX and the map go to `#route` (§387).
+ * Each row keeps its RO and EN labels side by side, not in tabs. Read-only roles see the heading
+ * and line only (§358).
  */
 export default async function LinksBox({ event, mayEditSettings, locale, heading }: BoxProps & { locale: string }) {
   const t = await getTranslations("Admin");

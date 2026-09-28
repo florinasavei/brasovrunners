@@ -4,21 +4,12 @@ import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
 
 /**
- * What publication would refuse, read off a form as it stands (§315, §350) — the same rule the
- * server applies (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): a title and
- * a summary in every language, the meeting point in every language unless the place is to be
- * announced (§328, §362), and a page address in every language.
- *
- * One function for everything that asks it, on both pages — the "Ce lipsește pentru publicare"
- * list in the Publicare box, which names them all; since §406 each card's closed line and its tabs'
- * counts, the map's chips, and "Creează și publică" and "Publică", which open the summary of gaps
- * instead of posting while one is left (over what is typed on the create page, over what is saved
- * on the editor, `storedPublishReader`) — so none of them disagree. In the order of the editor's
- * boxes (the title, the place, the address), and each gap says which box holds it, so the words on
- * the screen are the box's title and not a column name.
- *
- * `read` answers a box's posted value by its `name` (`""` for a box that is not there): a
- * `FormData` in the browser, a plain object in a test.
+ * What publication would refuse, read off a form as it stands (§315, §350, §406) — the server's
+ * rule (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): a title, a summary, a
+ * page address and, unless the place is to be announced (§328, §362), a meeting point, in every
+ * language. One function for the Publicare list, each card's closed line and tab counts, the map's
+ * chips, and the publish buttons, so none disagree. Gaps come in the editor's box order, each
+ * naming its box. `read` answers a box's posted value by `name` ("" when absent).
  */
 export type PublishGapBox = "titleSummary" | "place" | "address";
 export type PublishGapField = "title" | "excerpt" | "locationName" | "slug";
@@ -35,9 +26,7 @@ export function missingForPublish(read: (name: string) => string, locales: reado
       gaps.push({ box: "titleSummary", locale, field: "excerpt", name: field(locale, "excerptBody") });
     }
   }
-  // No meeting point is a gap only while the place is announced (§328): with the switch on, the
-  // server publishes without one and every surface says it is to be announced. One box per
-  // language (§362), each its own gap — a missing English place like any missing translation.
+  // No meeting point is a gap only while the place is announced (§328). One gap per language (§362).
   if (read("event.locationToBeAnnounced") !== "on") {
     for (const locale of locales) {
       const box = PLACE_NAME_FIELD[locale as PlaceNameLocale];
@@ -67,14 +56,10 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
 
 // --- The same gaps, seen from outside each card (§406) --------------------------------------
 
-/**
- * The card each gap belongs to, by its `#box-…` id: where "Publică" scrolls to and whose closed
- * line names it (§406; the owner, of a closed "Titlu și rezumat" whose tabs said only "incomplet":
- * "I need to see on the cards as well what info is required").
- */
+/** The card each gap belongs to, by its `#box-…` id: where "Publică" scrolls, whose closed line names it (§406). */
 export const PUBLISH_GAP_CARD: Readonly<Record<PublishGapBox, `box-${string}`>> = {
   titleSummary: "box-title",
-  // The place's own part of «Când și unde» since §481: the fold around it opens (`openFoldsAround`).
+  // The place part of «Când și unde» (§481): the fold around it opens (`openFoldsAround`).
   place: "box-place",
   address: "box-address",
 };
@@ -103,11 +88,7 @@ export type CardGapWords = {
   fields: Readonly<Record<PublishGapField, string>>;
 };
 
-/**
- * A card's required line: «lipsesc: Titlu (RO, EN) · Rezumat (RO)», or «complet» — each field by
- * the name its box wears, each language by its code, as every closed line on the editor writes a
- * language (`box-summaries.ts`).
- */
+/** A card's required line: «lipsesc: Titlu (RO, EN) · Rezumat (RO)» or «complet», languages by code (`box-summaries.ts`). */
 export function cardGapLine(gaps: readonly PublishGap[], box: PublishGapBox, words: CardGapWords): string {
   const missing = cardGaps(gaps, box);
   if (missing.length === 0) return words.complete;
@@ -128,13 +109,9 @@ export type StoredPublishEvent = { locationName: string | null; locationToBeAnno
 export type StoredPublishTranslation = { locale: string; title: string; excerpt: string | null; slug: string; locationName: string | null };
 
 /**
- * The saved event as `missingForPublish` reads a form: the editor's closed lines, its Publicare
- * list and its "Publică" ask the same function the create page asks of the boxes as typed, so the
- * two pages cannot name different gaps.
- *
- * Read the way the server's guard reads the row (`missingPublicFields`, `missingPublicEventFields`):
- * the summary by its plain text, the meeting point as the language's page names it (its own name,
- * else the event's — `placeNameIn`), a language with no row as every box blank.
+ * The saved event as `missingForPublish` reads a form, so both pages name the same gaps. Read as
+ * the server's guard reads the row: the summary by its plain text, the meeting point as the
+ * language's page names it (`placeNameIn`), a missing language as all blank.
  */
 export function storedPublishReader(event: StoredPublishEvent, translations: readonly StoredPublishTranslation[]): (name: string) => string {
   const inLanguage = (locale: string) => translations.find((row) => row.locale === locale);
@@ -151,13 +128,10 @@ export function storedPublishReader(event: StoredPublishEvent, translations: rea
   };
 }
 
-/**
- * The value of every box `missingForPublish` reads, as a plain record a Server Component can hand
- * an island (§406): the islands read a box the form does not draw from here.
- */
+/** Every box `missingForPublish` reads, as a plain record a Server Component can hand an island (§406). */
 export function publishCheckValues(read: (name: string) => string, locales: readonly string[]): Record<string, string> {
   const names = new Set<string>(["event.locationToBeAnnounced"]);
-  // Every name the check asks for, found by asking it with a reader that records them.
+  // Every name the check asks for, found by asking it with a recording reader.
   missingForPublish((name) => {
     names.add(name);
     return "";
@@ -168,18 +142,14 @@ export function publishCheckValues(read: (name: string) => string, locales: read
 // --- The same words in both languages (§354, bilingual everywhere) ---------------------------
 
 /**
- * The boxes whose long text is checked for "identical in both languages", in the order of the
- * editor's boxes: the summary (box 2), the description (3), the programme's notes and what to
- * bring (6), the rules (7), each partner's description (12), and the route description in the
- * "Traseul" card (§387). A title, a place's name or a link's label is short and may honestly read
- * the same — none of them is here.
+ * The long texts checked for "identical in both languages", in editor order (§387 included). Short
+ * texts — a title, a place, a link label — may honestly match and are not here.
  */
 export type IdenticalBox = "titleSummary" | "description" | "programme" | "rules" | "coHosts" | "course";
 export type IdenticalField = "excerpt" | "body" | "schedule" | "checklist" | "rules" | "coHostDescription" | "routeDescription";
 /**
- * One text whose second language says exactly what the first does. `locale` is the language that
- * carries the copy (English, beside the Romanian it copies), `name` its box — where the warning's
- * link goes — and `partner` the card's number, from 1, for a partner's description.
+ * One text whose second language repeats the first: `locale` is the copying language, `name` its
+ * box (where the warning links), `partner` the 1-based card number for a partner's description.
  */
 export type IdenticalText = { box: IdenticalBox; field: IdenticalField; locale: string; name: string; partner?: number };
 
@@ -197,15 +167,10 @@ const TRANSLATION_TEXTS: ReadonlyArray<readonly [IdenticalBox, IdenticalField, s
 const suffix = (locale: string) => `${locale.charAt(0).toUpperCase()}${locale.slice(1)}`;
 
 /**
- * Which long texts are the same words in both languages (§354, bilingual everywhere) — the
- * Romanian description pasted into the English box, as the English "Happy Monday" date carries on
- * production. A **warning** for the Publicare box's check and the boxes themselves, never a
- * refusal: `identicalInBothLanguages` counts only a text longer than forty characters, and even
- * that may be deliberate.
- *
- * The first locale is the one the others are compared with (`routing.locales` order: Romanian).
- * `read` answers a box by its posted name, as `missingForPublish` takes it: the form's own values
- * on the create page, the stored row (`storedTextReader`) on the editor.
+ * Which long texts are the same words in both languages (§354): a warning, never a refusal —
+ * `identicalInBothLanguages` counts only texts over forty characters, and even that may be
+ * deliberate. Compared with the first locale (Romanian). `read` is the form on create and
+ * `storedTextReader` on the editor.
  */
 export function identicalTexts(read: (name: string) => string, locales: readonly string[]): IdenticalText[] {
   const [source, ...others] = locales;
@@ -242,9 +207,8 @@ export type StoredTexts = {
 };
 
 /**
- * One stored text as its box would post it — a rich text's document as JSON, a plain box's text —
- * so a check written against the form reads the saved event the same way. The summary falls back
- * to its plain-text column, as its editor does (`excerptJson ?? excerpt`).
+ * One stored text as its box would post it (a rich document as JSON, a plain box as text), so a
+ * form check reads the saved event the same way. The summary falls back to its plain column.
  */
 export function storedTextValue(translation: StoredTexts, posted: string): string {
   const json = (value: unknown) => (value === null || value === undefined ? "" : JSON.stringify(value));
@@ -266,10 +230,7 @@ export function storedTextValue(translation: StoredTexts, posted: string): strin
   }
 }
 
-/**
- * The saved event as `identicalTexts` reads a form: each language's texts, and each partner's two
- * descriptions as stored (the editor opens with exactly these, `CoHostsBox`).
- */
+/** The saved event as `identicalTexts` reads a form: each language's texts and each partner's descriptions as stored. */
 export function storedTextReader(
   translations: readonly StoredTexts[],
   coHosts: readonly { descriptionRo: string | null; descriptionEn: string | null }[],

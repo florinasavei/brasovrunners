@@ -5,19 +5,9 @@ import { useCallback, useSyncExternalStore } from "react";
 import { useRecall } from "@/shared/forms/recall";
 
 /**
- * One sentence about the type that is currently chosen (§170; the owner, on the paragraph that
- * described all seven at once: "textul ăsta trebuie să fie collapsed și trebuie să apară doar
- * la concurs, nu la toate").
- *
- * The helper under "Tip eveniment" used to explain every type in one block of six lines, which
- * is a wall to read while choosing and wrong for six of the seven answers once chosen. This
- * shows the line for the chosen one; the full comparison stays one press away in the fold
- * beside it, which is where a comparison belongs.
- *
- * The same subscription as `OnlyForType`, and for the same reason: MUI's Select keeps its value
- * on a hidden input and fires no native change event, so the honest subscription is a mutation
- * observer on that input's `value` attribute — renewed after a refused submit re-mounts the
- * select with the type that was posted (§315).
+ * One sentence about the chosen type (§170); the full comparison stays in the fold beside it.
+ * Subscribes like `OnlyForType`: MUI's Select fires no native change, so a mutation observer on
+ * its hidden input, renewed after a refused submit re-mounts it (§315).
  */
 export default function TypeNote({
   selectName,

@@ -8,9 +8,8 @@ import { useRecall } from "@/shared/forms/recall";
 import QuietHelp from "@/shared/ui/QuietHelp";
 
 /**
- * Three dots, the first `step` of them lit — the same dots the event's gauge draws under its hub
- * (`DifficultyGaugeIcon`), so the control and the pill say a step the same way. Decorative: the
- * option's number and its accessible name say it.
+ * Three dots, the first `step` lit, as the gauge draws them (`DifficultyGaugeIcon`). Decorative:
+ * the option's number and accessible name say it.
  */
 function StepDotsIcon({ step }: { step: DifficultyStep }) {
   return (
@@ -23,29 +22,18 @@ function StepDotsIcon({ step }: { step: DifficultyStep }) {
 }
 
 /**
- * The outline's geometry (§537), matched to the band select beside it — an outlined MUI select,
- * 56 px tall, its shrunk label (0.75rem) in the top edge. Here the label is a `legend`, which
- * draws the same notch natively; the fieldset is 6 px taller than the select (half the legend's
- * line above the edge) and a −6 px top margin takes that back, so in `DifficultyRow`'s centred row
- * the two visible outlines are the same 56 px on the same line.
+ * The outline's geometry matched to the band select beside it (§537): a 56-px outlined select with
+ * its label in the edge. The `legend` fieldset is 6 px taller (half the legend's line), taken back
+ * by a −6 px margin, so both visible outlines are 56 px on one line.
  */
 export const STEP_FRAME = { height: 62, legendLine: 12, marginTop: -6, segmentHeight: 44 } as const;
 
 /**
- * «Treapta» (§526): the editor's second difficulty control, beside the band select in «Ce fel de
- * eveniment» — where inside the band the event stands, as a segmented 1 · 2 · 3, each segment with
- * its dots glyph. With the band it is the level on the club's scale of fifteen, which the save
- * writes (`fields.ts`, `difficultyLevel`).
- *
- * Native radios, visually hidden inside their segments, so the choice posts `event.difficultyStep`
- * with or without a script and the keyboard moves through the three as a radio group does; each
- * segment is 44 pixels tall and at least 56 wide (BR-REQ-041-01 criterion 6). A client component
- * only for the recall after a refused save (§315): the choice that was posted comes back. Words
- * only, as strings — no element crosses from the Server Component that renders it (§370).
- *
- * Laid out by `DifficultyRow` (§537): the root is `display: contents`, the outline with its «?» is
- * the grid's `step` cell — on the band select's axis — and the help line is the `help` cell under
- * it, so the line never lifts the toggle. Below `sm` the outline takes the full width.
+ * «Treapta» (§526): where in the band the event stands, 1 · 2 · 3; with the band it is the level
+ * of fifteen the save writes (`fields.ts`, `difficultyLevel`). Native radios, visually hidden, so
+ * it posts `event.difficultyStep` without a script and moves like a radio group; segments are
+ * 44 × ≥56 px (BR-REQ-041-01 criterion 6). Client only for the recall (§315). Laid out by
+ * `DifficultyRow`: the root is `display: contents`, filling the `step` and `help` cells.
  */
 export default function DifficultyStepField({
   name,
@@ -67,8 +55,7 @@ export default function DifficultyStepField({
   return (
     <Box data-testid="difficulty-step-field" sx={{ display: "contents" }}>
       <Box data-testid="difficulty-step-control" sx={{ gridArea: "step", display: "flex", alignItems: "center", minWidth: 0 }}>
-        {/* The fieldset is the radio group itself: one group, named by its legend, described by the
-            help line in the cell under it. */}
+        {/* The fieldset is the radio group: named by its legend, described by the help line below. */}
         <Box
           component="fieldset"
           role="radiogroup"
@@ -139,8 +126,7 @@ export default function DifficultyStepField({
             ))}
           </Box>
         </Box>
-        {/* The whole scale behind a «?» (§528, the §511 way), beside the toggle as the band's is
-            beside its select (§537) — outside the radio group's description, the one short line. */}
+        {/* The whole scale behind a «?» (§528, §537), outside the group's short description. */}
         {words.scale && <QuietHelp text={words.scale} testId="difficulty-scale-help" />}
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ gridArea: "help", display: "block", width: 0, minWidth: "100%" }}>

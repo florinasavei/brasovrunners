@@ -13,18 +13,10 @@ import { usePublishGaps } from "./MissingForPublish";
 import { type CardGapWords, cardGapLine, cardGaps, PUBLISH_GAP_CARD, type PublishGap, type PublishGapBox, publishGapLabel, type PublishGapLabels } from "./publish-check";
 
 /**
- * What publication still needs, seen from outside every card (§406; the owner, 2026-09-25, of a
- * closed "Titlu și rezumat" whose tabs said only "incomplet": "I need to see on the cards as well
- * what info is required", and of "Creează și publică" dimmed out of sight: "this should be
- * consistent!").
- *
- * One reading of the form, shared by everything that shows it — the closed lines of the cards
- * that hold a required box, the map's chips, the summary "Publică" opens — so they cannot
- * disagree with each other or with the Publicare list: every one of them is `missingForPublish`
- * (`publish-check.ts`), over the boxes as typed, and over what is stored for a box the form does
- * not draw (a language the reader may not write, the place for a role without the settings).
- * Starts from the server's answer, so the first paint is already right and nothing moves when the
- * script arrives.
+ * What publication still needs, one reading of the form shared by the cards' closed lines, the
+ * map's chips and the summary "Publică" opens (§406), so none disagree with the Publicare list:
+ * all are `missingForPublish` over the boxes as typed plus what is stored for boxes the form does
+ * not draw. Starts from the server's answer, so nothing moves when the script arrives.
  */
 type PublishCheck = { gaps: readonly PublishGap[] };
 
@@ -60,9 +52,8 @@ function usePublishCheck(fallback: readonly PublishGap[]): readonly PublishGap[]
 }
 
 /**
- * A card's required line on its closed heading: «lipsesc: Titlu (RO, EN) · Rezumat (RO)» behind the
- * warning glyph, or «complet» (`cardGapLine`). `initial` is the card's own answer from the server,
- * read until a provider has one.
+ * A card's required line on its closed heading (`cardGapLine`). `initial` is the server's answer,
+ * used until a provider has one.
  */
 export function CardRequiredLine({ box, initial, words }: { box: PublishGapBox; initial: readonly PublishGap[]; words: CardGapWords }) {
   const gaps = usePublishCheck(initial);
@@ -87,20 +78,17 @@ const NO_GAPS: readonly PublishGap[] = [];
 const ASK_EVENT = "br:publish-gaps";
 
 /**
- * Open the summary `id` names (§406): what a publish press does instead of posting while a box
- * publication needs is empty. A window event, because the press and the summary sit in different
- * columns — on the editor, in different forms.
+ * Opens the summary `id` names instead of posting (§406). A window event: the press and the
+ * summary sit in different columns, and on the editor in different forms.
  */
 export function askPublishGaps(id: string): void {
   window.dispatchEvent(new CustomEvent(ASK_EVENT, { detail: id }));
 }
 
 /**
- * The editor's "Publică" (§406): the same button on every event, whatever it lacks — never dimmed,
- * never hidden. While the saved event misses a box publication needs (`blocked`, read on the
- * server by `missingForPublish` over what is stored — publishing publishes what is saved), the
- * press posts nothing and opens the summary instead; otherwise it is the plain submit of its
- * transition form, and the confirmation (§384) and the server's guard answer it as before.
+ * The editor's "Publică" (§406), never dimmed or hidden. While the saved event lacks a required
+ * box (`blocked`, judged on what is stored — publishing publishes the saved row) the press opens
+ * the summary; otherwise it submits, and the confirmation (§384) and the server's guard answer.
  */
 export function PublishGateButton({ label, blocked, summaryId }: { label: string; blocked: boolean; summaryId: string }) {
   return (
@@ -123,16 +111,10 @@ export function PublishGateButton({ label, blocked, summaryId }: { label: string
 }
 
 /**
- * The §47 summary for a publication that cannot happen yet (§406): focusable, first in the column,
- * one link per missing box and language ("Titlu și rezumat › English › Titlu"), each opening the
- * folds and the tab around its box. Drawn only once a publish press asked for it, and gone when
- * nothing is missing any more.
- *
- * On arrival it takes the focus without moving the page, opens the first missing box and brings
- * its card to the top of the screen — the card whose closed line already said what it lacks.
- *
- * `gaps`, when given, is the list to name (the editor's saved event: "Publică" publishes what is
- * saved, so a box typed but not saved is still missing); otherwise the provider's, as typed.
+ * The §47 summary for a publication that cannot happen yet (§406): one link per missing box and
+ * language, opening the folds and tab around it. Drawn once a publish press asks; takes focus
+ * without scrolling, then brings the first missing card to the top. `gaps`, when given, is the
+ * saved event's list; otherwise the provider's, as typed.
  */
 export function PublishGapsSummary({
   id,

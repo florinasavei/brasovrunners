@@ -33,10 +33,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
   return rows.filter((row) => row !== undefined);
 }
 
-/**
- * The links' rows, coming back as they were typed after a refused submit (§315): keyed on the
- * answer and handed the recalled rows, exactly as `CoHostRowsEditor` and `ScheduleRowsEditor`.
- */
+/** Recalls the typed rows after a refused submit (§315), as `CoHostRowsEditor` and `ScheduleRowsEditor`. */
 export default function LinkRowsEditor(props: ComponentProps<typeof LinkRowsEditorIsland>) {
   const recall = useRecall();
   const initial = recall.has ? recalledRows(recall.names(), recall.value) : props.initial;
@@ -44,20 +41,12 @@ export default function LinkRowsEditor(props: ComponentProps<typeof LinkRowsEdit
 }
 
 /**
- * "Linkuri și fișiere" in the editor (`DECISIONS.md` §332): per row, what it is (with its glyph,
- * the same the public page shows), the address, and a label in each language side by side. A
- * client island for the three things a form cannot do by itself — add a row, remove one, move
- * one up or down — and nothing else: every box is an ordinary input named
- * `event.links[i].<box>`, which `admin/actions.ts#eventFieldsFrom` gathers by index. The index
- * is the row's place on the screen at the moment of the press, so "link 2" in a refusal is the
- * second row the organizer sees. A row with nothing typed is the spare line and is dropped on
- * save.
- *
- * Rows keep a key of their own across removals and moves, so moving the third link up carries
- * its typed boxes with it rather than handing them to the row that took its place.
- *
- * The hidden `event.links.present` says the form carried the list at all: with every row
- * removed nothing else is posted, and "no rows" must read as "no links", not as "not editing".
+ * "Linkuri și fișiere" rows (§332): kind (with its page glyph), address, and both labels side by
+ * side. Client only to add, remove and move rows; each box is a plain input
+ * `event.links[i].<box>`, gathered by index (`admin/actions.ts#eventFieldsFrom`), so "link 2" in a
+ * refusal is the second row on screen. An empty row is the spare line, dropped on save. Rows keep
+ * their own key so a move carries its typed boxes. `event.links.present` makes "no rows" read as
+ * "no links", not "not editing".
  */
 function LinkRowsEditorIsland({
   initial,
@@ -67,12 +56,12 @@ function LinkRowsEditorIsland({
 }: {
   initial: LinkRowValue[];
   labels: { kind: string; url: string; labelRo: string; labelEn: string; add: string; remove: string; moveUp: string; moveDown: string; row: string };
-  /** Each kind's word, already translated — the same word the page shows when a label is empty. */
+  /** Each kind's word, translated — what the page shows when a label is empty. */
   kindLabels: Record<EventLinkKind, string>;
   /** The boxes' HTML constraints, read off `fields.ts#eventLinkRowSchema` by the Server Component (§315). */
   constraints: { url: HtmlConstraints; label: HtmlConstraints };
 }) {
-  // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
+  // Which boxes a refusal named; the summary links here by `fieldId`.
   const recall = useRecall();
   const [rows, setRows] = useState<Array<{ key: number; value: LinkRowValue }>>(() =>
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
@@ -196,8 +185,7 @@ function LinkRowsEditorIsland({
           </Stack>
         );
       })}
-      {/* The list's own ceiling (§332): the button stops at twelve rather than letting a
-          thirteenth row be typed and then refused. */}
+      {/* The list's ceiling (§332): the button stops at twelve rather than a thirteenth row being refused. */}
       <Button
         type="button"
         variant="text"

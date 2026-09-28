@@ -20,12 +20,9 @@ import { joinDuration } from "../duration";
 export type NightEventWords = {
   label: string;
   choices: Readonly<Record<NightChoice, string>>;
-  /** "Automat: {day}, începe la {start}, apusul la {sunset} — {verdict}" — the start named before the sunset (§404). */
+  /** "Automat: {day}, începe la {start}, apusul la {sunset} — {verdict}": the start before the sunset (§404). */
   autoLine: string;
-  /**
-   * "Automat: {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}" (§404):
-   * an early-morning night start names that day's sunrise, never the evening's sunset.
-   */
+  /** "Automat: {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}": a pre-dawn start (§404). */
   autoLineDawn: string;
   /** "Automat: {day}, apusul la {sunset} — alege ora startului" */
   autoLineNoTime: string;
@@ -33,13 +30,13 @@ export type NightEventWords = {
   autoLineNoDate: string;
   verdictNight: string;
   verdictDay: string;
-  /** "… alergarea ține până la {end} …" — shown only when the start alone was not dark and the end came from «Durata» (§394). */
+  /** "… alergarea ține până la {end} …": only when the start was not dark and the end came from «Durata» (§394). */
   endLine: string;
-  /** "… programul zilei ține până la {end} (ultimul punct) …" — the same, when the end is the day's last programme row. */
+  /** "… programul zilei ține până la {end} (ultimul punct) …": the same, when the end is the last programme row. */
   endLineProgramme: string;
   /** "Într-o serie, fiecare dată urmează apusul zilei ei …" */
   series: string;
-  /** The day's words, written on the server (§324): the island formats no date itself. */
+  /** The day's words, written on the server (§324). */
   day: CalendarDayWords;
 };
 
@@ -47,14 +44,13 @@ export type NightEventWords = {
 export type NightProgrammeRow = { date: string; time: string; endTime: string };
 
 const WALL_TIME = /^\d{2}:\d{2}$/;
-/** One array for "no rows", so the effect's dependency does not change on every render. */
+/** One stable array for "no rows", so the effect's dependency does not change on every render. */
 const NO_ROWS: readonly NightProgrammeRow[] = [];
 
 /**
- * The span's end as the form stands, by the server's own rule (`night.ts#occurrenceSpanEnd`,
- * §394): «Durata»'s minutes added to the start when the box has a number — the event's own end;
- * else the latest programme row on the start's own date (its end time, or its start when it has
- * none); else none.
+ * The span's end as the form stands, by the server's rule (`night.ts#occurrenceSpanEnd`, §394):
+ * start + «Durata», else the latest programme row on the start's date (its end, else its start),
+ * else none.
  */
 function formSpanEnd(
   startsAt: Date,
@@ -71,13 +67,10 @@ function formSpanEnd(
 }
 
 /**
- * The automatic answer's line, from the boxes as they stand: the event's day in words, its sunset
- * and the verdict (§394) — decided by the **whole span**, not the start alone, with the server's
- * own end rule (`formSpanEnd`) and its own span test (`nightSpan`): a run that starts in daylight
- * and finishes after dusk is a night run, and `endLine` (null otherwise) says until when and
- * whether «Durata» or the programme said so. Pure — the island reads the form and hands the
- * strings here — and the same `sun.ts` the server's pill asks, so the line cannot promise what
- * the page will not show.
+ * The automatic answer's line from the boxes (§394): judged on the whole span, with the server's
+ * own `formSpanEnd` and `nightSpan`, so a run starting in daylight and ending after dusk is a night
+ * run and `endLine` says until when. Pure, and the same `sun.ts` as the pill, so the line cannot
+ * promise what the page will not show.
  */
 export function nightAutoLine(
   words: Pick<NightEventWords, "autoLine" | "autoLineDawn" | "autoLineNoTime" | "autoLineNoDate" | "verdictNight" | "verdictDay" | "endLine" | "endLineProgramme" | "day">,
@@ -96,10 +89,8 @@ export function nightAutoLine(
   const { night, nightAtStart } = nightSpan(startsAt, spanEnd?.end ?? null, place, start.timeZone);
   const sunrise = sun.sunrise ? wallClockTime(sun.sunrise, start.timeZone) : null;
   const verdict = night ? words.verdictNight : words.verdictDay;
-  // The start is named before the sunset, so the sunset is never read as the start (§404) — and the
-  // shape (Dawn, End, EndProgramme, After or plain) is `nightShape`'s own answer, the same rule the
-  // calendar and the reminder ask, never decided a second time here; the pill's tooltip names only
-  // the sunset (§415) and asks nothing of it.
+  // The start is named before the sunset (§404); the shape is `nightShape`'s answer, the rule the
+  // calendar and the reminder use, never decided again here.
   const named = night && !nightAtStart && spanEnd ? spanEnd.source : null;
   const facts: NightEventFacts = {
     night,
@@ -119,7 +110,7 @@ export function nightAutoLine(
   return { line, endLine: fillIn(shape.suffix === "EndProgramme" ? words.endLineProgramme : words.endLine, { end: shape.values.end }) };
 }
 
-/** The programme rows the form posts, gathered by index — `ScheduleRowsEditor`'s own names. */
+/** The programme rows the form posts, by index (`ScheduleRowsEditor`'s names). */
 export function programmeRowsOf(data: FormData): NightProgrammeRow[] | null {
   const rows = new Map<number, NightProgrammeRow>();
   for (const [name, value] of data.entries()) {
@@ -127,7 +118,7 @@ export function programmeRowsOf(data: FormData): NightProgrammeRow[] | null {
     if (!match) continue;
     const row = rows.get(Number(match[1])) ?? { date: "", time: "", endTime: "" };
     const box = match[2] as keyof NightProgrammeRow;
-    // A row's times are typed boxes too (§439): read as they will post, like the start's.
+    // Typed boxes (§439): read as they will post.
     row[box] = box === "date" ? String(value).trim() : readTypedTime(String(value));
     rows.set(Number(match[1]), row);
   }
@@ -138,15 +129,10 @@ const sameRows = (a: readonly NightProgrammeRow[], b: readonly NightProgrammeRow
   a.length === b.length && a.every((row, i) => row.date === b[i].date && row.time === b[i].time && row.endTime === b[i].endTime);
 
 /**
- * "Eveniment de noapte" in the "Traseul" card (§394, replacing §382's "Necesită frontală"
- * checkbox): Automat (după apus) / Da / Nu, and under it the automatic answer for the date in the
- * "Data și ora" card — recomputed as the date, the time or the zone is changed, so the organizer
- * sees what "Automat" will say before saving. A client island because it follows other boxes of the
- * form; the coordinates come from the server (the saved event's own place, `nightPlace`, §428;
- * `CLUB_COORDINATES` on the create page), the words too.
- *
- * On a series (the editor's `inSeries`, or the create page's "Se repetă" ticked) one more sentence
- * says each date follows its own sunset. After a refused submit the choice comes back as posted (§315).
+ * "Eveniment de noapte" in «Traseul» (§394): Automat / Da / Nu, with the automatic answer for the
+ * start date recomputed as date, time or zone change. Client to follow other boxes; coordinates
+ * and words come from the server (`nightPlace`, §428; `CLUB_COORDINATES` on create). On a series
+ * one sentence says each date follows its own sunset. Recalls after a refused submit (§315).
  */
 export default function NightEventField({
   name,
@@ -163,13 +149,13 @@ export default function NightEventField({
   name: string;
   defaultChoice: NightChoice;
   place: Coordinates;
-  /** The event's zone as the page rendered it; the form's own "event.timezone" wins once read. */
+  /** The zone as rendered; the form's "event.timezone" wins once read. */
   zone: string;
-  /** The start as the page rendered it (the editor's), `YYYY-MM-DD` and `HH:mm`; read from the form after. */
+  /** The start as rendered (`YYYY-MM-DD`, `HH:mm`); read from the form after. */
   start: { date: string; time: string };
-  /** «Durata» as the page rendered it (the saved end minus the start), for the first paint; read from the form after. */
+  /** «Durata» as rendered, for the first paint; read from the form after. */
   durationMinutes?: number | null;
-  /** The saved programme rows on the event's clock, for the first paint and a form without the programme's boxes. */
+  /** The saved programme rows on the event's clock, for the first paint and a form without the rows. */
   programme?: readonly NightProgrammeRow[];
   inSeries?: boolean;
   /** On create: the box that turns the series on, whose tick shows the series sentence. */
@@ -186,23 +172,20 @@ export default function NightEventField({
     const read = () => {
       const data = new FormData(form);
       const text = (field: string) => String(data.get(field) ?? "");
-      // «Durata» is two boxes, hours and minutes (§433), joined the way the save joins them.
+      // «Durata» (§433), joined as the save joins it.
       const duration = Number(joinDuration(text("event.durationHours"), text("event.durationMinutesPart")));
       const next = {
         date: text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date),
-        // The typed box as it will post («1900» → 19:00), the series sentence's own reading (§439):
-        // until it is left, the raw text would say «no time» here while the sentence says 19:00.
+        // The typed box as it will post («1900» → 19:00, §439), agreeing with the series sentence.
         time: readTypedTime(text("event.startsAtTime")) || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),
         timeZone: text("event.timezone") || zone,
         series: inSeries || (seriesToggleName ? data.get(seriesToggleName) === "on" : false),
-        // "Cât durează" (§71), added to the start (§394): a run that finishes after dusk is a
-        // night run even from a daylight start. No box, or not a number, means no end to name.
+        // «Durata» added to the start (§394): finishing after dusk makes a night run.
         durationMinutes: Number.isFinite(duration) && duration > 0 ? duration : null,
-        // The programme's rows (§117), the end when «Durata» is empty — the server's own order
-        // (§394). A form without the programme's boxes keeps the saved rows.
+        // The programme's rows when «Durata» is empty (§394); without their boxes, the saved rows.
         programme: programmeRowsOf(data) ?? programme,
       };
-      // The same answer keeps the same object, so a keystroke elsewhere in the form renders nothing here.
+      // The same answer keeps the same object, so an unrelated keystroke renders nothing.
       setLive((current) =>
         current.date === next.date &&
         current.time === next.time &&
@@ -214,7 +197,7 @@ export default function NightEventField({
           : next,
       );
     };
-    // After the frame the keystroke leads to, once for a burst (§371), like the Recurență sentence.
+    // After the frame, once per burst (§371).
     const scheduler = paintedScheduler(read);
     read();
     form.addEventListener("change", scheduler.schedule);

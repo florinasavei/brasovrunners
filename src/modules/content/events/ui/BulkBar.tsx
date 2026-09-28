@@ -9,18 +9,10 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * The bulk verbs of the events list, in one bar above it (`DECISIONS.md` §114; the owner:
- * "these batches are strange, I should be able to batch delete all"). It was a fold below the
- * table — out of sight of the ticks it acted on, with no way to tick everything and no delete.
- *
- * The one client island the list has, and it earns it: "select all" and "N ticked" need to
- * see the row checkboxes, which belong to this form by `form={formId}` and live in the table
- * above. The bar owns the `<form>`; each verb is a submit button with its own Server Action
- * as `formAction`, so the browser posts the same ticks to whichever was pressed. Every verb
- * asks first (§384) — publishing and archiving face the site, deleting cannot be undone — through
- * the one `ConfirmSubmitButton`, since one selection feeds three actions and a form-level question
- * could not tell them apart. Without JavaScript the buttons still post — only the counter, "select
- * all" and the questions go quiet, and the server refuses exactly as before.
+ * The events list's bulk verbs in one bar above it (§114). A client island because "select all"
+ * and "N ticked" must see the row checkboxes, which join this form via `form={formId}`. Each verb
+ * is a submit with its own Server Action as `formAction`, each confirming separately (§384).
+ * Without JavaScript the buttons still post and the server refuses as before.
  */
 type Action = (form: FormData) => Promise<void>;
 
@@ -79,7 +71,7 @@ export default function BulkBar({
     return () => document.removeEventListener("change", read);
   }, [formId]);
 
-  /** Nothing ticked, and this island is running — see the buttons below for why both halves. */
+  /** Nothing ticked and this island running (see the buttons below). */
   const idle = total > 0 && count === 0;
 
   const selectAll = (checked: boolean) => {
@@ -109,14 +101,9 @@ export default function BulkBar({
           <input type="hidden" name="uiLocale" value={uiLocale} />
           <input type="hidden" name="back" value={back} />
           {/*
-            Dim while nothing is ticked (§170; the owner: "trebe să fie active doar dacă
-            selectez ceva"), and each verb wears its glyph ("și butoanele astea au nevoie de
-            iconițe").
-
-            `total > 0` is the honest test for "this island is running": it is zero until the
-            effect above has counted the rows, which is exactly the state a browser without
-            JavaScript stays in — there the buttons still post, and the server answers "nothing
-            ticked" as it always did. The server-side refusal is untouched either way.
+            Dim while nothing is ticked (§170). `total > 0` means the island is running: without
+            JavaScript it stays zero, the buttons still post, and the server answers "nothing
+            ticked".
           */}
           <ConfirmSubmitButton
             formAction={publish}

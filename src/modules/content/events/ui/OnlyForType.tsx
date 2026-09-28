@@ -6,16 +6,9 @@ import { useRecall } from "@/shared/forms/recall";
 import { REVEAL_EVENT } from "@/shared/ui/fold";
 
 /**
- * What one of the form's MUI selects says right now, by the `name` it posts.
- *
- * MUI's Select keeps its value on a hidden input and fires no native change event; the value
- * attribute is what changes, so a mutation observer is the honest subscription. After a refused
- * submit the select re-mounts with the value that was posted (§315), so the subscription is
- * renewed on every answer — an observer on the old, removed input would never hear the new one —
- * and the server render reads the recalled value rather than the page's.
- *
- * `OnlyForType` below reads the type select with it; the notice beside the save button reads
- * the status select (`EventNoticeFields`, §331).
+ * What one of the form's MUI selects says now, by its posted `name`. MUI's Select fires no native
+ * change, so a mutation observer on its hidden input's value is the subscription — renewed on each
+ * recall generation, since a refused submit re-mounts the select with the posted value (§315).
  */
 export function useSelectedValue(selectName: string, initialValue: string): string {
   const recall = useRecall();
@@ -47,9 +40,8 @@ const RELAXED = "data-relaxed-while-hidden";
 const HIDDEN_BLOCK = "data-hidden-block";
 
 /**
- * Every box under `root` read-only while a hidden block holds it, and handed back once none does.
- * Read off the DOM rather than kept per block, so a block inside another (the "Pe site" fields
- * inside the race-only registration block) never hands back a box its outer block still hides.
+ * Every box under `root` read-only while any hidden block holds it, handed back once none does.
+ * Read off the DOM, so a nested hidden block never releases a box its outer block still hides.
  */
 function relaxHiddenBoxes(root: HTMLElement): void {
   for (const box of root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(CHECKED_BOXES)) {
@@ -65,30 +57,19 @@ function relaxHiddenBoxes(root: HTMLElement): void {
 }
 
 /**
- * The block `OnlyForType` and `OnlyForMode` draw (§350, found by review): shown while the answer
- * wants it, hidden otherwise — and while hidden, nothing in it can stop the save.
- *
- * Hidden, not removed, so what was typed is still posted and switching back finds it. But a hidden
- * box keeps its `min`, `max` and `pattern`, and one left out of range — a link typed as
- * `www.club.ro` under "La organizator" before a switch to "Pe site" — made the browser refuse the
- * submit and then fail to focus a box with `display: none`: Salvează did nothing and said nothing.
- * So every box in a hidden block is **read-only** while it is hidden: the standard bars a read-only
- * control from constraint validation and still posts its value. The service ignores what the
- * choice hides (`ignoreHiddenFields`, before its schema), and checks as typed only what every
- * choice keeps.
- *
- * A refusal about a box in here while it is hidden — one of the kept boxes, which the server
- * checks — arrives as `REVEAL_EVENT` from the box (`ActionForm`), and the block shows itself
- * until the answer changes, so the refusal names a box the reader can see and fix. The reveal
- * belongs to the answer it was made under and is **cleared when the answer changes**: switching
- * the mode away and back later hides the block again rather than finding an old reveal waiting.
+ * The block `OnlyForType` and `OnlyForMode` draw (§350): hidden, not removed, so typed values
+ * still post. While hidden every box in it is read-only — a read-only control is barred from
+ * constraint validation but still posts — because an out-of-range hidden box made the browser
+ * refuse the submit and fail to focus it: Salvează silently did nothing. The service ignores what
+ * the choice hides (`ignoreHiddenFields`). A server refusal about a box in here arrives as
+ * `REVEAL_EVENT` (`ActionForm`) and shows the block until the answer changes.
  */
 export function ShownWhen({ shown, answer, children }: { shown: boolean; answer: string; children: ReactNode }) {
   const block = useRef<HTMLDivElement>(null);
   const { generation } = useRecall();
   const [revealedFor, setRevealedFor] = useState<string | null>(null);
-  // The answer the reveal was last checked against: a new answer drops the reveal, during render
-  // (React's "adjusting state when a prop changes"), so no frame shows the stale one.
+  // A new answer drops the reveal during render (React's "adjusting state when a prop changes"),
+  // so no frame shows the stale one.
   const [revealAnswer, setRevealAnswer] = useState(answer);
   if (revealAnswer !== answer) {
     setRevealAnswer(answer);
@@ -110,7 +91,7 @@ export function ShownWhen({ shown, answer, children }: { shown: boolean; answer:
       observer.disconnect();
       element.removeEventListener(REVEAL_EVENT, onReveal);
     };
-    // The generation: a refused save re-mounts the boxes from what was posted, without the attribute.
+    // A refused save re-mounts the boxes from what was posted, without the attribute.
   }, [visible, answer, generation]);
 
   return (
@@ -121,14 +102,10 @@ export function ShownWhen({ shown, answer, children }: { shown: boolean; answer:
 }
 
 /**
- * Shows its children while the form's type select says one of `type` (`DECISIONS.md` §71):
- * the gun time is a race's field and nobody planning a Sunday run should see it; since §111
- * the registration block and the programme are hidden the same way on a group run. A client
- * island with one observer on the select, chosen over a server round-trip because the select
- * is MUI's and the form is one save. The children are always in the DOM — hidden, not removed
- * — so a value typed before the type was changed is still posted; the service ignores a race
- * start on anything but a race, and the registration block on a group run. While hidden, its
- * boxes cannot block the save (`ShownWhen`).
+ * Shows its children while the type select is one of `type` (§71, §111): e.g. the gun time only
+ * for a race, no registration or programme on a group run. Hidden, never removed, so values typed
+ * before a type change still post; the service ignores what the type excludes, and hidden boxes
+ * cannot block the save (`ShownWhen`).
  */
 export default function OnlyForType({
   type,

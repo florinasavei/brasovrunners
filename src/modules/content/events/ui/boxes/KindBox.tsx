@@ -16,37 +16,13 @@ import CostBox, { costLine } from "./CostBox";
 import StatusCard, { type StatusNotice } from "./StatusBox";
 
 /**
- * Card 1, "Ce fel de eveniment" (§350, §406, §448): the type, which the page's overline says first
- * — and which switches other cards' fields on and off: a group run has no registration and no
- * programme (§111), only a race has a gun time (§71) — and, as a named card inside it, the event's
- * status (`StatusCard`).
- *
- * **The status is here again since §448** (the owner, 2026-09-26: "starea evenimentului ar trebui
- * să apară pe primul card «Ce fel de eveniment»"). §358 had put the status, the course and the
- * links inside this box; §406 moved all three out — the course and the links to where the page
- * draws them, the status to the cards that are not on the page. The course and the links stay
- * where §406 put them; the status comes back, because it is the first thing an organizer asks of an
- * event after what kind it is. The box's closed line says both: «Alergare de grup · Programat».
- *
- * Open on the create page, because the type decides what the other cards ask; folded on the
- * editor. With people registered, choosing "Alergare de grup" says in amber what happens to them —
- * a warning, never a lock — and, since the status card inside it is one of the boxes whose change
- * reaches people, the box wears the amber outline too (the count is said once, under the page map,
- * §408).
- *
- * **The cost is a named card in here too since §466** (the owner, 2026-09-26: "cardul 7. Cost poate
- * fi inclus în cardul 1. la ce fel de eveniment"): `CostBox`, drawn after the status card under the plain
- * title «Cost» with its id `box-cost`, so a deep link still lands on it; it has no number and no
- * chip on the map, and the cards after it renumber. The box's closed line names it third:
- * «Alergare de grup · Programat · Gratuit».
- * It is drawn for every role — a words-only reader may own the discount note (§394).
- *
- * **The difficulty is asked here since §526** — the band («Ușor» … «Foarte greu») and its step
- * (1 · 2 · 3) side by side from `sm`: with the type, what kind of outing this is. The closed line
- * names it last, «Mediu 2», and says nothing while the club has not said.
- *
- * A role that may only read the settings is told so, in place of the select and the status card;
- * the closed line still names both.
+ * Card 1, "Ce fel de eveniment" (§350, §406): the type — which switches other cards' fields
+ * (§71, §111) — with named cards for the status (`StatusCard`, §448) and the cost (`CostBox`,
+ * §466, drawn for every role since the discount note may be a words-only reader's), and the
+ * difficulty band and step (§526). The closed line: «Alergare de grup · Programat · Gratuit ·
+ * Mediu 2». Open on create (the type decides the rest), folded on the editor; choosing a group
+ * run with people registered warns in amber, never locks. A settings reader is told so in place
+ * of the select and status.
  */
 export default async function KindBox({
   event,
@@ -64,26 +40,24 @@ export default async function KindBox({
   notice?: StatusNotice;
 }) {
   const t = await getTranslations("Admin");
-  // The type labels already exist for the public pages, and read the same to an organizer.
+  // The public pages' type labels read the same to an organizer.
   const tEvent = await getTranslations("Event");
   const initialType = event?.type ?? "GROUP_RUN";
   /** One sentence per type, for the note under the select (§170). */
   const typeNotes = Object.fromEntries(EVENT_TYPES.map((type) => [type, t(`editor.typeNotes.${type}`)]));
   const separator = (t.raw("editor.boxes.summary") as { separator: string }).separator;
-  // The level on the club's scale of fifteen (§526), as the two controls show it: its band and its step.
+  // The level on the club's scale of fifteen (§526), as its band and step.
   const level = event ? difficultyLevelOf(event) : null;
   const band = level === null ? null : difficultyBandOf(level);
-  // The club's whole scale, one line per band in the owner's words (§526, §528), behind a «?» beside
-  // the band and after «Treapta»'s help: a newline is a line in the tooltip (§257).
+  // The club's whole scale (§526, §528) behind a «?»; a newline is a tooltip line (§257).
   const difficultyScale = DIFFICULTY_SCALE_LINES.map((line) => t(`editor.difficultyScale.${line}`)).join("\n");
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const difficultyLine = band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null;
-  // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
+  // The closed line: type, status, cost (§466), and the difficulty when stated (§526).
   const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine]
     .filter((part): part is string => Boolean(part))
     .join(separator);
-  // Awaited here rather than nested, so the element is ready when the box is (a string renderer
-  // cannot wait for an async component inside a tree — `requiredLine` does the same).
+  // Awaited rather than nested, so the element is ready when the box is (as `requiredLine`).
   const status = !mayEditSettings
     ? null
     : event === null
@@ -91,7 +65,7 @@ export default async function KindBox({
       : notice
         ? await StatusCard({ event, risk, notice })
         : null;
-  // The cost card (§466), awaited for the same reason as the status card.
+  // Awaited for the same reason.
   const cost = await CostBox({ event, mayEditSettings, languages });
 
   return (
@@ -126,11 +100,10 @@ export default async function KindBox({
               warning
             />
           )}
-          {/* How hard (§526): the band and its step, the level on the club's scale of fifteen, which
-              «Ghid» explains — on one centred axis since §537 (`DifficultyRow`), stacked below `sm`. */}
+          {/* The band and its step on one centred axis (§526, §537, `DifficultyRow`). */}
           <DifficultyRow
             band={
-              // The whole scale behind a «?» beside the band too (§528): the band is the first choice.
+              // The whole scale behind a «?» beside the band too (§528).
               <>
                 <GlyphSelect
                   name="event.difficulty"
@@ -158,16 +131,15 @@ export default async function KindBox({
               />
             }
           />
-          {/* A compact help fold, not a card (§398; the owner: "«Ce înseamnă fiecare tip?» ar
-              trebui să fie un card mai mic"): a clickable line, closed by default (§336). */}
+          {/* A compact help fold, closed by default (§336, §398). */}
           <Panel collapsible variant="help" title={t("editor.typeHelpSummary")}>
             <Typography variant="body2" color="text.secondary">
               {t("editor.typeHelp")}
             </Typography>
           </Panel>
-          {/* 1.1 — the status (§448): the same select on the create page, starting at "Programat". */}
+          {/* The status (§448). */}
           {status}
-          {/* 1.2 — the cost (§466): the page draws it after the course; the editor asks it here. */}
+          {/* The cost (§466): the page draws it after the course. */}
           {cost}
         </Stack>
       ) : (
@@ -180,5 +152,5 @@ export default async function KindBox({
   );
 }
 
-/** The «?»'s lines, in order: «Ușor», «Mediu» per step, the other bands, what a step means — the owner's words (§528), which «Ghid» points to. */
+/** The «?»'s lines, in order (§528). */
 const DIFFICULTY_SCALE_LINES = ["EASY", "MEDIUM1", "MEDIUM2", "MEDIUM3", "FAIRLY_HARD", "HARD", "VERY_HARD", "steps"] as const;

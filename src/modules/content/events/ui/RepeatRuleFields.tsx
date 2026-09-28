@@ -32,21 +32,17 @@ export type RuleSentenceWords = {
   until: string;
   horizon: string;
   /**
-   * The seven weekday names by ISO number, written on the server (`series-sentence.ts#weekdayNames`)
-   * and handed here as strings: a client island formats no date itself (§324, §350 weekday on
-   * every date).
+   * The weekday names by ISO number, written on the server (`series-sentence.ts#weekdayNames`): a
+   * client island formats no date itself (§324).
    */
   weekdayNames: Readonly<Record<string, string>>;
-  /** The end date's words, written on the server the same way (`dates.ts#calendarDayWords`). */
+  /** The end date's words, written on the server (`dates.ts#calendarDayWords`). */
   untilDay: CalendarDayWords;
 };
 
 /**
- * "Se repetă săptămânal, lunea și miercurea, la 18:30 — la nesfârșit." — the rule, in words,
- * from the boxes as they stand (§350). Pure: the caller reads the form.
- *
- * The end reads as the Recurență box writes it once saved — "până la mie., 30 sept. 2026", its
- * weekday first (§349) — joined from the server's words, not formatted here (§324).
+ * "Se repetă săptămânal, lunea și miercurea, la 18:30 — la nesfârșit." — the rule from the boxes
+ * (§350). Pure; the end joins the server's words (§324, §349).
  */
 export function ruleSentenceFrom(
   words: RuleSentenceWords,
@@ -66,15 +62,10 @@ export function ruleSentenceFrom(
 }
 
 /**
- * The days of the week a series runs on, and the rule in one live sentence under them (§350).
- *
- * The event's own day is always in the series (§128): it is ticked and locked, and — a disabled
- * box posts nothing — a hidden input posts it. On the editor the day is known and fixed; on the
- * create page it **follows the start date as it is typed** (`followDateName`, the picker's hidden
- * box, which announces itself with `change`), so the lock moves with the date rather than being
- * absent until the save. The other days post `weekday=1..7` as before (`admin/actions.ts`).
- *
- * After a refused submit the ticks come back as posted (§315).
+ * The weekdays a series runs on, and the rule as a live sentence (§350). The event's own day is
+ * always included (§128): ticked, locked, and posted by a hidden input (a disabled box posts
+ * nothing). On create it follows the start date as typed (`followDateName`). Other days post
+ * `weekday=1..7`. Recalls after a refused submit (§315).
  */
 export default function RepeatRuleFields({
   prefix,
@@ -112,19 +103,17 @@ export default function RepeatRuleFields({
       const data = new FormData(form);
       const text = (name: string) => String(data.get(name) ?? "");
       if (followDateName) setLiveDate(text(followDateName));
-      // The time box is typed since §439 and moves on every keystroke: the sentence reads it as the
-      // box will post it («1900» → 19:00), and a half-typed «19:» or «7pm» says no time at all.
+      // The time box is typed (§439): read it as it will post («1900» → 19:00); a half-typed one
+      // gives no time.
       const next = {
         cadence: text(`${prefix}cadence`) || "WEEKLY",
         time: startTime ?? readTypedTime(text("event.startsAtTime")),
         until: text(`${prefix}until`),
       };
-      // The same rule keeps the same object, so a keystroke elsewhere in the form renders nothing here.
+      // The same rule keeps the same object, so an unrelated keystroke renders nothing.
       setRule((current) => (current.cadence === next.cadence && current.time === next.time && current.until === next.until ? current : next));
     };
-    // The whole form is read, so after the frame the keystroke or the press leads to, once for a
-    // burst (§371) — never inside the press of a save button, whose `change` on the box it leaves
-    // used to pay this before "Se salvează…" could paint.
+    // Reads the whole form, so after the frame, once per burst (§371), never inside a save press.
     const scheduler = paintedScheduler(read);
     read();
     form.addEventListener("change", scheduler.schedule);
@@ -190,24 +179,20 @@ export default function RepeatRuleFields({
   );
 }
 
-/**
- * "Publică datele noi automat" (§350): ticked by default, now always shown (it was only offered on
- * a live event), with what it means when it is off and while the event is a draft.
- */
+/** "Publică datele noi automat" (§350): always shown, ticked by default, saying what off and draft mean. */
 export function RepeatPublishField({
   name,
   draftSource,
   labels,
 }: {
   name: string;
-  /** Whether the event is (or is created as) a draft — its dates are drafts until it goes live. */
+  /** Whether the event is (or is created as) a draft: its dates stay drafts until it goes live. */
   draftSource: boolean;
   labels: { label: string; off: string; draft: string };
 }) {
   const recall = useRecall();
   const [on, setOn] = useState(recall.has ? recall.value(name) === "on" : true);
-  // The robot (§398): the same glyph as the source event's Recurență card, leading this
-  // switch's own line too, decorative and aria-hidden.
+  // The robot glyph (§398), as on the Recurență card.
   const RenewIcon = ACTION_ICONS.renew;
   return (
     <Box data-testid="repeat-publish-field">

@@ -17,12 +17,9 @@ import type { ComponentType } from "react";
 import type { PageSectionGlyph } from "@/modules/events/domain/page-sections";
 
 /**
- * The event page's sections as the editor's map draws them (§406), one glyph per section, looked
- * up **by name** (`PageSectionGlyph`): the list in `events/domain/page-sections.ts` names a picture
- * without importing one, and the map is a client island that makes the element itself, so no
- * element crosses from a Server Component (`AGENTS.md` §14.1, §370). The backoffice's only: no
- * public page imports this. One file per glyph, never the barrel (§90); the same pictures the
- * public page's facts use where it has one — the calendar, the pin, the route, the money, the handshake.
+ * One glyph per event-page section for the editor's map (§406), looked up by name
+ * (`PageSectionGlyph`) so no element crosses from a Server Component (`AGENTS.md` §14.1, §370).
+ * Backoffice only; one file per glyph, never the barrel (§90).
  */
 export const SECTION_GLYPHS: Record<PageSectionGlyph, ComponentType<SvgIconProps>> = {
   kind: CategoryIcon,

@@ -23,23 +23,12 @@ import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
- * route's pills in the facts and, further down, the route section under `#route` (§387). The
- * group run's declaration offer (§393) was here; since §448 it is under «Regulamentul», with the
- * race's declaration — one place for what a runner signs. It was card 1.2 inside "Ce fel de eveniment" (§358) and
- * moved whole. What they run on, how hard, how
- * long and how steep, whether it is a night event (automatic from the sunset, §394), and where the route can be
- * seen — a separate question from the meeting point (§49). How hard is asked in «Ce fel de eveniment» since §526,
- * with the band and its step side by side. All optional, so folded on both pages. "Nespecificat" is a real answer on the surface select:
- * the page omits the row rather than guessing (migration `0018`).
- *
- * Under the settings, in its own Română | English tabs, the route / training description (§387):
- * the pit stops, the climbs, what to expect, and a map as a picture in the text — the words' role's,
- * like every other text, both languages or neither (§352), shown under `#route` on the event page.
- *
- * For a role that may only read the settings, the card is its heading and its line (§358) — unless
- * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
- * alone, since those words are theirs. The type's box has already said the settings are not.
+ * "Traseul" (§350, §406): the route pills' settings — surface, length, climb, whether a night
+ * event (automatic from the sunset, §394) and where the route can be seen (separate from the
+ * meeting point, §49) — then per-language tabs for the route description under `#route` (§387,
+ * both languages or neither §352). "Nespecificat" makes the page omit the row. Difficulty is in
+ * «Ce fel de eveniment» (§526), the declaration under «Regulamentul» (§448). A settings reader
+ * sees heading and line, or only the description's tabs if the words are theirs (§358).
  */
 export default async function CourseBox({
   event,
@@ -54,10 +43,10 @@ export default async function CourseBox({
   const { words } = await summaryWords();
   // The event's own start on its own clock, for the night line's first paint (§394).
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
-  // The boxes as «Când și unde» shows them: "" for a part left blank (§545), never the provisional start.
+  // "" for a part left blank (§545), never the provisional start.
   const start = startBoxValues(event?.startsAt ?? null, zone);
-  // The span's end for the first paint, by the server's rule (§394): «Durata» (the saved end), else
-  // the programme's rows on the event's clock — the island reads both from the form after.
+  // The span's end for the first paint (§394): «Durata», else the programme's rows; the island
+  // re-reads both from the form.
   const savedMinutes = savedDurationMinutes(event?.startsAt, event?.endsAt);
   const savedProgramme = readScheduleItems(event?.scheduleItems).map((row) => {
     const from = toWallTimeInput(new Date(row.startsAt), zone);
@@ -72,8 +61,8 @@ export default async function CourseBox({
       event,
       {
         surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
-        // The automatic answer for the event's own date (§394), read by the same function as the pill.
-        // Nothing for a date or an hour left blank (§545): there is no sunset to compare them with.
+        // The automatic answer for the event's date (§394), by the pill's function; none without a
+        // date and hour (§545).
         night: event && start.date && start.time ? clubNightEvent({ ...event, nightOverride: null }).night : false,
       },
       languages.map((entry) => entry.translation),
@@ -128,26 +117,22 @@ export default async function CourseBox({
             sx={{ flex: 1 }}
           />
         </Stack>
-        {/* "Eveniment de noapte" (§394, replacing §382's "Necesită frontală"): Automat by default —
-            the Wednesday hill run is a night event from autumn to spring by its own sunset — with
-            "Da" and "Nu" for the organizer who knows better, and the automatic answer under it. */}
+        {/* "Eveniment de noapte" (§394): Automat by default, "Da"/"Nu" to override, the automatic
+            answer under it. */}
         <Box>
           <NightEventField
             name="event.nightOverride"
             defaultChoice={nightChoiceOf(event?.nightOverride)}
-            // The saved event's own place (§428, §416's rule), the club's on the create page. A map
-            // link or a pair typed in «Locul» in this sitting is read at the next save.
+            // The saved event's place (§416, §428), the club's on create; an unsaved change is read
+            // at the next save.
             place={event ? nightPlace(event) : env.CLUB_COORDINATES}
             zone={zone}
             start={start}
             durationMinutes={savedMinutes && savedMinutes > 0 ? savedMinutes : null}
             programme={savedProgramme}
             inSeries={inSeries}
-            // The repeat toggle is a field in the same form only on the create page — "repeat.on"
-            // inside the one `ActionForm` this card also lives in. On the edit page, "Repetă" is a
-            // separate `ActionForm` (the aside's own submit, `scope="repeat"`), so a name here could
-            // never be read from this form's data; the series sentence there depends on `inSeries`
-            // alone, computed server-side from the event's own row (§394).
+            // Only on the create page is the repeat tick in this form; on the editor «Repetă» is a
+            // separate form, so the series sentence there uses the server-side `inSeries` (§394).
             seriesToggleName={event ? undefined : "repeat.on"}
             words={{
               label: t("editor.night.label"),
@@ -166,10 +151,8 @@ export default async function CourseBox({
           />
           <BoxNote>{t("editor.night.help")}</BoxNote>
         </Box>
-        {/* The group run's optional self-declaration (§393) is under «Regulamentul» since §448
-            (`DeclarationCard`): it still follows the surface chosen here. */}
-        {/* A group run's minimum age had its own box here (§440); since §505 it is the one
-            `event.minAge` of «Regulamentul», for every type (`RulesBox`). */}
+        {/* The group run's self-declaration is under «Regulamentul» (§448) and the minimum age is
+            `RulesBox`'s `event.minAge` for every type (§505). */}
         <RecallField
           name="event.routeUrl"
           label={t("editor.routeUrl")}

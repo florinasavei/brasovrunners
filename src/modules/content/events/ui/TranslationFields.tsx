@@ -14,48 +14,26 @@ import type { EditableTranslation } from "../repository";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import OnlyForType from "./OnlyForType";
 
-/**
- * «Tradu din română» under an English box (§464): drawn for the English language only, and by the
- * button itself only where the page offers translation.
- */
+/** «Tradu din română» under an English box (§464), only where the page offers translation. */
 function translateButton(translation: { locale: Locale }, name: string) {
   return translation.locale === "en" ? <TranslateFieldButton en={name} /> : null;
 }
 
-/**
- * The rich-text editor's control names, read once here for the four text boxes that mount it: the
- * catalogue's dotted namespace in one place rather than once per box.
- */
+/** The rich-text editor's control names, read once for the four boxes that mount it. */
 async function editorLabels() {
   return richTextEditorLabels(await getTranslations("Admin.richText"));
 }
 
 /**
- * One language's text, split by the box of the event editor that asks for it (§350).
- *
- * The editor used to hold a language in one tab of one "Conținut" panel — the title, the place's
- * name, the summary, the description, the rules, the programme's notes, what to bring and the
- * page address, in the order somebody writes in (§260). Now every box that has per-language text
- * has its own Română | English tabs, and each piece here renders only its own fields, with the
- * same `name("…")` and the same `RecallField` as before — so `admin/actions.ts#translationInputFrom`
- * reads exactly what it always read, from whichever box posted it. A box hidden by type hides its
- * inputs; it never omits them: a language the person may edit posts every one of its fields, or
- * the save would write "" over what a hidden box held.
- *
- * The place's name is no longer one of them (§362): it is asked once per language in the Locul
- * box, beside the other language's, and saved with the event's fields — the Organizer's, not the
- * words' (`PlaceBox`, `PlaceToBeAnnounced`).
- *
- * A language the person may not edit renders no inputs at all — not the hidden ids either
- * (`TranslationHiddenFields` is not rendered for it) — so a save posts nothing for that language
- * and the server has nothing to refuse (BR-REQ-060-01): short fields as text, rich texts as
- * "completat / gol", and the box says whose words they are.
+ * One language's text, split by the editor box that asks for it (§350). Each piece renders only
+ * its own fields with the same `name("…")` and `RecallField`, so
+ * `admin/actions.ts#translationInputFrom` reads what it always read. A box hidden by type hides its
+ * inputs but never omits them, or the save would write "" over them. The place's name is not here
+ * (§362: `PlaceBox`, an event field). A language the person may not edit renders no inputs, not
+ * even the hidden ids, so nothing is posted for it (BR-REQ-060-01); it reads as text instead.
  */
 
-/**
- * What a piece needs of a translation: the stored row, or a blank one for the create form, whose
- * `id` and `version` are then absent.
- */
+/** A stored translation, or a blank one for the create form (no `id` or `version`). */
 export type TranslationDraft = Pick<
   EditableTranslation,
   | "locale"
@@ -104,10 +82,7 @@ function box(field: TranslationFieldName) {
 
 const named = (translation: TranslationDraft) => (field: string) => `translations.${translation.locale}.${field}`;
 
-/**
- * The event a stored translation belongs to, as the gallery picker's place (§485): «Din galerie»
- * in any of its texts opens on «Acest eveniment». The create form's blank rows have none.
- */
+/** The event a stored translation belongs to, for «Din galerie»'s «Acest eveniment» (§485); none on create. */
 const pictureScopeOf = (translation: TranslationDraft): PickerScope | undefined =>
   translation.eventId ? { kind: "event", id: translation.eventId } : undefined;
 
@@ -140,11 +115,9 @@ async function TextsReadOnly() {
 }
 
 /**
- * The row's id and the version the language was rendered from, once per editable language, at the
- * very top of the save form. A save carrying a stale version fails the whole save, both languages
- * and the event row together (BR-REQ-051-01 criterion 5). The create form has no row and posts
- * neither. After a refusal it is the version that was posted, not the one the database now holds
- * (`RecallHidden`, §315): the recalled edits were made against that one.
+ * The row's id and rendered version, per editable language, at the top of the save form: a stale
+ * version fails the whole save (BR-REQ-051-01 criterion 5). After a refusal it is the version that
+ * was posted, against which the recalled edits were made (`RecallHidden`, §315). None on create.
  */
 export function TranslationHiddenFields({ translation }: { translation: TranslationDraft }) {
   const name = named(translation);
@@ -158,10 +131,7 @@ export function TranslationHiddenFields({ translation }: { translation: Translat
   );
 }
 
-/**
- * Box 2, "Titlu și rezumat": the title, then the summary the card, the hero and every share carry
- * (§260) — required before publication, which its fold says on its face.
- */
+/** "Titlu și rezumat": the title and the summary every card, hero and share carries (§260); required to publish. */
 export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
   const name = named(translation);
@@ -178,8 +148,7 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
     <Stack spacing={2}>
       <RecallField name={name("title")} label={t("editor.fields.title")} defaultValue={translation.title} {...box("title")} />
       {translateButton(translation, name("title"))}
-      {/* In the same editor as everything else (§73): a sentence or two and, if the organizer
-          wants one, a picture. */}
+      {/* The same editor as everything else (§73): a sentence or two and perhaps a picture. */}
       <LazyRichTextEditor
         name={name("excerptBody")}
         label={t("editor.fields.excerpt")}
@@ -188,7 +157,7 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
         initialBody={translation.excerptJson ?? fromPlainText(translation.excerpt)}
         accessibleSuffix={translation.locale.toUpperCase()}
         pictureScope={pictureScopeOf(translation)}
-        // Its pictures are the listing card's, in the card's 16∶9 frame (§454).
+        // Its pictures are the listing card's, in its 16∶9 frame (§454).
         cardPictures
         labels={await editorLabels()}
       />
@@ -201,9 +170,8 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
 }
 
 /**
- * Box 3, "Descrierea evenimentului": the description proper, in the same editor a standing page
- * uses (§11.3, §71), folded so the heaviest editor mounts only when opened (§96). A film goes in
- * here too, with the editor's own YouTube button (§266).
+ * "Descrierea evenimentului": the standing-page editor (§71), folded so it mounts only when opened
+ * (§96). Films go here with the editor's YouTube button (§266).
  */
 export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
@@ -237,9 +205,8 @@ export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
 }
 
 /**
- * Box 6, "Programul zilei și ce să aduci", its tabs: the notes under the timed rows (§96, §117) —
- * not on a group run (§111), hidden, never removed — and what to bring, on every type: one line
- * in the confirmation, the reminder and the calendar entry (§81).
+ * "Programul zilei și ce să aduci" tabs: the notes under the timed rows (§96, §117; hidden on a
+ * group run, §111) and what to bring, repeated in the confirmation, reminder and calendar (§81).
  */
 export async function ProgrammeTextFields({ translation, mayEdit, eventType }: PieceProps & { eventType: EventType }) {
   const t = await getTranslations("Admin");
@@ -280,10 +247,7 @@ export async function ProgrammeTextFields({ translation, mayEdit, eventType }: P
   );
 }
 
-/**
- * Box 7, "Regulamentul": what the declaration says they read on this page, linked from every
- * email (§96). Folded; the editor mounts on opening.
- */
+/** "Regulamentul": what the declaration says they read, linked from every email (§96). Mounts on opening. */
 export async function RulesFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
   const name = named(translation);
@@ -316,10 +280,8 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
 }
 
 /**
- * Card 1.2, "Traseul", its tabs (§387): the route / training description — the pit stops, the
- * climbs, what to expect, and a map as a picture in the text (§72–§73) — in the same editor as the
- * description, folded so it mounts only when opened (§96). Shown under `#route` on the event page,
- * with the route's own links.
+ * "Traseul" tabs (§387): the route description, a map as a picture in the text (§72–§73), in the
+ * description's editor, mounting when opened (§96). Shown under `#route` with the route's links.
  */
 export async function RouteDescriptionFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
@@ -353,9 +315,8 @@ export async function RouteDescriptionFields({ translation, mayEdit }: PieceProp
 }
 
 /**
- * Box 14, "Adresa paginii și motoarele de căutare": the address, locked once published (§11.5) —
- * a locked box is disabled and posts nothing, so a hidden input carries it — and the two fields a
- * search engine shows.
+ * "Adresa paginii și motoarele de căutare": the address, locked once published (§11.5) — a
+ * disabled box posts nothing, so a hidden input carries it — and the two search-engine fields.
  */
 export async function AddressFields({ translation, mayEdit, slugLocked }: PieceProps & { slugLocked: boolean }) {
   const t = await getTranslations("Admin");
@@ -371,8 +332,7 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
   return (
     <Stack spacing={2}>
       {slugLocked && <input type="hidden" name={name("slug")} value={translation.slug} />}
-      {/* A locked address is disabled and posts nothing (the hidden field above carries it), so
-          its constraints would only mark a box nobody can type into. */}
+      {/* A locked address is disabled; its constraints would only mark a box nobody can type into. */}
       <RecallField
         name={name("slug")}
         label={t("editor.fields.slug")}
@@ -397,10 +357,8 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
 }
 
 /**
- * The club's discount on an external event's own fee (`DECISIONS.md` §394): one short line per
- * language, inside the cost card, shown only on an `EXTERNAL`-registration, `PAID` event
- * (`CostFields`). Never required — the organizer sets the price; the club only ever knows the
- * discount, if there is one.
+ * The club's discount note on an external event's fee (§394): one line per language, shown only
+ * for `EXTERNAL` + `PAID` (`CostFields`). Never required.
  */
 export async function DiscountNoteFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");

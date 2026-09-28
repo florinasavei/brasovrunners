@@ -23,32 +23,14 @@ import BibDesignPreview from "./BibDesignPreview";
 import BibFooterTextField from "./BibFooterTextField";
 
 /**
- * What a race number looks like, as the club decides it (`DECISIONS.md` §249; the owner: "I
- * wanna be able to design the BIDs").
+ * What a race number looks like (§249): a Server Component of ordinary inputs, folded under the
+ * bib colour (§173); the pictures are radios over already-uploaded assets. The one island is the
+ * preview (`BibDesignPreview`), seeded here with the stored design's address. The footer
+ * ("Subsol", §317) lists its switches in print order, each naming what it would print on this
+ * deployment; the club's line is a second island for its character count.
  *
- * A Server Component with ordinary inputs, folded away under the colour it extends — the bib's
- * colour has lived in this form since §173 and this is the rest of the same question. No
- * JavaScript decides anything: the checkboxes and the two selects post their own values, and
- * the pictures are radio buttons over the pictures already uploaded, so choosing one is a form
- * control rather than a widget.
- *
- * The one client island is the preview at the top (`BibDesignPreview`; the owner: "la BID îmi
- * trebuie un preview aici"): the bib as the picture route draws it for a sample runner, with
- * the boxes' current, unsaved values in its address. This component gives it the first address,
- * from the stored design, so the picture is there before any script runs; the island only
- * rebuilds it as the boxes change.
- *
- * **The marker input is not decoration.** A checkbox that is off posts nothing, so a form
- * without this panel — the create form — would otherwise read as "every switch off" and
- * silently redesign a bib. `present=1` is what tells the action that the design was on screen
- * (`app/[locale]/admin/actions.ts`).
- *
- * **The footer is a group of its own** ("Subsol", §317; the owner: "on the bid I have some
- * email, I wanna be able to control and toggle that!"): the switches and the club's own line,
- * laid out in the order they print, each switch naming what it would print on this deployment —
- * the mailbox, the site's host — so the club is never switching on a word it cannot see. The
- * line's box is the panel's second island, for its character count; everything else posts
- * itself, and the preview above follows all of it through the same query-string mirror.
+ * The `present=1` marker matters: an unticked checkbox posts nothing, so a form without this panel
+ * would otherwise read as "every switch off" and silently redesign the bib (`admin/actions.ts`).
  */
 export default async function BibDesignPanel({
   eventId,
@@ -57,10 +39,7 @@ export default async function BibDesignPanel({
   bibColour,
   summary,
 }: {
-  /**
-   * The event being designed; the preview asks the picture route for its title and date. Null on
-   * the create page (§350): every setting is there, and no preview — the route needs an event.
-   */
+  /** The event being designed, for the preview's title and date; null on create, where there is no preview. */
   eventId: string | null;
   /** What is stored, or the platform's own on an event nobody has designed. */
   design?: BibDesign;
@@ -71,18 +50,15 @@ export default async function BibDesignPanel({
   summary?: string;
 }) {
   const t = await getTranslations("Admin");
-  // The reader's own language, for the picture list's titles; the form has no locale prop.
+  // The reader's language, for the picture list's titles.
   const locale = (await getLocale()) as Locale;
   const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design }) : null;
   /*
-    The pictures already uploaded, read here rather than fetched by the browser: this form is a
-    Server Component and the list is the same one the pictures page shows. Nothing is offered
-    when there is no store configured — a local machine without R2 — and the two choices then
-    read "the club's colour" and "no sponsors", which is what such a deployment can honour.
+    The uploaded pictures, read on the server. With no store configured (local, no R2) nothing is
+    offered and the choices read "the club's colour" and "no sponsors".
   */
   const assets = isStorageConfigured() ? (await listMediaAssetsForAdmin(getDb(), locale)).slice(0, 60) : [];
-  // What the footer's two switches would print here: this deployment's own values, never a
-  // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
+  // What the footer's switches would print here: this deployment's values, never a literal (§317).
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
   // The first address the club shows (§442), as the bib routes print it.
   const replyTo = (await shownContactAddressesOrDefault())[0] ?? null;
@@ -93,8 +69,7 @@ export default async function BibDesignPanel({
     label: string,
     prints?: string | null,
   ) => (
-    // A `CheckboxField` like every other tick of the design (§315): it comes back as it was after a
-    // refused save, and its label travels as children, never as an element prop (the defect it documents).
+    // A `CheckboxField` (§315): recalled after a refused save; the label travels as children, never an element prop.
     <CheckboxField name={`event.bibDesign.${field}`} defaultChecked={design[field]}>
         <span>
           {label}
@@ -116,9 +91,8 @@ export default async function BibDesignPanel({
         {t(`editor.bibDesign.${field}Help`)}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        {/* A plain label with children rather than `FormControlLabel`'s element prop: the
-            defect `CheckboxField` documents. The radio comes back as ticked after a refused
-            submit (§315). */}
+        {/* A plain label with children, not `FormControlLabel`'s element prop (see `CheckboxField`).
+            Recalled after a refused submit (§315). */}
         <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 2, cursor: "pointer" }}>
           <RecallRadio
             name={`event.bibDesign.${field}`}
@@ -164,7 +138,7 @@ export default async function BibDesignPanel({
 
   return (
     <Panel glyph="bibDesign" collapsible level={4} id="box-bib-design" title={t("editor.bibDesign.title")} aside={summary} data-testid="bib-design">
-      {/* What tells the action that this panel was on the form; see the note above. */}
+      {/* Tells the action this panel was on the form; see above. */}
       <input type="hidden" name="event.bibDesign.present" value="1" />
 
       <Stack spacing={1.5}>
@@ -172,8 +146,7 @@ export default async function BibDesignPanel({
           {t("editor.bibDesign.intro")}
         </Typography>
 
-        {/* The bib as it would print with the boxes as they are now, redrawn as they change —
-            once the event exists: the picture route draws an event's title and date. */}
+        {/* The live preview, once the event exists: the picture route draws its title and date. */}
         {eventId && initialSrc && (
           <BibDesignPreview
             eventId={eventId}
@@ -225,8 +198,7 @@ export default async function BibDesignPanel({
         {picker("headerImageSrc")}
         {picker("sponsorImageSrc")}
 
-        {/* The small print, the club's to compose (§317), in the order it prints: the event,
-            the partners, the club's own line, the website, the mailbox. */}
+        {/* The small print (§317), in print order: event, partners, the club's line, website, mailbox. */}
         <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="bib-design-footer">
           <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
             {t("editor.bibDesign.footer.title")}

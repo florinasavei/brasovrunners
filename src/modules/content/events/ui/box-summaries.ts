@@ -15,25 +15,13 @@ import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
 
 /**
- * The line each box of the event editor shows while it is shut (§350; the owner asked for the
- * editor to read "like the event's fact sheet"): "Parcul Titulescu · hartă", "Pe site · 150 locuri
- * · declarația v3". A closed fold that says nothing is a fold nobody opens, and a
- * fold that says its answer is one nobody has to open to check it.
- *
- * Pure functions of the saved event and its languages, rendered on the server (`Panel`'s `aside`)
- * — the editor opens with the summaries of what is stored; the create page shows the summaries of
- * the defaults. The words arrive as templates from the catalogue (`Admin.editor.boxes.summary`,
- * read with `t.raw`), filled here with `fillIn`, because the catalogues carry no ICU plurals: a
- * counted noun is three keys and `countForm` picks one.
- *
- * Dates are the site's short form (`src/i18n/dates.ts`, §350 weekday on every date) — `Sâm., 21
- * nov. 2026, 09:00` / `Sat, 21 Nov 2026, 09:00` — in the reader's language and the event's own
- * time zone, never the server's or the browser's clock; times are 24-hour.
- *
- * **Bilingual everywhere** (§354): an optional text is both languages or neither, so a closed line
- * names a text stored in one language — "de scris și în EN", "etichetă într-o singură limbă" — as
- * the one the next save will refuse; and a long text whose English says exactly what its Romanian
- * does is named too — "EN identic cu RO" — as a question, never a refusal.
+ * The line each editor box shows while shut (§350): "Parcul Titulescu · hartă", "Pe site · 150
+ * locuri · declarația v3". Pure functions of the saved event (or the create page's defaults),
+ * rendered on the server. Words are catalogue templates (`Admin.editor.boxes.summary`, `t.raw`)
+ * filled with `fillIn`; the catalogues carry no ICU plurals, so `countForm` picks among three keys.
+ * Dates are the short form of `src/i18n/dates.ts` in the reader's language and the event's zone,
+ * 24-hour. A one-language optional text is named as the next save's refusal, and identical long
+ * texts as a question (§354).
  */
 
 /** A counted noun, as `countForm` names its three forms. */
@@ -103,15 +91,14 @@ function join(words: SummaryWords, parts: readonly (string | null | undefined | 
 }
 
 /**
- * `Sâm., 21 nov. 2026, 09:00` — a date and its time as the site writes them in a list or a closed
- * line (`formatDay`'s short form, §350), in the reader's language and the event's zone. `inline`
- * keeps Romanian's lower case for a date inside a sentence ("până la dum., 1 nov. 2026").
+ * `Sâm., 21 nov. 2026, 09:00` in the reader's language and the event's zone (§350). `inline`
+ * keeps Romanian's lower case inside a sentence.
  */
 export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" | "continues" = "start"): string {
   return formatDay(date, { locale, timeZone: zone, style: "short", withTime: true, position });
 }
 
-/** `Sâm., 21 nov. 2026` — the same short form without the time. */
+/** `Sâm., 21 nov. 2026` — the same without the time. */
 export function summaryDate(date: Date, zone: string, locale: string, position: "start" | "inline" = "start"): string {
   return formatDay(date, { locale, timeZone: zone, style: "short", position });
 }
@@ -135,7 +122,7 @@ export type SummaryTranslation = {
   routeDescriptionJson?: unknown;
   checklist: string | null;
   locationName: string | null;
-  /** The two search-engine overrides (box 14), when the caller has them — the editor always does. */
+  /** The two search-engine overrides, when the caller has them (the editor always does). */
   seoTitle?: string | null;
   seoDescription?: string | null;
 };
@@ -149,13 +136,9 @@ const summaryBlank = (translation: SummaryTranslation) =>
 export type BlankTest = (translation: SummaryTranslation) => boolean;
 
 /**
- * Which languages a box marks "· incomplet" on first paint (the strip re-reads as it is typed):
- * `required` — a watched value blank here; `parity` — blank here while another language has it.
- *
- * A box that watches several fields passes one test per field, and the rule applies to each field
- * on its own — exactly what `LocaleTabPanels` does as it re-reads `watch.names` — so the first
- * paint and the first keystroke agree: a programme with the notes in Romanian and the checklist in
- * English marks both tabs from the start, not only once somebody types.
+ * Which languages a box marks "· incomplet" on first paint: `required` — a watched value blank
+ * here; `parity` — blank here while another language has it. Applied per field, as
+ * `LocaleTabPanels` re-reads `watch.names`, so the first paint and the first keystroke agree.
  */
 export function incompleteLocales(
   translations: readonly SummaryTranslation[],
@@ -189,9 +172,8 @@ export const BLANK = {
 } as const;
 
 /**
- * Box 2: `„Crosul Tâmpei” · „Tâmpa Cross”`. What is missing is said before it, by the card's
- * required line (§406: «lipsesc: Titlu (EN) · Rezumat (EN)», `publish-check.ts#cardGapLine`), from
- * the check publication runs — not a second time here.
+ * `„Crosul Tâmpei” · „Tâmpa Cross”`. What is missing is said by the card's required line
+ * (`publish-check.ts#cardGapLine`, §406), not again here.
  */
 export function titleSummarySummary(words: SummaryWords, translations: readonly SummaryTranslation[]): string {
   const titles = translations.map((translation) =>
@@ -202,10 +184,8 @@ export function titleSummarySummary(words: SummaryWords, translations: readonly 
 }
 
 /**
- * The languages after the first whose text, for any of `posted` (the names its boxes post after
- * `translations.<locale>.`), is the first language's word for word (§354, bilingual everywhere):
- * what a strip marks on the English tab and a closed line names. `identicalInBothLanguages`
- * decides, so a short text never counts.
+ * The languages after the first whose text for any of `posted` repeats the first's word for word
+ * (§354), decided by `identicalInBothLanguages`, so a short text never counts.
  */
 export function identicalLocales(translations: readonly SummaryTranslation[], posted: readonly string[]): string[] {
   const [first, ...rest] = translations;
@@ -223,11 +203,9 @@ function identicalMarks(words: SummaryWords, translations: readonly SummaryTrans
 }
 
 /**
- * Boxes 3 and 7: `RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)`.
- *
- * A text written in one language only is the one the next save refuses (§352, both or neither),
- * so the line says which language still owes it rather than what the empty page would fall back
- * to — nothing falls back any more. Then `EN identic cu RO` when both say the same words.
+ * `RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)`: a one-language text is
+ * the next save's refusal (§352), so the line names the language that owes it; then `EN identic cu
+ * RO` when both match.
  */
 function perLanguageText(
   words: SummaryWords,
@@ -252,15 +230,14 @@ export function rulesSummary(words: SummaryWords, translations: readonly Summary
 
 type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone"> & Partial<Pick<EditableEvent, "dateToBeAnnounced" | "timeToBeAnnounced">>;
 
-/** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` — the duration in hours and minutes (§433). */
+/** `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` (duration in hours and minutes, §433). */
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
   const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
-  // A part left blank (§545, amending §533) is not said at all: no invented date, and the day alone
-  // when only the hour was left blank — never the provisional value the platform stored in its place.
+  // A part left blank (§545) is not said: never the stored provisional value.
   const blank = blankStartParts(event.startsAt, event.timezone);
   return join(words, [
-    // Said first while the date is held back (§533): the provisional date after it is staff's alone.
+    // Said first while the date is held back (§533).
     event.dateToBeAnnounced ? words.when.tba : event.timeToBeAnnounced ? words.when.timeTba : null,
     blank.date ? null : blank.time ? summaryDate(event.startsAt, event.timezone, locale) : summaryDateTime(event.startsAt, event.timezone, locale),
     event.type === "RACE" && event.raceStartsAt
@@ -270,7 +247,7 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
   ]);
 }
 
-/** Sub-card 4.1: `Europe/Bucharest — ora României`, or the zone alone elsewhere. */
+/** `Europe/Bucharest — ora României`, or the zone alone elsewhere. */
 export function timezoneSummary(words: SummaryWords, zone: string): string {
   return zone === CLUB_TIME_ZONE ? fillIn(words.timezone.home, { zone }) : zone;
 }
@@ -278,12 +255,8 @@ export function timezoneSummary(words: SummaryWords, zone: string): string {
 type PlaceEvent = Pick<EditableEvent, "locationName" | "locationAddress" | "locationToBeAnnounced" | "mapUrl">;
 
 /**
- * Box 5: `Parcul Titulescu (EN: Titulescu Park) · hartă`, or `Se anunță mai târziu`.
- *
- * The Romanian name first — the event's own meeting point — and another language's only when it
- * says something else (§362): "Stadionul Tineretului" twice over would be the redundancy the box
- * was rebuilt to remove. Each language reads as its box and its page do (`placeInBox`), so an
- * event saved before §362, whose English row is empty, summarises as the one name it shows.
+ * `Parcul Titulescu (EN: Titulescu Park) · hartă`, or `Se anunță mai târziu`. Another language's
+ * name only when it differs (§362); each language reads as its box and page do (`placeInBox`).
  */
 export function placeSummary(words: SummaryWords, event: PlaceEvent | null, translations: readonly SummaryTranslation[]): string {
   if (!event) return words.place.tba;
@@ -302,9 +275,8 @@ export function placeSummary(words: SummaryWords, event: PlaceEvent | null, tran
 type ProgrammeEvent = Pick<EditableEvent, "scheduleItems" | "timezone">;
 
 /**
- * Box 6: `4 momente, 08:00–12:30 · ce să aduci: RO, EN`, or a group run's own words — then, for
- * the notes and what to bring (§354), the language that still owes one of them, and
- * `EN identic cu RO` when either says the same words in both.
+ * `4 momente, 08:00–12:30 · ce să aduci: RO, EN`, or a group run's own words; then the language
+ * that still owes the notes or what to bring, and `EN identic cu RO` (§354).
  */
 export function programmeSummary(
   words: SummaryWords,
@@ -324,8 +296,7 @@ export function programmeSummary(
     const last = summaryTime(new Date(lastItem.endsAt ?? lastItem.startsAt), event.timezone, locale);
     rows = `${counted(words.programme.moments, items.length, locale)}${first === last ? `, ${first}` : `, ${fillIn(words.programme.range, { from: first, to: last })}`}`;
   }
-  // Each field on its own, as the strip's marks read them (`BLANK.programme`); a group run keeps
-  // no notes (§111), so only what to bring counts there.
+  // Each field on its own (`BLANK.programme`); a group run has no notes (§111).
   const owed = incompleteLocales(translations, "parity", hasProgramme ? BLANK.programme : [BLANK.programme[1]]);
   return join(words, [
     rows,
@@ -341,17 +312,15 @@ type RegistrationEvent = Pick<
 >;
 
 /**
- * The cost select's own starting value (§398; the owner: "by default toate evenimentele sunt
- * gratuite"). A new event (`event === null`, the create page before a first save) preselects
- * `FREE`; an edited event keeps exactly what it has — an unset cost included, which stays "" and
- * reads as "Nespecificat", the same as before this decision. `RegistrationBox` posts this value
- * whether or not its box is opened, so a save that never touches the cost still writes `FREE`.
+ * The cost select's start (§398): `FREE` on a new event; an edited one keeps what it has, an
+ * unset "" («Nespecificat») included. The select always posts, so a create that never opens it
+ * writes `FREE`.
  */
 export function initialCostTypeOf(event: Pick<RegistrationEvent, "costType"> | null): string {
   return event === null ? "FREE" : (event.costType ?? "");
 }
 
-/** Box 8: `Pe site · 150 locuri · gratuit · declarația v3 · lista ascunsă`. */
+/** `Pe site · 150 locuri · gratuit · declarația v3 · lista ascunsă`. */
 export function registrationSummary(
   words: SummaryWords,
   event: RegistrationEvent | null,
@@ -381,10 +350,8 @@ type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClos
   Partial<Pick<EditableEvent, "registrationOpensSoon">>;
 
 /**
- * Sub-card 8.1: `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, or `De la publicare – până
- * la start`, or `Se deschid în curând – până la start` while the opening has no date (§451). The
- * second date continues the first, so it keeps the language's own case, as `formatDayRange`
- * writes a span.
+ * `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, `De la publicare – până la start`, or `Se
+ * deschid în curând – până la start` (§451). The second date keeps the language's own case.
  */
 export function registrationWindowSummary(words: SummaryWords, event: WindowEvent | null, locale: string): string {
   const from = event?.registrationOpensSoon
@@ -397,10 +364,8 @@ export function registrationWindowSummary(words: SummaryWords, event: WindowEven
 }
 
 /**
- * The minimum age's part of «Regulamentul»'s closed line (§505 — the box moved there from the
- * registration card's «Condiții de participare», for every type): `vârsta minimă 16 ani`, or
- * `fără vârstă minimă` for zero — never "de la 0 ani". The number reads through `yearsPhrase`,
- * so twenty is «20 de ani».
+ * The minimum age in «Regulamentul»'s closed line (§505): `vârsta minimă 16 ani`, or `fără vârstă
+ * minimă` for zero. `yearsPhrase` handles «20 de ani».
  */
 export function minAgeSummary(words: SummaryWords, minAge: number, locale: string): string {
   return minAge > 0 ? fillIn(words.age.from, { age: yearsPhrase(minAge, locale) }) : words.age.none;
@@ -409,11 +374,8 @@ export function minAgeSummary(words: SummaryWords, minAge: number, locale: strin
 type DeclarationEvent = Pick<EditableEvent, "registrationMode" | "offersGroupRunDeclaration">;
 
 /**
- * The «Declarația pe propria răspundere» card under «Regulamentul» (§448), and the part of the
- * rules card's closed line it adds: a group run's optional self-declaration — `declarație trail` or
- * `fără declarație` — or a race's, when it registers on the site — `declarația v3`, or the missing
- * one named as the gap it is. Null when the event asks for no declaration at all (a race registering
- * elsewhere, or not at all).
+ * The declaration card's line (§448): a group run's `declarație trail` / `fără declarație`, or a
+ * site-registering race's `declarația v3` or its gap. Null when no declaration is asked.
  */
 export function declarationSummary(
   words: SummaryWords,
@@ -423,9 +385,8 @@ export function declarationSummary(
     declarationVersion: number | null;
     surface: string | null;
     /**
-     * Whether an approved, not withdrawn text of the run's surface is in force (§393). Ticked with
-     * none, the public button does not show, so the line says so rather than «declarație pentru
-     * Trail» (§483). Absent means "not known here" and reads as in force, as before.
+     * Whether an approved, not withdrawn text of the run's surface is in force (§393, §483); ticked
+     * with none, the line says the button will not show. Absent reads as in force.
      */
     groupRunTextInForce?: boolean;
   },
@@ -443,17 +404,15 @@ export function declarationSummary(
 }
 
 /**
- * Sub-card 8.3: `Cerută cu 7 zile înainte, termen cu 2 zile înainte`; `…, termen la start` when the
- * deadline is zero (§407 — the one test, `confirmationDueAtStart`); and the sentence for no window
- * at all — the first number zero, or a deadline at or before the opening (§104's
- * `confirmationWindow`) — rather than two numbers the allocator ignores.
+ * `Cerută cu 7 zile înainte, termen cu 2 zile înainte`; `…, termen la start` for a zero deadline
+ * (§407, `confirmationDueAtStart`); or the no-window sentence (§104's `confirmationWindow`).
  */
 export function confirmationSummary(words: SummaryWords, opens: number, due: number): string {
   if (opens <= 0 || opens <= due) return words.confirmation.off;
   return fillIn(confirmationDueAtStart({ days: due }) ? words.confirmation.atStart : words.confirmation.sentence, { opens, due });
 }
 
-/** Sub-card 8.4: `De la 100 · verde · rezervă 900–949 · 42 alocate, 2 de tipărit`. */
+/** `De la 100 · verde · rezervă 900–949 · 42 alocate, 2 de tipărit`. */
 export function bibsSummary(
   words: SummaryWords,
   start: number,
@@ -473,8 +432,8 @@ export function bibsSummary(
 }
 
 /**
- * Sub-sub-card 8.4.1: `Numele alergătorului, Data · subsol: Partenerii` — the ticks that are on,
- * in the words of their own boxes, so the summary cannot drift from the panel.
+ * `Numele alergătorului, Data · subsol: Partenerii` — the ticks that are on, in their boxes' own
+ * words, so the summary cannot drift from the panel.
  */
 export function bibDesignSummary(
   words: SummaryWords,
@@ -487,7 +446,7 @@ export function bibDesignSummary(
   ]) || words.nothing;
 }
 
-/** Sub-card 8.5: `Ascunsă`, or what a published list shows. */
+/** `Ascunsă`, or what a published list shows. */
 export function startListSummary(words: SummaryWords, visibility: string | null | undefined): string {
   return visibility === "NAMES" ? words.startList.shown : words.startList.hidden;
 }
@@ -495,10 +454,8 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride">;
 
 /**
- * The night event's word on the closed "Traseul" card (§394): `de noapte` for the organizer's "Da",
- * `de zi` for "Nu", `de noapte (automat)` when automatic and the event's own date is one, and
- * `de zi (automat)` when automatic and it is not — a stated answer, unlike the true "nothing"
- * this card gives a fact nobody typed, since "Automat" is always a choice, never a blank.
+ * The night word on the closed "Traseul" card (§394): `de noapte` / `de zi` for Da / Nu, with
+ * `(automat)` when automatic — "Automat" is always a choice, never a blank.
  */
 export function nightSummary(words: SummaryWords, nightOverride: boolean | null | undefined, computedNight: boolean): string | null {
   if (nightOverride === true) return words.course.night;
@@ -513,11 +470,9 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
 }
 
 /**
- * Sub-card 1.2: `Trail · 12 km · +450 m · de noapte (automat) · traseu · cu descriere`, or
- * `Nimic completat` (the night event, §394 — `labels.night` is the automatic answer for the event's
- * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
- * written in every language, `descriere într-o singură limbă` when in one only — the text the next
- * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
+ * `Trail · 12 km · +450 m · de noapte (automat) · traseu · cu descriere`, or `Nimic completat`.
+ * `labels.night` is the caller's automatic answer (§394). The route description (§387) adds `cu
+ * descriere`, `descriere într-o singură limbă` (§352) or `EN identic cu RO` (§354).
  */
 export function courseSummary(
   words: SummaryWords,
@@ -541,9 +496,8 @@ export function courseSummary(
 type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links">;
 
 /**
- * "Linkuri și fișiere": `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
- * `etichetă într-o singură limbă` when a row carries a label in one language only (§354): the
- * page shows the kind's own word for it in both languages, and the next save will refuse it.
+ * `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link`, plus `etichetă
+ * într-o singură limbă` for a one-language label, which the next save refuses (§354).
  */
 export function linksSummary(
   words: SummaryWords,
@@ -566,14 +520,9 @@ export function linksSummary(
 type CoHostEvent = Parameters<typeof readCoHosts>[0];
 
 /**
- * Box 12: `Împreună cu Brașov Running Festival · 2 linkuri · cu descriere`, or `Fără parteneri`.
- *
- * The links are counted across every card; the description (§352) is one word — "cu descriere"
- * when a card carries it in both languages — and says "descriere într-o singură limbă" instead
- * whenever a card holds half a pair, because that card is the one the next save will refuse and
- * the closed line is where the organizer sees it first. A partner's link with its label in one
- * language only is named the same way, "etichetă într-o singură limbă" (§354, bilingual
- * everywhere), and a description whose English is its Romanian word for word, `EN identic cu RO`.
+ * `Împreună cu Brașov Running Festival · 2 linkuri · cu descriere`, or `Fără parteneri`. Links are
+ * counted across cards. A half-written description (§352) or one-language link label (§354) is
+ * named as the next save's refusal; an identical description as `EN identic cu RO`.
  */
 export function coHostsSummary(words: SummaryWords, event: CoHostEvent | null, locale: string): string {
   const hosts = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null });
@@ -594,16 +543,15 @@ export function coHostsSummary(words: SummaryWords, event: CoHostEvent | null, l
   ]);
 }
 
-/** Box 13: `Eveniment principal · Ediție specială`, or `Nimic în evidență`. */
+/** `Eveniment principal · Ediție specială`, or `Nimic în evidență`. */
 export function promotionSummary(words: SummaryWords, event: Pick<EditableEvent, "featured" | "isSpecial"> | null): string {
   const line = join(words, [event?.featured ? words.promotion.featured : null, event?.isSpecial ? words.promotion.special : null]);
   return line || words.promotion.none;
 }
 
 /**
- * Box 14: `/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare` — and
- * `SEO într-o singură limbă` when a search-engine override is written in one language only (§354),
- * the text the next save refuses.
+ * `/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare`, plus `SEO
+ * într-o singură limbă` for a one-language override (§354).
  */
 export function addressSummary(
   words: SummaryWords,

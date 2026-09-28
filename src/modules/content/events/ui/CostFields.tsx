@@ -7,33 +7,15 @@ import RecallField from "@/shared/forms/recall";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
 import { useSelectedValue } from "./OnlyForType";
 
-/** The two boxes' constraints as the registration box reads them off the schema (§315): plain data, never zod. */
+/** The two boxes' constraints read off the schema (§315): plain data, never zod. */
 type BoxProps = ReturnType<typeof textFieldConstraints>;
 
 /**
- * "Suma" and "Unde se plătește", or "Link pentru donație" and "Suma sugerată" — one pair of
- * columns (`cost_amount`, `cost_url`) wearing whichever pair of labels the chosen kind needs
- * (`DECISIONS.md` §343; the owner, of "Cu taxă" showing no box for the money: "usually nothing
- * is paid; the exception is Wings for Life, where a donation is made on another site").
- *
- * One `RecallField` per column, not two — a second pair with the same `name` would post twice —
- * so this watches `event.costType` the way `OnlyForType` does and relabels rather than
- * duplicates. Hidden, not removed, while the kind is `FREE` or not stated: whatever was typed
- * for a `PAID` event is still there if the club tries `DONATION` and comes back, the same rule
- * `PlaceToBeAnnounced` keeps for the meeting point (§328).
- *
- * `required` follows the chosen kind — the amount exactly while `PAID` is chosen, the link
- * exactly while `DONATION` is — the same discipline `PlaceToBeAnnounced` keeps for the meeting
- * point (§328): a box is `required` only while it is also shown, so a browser never refuses a
- * submit over a box hidden by `display: none` with nothing to focus. Unlike the meeting point,
- * neither column carries `required` from the schema itself (`content/events/fields.ts` leaves
- * both optional, refusing a blank one only through `costRule`'s cross-field check), so there is
- * no schema-level `required` on `slotProps.htmlInput` for the conditional prop to fight —
- * setting `required` on the field is the whole answer, where `PlaceToBeAnnounced` also has to
- * override `slotProps.htmlInput.required` to win against the schema's own. The rule that a paid
- * event must say how much, and a donation where, is still the server's
- * (`content/events/fields.ts#costRule`) — the browser now refuses a blank box exactly when the
- * server would.
+ * One pair of columns (`cost_amount`, `cost_url`) relabelled by the chosen cost kind — amount and
+ * where to pay, or donation link and suggested sum (§343). One `RecallField` per column (a second
+ * with the same `name` would post twice), hidden not removed while FREE, so typed values survive a
+ * kind change (as `PlaceToBeAnnounced`, §328). A box is `required` only while shown, so the browser
+ * never refuses over a hidden box; the rule itself is the server's (`fields.ts#costRule`).
  */
 export default function CostFields({
   initialCostType,
@@ -59,10 +41,8 @@ export default function CostFields({
     donationAmountHelp: string;
   };
   /**
-   * The discount note's own strip, per language, rendered by the caller (`RegistrationBox`) so
-   * this file need not know about `LocaleTabPanels` or the editor's translations — only when to
-   * show it (`DECISIONS.md` §394). `children`, not a named prop: a Server Component may hand a
-   * client component `children` but no other element-valued prop (§370's own guard).
+   * The discount note, per language, rendered by the caller (§394). `children`, because a Server
+   * Component may pass a client component no other element-valued prop (§370).
    */
   children: ReactNode;
 }) {
@@ -70,9 +50,8 @@ export default function CostFields({
   const mode = useSelectedValue("event.registrationMode", initialMode);
   const isDonation = current === "DONATION";
   const shown = current === "PAID" || isDonation;
-  // The club's discount only means anything where the fee is settled at another organizer's own
-  // form (`DECISIONS.md` §394): hidden, not removed, the same rule the two boxes above follow —
-  // switching back to "La organizator" finds what was typed.
+  // The discount applies only where the fee is paid at another organizer's form (§394); hidden,
+  // not removed, like the boxes above.
   const showDiscount = current === "PAID" && mode === "EXTERNAL";
 
   return (
@@ -87,12 +66,8 @@ export default function CostFields({
           required={current === "PAID"}
           sx={{ flex: 1 }}
         />
-        {/* Hidden, not removed, while the club's discount strip is the one that matters
-            (`showDiscount`): the page, the .ics and the JSON-LD all ignore `costUrl` on an
-            `EXTERNAL` + `PAID` event now (`DECISIONS.md` §394 — the fee is paid at the
-            organizer's own form) — showing the box here would let an organizer fill it and watch
-            it vanish from the site with no explanation. Whatever was typed stays, the same rule
-            the pair follows switching between `PAID` and `DONATION`. */}
+        {/* Hidden (not removed) while the discount note applies: on EXTERNAL + PAID the site ignores
+            `costUrl` (§394), so an editable box would vanish from the page unexplained. */}
         <Box sx={{ display: showDiscount ? "none" : "block", flex: 1 }}>
           <RecallField
             name="event.costUrl"

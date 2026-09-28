@@ -5,15 +5,10 @@ import type { Database } from "@/db/types";
 import { type Locale, routing } from "@/i18n/routing";
 
 /**
- * Backoffice reads (BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02).
- *
- * Separate from `modules/events/repository.ts` on purpose. That file returns only PUBLISHED
- * rows and only the columns a public page may show; these return every editorial status,
- * including drafts, which is precisely what must never reach a public query. Keeping the two
- * apart means a change here cannot widen what the public site renders.
- *
- * Every function is a read. Writes go through `service.ts`, which is where the authorization
- * and the version check live.
+ * Backoffice reads (BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02). Kept apart from
+ * `modules/events/repository.ts`, which returns only PUBLISHED rows and public columns: these
+ * include drafts, so a change here cannot widen what the public site renders. Reads only; writes
+ * go through `service.ts`, where authorization and the version check live.
  */
 
 export type EditableTranslation = typeof eventTranslations.$inferSelect;
@@ -39,19 +34,9 @@ export async function listEventsForBackoffice<T extends Record<string, unknown>>
 }
 
 /**
- * How many registrations each event carries, for the list screen.
- *
- * `deleteEvent` refuses an event that has any, and the list had no way to say so: the button was
- * simply offered and the refusal arrived afterwards as an error code. A count turns that into a
- * sentence an organizer accepts before pressing anything — "eleven people have registered" is a
- * reason; a button that fails is not (BR-REQ-060-01: the guard is still on the server either
- * way, and this only changes what the screen is able to explain).
- *
- * `TEST` rows are counted too, deliberately. They block a delete exactly as real ones do, because
- * the foreign key does not care what kind they are, so a count that omitted them would explain
- * the refusal with a number that disagreed with it.
- *
- * One grouped query for the whole list rather than one per row.
+ * Registrations per event for the list, so the screen can say why a delete would be refused
+ * (the guard stays on the server, BR-REQ-060-01). `TEST` rows count too: the foreign key blocks a
+ * delete regardless of kind. One grouped query for the whole list.
  */
 export async function countRegistrationsByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -60,8 +45,7 @@ export async function countRegistrationsByEvent<T extends Record<string, unknown
     .select({
       eventId: registrations.eventId,
       total: count(),
-      // Split out since §176: an event blocked only by test rows is deleted with them, and the
-      // row must say that rather than "archive it instead" to somebody who already has.
+      // An event blocked only by test rows is deleted with them (§176); the row says so.
       test: sql<number>`count(*) FILTER (WHERE ${registrations.kind} = 'TEST')`.mapWith(Number),
     })
     .from(registrations)
@@ -70,11 +54,7 @@ export async function countRegistrationsByEvent<T extends Record<string, unknown
   return new Map(rows.map((row) => [row.eventId, { total: row.total, test: row.test }]));
 }
 
-/**
- * Confirmed and checked-in per event — the two numbers the desk shows (`countDesk`), for the
- * events list on race day (`DECISIONS.md` §83): an organizer watching from the office sees
- * how many are here without opening the desk.
- */
+/** Confirmed and checked-in per event, the desk's two numbers (`countDesk`), for the list on race day (§83). */
 export async function countConfirmedAndCheckedInByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
 ): Promise<Map<string, { confirmed: number; checkedIn: number }>> {
@@ -114,11 +94,8 @@ export async function findTranslationById<T extends Record<string, unknown>>(
 }
 
 /**
- * One translation and the event it belongs to, in one query.
- *
- * Editing a translation needs both now: the author is on the translation, but the editorial
- * status and the first-publication date — what decides whether this is live content and whether
- * the slug is still editable — moved to the event (`DECISIONS.md` §28).
+ * One translation and its event in one query: the editorial status and first-publication date,
+ * which decide liveness and whether the slug is editable, are on the event (§28).
  */
 export async function findTranslationWithEventById<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -146,10 +123,8 @@ export async function listTranslationsForEvent<T extends Record<string, unknown>
 }
 
 /**
- * The slugs already taken in one locale, among a candidate set.
- *
- * Duplicating an event has to invent slugs nobody is using, and `UNIQUE(locale, slug)` is what
- * would otherwise reject the copy — asking first turns a constraint violation into a suffix.
+ * The slugs already taken in one locale among candidates, so a duplicate gets a suffix instead of
+ * hitting `UNIQUE(locale, slug)`.
  */
 export async function findTakenSlugs<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -165,12 +140,8 @@ export async function findTakenSlugs<T extends Record<string, unknown>>(
 }
 
 /**
- * One event and one locale, whatever its editorial status — the preview query
- * (BR-REQ-051-02).
- *
- * This is the one read in the codebase that deliberately returns unpublished content, which
- * is why it lives here rather than beside the public queries, and why every caller of it is
- * behind `requireStaff()`.
+ * One event and locale whatever its editorial status — the preview (BR-REQ-051-02). The one read
+ * that deliberately returns unpublished content; every caller is behind `requireStaff()`.
  */
 export async function findTranslationForPreview<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -187,10 +158,9 @@ export async function findTranslationForPreview<T extends Record<string, unknown
 }
 
 /**
- * Every date of a series — the source and each date made from it — soonest first, with what
- * the editor's header needs to say which one is open and mark the ones unlike the others
- * (§131). Two indexed reads' worth for a series of any length; archived dates included, so
- * the count is the series' own.
+ * Every date of a series, source included, soonest first, with what the editor's header needs to
+ * mark the open date and the ones unlike the others (§131). Archived dates included, so the count
+ * is the series' own.
  */
 export async function listSeriesDates<T extends Record<string, unknown>>(db: Database<T>, sourceId: string) {
   return db
@@ -212,18 +182,10 @@ export async function listSeriesDates<T extends Record<string, unknown>>(db: Dat
 }
 
 /**
- * Exactly what a hard delete would destroy, read before anything is pressed (BR-REQ-037-06).
- *
- * The screen that asks for a typed confirmation has to be able to state the consequence, and
- * the consequence is four numbers and a fact: how many registrations there are, how many of
- * them are confirmed people who expect to run, how many are `TEST` rows, and — the one that
- * decides whether this is a mistake being tidied up or a season being destroyed — whether any
- * of them is a real participant at all (`DECISIONS.md` §30). A count of "2" means nothing on
- * its own; "2, both of them real people, one confirmed" is a sentence somebody can act on.
- *
- * `titles` is every language's title *with its locale*, because that is what the confirmation
- * field compares against: the organizer types the title they can see, the event has two, and
- * which one they can see depends on the language the backoffice is in.
+ * What a hard delete would destroy, read before anything is pressed (BR-REQ-037-06): how many
+ * registrations, how many confirmed, how many `TEST`, and whether any is a real participant
+ * (§30). `titles` carries every language's title with its locale, since the typed confirmation is
+ * compared with the title the organizer sees in the backoffice's language.
  */
 export type EventErasurePlan = {
   eventId: string;
@@ -265,8 +227,7 @@ export async function readEventErasurePlan<T extends Record<string, unknown>>(
     eventId: event.id,
     titles: titles
       .filter((row) => row.title.trim() !== "")
-      // The default locale first, so a plan read without a reader — a test, an audit row — gets
-      // the club's own language rather than whichever locale sorts first.
+      // The default locale first, so a plan read without a reader gets the club's language.
       .sort((a, b) => routing.locales.indexOf(a.locale) - routing.locales.indexOf(b.locale)),
     startsAt: event.startsAt,
     timezone: event.timezone,
@@ -278,7 +239,7 @@ export async function readEventErasurePlan<T extends Record<string, unknown>>(
   };
 }
 
-/** The title of an event in one language — for the note on a series' date (§122); the other language if that one is missing. */
+/** An event's title in one language (the other if missing), for the note on a series' date (§122). */
 export async function findEventTitle<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
