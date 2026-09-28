@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { updateSiteFontSize } from "@/modules/appearance/site-font-size";
 import { SITE_TINT_REFUSAL, updateSiteTint } from "@/modules/appearance/site-tint";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -45,4 +46,24 @@ export async function updateSiteTintAction(_previous: FormOutcome | null, form: 
   revalidatePath(path);
   await flashOutcome({ saved: "siteTint" });
   redirect(`${path}?saved=siteTint#admin-alert`);
+}
+
+/**
+ * «Mărimea textului» (§NNN): the public pages' text size, one of four steps. A club setting (§450)
+ * — the Administrator's at the door, and the service asserts it again. Asked first (§384): every
+ * visitor reads at the new size from the next page view.
+ */
+export async function updateSiteFontSizeAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/appearance" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateSiteFontSize(getDb(), actor, { size: form.get("size") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "siteFontSize" });
+  redirect(`${path}?saved=siteFontSize#admin-alert`);
 }

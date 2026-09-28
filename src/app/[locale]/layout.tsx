@@ -15,8 +15,9 @@ import { routing } from "@/i18n/routing";
 import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
+import { siteFontSizeStyle } from "@/modules/appearance/domain/site-font-size";
 import { siteTintStyle } from "@/modules/appearance/domain/site-tint";
-import { cachedSiteTint } from "@/modules/public-cache/reads";
+import { cachedSiteFontSize, cachedSiteTint } from "@/modules/public-cache/reads";
 import AppTheme from "@/theme/AppTheme";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -136,6 +137,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   // «Aspectul site-ului» (§488): the club's tint for the public pages, from the public cache, as
   // one rule on MUI's page-colour variable — nothing at all for the default.
   const tintStyle = siteTintStyle(await cachedSiteTint());
+  // «Mărimea textului» (§NNN): the club's text size for the public pages, the same way — one rule
+  // on the root font size, nothing at all for the default.
+  const fontSizeStyle = siteFontSizeStyle(await cachedSiteFontSize());
 
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
@@ -144,6 +148,8 @@ export default async function LocaleLayout({ children, params }: Props) {
         {/* Drawn on the server, before the first paint; light scheme and public pages only
             (`modules/appearance/domain/site-tint.ts`). Its text is a preset or a checked #rrggbb, never raw typed text. */}
         {tintStyle && <style data-site-tint="">{tintStyle}</style>}
+        {/* Public pages only, both schemes (`modules/appearance/domain/site-font-size.ts`); its text is a step's own number. */}
+        {fontSizeStyle && <style data-site-font-size="">{fontSizeStyle}</style>}
         {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
             (§93). Light unless the visitor pressed the switch — the owner: "by default we are on
             white, ignore browser settings; dark is enabled only by the button". */}

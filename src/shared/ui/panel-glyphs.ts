@@ -35,6 +35,7 @@ import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotesIcon from "@mui/icons-material/Subject";
 import OutboxIcon from "@mui/icons-material/Outbox";
 import PaidIcon from "@mui/icons-material/Paid";
+import FormatSizeIcon from "@mui/icons-material/FormatSize";
 import PaletteIcon from "@mui/icons-material/Palette";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -130,6 +131,7 @@ export const PANEL_GLYPHS = {
   invite: PersonAddIcon,
   members: GroupAddIcon,
   appearance: PaletteIcon,
+  textSize: FormatSizeIcon,
   costs: PaidIcon,
   database: StorageIcon,
   budget: SpeedIcon,

@@ -9,6 +9,8 @@ import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-add
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "@/modules/appearance/domain/site-tint";
 import { readSiteTint } from "@/modules/appearance/site-tint";
+import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
+import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import {
   findPublishedAlbumBySlug,
   findPublishedAlbumTranslations,
@@ -516,6 +518,22 @@ export async function cachedSiteTint(): Promise<SiteTintSetting> {
     return parseSiteTint(read.value);
   } catch {
     return DEFAULT_SITE_TINT_SETTING;
+  }
+}
+
+/**
+ * «Mărimea textului» (§NNN): the text size every public page is drawn at, read by the locale layout
+ * beside the tint and cached for the same reason — a save expires it (`updateSiteFontSize`). When
+ * the database cannot answer, the last good copy (§447), then the platform's own size.
+ */
+export async function cachedSiteFontSize(): Promise<SiteFontSizeSetting> {
+  try {
+    const read = await readWithLastGood("settings:site-font-size", () =>
+      publicRead(["settings.site-font-size"], ["settings"], async () => (await readSiteFontSize(getDb())).setting),
+    );
+    return parseSiteFontSize(read.value);
+  } catch {
+    return DEFAULT_SITE_FONT_SIZE_SETTING;
   }
 }
 

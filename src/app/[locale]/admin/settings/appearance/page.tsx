@@ -6,7 +6,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
+import { readSiteFontSize } from "@/modules/appearance/site-font-size";
 import { readSiteTint } from "@/modules/appearance/site-tint";
+import SiteFontSizePanel from "@/modules/appearance/ui/SiteFontSizePanel";
 import SiteTintPanel from "@/modules/appearance/ui/SiteTintPanel";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
@@ -22,7 +24,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * «Setări» → «Aspect» (§488, moved from Pagini → «Aspect» by §516): how the public pages look.
- * Today one setting, the site's light background tint. Read by whoever reads the club's content;
+ * Two settings: the site's light background tint and, since §NNN, its text size. Read by whoever reads the club's content;
  * changed by the Administrator (`canManageClubSettings`, §450), which the action and the service
  * assert again (BR-REQ-060-01).
  */
@@ -36,7 +38,9 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
 
   const { saved } = await searchParams;
   const t = await getTranslations("Admin");
-  const state = await readSiteTint(getDb());
+  const db = getDb();
+  const state = await readSiteTint(db);
+  const fontSize = await readSiteFontSize(db);
 
   return (
     <Stack spacing={3}>
@@ -44,10 +48,12 @@ export default async function AdminAppearancePage({ params, searchParams }: Prop
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {saved === "siteTint" && <Alert severity="success">{t("appearance.saved")}</Alert>}
+        {saved === "siteFontSize" && <Alert severity="success">{t("fontSize.saved")}</Alert>}
       </Box>
 
-      {/* The tab is this card alone, so it opens on arrival (§336's `primary`, §516). */}
+      {/* The tab's two cards open on arrival (§336's `primary`, §516): each is a single choice. */}
       <SiteTintPanel locale={locale} state={state} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
+      <SiteFontSizePanel locale={locale} state={fontSize} mayEdit={canManageClubSettings(actor.role)} openWhen={{ primary: true }} />
     </Stack>
   );
 }

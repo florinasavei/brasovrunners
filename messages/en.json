@@ -991,6 +991,8 @@
       "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
+      "siteFontSizeTitle": "Change the text size?",
+      "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in both themes. The backoffice stays as it is. You can go back to «Normal» at any time.",
       "translationBudgetTitle": "Save the translation budget?",
       "translationBudgetBody": "The new number applies from the next press of \"Translate from Romanian\". What was translated today stays counted.",
       "deliveryTimingTitle": "Change when emails leave?",
@@ -3196,6 +3198,27 @@
       "groupStandard": "Standard pages",
       "groupCustom": "Custom pages",
       "tabMembers": "Members"
+    },
+    "fontSize": {
+      "title": "Text size",
+      "intro": "How large the text is on the public pages: headings, paragraphs and buttons grow or shrink together.",
+      "introMore": "The page's spacing and widths stay the same. The size multiplies the visitor's own browser size: a reader who enlarged their text still reads it larger.",
+      "current": "Now: {size}",
+      "updatedAt": "Set {when}.",
+      "legend": "Text size on the public pages",
+      "default": "default",
+      "save": "Save the size",
+      "saving": "Saving…",
+      "saved": "The site's text size was saved.",
+      "readOnly": "The Administrator chooses the size; this is the choice in force.",
+      "scope": "Applies in both themes. The backoffice always stays at its own size.",
+      "sample": "Group run on Tâmpa, Saturday at 9:00",
+      "sizes": {
+        "small": { "name": "Small", "help": "Paragraph text at {px} px." },
+        "normal": { "name": "Normal", "help": "The size so far: {px} px." },
+        "large": { "name": "Large", "help": "Paragraph text at {px} px." },
+        "xlarge": { "name": "Extra large", "help": "Paragraph text at {px} px; on a phone, some lines may wrap." }
+      }
     },
     "appearance": {
       "title": "Site appearance",
@@ -6536,6 +6559,7 @@
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",
       "siteTint": "The site's background was saved.",
+      "siteFontSize": "The site's text size was saved.",
       "clubTodoAdded": "Added to the list.",
       "clubTodoSaved": "Line saved.",
       "clubTodoUnchanged": "The line already said this; nothing changed.",
