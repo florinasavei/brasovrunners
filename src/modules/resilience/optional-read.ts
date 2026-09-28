@@ -18,7 +18,7 @@ export async function readOrWhileAway<T>(read: () => Promise<T>, whileAway: T): 
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
-    // A static page with a part left out is kept a minute, not a day (§NNN).
+    // A static page with a part left out is kept a minute, not a day (§543).
     await holdPageFor(DEGRADED_PAGE_SECONDS);
     return whileAway;
   }

@@ -25,7 +25,7 @@ import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
  * `/ro/ro/evenimente`. The rendered element is still a plain `<a href="…">` with the whole
  * query in it, which is what a crawler follows and what `event-pages.spec.ts` reads.
  *
- * Never prefetched (§NNN): its href carries `?month=` or `?year=`, which is the calendar's live
+ * Never prefetched (§543): its href carries `?month=` or `?year=`, which is the calendar's live
  * twin, rendered per request — two prefetches per visit would start two functions on a page the
  * CDN otherwise answers alone. The press waits for its answer; the runner says it is travelling.
  */

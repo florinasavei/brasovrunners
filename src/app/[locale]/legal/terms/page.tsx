@@ -22,7 +22,7 @@ import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string }> };
 
-/** Static, kept by the CDN — the privacy notice's arrangement, for the same reasons (§NNN, amending §333). */
+/** Static, kept by the CDN — the privacy notice's arrangement, for the same reasons (§543, amending §333). */
 export const revalidate = 86400;
 
 /**

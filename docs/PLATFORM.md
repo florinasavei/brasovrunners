@@ -163,7 +163,7 @@ becomes natural if the nonprofit grant lands and the staff already have club acc
 - **Hobby's Active CPU (4 hours a month) is the cap the public site itself can reach.** On
   2026-09-28 the club was at 3 h 02 m, with 160 K function invocations for 153 K edge requests in
   30 days: every public page rendered per request (~68 ms of CPU each), for visitors and crawlers
-  alike. Since §NNN the public pages are static (ISR): Vercel's CDN answers a stranger's visit,
+  alike. Since §543 the public pages are static (ISR): Vercel's CDN answers a stranger's visit,
   and a function runs only on the first visit after a write that changed the page, after its
   clock turns (a door opening or closing, midnight, the forecast's hour), or after a day. What
   still runs per request, on purpose: the proxy (Vercel runs it before the cache — a few ms of

@@ -175,7 +175,7 @@ export async function readWithLastGood<T>(
         kept as this key's copy: it is not a newer truth than the copies it was made of.
       */
       noteSavedCopyServed(seen.oldest);
-      // A static page made from a copy is kept a minute, never a day (§NNN): the next visit after it asks again.
+      // A static page made from a copy is kept a minute, never a day (§543): the next visit after it asks again.
       await holdPageFor(DEGRADED_PAGE_SECONDS);
       return { value, freshness: "saved", takenAt: seen.oldest, restingUntil: null };
     }
@@ -208,7 +208,7 @@ export async function readWithLastGood<T>(
     // Once per outage and instance is enough for the log: the breaker makes every read after the
     // first one fail the same way, and a line per page view would bury the first.
     if (!(error instanceof DatabaseRestingError)) console.error("[resilience] serving the last good copy of", key, error);
-    // The CDN keeps an outage's page a minute, not a day (§NNN).
+    // The CDN keeps an outage's page a minute, not a day (§543).
     await holdPageFor(DEGRADED_PAGE_SECONDS);
     return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt, restingUntil };
   }
@@ -217,7 +217,7 @@ export async function readWithLastGood<T>(
 /**
  * Whether the database is away because Neon suspended the project for the month (§447) — asked
  * only on this failure path, only for an error that says the database is away, and of the level
- * this instance last read (`budget-level.ts`), never of the database — and since §NNN never of
+ * this instance last read (`budget-level.ts`), never of the database — and since §543 never of
  * Neon's API either: this runs inside a static page's render, where a request to Neon is the
  * render's own. The period's end when it is, so the page can say when the site is whole again;
  * null for every other outage, whose length nobody knows.
@@ -263,7 +263,7 @@ export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours
  * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
  * a request (a test, a script) there is no header, and the way back is the site's root.
  *
- * On a production server the header is read only in a render Next answers per request (§NNN): a
+ * On a production server the header is read only in a render Next answers per request (§543): a
  * live twin, the registration and declaration forms, a token page (`renderKind() === "request"`).
  * A static page's render never reads it: there `headers()` sets the render's revalidate to 0 before
  * it throws, so catching the throw does not undo it — Next then answers 500 («Page changed from

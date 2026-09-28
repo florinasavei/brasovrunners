@@ -370,11 +370,11 @@ export default async function SiteFooter() {
               >
                 {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
                 <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
-                {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. A form rendered per request: never prefetched (§NNN). */}
+                {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. A form rendered per request: never prefetched (§543). */}
                 <Link href="/registrations/mine" prefetch={false}>{footer("myRegistrations")}</Link>
                 {showFaq && <Link href="/faq">{footer("faq")}</Link>}
               </Box>
-              {/* "Scrie-ne" once (BR-REQ-070-04; the form is rendered per request, so never prefetched, §NNN): the form, and — when the club's mailbox is
+              {/* "Scrie-ne" once (BR-REQ-070-04; the form is rendered per request, so never prefetched, §543): the form, and — when the club's mailbox is
                   configured (§8; nothing here invents an address) — the address beside it as the
                   mail link, "Scrie-ne: <address>". One item, so the address wraps under its own
                   lead rather than onto a line of its own somewhere else. The club's description

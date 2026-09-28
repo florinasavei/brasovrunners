@@ -25,7 +25,7 @@ import { type NeonDeps, type NeonMeter, readNeonMeter } from "./neon";
  * up), through the shared fifteen-minute reading (`readNeonMeter`), with a minute of this
  * instance's memory on top so a burst of pings asks once.
  *
- * A public page never asks here (§NNN): its render is told the level this instance last read, by
+ * A public page never asks here (§543): its render is told the level this instance last read, by
  * `budget-level.ts`, which every reading below notes and which makes no request of its own — a
  * request to Neon inside a static page's render is the render's own and shortens or breaks the page.
  *

@@ -14,7 +14,7 @@ import { env } from "@/shared/config/env";
  * open owner decision. No AI user-agent is named here in either direction until it is taken —
  * inventing a policy would misrepresent the club.
  */
-/** The query keys an event page reads, each of which makes it the live twin's render (`i18n/live-twin.ts`, §NNN). */
+/** The query keys an event page reads, each of which makes it the live twin's render (`i18n/live-twin.ts`, §543). */
 const EVENT_PAGE_QUERY_KEYS = ["lista", "interest", "since", "declaratie"] as const;
 
 export default function robots(): MetadataRoute.Robots {
@@ -53,7 +53,7 @@ export default function robots(): MetadataRoute.Robots {
           "/en/runners",
           /*
             What a crawler has no business in, and each visit of which starts a function now that
-            the public pages are static (§NNN). The canonical addresses stay open: `/ro/evenimente`,
+            the public pages are static (§543). The canonical addresses stay open: `/ro/evenimente`,
             `/ro/calendar` and every `/ro/evenimente/<slug>` have no `?`, and the sitemap names them.
             - Every query permutation of the listing and the calendar — ten filter groups and a month
               or a year each, which multiply into more addresses than the site has pages, all

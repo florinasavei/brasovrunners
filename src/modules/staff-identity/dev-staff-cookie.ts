@@ -8,6 +8,6 @@
  * will be signed by it — hand-rolling one now is exactly what §13.1 forbids.
  *
  * Its own module, reading nothing of the request, so the proxy can name it too: a signed-in
- * developer goes to an event page's live twin (`i18n/live-twin.ts`, §NNN).
+ * developer goes to an event page's live twin (`i18n/live-twin.ts`, §543).
  */
 export const DEV_STAFF_COOKIE = "br_dev_staff";

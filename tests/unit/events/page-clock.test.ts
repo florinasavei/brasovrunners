@@ -3,7 +3,7 @@ import { eventClockInstants, nextWallMidnight } from "@/modules/events/domain/pa
 import { SIGNING_GRACE_MINUTES } from "@/modules/group-run-declarations/domain";
 
 /**
- * §NNN (amending §333) — the instants at which a page that shows an event reads differently, so
+ * §543 (amending §333) — the instants at which a page that shows an event reads differently, so
  * a static page is kept until the first of them and no longer.
  */
 const iso = (dates: Date[]) => dates.map((date) => date.toISOString()).sort();
@@ -67,7 +67,7 @@ describe("nextWallMidnight", () => {
     expect(nextWallMidnight(new Date("2026-10-25T09:00:00.000Z"), "Europe/Bucharest").toISOString()).toBe("2026-10-25T22:00:00.000Z");
   });
 
-  it("is the event's own zone's midnight when the event is kept in another zone, where the countdown turns its day (§78, §NNN)", () => {
+  it("is the event's own zone's midnight when the event is kept in another zone, where the countdown turns its day (§78, §543)", () => {
     // 20 November, noon UTC: Bucharest turns the day at 22:00 UTC, Lisbon (UTC+0) two hours later.
     expect(nextWallMidnight(new Date("2026-11-20T12:00:00.000Z"), "Europe/Lisbon").toISOString()).toBe("2026-11-21T00:00:00.000Z");
   });

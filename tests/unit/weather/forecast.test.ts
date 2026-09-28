@@ -283,7 +283,7 @@ describe("§402 a cached answer too old to trust", () => {
     expect(failing).toHaveBeenCalledTimes(2);
   });
 
-  it("asks the hour's own cached entry for the fresh answer, never a bare fetch (§NNN)", async () => {
+  it("asks the hour's own cached entry for the fresh answer, never a bare fetch (§543)", async () => {
     const old = { ...forecast(), fetchedAt: NOW.getTime() - 3 * HOUR, weatherCode: forecast().weatherCode.map(() => 0) };
     const cached = vi.fn(async () => old);
     const refresh = vi.fn(async () => forecast());
@@ -303,7 +303,7 @@ describe("§402 a cached answer too old to trust", () => {
     expect(forecastHour(top + HOUR)).toBe(forecastHour(top) + 1);
   });
 
-  it("sends no cache mode: `cache: \"no-store\"` in a static page's render would make it dynamic (§NNN)", async () => {
+  it("sends no cache mode: `cache: \"no-store\"` in a static page's render would make it dynamic (§543)", async () => {
     const fetchImpl = json(answer());
     await fetchOpenMeteo(fetchImpl, () => NOW.getTime());
     const init = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;

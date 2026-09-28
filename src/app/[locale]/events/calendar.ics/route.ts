@@ -15,7 +15,7 @@ import { env } from "@/shared/config/env";
  *
  * §129 kept it out of the CDN: the CDN's hour of cache served a time the organizer had changed,
  * and a stale copy is a runner at the wrong hour. That was an hour of cache *by the clock*. Since
- * §NNN (amending §129 and §333) the feed is a static response the CDN keeps until a write expires
+ * §543 (amending §129 and §333) the feed is a static response the CDN keeps until a write expires
  * it — the rows behind it are the public cache's (§333), tagged, and the very save that changes a
  * time expires the rows and the file together — or until its clock says it reads differently: the
  * next UTC day (the window's own day), a registration door opening or closing (its description
@@ -26,7 +26,7 @@ export const dynamic = "force-static";
 /** A literal, as Next requires: `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together). */
 export const revalidate = 86400;
 
-/** Made on its first request, never at build: no database in CI (§NNN). */
+/** Made on its first request, never at build: no database in CI (§543). */
 export function generateStaticParams(): { locale: string }[] {
   return [];
 }
@@ -56,7 +56,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     await readWithLastGood(`ics-feed:${known}`, () => cachedPublishedEventsBetween(known, new Date(startOfUtcDay(from)), new Date(startOfUtcDay(to) + DAY)), now)
   ).value;
   const events = days.filter((event) => event.startsAt.getTime() >= from && event.startsAt.getTime() < to);
-  // Kept until the window's day turns, or an event's door or start changes what the file says (§NNN).
+  // Kept until the window's day turns, or an event's door or start changes what the file says (§543).
   await holdPageUntil([new Date(startOfUtcDay(now.getTime()) + DAY), ...events.flatMap((event) => eventClockInstants(event))], now);
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({
@@ -71,7 +71,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
       "Content-Type": "text/calendar; charset=utf-8",
       // The club's name from the platform's constant (§357), never written in: "brasov-runners-ro.ics".
       "Content-Disposition": `inline; filename="${calendarFeedFileName(known)}"`,
-      // No Cache-Control of its own (§NNN): Next writes the static response's, and a write expires the CDN's copy.
+      // No Cache-Control of its own (§543): Next writes the static response's, and a write expires the CDN's copy.
     },
   });
 }

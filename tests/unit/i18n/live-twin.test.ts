@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LIVE_SEGMENT, liveTwinPathname, mayBeSignedIn } from "@/i18n/live-twin";
 
 /**
- * §NNN (amending §333) — which request the static page cannot answer, and so goes to the page's
+ * §543 (amending §333) — which request the static page cannot answer, and so goes to the page's
  * live twin: an address whose query the page reads, or an event page asked with a session cookie.
  */
 const search = (query: string) => new URLSearchParams(query);

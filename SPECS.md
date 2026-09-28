@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.21-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.21-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.22-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -126,6 +126,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 15. The event page and the staff preview say the age sentence chosen by `publicAgeRule` after the rules, and say nothing when there is no minimum and no registration here (2026-09-27, `DECISIONS.md` §509).
 16. Every question, category and the introduction are saved in both languages or neither, and the page is published in both languages at once; a DRAFT page answers 404 (2026-09-27, `DECISIONS.md` §525).
 17. The listing filter reads the old difficulty keys in an address as the migration mapped them: VERY_EASY as EASY and MODERATE as MEDIUM (2026-09-27, `DECISIONS.md` §526).
+18. Given a locale with no published translation of an event, page or album, then its static route answers 404, as the per-request route did, and never the other language's text. The 404 is kept like any page, and when that locale is then published, the publish's own tags expire the cached 404, so the next anonymous request is the page (2026-09-28, `DECISIONS.md` §543).
 
 **Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
@@ -524,6 +525,7 @@ coffee is run on nothing.
 36. Whether a date is a night event, and the sunset its pill names, are computed at the event's own place: the map link's pin, else the typed «Coordonate», else CLUB_COORDINATES. The club's place is used while the place is to be announced (§428, the rule of §416).
 37. The night pill reads «Noapte» / «Night» on every event type and wears a crescent moon (Material's ModeNight), never the flashlight. The calendar entry, the .ics line and the reminder keep their full labels by type (§428).
 38. A single-date listing card for one date of a repeated event (§113), left alone by the filters or shown as the lead event, wears the series card's repeat chip with the series' rhythm: weekly, fortnightly, or the number of dates. A one-off event wears no repeat chip.
+39. Amends criterion 7 (§129): the club feed is kept by the CDN until a save that changes an event expires it through its public-cache tags, or until its clock does (the next event's instant, at most a day). It is no longer read afresh on every request (2026-09-28, `DECISIONS.md` §543, amending §129).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -1969,6 +1971,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 4. Given production `robots.txt`, when it is fetched, then admin, API, participant action and manage paths, declaration pages, preview, and runner profiles are disallowed for every user agent.
 5. Given production `robots.txt`, when it is inspected, then the training-crawler policy recorded in `DECISIONS.md` is reflected, with the verification date of the user-agent names recorded.
 6. Given a request identifying as a crawler, when a public page is served, then the content is identical to what a person receives.
+7. Given production `robots.txt`, then the following are disallowed: every query permutation of the listing and the calendar, an event page asked `lista`, `interest`, `since` or `declaratie`, the live twins under `/<locale>/live/`, the registration and declaration forms, the token pages, the newsletter's pages and the share picture asked for a shape. The canonical listing, calendar and event pages stay crawlable, as do an event page with a key it does not read (`?fbclid=`), every Open Graph picture with or without Next's content-hash query (`/en/events/<slug>/opengraph-image?<hash>`), and the bare share picture named in the JSON-LD (2026-09-28, `DECISIONS.md` §543).
 
 **Verification:** integration `seo/machine-readability.test.ts`; e2e `robots.spec.ts`
 
@@ -2674,6 +2677,14 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 16. Given the month's budget is red, when a public page's read misses the data cache and is answered from its saved copy, then the page shows the saved-copy notice naming the copy's time (`Offline.saved`), the read is refreshed in the background, and a cache hit shows no notice; within two minutes of a write on the same instance a miss is read from the database in the request instead (2026-09-27, `DECISIONS.md` §493). Verification: unit `public-cache/cache.test.ts`.
 17. Given the month's budget is red, when a slug that cannot name a saved row (not lowercase words joined by single hyphens, or over 200 characters) is asked for, or the language switch is asked for such a path, a path over 300 characters, or a path whose answer is not cached and has no copy, then no database query is made: the page answers 'no such page' and the switch lands on the other language's listing — never a 500; below red both are asked of the database as before (2026-09-27, `DECISIONS.md` §493). Verification: unit `public-cache/red-month-reads.test.ts`.
 18. Given the month's budget is red, when a public read looks up the data cache, then the lookup never starts a background revalidation of an entry by age (no 'revalidating cache with key' error for a stale hit), and the entry the background refresh files keeps the stretched ceiling (2026-09-27, `DECISIONS.md` §493). Verification: unit `public-cache/cache.test.ts`.
+19. Given an anonymous request for the bare listing, the calendar, an event page, a standing page, the gallery, the FAQ, «Echipa», the terms, the privacy notice, an event's `.ics`, the feed or an Open Graph picture, when it is asked twice, then the second answer is the static copy (`x-nextjs-cache: HIT`, `Cache-Control: s-maxage=…`). The copy is kept no longer than a day, and no longer than the next instant its clock changes it: a registration window opening or closing, an event starting or ending, a group run's signing close, the confirmation or weather window opening, the start list closing, midnight in Brașov, or midnight in a shown event's own zone. A request that names a filter, a month, a year, a layout, `?lista=`, `?interest=` or `?declaratie=`, or an event page asked with a session cookie, is rendered per request with `private, no-store` (2026-09-28, `DECISIONS.md` §543).
+20. Given any Next link a static public page can render (the header, the footer, the cards, the door, the calendar, the filters), then it prefetches only a static public page at its bare address. A link to a live twin (any query) or to a page rendered per request (the contact form, «Membri», the members' zone, the sign-in, the register and declaration forms, «Înscrierile mele») is never prefetched. A source walk over every file a static page reaches, client islands included, fails on a link that neither names a static page literally nor states its `prefetch` (2026-09-28, `DECISIONS.md` §543).
+21. Given the public routes under `src/app/[locale]/` (the backoffice aside) and the app root's metadata routes, then each is named in exactly one list: static with the day's ceiling, `force-static`, a live twin, per request with its reason, rendering nothing, or made at build. A route in no list, or in two, fails `yarn check` (2026-09-28, `DECISIONS.md` §543).
+22. Given any server file a static public page, a `force-static` handler or the locale layout reaches, then it writes no `cache: "no-store"`, no `revalidate: 0`, no `unstable_noStore()` and no `connection()`, but for a file named with its reason. The weather's every request, the refresh of a forecast older than two hours included, is a data-cache entry's, keyed by the place and the hour, so an event page within the forecast window stays static (`x-nextjs-cache: HIT`) and shows the forecast (2026-09-28, `DECISIONS.md` §543).
+23. Given a static public page, a `force-static` handler or the locale layout, then no server file it reaches makes a request to Neon's API: the budget governor's level (§447) and the resting page's period end are the last reading this instance noted, from the job pinger or a backoffice page. A reading older than three hours or from an ended billing period is `unknown`, with no effect. A source walk fails when a static route reaches `diagnostics/neon.ts` or `diagnostics/neon-budget.ts` (2026-09-28, `DECISIONS.md` §543).
+24. Given a cached forecast older than two hours, when the fresh answer is asked for, then its data-cache entry is keyed by the place and the hour and stands only for what is left of that hour, so no hour's entry is fresh after its hour (2026-09-28, `DECISIONS.md` §543).
+25. Given an event page served to an anonymous visitor from its static copy, when an organizer saves the event, then the next anonymous request is the page as saved: the write's own public-cache tags expire the copy (2026-09-28, `DECISIONS.md` §543).
+26. Given a public page on a red month whose read missed the cache with no saved copy (§447), then the reader is redirected to the resting page, never answered 500. From a static page's render the way back is the site's root, the request is never read and the redirect is kept by the CDN no longer than a minute. From a render Next answers per request (a live twin, a form, a token page) the way back is the reader's own address. A render that cannot be told apart is treated as a static one (2026-09-28, `DECISIONS.md` §543).
 
 **Verification:** integration `hosting/portability.test.ts`; deployment checklist
 

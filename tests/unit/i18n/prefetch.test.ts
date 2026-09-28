@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { prefetchFor } from "@/i18n/prefetch";
 
 /**
- * §NNN — a link from a static public page prefetches only another static page at its bare address;
+ * §543 — a link from a static public page prefetches only another static page at its bare address;
  * a per-request address (a form, a session page, a live twin) is never prefetched.
  */
-describe("§NNN prefetchFor", () => {
+describe("§543 prefetchFor", () => {
   it.each(["/events", "/calendar", "/faq", "/team", "/gallery", "/legal/terms", "/legal/privacy"])("keeps Next's default for the static page %s", (href) => {
     expect(prefetchFor(href)).toBeUndefined();
   });

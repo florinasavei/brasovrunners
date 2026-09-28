@@ -130,7 +130,7 @@ const nextConfig: NextConfig = {
   },
 
   /**
-   * The sitemap's shared-cache lifetime (§NNN): it is made per request (`app/sitemap.ts` says why it
+   * The sitemap's shared-cache lifetime (§543): it is made per request (`app/sitemap.ts` says why it
    * cannot be static), so the CDN is told to keep it an hour and serve it once more while it is made
    * again. The same file for every crawler, never a person's; nothing else is named here — every
    * other public response is static, and its lifetime is Next's own (`public-cache/page-lifetime.ts`).

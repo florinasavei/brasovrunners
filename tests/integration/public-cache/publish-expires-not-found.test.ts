@@ -4,7 +4,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-040-02 — a locale with no published event answers 404 from its static route, and the
+ * §543, BR-REQ-040-02 — a locale with no published event answers 404 from its static route, and the
  * publish expires that cached 404 through the tags.
  *
  * The static event page is filed under the tags of the reads made while it is prerendered (§333's
@@ -36,7 +36,7 @@ async function visit(slug: string) {
   return cachedPublishedEventBySlug("ro", slug);
 }
 
-describe("§NNN BR-REQ-040-02 the publish expires the cached 404 of the static event page", () => {
+describe("§543 BR-REQ-040-02 the publish expires the cached 404 of the static event page", () => {
   let admin: StaffUser;
 
   beforeAll(async () => {

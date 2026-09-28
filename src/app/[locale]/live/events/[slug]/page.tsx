@@ -8,7 +8,7 @@ import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
 /**
- * An event page's live twin (§NNN, amending §333): the same page, rendered per request, for a
+ * An event page's live twin (§543, amending §333): the same page, rendered per request, for a
  * visit the static copy cannot answer — an address that asks something (`?lista=2`, `?interest=1`,
  * `?declaratie=…`) or a reader with a session cookie, who may be staff and get the "edit in the
  * backoffice" button (§135). The proxy rewrites such a visit here; the address is unchanged

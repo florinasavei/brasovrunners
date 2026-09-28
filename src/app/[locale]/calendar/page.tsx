@@ -40,7 +40,7 @@ type Props = {
   params: Promise<{ locale: string }>;
   /**
    * The address's query — passed only by the live twin (`app/[locale]/live/calendar/page.tsx`), which
-   * the proxy sends a visit naming a month, a year, a layout or a filter to (§NNN). This static
+   * the proxy sends a visit naming a month, a year, a layout or a filter to (§543). This static
    * route never reads Next's `searchParams`: the bare calendar is this month, the same for everyone.
    */
   query?: Promise<CalendarQuery>;
@@ -61,7 +61,7 @@ type CalendarQuery = {
 };
 
 /**
- * Static at its bare address, made on its first visit and kept by the CDN (§NNN, amending §333):
+ * Static at its bare address, made on its first visit and kept by the CDN (§543, amending §333):
  * made again on a write to the events it shows, on a door's change, at midnight (the month's "today"
  * and its turn), and at the latest after a day. A literal, as Next requires: it equals
  * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
@@ -114,7 +114,7 @@ export default async function CalendarPage({ params, query: asked }: Props) {
 
   const t = await getTranslations("Events");
   const now = new Date();
-  // This month, and today's square, are the day's: the static page is made again at midnight (§NNN).
+  // This month, and today's square, are the day's: the static page is made again at midnight (§543).
   await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);
 
   // The same readings of the address the listing makes (§89, §116, §137, §413), so a link that

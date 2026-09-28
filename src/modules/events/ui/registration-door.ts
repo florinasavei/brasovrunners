@@ -44,7 +44,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let waitlistRoom: number | null = null;
   let waitlistCapacity: number | null = null;
   /*
-    Every page that shows a door is kept no longer than the door's next change (§NNN): the window
+    Every page that shows a door is kept no longer than the door's next change (§543): the window
     opening or closing, the start, the confirmation window, the weather window — the page's card,
     hero or button read differently from then on, and a static page must be made again then.
   */
@@ -70,7 +70,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
       */
       unstable_rethrow(error);
       console.error("[registration-door] could not read the availability", error);
-      // A static page without its count is kept a minute, never a day (§NNN).
+      // A static page without its count is kept a minute, never a day (§543).
       await holdPageFor(DEGRADED_PAGE_SECONDS);
       return { kind: "UNKNOWN" };
     }

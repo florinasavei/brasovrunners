@@ -5,7 +5,7 @@ vi.mock("@/shared/config/env", () => ({ env: { APP_ENV: "production", APP_BASE_U
 const { default: robots } = await import("@/app/robots");
 
 /**
- * BR-REQ-070-03 criterion 4, and §NNN — production's robots.txt keeps a crawler out of what it has
+ * BR-REQ-070-03 criterion 4, and §543 — production's robots.txt keeps a crawler out of what it has
  * no business in, each visit of which starts a function now that the public pages are static, and
  * never out of a canonical page.
  *
@@ -25,7 +25,7 @@ const disallowed = (() => {
 })();
 const isBlocked = (address: string) => disallowed.some((rule) => blocks(rule, address));
 
-describe("§NNN robots.txt on production", () => {
+describe("§543 robots.txt on production", () => {
   it.each([
     "/ro/evenimente?type=RACE",
     "/en/events?surface=TRAIL&cost=FREE",

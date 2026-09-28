@@ -11,7 +11,7 @@ import { INLINE_TAP_TARGET } from "./tap-target";
  * above its words, given back as a negative margin so the line keeps its height (`INLINE_TAP_TARGET`,
  * §480), the same shape the contact page gives its own inline links.
  *
- * Never prefetched (§NNN): the contact form is rendered per request (its render time is the bot
+ * Never prefetched (§543): the contact form is rendered per request (its render time is the bot
  * check's clock), and a prefetch from a static page would start a function per view.
  */
 export default function ContactLink({ children }: { children: ReactNode }) {

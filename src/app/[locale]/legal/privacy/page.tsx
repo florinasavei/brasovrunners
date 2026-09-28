@@ -25,7 +25,7 @@ type Props = { params: Promise<{ locale: string }> };
 // The current approved version can change without a deploy (a new version becoming
 // effective), so this is never made at build time. The text comes from the public cache (§333),
 // which an approval expires and whose key is the stretch between effective dates; the page is
-// static and kept by the CDN (§NNN, amending §333), made again after an approval, when the next
+// static and kept by the CDN (§543, amending §333), made again after an approval, when the next
 // version takes effect (the read holds it to that instant) and a day at most — so a version
 // approved ahead of time takes over on its day with nobody saving anything. A literal, as Next
 // requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).

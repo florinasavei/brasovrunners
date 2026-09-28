@@ -102,7 +102,7 @@ export default function proxy(request: NextRequest) {
 
   /*
     The listing, the calendar and an event page are static for an anonymous visitor at their bare
-    address (§NNN): the CDN answers them. A request whose query the page reads (a filter, a month,
+    address (§543): the CDN answers them. A request whose query the page reads (a filter, a month,
     `?lista=`), or an event page asked with a session cookie (the staff "edit" button, §135), is
     rewritten to the page's live twin under `/<locale>/live/…`, rendered per request as before — the
     visitor's address unchanged. next-intl has already resolved the route: its rewrite names the

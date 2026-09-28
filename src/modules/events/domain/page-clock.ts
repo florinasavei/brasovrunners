@@ -7,7 +7,7 @@ import { fromWallTimeInput, toWallTimeInput } from "./zoned-time";
 
 /**
  * The instants at which a public page that shows an event reads differently, with nothing written
- * in between (§NNN, amending §333): a static page is kept until the first of them, so the CDN never
+ * in between (§543, amending §333): a static page is kept until the first of them, so the CDN never
  * serves a door as open after it closed for longer than one visit — the one visit that asks for
  * the new copy.
  *

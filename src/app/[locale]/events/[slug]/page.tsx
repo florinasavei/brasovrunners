@@ -68,7 +68,7 @@ type Props = {
   /**
    * The address's query — `?lista=`, `?interest=`, `?since=`, `?declaratie=` — passed only by the
    * live twin (`app/[locale]/live/events/[slug]/page.tsx`), which the proxy sends such a visit to
-   * (§NNN). This static route never reads Next's `searchParams`.
+   * (§543). This static route never reads Next's `searchParams`.
    */
   query?: Promise<EventQuery>;
   /**
@@ -86,7 +86,7 @@ const one = (value: string | string[] | undefined): string | undefined => (Array
 
 /**
  * Static for an anonymous visitor at its bare address, made on its first visit and kept by the CDN
- * (§NNN, amending §333). Organizers publish and cancel events between deploys: every write that
+ * (§543, amending §333). Organizers publish and cancel events between deploys: every write that
  * changes the event, its places or its start list expires the page through the rows' own tags
  * (§333), so a cancelled run is never served as scheduled. The clock is kept the same way: the page
  * is made again when its door opens or closes, the confirmation or weather window opens, the start
@@ -99,7 +99,7 @@ const one = (value: string | string[] | undefined): string | undefined => (Array
  */
 export const revalidate = 86400;
 
-/** Made on its first visit, never at build: no slug is known before the database is asked (§NNN). */
+/** Made on its first visit, never at build: no slug is known before the database is asked (§543). */
 export function generateStaticParams(): { slug: string }[] {
   return [];
 }
@@ -162,7 +162,7 @@ export default async function EventDetailPage({ params, query, canEdit = false }
   const [interest, since, lista, declaratie] = [one(asked.interest), one(asked.since), one(asked.lista), one(asked.declaratie)];
 
   const now = new Date();
-  // The countdown and the day's words (§76, §78): the static page is made again at midnight (§NNN).
+  // The countdown and the day's words (§76, §78): the static page is made again at midnight (§543).
   await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);
   /*
     The page's facts, with the last copy of them behind it (§281).
@@ -194,7 +194,7 @@ export default async function EventDetailPage({ params, query, canEdit = false }
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
   if (!event) notFound();
   // The event's own dates are told on its own wall clock (`raceWeek`, §78): in another zone its day
-  // turns at that zone's midnight, and the page is made again then too (§NNN).
+  // turns at that zone's midnight, and the page is made again then too (§543).
   await holdPageUntil([nextWallMidnight(now, event.timezone)], now);
 
   const t = await getTranslations("Event");
@@ -203,7 +203,7 @@ export default async function EventDetailPage({ params, query, canEdit = false }
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The live
-  // twin reads the session and says so (§NNN); the editor asserts the role again for itself
+  // twin reads the session and says so (§543); the editor asserts the role again for itself
   // (BR-REQ-060-01). Never on the static copy.
   const editHref = canEdit ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   // The forecast for the start (§402): read on the server, from Open-Meteo through the data cache,

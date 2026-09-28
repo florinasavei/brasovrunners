@@ -19,7 +19,7 @@ vi.mock("next/dist/server/app-render/work-unit-async-storage.external", () => ({
 const { DEGRADED_PAGE_SECONDS, holdPageFor, holdPageUntil, PUBLIC_PAGE_CEILING_SECONDS, renderKind, secondsUntilFirst } = await import("@/modules/public-cache/page-lifetime");
 
 /**
- * §NNN (amending §333) — a static public page is kept until the first instant it would read
+ * §543 (amending §333) — a static public page is kept until the first instant it would read
  * differently, and never longer than a day. The lifetime is asked of Next through one tiny cached
  * entry, whose `revalidate` a prerender takes as the page's own.
  */
@@ -102,7 +102,7 @@ describe("holdPageUntil / holdPageFor", () => {
   });
 });
 
-describe("§NNN a hold is asked only where the page may be kept", () => {
+describe("§543 a hold is asked only where the page may be kept", () => {
   const inProductionServer = () => {
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     vi.stubEnv("NODE_ENV", "production");

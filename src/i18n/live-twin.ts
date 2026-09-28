@@ -1,7 +1,7 @@
 import { DEV_STAFF_COOKIE } from "@/modules/staff-identity/dev-staff-cookie";
 
 /**
- * Which request a static public page cannot answer, and the live twin that answers it (§NNN,
+ * Which request a static public page cannot answer, and the live twin that answers it (§543,
  * amending §333).
  *
  * The listing, the calendar and an event page are static for an anonymous visitor at their bare

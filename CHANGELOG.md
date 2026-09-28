@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.22-2026-09-27
+
+- **The public pages are served from the CDN** — the listing, the calendar, every event page, the club's pages, the gallery, the legal texts, the calendar files and the share pictures are made once and kept until a save changes them or their clock turns, so a visitor or a crawler no longer starts a server for each page; filters, a chosen month, the participants' pages and a signed-in organizer still get the page made for them, and no link on a cached page fetches a page made per request ahead of the press. §543.
 ## BR-V2.21-2026-09-27
 
 - **The Organizer reads the events and changes none** — creating, editing, publishing, cancelling, duplicating, series and the update notice are the Administrator's; the Organizer opens an event with «Deschide», read-only, keeps «Alocare și tipărire» with the numbers' PDF, the registrations, the export, the desk and the messages to participants, and the role picker says the split. §542.
