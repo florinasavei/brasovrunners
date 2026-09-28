@@ -517,6 +517,12 @@ export type LegalDocumentVersionRow = {
   effectiveAt: Date;
   approvedByStaffUserId: string | null;
   /**
+   * The fingerprint of both translations (`computeContentHash`) — what «Regenerează din șabloane»
+   * compares a template's text with, so a press never makes a draft of words already in force or
+   * already waiting as a draft (§NNN).
+   */
+  contentSha256: string;
+  /**
    * When the club took this version out of circulation, or `null` — the one reader that keeps
    * withdrawn rows rather than filtering them out.
    *
@@ -558,6 +564,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       isApproved: legalDocuments.isApproved,
       effectiveAt: legalDocuments.effectiveAt,
       approvedByStaffUserId: legalDocuments.approvedByStaffUserId,
+      contentSha256: legalDocuments.contentSha256,
       withdrawnAt: legalDocuments.withdrawnAt,
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,

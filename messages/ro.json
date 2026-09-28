@@ -1008,7 +1008,8 @@
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
-      "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni."
+      "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
+      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -2109,7 +2110,51 @@
         "redo": "Înainte"
       },
       "listSocialsMissing": "Nota în vigoare nu descrie încă Strava și Instagram pe lista publică, deci nu apar. Aprobă o notă nouă din șablon.",
-      "listStatesMissing": "Nota în vigoare nu descrie încă stadiile de pe lista publică, deci lista arată doar confirmații. Aprobă o notă nouă din șablon."
+      "listStatesMissing": "Nota în vigoare nu descrie încă stadiile de pe lista publică, deci lista arată doar confirmații. Aprobă o notă nouă din șablon.",
+      "batch": {
+        "toolsTitle": "Toate textele deodată",
+        "regenerateIntro": "Șablonul s-a schimbat pentru: {texts}. Butonul face câte o ciornă nouă, cu datele clubului; nimic nu intră în vigoare până nu o aprobi.",
+        "regenerateBlanks": "În {texts} rămân câmpuri de completat, de forma '<'…>: scrie-le în ciornă înainte de aprobare.",
+        "regenerate": "Regenerează din șabloane ({count})",
+        "regeneratePending": "Se fac ciornele…",
+        "regenerateTitle": "Faci ciorne noi din șabloane ({count})?",
+        "regenerateBody": "Se face câte o ciornă nouă pentru: {texts}. Textele în vigoare rămân neschimbate până aprobi ciornele.",
+        "upToDate": "Toate textele au deja cuvintele șabloanelor, în vigoare sau în ciornă.",
+        "approveIntro": "Ciorne gata de aprobat: {versions}.",
+        "approve": "Aprobă ciornele ({count})",
+        "approvePending": "Se aprobă…",
+        "approveTitle": "Aprobi ciornele ({count})?",
+        "approveBody": "Se aprobă: {versions}. Din acest moment sunt în vigoare pe site, ca texte ale clubului; o corectare este o versiune nouă.",
+        "heldIntro": "Nu se aprobă deodată:",
+        "held": {
+          "superseded": "există o ciornă mai nouă a aceluiași text; șterge-o pe aceasta sau aprob-o de pe pagina ei.",
+          "behind": "o versiune aprobată cu număr mai mare este deja oferită, deci aceasta n-ar intra niciodată în vigoare.",
+          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le.",
+          "ready": "gata de aprobat."
+        },
+        "deleteIntro": "Bifează în tabel versiunile de șters, apoi apasă butonul: vezi lista înainte de ștergere.",
+        "deleteTicked": "Șterge versiunile bifate",
+        "tick": "Bifează {version} pentru ștergere",
+        "backToList": "Înapoi la documentele legale",
+        "title": "Ștergerea versiunilor bifate",
+        "nothingSelected": "Nu ai bifat nicio versiune. Întoarce-te la listă și bifează versiunile de șters.",
+        "goes": "Se șterg ({count}):",
+        "stays": "Rămân, nu se pot șterge ({count}):",
+        "draftGoes": "ciornă; nimeni nu a văzut-o.",
+        "approvedGoes": "aprobată; dispare definitiv, numărul rămâne retras.",
+        "approvedConsequence": "Versiunile aprobate din listă ({count}) dispar definitiv: textul în ambele limbi, titlurile și rândul din evidență. Numerele lor rămân retrase. Nu se pot recupera.",
+        "phraseHelp": "Scrie exact „{phrase}” (numărul versiunilor aprobate din listă), ca să confirmi. Orice altceva oprește ștergerea.",
+        "reasonHelp": "Rămâne în jurnal, la fiecare versiune aprobată ștearsă. Este singurul lucru care supraviețuiește ștergerii.",
+        "action": "Șterge versiunile ({count})",
+        "pending": "Se șterge…",
+        "draftsOnly": "Doar ciorne: nimeni nu le-a văzut și numerele lor nu au fost date nimănui, așa că nu se cere confirmare scrisă.",
+        "draftsConfirmTitle": "Ștergi ciornele ({count})?",
+        "draftsConfirmBody": "Se șterg: {versions}. Nu se pot recupera.",
+        "regenerated": "Gata: ciorne noi din șabloane ({count}). Citește-le, apoi aprobă-le.",
+        "draftsApproved": "Gata: ciorne aprobate ({count}), în vigoare de acum.",
+        "deleted": "Gata: versiuni șterse ({count}).",
+        "deleteDrafts": "Șterge ciornele ({count})"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -6522,6 +6567,21 @@
         "one": "Adăugat: {count} membru.",
         "few": "Adăugați: {count} membri.",
         "other": "Adăugați: {count} de membri."
+      },
+      "legalTemplatesRegenerated": {
+        "one": "{count} ciornă nouă din șablon.",
+        "few": "{count} ciorne noi din șabloane.",
+        "other": "{count} de ciorne noi din șabloane."
+      },
+      "legalDraftsApproved": {
+        "one": "{count} ciornă aprobată și în vigoare.",
+        "few": "{count} ciorne aprobate și în vigoare.",
+        "other": "{count} de ciorne aprobate și în vigoare."
+      },
+      "legalVersionsDeleted": {
+        "one": "{count} versiune ștearsă.",
+        "few": "{count} versiuni șterse.",
+        "other": "{count} de versiuni șterse."
       }
     }
   },

@@ -12,11 +12,14 @@ import type { Locale } from "@/i18n/routing";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
 import {
+  approveDrafts,
   approvePlatformTemplates,
   approveVersion,
   createDraftVersion,
   deleteApprovedVersion,
   deleteDraftVersion,
+  deleteVersionsInBatch,
+  regenerateFromTemplates,
   updateDraftVersion,
   withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
@@ -54,7 +57,7 @@ function translationsFrom(form: FormData) {
 // it is reporting. Never anything about a person — a document code, a number, a count.
 async function backTo(
   path: string,
-  outcome: { error?: string; saved?: string; phrase?: string; approved?: string },
+  outcome: { error?: string; saved?: string; phrase?: string; approved?: string; created?: string; deleted?: string },
 ): Promise<never> {
   await flashOutcome(outcome);
   const query = new URLSearchParams(
@@ -123,6 +126,91 @@ export async function approvePlatformTemplatesAction(_previous: FormOutcome | nu
   }
 
   return backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
+}
+
+function allOf(form: FormData, name: string): string[] {
+  return form.getAll(name).filter((value): value is string => typeof value === "string" && value !== "");
+}
+
+/**
+ * «Regenerează din șabloane» (§NNN): a new draft of every text whose platform template says
+ * something the text in force and the drafts waiting do not — drafts only, nothing approved. The
+ * keys are the ones the confirm dialog named. Administrator (§450), here and in the service.
+ */
+export async function regenerateLegalTemplatesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+
+  let outcome: { error?: string; saved?: string; created?: string };
+  try {
+    const actor = await requireStaffCapability(canWriteLegalTexts);
+    const db = getDb();
+    const result = await regenerateFromTemplates(db, actor, clubFactsFromEnv(env, await shownContactAddresses(db)), allOf(form, "key"), new Date());
+    outcome = { saved: "legalTemplatesRegenerated", created: String(result.created.length) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  return backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
+}
+
+/**
+ * «Aprobă toate ciornele» (§NNN): the drafts the confirm dialog named, approved in one
+ * transaction by `approveVersion` — all or none. Administrator (§450), here and in the service.
+ */
+export async function approveLegalDraftsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+
+  let outcome: { error?: string; saved?: string; approved?: string };
+  try {
+    const actor = await requireStaffCapability(canWriteLegalTexts);
+    const approved = await approveDrafts(getDb(), actor, allOf(form, "versionId"), new Date());
+    outcome = { saved: "legalDraftsApproved", approved: String(approved) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  return backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
+}
+
+/**
+ * The ticked versions deleted in one press, from `/admin/legal/delete` (§NNN): drafts as one
+ * draft is, approved versions as one approved version is — the phrase (`DELETE <n>`) and the
+ * reason asked once for all of them, an audit row each. A refusal stays on the batch screen,
+ * with the reason back in its box and the phrase to type again, as `deleteApprovedLegalVersionAction`
+ * does; the three refusals a person can act on are told apart from a race.
+ */
+export async function deleteLegalVersionsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+
+  let deleted: { drafts: number; approved: number };
+  try {
+    const actor = await requireStaffCapability(canWriteLegalTexts);
+    deleted = await deleteVersionsInBatch(getDb(), actor, {
+      versionIds: allOf(form, "versionId"),
+      typedConfirmation: text(form, "typedConfirmation"),
+      reason: text(form, "reason"),
+      now: new Date(),
+    });
+  } catch (error) {
+    const failure = refused(error, form);
+    const named = (field: string) => isDomainError(error) && error.fields.includes(field);
+    return {
+      ...failure,
+      error: named("typedConfirmation")
+        ? "LEGAL_BATCH_CONFIRMATION_MISMATCH"
+        : named("reason")
+          ? "LEGAL_DELETE_NEEDS_REASON"
+          : named("termsAccepted")
+            ? "LEGAL_TERMS_ACCEPTED"
+            : failure.error,
+      fields: failure.fields.filter((field) => field === "typedConfirmation" || field === "reason"),
+    };
+  }
+
+  return backTo(getPathname({ locale, href: "/admin/legal" }), {
+    saved: "legalVersionsDeleted",
+    deleted: String(deleted.drafts + deleted.approved),
+  });
 }
 
 export async function approveLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

@@ -1008,7 +1008,8 @@
       "WALK_IN_BIB_TAKEN": "The person is entered, but somebody just gave that number away, so they are unconfirmed. Find them in the list and press “Confirm here” with another number.",
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
       "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
-      "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added."
+      "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
+      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\"."
     },
     "editor": {
       "eventSection": "Event details",
@@ -2109,7 +2110,51 @@
         "redo": "Redo"
       },
       "listSocialsMissing": "The notice in force does not yet describe Strava and Instagram on the public list, so they do not show. Approve a new notice from the template.",
-      "listStatesMissing": "The notice in force does not yet describe the stages on the public list, so it shows only the confirmed. Approve a new notice from the template."
+      "listStatesMissing": "The notice in force does not yet describe the stages on the public list, so it shows only the confirmed. Approve a new notice from the template.",
+      "batch": {
+        "toolsTitle": "Every text at once",
+        "regenerateIntro": "The template changed for: {texts}. The button makes a new draft of each, with the club's facts; nothing takes effect until you approve it.",
+        "regenerateBlanks": "In {texts} some fields are left to fill in, written '<'…>: type them into the draft before approving.",
+        "regenerate": "Regenerate from the templates ({count})",
+        "regeneratePending": "Making the drafts…",
+        "regenerateTitle": "Make new drafts from the templates ({count})?",
+        "regenerateBody": "A new draft is made for: {texts}. The texts in force stay as they are until you approve the drafts.",
+        "upToDate": "Every text already has the templates' words, in force or as a draft.",
+        "approveIntro": "Drafts ready to approve: {versions}.",
+        "approve": "Approve the drafts ({count})",
+        "approvePending": "Approving…",
+        "approveTitle": "Approve the drafts ({count})?",
+        "approveBody": "Approving: {versions}. From now on they are in force on the site as the club's texts; a correction is a new version.",
+        "heldIntro": "Not approved together:",
+        "held": {
+          "superseded": "a newer draft of the same text exists; delete this one or approve it from its own page.",
+          "behind": "an approved version with a higher number is already offered, so this one would never take effect.",
+          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them.",
+          "ready": "ready to approve."
+        },
+        "deleteIntro": "Tick the versions to delete in the table, then press the button: you see the list before anything is deleted.",
+        "deleteTicked": "Delete the ticked versions",
+        "tick": "Tick {version} for deletion",
+        "backToList": "Back to the legal documents",
+        "title": "Deleting the ticked versions",
+        "nothingSelected": "No version is ticked. Go back to the list and tick the versions to delete.",
+        "goes": "Deleted ({count}):",
+        "stays": "Kept, they cannot be deleted ({count}):",
+        "draftGoes": "a draft; nobody has seen it.",
+        "approvedGoes": "approved; gone for good, its number stays retired.",
+        "approvedConsequence": "The approved versions listed ({count}) are gone for good: the text in both languages, the titles and the record. Their numbers stay retired. They cannot be recovered.",
+        "phraseHelp": "Type exactly \"{phrase}\" (the number of approved versions listed) to confirm. Anything else stops the deletion.",
+        "reasonHelp": "It stays in the log, on every approved version deleted. It is the only thing that survives the deletion.",
+        "action": "Delete the versions ({count})",
+        "pending": "Deleting…",
+        "draftsOnly": "Drafts only: nobody has seen them and their numbers were given to nobody, so no typed confirmation is asked.",
+        "draftsConfirmTitle": "Delete the drafts ({count})?",
+        "draftsConfirmBody": "Deleting: {versions}. They cannot be recovered.",
+        "regenerated": "Done: new drafts from the templates ({count}). Read them, then approve them.",
+        "draftsApproved": "Done: drafts approved ({count}), in force from now.",
+        "deleted": "Done: versions deleted ({count}).",
+        "deleteDrafts": "Delete the drafts ({count})"
+      }
     },
     "tasks": {
       "title": "What is still to do",
@@ -6522,6 +6567,21 @@
         "one": "Added: {count} member.",
         "few": "Added: {count} members.",
         "other": "Added: {count} members."
+      },
+      "legalTemplatesRegenerated": {
+        "one": "{count} new draft from the template.",
+        "few": "{count} new drafts from the templates.",
+        "other": "{count} new drafts from the templates."
+      },
+      "legalDraftsApproved": {
+        "one": "{count} draft approved and in effect.",
+        "few": "{count} drafts approved and in effect.",
+        "other": "{count} drafts approved and in effect."
+      },
+      "legalVersionsDeleted": {
+        "one": "{count} version deleted.",
+        "few": "{count} versions deleted.",
+        "other": "{count} versions deleted."
       }
     }
   },
