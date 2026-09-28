@@ -10,6 +10,7 @@ import { bibDesignFromQuery } from "@/modules/registrations/bib-design";
 import { bibNumberFromQuery } from "@/modules/registrations/bib-design-query";
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -102,11 +103,18 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   const [row] = await db
-    .select({ bibNumber: registrations.bibNumber, registeredName: registrations.registeredName, kind: registrations.kind })
+    .select({
+      bibNumber: registrations.bibNumber,
+      registeredName: registrations.registeredName,
+      kind: registrations.kind,
+      status: registrations.status,
+    })
     .from(registrations)
     .where(and(eq(registrations.id, registrationId), eq(registrations.eventId, id)))
     .limit(1);
-  if (!row || row.bibNumber === null || row.kind !== "REAL") {
+  // The sheet's own rule (`bibs.ts#bibScopeWhere`): a bib is drawn for a confirmed real
+  // registration only, so a restarted row still wearing its retired number draws none (§548).
+  if (!row || row.kind !== "REAL" || row.status !== "CONFIRMED" || raceNumberOf(row) === null || row.bibNumber === null) {
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }
 

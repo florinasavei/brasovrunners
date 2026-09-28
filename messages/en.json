@@ -272,7 +272,7 @@
         "few": "{count} places",
         "other": "{count} places"
       },
-      "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
+      "full": "No places left. On the waiting list, the first in line gets the next free place.",
       "waitlistFull": "The places and the waiting list are full.",
       "fullNoWaitlist": "Every place has been taken, so registration has closed.",
       "waitlistRoom": {
@@ -609,7 +609,8 @@
           "health_viewed": "Emergency details and health note opened",
           "consent_withdrawn": "Consent withdrawn",
           "declaration_downloaded": "Signed declaration downloaded (PDF)",
-          "sent_now": "Sent now, past the scheduled round"
+          "sent_now": "Sent now, past the scheduled round",
+          "cancelled_by_participant": "Cancelled by the participant, from their own link"
         }
       },
       "locale": {
@@ -708,11 +709,9 @@
       "exportExcel": "Export to Excel",
       "readOnlyNotice": "You can read the list, the export and the numbers, but not change them. On race day you work from “Race day”.",
       "columnBib": "Race number (BIB)",
-      "bibColumnHint": "The race number:\n– 2* — provisional, may still change.\n– 1 (bold) — final, emailed to the runner.\n– 1 ✓ — final and printed.",
-      "bibProvisionalShort": "provisional",
-      "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
-      "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
-      "bibHeldNow": "Race number: {number} — provisional until registration closes.",
+      "bibColumnHint": "The race number:\n– «—»: not confirmed yet; the number comes with the confirmation.\n– 12: given at the confirmation and emailed.\n– 12 ✓: printed.",
+      "bibSettled": "Race number: {number}, given at the confirmation and emailed. If you change it, the person is emailed the new one, and the old one is never given to anybody else.",
+      "bibSettledPrinted": "Race number: {number}. It is printed, so it no longer changes.",
       "bibNone": "No race number yet.",
       "bibChange": "Change the number",
       "bibPrinted": "Bib printed",
@@ -935,7 +934,7 @@
       "givePlaceTitle": "Give them a place?",
       "givePlaceBody": "{name} gets a free place ahead of the waiting list, and the confirmation with the race number.",
       "setBibTitle": "Save the number?",
-      "setBibBody": "The number stays this person's and is never given to anybody else.",
+      "setBibBody": "The person is emailed the number. A number once given is never given to anybody else.",
       "resendTitle": "Send the email again?",
       "resendBody": "The email for the current state goes to {name} again, with a new link; the link in the old email stops working.",
       "reminderTitle": "Send the reminder?",
@@ -1366,7 +1365,7 @@
       "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
-      "bibStartNumberHelp": "1 by default. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "bibStartNumberHelp": "1 by default. Use 100 or 500 to give each distance its own band — numbers are given in order of confirmation, counting up from here.",
       "minAge": "Minimum age to take part",
       "reminder": {
         "label": "The reminder before the start",
@@ -3618,7 +3617,7 @@
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
       "spareMark": "on-the-spot entry",
-      "helpMore": "Numbers are given in order of registration and never change. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
+      "helpMore": "Numbers are given in order of confirmation and are never given twice. The sheet prints two A5 numbers per A4 page; a single number downloads from the registration's page."
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -3706,7 +3705,6 @@
       "rowHelp": "On each row: type the race number (if they have none) → “Save no.”; when the person has arrived → “Mark present”. Somebody who has not signed the declaration signs it on paper → “Confirm on paper”.",
       "givePlace": "Give a place",
       "bibField": "Race number (BIB)",
-      "bibProvisional": "Provisional number: it is settled when registration closes.",
       "saveBib": "Save no.",
       "checkIn": "Mark present",
       "undoCheckIn": "Undo",
@@ -3795,7 +3793,7 @@
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
         "DECLARATION_ARCHIVE": "With the signed declaration, to the club's declarations mailbox, for real registrations only. The identity document is masked.",
-        "BIB_ASSIGNED": "Once, when registration closes and the numbers become final, and when someone sets a confirmed registration's number by hand. With the QR code.",
+        "BIB_ASSIGNED": "When someone sets a confirmed registration's number by hand. With the QR code.",
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
         "REGISTRATION_OPENED": "When registration opens, once, to every address left at “Tell me” on the event's page.",
         "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",
@@ -3825,7 +3823,7 @@
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
         "DECLARATION_ARCHIVE": "with each signed declaration, to the archive",
-        "BIB_ASSIGNED": "when registration closes, or a number is set by hand",
+        "BIB_ASSIGNED": "when a number is set by hand",
         "STAFF_INVITATION": "when a colleague is added",
         "REGISTRATION_OPENED": "when registration opens",
         "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
@@ -3955,7 +3953,7 @@
             "eventTitle": "The event's title, in this text's language",
             "eventLocationName": "The meeting point, by its name in this text's language; while it is not announced, the sentence that says so",
             "eventStartsAtFormatted": "The start's date and time, in the event's time zone, written in this text's language",
-            "bibNumber": "The race number, possibly the provisional one until registration closes",
+            "bibNumber": "The race number, given at the confirmation",
             "checkinCode": "The desk code the participant collects their number with",
             "currentStatus": "The registration's status when the message is sent",
             "holdExpiresAtFormatted": "Until when the place is held, while that deadline is ahead",
@@ -4142,7 +4140,7 @@
           "familySittingMinutes": "A family registration's email waits for “Done” at most (minutes)"
         },
         "help": {
-          "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
+          "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
           "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
           "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
           "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
@@ -4186,7 +4184,6 @@
           "lastCall": "the last call to sign, to those who have not signed yet",
           "participation": "the participation confirmation opens, to those who have not signed yet",
           "nextInLine": "a held place lapses; it goes to the next on the waiting list",
-          "bibs": "registration closes; race numbers become final",
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
           "newsletter": "the newsletter, to the topic's subscribers"
@@ -4277,7 +4274,7 @@
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "The place is held for {hold} from when the email leaves, or until the deadline for a distant event. The deadline counts only when somebody is waiting; otherwise it is signed at the desk too.",
-        "BIB_ASSIGNED": "Automatically at the close, or when an organizer types the number on the registration's page or at the desk. With the manage link. Never for a cancelled event.",
+        "BIB_ASSIGNED": "When an organizer types a confirmed registration's number on its page or at the desk. Otherwise, the number comes with the confirmation. With the manage link. Never for a cancelled event.",
         "REGISTER_ANOTHER_PERSON": "No registration is created, and the screen says “check your email” as always. If the address already has {people}, the email says only that, with no link."
       }
     },
@@ -4553,7 +4550,7 @@
                 "«See the bibs» to check them on screen.",
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
                 "Print at actual size (100%) and cut on the line.",
-                "Numbers go in registration order, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
+                "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers."
               ]
             },
@@ -4977,7 +4974,7 @@
                 "Fill in the form. For a race: «Read the race conditions», scroll to the end, then «I have read them and I agree». Tick the terms too.",
                 "Press «Submit registration». If something is missing, «Still missing:» appears above the button with each item — tap one and it takes you there.",
                 "In the email press «Confirm your email». The link is valid for {confirmation}.",
-                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign and confirm».",
+                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign».",
                 "They get the confirmation with the QR code and the race number, plus the signed declaration as a PDF.",
                 "Check in the backoffice: «Registrations» → search the name → the status «Confirmată» (confirmed)."
               ]
@@ -4993,7 +4990,7 @@
             {
               "title": "They withdraw or cannot come any more",
               "steps": [
-                "From the confirmation email: «Manage your registration» → «Cancel registration».",
+                "From the confirmation email: «Manage your registration» → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
                 "From the reminder: «I can't come — cancel my registration».",
                 "Any time: «My registrations», on the site, with their address. The place goes to the waiting list at once."
               ]
@@ -5524,13 +5521,13 @@
     "privacyLinkLabel": "privacy notice",
     "listOptIn": "I want to appear on the participant list",
     "listSocials": "Also show my Strava and Instagram beside my name on the list",
-    "listSocialsHelp": "Only together with the tick above, that you want to appear on the list. Take them off at any time from “My registrations”, by deleting your Strava and Instagram or by leaving the list.",
+    "listSocialsHelp": "Only with the tick above. Take them off any time from “My registrations”.",
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
     "missingTitle": "Still missing:",
     "submittedTo": "We sent it to:",
-    "submittedAlready": "If you were already registered for this event, that email is your existing confirmation — no second registration was created.",
+    "submittedAlready": "If you were already registered, the email shows your existing registration: no second one is created.",
     "done": {
       "heading": "Almost there!",
       "headingNamed": "Almost there, {name}!",
@@ -5545,21 +5542,21 @@
       "next": {
         "open": {
           "title": "Open the email and press the link",
-          "body": "That is all. The link is valid for {confirmation}."
+          "body": "The link is valid for {confirmation}."
         },
         "declare": {
           "title": "Sign the declaration",
           "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
-          "bodyLater": "The place is yours. We ask you to confirm {opens} before the start: sign the declaration online — or on paper, at the registration desk on race day. You can sign earlier, from the registration email."
+          "bodyLater": "The place is yours. We ask for the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too."
         },
         "confirmed": {
           "title": "You are in",
           "body": "You get the confirmation, with your QR code and race number. See you at the start!"
         }
       },
-      "delay": "It usually arrives within a minute, five at the most.",
-      "delayScheduled": "Emails leave on the platform's scheduled round, so it arrives within {wait} at the most.",
-      "notArrived": "Not there? Look in Spam too. The link is valid for {confirmation}, so there is time.",
+      "delay": "It arrives within five minutes.",
+      "delayScheduled": "It arrives within {wait}.",
+      "notArrived": "Not there? Look in Spam too.",
       "backToEvent": "Back to the event",
       "family": "One email, for everybody: {names}.",
       "familyEach": "Each person gets their own email."
@@ -5600,7 +5597,6 @@
     "displayName": "Public display name",
     "displayNameHelp": "By default the list and the results show your full name; if you would rather show something else, such as “Ana P.”, write it here.",
     "birthDate": "Date of birth",
-    "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateEcho": "{date} · {age} on the event day",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
@@ -5613,15 +5609,14 @@
       "MALE": "Male",
       "UNSPECIFIED": "Prefer not to say"
     },
-    "sexHelp": "For category rankings. Pick an answer — “Prefer not to say” is one of them.",
+    "sexHelp": "For the category rankings.",
     "sexChoose": "Choose…",
     "sexMissing": "Choose your sex — you may pick “Prefer not to say”",
     "nationality": "Citizenship",
     "country": "Country of residence",
     "city": "City",
-    "originHelp": "Tells the club where its events' participants come from.",
     "preferredLocale": "The language for your emails and the declaration",
-    "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
+    "preferredLocaleHelp": "Emails come in both languages, this one first.",
     "preferredLocaleOptions": {
       "ro": "Romanian",
       "en": "English"
@@ -5634,18 +5629,16 @@
       "open": "Open the list of countries",
       "close": "Close the list of countries"
     },
-    "phoneHelp": "The number without the country code — for example 0712 345 678.",
+    "phoneHelp": "Without the country code, for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",
-    "emergencyContactHelp": "Tell this person you gave us their name and number: we call only if something happens to you at the race. We keep them as long as the registration.",
+    "emergencyContactHelp": "Tell this person you gave us their number: we call only if something happens to you at the race. We delete them seven days after the event.",
     "tshirtSize": "T-shirt size",
     "tshirtSizes": {
       "NONE": "No t-shirt"
     },
     "clubName": "Club or team",
-    "optional": "Optional",
     "healthNotes": "Conditions, allergies or medication",
-    "healthNotesHelp": "Only what an organizer would need to know if you needed help on race day. You may leave this empty.",
     "healthConsent": "I agree that the race organizers may keep this health information, only for my safety on race day. I can withdraw it at any time from “My registrations”.",
     "displayNameToggle": "Want to appear publicly under a different name?",
     "displayNamePlaceholder": "Ana P.",
@@ -5678,7 +5671,7 @@
       "termsAccepted": "Accepting the terms and conditions",
       "fitnessAcknowledged": "The acknowledgement about the person's fitness statement"
     },
-    "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
+    "requiredLegend": "Fields marked * are required.",
     "optionalSuffix": "optional",
     "resend": {
       "title": "Send the registration link again",
@@ -5704,9 +5697,9 @@
       },
       "declaration": {
         "title": "Sign the declaration",
-        "body": "From that same email, read the declaration and type your name — online, or on paper at the registration desk on race day. The registration is complete only with the signed declaration. Your place is held for {hold}; if a waiting list forms, after that it goes to the next in line.",
-        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {due}; after that it goes to the next in line.",
-        "bodyLaterAtStart": "The place is yours, but the race is free, so we ask for a confirmation: you can sign the declaration of own responsibility from now, from the registration email, any time until the start — online, or on paper at the registration desk on race day. {opens} before the start we send you a reminder email. The place does not lapse before the start."
+        "body": "From that same email, sign it online or on paper at the registration desk on race day. Your place is held for {hold}; if there is a waiting list, it then goes to the next in line.",
+        "bodyLater": "The race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration, online or on paper at the registration desk. You can sign earlier too. If there is a waiting list, the place is held until {due}.",
+        "bodyLaterAtStart": "The race is free, so we ask for a confirmation: sign the declaration from the registration email any time before the start, online or on paper at the registration desk. We remind you {opens} before. The place does not lapse before the start."
       },
       "confirmed": {
         "title": "You are in",
@@ -5733,7 +5726,7 @@
         "declare": "Sign the declaration"
       },
       "now": {
-        "details": "Fill in the form. We will then email you to confirm your address.",
+        "details": "We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link.",
         "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
         "declareScheduled": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
@@ -5747,27 +5740,24 @@
       "guardian": "Registering a minor — parent or legal guardian"
     },
     "clubMemberDeclared": "I am a member of the {club} group",
-    "clubNameFromMembership": "Filled in because you ticked that you are a member. Untick it to enter a different club.",
+    "clubNameFromMembership": "Filled in from the member tick. Untick it to enter another club.",
     "facts": {
       "details": "Event details",
       "rules": "The rules",
       "terms": "Racing TOS",
       "privacy": "Privacy"
     },
-    "socialsHelp": "Optional. Used only to follow you and tag you in the club's posts; a tag is public on that network. Never shown on the site. You can delete them at any time from “My registrations”.",
-    "socialsHelpList": "Optional. Used to follow you and tag you in the club's posts; a tag is public on that network. On the site they show only with the tick further down. Delete them any time from “My registrations”.",
+    "socialsHelp": "Used only to follow and tag you in the club's posts; a tag is public on that network. Never shown on the site. Delete them any time from “My registrations”.",
+    "socialsHelpList": "Used to follow and tag you in the club's posts; a tag is public on that network. On the site they show only with the tick further down. Delete them any time from “My registrations”.",
     "stravaUrl": "Your Strava profile (link)",
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",
-    "instagramHandleHelp": "With or without the @.",
-    "guardianHelp": "Under 18, a parent or guardian registers: they sign the declaration, collect the kit and give the choices below for the child. The email and phone may be yours.",
+    "guardianHelp": "Required under 18. You, the parent or guardian, sign the declaration and give the choices below for the child; the email and phone may be yours.",
     "guardianName": "Full name of the parent / guardian",
     "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
-    "privacyBanner": "Nothing you write here appears on the site. The club uses it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (at most the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
-    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Without the tick, once you are confirmed you are only counted, as “Participant (name hidden)”. Nothing else is published: not your email, not your phone, not your date of birth. The club uses your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (at most the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
-    "confidentialNote": "Confidential. Never published.",
-    "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
-    "healthIntro": "Optional: only what the organizers should know if you need help. Only they see it, and it is deleted seven days after the event.",
+    "privacyBanner": "Nothing you write here appears on the site. We use it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, with your identity document masked, goes to the club's archive. We keep the registration for three years after the event.",
+    "privacyBannerWithList": "Nothing you write here appears on the site, with one exception: your name and club go on this event's public list only if you tick the box below; without the tick you are only counted. We use your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, with your identity document masked, goes to the club's archive. We keep the registration for three years after the event.",
+    "healthIntro": "Only what the organizers should know if you need help. Only they see it, and it is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
     "clubMemberHint": "I have been to at least 3 group runs in the past year.",
     "rules": {
@@ -5793,7 +5783,6 @@
     "emailInvalid": "That does not look like an email address. Check the letters and the @.",
     "emailSuggestion": "Did you mean {address}?",
     "emailUseSuggestion": "Yes, fix it",
-    "emailHelp": "This is where the confirmation link goes. Type it carefully.",
     "phoneTooShort": "Keep going — a number has at least 4 digits.",
     "phoneValid": "Looks right. We will store it as",
     "botCheckWait": "Checking… we send the form ourselves as soon as it answers; no need to press again.",
@@ -5820,9 +5809,9 @@
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
       "addPending": "Opening the form…",
-      "addHint": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
-      "addHintOn": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
-      "addHintLeft": "If you press “Yes”, the next email waits at most {window} after the last form and covers everybody.",
+      "addHint": "If you register one more person by {at}, the email waits for their form, at most {window}, and you get one email for everybody.",
+      "addHintOn": "If you register one more person by {at}, the email waits for their form, at most {window}, and you get one email for everybody.",
+      "addHintLeft": "If you register one more person, the next email waits at most {window} after the last form and covers everybody.",
       "addHintAtOnce": "Each person gets their own email.",
       "done": "No, done — send me the email",
       "doneAtOnce": "No, I am done",
@@ -5855,7 +5844,8 @@
       "placeReserved": "place reserved",
       "placeWaitlist": "on the waiting list, once confirmed",
       "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all.",
-      "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then."
+      "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then.",
+      "addLink": "Register one more person with this address"
     }
   },
   "Registrations": {
@@ -5889,9 +5879,10 @@
           "current": "now",
           "next": "next",
           "closed": "no longer waiting for a signature",
-          "later": "later"
+          "later": "later",
+          "cancelled": "registration cancelled"
         },
-        "nextAction": "Sign and go to the next one",
+        "nextAction": "Sign and go to the next person",
         "skipAction": "I'll sign later",
         "skipHelp": "Nothing changes in this person's registration: their declaration can also be signed from the link emailed for them, until the deadline.",
         "doneLater": "A declaration left for later is signed from the link emailed for that person, until the deadline.",
@@ -5900,16 +5891,21 @@
         "what": {
           "confirmed": "Confirmed. The code for the registration desk: {code}. The confirmation, with the QR code and the PDF of the declaration, is on its way by email.",
           "number": "Race number: {number}",
-          "numberProvisional": "Race number: {number} (provisional: settled when registration closes)",
           "noNumber": "Race number: none yet",
           "waitlisted": "On the waiting list: an email comes if a place frees up.",
           "later": "Later: sign from the link emailed for this person.",
-          "closed": "No longer waiting for a signature."
-        }
+          "closed": "No longer waiting for a signature.",
+          "cancelled": "The registration is cancelled, and the place is free again."
+        },
+        "withdraw": "Withdraw the registration for {name}",
+        "withdrawHelp": "The place is released, and the address gets a confirmation email.",
+        "withdrawTitle": "Withdraw the registration for {name}?",
+        "withdrawBody": "The registration for {name} at {event} is cancelled and the place is released. It cannot be undone: to register again, send the form again.",
+        "withdrawConfirm": "Yes, withdraw",
+        "withdrawBack": "No, go back"
       },
       "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
-      "action": "Sign and confirm",
       "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",
       "changed": "The declaration was updated while you were reading it. Nothing was recorded. Below is the current text — please read it and sign again.",
@@ -5973,7 +5969,8 @@
         "PASSPORT": "Passport",
         "RESIDENCE_PERMIT": "Residence permit",
         "OTHER": "Other document"
-      }
+      },
+      "sign": "Sign"
     },
     "list": {
       "title": "The public participant list",
@@ -6001,16 +5998,12 @@
     },
     "mine": {
       "title": "My registrations",
-      "intro": "Type the address you registered with and we send one link to every active registration of yours — the state of each, the access code and QR, and the option to withdraw.",
+      "intro": "Type the address you registered with and we send you one link to all your registrations.",
       "email": "Email address",
-      "emailHelp": "The address used when registering.",
       "submit": "Send me the link",
       "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
       "listTitle": "Your registrations",
       "empty": "You have no active registration at the moment.",
-      "code": "Access code",
-      "bib": "Race number",
-      "bibProvisional": "Provisional number. It is settled when registration closes, and you get it by email then.",
       "cancel": "Withdraw from this registration",
       "cancelledTitle": "Registration cancelled",
       "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",
@@ -6028,14 +6021,14 @@
       "closedTitle": "Registrations that are over",
       "closedHelp": "These registrations are no longer active, but they hold details you gave on consent; you can delete them here.",
       "eventCancelledChip": "Event cancelled",
-      "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
+      "eventCancelled": "There is nothing you need to do: your registration stays with us as a record, with the status above.",
       "runner": "Registered: {name}",
       "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day.",
       "familySign": {
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"
       },
-      "sentScheduled": "If that address has registrations, the link leaves for it on the platform's next scheduled round, within {wait} at the most. Check the spam folder too.",
+      "sentScheduled": "If that address has registrations, the link leaves for it within {wait} at the most. Check the spam folder too.",
       "declaration": {
         "signed": "Declaration: signed — {when}",
         "toSign": "Declaration: to sign",
@@ -6053,11 +6046,10 @@
     "manage": {
       "title": "Manage your registration",
       "prompt": "You can cancel this registration. The place will be released immediately.",
-      "action": "Cancel registration",
       "done": "Your registration has been cancelled.",
       "eventStarted": "This event has already started; the registration can no longer be cancelled.",
+      "eventCancelled": "The event has been cancelled; there is nothing you need to do.",
       "doneTitle": "Registration cancelled",
-      "declarationPdf": "The declaration you signed (PDF)",
       "raceDayTitle": "On race day",
       "codeIntro": "Show this code at the number pickup desk. It is in your confirmation email too.",
       "qrAlt": "Your QR code {code}",
@@ -6065,7 +6057,18 @@
       "selfCheckInHelp": "You can do this from {checkin} before the start. You still pick up your number at the desk.",
       "selfCheckInDone": "You are marked as here. Pick up your number at the desk.",
       "selfCheckInClosed": "Check-in opens on {date}.",
-      "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out."
+      "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out.",
+      "signedSent": "The signed declaration was sent to you by email.",
+      "signedPaper": "The declaration was signed on paper.",
+      "familyTitle": "The registrations on this address",
+      "familyIntro": "Each person has their own QR code and their own race number.",
+      "personCancel": "Cancel the registration for {name}",
+      "cancelTitle": "Cancel the registration for {name}?",
+      "cancelBody": "The registration for {name} at {event} is cancelled and the place is released. The address gets a confirmation email.",
+      "cancelConfirm": "Yes, cancel",
+      "cancelBack": "No, go back",
+      "doneOthers": "This link has been used. For the other people on the address, ask for a new link from “My registrations”.",
+      "qrTitle": "The QR code for {name}"
     },
     "spent": {
       "event": "For the event: {event}",
@@ -6161,6 +6164,10 @@
       "nobodyTitle": "Nobody was registered",
       "nobody": "We registered nobody; the details sent have been deleted.",
       "nobodyRefused": "We registered nobody on the list."
+    },
+    "qr": {
+      "number": "Race number: {number}",
+      "code": "Access code: {code}"
     }
   },
   "Devs": {
@@ -6449,12 +6456,10 @@
   },
   "Contact": {
     "title": "Write to us",
-    "intro": "A question about a run, a registration or the club? Write to us here — the message lands straight in the club's mailbox and we answer by email.",
+    "intro": "A question about a run, a registration or the club? We answer by email.",
     "faqHint": "You may find the answer in the <faq>FAQ</faq>.",
-    "requiredLegend": "Fields marked with * are required.",
     "name": "Your name",
     "email": "Your email address",
-    "emailHelp": "We answer at this address.",
     "message": "Message",
     "messageHelp": "At most 2,000 characters.",
     "privacy": "Your message arrives as an email in the club's Gmail (Google) mailbox, read by the team members who answer. We use it only to reply and delete it after at most 12 months.",
@@ -6607,7 +6612,8 @@
       "declarationConfirmed": "Declaration signed: your registration is confirmed.",
       "declarationWaitlisted": "Declaration signed: you are on the waiting list.",
       "familySignNothingLeft": "No declaration is left to sign for this event: the list below shows where each registration stands.",
-      "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person."
+      "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person.",
+      "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email."
     },
     "toast": {
       "saved": "Saved.",
@@ -6971,15 +6977,14 @@
       "RESULTS_PHOTOS": "Results and photo albums after the events."
     },
     "heading": "The club's news by email",
-    "intro": "Choose what you want to hear from us — the big events, shoe testing, the weekly runs, volunteering — and we write to you about that alone.",
+    "intro": "Pick the topics you care about and we write to you about those alone.",
     "open": "Subscribe to the news",
     "dialogTitle": "Subscribe to the club's news",
     "dialogIntro": "Tick what interests you. We email you a confirmation link; until you press it, you receive nothing else.",
     "close": "Close",
     "email": "Email address",
-    "emailHelp": "Where we send the confirmation link and, after that, the news.",
     "topicsLegend": "What you want to receive",
-    "topicsHelp": "Choose at least one topic. You can change them at any time from the link in every email.",
+    "topicsHelp": "At least one topic.",
     "privacy": "We keep your address and the topics you chose only to send you these emails; you unsubscribe at any time from the link in every message. Details in the",
     "privacyLinkLabel": "privacy notice",
     "consent": "I have read the privacy notice and agree to receive the club's news by email on the topics I ticked.",
@@ -6988,7 +6993,7 @@
     "sent": {
       "title": "Check your inbox",
       "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it. Can't find it? Look in the Spam folder too.",
-      "bodyScheduled": "If the address is right, you get an email with a link within {wait} at the most — emails leave on the platform's scheduled round. The subscription starts only once you press the link. Can't find it? Look in your Spam folder too."
+      "bodyScheduled": "If the address is right, you get an email with a link within {wait} at the most. The subscription starts only once you press the link. Can't find it? Look in your Spam folder too."
     },
     "errors": {
       "title": "The subscription has not started yet",
@@ -7044,7 +7049,7 @@
   },
   "Faq": {
     "title": "Frequently asked questions",
-    "lead": "What people coming to {club} for the first time ask us: how to register, what to bring, where to find us. Press a question to see its answer.",
+    "lead": "What people coming to {club} for the first time ask us: how to register, what to bring, where to find us.",
     "empty": "The club's questions will be here soon.",
     "listLabel": "The club's questions and answers",
     "contact": "Can't find the answer? <contact>Write to us</contact>."

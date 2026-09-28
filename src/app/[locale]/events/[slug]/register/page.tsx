@@ -758,7 +758,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             owes the person reading it one sentence about where any of that goes — and the
             answer here is unusually good, so it is worth saying: nothing is published unless
             the event has a start list *and* the box below is ticked, and then only the name.
-            The two section markers repeat it where each block of fields is.
+            Said once (§546): the two section markers that repeated it are gone.
           */}
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
@@ -868,12 +868,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 }}
               >
               <Stack spacing={2} sx={{ minWidth: 0 }}>
+              {/* No «Confidențial» marker under the heading any more (§546): the banner above the
+                  form says where every answer goes, once. */}
               <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
                 {t("sections.about")}
-              </Typography>
-              {/* The marker under each block (§171): where these answers go. */}
-              <Typography variant="caption" color="text.secondary">
-                {t("confidentialNote")}
               </Typography>
 
               {/*
@@ -901,18 +899,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate")}
-                /* The event's minimum age and the categories, in the help (§321, §329; never under
-                   fourteen since §515); a refusal for age says the rule again
-                   rather than "complete this field correctly". Left native, not the backoffice's
-                   MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a runner's own birth
-                   date is decades back, faster typed than paged through a calendar month by
-                   month, and this box is public — the picker never ships here anyway. */
+                /* No help at rest (§546): the minimum age is the line above the form, and the
+                   words under the box (§467) say the age on race day. A refusal for age says the
+                   rule (§321, §329) rather than "complete this field correctly". Left native, not
+                   the backoffice's MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a
+                   runner's own birth date is decades back, faster typed than paged through a
+                   calendar month by month, and this box is public. */
                 helperText={
-                  invalid.has("birthDate")
-                    ? tooYoung
-                      ? t("errors.tooYoung", minimumAge)
-                      : t("errors.field")
-                    : t("birthDateHelp", minimumAge)
+                  invalid.has("birthDate") ? (tooYoung ? t("errors.tooYoung", minimumAge) : t("errors.field")) : undefined
                 }
                 type="date"
                 label={t("birthDate")}
@@ -952,7 +946,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   words={countrySearchWords}
                 />
                 <TextField
-                  {...field("city", t("originHelp"))}
+                  {...field("city")}
                   label={t("city")}
                   required
                   fullWidth
@@ -999,9 +993,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
                 {t("sections.contact")}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {t("contactNote")}
-              </Typography>
 
               {/*
                 The address, twice, typed by hand (§206). QA's outbox holds three bounced
@@ -1037,7 +1028,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 invalidLabel={t("emailInvalid")}
                 suggestionLabel={t.raw("emailSuggestion") as string}
                 useSuggestionLabel={t("emailUseSuggestion")}
-                help={t("emailHelp")}
+                // No help at rest (§546): the address is typed twice, and the line above the form
+                // already says the email comes to confirm it.
                 defaultValue={prefill("email")}
                 defaultConfirmValue={prefill("emailConfirm")}
                 error={invalid.has("email") || invalid.has("emailConfirm")}
@@ -1070,7 +1062,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               <Stack spacing={2}>
                 {/* A third person's name and number (§322): the runner is the one who can tell
-                    them, so the form says to, and says when they would be rung. */}
+                    them, so the form says to, when they would be rung, and that both are deleted
+                    seven days after the event (§421). */}
                 <TextField
                   {...field("emergencyContactName", t("emergencyContactHelp"))}
                   label={t("emergencyContactName")}
@@ -1193,7 +1186,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     whatever the browser did, so a form filled with JavaScript off records it too.
                   */}
                   <ClubForMember
-                    {...field("clubName", t("optional"))}
+                    {...field("clubName")}
                     label={t("clubName")}
                     memberCheckboxId={fieldId("clubMemberDeclared")}
                     clubName={CLUB_NAME}
@@ -1219,11 +1212,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("guardianName")}>
                 <Stack spacing={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("guardianHelp")}
-                  </Typography>
+                  {/* One helper, under the name (§546): required under eighteen — the box carries no
+                      asterisk, because it is shown by the birth date — who signs, and whose email. */}
                   <TextField
-                    {...field("guardianName", t("guardianNameHelp"))}
+                    {...field("guardianName", t("guardianHelp"))}
                     label={t("guardianName")}
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: 200 } }}
@@ -1263,7 +1255,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { maxLength: 200 } }}
                   />
                   <TextField
-                    {...field("instagramHandle", t("instagramHandleHelp"))}
+                    {...field("instagramHandle")}
                     label={t("instagramHandle")}
                     placeholder="@numele.tau"
                     autoComplete="off"
@@ -1302,7 +1294,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {t("healthIntro")}
                   </Typography>
                   <TextField
-                    {...field("healthNotes", t("healthNotesHelp"))}
+                    {...field("healthNotes")}
                     label={t("healthNotes")}
                     multiline
                     minRows={2}
@@ -1485,6 +1477,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {/* The language of the emails and the declaration (§97): the page's, unless said otherwise. */}
               <TextField
+                id={fieldId("preferredLocale")}
                 name="preferredLocale"
                 label={t("preferredLocale")}
                 helperText={t("preferredLocaleHelp")}

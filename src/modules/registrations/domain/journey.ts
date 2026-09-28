@@ -93,8 +93,6 @@ export type JourneyInput = {
   declarationAcceptedAt: Date | null;
   confirmedAt: Date | null;
   bibNumber: number | null;
-  /** The number held before the settle (§214); the journey does not care which column. */
-  provisionalBibNumber?: number | null;
   checkedInAt: Date | null;
   cancelledAt: Date | null;
   expiredAt: Date | null;
@@ -130,9 +128,8 @@ function emailDate(input: JourneyInput): Date | null {
 }
 
 function bibDetail(input: JourneyInput): JourneyStepDetail | undefined {
-  // Either column (§214): the chip says "nr. 42", and before registration closes the 42 is
-  // the provisional one. Whether it can still move is the column's business, not the chip's.
-  return input.bibNumber !== null || (input.provisionalBibNumber ?? null) !== null ? "bib" : undefined;
+  // The chip says "nr. 42" on the confirmed step: the number comes with the confirmation (§548).
+  return input.bibNumber !== null ? "bib" : undefined;
 }
 
 /**

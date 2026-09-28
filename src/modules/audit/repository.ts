@@ -28,6 +28,12 @@ export type AuditAction =
   | "registration.name_corrected"
   | "registration.cancelled_by_staff"
   /**
+   * A participant cancelled their own registration (§547): from their manage link, «Înscrierile
+   * mele» or the family's declarations wizard. No staff actor; the metadata is the state it left and
+   * the door (`{ from, via }`), never the name.
+   */
+  | "registration.cancelled_by_participant"
+  /**
    * Erasure (BR-REQ-037-06). The one action whose audit row outlives the thing it describes:
    * `entity_id` carries no foreign key, so this survives the delete and is the only remaining
    * evidence that the registration existed and who authorised its removal.

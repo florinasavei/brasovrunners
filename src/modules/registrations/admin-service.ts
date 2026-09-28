@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull, notInArray, or } from "drizzle-orm";
+import { and, asc, count, eq, isNull, or } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -25,10 +25,10 @@ import {
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
-import { bibNumberInUse, erasedBibNumbers, isEventSpareNumber } from "./bibs";
+import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
-import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
+import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
 import { registrationNameKey, sameRunner } from "./domain/name-key";
 import { ALREADY_ON_ADDRESS } from "./domain/family";
@@ -499,12 +499,13 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   /*
-    A handed number only for a walk-in (§444), the rule the desk's box is drawn by: a runner who
-    registered online keeps the provisional number they were shown, and a printed bib is never
-    swapped. Refused naming the box, before anything is written; checked again under the lock.
+    A handed number only for a row that wears none yet (§444, §548), the rule the desk's box is
+    drawn by: nobody has a number before the confirmation, so it is the number this confirmation
+    gives; a row that already wears one keeps it, and a printed bib is never swapped. Refused naming
+    the box, before anything is written; checked again under the lock.
   */
   if (options.bibNumber !== undefined && !handsSpareAtConfirm(current)) {
-    throw new DomainError("VALIDATION_ERROR", "a number is handed at the desk only to a walk-in with no printed bib", ["bibNumber"]);
+    throw new DomainError("VALIDATION_ERROR", "this registration already has a race number; it cannot be changed", ["bibNumber"]);
   }
   const event = await eventForRegistration(db, current.eventId);
 
@@ -563,17 +564,20 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 }
 
 /**
- * One race number by hand, or none (BR-REQ-038-01 criterion 7). The partial unique index is
- * what refuses two runners with one number; here that surfaces as a sentence.
+ * One race number by hand (BR-REQ-038-01 criterion 7): §105's preferential number, or a desk spare
+ * (§444). The partial unique index is what refuses two runners with one number; here that
+ * surfaces as a sentence.
  *
- * **A confirmed registration's number is settled** (§173; the owner: "nu ar trebui să mai pot
- * schimba numărul de concurs odată confirmat!"). §105 put a preferential number in an
- * organizer's hands, and that stays — before confirmation, which is when there is nothing
- * printed and nobody has been told. Once a registration is confirmed the runner has been
- * emailed their number, it is on a sheet, and quite possibly on a bib in an envelope; changing
- * it there produces two runners who each believe they are 214. The one exception is giving a
- * number to a confirmed registration that has none, which is filling a gap rather than moving
- * anybody.
+ * **On a confirmed registration only** (§548, amending §105 and §173). A number exists only once a
+ * registration is confirmed, and the confirmation draws one at once and emails it — so there is
+ * nothing to type a number into before then, and the preferential number is a change of the one
+ * the confirmation gave. §173's lock ("nu ar trebui să mai pot schimba numărul de concurs odată
+ * confirmat!") keeps its reason in two rules instead: a printed number never changes (§311), and
+ * the number replaced is **retired**, never given to anybody else, because the runner was already
+ * sent it — the audit row carries it (`bibs.ts#replacedBibNumbers`) and the runner is sent the new
+ * one with a line saying it replaces any earlier number. A confirmed registration with no number
+ * (confirmed before §87) is given one the same way. Clearing a confirmed runner's number is
+ * refused: it would be a number retired for nothing and a runner with none.
  */
 export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -589,22 +593,10 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   if (current.bibNumber === bibNumber) return current;
-  if (current.status === "CONFIRMED" && current.bibNumber !== null) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      "this registration is confirmed and already has a race number; it cannot be changed",
-    );
-  }
   /*
     A registration that is over takes no number change at all (§311; BR-REQ-060-01 — the server
-    says it, not the missing field).
-
-    Its settled number is retired, not free (§173): clearing it or replacing it would hand 27 back
-    to the draw while the bib printed for it is still in the pile, and the desk verb that reaches
-    here is every staff role's. The desk and the registration's page draw no number field on such
-    a row, and that is the interface agreeing with this line rather than standing in for it. A
-    terminal row with no number is refused too: a number given to nobody is a number retired for
-    nothing.
+    says it, not the missing field). Its number is retired, not free (§173): replacing it would
+    hand 27 back while the bib printed for it is still in the pile.
   */
   if (isTerminalStatus(current.status)) {
     throw new DomainError(
@@ -612,12 +604,28 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
       `this registration is ${current.status.toLowerCase()}; its race number is retired and cannot be changed`,
     );
   }
+  // Not confirmed yet: the number comes with the confirmation, in its order (§548).
+  if (current.status !== "CONFIRMED") {
+    throw new DomainError("VALIDATION_ERROR", "a race number is given when the registration is confirmed, not before");
+  }
+  if (current.kind !== "REAL") {
+    throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number");
+  }
+  if (bibNumber === null) {
+    throw new DomainError("VALIDATION_ERROR", "a confirmed registration keeps its race number; type another one to change it");
+  }
   /*
-    And a number that is on paper stays on it, whatever the status (§311). The one way to be
-    here with a printed mark is a cancelled entry that restarted — it carries its number and its
-    mark back into the queue — and moving that number would leave the printed bib pointing at
-    nobody, exactly as clearing it on the cancelled row would have.
+    Replacing a number the runner was already emailed retires it for good (§548), so it is a change
+    to a registration, the Administrator's (`canManageRegistrations`, §289) — not a desk verb. The
+    desk keeps filling the gap: a confirmed row with no number yet takes one from any desk role.
   */
+  if (current.bibNumber !== null && !canManageRegistrations(actor.role)) {
+    throw new DomainError(
+      "FORBIDDEN",
+      `role ${actor.role} may not replace a confirmed registration's race number; AGENTS.md §10.2 reserves it to ADMIN`,
+    );
+  }
+  // A number that is on paper stays on it (§311): moving it would leave the printed bib pointing at nobody.
   if (current.bibNumber !== null && current.bibPrintedAt !== null) {
     throw new DomainError("VALIDATION_ERROR", "this race number is already printed; it cannot be changed");
   }
@@ -626,19 +634,29 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   try {
     updated = await db.transaction(async (tx) => {
       /*
-        The event row's lock first (§444), the one the confirmation holds when the desk hands a
-        spare with the paper and the print holds when it reserves spares: two volunteers giving the
-        same spare — one typing it here, one confirming with it — are then one after the other, and
-        the second meets the check below rather than the unique index.
+        The event row's lock first (§444), the one every confirmation holds when it draws or is
+        handed a number and the print holds when it reserves spares: two volunteers giving the same
+        spare — one typing it here, one confirming with it — are then one after the other, and the
+        second meets the check below rather than the unique index.
       */
       await tx.select({ id: events.id }).from(events).where(eq(events.id, current.eventId)).for("update");
       /*
-        Not a number somebody else is holding provisionally (§444, found while adding the spares):
-        the unique index covers the settled column only, so 57 typed here while another runner is
-        looking at a provisional 57 went through — and failed on the index the moment that runner
-        was confirmed and adopted it (§220), on the desk, in front of them.
+        The number this change replaces, read again under that lock: `current` was read before it,
+        so two volunteers replacing 5 with 9 and 5 with 12 at once would otherwise both record
+        `from: 5`, and 9 — already emailed — would be retired by nobody. The second meets a changed
+        number here and is told to look again.
       */
-      if (bibNumber !== null && (await bibNumberInUse(tx, { eventId: current.eventId, number: bibNumber, exceptRegistrationId: registrationId }))) {
+      const [locked] = await tx
+        .select({ bibNumber: registrations.bibNumber })
+        .from(registrations)
+        .where(eq(registrations.id, registrationId))
+        .limit(1);
+      if (!locked) throw new DomainError("NOT_FOUND", "no such registration");
+      if (locked.bibNumber !== current.bibNumber) {
+        throw new DomainError("CONFLICT", "this race number was changed by somebody else a moment ago; look at it again", ["bibNumber"]);
+      }
+      const replaced = locked.bibNumber;
+      if (await bibNumberInUse(tx, { eventId: current.eventId, number: bibNumber, exceptRegistrationId: registrationId })) {
         throw new DomainError("CONFLICT", `number ${bibNumber} is already somebody's at this event`, ["bibNumber"]);
       }
       /*
@@ -646,30 +664,21 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         on. Marked printed, so the next "unprinted" sheet does not print a second one with the name,
         and a cancellation lists it among the bibs that exist (§311).
       */
-      const spare = bibNumber !== null && (await isEventSpareNumber(tx, current.eventId, bibNumber));
+      const spare = await isEventSpareNumber(tx, current.eventId, bibNumber);
       const [row] = await tx
         .update(registrations)
+        .set({ bibNumber, updatedAt: now, ...(spare ? { bibPrintedAt: now } : {}) })
         /*
-          Setting a number by hand **settles** it, so the provisional one goes with it (§230).
-
-          §220 already says the recompaction closes around a number given by hand; it only skips
-          rows that have a final number, so a row left holding both columns would keep a
-          provisional number reserved to somebody who no longer needs it — a hole in the
-          sequence, which is the exact failure §220 fixed in the bulk sweeps. One runner, one
-          number, whichever verb produced it.
-        */
-        .set({ bibNumber, provisionalBibNumber: null, updatedAt: now, ...(spare ? { bibPrintedAt: now } : {}) })
-        /*
-          The two refusals above, again, in the write itself (§311): `current` was read before
-          this transaction, so a registration cancelled or expired — or a number printed — in
-          between would otherwise still have its number moved. No row back means one of them
-          became true, and it is the same refusal.
+          The refusals above, again, in the write itself (§311): `current` was read before this
+          transaction, so a registration cancelled — or a number printed — in between would
+          otherwise still have its number moved. No row back means one of them became true.
         */
         .where(
           and(
             eq(registrations.id, registrationId),
-            notInArray(registrations.status, [...TERMINAL_STATUSES]),
+            eq(registrations.status, "CONFIRMED"),
             or(isNull(registrations.bibPrintedAt), isNull(registrations.bibNumber)),
+            replaced === null ? isNull(registrations.bibNumber) : eq(registrations.bibNumber, replaced),
           ),
         )
         .returning();
@@ -677,15 +686,27 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         throw new DomainError("VALIDATION_ERROR", "this registration is over or its race number is printed; the number cannot be changed");
       }
       /*
-        Nor the number of a registration that was erased here (§311). The unique index cannot
-        say it — the row that wore 27 is gone — so the erasure's audit row does, read **after**
-        the write, inside it: if the erased row still existed when the UPDATE ran, the index
-        refused it; if it was already gone, the audit row was committed before it went, and
-        this read sees it and rolls the write back.
+        Nor a number retired here (§311, §548) — erased with its row or replaced by hand. The unique
+        index cannot say it, the row that wore 27 being gone or wearing another, so the audit rows
+        do, read **after** the write, inside it: an erasure commits its audit row before its row goes.
       */
-      if (bibNumber !== null && (await erasedBibNumbers(tx, current.eventId)).includes(bibNumber)) {
-        throw new DomainError("CONFLICT", `number ${bibNumber} was worn by an erased registration at this event and stays retired`);
+      if ((await retiredBibNumbers(tx, current.eventId)).includes(bibNumber)) {
+        throw new DomainError("CONFLICT", `number ${bibNumber} was worn at this event before and stays retired`);
       }
+      /*
+        The audit row, in the same transaction: its `from` is what retires the replaced number
+        (`bibs.ts#replacedBibNumbers`), so a draw that could see the new number and not the row
+        saying the old one is retired must be impossible. The event is named so the read can find it.
+      */
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: current.participantId,
+        action: "registration.bib_set",
+        entityType: "registration",
+        entityId: registrationId,
+        metadata: { eventId: current.eventId, from: replaced, to: bibNumber },
+        now,
+      });
       return row;
     });
   } catch (error) {
@@ -695,20 +716,10 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     }
     throw error;
   }
-  await recordAuditEvent(db, {
-    actorStaffUserId: actor.id,
-    participantId: current.participantId,
-    action: "registration.bib_set",
-    entityType: "registration",
-    entityId: registrationId,
-    metadata: { from: current.bibNumber, to: bibNumber },
-    now,
-  });
-  // The runner is told (§105): a number given or changed by hand after the confirmation went
-  // out would otherwise live only on the desk's screen. A cleared number is not news, and
-  // neither is a number at a race that will not run (§331): it is written, and nobody is mailed.
-  const event = bibNumber !== null && updated.status === "CONFIRMED" ? await findEventForAllocation(db, updated.eventId) : undefined;
-  if (bibNumber !== null && updated.status === "CONFIRMED" && event?.eventStatus !== "CANCELLED") {
+  // The runner is told (§105): the confirmation carried the old number, or none. A number at a
+  // race that will not run is not news (§331): it is written, and nobody is mailed.
+  const event = await findEventForAllocation(db, updated.eventId);
+  if (event?.eventStatus !== "CANCELLED") {
     await db.transaction(async (tx) => {
       await enqueueEmail(tx, {
         participantId: updated.participantId,
