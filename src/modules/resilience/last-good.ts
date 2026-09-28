@@ -8,6 +8,7 @@ import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { DatabaseRestingError, isColdMiss } from "./breaker";
 import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
 import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
+import { DEGRADED_PAGE_SECONDS, holdPageFor } from "@/modules/public-cache/page-lifetime";
 import {
   type Envelope,
   isSnapshotTooOld,
@@ -174,6 +175,8 @@ export async function readWithLastGood<T>(
         kept as this key's copy: it is not a newer truth than the copies it was made of.
       */
       noteSavedCopyServed(seen.oldest);
+      // A static page made from a copy is kept a minute, never a day (§NNN): the next visit after it asks again.
+      await holdPageFor(DEGRADED_PAGE_SECONDS);
       return { value, freshness: "saved", takenAt: seen.oldest, restingUntil: null };
     }
     const envelope = { takenAt: now, value };
@@ -205,6 +208,8 @@ export async function readWithLastGood<T>(
     // Once per outage and instance is enough for the log: the breaker makes every read after the
     // first one fail the same way, and a line per page view would bury the first.
     if (!(error instanceof DatabaseRestingError)) console.error("[resilience] serving the last good copy of", key, error);
+    // The CDN keeps an outage's page a minute, not a day (§NNN).
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
     return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt, restingUntil };
   }
 }

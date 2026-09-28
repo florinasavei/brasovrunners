@@ -38,7 +38,7 @@ let editorUrl = "";
  * guard would turn a parallel run into a CONFLICT rather than a failure worth reading.
  */
 test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
-  test("is set in the editor and opens from the published event page", async ({ page }) => {
+  test("is set in the editor and opens from the published event page", async ({ page, request }) => {
     // Unique per project *and* per run: the two projects share one database and
     // `UNIQUE(locale, slug)` would fail the second run of the suite otherwise.
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -127,6 +127,21 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
+    /*
+      A stranger's visit is the CDN's (§NNN): the bare page is static — made on the first request,
+      the same copy for the next, with a shared-cache lifetime — and has no staff button. `request`
+      carries none of the signed-in page's cookies. The page itself is read below by the signed-in
+      browser, which the proxy sends to the live twin for the edit button.
+    */
+    const first = await request.get(`/ro/evenimente/${slug}`);
+    expect(first.status()).toBe(200);
+    const again = await request.get(`/ro/evenimente/${slug}`);
+    expect(again.headers()["x-nextjs-cache"]).toBe("HIT");
+    expect(again.headers()["cache-control"]).toMatch(/s-maxage=\d+/);
+    expect(await again.text()).toContain(ROUTE_LINK);
+    // The address's own question, or a session, is the live twin's: per request, never shared.
+    expect((await request.get(`/ro/evenimente/${slug}?lista=2`)).headers()["cache-control"]).toMatch(/no-store/);
+
     await page.goto(`/ro/evenimente/${slug}`);
 
     // The type and the surface, both as localized text, beside each other (BR-REQ-010-01) —
@@ -185,7 +200,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page.getByRole("link", { name: "Vezi traseul" })).toHaveCount(0);
   });
 
-  test("says nothing about a route when the club has not drawn one", async ({ page }) => {
+  test("says nothing about a route when the club has not drawn one", async ({ page, request }) => {
     await signIn(page, "Dev Administrator");
     // Straight to this test's own event. Matching by title would be a substring match against
     // every "Cursa cu traseu …" an earlier run left behind, and `.first()` would pick one of
@@ -211,6 +226,12 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await acknowledge.check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
+
+    // The save expired the stranger's static copy (§NNN, through the rows' own tags, §333): the
+    // next anonymous visit is the page as saved, never the cached one with the route still on it.
+    const afterSave = await request.get(`/ro/evenimente/${slug}`);
+    expect(afterSave.status()).toBe(200);
+    expect(await afterSave.text()).not.toContain(ROUTE_LINK);
 
     await page.goto(`/ro/evenimente/${slug}`);
 

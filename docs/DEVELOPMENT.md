@@ -287,6 +287,20 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
 
 - **`middleware.ts` does not exist here.** Next 16 renamed it to `proxy.ts`, with the export
   renamed to match. The Node runtime is the only one it supports.
+- **The public pages are static, and a production build keeps what it made** (§NNN). The
+  listing, the calendar, an event page, the standing pages, the gallery, the legal pages, the
+  `.ics` files and the Open Graph pictures are made on their first visit and kept (ISR), expired
+  by the write that changes them — the same `revalidatePublicContent(...)` every write already
+  calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). `curl -sI` shows it:
+  `x-nextjs-cache: HIT` and `Cache-Control: s-maxage=…` on a second visit. A filtered listing
+  (`?type=…`), a month (`?month=…`), `?lista=` and a signed-in browser on an event page are the
+  page's *live twin* under `src/app/[locale]/live/`, rendered per request as before
+  (`src/i18n/live-twin.ts`) — so a signed-in browser never shows you the stranger's copy; use
+  `curl` or a private window for that. `next start` stores the pages it made in
+  `.next/server/app/ro/` and `/en/`, and they outlive a restart: `yarn db:reset:local` deletes
+  them, and a running `yarn start` must be restarted after a reset (it holds them in memory
+  too). A row changed by hand in the database is on the pages within a day, or at the next
+  write, as §333 already said of the rows. Under `next dev` nothing is cached.
 - **`component={Link}` fails in a Server Component**, with "Functions cannot be passed directly
   to Client Components". `src/shared/ui/ButtonLink.tsx` exists for that reason.
 - **The MUI App Router provider is imported from a version-suffixed path**,

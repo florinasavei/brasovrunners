@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
+import { publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import {
   cachedDeadlines,
   cachedFirstStatesNoticeVersion,
@@ -111,7 +112,10 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     same component draws every `?lista=` page, so a page link past the date shows nothing either.
   */
   const now = new Date();
-  if (!publicListStillOpen(event, now, await cachedDeadlines())) return null;
+  const deadlines = await cachedDeadlines();
+  // A static event page is made again when the list closes (§NNN), or the CDN would keep the names.
+  await holdPageUntil([publicListClosesAt(event, deadlines)], now);
+  if (!publicListStillOpen(event, now, deadlines)) return null;
 
   const t = await getTranslations("Event");
   const locale = await getLocale();

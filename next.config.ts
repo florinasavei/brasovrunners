@@ -129,6 +129,16 @@ const nextConfig: NextConfig = {
     "/[locale]/admin/tasks/**": ["./docs/QUEUE.md"],
   },
 
+  /**
+   * The sitemap's shared-cache lifetime (§NNN): it is made per request (`app/sitemap.ts` says why it
+   * cannot be static), so the CDN is told to keep it an hour and serve it once more while it is made
+   * again. The same file for every crawler, never a person's; nothing else is named here — every
+   * other public response is static, and its lifetime is Next's own (`public-cache/page-lifetime.ts`).
+   */
+  async headers() {
+    return [{ source: "/sitemap.xml", headers: [{ key: "Cache-Control", value: "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400" }] }];
+  },
+
   // `next dev` otherwise appends a block to AGENTS.md and re-adds it on every run.
   // AGENTS.md is one of the six synchronized root documents: it carries the baseline marker,
   // docs:check verifies it, and AGENTS.md §1.4 governs who may edit it. A tool rewriting it

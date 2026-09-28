@@ -1,4 +1,5 @@
 import { unstable_rethrow } from "next/navigation";
+import { DEGRADED_PAGE_SECONDS, holdPageFor } from "@/modules/public-cache/page-lifetime";
 import { isDatabaseAwayError } from "./domain/database-away";
 
 /**
@@ -17,6 +18,8 @@ export async function readOrWhileAway<T>(read: () => Promise<T>, whileAway: T): 
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
+    // A static page with a part left out is kept a minute, not a day (§NNN).
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
     return whileAway;
   }
 }

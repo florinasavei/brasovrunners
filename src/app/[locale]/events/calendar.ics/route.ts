@@ -3,20 +3,33 @@ import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { buildCalendar, calendarFeedFileName } from "@/modules/events/ical";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
+import { eventClockInstants } from "@/modules/events/domain/page-clock";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { env } from "@/shared/config/env";
 
 /**
  * The club's calendar feed (`DECISIONS.md` §107): every published event from a month ago to
  * a year ahead, as one `.ics` that Google Calendar ("From URL"), Apple and Outlook subscribe
- * to and refresh on their own. Public. Never cached by the CDN (§129): the CDN's hour of cache
- * served a time the organizer had changed, and a stale copy is a runner at the wrong hour.
+ * to and refresh on their own. Public.
  *
- * The rows behind it are cached (§333), which is not the same thing: the public cache is expired
- * by the very save that changes a time, so a subscriber's app asking a few times a day reads the
- * organizer's latest words without waking the database for each ask.
+ * §129 kept it out of the CDN: the CDN's hour of cache served a time the organizer had changed,
+ * and a stale copy is a runner at the wrong hour. That was an hour of cache *by the clock*. Since
+ * §NNN (amending §129 and §333) the feed is a static response the CDN keeps until a write expires
+ * it — the rows behind it are the public cache's (§333), tagged, and the very save that changes a
+ * time expires the rows and the file together — or until its clock says it reads differently: the
+ * next UTC day (the window's own day), a registration door opening or closing (its description
+ * says where registration stands). A subscriber's app asking a few times a day no longer starts a
+ * function for each ask.
  */
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+/** A literal, as Next requires: `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together). */
+export const revalidate = 86400;
+
+/** Made on its first request, never at build: no database in CI (§NNN). */
+export function generateStaticParams(): { locale: string }[] {
+  return [];
+}
 
 const DAY = 24 * 60 * 60_000;
 
@@ -43,6 +56,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     await readWithLastGood(`ics-feed:${known}`, () => cachedPublishedEventsBetween(known, new Date(startOfUtcDay(from)), new Date(startOfUtcDay(to) + DAY)), now)
   ).value;
   const events = days.filter((event) => event.startsAt.getTime() >= from && event.startsAt.getTime() < to);
+  // Kept until the window's day turns, or an event's door or start changes what the file says (§NNN).
+  await holdPageUntil([new Date(startOfUtcDay(now.getTime()) + DAY), ...events.flatMap((event) => eventClockInstants(event))], now);
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({
     // Every detail the page has, in the description (§159); where registration stands is read against `now`.
@@ -56,7 +71,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
       "Content-Type": "text/calendar; charset=utf-8",
       // The club's name from the platform's constant (§357), never written in: "brasov-runners-ro.ics".
       "Content-Disposition": `inline; filename="${calendarFeedFileName(known)}"`,
-      "Cache-Control": "no-cache",
+      // No Cache-Control of its own (§NNN): Next writes the static response's, and a write expires the CDN's copy.
     },
   });
 }
