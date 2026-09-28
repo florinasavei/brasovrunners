@@ -137,15 +137,18 @@ describe("§541 the photo field's wiring", () => {
   const photo = { id: PHOTO_ID, src: "/web.webp", preview: "/thumb.webp", width: 4000, height: 3000 };
   const render = (props: Partial<Parameters<typeof TeamPhotoField>[0]>, recalled?: Record<string, string>) =>
     renderToStaticMarkup(
-      createElement(RecallProvider, {
-        value: {
-          values: recalled ? Object.fromEntries(Object.entries(recalled).map(([key, value]) => [key, [value]])) : null,
-          fields: [],
-          generation: 0,
-          fieldError: "",
+      createElement(
+        RecallProvider,
+        {
+          value: {
+            values: recalled ? Object.fromEntries(Object.entries(recalled).map(([key, value]) => [key, [value]])) : null,
+            fields: [],
+            generation: 0,
+            fieldError: "",
+          },
         },
-        children: createElement(TeamPhotoField, { photo: null, crop: null, labels, inputId: "team-photo-t", ...props }),
-      }),
+        createElement(TeamPhotoField, { photo: null, crop: null, labels, inputId: "team-photo-t", ...props }),
+      ),
     );
   const hidden = (markup: string, name: string) => {
     const match = new RegExp(`<input type="hidden" name="${name}" value="([^"]*)"`).exec(markup);
