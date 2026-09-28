@@ -175,7 +175,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     for (const testId of ["difficulty-scale-help", "difficulty-band-help"]) {
       const help = page.getByTestId(testId);
       await expect(help).toBeVisible();
-      await expect(help).toHaveAttribute("aria-label", /– mediu 1 = alergarea de pe Tâmpa/);
+      await expect(help).toHaveAttribute("aria-label", /mediu 1: alergarea de pe Tâmpa/);
     }
     // Side by side with the band from `sm`: the two controls' tops on one row.
     const select = await page.getByRole("combobox", { name: "Dificultate" }).boundingBox();
