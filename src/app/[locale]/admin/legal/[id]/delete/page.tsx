@@ -9,7 +9,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
@@ -163,7 +163,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 {t("legal.erase.whatGoes", {
                   document,
                   version: version.version,
-                  date: formatDay(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+                  date: formatDateInWords(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
                 })}
               </Typography>
               {/*

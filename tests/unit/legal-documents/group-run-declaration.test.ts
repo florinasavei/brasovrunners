@@ -364,11 +364,11 @@ describe("§393 the two templates", () => {
     const enText = paragraphs(privacyNoticeEn).join(" ");
     expect(roText).toContain("Dacă o semnezi din nou pe același text, nu păstrăm a doua: îți retrimitem copia.");
     expect(roText).toContain(
-      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci; pe amândouă le ștergem doar la cererea ta.",
+      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci, după aceeași regulă ca o declarație retrasă (mai jos).",
     );
     expect(enText).toContain("If you sign it again on the same text, we keep no second one: we resend your copy.");
     expect(enText).toContain(
-      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then; we delete both only at your request.",
+      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then, under the same rule as a withdrawn declaration (below).",
     );
     for (const text of [roText, enText]) expect(text).not.toMatch(/o înlocuiește pe cea veche|replaces the old one/);
   });
@@ -376,10 +376,10 @@ describe("§393 the two templates", () => {
   // A signature covers every date of a repeating run only once the text names {{series}} (§523).
   it("the privacy notice hedges the whole-series signature to the declaration's text (§523)", () => {
     expect(paragraphs(privacyNoticeRo).join(" ")).toContain(
-      "O semnezi o singură dată pentru o alergare care se repetă, când textul declarației prevede asta: acoperă atunci fiecare dată a ei, fără termen.",
+      "O semnezi o singură dată pentru o alergare care se repetă, când textul declarației prevede asta: acoperă atunci fiecare dată a ei, până când o retragi sau este înlocuită cu o versiune nouă.",
     );
     expect(paragraphs(privacyNoticeEn).join(" ")).toContain(
-      "You sign it once for a run that repeats, where the declaration's text says so: it then covers every date of it, with no end date.",
+      "You sign it once for a run that repeats, where the declaration's text says so: it then covers every date of it, until you withdraw it or it is replaced by a new version.",
     );
   });
 
@@ -426,9 +426,9 @@ describe("§393 the two templates", () => {
 });
 
 describe("§393 the public offer line states the retention truthfully", () => {
-  it("says the club keeps it while the signer comes to the runs and deletes it when they ask (§503), with no number of days", () => {
-    expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp vii la alergări și o șterge când îi ceri/);
-    expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it while you keep coming to the runs and deletes it when you ask/);
+  it("says the club keeps it while it is needed and stops using it at the signer's withdrawal (§503, §NNN), with no number of days", () => {
+    expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei/);
+    expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal/);
     expect(ro.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|zile/);
     expect(en.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|days/);
   });

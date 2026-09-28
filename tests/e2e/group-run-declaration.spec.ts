@@ -68,7 +68,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
   await expect(page.locator("#main")).toContainText(words.adults);
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
-  // The text's version and the weekday it took effect, over it, as the PDF says it (§499).
+  // The text's version and the whole date it took effect, the month in words, no weekday (§NNN), over it, as the PDF says it (§499).
   await expect(page.getByTestId("declaration-version")).toHaveText(
     locale === "ro" ? /^Versiunea \d+, în vigoare din \d{1,2} \p{L}+ \d{4}$/u : /^Version \d+, in force since \d{1,2} \p{L}+ \d{4}$/u,
   );
@@ -296,7 +296,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await expect(offer.getByRole("heading", { level: 3, name: "Declarație pe propria răspundere", exact: true })).toBeVisible();
     // Once for the whole series of a run that repeats (§523).
     await expect(offer).toContainText(
-      `Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria ${title}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri`,
+      `Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria ${title}; clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei`,
     );
     await expect(offer).not.toContainText("Dacă vrei");
     // The photographs notice comes before it in the fold, the declaration last (§498).
@@ -332,7 +332,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await openFold(page.getByTestId("conditions-fold"));
     await expect(offer.getByRole("heading", { level: 3, name: "Self-declaration", exact: true })).toBeVisible();
     await expect(offer).toContainText(
-      `Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole ${englishTitle} series; the club keeps it while you keep coming to the runs and deletes it when you ask`,
+      `Sign the self-declaration: you get it by email. For a run that repeats you sign it once, for the whole ${englishTitle} series; the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal`,
     );
     await expect(offer).not.toContainText("If you wish");
     await offer.getByRole("link", { name: "Sign the declaration", exact: true }).click();

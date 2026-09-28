@@ -395,8 +395,8 @@
     "groupRunDeclaration": {
       "heading": "Declarație pe propria răspundere",
       "button": "Semnează declarația",
-      "line": "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
-      "lineOneDate": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
+      "line": "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei.",
+      "lineOneDate": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei.",
       "signedSeries": "Ai semnat deja declarația pentru aceste alergări (v. {version}, semnată {when}). Este valabilă pentru toate alergările seriei: nu o mai semnezi.",
       "signedOne": "Ai semnat deja declarația pentru această alergare (v. {version}, semnată {when}).",
       "signedOlder": "Ai semnat versiunea {version} a declarației ({when}). Între timp, organizatorul a aprobat o versiune nouă: citește-o și semneaz-o din nou.",
@@ -2382,7 +2382,7 @@
             "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis. Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
             "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
             "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
-            "În Gmail-ul clubului: copiile declarațiilor de concurs mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") -subject:(\"alergare de grup\" OR \"group run\") older_than:3y (copiile de la alergările de grup nu se șterg după vechime: rămân cât timp declarația e activă, cum spune e-mailul fiecăreia), iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
+            "În Gmail-ul clubului: copiile declarațiilor de concurs mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") -subject:(\"Declarație semnată (alergare de grup)\" OR \"Signed declaration (group run)\") older_than:3y (copiile de la alergările de grup nu se șterg după vechime: rămân cât timp declarația e activă, cum spune e-mailul fiecăreia), iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
             "Tot acolo, confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
           ]
         },
@@ -4928,7 +4928,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională și când. Clubul păstrează o declarație cât timp semnatarul vine la alergări și o șterge când îi cere: atunci o ștergi aici, cu motivul.",
+      "help": "Cine a semnat declarația opțională și când. Clubul o păstrează cât e necesară; când semnatarul cere retragerea ei, o ștergi aici, cu motivul.",
       "helpMore": "O semnătură marcată «serie» acoperă toate datele alergării; o versiune nouă se semnează din nou, iar cea veche rămâne. Nu se cere act de identitate; adresa semnatarului e în PDF.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when} (v{version})",
